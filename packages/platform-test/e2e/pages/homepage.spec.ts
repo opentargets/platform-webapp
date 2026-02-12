@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
+import { test } from "../../fixtures";
 import { fillPolling } from "../../utils/fillPolling";
 
 test.describe("Home page actions", () => {

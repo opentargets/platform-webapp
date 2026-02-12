@@ -1,66 +1,17 @@
-/**
- * Test configuration interface
- * Defines the structure of test data used across E2E tests
- */
-export interface TestConfig {
-  drug: {
-    /** Drug with comprehensive data across all sections */
-    primary: string;
-    alternatives?: {
-      withWarnings: string;
-      withAdverseEvents: string;
-    };
-  };
-  variant: {
-    /** Variant with GWAS and general data */
-    primary: string;
-    /** Variant with molecular structure data */
-    withMolecularStructure: string;
-    /** Variant with pharmacogenomics data */
-    withPharmacogenomics: string;
-    /** Variant with QTL data */
-    withQTL?: string;
-    /** Variant with EVA/ClinVar data */
-    withEVA?: string;
-  };
-  target?: {
-    primary?: string;
-    alternatives?: string[];
-    aotfDiseases?: string[];
-  };
-  disease: {
-    primary: string;
-    name?: string;
-    alternatives?: string[];
-    aotfGenes?: string[];
-  };
-  study: {
-    gwas: {
-      primary: string;
-      alternatives?: string[];
-    };
-    qtl?: {
-      primary?: string;
-      alternatives?: string[];
-    };
-  };
-}
+import type { TestConfig } from "../types";
+import { fetchConfigFromSheet } from "../utils/fetchConfigFromSheet";
+import { mergeWithDefaults } from "../utils/mergeWithDefaults";
 
 /**
- * Mock function to simulate fetching config from external source
- * In real implementation, this would make an API call to retrieve test data
+ * Default test configuration (fallback)
  */
-async function fetchTestConfig(): Promise<TestConfig> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
-  // Return mock configuration
+function getDefaultConfig(): TestConfig {
   return {
     drug: {
-      primary: "CHEMBL1201585", // TRASTUZUMAB - has comprehensive data
+      primary: "CHEMBL3353410", // TRASTUZUMAB - has comprehensive data
       alternatives: {
-        withWarnings: "CHEMBL1201585",
-        withAdverseEvents: "CHEMBL1201585",
+        withWarnings: "CHEMBL3353410",
+        withAdverseEvents: "CHEMBL3353410",
       },
     },
     variant: {
@@ -90,6 +41,11 @@ async function fetchTestConfig(): Promise<TestConfig> {
         alternatives: [],
       },
     },
+    credibleSet: {
+      primary: "1aac7a781b1395adad7daa04e5d13970",
+      withGWASColoc: "8990f5e6515a5e24a3534da8ab339a92",
+      withQTLColoc: "5f4e2f4f4e2f4e2f4e2f4e2f4e2f4e2f",
+    },
   };
 }
 
@@ -99,13 +55,39 @@ async function fetchTestConfig(): Promise<TestConfig> {
 let cachedConfig: TestConfig | null = null;
 
 /**
- * Get test configuration (with caching)
+ * Default configuration constants
+ */
+const DEFAULT_CONFIG_URL =
+  "https://docs.google.com/spreadsheets/d/1oWYlb_o0AZBYOFUCd8k5-whZpKLpicZ-UyyNkLUbUk8/export?format=csv";
+const DEFAULT_SCENARIO = "testing_scenario_1";
+
+/**
+ * Get test configuration (always fetches fresh)
+ * Reads from environment variables TEST_CONFIG_URL and TEST_SCENARIO if available,
+ * otherwise uses hardcoded defaults.
  * @returns Test configuration object
  */
 export async function getTestConfig(): Promise<TestConfig> {
-  if (!cachedConfig) {
-    cachedConfig = await fetchTestConfig();
+  // Always reset to fetch fresh config for every run
+  cachedConfig = null;
+
+  const configUrl = process.env.TEST_CONFIG_URL || DEFAULT_CONFIG_URL;
+  const scenarioName = process.env.TEST_SCENARIO || DEFAULT_SCENARIO;
+  const defaults = getDefaultConfig();
+
+  if (configUrl) {
+    console.log(`Fetching test config from: ${configUrl}`);
+    console.log(`Using scenario: ${scenarioName}`);
+    const fetchedConfig = await fetchConfigFromSheet(configUrl, scenarioName);
+    if (fetchedConfig) {
+      // Merge fetched config with defaults to fill any empty cells
+      cachedConfig = mergeWithDefaults(fetchedConfig, defaults);
+      return cachedConfig;
+    }
+    console.log("Falling back to default configuration");
   }
+
+  cachedConfig = defaults;
   return cachedConfig;
 }
 

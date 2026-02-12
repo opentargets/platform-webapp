@@ -1,7 +1,31 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for UniProt Variants section on Variant page
+ * Interactor for the UniProt Variants section on Variant pages.
+ *
+ * Displays variant annotations from UniProtKB, including natural variants,
+ * disease-associated mutations, and sequence conflicts. Information includes:
+ * - **Disease/Phenotype**: Associated conditions from UniProt annotations
+ * - **Variant description**: Functional impact and literature evidence
+ * - **Cross-references**: Links to disease databases (OMIM, etc.)
+ *
+ * Complements ClinVar data with protein-focused variant annotations.
+ *
+ * @example
+ * ```typescript
+ * const uniprotVariants = new UniProtVariantsSection(page);
+ * await uniprotVariants.waitForLoad();
+ *
+ * // Get variant annotations
+ * const rowCount = await uniprotVariants.getTableRows();
+ *
+ * // Navigate to disease pages
+ * const diseaseCount = await uniprotVariants.getDiseaseLinksCount(0);
+ * await uniprotVariants.clickDiseaseLink(0, 0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `uniprot-variants`
  */
 export class UniProtVariantsSection {
   constructor(private page: Page) {}
@@ -81,9 +105,7 @@ export class UniProtVariantsSection {
 
   async clickDiseaseLink(rowIndex: number, linkIndex: number = 0): Promise<void> {
     const links = await this.getDiseaseLinks(rowIndex);
-    const link = links.nth(linkIndex);
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
+    await links.nth(linkIndex).click();
   }
 
   // Global filter/search

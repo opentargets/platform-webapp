@@ -1,7 +1,27 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Adverse Events section
+ * Interactor for the Adverse Events (Pharmacovigilance) section on Drug pages.
+ *
+ * Displays adverse event data from the FDA Adverse Event Reporting System (FAERS),
+ * including event names with MedDRA links, reported event counts, and log likelihood
+ * ratios indicating the strength of the drug-adverse event association.
+ *
+ * @example
+ * ```typescript
+ * const adverseEvents = new PharmacovigilanceSection(page);
+ * await adverseEvents.waitForLoad();
+ *
+ * // Get number of adverse events
+ * const rowCount = await adverseEvents.getTableRows();
+ *
+ * // Get details of first adverse event
+ * const eventName = await adverseEvents.getAdverseEventName(0);
+ * const llr = await adverseEvents.getLogLikelihoodRatio(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `adverseevents`
  */
 export class PharmacovigilanceSection {
   constructor(private page: Page) {}

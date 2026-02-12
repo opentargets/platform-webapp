@@ -1,18 +1,42 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Tractability section on Target page
- * Displays tractability assessment across different modalities (Small molecule, Antibody, PROTAC, Other)
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for Tractability section on Target page.
+ *
+ * Displays tractability assessment across different therapeutic modalities:
+ * - **Small molecule (SM)**: Druggability for small molecule interventions
+ * - **Antibody (AB)**: Accessibility for antibody-based therapies
+ * - **PROTAC (PR)**: Suitability for proteolysis targeting chimeras
+ * - **Other (OC)**: Other clinical modalities
+ *
+ * Uses data-testid selectors for reliable, predictable testing.
+ *
+ * @example
+ * ```typescript
+ * const tractability = new TractabilitySection(page);
+ * await tractability.waitForLoad();
+ * const smEnabled = await tractability.getSmallMoleculeEnabledCount();
+ * const abEnabled = await tractability.getAntibodyEnabledCount();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `tractability`
  */
 export class TractabilitySection {
   constructor(private page: Page) {}
 
-  // Section container
+  /**
+   * Get the main section container element.
+   * @returns Locator for the section container
+   */
   getSection(): Locator {
     return this.page.locator("[data-testid='section-tractability']");
   }
 
+  /**
+   * Check if the section is currently visible.
+   * @returns Promise resolving to true if visible, false otherwise
+   */
   async isSectionVisible(): Promise<boolean> {
     return await this.getSection()
       .isVisible()

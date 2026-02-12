@@ -1,16 +1,39 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Variant Effect section
+ * Interactor for Variant Effect / In-Silico Predictors section.
+ *
+ * Displays computational predictions of variant effects from various
+ * in-silico prediction methods. Supports both table and chart views
+ * for visualizing prediction scores.
+ *
+ * @example
+ * ```typescript
+ * const variantEffect = new VariantEffectSection(page);
+ * await variantEffect.waitForLoad();
+ * const methodName = await variantEffect.getMethodName(0);
+ * const prediction = await variantEffect.getPrediction(0);
+ * await variantEffect.switchToChartView();
+ * ```
+ *
+ * @category Variant
+ * @remarks Section ID: `in-silico-predictors`
  */
 export class VariantEffectSection {
   constructor(private page: Page) {}
 
-  // Section container
+  /**
+   * Get the main section container element.
+   * @returns Locator for the section container
+   */
   getSection(): Locator {
     return this.page.locator("[data-testid='section-in-silico-predictors']");
   }
 
+  /**
+   * Check if the section is currently visible.
+   * @returns Promise resolving to true if visible, false otherwise
+   */
   async isSectionVisible(): Promise<boolean> {
     return await this.getSection()
       .isVisible()

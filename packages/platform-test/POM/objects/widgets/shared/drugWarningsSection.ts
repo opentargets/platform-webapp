@@ -1,7 +1,31 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Drug Warnings section
+ * Interactor for the Drug Warnings section on Drug pages.
+ *
+ * Displays regulatory safety warnings and alerts associated with a drug,
+ * including FDA black box warnings, withdrawals, and safety communications.
+ * Information includes:
+ * - **Warning type**: Category of the safety alert
+ * - **Warning description**: Details about the safety concern
+ * - **Adverse events**: Links to related MedDRA terms
+ * - **References**: Links to regulatory sources
+ *
+ * @example
+ * ```typescript
+ * const warnings = new DrugWarningsSection(page);
+ * await warnings.waitForLoad();
+ *
+ * // Get warning details
+ * const rowCount = await warnings.getTableRows();
+ * const warningType = await warnings.getWarningType(0);
+ *
+ * // Search warnings
+ * await warnings.search("cardiac");
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `drugwarnings`
  */
 export class DrugWarningsSection {
   constructor(private page: Page) {}

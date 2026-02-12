@@ -3,6 +3,10 @@ import { DiseasePage } from "../../../POM/page/disease/disease";
 
 test.describe("Disease Page - Header and Navigation", () => {
   test.beforeEach(async ({ page, baseURL, testConfig }) => {
+    //if no disease id, skip all tests
+    if (!testConfig.disease.primary) {
+      test.skip();
+    }
     await page.goto(`${baseURL}/disease/${testConfig.disease.primary}/associations`);
   });
 

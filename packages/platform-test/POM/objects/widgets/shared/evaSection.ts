@@ -1,7 +1,32 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for EVA/ClinVar section on Variant page
+ * Interactor for the EVA/ClinVar section on Variant pages.
+ *
+ * Displays clinical variant annotations from the European Variation Archive (EVA)
+ * and NCBI ClinVar database. Information includes:
+ * - **Clinical significance**: Pathogenic, benign, uncertain significance, etc.
+ * - **Associated diseases**: Conditions linked to the variant
+ * - **Review status**: Level of evidence supporting the classification
+ * - **Submitter information**: Organizations that submitted the annotation
+ *
+ * Essential for understanding the clinical relevance of genetic variants.
+ *
+ * @example
+ * ```typescript
+ * const eva = new EVASection(page);
+ * await eva.waitForLoad();
+ *
+ * // Get clinical annotations
+ * const rowCount = await eva.getTableRows();
+ * const significance = await eva.getClinicalSignificance(0);
+ *
+ * // Navigate to disease
+ * await eva.clickDiseaseLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `eva`
  */
 export class EVASection {
   constructor(private page: Page) {}

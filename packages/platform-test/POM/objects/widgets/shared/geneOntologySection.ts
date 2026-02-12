@@ -1,9 +1,33 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Gene Ontology section on Target page
- * Displays GO annotations organized by aspect (Molecular Function, Biological Process, Cellular Component)
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Gene Ontology (GO) section on Target pages.
+ *
+ * Displays functional annotations from the Gene Ontology Consortium, organized
+ * by three aspects:
+ * - **Molecular Function (MF)**: Activities at the molecular level (e.g., kinase activity)
+ * - **Biological Process (BP)**: Larger biological programs (e.g., cell division)
+ * - **Cellular Component (CC)**: Locations within the cell (e.g., nucleus)
+ *
+ * Each annotation includes evidence codes and links to supporting publications.
+ *
+ * @example
+ * ```typescript
+ * const geneOntology = new GeneOntologySection(page);
+ * await geneOntology.waitForLoad();
+ *
+ * // Search GO terms
+ * await geneOntology.search("kinase");
+ *
+ * // Access publications
+ * await geneOntology.clickPublicationsDrawer();
+ *
+ * // Download data
+ * await geneOntology.clickDataDownloader();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `geneontology`
  */
 export class GeneOntologySection {
   constructor(private page: Page) {}

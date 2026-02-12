@@ -14,7 +14,7 @@ test.describe("Variant Profile Header", () => {
     await variantPage.goToVariantPage(testConfig.variant.primary);
   });
 
-  test("Profile header is visible", async () => {
+  test("Profile header is visible", { tag: "@smoke" }, async () => {
     expect(await variantProfileHeader.isProfileHeaderVisible()).toBe(true);
   });
 

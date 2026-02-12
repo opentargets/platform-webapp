@@ -1,7 +1,33 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for QTL Credible Sets section on Variant page
+ * Interactor for the QTL Credible Sets section on Variant pages.
+ *
+ * Displays molecular QTL (Quantitative Trait Loci) credible sets containing
+ * the variant, including expression QTLs (eQTLs), splicing QTLs (sQTLs),
+ * and protein QTLs (pQTLs). Information includes:
+ * - **Credible set ID**: Links to detailed credible set analysis
+ * - **Study**: QTL study identifier and type (eQTL, sQTL, pQTL)
+ * - **Affected gene**: Gene whose expression/splicing is affected
+ * - **Tissue**: Biological context where the QTL effect is observed
+ *
+ * Helps link non-coding variants to their molecular effects on gene regulation.
+ *
+ * @example
+ * ```typescript
+ * const qtlCredibleSets = new QTLCredibleSetsSection(page);
+ * await qtlCredibleSets.waitForLoad();
+ *
+ * // Get QTL data
+ * const rowCount = await qtlCredibleSets.getTableRows();
+ *
+ * // Navigate to related pages
+ * await qtlCredibleSets.clickCredibleSetLink(0);
+ * await qtlCredibleSets.clickAffectedGeneLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `qtl-credible-sets`
  */
 export class QTLCredibleSetsSection {
   constructor(private page: Page) {}
@@ -11,24 +37,7 @@ export class QTLCredibleSetsSection {
     return this.page.locator("[data-testid='section-qtl-credible-sets']");
   }
 
-  /**
-   * Check if section is visible - waits for page loaders first
-   */
   async isSectionVisible(): Promise<boolean> {
-    // First wait for any page-level skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const skeletons = document.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // No skeletons found
-      });
-
-    // Then check section visibility
     return await this.getSection()
       .isVisible()
       .catch(() => false);
@@ -81,10 +90,7 @@ export class QTLCredibleSetsSection {
 
   async clickCredibleSetLink(rowIndex: number): Promise<void> {
     const link = await this.getCredibleSetLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
-    // Wait for the element to be visible and stable before clicking
-    await link.waitFor({ state: "visible", timeout: 10000 });
-    await link.click({ force: true });
+    await link.click();
   }
 
   // Study link
@@ -95,7 +101,6 @@ export class QTLCredibleSetsSection {
 
   async clickStudyLink(rowIndex: number): Promise<void> {
     const link = await this.getStudyLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
     await link.click();
   }
 
@@ -107,7 +112,6 @@ export class QTLCredibleSetsSection {
 
   async clickAffectedGeneLink(rowIndex: number): Promise<void> {
     const link = await this.getAffectedGeneLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
     await link.click();
   }
 

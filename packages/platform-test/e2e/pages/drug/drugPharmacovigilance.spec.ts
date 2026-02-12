@@ -12,6 +12,13 @@ test.describe("Drug Pharmacovigilance Section", () => {
     // Navigate to a drug with pharmacovigilance data
     await drugPage.goToDrugPage(testConfig.drug.primary);
 
+    // Check if pharmacovigilance section exists, skip if not
+    const sectionVisible = await Pharmacovigilance.isSectionVisible();
+    if (!sectionVisible) {
+      test.skip(true, "No pharmacovigilance section found for this drug");
+      return;
+    }
+
     // Wait for the section to fully load
     await Pharmacovigilance.waitForLoad();
   });

@@ -1,8 +1,33 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Mouse Phenotypes section on Target page
- * Displays phenotypes observed in mouse models with gene knockouts
+ * Interactor for the Mouse Phenotypes section on Target pages.
+ *
+ * Displays phenotypes observed in mouse models with gene knockouts or mutations,
+ * sourced from the International Mouse Phenotyping Consortium (IMPC) and MGI.
+ * Information includes:
+ * - **Phenotype categories**: Grouped by biological system (e.g., cardiovascular, nervous)
+ * - **Phenotype labels**: Specific observed effects with Mammalian Phenotype Ontology terms
+ * - **Biological models**: Details about the mouse strains and genetic modifications
+ *
+ * Valuable for predicting potential effects of target modulation in humans.
+ *
+ * @example
+ * ```typescript
+ * const mousePhenotypes = new MousePhenotypesSection(page);
+ * await mousePhenotypes.waitForLoad();
+ *
+ * // Get phenotype details
+ * const rowCount = await mousePhenotypes.getTableRows();
+ * const category = await mousePhenotypes.getPhenotypeCategory(0);
+ * const label = await mousePhenotypes.getPhenotypeLabel(0);
+ *
+ * // View biological models
+ * await mousePhenotypes.clickBiologicalModelsDrawer(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `mousephenotypes`
  */
 export class MousePhenotypesSection {
   constructor(private page: Page) {}

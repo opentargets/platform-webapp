@@ -2,7 +2,33 @@ import type { Locator, Page } from "@playwright/test";
 import { fillPolling } from "../../../../utils/fillPolling";
 
 /**
- * Interactor for Pharmacogenomics section
+ * Interactor for the Pharmacogenomics section on Target and Drug pages.
+ *
+ * Displays genetic variants that affect drug response, sourced from PharmGKB.
+ * This information is crucial for personalized medicine and includes:
+ * - **Genotype/Haplotype**: Specific genetic variant or combination
+ * - **Drug**: Medication affected by the genetic variant
+ * - **Phenotype**: Clinical outcome or drug response
+ * - **Evidence level**: Strength of the pharmacogenomic association
+ * - **Gene**: The gene containing the variant
+ *
+ * @example
+ * ```typescript
+ * const pharmaco = new PharmacogenomicsSection(page);
+ * await pharmaco.waitForLoad();
+ *
+ * // Get pharmacogenomic associations
+ * const rowCount = await pharmaco.getTableRows();
+ * const genotype = await pharmaco.getGenotypeId(0);
+ * const drugName = await pharmaco.getDrugName(0, 0);
+ *
+ * // Navigate to related pages
+ * await pharmaco.clickDrugLink(0, 0);
+ * await pharmaco.clickGeneLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `pharmacogenetics`
  */
 export class PharmacogenomicsSection {
   constructor(private page: Page) {}
@@ -98,7 +124,6 @@ export class PharmacogenomicsSection {
 
   async clickGeneLink(rowIndex: number): Promise<void> {
     const link = await this.getGeneLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
     await link.click();
   }
 
@@ -120,7 +145,6 @@ export class PharmacogenomicsSection {
 
   async clickPhenotypeLink(rowIndex: number): Promise<void> {
     const link = await this.getPhenotypeLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
     await link.click();
   }
 

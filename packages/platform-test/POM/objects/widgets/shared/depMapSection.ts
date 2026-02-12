@@ -1,8 +1,31 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Cancer DepMap section on Target page
- * Displays gene essentiality data from DepMap as a visualization plot
+ * Interactor for the Cancer DepMap (Dependency Map) section on Target pages.
+ *
+ * Displays gene essentiality data from the Broad Institute's DepMap project,
+ * showing how essential a gene is for cancer cell survival across different
+ * cell lines and cancer types. The visualization helps identify:
+ * - **Essential genes**: Required for cell survival (potential drug targets)
+ * - **Non-essential genes**: Not required for survival
+ * - **Cancer-specific dependencies**: Genes essential only in certain cancer types
+ *
+ * Data is derived from genome-wide CRISPR-Cas9 knockout screens.
+ *
+ * @example
+ * ```typescript
+ * const depMap = new DepMapSection(page);
+ * await depMap.waitForLoad();
+ *
+ * // Check if essentiality plot is displayed
+ * const plotVisible = await depMap.isPlotVisible();
+ *
+ * // Export data
+ * await depMap.clickExportData();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `depmapessentiality`
  */
 export class DepMapSection {
   constructor(private page: Page) {}

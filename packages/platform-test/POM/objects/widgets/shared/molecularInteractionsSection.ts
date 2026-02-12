@@ -1,9 +1,35 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Molecular Interactions section on Target page
- * Displays protein-protein interactions with tabs for different sources (IntAct, Signor, Reactome, String)
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Molecular Interactions section on Target pages.
+ *
+ * Displays protein-protein interactions (PPIs) from multiple curated databases,
+ * organized in tabs by data source:
+ * - **IntAct**: Experimentally validated physical interactions
+ * - **Signor**: Causal signaling relationships
+ * - **Reactome**: Pathway-based functional interactions
+ * - **String**: Predicted and experimental interaction networks
+ *
+ * Each interaction includes confidence scores, interaction types, and literature evidence.
+ *
+ * @example
+ * ```typescript
+ * const interactions = new MolecularInteractionsSection(page);
+ * await interactions.waitForLoad();
+ *
+ * // Switch between data sources
+ * await interactions.clickIntactTab();
+ * await interactions.clickSignorTab();
+ *
+ * // Search interactions
+ * await interactions.search("MAPK");
+ *
+ * // Download data
+ * await interactions.clickDataDownloader();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `interactions`
  */
 export class MolecularInteractionsSection {
   constructor(private page: Page) {}

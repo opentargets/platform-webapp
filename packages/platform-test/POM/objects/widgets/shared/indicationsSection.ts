@@ -1,7 +1,32 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Indications section
+ * Interactor for the Indications section on Drug pages.
+ *
+ * Displays therapeutic indications (approved uses) for a drug, sourced from
+ * ChEMBL and other regulatory databases. Information includes:
+ * - **Indication name**: Disease or condition the drug treats
+ * - **Max phase**: Highest clinical trial phase reached
+ * - **References**: Links to supporting regulatory sources
+ *
+ * Shows both approved indications and those in clinical development.
+ *
+ * @example
+ * ```typescript
+ * const indications = new IndicationsSection(page);
+ * await indications.waitForLoad();
+ *
+ * // Get indication details
+ * const rowCount = await indications.getTableRows();
+ * const indicationName = await indications.getIndicationName(0);
+ * const maxPhase = await indications.getMaxPhase(0);
+ *
+ * // Navigate to disease page
+ * await indications.clickIndicationLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `indications`
  */
 export class IndicationsSection {
   constructor(private page: Page) {}

@@ -267,6 +267,30 @@ test.describe("Study Page - GWAS Study", () => {
       }
     });
 
+    test("Credible sets link is clickable in the table", async ({ page }) => {
+      const gwasCredibleSets = new GWASCredibleSetsSection(page);
+      await gwasCredibleSets.waitForSectionLoad();
+
+      const isTableVisible = await gwasCredibleSets.isTableVisible();
+
+      if (isTableVisible) {
+        const rowCount = await gwasCredibleSets.getRowCount();
+
+        if (rowCount > 0) {
+          const credibleSetId = await gwasCredibleSets.getCredibleSetId(0);
+          test.expect(credibleSetId).toBeTruthy();
+
+          // Click credible set link
+          await gwasCredibleSets.clickCredibleSetLink(0);
+          await page.waitForURL("**/credible-set/**");
+
+          // Verify we're on the correct credible set page using URL
+          test.expect(page.url()).toContain("/credible-set/");
+          test.expect(page.url()).toContain(credibleSetId);
+        }
+      }
+    });
+
     test("GWAS Credible Sets table displays data", async ({ page }) => {
       const gwasCredibleSets = new GWASCredibleSetsSection(page);
       await gwasCredibleSets.waitForSectionLoad();

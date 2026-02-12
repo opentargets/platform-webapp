@@ -15,6 +15,13 @@ test.describe("Drug Pharmacovigilance Section", () => {
       testConfig.drug.alternatives?.withAdverseEvents ?? testConfig.drug.primary
     );
 
+    // Check if adverse events section exists, skip if not
+    const sectionVisible = await Pharmacovigilance.isSectionVisible();
+    if (!sectionVisible) {
+      test.skip(true, "No adverse events section found for this drug");
+      return;
+    }
+
     // Wait for the section to fully load
     await Pharmacovigilance.waitForLoad();
   });

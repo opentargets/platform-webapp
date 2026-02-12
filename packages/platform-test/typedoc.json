@@ -1,0 +1,26 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["POM/objects/widgets"],
+  "entryPointStrategy": "expand",
+  "out": "docs/widgets-api",
+  "name": "Platform Test Widgets API",
+  "readme": "docs/WIDGETS_README.md",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "disableSources": false,
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "categoryOrder": ["AOTF", "CredibleSet", "shared", "Study", "Variant", "*"],
+  "groupOrder": ["Classes", "Functions", "Variables", "*"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "searchInComments": true,
+  "searchInDocuments": true,
+  "plugin": [],
+  "exclude": ["**/index.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "tsconfig": "tsconfig.docs.json"
+}

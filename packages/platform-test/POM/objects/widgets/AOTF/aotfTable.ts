@@ -1,5 +1,23 @@
 import type { Locator, Page } from "@playwright/test";
 
+/**
+ * Interactor for the Association On-The-Fly (AOTF) Table component.
+ *
+ * The AOTF table displays target-disease associations with scores across
+ * different data types. It supports multiple sections (Pinned, Uploaded, Core)
+ * and provides functionality for sorting, filtering, and pagination.
+ *
+ * @example
+ * ```typescript
+ * const table = new AotfTable(page);
+ * await table.waitForTableLoad();
+ * const rowCount = await table.getRowCount();
+ * const entityName = await table.getEntityName(0);
+ * ```
+ *
+ * @category AOTF
+ * @remarks Section ID: `associations-table`
+ */
 export class AotfTable {
   page: Page;
 

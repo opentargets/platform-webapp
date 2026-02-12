@@ -9,6 +9,10 @@ import { PhenotypesSection } from "../../../POM/objects/widgets/Phenotypes/pheno
 
 test.describe("Disease Profile Page", () => {
   test.beforeEach(async ({ page, baseURL, testConfig }) => {
+    //if no disease id, skip all tests
+    if (!testConfig.disease.primary) {
+      test.skip();
+    }
     await page.goto(`${baseURL}/disease/${testConfig.disease.primary}`);
   });
 

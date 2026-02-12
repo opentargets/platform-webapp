@@ -1,9 +1,37 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Comparative Genomics section on Target page
- * Displays orthologues and paralogues with a chart and table view
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Comparative Genomics section on Target pages.
+ *
+ * Displays evolutionary conservation data showing homologous genes across species.
+ * Data is sourced from Ensembl Compara and includes:
+ * - **Orthologues**: Genes in other species that evolved from a common ancestor
+ * - **Paralogues**: Genes within the same species arising from gene duplication
+ * - **Homology types**: One-to-one, one-to-many, many-to-many relationships
+ * - **Sequence identity**: Percentage similarity between protein sequences
+ *
+ * The section supports two visualization modes:
+ * - **Chart view**: Phylogenetic tree visualization of homologues
+ * - **Table view**: Detailed tabular data with search and pagination
+ *
+ * @example
+ * ```typescript
+ * const compGenomics = new ComparativeGenomicsSection(page);
+ * await compGenomics.waitForLoad();
+ *
+ * // Switch between views
+ * await compGenomics.switchToChartView();
+ * const chartVisible = await compGenomics.isChartVisible();
+ *
+ * await compGenomics.switchToTableView();
+ * await compGenomics.search("mouse");
+ *
+ * // Download data
+ * await compGenomics.clickDataDownloader();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `compgenomics`
  */
 export class ComparativeGenomicsSection {
   constructor(private page: Page) {}
