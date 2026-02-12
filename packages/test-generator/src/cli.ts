@@ -7,15 +7,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { detect } from './detector';
 import { generateTestsForWidget } from './generator';
-import { TestGeneratorConfig, DEFAULT_CONFIG, GenerationResult, WidgetInfo } from './types';
+import { generateTestsForPage } from './generator/page-orchestrator';
+import { TestGeneratorConfig, DEFAULT_CONFIG, GenerationResult, WidgetInfo, PageInfo, PageGenerationResult } from './types';
 
 function printUsage(): void {
   console.log(`
 Test Generator CLI
 
 Usage:
-  test-generator detect [options]    Detect new widgets in PR
-  test-generator generate [options]  Generate tests for detected widgets
+  test-generator detect [options]    Detect new widgets and pages in PR
+  test-generator generate [options]  Generate tests for detected widgets and pages
   test-generator --help              Show this help message
 
 Options:
@@ -24,22 +25,29 @@ Options:
   --dry-run                 Don't write any files
   --verbose                 Show detailed output
   --skip-data-testids       Skip adding data-testid attributes
-  --output-file <path>      Write detected widgets to JSON file
-  --widgets-file <path>     Read widgets from JSON file (for generate command)
+  --output-file <path>      Write detected widgets to JSON file (detect command)
+  --pages-output-file <path> Write detected pages to JSON file (detect command)
+  --widgets-file <path>     Read widgets from JSON file (generate command)
+  --pages-file <path>       Read pages from JSON file (generate command)
+  --skip-widgets            Skip widget generation (only generate page tests)
+  --skip-pages              Skip page generation (only generate widget tests)
 
 Environment Variables:
   ANTHROPIC_API_KEY         API key for Claude (required for generate)
   GITHUB_TOKEN              GitHub token for PR access
   
 Examples:
-  # Detect new widgets in a PR
-  test-generator detect --base-branch main --output-file widgets.json
+  # Detect new widgets and pages in a PR
+  test-generator detect --base-branch main --output-file detected.json
   
   # Generate tests for detected widgets
   test-generator generate --widgets-file widgets.json
   
+  # Generate tests for pages only
+  test-generator generate --pages-file pages.json --skip-widgets
+  
   # Detect and generate in one step
-  test-generator detect --output-file widgets.json && test-generator generate --widgets-file widgets.json
+  test-generator detect --output-file detected.json && test-generator generate --widgets-file detected.json
 `);
 }
 
@@ -52,7 +60,11 @@ function parseArgs(args: string[]): {
     verbose: boolean;
     skipDataTestIds: boolean;
     outputFile?: string;
+    pagesOutputFile?: string;
     widgetsFile?: string;
+    pagesFile?: string;
+    skipWidgets: boolean;
+    skipPages: boolean;
     help: boolean;
   };
 } {
@@ -64,7 +76,11 @@ function parseArgs(args: string[]): {
     verbose: false,
     skipDataTestIds: false,
     outputFile: undefined as string | undefined,
+    pagesOutputFile: undefined as string | undefined,
     widgetsFile: undefined as string | undefined,
+    pagesFile: undefined as string | undefined,
+    skipWidgets: false,
+    skipPages: false,
     help: false,
   };
 
@@ -89,8 +105,20 @@ function parseArgs(args: string[]): {
       case '--output-file':
         options.outputFile = args[++i];
         break;
+      case '--pages-output-file':
+        options.pagesOutputFile = args[++i];
+        break;
       case '--widgets-file':
         options.widgetsFile = args[++i];
+        break;
+      case '--pages-file':
+        options.pagesFile = args[++i];
+        break;
+      case '--skip-widgets':
+        options.skipWidgets = true;
+        break;
+      case '--skip-pages':
+        options.skipPages = true;
         break;
       case '--help':
       case '-h':
@@ -103,30 +131,59 @@ function parseArgs(args: string[]): {
 }
 
 async function runDetect(options: ReturnType<typeof parseArgs>['options']): Promise<void> {
-  console.log('🔍 Detecting new widgets...\n');
+  console.log('🔍 Detecting new widgets and pages...\n');
 
   const result = detect(options.baseBranch);
   const widgets = result.widgets;
+  const pages = result.pages;
 
-  if (widgets.length === 0) {
-    console.log('✅ No new widgets detected.');
-    return;
-  }
-
-  console.log(`Found ${widgets.length} new widget(s):\n`);
-
-  for (const widget of widgets) {
-    console.log(`  📦 ${widget.name} (${widget.entity})`);
-    if (options.verbose) {
-      console.log(`     Path: ${widget.path}`);
-      console.log(`     Files: ${Object.keys(widget.sources || {}).join(', ')}`);
+  // Report widgets
+  if (!options.skipWidgets) {
+    if (widgets.length === 0) {
+      console.log('✅ No new widgets detected.');
+    } else {
+      console.log(`Found ${widgets.length} new widget(s):\n`);
+      for (const widget of widgets) {
+        console.log(`  📦 ${widget.name} (${widget.entity})`);
+        if (options.verbose) {
+          console.log(`     Path: ${widget.path}`);
+          console.log(`     Files: ${Object.keys(widget.sources || {}).join(', ')}`);
+        }
+      }
     }
   }
 
-  if (options.outputFile) {
+  // Report pages
+  if (!options.skipPages) {
+    if (pages.length === 0) {
+      console.log('✅ No new pages detected.');
+    } else {
+      console.log(`\nFound ${pages.length} new page(s):\n`);
+      for (const page of pages) {
+        console.log(`  📄 ${page.name} (${page.type})`);
+        if (options.verbose) {
+          console.log(`     Path: ${page.path}`);
+          console.log(`     Route: ${page.route || 'unknown'}`);
+          if (page.tabs && page.tabs.length > 0) {
+            console.log(`     Tabs: ${page.tabs.map(t => t.name).join(', ')}`);
+          }
+          console.log(`     Files: ${Object.keys(page.sources || {}).join(', ')}`);
+        }
+      }
+    }
+  }
+
+  // Save outputs
+  if (options.outputFile && !options.skipWidgets) {
     const outputPath = path.resolve(options.outputFile);
     fs.writeFileSync(outputPath, JSON.stringify(widgets, null, 2));
     console.log(`\n📝 Saved widget info to ${outputPath}`);
+  }
+
+  if (options.pagesOutputFile && !options.skipPages) {
+    const pagesPath = path.resolve(options.pagesOutputFile);
+    fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2));
+    console.log(`📝 Saved page info to ${pagesPath}`);
   }
 }
 
@@ -137,22 +194,44 @@ async function runGenerate(options: ReturnType<typeof parseArgs>['options']): Pr
     process.exit(1);
   }
 
-  let widgets: WidgetInfo[];
-  if (options.widgetsFile) {
-    const widgetsPath = path.resolve(options.widgetsFile);
-    if (!fs.existsSync(widgetsPath)) {
-      console.error(`❌ Error: Widgets file not found: ${widgetsPath}`);
-      process.exit(1);
+  let widgets: WidgetInfo[] = [];
+  let pages: PageInfo[] = [];
+
+  // Load or detect widgets
+  if (!options.skipWidgets) {
+    if (options.widgetsFile) {
+      const widgetsPath = path.resolve(options.widgetsFile);
+      if (!fs.existsSync(widgetsPath)) {
+        console.error(`❌ Error: Widgets file not found: ${widgetsPath}`);
+        process.exit(1);
+      }
+      widgets = JSON.parse(fs.readFileSync(widgetsPath, 'utf-8'));
+    } else {
+      console.log('🔍 Detecting widgets...\n');
+      const result = detect(options.baseBranch);
+      widgets = result.widgets;
     }
-    widgets = JSON.parse(fs.readFileSync(widgetsPath, 'utf-8'));
-  } else {
-    console.log('🔍 Detecting widgets...\n');
-    const result = detect(options.baseBranch);
-    widgets = result.widgets;
   }
 
-  if (widgets.length === 0) {
-    console.log('✅ No widgets to process.');
+  // Load or detect pages
+  if (!options.skipPages) {
+    if (options.pagesFile) {
+      const pagesPath = path.resolve(options.pagesFile);
+      if (!fs.existsSync(pagesPath)) {
+        console.error(`❌ Error: Pages file not found: ${pagesPath}`);
+        process.exit(1);
+      }
+      pages = JSON.parse(fs.readFileSync(pagesPath, 'utf-8'));
+    } else if (!options.widgetsFile) {
+      // Only detect if we haven't loaded widgets from file (to avoid detecting twice)
+      console.log('🔍 Detecting pages...\n');
+      const result = detect(options.baseBranch);
+      pages = result.pages;
+    }
+  }
+
+  if (widgets.length === 0 && pages.length === 0) {
+    console.log('✅ No widgets or pages to process.');
     return;
   }
 
@@ -164,42 +243,74 @@ async function runGenerate(options: ReturnType<typeof parseArgs>['options']): Pr
     skipDataTestIds: options.skipDataTestIds,
   };
 
-  console.log(`🚀 Generating tests for ${widgets.length} widget(s)...\n`);
+  // Process widgets
+  const widgetResults: GenerationResult[] = [];
+  if (widgets.length > 0) {
+    console.log(`🚀 Generating tests for ${widgets.length} widget(s)...\n`);
 
-  const results: GenerationResult[] = [];
+    for (const widget of widgets) {
+      console.log(`\n📦 Processing widget: ${widget.name}...`);
 
-  for (const widget of widgets) {
-    console.log(`\n📦 Processing ${widget.name}...`);
+      const result = await generateTestsForWidget(widget, config);
+      widgetResults.push(result);
 
-    const result = await generateTestsForWidget(widget, config);
-    results.push(result);
-
-    if (result.success) {
-      console.log(`  ✅ Success`);
-      if (result.interactorPath) {
-        console.log(`     Interactor: ${result.interactorPath}`);
+      if (result.success) {
+        console.log(`  ✅ Success`);
+        if (result.interactorPath) {
+          console.log(`     Interactor: ${result.interactorPath}`);
+        }
+        if (result.testPath) {
+          console.log(`     Test: ${result.testPath}`);
+        }
+        if (result.dataTestIds && result.dataTestIds.applied > 0) {
+          console.log(`     Data-testids added: ${result.dataTestIds.applied}`);
+        }
+      } else {
+        console.log(`  ❌ Failed: ${result.error}`);
       }
-      if (result.testPath) {
-        console.log(`     Test: ${result.testPath}`);
+    }
+  }
+
+  // Process pages
+  const pageResults: PageGenerationResult[] = [];
+  if (pages.length > 0) {
+    console.log(`\n🚀 Generating tests for ${pages.length} page(s)...\n`);
+
+    for (const page of pages) {
+      console.log(`\n📄 Processing page: ${page.name}...`);
+
+      const result = await generateTestsForPage(page, config);
+      pageResults.push(result);
+
+      if (result.success) {
+        console.log(`  ✅ Success`);
+        if (result.interactorPath) {
+          console.log(`     Interactor: ${result.interactorPath}`);
+        }
+        if (result.testPath) {
+          console.log(`     Test: ${result.testPath}`);
+        }
+      } else {
+        console.log(`  ❌ Failed: ${result.error}`);
       }
-      if (result.dataTestIds && result.dataTestIds.applied > 0) {
-        console.log(`     Data-testids added: ${result.dataTestIds.applied}`);
-      }
-    } else {
-      console.log(`  ❌ Failed: ${result.error}`);
     }
   }
 
   // Summary
-  const successful = results.filter((r) => r.success).length;
-  const failed = results.filter((r) => !r.success).length;
+  const successfulWidgets = widgetResults.filter((r) => r.success).length;
+  const failedWidgets = widgetResults.filter((r) => !r.success).length;
+  const successfulPages = pageResults.filter((r) => r.success).length;
+  const failedPages = pageResults.filter((r) => !r.success).length;
 
   console.log('\n📊 Summary:');
-  console.log(`   Total: ${results.length}`);
-  console.log(`   Successful: ${successful}`);
-  console.log(`   Failed: ${failed}`);
+  if (widgets.length > 0) {
+    console.log(`   Widgets: ${widgetResults.length} total, ${successfulWidgets} successful, ${failedWidgets} failed`);
+  }
+  if (pages.length > 0) {
+    console.log(`   Pages: ${pageResults.length} total, ${successfulPages} successful, ${failedPages} failed`);
+  }
 
-  if (failed > 0) {
+  if (failedWidgets > 0 || failedPages > 0) {
     process.exit(1);
   }
 }

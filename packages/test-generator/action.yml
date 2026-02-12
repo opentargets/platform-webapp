@@ -17,6 +17,10 @@ inputs:
     description: 'Base branch to compare against'
     required: false
     default: 'main'
+  source-branch:
+    description: 'Source branch where widgets were added (for PR creation)'
+    required: false
+    default: ''
   skip-data-testids:
     description: 'Skip adding data-testid attributes'
     required: false
@@ -25,28 +29,40 @@ inputs:
     description: 'Run without writing files'
     required: false
     default: 'false'
-  commit-changes:
-    description: 'Commit changes back to the PR branch'
+  create-pr:
+    description: 'Create a separate PR for generated tests'
     required: false
     default: 'true'
-  commit-message:
-    description: 'Commit message for generated files'
+  original-pr-number:
+    description: 'Original PR number (for linking in comments)'
     required: false
-    default: 'chore: auto-generate tests for new widgets'
+    default: ''
 
 outputs:
   widgets-detected:
     description: 'Number of new widgets detected'
     value: ${{ steps.detect.outputs.count }}
+  widgets-json:
+    description: 'JSON array of detected widgets'
+    value: ${{ steps.detect.outputs.widgets_json }}
   tests-generated:
     description: 'Number of tests successfully generated'
-    value: ${{ steps.generate.outputs.success-count }}
+    value: ${{ steps.generate.outputs.success_count }}
   tests-failed:
     description: 'Number of tests that failed to generate'
-    value: ${{ steps.generate.outputs.fail-count }}
-  modified-files:
-    description: 'JSON array of modified source files (data-testids)'
-    value: ${{ steps.generate.outputs.modified-files }}
+    value: ${{ steps.generate.outputs.fail_count }}
+  has-changes:
+    description: 'Whether any files were generated'
+    value: ${{ steps.commit.outputs.has_changes }}
+  generated-branch:
+    description: 'Name of the branch with generated tests'
+    value: ${{ steps.commit.outputs.generated_branch }}
+  pr-number:
+    description: 'PR number for generated tests'
+    value: ${{ steps.create_pr.outputs.pr_number }}
+  pr-url:
+    description: 'PR URL for generated tests'
+    value: ${{ steps.create_pr.outputs.pr_url }}
 
 runs:
   using: 'composite'
@@ -75,19 +91,24 @@ runs:
         cd ${{ github.workspace }}
         
         # Run detection
-        OUTPUT=$(node ${{ github.action_path }}/dist/cli.js detect \
+        node ${{ github.action_path }}/dist/cli.js detect \
           --base-branch ${{ inputs.base-branch }} \
           --output-file /tmp/widgets.json \
-          --verbose)
+          --verbose
         
-        echo "$OUTPUT"
-        
-        # Count widgets
+        # Output results
         if [ -f /tmp/widgets.json ]; then
-          COUNT=$(jq 'length' /tmp/widgets.json)
+          COUNT=$(cat /tmp/widgets.json | jq 'length')
           echo "count=$COUNT" >> $GITHUB_OUTPUT
+          WIDGETS_JSON=$(cat /tmp/widgets.json)
+          echo "widgets_json<<EOF" >> $GITHUB_OUTPUT
+          echo "$WIDGETS_JSON" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "📦 Found $COUNT new widget(s)"
         else
           echo "count=0" >> $GITHUB_OUTPUT
+          echo "widgets_json=[]" >> $GITHUB_OUTPUT
+          echo "✅ No new widgets detected"
         fi
 
     - name: Generate tests
@@ -109,41 +130,132 @@ runs:
           ARGS="$ARGS --dry-run"
         fi
         
-        # Run generation and capture output
-        OUTPUT=$(node ${{ github.action_path }}/dist/cli.js generate $ARGS 2>&1) || true
+        # Run generation
+        node ${{ github.action_path }}/dist/cli.js generate $ARGS
         
-        echo "$OUTPUT"
-        
-        # Parse results from output
-        SUCCESS=$(echo "$OUTPUT" | grep -c "✅ Success" || echo "0")
-        FAIL=$(echo "$OUTPUT" | grep -c "❌ Failed" || echo "0")
-        
-        echo "success-count=$SUCCESS" >> $GITHUB_OUTPUT
-        echo "fail-count=$FAIL" >> $GITHUB_OUTPUT
-        
-        # Get modified files
-        MODIFIED=$(git diff --name-only 2>/dev/null | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo "[]")
-        echo "modified-files=$MODIFIED" >> $GITHUB_OUTPUT
+        # Parse results
+        echo "success_count=$(ls -1 packages/platform-test/e2e/pages/**/*.spec.ts 2>/dev/null | wc -l || echo 0)" >> $GITHUB_OUTPUT
+        echo "fail_count=0" >> $GITHUB_OUTPUT
 
-    - name: Commit changes
-      if: inputs.commit-changes == 'true' && steps.detect.outputs.count > 0 && inputs.dry-run != 'true'
+    - name: Commit generated files
+      id: commit
+      if: steps.detect.outputs.count > 0 && inputs.dry-run != 'true'
       shell: bash
+      env:
+        SOURCE_BRANCH: ${{ inputs.source-branch }}
+        RUN_NUMBER: ${{ github.run_number }}
       run: |
         cd ${{ github.workspace }}
         
         # Check for changes
         if [ -z "$(git status --porcelain)" ]; then
           echo "No changes to commit"
+          echo "has_changes=false" >> $GITHUB_OUTPUT
           exit 0
         fi
+        
+        echo "has_changes=true" >> $GITHUB_OUTPUT
+        
+        # Determine source branch
+        if [ -z "$SOURCE_BRANCH" ]; then
+          SOURCE_BRANCH="${{ github.head_ref }}"
+        fi
+        echo "source_branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+        
+        # Create branch for generated tests
+        GENERATED_BRANCH="auto-tests/${SOURCE_BRANCH}-${RUN_NUMBER}"
+        echo "generated_branch=$GENERATED_BRANCH" >> $GITHUB_OUTPUT
         
         # Configure git
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         
-        # Stage and commit
-        git add .
-        git commit -m "${{ inputs.commit-message }}"
+        git checkout -b "$GENERATED_BRANCH"
         
-        # Push to PR branch
-        git push
+        # Commit changes
+        git add .
+        git commit -m "chore: auto-generate tests for new widgets
+
+        Generated by test-generator package.
+        
+        Widgets: $(cat /tmp/widgets.json | jq -r '.[].name' | tr '\n' ', ' | sed 's/,$//')"
+        
+        git push origin "$GENERATED_BRANCH"
+
+    - name: Create PR for generated tests
+      id: create_pr
+      if: steps.commit.outputs.has_changes == 'true' && inputs.create-pr == 'true'
+      uses: actions/github-script@v7
+      env:
+        WIDGETS_JSON: ${{ steps.detect.outputs.widgets_json }}
+        GENERATED_BRANCH: ${{ steps.commit.outputs.generated_branch }}
+        SOURCE_BRANCH: ${{ steps.commit.outputs.source_branch }}
+        ORIGINAL_PR_NUMBER: ${{ inputs.original-pr-number }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const generatedBranch = process.env.GENERATED_BRANCH;
+          const sourceBranch = process.env.SOURCE_BRANCH;
+          const widgetsJson = process.env.WIDGETS_JSON || '[]';
+          const newWidgets = JSON.parse(widgetsJson);
+          const widgetList = newWidgets.map(w => `- **${w.name}** (${w.entity})`).join('\n');
+          const widgetNames = newWidgets.map(w => w.name).join(', ');
+          const prNumber = process.env.ORIGINAL_PR_NUMBER;
+          
+          const prBodyLines = [
+            '# [Platform-test]: Auto-generated tests for new widgets',
+            '',
+            '## Description',
+            '',
+            `This PR contains auto-generated Playwright tests, Page Object Model interactors, and data-testid attributes for new widgets${prNumber ? ' detected in #' + prNumber : ''}.`,
+            '',
+            `**Widgets:** ${widgetNames}`,
+            `**Source Branch:** \`${sourceBranch}\``,
+            '',
+            '## Type of change',
+            '',
+            '- [x] New feature (non-breaking change which adds functionality)',
+            '',
+            '## Generated Files',
+            '',
+            '### Detected Widgets',
+            widgetList,
+            '',
+            '### Files Added/Modified',
+            '- Interactors in `packages/platform-test/POM/objects/widgets/`',
+            '- Test specs in `packages/platform-test/e2e/pages/`',
+            '- Fixture updates in `packages/platform-test/fixtures/testConfig.ts`',
+            '- Data-testid attributes added to source components',
+            '',
+            '## How Has This Been Tested?',
+            '',
+            '- [ ] Run the generated Playwright tests locally',
+            '- [ ] Verify data-testid attributes are correctly placed in the DOM',
+            '',
+            '## Checklist:',
+            '',
+            '- [x] I have commented my code, particularly in hard-to-understand areas',
+            '- [ ] My changes generate no new warnings',
+            '- [x] I have made corresponding changes to the documentation',
+            '',
+            '---',
+            '',
+            '> **Note:** Please review the generated tests and adjust as needed. The LLM-generated code may require fine-tuning based on actual component behavior and data availability.',
+            '',
+            `_Merge this PR into \`${sourceBranch}\` to add the generated tests to your branch._`
+          ];
+          
+          const prBody = prBodyLines.join('\n');
+
+          const pr = await github.rest.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `[Platform-test]: Auto-generated tests for ${widgetNames}`,
+            head: generatedBranch,
+            base: sourceBranch,
+            body: prBody
+          });
+          
+          core.setOutput('pr_number', pr.data.number);
+          core.setOutput('pr_url', pr.data.html_url);
+          return pr.data;

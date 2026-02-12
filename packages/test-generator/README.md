@@ -190,15 +190,22 @@ npx test-generator generate --widgets-file widgets.json --skip-data-testids
 
 ## GitHub Action Usage
 
-Add to your workflow:
+The action detects new widgets in a PR and creates a **separate PR** with generated tests.
+
+### Basic Usage
 
 ```yaml
 name: Generate Tests
 
 on:
   pull_request:
+    types: [opened]
     paths:
       - 'packages/sections/src/**'
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   generate:
@@ -215,7 +222,40 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           base-branch: main
-          commit-changes: 'true'
+          source-branch: ${{ github.head_ref }}
+          original-pr-number: ${{ github.event.pull_request.number }}
+```
+
+### Manual Dispatch
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to generate tests for'
+        required: true
+        type: string
+      pr_number:
+        description: 'Original PR number (optional)'
+        required: false
+        type: string
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.target_branch }}
+
+      - name: Generate Tests
+        uses: ./packages/test-generator
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          source-branch: ${{ inputs.target_branch }}
+          original-pr-number: ${{ inputs.pr_number }}
 ```
 
 ### Action Inputs
@@ -225,19 +265,36 @@ jobs:
 | `anthropic-api-key` | Anthropic API key for Claude | Yes | - |
 | `github-token` | GitHub token for PR access | No | `${{ github.token }}` |
 | `base-branch` | Base branch to compare against | No | `main` |
+| `source-branch` | Source branch where widgets were added | No | `${{ github.head_ref }}` |
 | `skip-data-testids` | Skip adding data-testid attributes | No | `false` |
 | `dry-run` | Run without writing files | No | `false` |
-| `commit-changes` | Commit changes back to PR branch | No | `true` |
-| `commit-message` | Commit message for generated files | No | `chore: auto-generate tests...` |
+| `create-pr` | Create a separate PR for generated tests | No | `true` |
+| `original-pr-number` | Original PR number (for linking in comments) | No | - |
 
 ### Action Outputs
 
 | Output | Description |
 |--------|-------------|
 | `widgets-detected` | Number of new widgets detected |
+| `widgets-json` | JSON array of detected widgets |
 | `tests-generated` | Number of tests successfully generated |
 | `tests-failed` | Number of tests that failed to generate |
-| `modified-files` | JSON array of modified source files |
+| `has-changes` | Whether any files were generated |
+| `generated-branch` | Name of the branch with generated tests |
+| `pr-number` | PR number for generated tests |
+| `pr-url` | PR URL for generated tests |
+
+### How It Works
+
+1. **Detection**: Compares current branch to `base-branch` to find new widget directories
+2. **Generation**: Uses Claude LLM to analyze widgets and generate tests
+3. **Branch Creation**: Creates a new branch `auto-tests/{source-branch}-{run-number}`
+4. **PR Creation**: Opens a PR from the generated branch to the source branch
+
+The generated PR follows the project's PR template format with:
+- Description of detected widgets
+- List of generated files
+- Checklist for review
 
 ## Programmatic API
 

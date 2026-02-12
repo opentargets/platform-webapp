@@ -24,8 +24,12 @@ export {
   
   // Page detection
   detectNewPages,
-  type PageInfo,
+  readPageSources,
+  getAllPages,
   
   // Main detect function
   detect,
 } from './detector/index';
+
+// Re-export types from types module
+export type { PageInfo, WidgetInfo } from './types';

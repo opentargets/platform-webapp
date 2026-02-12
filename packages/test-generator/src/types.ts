@@ -14,6 +14,55 @@ export interface WidgetInfo {
   suggestedTestIdChanges?: TestIdChanges;
 }
 
+export interface PageInfo {
+  type: 'page';
+  name: string;
+  path: string;
+  /** URL route pattern, e.g., "/target/:ensgId" */
+  route?: string;
+  /** Main page component file name */
+  mainComponent?: string;
+  /** Source code of page files */
+  sources?: Record<string, string>;
+  /** Paths to source files */
+  sourcePaths?: Record<string, string>;
+  /** Tabs/routes defined in the page */
+  tabs?: PageTab[];
+  /** Entity type this page handles (target, disease, etc.) */
+  entityType?: string;
+}
+
+export interface PageTab {
+  name: string;
+  route: string;
+  label: string;
+}
+
+export interface PageAnalysis {
+  /** Components used in the page */
+  components: string[];
+  /** Whether page has tab navigation */
+  hasTabs: boolean;
+  /** Tab definitions if hasTabs */
+  tabs: PageTab[];
+  /** External links in header */
+  hasExternalLinks: boolean;
+  /** Has GraphQL query */
+  hasQuery: boolean;
+  /** URL parameters */
+  urlParams: string[];
+  /** Header elements */
+  headerElements: string[];
+  /** Routing pattern */
+  routePattern: string;
+  /** Entity type (target, disease, drug, etc.) */
+  entityType: string;
+  /** Existing data-testid attributes */
+  existingTestIds: string[];
+  /** Reasoning from LLM */
+  reasoning: string;
+}
+
 export interface TestIdChanges {
   changes: TestIdChange[];
 }
@@ -62,6 +111,15 @@ export interface GenerationResult {
   testPath?: string;
 }
 
+export interface PageGenerationResult {
+  page: string;
+  success: boolean;
+  error?: string;
+  analysis?: Partial<PageAnalysis>;
+  interactorPath?: string;
+  testPath?: string;
+}
+
 export interface TestGeneratorConfig {
   /** Anthropic API key for LLM-based generation */
   anthropicApiKey?: string;
@@ -96,6 +154,12 @@ export const DEFAULT_CONFIG: Required<TestGeneratorConfig> = {
   skipDataTestIds: false,
   dryRun: false,
   verbose: false,
+};
+
+export const PAGE_CONFIG = {
+  pagesPath: 'apps/platform/src/pages',
+  pageInteractorOutputPath: 'packages/platform-test/POM/page',
+  pageTestOutputPath: 'packages/platform-test/e2e/pages',
 };
 
 export const ENTITY_TYPES = [

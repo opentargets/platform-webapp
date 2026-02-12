@@ -25,5 +25,11 @@ export { loadExamples, writeGeneratedFiles, type Examples } from './file-io';
 // Data-testid application
 export { applyDataTestIds, type DataTestIdResult } from './testid-applicator';
 
-// Main orchestrator
+// Main widget orchestrator
 export { generateTestsForWidget } from './orchestrator';
+
+// Page generation
+export { analyzePage } from './page-analyzer';
+export { generatePageInteractor, type PageExamples } from './page-interactor-generator';
+export { generatePageTest } from './page-test-generator';
+export { generateTestsForPage } from './page-orchestrator';

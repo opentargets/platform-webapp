@@ -27,13 +27,16 @@ export {
 export { detectNewWidgets } from './widget-detector';
 
 // Page detection
-export { detectNewPages, type PageInfo } from './page-detector';
+export { detectNewPages, readPageSources, getAllPages } from './page-detector';
+
+// Re-export types used by this module
+export type { PageInfo, WidgetInfo, TestGeneratorConfig } from '../types';
 
 // Re-export main detect function
-import { WidgetInfo, TestGeneratorConfig } from '../types';
+import { WidgetInfo, PageInfo, TestGeneratorConfig } from '../types';
 import { getNewFiles } from './git-utils';
 import { detectNewWidgets } from './widget-detector';
-import { detectNewPages, PageInfo } from './page-detector';
+import { detectNewPages } from './page-detector';
 
 /**
  * Main detection function - detects both widgets and pages

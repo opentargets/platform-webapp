@@ -33,6 +33,13 @@ export {
   applyDataTestIds,
   type DataTestIdResult,
   
-  // Main orchestrator
+  // Main widget orchestrator
   generateTestsForWidget,
+  
+  // Page generation
+  analyzePage,
+  generatePageInteractor,
+  generatePageTest,
+  generateTestsForPage,
+  type PageExamples,
 } from './generator/index';
