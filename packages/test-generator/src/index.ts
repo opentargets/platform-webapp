@@ -13,10 +13,6 @@ export type {
   PageGenerationResult,
   TestGeneratorConfig,
   GenerationResult,
-  DataTestIdSuggestion,
-  ASTProcessingResult,
-  ASTFileResult,
-  ASTProcessingOptions,
 } from './types';
 
 export { DEFAULT_CONFIG, PAGE_CONFIG } from './types';

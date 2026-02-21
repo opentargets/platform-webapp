@@ -133,10 +133,13 @@ export function extractComponentNames(code: string): string[] {
  * 
  * This now only extracts existing test IDs and component names.
  * Data-testid suggestions are handled by the LLM.
+ * 
+ * @deprecated This function is kept for backwards compatibility. 
+ * Use the LLM-based analysis in generator/analyzer.ts instead.
  */
 export function analyzeComponentForTestIds(
   code: string,
-  _sectionId: string,
+  _sectionId?: string,
   _targetComponents?: TargetComponent[]
 ): AnalysisResult {
   const ast = parseCode(code);
