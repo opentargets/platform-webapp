@@ -1,6 +1,9 @@
 import { ReactElement } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { SearchProvider, PrivateRoute, OTConfigurationProvider, FromGeneticsModal } from "ui";
+import { ReportBuilderProvider } from "ui/src/providers/ReportBuilderProvider";
+import ReportBuilder from "ui/src/components/Report/ReportBuilder";
+import ReportToggleButton from "ui/src/components/Report/ReportToggleButton";
 import { getConfig } from "@ot/config";
 
 import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
@@ -23,14 +26,17 @@ const config = getConfig();
 
 function App(): ReactElement {
   return (
-    <OTConfigurationProvider config={config}>
-      <SearchProvider
-        searchQuery={SEARCH_QUERY}
-        searchPlaceholder="Search for a target, drug, disease, or phenotype..."
-      >
-        <Router>
-          <FromGeneticsModal />
-          <Routes>
+    <ReportBuilderProvider>
+      <OTConfigurationProvider config={config}>
+        <SearchProvider
+          searchQuery={SEARCH_QUERY}
+          searchPlaceholder="Search for a target, drug, disease, or phenotype..."
+        >
+          <Router>
+            <FromGeneticsModal />
+            <ReportBuilder />
+            <ReportToggleButton />
+            <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/api" element={<APIPage />} />
             <Route path="/search" element={<SearchPage />} />
@@ -55,6 +61,7 @@ function App(): ReactElement {
         </Router>
       </SearchProvider>
     </OTConfigurationProvider>
+    </ReportBuilderProvider>
   );
 }
 

@@ -1,6 +1,5 @@
 import classNames from "classnames";
 import { Avatar, Box, Card, CardContent, Divider, Grid, Skeleton, Typography } from "@mui/material";
-import { Element } from "react-scroll";
 
 import ErrorBoundary from "../ErrorBoundary";
 import SectionError from "./SectionError";
@@ -8,9 +7,9 @@ import sectionStyles from "./sectionStyles";
 import { createShortName } from "../Summary/utils";
 import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
-import { ReactNode, useEffect, useState } from "react";
+import { AddToReportButton } from "../Report";
+import { ReactNode, useState } from "react";
 import { VIEW } from "@ot/constants";
-import { SummaryLoader } from "../PublicationsDrawer";
 
 type definitionType = {
   id: string;
@@ -26,12 +25,10 @@ type SectionItemProps = {
   renderDescription: () => ReactNode;
   renderChart?: () => ReactNode;
   renderBody: () => ReactNode;
-  // check tags
-  tags: string[];
+  tags?: string[];
   chipText: string;
   entity: string;
   showEmptySection: boolean;
-  // check use
   showContentLoading: boolean;
   loadingMessage: string;
   defaultView: string;
@@ -49,51 +46,40 @@ function SectionItem({
   loadingMessage = "Loading data. This may take some time...",
   renderChart,
   defaultView = VIEW.table,
+  tags = [],
 }: SectionItemProps): ReactNode {
   const classes = sectionStyles();
-  const { loading, error, data } = request;
+  const { loading, error, data } = request as any;
   const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
-  const [showDelayLoadingMessage, setShowDelayLoadingMessage] = useState(false);
-
-  // TODO: refactor to avoid re-renders
-
-  // useEffect(() => {
-  //   const delayLoaderTimer = setTimeout(() => setShowDelayLoadingMessage(true), 5000);
-
-  //   return () => {
-  //     clearTimeout(delayLoaderTimer);
-  //   };
-  // }, []);
 
   if (data && entity && data[entity]) {
-    hasData = definition.hasData(data[entity]);
+    hasData = definition.hasData((data as any)[entity]);
   }
 
   if (!hasData && !showEmptySection && !loading) return null;
 
   function getSelectedView(): ReactNode {
-    if (error) return <SectionError error={error} />;
+    if (error) return <SectionError message={String(error)} />;
     if (showContentLoading && loading)
       return (
         <>
           <Box sx={{ display: "flex", justifyContent: "center" }}>
-            {showDelayLoadingMessage && loadingMessage}
+            {loadingMessage}
           </Box>
           <Skeleton sx={{ height: 390 }} variant="rectangular" />
         </>
       );
     if (selectedView === VIEW.table) return renderBody();
     if (selectedView === VIEW.chart && renderChart) return renderChart();
-    // if (!loading && !hasData && showEmptySection)
     return <div className={classes.noData}> No data available for this {entity}. </div>;
   }
 
   return (
     <Grid item xs={12}>
       <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
-        <Element name={definition.id}>
+        <div id={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>
               <Box className={classes.cardHeaderContainer}>
@@ -131,18 +117,29 @@ function SectionItem({
                     {renderDescription()}
                   </Typography>
                 </Box>
-                {/* CHART VIEW SWITCH */}
-                <Box>
+                {/* CHART VIEW SWITCH & ADD TO REPORT */}
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                   {renderChart && (
                     <SectionViewToggle defaultValue={defaultView} viewChange={setSelectedView} />
                   )}
+                  <AddToReportButton
+                    definition={{ ...definition, entity } as unknown as any}
+                    request={{ loading, error, data } as unknown as any}
+                    renderedBody={renderBody()}
+                    renderedChart={renderChart?.()}
+                    description={renderDescription()}
+                    entity={entity}
+                    selectedView={selectedView as unknown as "table" | "chart"}
+                    tags={tags}
+                    chipText={chipText}
+                  />
                 </Box>
               </Box>
               <Divider />
               <CardContent className={classes.cardContent}>{getSelectedView()}</CardContent>
             </ErrorBoundary>
           </Card>
-        </Element>
+        </div>
       </section>
     </Grid>
   );
