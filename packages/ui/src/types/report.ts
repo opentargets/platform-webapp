@@ -13,6 +13,8 @@ export interface ReportSectionDefinition {
   shortName?: string;
   entity: string;
   isPrivate?: boolean;
+  // Component reference for reconstruction
+  componentPath?: string; // e.g., "credibleSet/EnhancerToGenePredictions"
 }
 
 export interface ReportRequest {
@@ -33,6 +35,14 @@ export interface ReportSection {
   
   // Original GraphQL request (for re-running queries later)
   request: ReportRequest;
+  
+  // Entity ID for this section (e.g., disease ID, target ID, variant ID)
+  // Needed to reconstruct queries for Body components
+  entityId?: string;
+  
+  // Entity label/name (e.g., disease name, target symbol, variant ID display)
+  // Needed for descriptions and visualizations in Body components
+  entityLabel?: string;
   
   // Rendered content - captured at time of addition
   renderedContent: {

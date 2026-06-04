@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import { Alert, Collapse, Tab, Tabs, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { SectionItem, useApolloClient, Link } from "ui";
+import { SectionItem, useApolloClient, Link, useReportSectionContext } from "ui";
 import { testPPPaccess } from "@ot/utils";
 import { PPP_WEB_URL } from "@ot/constants";
 
@@ -14,6 +14,10 @@ import GtexTab, { getData as getGtexData } from "./GtexTab";
 import SummaryTab, { getData as getSummaryData } from "./SummaryTab";
 
 function Section({ id: ensgId, label: symbol, entity }) {
+  const reportContext = useReportSectionContext();
+  ensgId = reportContext?.entityId || ensgId;
+  symbol = reportContext?.entityLabel || symbol;
+  
   const defaultTab = "summary";
   const [showAlert, setShowAlert] = useState(true);
   const [showPPPMessage, setShowPPPMessage] = useState(false);

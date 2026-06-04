@@ -1,4 +1,4 @@
-import { Link, SectionItem, OtTable } from "ui";
+import { Link, SectionItem, OtTable, useReportSectionContext } from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
@@ -44,6 +44,10 @@ const getColumns = classes => [
 ];
 
 function Body({ label, id: efoId, entity }) {
+  const reportContext = useReportSectionContext();
+  efoId = reportContext?.entityId || efoId;
+  label = reportContext?.entityLabel || label;
+  
   const classes = useStyles();
   const request = useQuery(OT_PROJECTS_QUERY, {
     variables: { efoId },

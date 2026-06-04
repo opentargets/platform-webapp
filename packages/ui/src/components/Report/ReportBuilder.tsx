@@ -39,7 +39,9 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
+import { ReportSectionContext } from "../../providers/ReportSectionContext";
 import { ReportSection } from "../../types/report";
+import { useReportSectionContent } from "../../hooks/useReportSectionRenderer";
 
 /**
  * Draggable Report Section Component
@@ -53,7 +55,10 @@ const DraggableReportSection: React.FC<{
     id: section.reportSectionId,
   });
 
-  console.log(section, 'rendering DraggableReportSection');
+  const content = useReportSectionContent(section);
+  const hasContent = !!(content.body && content.description);
+
+  console.log(section, section.selectedView, content.body, content.chart, 'rendering DraggableReportSection');
 
   return (
     <Card
@@ -106,7 +111,11 @@ const DraggableReportSection: React.FC<{
             </Box>
 
             <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-              {section.renderedContent.description}
+              {content.description || (
+                <em style={{ color: "#999" }}>
+                  Description not available (navigate to page to load)
+                </em>
+              )}
             </Typography>
 
             {/* Rendered Content Preview */}
@@ -124,9 +133,25 @@ const DraggableReportSection: React.FC<{
                 },
               }}
             >
-              {section.selectedView === "table"
-                ? section.renderedContent.body
-                : section.renderedContent.chart}
+              <ReportSectionContext.Provider 
+                value={{ 
+                  entityId: section.entityId, 
+                  entityLabel: section.entityLabel, 
+                  entityType: section.definition.entity 
+                }}
+              >
+                {content.body || content.chart}
+              </ReportSectionContext.Provider>
+              {!hasContent && (
+                <Box sx={{ textAlign: "center", color: "#999", py: 4 }}>
+                  <Typography variant="body2">
+                    Content not available
+                  </Typography>
+                  <Typography variant="caption">
+                    Navigate to the {section.definition.entity} page to load section content
+                  </Typography>
+                </Box>
+              )}
             </Box>
 
             {/* Controls */}
@@ -187,10 +212,10 @@ const DroppableSectionsList: React.FC<{
  * Main Report Builder Component
  */
 interface ReportBuilderProps {
-  drawerWidth?: number;
+  drawerWidth?: number | string;
 }
 
-export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = 600 }) => {
+export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90vw" }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editName, setEditName] = useState("");

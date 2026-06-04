@@ -8,8 +8,9 @@ import { createShortName } from "../Summary/utils";
 import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
 import { AddToReportButton } from "../Report";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { VIEW } from "@ot/constants";
+import { registerSectionRenderer } from "../../hooks/useReportSectionRenderer";
 
 type definitionType = {
   id: string;
@@ -53,6 +54,16 @@ function SectionItem({
   const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
+
+  // Register render functions for this section so reports can re-render from storage
+  // Must be before early return to follow Rules of Hooks
+  useEffect(() => {
+    registerSectionRenderer(definition.id, (storedDefinition, storedRequest) => ({
+      renderBody,
+      renderChart,
+      renderDescription,
+    }));
+  }, [definition.id, renderBody, renderChart, renderDescription]);
 
   if (data && entity && data[entity]) {
     hasData = definition.hasData((data as any)[entity]);
@@ -125,9 +136,9 @@ function SectionItem({
                   <AddToReportButton
                     definition={{ ...definition, entity } as unknown as any}
                     request={{ loading, error, data } as unknown as any}
-                    renderedBody={renderBody()}
-                    renderedChart={renderChart?.()}
-                    description={renderDescription()}
+                    renderedBody={renderBody}
+                    renderedChart={renderChart}
+                    description={renderDescription}
                     entity={entity}
                     selectedView={selectedView as unknown as "table" | "chart"}
                     tags={tags}

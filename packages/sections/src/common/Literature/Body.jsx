@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { LiteratureProvider, useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
 import { Box } from "@mui/material";
-import { SectionItem, useApolloClient } from "ui";
+import { SectionItem, useApolloClient, useReportSectionContext, registerSectionComponent} from "ui";
 import PublicationsList from "./PublicationsList";
 import Description from "./Description";
 import Entities from "./Entities";
 import Category from "./Category";
 import CountInfo from "./CountInfo";
 import { DateFilter } from "./DateFilter";
+import { definition } from ".";
 
 function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
   const [requestObj, setRequestObj] = useState({});
@@ -71,6 +72,7 @@ function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
 }
 
 function Body({ definition, name, id, entity, BODY_QUERY }) {
+
   return (
     <LiteratureProvider>
       <LiteratureList
@@ -84,4 +86,10 @@ function Body({ definition, name, id, entity, BODY_QUERY }) {
   );
 }
 
+registerSectionComponent('bibliography1', Body, {
+  id: "bibliography1",
+  name: "Bibliography",
+  shortName: "B",
+  hasData: data => (data.similarEntities?.length || 0) > 0,
+});
 export default Body;

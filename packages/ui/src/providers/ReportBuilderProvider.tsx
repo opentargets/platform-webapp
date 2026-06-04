@@ -1,7 +1,55 @@
 import { createScopedContext } from "@ot/utils";
 import { Report, ReportSection, ReportSectionViewType, ReportSectionDefinition, ReportRequest } from "../types/report";
 import { v4 as uuidv4 } from "uuid";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
+
+/**
+ * Local Storage Utilities
+ */
+const REPORTS_STORAGE_KEY = "ot-reports";
+
+interface SerializedReport extends Omit<Report, 'sections'> {
+  sections: Omit<ReportSection, 'renderedContent'>[];
+}
+
+const serializeReports = (reports: Map<string, Report>): Record<string, SerializedReport> => {
+  const serialized: Record<string, SerializedReport> = {};
+  reports.forEach((report, id) => {
+    serialized[id] = {
+      ...report,
+      sections: report.sections.map(({ renderedContent, ...section }) => section),
+    };
+  });
+  return serialized;
+};
+
+const deserializeReports = (data: Record<string, SerializedReport>): Map<string, SerializedReport> => {
+  const reports = new Map<string, SerializedReport>();
+  Object.entries(data).forEach(([id, report]) => {
+    reports.set(id, report);
+  });
+  return reports;
+};
+
+const saveReportsToStorage = (reports: Map<string, Report>): void => {
+  try {
+    const serialized = serializeReports(reports);
+    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(serialized));
+  } catch (error) {
+    console.error("Failed to save reports to localStorage:", error);
+  }
+};
+
+const loadReportsFromStorage = (): Map<string, SerializedReport> | null => {
+  try {
+    const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
+    if (!stored) return null;
+    return deserializeReports(JSON.parse(stored));
+  } catch (error) {
+    console.error("Failed to load reports from localStorage:", error);
+    return null;
+  }
+};
 
 /**
  * Report Builder State
@@ -27,6 +75,8 @@ type ReportBuilderAction =
       type: "addSectionToReport";
       definition: ReportSectionDefinition;
       request: ReportRequest;
+      entityId?: string;
+      entityLabel?: string;
       renderedContent: {
         body: ReactNode;
         chart?: ReactNode;
@@ -68,6 +118,11 @@ type ReportBuilderAction =
     }
   | {
       type: "clearReport";
+    }
+  | {
+      type: "initializeFromStorage";
+      reports: Map<string, SerializedReport>;
+      activeReportId: string | null;
     };
 
 /**
@@ -126,6 +181,8 @@ export const { ScopedProvider, useScopedState, useScopedDispatch } =
           reportSectionId: uuidv4(),
           definition: action.definition,
           request: action.request,
+          entityId: action.entityId,
+          entityLabel: action.entityLabel,
           renderedContent: action.renderedContent,
           selectedView: action.selectedView || "table",
           addedAt: Date.now(),
@@ -312,10 +369,81 @@ export const { ScopedProvider, useScopedState, useScopedDispatch } =
           totalSectionsCount: state.totalSectionsCount - clearedSectionCount,
         };
       },
+
+      /**
+       * Initialize reports from localStorage
+       */
+      initializeFromStorage: (state: ReportBuilderState, action: Extract<ReportBuilderAction, { type: "initializeFromStorage" }>) => {
+        const reportsWithSections = new Map<string, Report>();
+        let totalSections = 0;
+
+        action.reports.forEach((serializedReport, id) => {
+          const sections: ReportSection[] = serializedReport.sections.map((section) => ({
+            ...section,
+            renderedContent: {
+              body: null,
+              chart: undefined,
+              description: null,
+            },
+          }));
+
+          totalSections += sections.length;
+
+          reportsWithSections.set(id, {
+            id: serializedReport.id,
+            name: serializedReport.name,
+            createdAt: serializedReport.createdAt,
+            updatedAt: serializedReport.updatedAt,
+            entityContext: serializedReport.entityContext,
+            description: serializedReport.description,
+            sections,
+          });
+        });
+
+        return {
+          ...state,
+          reports: reportsWithSections,
+          activeReportId: action.activeReportId,
+          totalSectionsCount: totalSections,
+        };
+      },
     },
   });
 
-export const ReportBuilderProvider = ScopedProvider as React.FC<{ children: ReactNode }>;
+export const ReportBuilderProvider = ({ children }: { children: ReactNode }) => {
+  return (
+    <OriginalReportBuilderProvider>
+      <ReportBuilderPersistenceWrapper>{children}</ReportBuilderPersistenceWrapper>
+    </OriginalReportBuilderProvider>
+  );
+};
+
+const ReportBuilderPersistenceWrapper = ({ children }: { children: ReactNode }) => {
+  const state = useScopedState() as unknown as ReportBuilderState;
+  const dispatch = useScopedDispatch() as unknown as (action: ReportBuilderAction) => void;
+
+  // Load reports from localStorage on mount
+  useEffect(() => {
+    const storedReports = loadReportsFromStorage();
+    if (storedReports && storedReports.size > 0) {
+      const activeReportId = Array.from(storedReports.keys())[0];
+      dispatch({
+        type: "initializeFromStorage",
+        reports: storedReports,
+        activeReportId,
+      });
+    }
+  }, [dispatch]);
+
+  // Persist reports to localStorage whenever they change
+  useEffect(() => {
+    saveReportsToStorage(state.reports);
+  }, [state.reports]);
+
+  return <>{children}</>;
+};
+
+const OriginalReportBuilderProvider = ScopedProvider as React.FC<{ children: ReactNode }>;
 export const useReportBuilderState = useScopedState;
 export const useReportBuilderDispatch = useScopedDispatch;
 

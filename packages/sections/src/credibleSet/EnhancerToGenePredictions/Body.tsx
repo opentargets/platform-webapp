@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client";
 import { Link, SectionItem, OtTable, Tooltip } from "ui";
 import { naLabel } from "@ot/constants";
 import { definition } from ".";
+import { registerSectionComponent } from "ui";
 
 import Description from "./Description";
 import ENHANCER_TO_GENE_PREDICTIONS_QUERY from "./EnhancerToGenePredictionsQuery.gql";
@@ -188,5 +189,8 @@ function Body({ id, entity }: BodyProps) {
     />
   );
 }
+
+// Register this section component globally so it can be reconstructed from storage
+registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

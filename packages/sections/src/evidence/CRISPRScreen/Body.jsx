@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { useQuery } from "@apollo/client";
-import { Tooltip, SectionItem, TooltipStyledLabel, OtTable, PublicationsDrawer, Link } from "ui";
+import { Tooltip, SectionItem, TooltipStyledLabel, OtTable, PublicationsDrawer, Link, useReportSectionContext } from "ui";
 import Description from "./Description";
 import {
   dataTypesMap,

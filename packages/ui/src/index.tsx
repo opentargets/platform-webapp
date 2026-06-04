@@ -103,3 +103,7 @@ export { default as PlatformApiProvider } from "./providers/PlatformApiProvider"
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerProvider";
 export * from "./providers/ViewerInteractionProvider";
+export * from "./providers/SectionRegistry";
+export * from "./providers/ReportBuilderProvider";
+export * from "./providers/ReportSectionContext";
+export { AddToReportButton, ReportBuilder, ReportToggleButton } from "./components/Report";

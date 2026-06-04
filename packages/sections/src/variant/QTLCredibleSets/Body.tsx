@@ -9,6 +9,7 @@ import {
   ClinvarStars,
   useBatchQuery,
   Navigate,
+  useReportSectionContext,
 } from "ui";
 import { Box, Chip } from "@mui/material";
 
@@ -249,6 +250,9 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactNode {
+  const reportContext = useReportSectionContext();
+  id = reportContext?.entityId || id;
+  
   const variables = {
     variantId: id,
     size: table5HChunkSize,

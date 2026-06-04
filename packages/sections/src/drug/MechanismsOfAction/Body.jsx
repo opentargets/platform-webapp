@@ -1,7 +1,7 @@
 import { v1 } from "uuid";
 import { Fragment } from "react";
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, TableDrawer, OtTable, useReportSectionContext } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

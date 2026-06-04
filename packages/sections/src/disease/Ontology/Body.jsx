@@ -1,4 +1,4 @@
-import { SectionItem } from "ui";
+import { SectionItem, registerSectionComponent, useReportSectionContext } from "ui";
 
 import Description from "./Description";
 import ONTOLOGY_QUERY from "./OntologyQuery.gql";
@@ -8,6 +8,10 @@ import { definition } from ".";
 import OntologySubgraph from "./OntologySubgraph";
 
 function Body({ id: efoId, label, entity }) {
+  const reportContext = useReportSectionContext();
+  efoId = reportContext?.entityId || efoId;
+  label = reportContext?.entityLabel || label;
+  
   const request = useQuery(ONTOLOGY_QUERY, {
     variables: { efoId },
   });
@@ -29,5 +33,8 @@ function Body({ id: efoId, label, entity }) {
     />
   );
 }
+
+// Register at module level
+registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

@@ -19,9 +19,9 @@ import { ReportSectionDefinition, ReportRequest, ReportSectionViewType } from ".
 interface AddToReportButtonProps {
   definition: ReportSectionDefinition;
   request: ReportRequest;
-  renderedBody: ReactNode;
-  renderedChart?: ReactNode;
-  description: ReactNode;
+  renderedBody: () => ReactNode;
+  renderedChart?: () => ReactNode;
+  description: () => ReactNode;
   entity: string;
   selectedView: ReportSectionViewType;
   tags?: string[];
@@ -65,29 +65,22 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
 
   const handleAddToActiveReport = () => {
     if (activeReport) {
-
-        console.log(renderedBody, renderedChart)
-      // Ensure rendered content is properly captured
-      const capturedBody = renderedBody ? (
-        <Box sx={{ width: "100%" }}>
-          {<renderedBody />}
-        </Box>
-      ) : null;
-      
-      const capturedChart = renderedChart ? (
-        <Box sx={{ width: "100%" }}>
-          {renderedChart}
-        </Box>
-      ) : null;
+      // Extract entity ID and label from the request data
+      // The entity ID is the identifier for the current entity (disease ID, gene ID, etc.)
+      // The entity label is the name/symbol (used in descriptions and visualizations)
+      const entityId = request?.data?.[entity]?.id;
+      const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
 
       dispatch({
         type: "addSectionToReport",
         definition,
         request,
+        entityId,
+        entityLabel,
         renderedContent: {
-          body: capturedBody,
-          chart: capturedChart,
-          description: description,
+          body: renderedBody(),
+          chart: renderedChart?.(),
+          description: description(),
         },
         selectedView,
         tags,
@@ -109,27 +102,20 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
 
     // After creating report, add the section
     setTimeout(() => {
-      // Ensure rendered content is properly captured
-      const capturedBody = renderedBody ? (
-        <Box sx={{ width: "100%" }}>
-          {renderedBody}
-        </Box>
-      ) : null;
-      
-      const capturedChart = renderedChart ? (
-        <Box sx={{ width: "100%" }}>
-          {renderedChart}
-        </Box>
-      ) : null;
+      // Extract entity ID and label from the request data
+      const entityId = request?.data?.[entity]?.id;
+      const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
 
       dispatch({
         type: "addSectionToReport",
         definition,
         request,
+        entityId,
+        entityLabel,
         renderedContent: {
-          body: capturedBody,
-          chart: capturedChart,
-          description,
+          body: renderedBody(),
+          chart: renderedChart?.(),
+          description: description(),
         },
         selectedView,
         tags,

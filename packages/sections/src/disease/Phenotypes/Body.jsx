@@ -1,12 +1,12 @@
 import { useQuery } from "@apollo/client";
 import _ from "lodash";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTable, registerSectionComponent, useReportSectionContext } from "ui";
+import { definition } from "."
 
 import Description from "./Description";
 import { naLabel } from "@ot/constants";
 
 import PHENOTYPES_BODY_QUERY from "./PhenotypesQuery.gql";
-import { definition } from ".";
 
 const evidenceTypeDescription = {
   IEA: "Inferred from Electronic Annotations (IEA) are extracted by parsing the Clinical Features sections of the Online Mendelian Inheritance in Man resource",
@@ -222,5 +222,8 @@ function Body({ label: name, id: efoId, entity }) {
     />
   );
 }
+
+// Register at module level
+registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

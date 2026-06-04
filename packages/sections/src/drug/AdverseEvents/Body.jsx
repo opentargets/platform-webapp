@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client";
 import { Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import _ from "lodash";
-import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader } from "ui";
+import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader, useReportSectionContext } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

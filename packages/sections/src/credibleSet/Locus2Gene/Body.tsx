@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { SectionItem, HeatmapTable } from "ui";
+import { SectionItem, HeatmapTable, registerSectionComponent } from "ui";
 import { useQuery } from "@apollo/client";
 import { definition } from ".";
 import LOCUS2GENE_QUERY from "./Locus2GeneQuery.gql";
@@ -36,4 +36,5 @@ function Body({ id, entity }: BodyProps): ReactNode {
     />
   );
 }
+registerSectionComponent(definition.id, Body, definition);
 export default Body;
