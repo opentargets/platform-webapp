@@ -62,7 +62,9 @@ export const getRenderFunctions = (section: ReportSection) => {
   }
 
   // Strategy 3: Try to reconstruct from registered component metadata
-  const componentData = getSectionComponent(section.definition.id);
+  // Use composite ID format "entity:sectionId" to match registerAllSections format
+  const compositeId = `${section.definition.entity}:${section.definition.id}`;
+  const componentData = getSectionComponent(compositeId);
   if (componentData) {
     const reconstructed = createRenderFunctionsFromMetadata(
       section.definition,
@@ -83,6 +85,7 @@ export const getRenderFunctions = (section: ReportSection) => {
         Section not available - no renderer found for {section.definition.name}
       </div>
     ),
+    renderChart: undefined,
     renderDescription: () => <div>Section not loaded</div>,
   };
 };
@@ -95,9 +98,9 @@ export const useReportSectionContent = (section: ReportSection) => {
   const renderers = getRenderFunctions(section);
 
   return {
-    body: renderers.renderBody?.(),
-    chart: renderers.renderChart?.(),
-    description: renderers.renderDescription?.(),
+    body: renderers.renderBody(),
+    chart: renderers.renderChart ? renderers.renderChart() : undefined,
+    description: renderers.renderDescription(),
   };
 };
 

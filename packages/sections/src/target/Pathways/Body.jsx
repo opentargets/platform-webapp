@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Link, OtTable } from "ui";
+import { SectionItem, Link, OtTable, useReportQueryVariables } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarker } from "@fortawesome/free-solid-svg-icons";
 
@@ -39,7 +39,8 @@ function getColumns(symbol) {
 }
 
 function Body({ id: ensemblId, label: symbol, entity }) {
-  const variables = { ensemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId };
   const request = useQuery(PATHWAYS_QUERY, {
     variables,
   });

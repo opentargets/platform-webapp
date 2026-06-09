@@ -1,8 +1,7 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, OtTable, Tooltip } from "ui";
+import { Link, SectionItem, OtTable, Tooltip, useReportQueryVariables } from "ui";
 import { naLabel } from "@ot/constants";
 import { definition } from ".";
-import { registerSectionComponent } from "ui";
 
 import Description from "./Description";
 import ENHANCER_TO_GENE_PREDICTIONS_QUERY from "./EnhancerToGenePredictionsQuery.gql";
@@ -146,7 +145,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     studyLocusId: id,
   };
 
@@ -189,8 +189,5 @@ function Body({ id, entity }: BodyProps) {
     />
   );
 }
-
-// Register this section component globally so it can be reconstructed from storage
-registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

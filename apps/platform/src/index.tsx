@@ -1,3 +1,8 @@
+// ⚠️ Register all section components FIRST before any other setup
+// This populates the component registry so reports can render immediately
+import { registerAllSections } from "sections";
+registerAllSections();
+
 import * as ReactDOMClient from "react-dom/client";
 import TagManager from "react-gtm-module";
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";

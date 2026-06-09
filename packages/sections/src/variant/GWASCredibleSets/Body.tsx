@@ -280,7 +280,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     variantId: id,
     size: table5HChunkSize,
     index: 0,

@@ -59,7 +59,8 @@ const columns = [
 ];
 
 function Body({ id: chemblId, label: name, entity }) {
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const request = useQuery(MECHANISMS_OF_ACTION_QUERY, {
     variables,
   });

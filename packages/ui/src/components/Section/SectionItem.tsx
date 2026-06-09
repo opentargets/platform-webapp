@@ -50,7 +50,8 @@ function SectionItem({
   tags = [],
 }: SectionItemProps): ReactNode {
   const classes = sectionStyles();
-  const { loading, error, data } = request as any;
+  const { loading, error, data, variables } = request as any;
+  console.log({ request, loading, error, data, variables }, "SectionItem request details");
   const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
@@ -135,7 +136,7 @@ function SectionItem({
                   )}
                   <AddToReportButton
                     definition={{ ...definition, entity } as unknown as any}
-                    request={{ loading, error, data } as unknown as any}
+                    request={{ loading, error, data, variables } as unknown as any}
                     renderedBody={renderBody}
                     renderedChart={renderChart}
                     description={renderDescription}

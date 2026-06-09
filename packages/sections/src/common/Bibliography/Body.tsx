@@ -6,7 +6,7 @@ import { Autocomplete, Box, Button, Chip, Grid, TextField, Typography } from "@m
 
 import Publication from "./Publication";
 import { getAggregationsData, getPublicationsData } from "./Api";
-import { SectionItem, useReportSectionContext, registerSectionComponent } from "ui";
+import { SectionItem, useReportSectionContext } from "ui";
 import Description from "./Description";
 import { definition } from ".";
 
@@ -334,8 +334,5 @@ const Body: FC<BodyProps> = ({ id, label, definition }) => {
     />
   );
 };
-
-// Register at module level
-registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

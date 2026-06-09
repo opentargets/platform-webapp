@@ -104,6 +104,9 @@ export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvide
 export * from "./providers/ViewerProvider";
 export * from "./providers/ViewerInteractionProvider";
 export * from "./providers/SectionRegistry";
+export * from "./providers/ComponentRegistry";
+export * from "./providers/ComponentRegistryInit";
 export * from "./providers/ReportBuilderProvider";
 export * from "./providers/ReportSectionContext";
+export * from "./providers/ReportQueryVariablesProvider";
 export { AddToReportButton, ReportBuilder, ReportToggleButton } from "./components/Report";

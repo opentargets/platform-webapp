@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { LiteratureProvider, useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
 import { Box } from "@mui/material";
-import { SectionItem, useApolloClient, useReportSectionContext, registerSectionComponent} from "ui";
+import { SectionItem, useApolloClient, useReportSectionContext } from "ui";
 import PublicationsList from "./PublicationsList";
 import Description from "./Description";
 import Entities from "./Entities";
@@ -86,10 +86,4 @@ function Body({ definition, name, id, entity, BODY_QUERY }) {
   );
 }
 
-registerSectionComponent('bibliography1', Body, {
-  id: "bibliography1",
-  name: "Bibliography",
-  shortName: "B",
-  hasData: data => (data.similarEntities?.length || 0) > 0,
-});
 export default Body;

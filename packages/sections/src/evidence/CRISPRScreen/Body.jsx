@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { useQuery } from "@apollo/client";
-import { Tooltip, SectionItem, TooltipStyledLabel, OtTable, PublicationsDrawer, Link, useReportSectionContext } from "ui";
+import { Tooltip, SectionItem, TooltipStyledLabel, OtTable, PublicationsDrawer, Link, useReportSectionContext, useReportQueryVariables } from "ui";
 import Description from "./Description";
 import {
   dataTypesMap,
@@ -195,7 +195,8 @@ const exportColumns = [
 
 function Body({ id, label, entity }) {
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

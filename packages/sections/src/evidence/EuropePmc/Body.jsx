@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useLazyQuery } from "@apollo/client";
-import { SectionItem, Link, getPage, Table } from "ui";
+import { SectionItem, Link, getPage, Table, useReportQueryVariables } from "ui";
 
 import Description from "./Description";
 import { europePmcLiteratureQuery } from "@ot/utils";
@@ -106,7 +106,13 @@ function Body({ id, label, entity }) {
   const [pageSize, setPageSize] = useState(5);
   const [literatureData, setLiteratureData] = useState([]);
   const [newIds, setNewIds] = useState([]);
-  const variables = { ensemblId: ensgId, efoId, size: pageSize * pagesToFetch };
+  
+  const savedVariables = useReportQueryVariables();
+  const variables = {
+    ensemblId: savedVariables?.ensemblId || ensgId,
+    efoId: savedVariables?.efoId || efoId,
+    size: pageSize * pagesToFetch,
+  };
   const {
     loading: isLoading,
     error,

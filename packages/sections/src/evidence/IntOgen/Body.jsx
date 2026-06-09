@@ -2,7 +2,7 @@ import { Box, List, ListItem, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useQuery } from "@apollo/client";
 import { v1 } from "uuid";
-import { ChipList, Link, SectionItem, Tooltip, ScientificNotation, OtTable } from "ui";
+import { ChipList, Link, SectionItem, Tooltip, ScientificNotation, OtTable, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import methods from "./methods";
@@ -146,7 +146,8 @@ function Body({ id, label, entity }) {
   const classes = useStyles();
 
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

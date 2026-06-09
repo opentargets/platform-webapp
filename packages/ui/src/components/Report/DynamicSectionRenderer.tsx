@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { ReportSection } from "../types/report";
+import { ReportSection } from "../../types/report";
 
 /**
  * Dynamic Section Renderer
@@ -72,6 +72,7 @@ export const registerSectionComponent = (
 /**
  * Get a registered section component
  */
-export const getSectionComponent = (definitionId: string) => {
-  return sectionComponentRegistry.get(definitionId);
+export const getSectionComponent = (sectionId: string) => {
+  // sectionId should be in composite format "entity:sectionId"
+  return sectionComponentRegistry.get(sectionId);
 };

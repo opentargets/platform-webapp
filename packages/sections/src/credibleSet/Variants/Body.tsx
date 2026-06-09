@@ -7,6 +7,7 @@ import {
   OtTable,
   useBatchQuery,
   SectionLoader,
+  useReportQueryVariables,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";
@@ -180,7 +181,8 @@ type BodyProps = {
 };
 
 function Body({ id, leadVariantId, entity }: BodyProps) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     studyLocusId: id,
     size: table5HChunkSize,
     index: 0,

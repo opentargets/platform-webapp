@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { Typography } from "@mui/material";
-import { Link, Tooltip, SectionItem, OtTable } from "ui";
+import { Link, Tooltip, SectionItem, OtTable, useReportQueryVariables } from "ui";
 
 import {
   dataTypesMap,
@@ -92,7 +92,8 @@ const columns = [
 function Body({ id, label, entity }) {
   const { ensgId, efoId } = id;
 
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

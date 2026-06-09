@@ -4,6 +4,7 @@ import {
   useClinicalReportsMasterDetail,
   RecordsCards,
   ClinicalReportsMasterDetailFrame,
+  useReportQueryVariables,
 } from "ui";
 import { useCallback } from "react";
 import Description from "./Description";
@@ -12,7 +13,8 @@ import { definition } from ".";
 import IndicationsTable from "./IndicationsTable";
 
 function Body({ id: chemblId, label: name, entity }) {
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const request = useQuery(INDICATIONS_QUERY, { variables });
 
   const getClinicalReportsIds = useCallback(

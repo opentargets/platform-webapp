@@ -9,6 +9,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTable,
+  useReportQueryVariables,
 } from "ui";
 
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
@@ -143,7 +144,8 @@ const getColumns = label => [
 ];
 
 function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }) {
-  const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
 
   const request = useQuery(OPEN_TARGETS_GENETICS_QUERY, {
     variables,

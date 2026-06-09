@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 import _ from "lodash";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable, registerSectionComponent, useReportSectionContext } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTable, useReportSectionContext, useReportQueryVariables } from "ui";
 import { definition } from "."
 
 import Description from "./Description";
@@ -179,7 +179,8 @@ const columns = [
 ];
 
 function Body({ label: name, id: efoId, entity }) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     efoId,
     index: 0,
     size: 1000,
@@ -222,8 +223,5 @@ function Body({ label: name, id: efoId, entity }) {
     />
   );
 }
-
-// Register at module level
-registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

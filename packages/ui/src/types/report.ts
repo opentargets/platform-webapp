@@ -21,6 +21,9 @@ export interface ReportRequest {
   loading: boolean;
   error: any;
   data: Record<string, unknown>;
+  // GraphQL variables used to fetch this data
+  // Essential for reconstructing/re-running the query when loading from storage
+  variables?: Record<string, unknown>;
 }
 
 /**
@@ -33,7 +36,8 @@ export interface ReportSection {
   // Widget definition and metadata
   definition: ReportSectionDefinition;
   
-  // Original GraphQL request (for re-running queries later)
+  // Original GraphQL request with data AND variables
+  // Variables are essential for reconstructing queries when loading from storage
   request: ReportRequest;
   
   // Entity ID for this section (e.g., disease ID, target ID, variant ID)

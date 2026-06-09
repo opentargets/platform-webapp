@@ -89,8 +89,8 @@ const getColumns = label => [
 
 function Body({ id, label, entity }) {
   const { ensgId, efoId } = id;
-
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

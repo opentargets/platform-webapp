@@ -1,4 +1,4 @@
-import { SectionItem, registerSectionComponent, useReportSectionContext } from "ui";
+import { SectionItem, useReportSectionContext } from "ui";
 
 import Description from "./Description";
 import ONTOLOGY_QUERY from "./OntologyQuery.gql";
@@ -33,8 +33,5 @@ function Body({ id: efoId, label, entity }) {
     />
   );
 }
-
-// Register at module level
-registerSectionComponent(definition.id, Body, definition);
 
 export default Body;

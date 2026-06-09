@@ -73,7 +73,8 @@ const columns = [
 ];
 
 function Body({ id: chemblId, label: name, entity }) {
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const request = useQuery(DRUG_WARNINGS_QUERY, {
     variables,
   });

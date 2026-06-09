@@ -288,6 +288,7 @@ function getColumns(label) {
 
 function Body({ id, label, entity }) {
   const { ensgId: ensemblId, efoId } = id;
+  const savedVariables = useReportQueryVariables();
   const [request, setRequest] = useState({ loading: true, data: null, error: false });
   const columns = getColumns(label);
 

@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client";
 import { Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import _ from "lodash";
-import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader, useReportSectionContext } from "ui";
+import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader, useReportSectionContext, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -69,7 +69,8 @@ const getColumns = (critVal, maxLlr, classes) => [
 
 function Body({ id: chemblId, label: name, entity }) {
   const classes = useStyles();
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const { loading, error, data, fetchMore } = useQuery(ADVERSE_EVENTS_QUERY, {

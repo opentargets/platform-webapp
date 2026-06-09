@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 
-import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable } from "ui";
+import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable, useReportQueryVariables } from "ui";
 import { makeStyles } from "@mui/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
@@ -148,7 +148,8 @@ function getColumns(classes, symbol) {
 
 function Body({ id: ensemblId, label: symbol, entity }) {
   const classes = useStyles();
-  const variables = { ensemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId };
   const request = useQuery(SAFETY_QUERY, { variables });
   return (
     <SectionItem
