@@ -248,7 +248,7 @@ export function Body({ id, label, entity }) {
       entity={entity}
       request={request}
       renderDescription={() => (
-        <Description symbol={label.symbol} diseaseName={label.name} data={request.data} />
+        <Description symbol={label?.symbol} diseaseName={label?.name} data={request?.data} />
       )}
       renderBody={() => {
         return (

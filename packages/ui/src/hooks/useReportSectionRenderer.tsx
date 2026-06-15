@@ -80,11 +80,14 @@ export const getRenderFunctions = (section: ReportSection) => {
 
   // Fallback if no method works
   return {
-    renderBody: () => (
+    renderBody: () => {
+      console.log('section.definition', section.definition);
+      return (
+
       <div style={{ padding: "16px", textAlign: "center", color: "#999" }}>
         Section not available - no renderer found for {section.definition.name}
       </div>
-    ),
+    )},
     renderChart: undefined,
     renderDescription: () => <div>Section not loaded</div>,
   };

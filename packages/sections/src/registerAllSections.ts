@@ -93,6 +93,7 @@ import * as EvidenceGene2Phenotype from "./evidence/Gene2Phenotype";
 import * as EvidenceIntOgen from "./evidence/IntOgen";
 import * as EvidenceReactome from "./evidence/Reactome";
 
+
 /**
  * Register all sections
  * Call this once during app initialization before any reports load
@@ -106,6 +107,8 @@ export const registerAllSections = () => {
     { entity: "disease", definition: DiseaseDrugs.definition, getBodyComponent: DiseaseDrugs.getBodyComponent },
     { entity: "disease", definition: DiseaseGWASStudies.definition, getBodyComponent: DiseaseGWASStudies.getBodyComponent },
     { entity: "disease", definition: DiseaseOTProjects.definition, getBodyComponent: DiseaseOTProjects.getBodyComponent },
+    { entity: 'disease', definition: EvidenceGeneBurden.definition, getBodyComponent: EvidenceGeneBurden.getBodyComponent },
+
 
     // Drug
     { entity: "drug", definition: DrugMechanismsOfAction.definition, getBodyComponent: DrugMechanismsOfAction.getBodyComponent },
