@@ -40,6 +40,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
 import { ReportSectionContext } from "../../providers/ReportSectionContext";
+import { ReportComponentStateProvider } from "../../providers/ReportComponentStateContext";
 import { ReportSection } from "../../types/report";
 import { useReportSectionContent } from "../../hooks/useReportSectionRenderer";
 
@@ -133,15 +134,17 @@ const DraggableReportSection: React.FC<{
                 },
               }}
             >
-              <ReportSectionContext.Provider 
-                value={{ 
-                  entityId: section.entityId, 
-                  entityLabel: section.entityLabel, 
-                  entityType: section.definition.entity 
-                }}
-              >
-                {content.body || content.chart}
-              </ReportSectionContext.Provider>
+              <ReportComponentStateProvider initialState={section.componentState}>
+                <ReportSectionContext.Provider 
+                  value={{ 
+                    entityId: section.entityId, 
+                    entityLabel: section.entityLabel, 
+                    entityType: section.definition.entity 
+                  }}
+                >
+                  {content.body || content.chart}
+                </ReportSectionContext.Provider>
+              </ReportComponentStateProvider>
               {!hasContent && (
                 <Box sx={{ textAlign: "center", color: "#999", py: 4 }}>
                   <Typography variant="body2">

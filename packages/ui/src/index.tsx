@@ -108,5 +108,6 @@ export * from "./providers/ComponentRegistry";
 export * from "./providers/ComponentRegistryInit";
 export * from "./providers/ReportBuilderProvider";
 export * from "./providers/ReportSectionContext";
+export * from "./providers/ReportComponentStateContext";
 export * from "./providers/ReportQueryVariablesProvider";
 export { AddToReportButton, ReportBuilder, ReportToggleButton } from "./components/Report";

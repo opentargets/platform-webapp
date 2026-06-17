@@ -51,20 +51,10 @@ function SectionItem({
 }: SectionItemProps): ReactNode {
   const classes = sectionStyles();
   const { loading, error, data, variables } = request as any;
-  console.log({ request, loading, error, data, variables }, "SectionItem request details");
   const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
 
-  // Register render functions for this section so reports can re-render from storage
-  // Must be before early return to follow Rules of Hooks
-  useEffect(() => {
-    registerSectionRenderer(definition.id, (storedDefinition, storedRequest) => ({
-      renderBody,
-      renderChart,
-      renderDescription,
-    }));
-  }, [definition.id, renderBody, renderChart, renderDescription]);
 
   if (data && entity && data[entity]) {
     hasData = definition.hasData((data as any)[entity]);

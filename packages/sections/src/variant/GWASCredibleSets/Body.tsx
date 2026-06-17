@@ -9,6 +9,7 @@ import {
   L2GScoreIndicator,
   useBatchQuery,
   Navigate,
+  useReportQueryVariables,
 } from "ui";
 import { Box, Chip } from "@mui/material";
 import { definition } from ".";

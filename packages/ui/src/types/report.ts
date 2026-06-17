@@ -55,6 +55,11 @@ export interface ReportSection {
     description: ReactNode;
   };
   
+  // Component state - filters, selected rows, sorting, etc.
+  // Captured when section is added to report
+  // Restored when section is displayed in report
+  componentState?: Record<string, any>;
+  
   // Current view preference for this section in the report
   selectedView: ReportSectionViewType;
   

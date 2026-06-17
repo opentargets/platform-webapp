@@ -138,7 +138,7 @@ const getColumns = label => [
             group: "literature",
           }))
         : [];
-      return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
+      return <PublicationsDrawer entries={entries} symbol={label?.symbol} name={label.name} />;
     },
   },
 ];

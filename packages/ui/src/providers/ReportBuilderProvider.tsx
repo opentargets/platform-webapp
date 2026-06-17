@@ -188,6 +188,7 @@ export const { ScopedProvider, useScopedState, useScopedDispatch } =
           addedAt: Date.now(),
           tags: action.tags,
           chipText: action.chipText,
+          componentState: action.componentState,
         };
 
         const newReports = new Map(state.reports);

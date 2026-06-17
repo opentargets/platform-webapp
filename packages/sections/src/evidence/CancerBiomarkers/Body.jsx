@@ -82,7 +82,7 @@ const getColumns = label => [
           }))
         : [];
 
-      return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
+      return <PublicationsDrawer entries={entries} symbol={label?.symbol} name={label.name} />;
     },
   },
 ];

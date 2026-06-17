@@ -63,6 +63,7 @@ export const getComponentAsync = async (
     // Dynamically import the component
     // This uses the manifest path to construct the correct import path
     const module = await import(
+      /* @vite-ignore */
       /* webpackChunkName: "[request]" */
       `../../../sections/src/${manifest.path}/Body`
     );

@@ -29,6 +29,8 @@ interface AddToReportButtonProps {
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium" | "large";
   showLabel?: boolean;
+  // Callback to capture component state (filters, selected rows, etc.)
+  onCaptureState?: () => Record<string, any>;
 }
 
 /**
@@ -48,6 +50,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
   variant = "outlined",
   size = "small",
   showLabel = true,
+  onCaptureState,
 }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -70,6 +73,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
       // The entity label is the name/symbol (used in descriptions and visualizations)
       const entityId = request?.data?.[entity]?.id;
       const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
+      const componentState = onCaptureState?.() || {};
 
       dispatch({
         type: "addSectionToReport",
@@ -85,6 +89,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         selectedView,
         tags,
         chipText,
+        componentState,
       });
       handleMenuClose();
     }
@@ -105,6 +110,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
       // Extract entity ID and label from the request data
       const entityId = request?.data?.[entity]?.id;
       const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
+      const componentState = onCaptureState?.() || {};
 
       dispatch({
         type: "addSectionToReport",
@@ -120,6 +126,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         selectedView,
         tags,
         chipText,
+        componentState,
       });
     }, 0);
 
