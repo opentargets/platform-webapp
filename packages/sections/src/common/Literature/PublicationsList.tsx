@@ -168,7 +168,7 @@ function PublicationsList({ hideSearch = false }) {
       });
       literatureDispatch({ type: "loadingEntities", value: false });
       const data = request.data[globalEntity];
-      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid }) => pmid) ?? [];
+      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid, pmcid }) => pmid ? pmid : pmcid) ?? [];
       const update = {
         litsIds: [...litsIds, ...newLitsIds],
         cursor: data.literatureOcurrences?.cursor,
@@ -214,7 +214,7 @@ function PublicationsList({ hideSearch = false }) {
       });
       literatureDispatch({ type: "loadingEntities", value: false });
       const data = request.data[globalEntity];
-      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid }) => pmid) ?? [];
+      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid, pmcid }) => pmid ? pmid : pmcid) ?? [];
       const update = {
         litsIds: [...litsIds, ...newLitsIds],
         cursor: data.literatureOcurrences?.cursor,

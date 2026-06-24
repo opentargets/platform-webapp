@@ -1,5 +1,5 @@
 query associatedTargets {
-  disease(efoId: "EFO_0000349") {
+  disease(efoId: "MONDO_0005005") {
     id
     name
     associatedTargets {

@@ -21,6 +21,7 @@ import CredibleSetPage from "./pages/CredibleSetPage";
 import APIPage from "./pages/APIPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProjectsPage from "./pages/ProjectsPage";
+import AnalysisPage from "./pages/AnalysisPage";
 
 const config = getConfig();
 
@@ -39,6 +40,14 @@ function App(): ReactElement {
             <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/api" element={<APIPage />} />
+            <Route
+              path="/analysis"
+              element={
+                <PrivateRoute>
+                  <AnalysisPage />
+                </PrivateRoute>
+              }
+            />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/downloads/*" element={<DownloadsPage />} />
             <Route path="/target/:ensgId/*" element={<TargetPage />} />

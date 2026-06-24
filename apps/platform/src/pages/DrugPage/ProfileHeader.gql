@@ -1,7 +1,10 @@
 fragment DrugProfileHeaderFragment on Drug {
   description
   drugType
-  synonyms
+  synonyms {
+    label
+    source
+  }
   parentMolecule {
     id
     name
@@ -11,5 +14,8 @@ fragment DrugProfileHeaderFragment on Drug {
     name
   }
   maximumClinicalStage
-  tradeNames
+  tradeNames {
+    label
+    source
+  }
 }

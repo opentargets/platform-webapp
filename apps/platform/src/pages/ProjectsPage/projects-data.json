@@ -33,7 +33,7 @@
     "project_status": "Active",
     "open_targets_therapeutic_area": "Immunology and Inflammation",
     "disease_mapping": [
-      { "label": "autoimmune disease", "disease_id": "EFO_0005140" },
+      { "label": "autoimmune disease", "disease_id": "MONDO_0007179" },
       { "label": "cancer", "disease_id": "MONDO_0004992" },
       { "label": "inflammation", "disease_id": "MP_0001845" }
     ]
@@ -99,8 +99,8 @@
     "project_status": "Active",
     "open_targets_therapeutic_area": "Oncology",
     "disease_mapping": [
-      { "label": "colorectal carcinoma", "disease_id": "EFO_1001951" },
-      { "label": "triple-negative breast cancer", "disease_id": "EFO_0005537" }
+      { "label": "colorectal carcinoma", "disease_id": "MONDO_0024331" },
+      { "label": "triple-negative breast cancer", "disease_id": "MONDO_0005494" }
     ]
   },
   {
@@ -114,7 +114,7 @@
     "open_targets_therapeutic_area": "Oncology",
     "disease_mapping": [
       { "label": "Colorectal cancer", "disease_id": "MONDO_0005575" },
-      { "label": "Cutaneous melanoma", "disease_id": "EFO_0000389" }
+      { "label": "Cutaneous melanoma", "disease_id": "MONDO_0005012" }
     ]
   },
   {
@@ -127,8 +127,8 @@
     "project_status": "Active",
     "open_targets_therapeutic_area": "Other Therapy Area",
     "disease_mapping": [
-      { "label": "colorectal carcinoma", "disease_id": "EFO_1001951" },
-      { "label": "breast carcinoma", "disease_id": "EFO_0000305" }
+      { "label": "colorectal carcinoma", "disease_id": "MONDO_0024331" },
+      { "label": "breast carcinoma", "disease_id": "MONDO_0004989" }
     ]
   },
   {
@@ -141,7 +141,7 @@
     "project_status": "Active",
     "open_targets_therapeutic_area": "Immunology and Inflammation",
     "disease_mapping": [
-      { "label": "inflammatory bowel disease", "disease_id": "EFO_0003767" }
+      { "label": "inflammatory bowel disease", "disease_id": "MONDO_0005265" }
     ]
   },
   {
@@ -167,7 +167,7 @@
     "project_status": "Closed",
     "open_targets_therapeutic_area": "Neurodegenerative Disease",
     "disease_mapping": [
-      { "label": "Pain", "disease_id": "EFO_0003843" }
+      { "label": "Pain", "disease_id": "HP_0012531" }
     ]
   },
   {
@@ -209,8 +209,8 @@
     "project_status": "Active",
     "open_targets_therapeutic_area": "Immunology and Inflammation",
     "disease_mapping": [
-      { "label": "Psoriasis", "disease_id": "EFO_0000676" },
-      { "label": "Atopic Eczema", "disease_id": "EFO_0000274" }
+      { "label": "Psoriasis", "disease_id": "MONDO_0005083" },
+      { "label": "Atopic Eczema", "disease_id": "MONDO_0004980" }
     ]
   },
   {

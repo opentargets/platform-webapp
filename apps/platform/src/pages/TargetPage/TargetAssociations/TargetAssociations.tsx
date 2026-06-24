@@ -8,7 +8,7 @@ type TargetAssociationsProps = {
 };
 
 function TargetAssociations({ ensgId }: TargetAssociationsProps): ReactElement {
-  return <AssociationsView id={ensgId} entity={ENTITY.TARGET} query={TARGET_ASSOCIATIONS_QUERY} />;
+  return <AssociationsView key={ensgId} id={ensgId} entity={ENTITY.TARGET} query={TARGET_ASSOCIATIONS_QUERY} />;
 }
 
 export default TargetAssociations;

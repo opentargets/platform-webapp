@@ -1,75 +1,25 @@
-import { DocumentNode } from "graphql";
-import {
-  defaulDatasourcesWeigths,
-  DEFAULT_TABLE_PAGINATION_STATE,
-  DEFAULT_TABLE_SORTING_STATE,
-} from "../associationsUtils";
-import { Action, ActionType, ENTITY, State, TABLE_VIEW } from "../types";
+import { defaulDatasourcesWeigths } from "../associationsUtils";
+import { Action, ActionType, ENTITY, QueryState } from "../types";
 import { isEqual } from "lodash";
 
-/*****************
- * INITIAL STATE *
- *****************/
-
-export const initialState: State = {
-  pagination: DEFAULT_TABLE_PAGINATION_STATE,
-  loading: false,
-  query: null,
-  parentId: "",
+export const initialState: QueryState = {
   enableIndirect: false,
-  sorting: DEFAULT_TABLE_SORTING_STATE,
-  parentEntity: null, // TODO: review initial state
-  rowEntity: null,
-  tableView: TABLE_VIEW.MAIN,
-  isMainView: true,
-  searchFilter: "",
-  advanceOptionsOpen: false,
-  pinnedEntities: [],
-  bodyData: [],
-  pinnedData: [],
-  interactors: new Map(),
   dataSourceControls: defaulDatasourcesWeigths,
   modifiedSourcesDataControls: false,
-  facetFilters: [],
-  facetFiltersIds: [],
-  entitySearch: "",
   includeMeasurements: false,
 };
 
-type InitialStateParams = {
-  parentEntity: ENTITY;
-  parentId: string;
-  query: DocumentNode;
-};
-
-export function createInitialState({ parentEntity, parentId, query }: InitialStateParams): State {
-  const rowEntity = parentEntity === ENTITY.TARGET ? ENTITY.DISEASE : ENTITY.TARGET;
-  const state = { ...initialState, query, parentId, parentEntity, rowEntity };
-  return state;
+export function createInitialState({ entity }: { entity: ENTITY }): QueryState {
+  return { ...initialState, enableIndirect: entity !== ENTITY.TARGET };
 }
 
-export function aotfReducer(state: State = initialState, action: Action): State {
-  if (typeof state === undefined) {
-    throw Error("State provied to aotfReducer is undefined");
+export function aotfReducer(state: QueryState = initialState, action: Action): QueryState {
+  if (state === undefined) {
+    throw Error("State provided to aotfReducer is undefined");
   }
   switch (action.type) {
-    case ActionType.PAGINATE: {
-      return {
-        ...state,
-        pagination: action.pagination,
-      };
-    }
-    case ActionType.RESET_PAGINATION: {
-      return {
-        ...state,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
-      };
-    }
-    case ActionType.SORTING: {
-      return {
-        ...state,
-        sorting: action.sorting,
-      };
+    case ActionType.SET_ENABLE_INDIRECT: {
+      return { ...state, enableIndirect: action.enableIndirect };
     }
     case ActionType.DATA_SOURCE_CONTROL: {
       const colUpdatedControls = { ...action.payload };
@@ -78,24 +28,17 @@ export function aotfReducer(state: State = initialState, action: Action): State 
         return col;
       });
       const modifiedSourcesDataControls = !isEqual(defaulDatasourcesWeigths, dataSourceControls);
-      return {
-        ...state,
-        dataSourceControls,
-        modifiedSourcesDataControls,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
-      };
+      return { ...state, dataSourceControls, modifiedSourcesDataControls };
     }
     case ActionType.RESET_DATA_SOURCE_CONTROL: {
       return {
         ...state,
         dataSourceControls: defaulDatasourcesWeigths,
         modifiedSourcesDataControls: false,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
       };
     }
     case ActionType.HANDLE_AGGREGATION_CLICK: {
       const aggregation = action.aggregation;
-
       const isAllActive = state.dataSourceControls
         .filter(el => el.aggregation === aggregation)
         .every(el => el.required);
@@ -103,51 +46,23 @@ export function aotfReducer(state: State = initialState, action: Action): State 
         .filter(el => el.aggregation !== aggregation)
         .some(el => el.required);
       const dataSourceControls = state.dataSourceControls.map(col => {
-        if (col.aggregation === aggregation) {
-          return {
-            ...col,
-            required: !isAllActive,
-          };
-        }
+        if (col.aggregation === aggregation) return { ...col, required: !isAllActive };
         return col;
       });
       return {
         ...state,
         dataSourceControls,
         modifiedSourcesDataControls: !isAllActive || isAnyOtherActive,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
-      };
-    }
-    case ActionType.FACETS_SEARCH: {
-      return {
-        ...state,
-        facetFilters: action.facetFilters,
-        facetFiltersIds: action.facetFiltersIds,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
-      };
-    }
-
-    case ActionType.ENTITY_SEARCH: {
-      return {
-        ...state,
-        entitySearch: action.entitySearch,
-        pagination: DEFAULT_TABLE_PAGINATION_STATE,
       };
     }
     case ActionType.SET_INCLUDE_MEASUREMENTS: {
-      return {
-        ...state,
-        includeMeasurements: action.includeMeasurements,
-      };
+      return { ...state, includeMeasurements: action.includeMeasurements };
     }
     case ActionType.SET_INITIAL_STATE: {
-      return {
-        ...initialState,
-      };
+      return { ...initialState };
     }
     default: {
       throw Error("Unknown action: " + action);
-      return state;
     }
   }
 }

@@ -5,7 +5,7 @@ const OtPopper = styled(Popper)(({ theme }) => ({
   borderRadius: 4,
   border: `1px solid ${theme.palette.grey[400]}`,
   background: "white",
-  zIndex: "100",
+  zIndex: "10000",
 }));
 
 export default OtPopper;

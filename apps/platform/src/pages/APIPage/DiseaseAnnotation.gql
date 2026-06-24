@@ -1,5 +1,5 @@
 query diseaseAnnotation {
-  disease(efoId: "EFO_0000222") {
+  disease(efoId: "MONDO_0018874") {
     id
     name
     phenotypes {

@@ -1,7 +1,9 @@
 import { CardContent, Typography } from "@mui/material";
+import { ProfileChipList } from "ui";
 import { makeStyles } from "@mui/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrescriptionBottleAlt } from "@fortawesome/free-solid-svg-icons";
+import { parseDrugLabels } from "@ot/utils";
 
 import { LongText, Chip, Link, LongList } from "ui";
 
@@ -55,28 +57,14 @@ function DrugDetail({ data }) {
         </>
       )}
       {data.synonyms.length > 0 && (
-        <>
-          <Typography className={classes.subtitle} variant="subtitle1">
-            Synonyms
-          </Typography>
-          <LongList
-            terms={data.synonyms}
-            maxTerms={5}
-            render={synonym => <Chip key={synonym} title={synonym} label={synonym} />}
-          />
-        </>
+        <ProfileChipList title="Synonyms" maxTerms={5} titleVariant="subtitle1">
+          {parseDrugLabels(data.synonyms)}
+        </ProfileChipList>
       )}
       {data.tradeNames.length > 0 && (
-        <>
-          <Typography className={classes.subtitle} variant="subtitle1">
-            Trade names
-          </Typography>
-          <LongList
-            terms={data.tradeNames}
-            maxTerms={5}
-            render={tradeName => <Chip key={tradeName} title={tradeName} label={tradeName} />}
-          />
-        </>
+        <ProfileChipList title="Trade names" maxTerms={5} titleVariant="subtitle1">
+          {parseDrugLabels(data.tradeNames)}
+        </ProfileChipList>
       )}
     </CardContent>
   );

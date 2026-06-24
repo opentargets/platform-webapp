@@ -82,7 +82,7 @@ export class AotfActions {
   }
 
   getWeightsControlsContainer(): Locator {
-    return this.page.locator(".weights-controlls");
+    return this.page.locator("[data-testid='weights-controls-container']");
   }
 
   async isColumnOptionsActive(): Promise<boolean> {

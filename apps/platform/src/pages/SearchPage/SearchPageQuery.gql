@@ -120,8 +120,14 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
               }
             }
           }
-          synonyms
-          tradeNames
+          synonyms {
+            label
+            source
+          }
+          tradeNames {
+            label
+            source
+          }
         }
       }
     }

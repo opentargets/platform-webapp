@@ -83,17 +83,6 @@ test.describe("Target Page - Header and Navigation", () => {
       expect(linksCount).toBeGreaterThanOrEqual(4);
     });
 
-    test("CRISPR DepMap link is present when target is in DepMap", async ({ page }) => {
-      const targetPage = new TargetPage(page);
-      await targetPage.waitForPageLoad();
-
-      // This link may not always be present, so we check conditionally
-      const crisprHref = await targetPage.getCrisprDepMapLinkHref();
-      if (crisprHref) {
-        expect(crisprHref).toContain("depmap.org");
-      }
-    });
-
     test("TEP link is present when target has TEP data", async ({ page }) => {
       const targetPage = new TargetPage(page);
       await targetPage.waitForPageLoad();

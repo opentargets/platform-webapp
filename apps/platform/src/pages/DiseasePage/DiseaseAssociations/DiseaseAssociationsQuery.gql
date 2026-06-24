@@ -4,6 +4,7 @@ query DiseaseAssociationsQuery(
   $size: Int!
   $sortBy: String!
   $enableIndirect: Boolean!
+  $isDirect: Boolean!
   $datasources: [DatasourceSettingsInput!]
   $rowsFilter: [String!]
   $facetFilters: [String!]
@@ -23,10 +24,17 @@ query DiseaseAssociationsQuery(
     ) {
       count
       rows {
+        novelty
         target {
           id
           approvedSymbol
           approvedName
+          associationTimeSeries(efoId: $id, aggregationTypes: [overall], isDirect: $isDirect, page: { index: 0, size: 500 }) {
+            rows {
+              novelty
+              year
+            }
+          }
           prioritisation {
             items {
               key

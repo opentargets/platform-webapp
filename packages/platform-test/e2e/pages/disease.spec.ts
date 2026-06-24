@@ -3,7 +3,7 @@ import { AotfActions } from "../../POM/objects/widgets/AOTF/aotfActions";
 import { AotfTable } from "../../POM/objects/widgets/AOTF/aotfTable";
 import { DiseasePage } from "../../POM/page/disease/disease";
 
-const DISEASE_EFO_ID = "EFO_0000612";
+const DISEASE_EFO_ID = "MONDO_0005068";
 const DISEASE_NAME = "myocardial infarction";
 
 test.describe("Disease Page", () => {

@@ -160,24 +160,6 @@ export class TargetPage {
   }
 
   /**
-   * Get the CRISPR DepMap external link
-   */
-  getCrisprDepMapLink(): Locator {
-    return this.page.locator('a[href*="depmap.org"]');
-  }
-
-  /**
-   * Get the CRISPR DepMap link href attribute (if available)
-   */
-  async getCrisprDepMapLinkHref(): Promise<string | null> {
-    const isVisible = await this.getCrisprDepMapLink()
-      .isVisible()
-      .catch(() => false);
-    if (!isVisible) return null;
-    return await this.getCrisprDepMapLink().getAttribute("href");
-  }
-
-  /**
    * Get the TEP (Target Enabling Package) link
    */
   getTEPLink(): Locator {

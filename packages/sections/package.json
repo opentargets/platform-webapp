@@ -41,7 +41,6 @@
     "react-helmet": "^6.0.0",
     "react-measure": "^2.1.2",
     "react-router-dom": "6.28.0",
-    "smiles-drawer": "^1.1.22",
     "tsparticles": "^2.0.6",
     "typeface-inter": "^3.3.0",
     "ui": "*",

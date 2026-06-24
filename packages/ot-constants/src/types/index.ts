@@ -1791,7 +1791,7 @@ export type Query = {
   credibleSet?: Maybe<CredibleSet>;
   /** List credible sets filtered by study-locus IDs, study IDs, variant IDs, study types or regions */
   credibleSets: CredibleSets;
-  /** Retrieve a disease or phenotype by identifier (e.g. EFO_0000400) */
+  /** Retrieve a disease or phenotype by identifier (e.g. MONDO_0005068) */
   disease?: Maybe<Disease>;
   /** Retrieve multiple diseases by disease or phenotype identifiers */
   diseases: Array<Disease>;
@@ -1805,7 +1805,7 @@ export type Query = {
   geneOntologyTerms: Array<Maybe<GeneOntologyTerm>>;
   /** List of molecular interaction resources and their versions */
   interactionResources: Array<InteractionResources>;
-  /** Map free-text terms to canonical IDs used as primary identifiers in the Platform (targets, diseases, drugs, variants or studies). For example, mapping 'diabetes' to EFO_0000400 or 'BRCA1' to ENSG00000139618 */
+  /** Map free-text terms to canonical IDs used as primary identifiers in the Platform (targets, diseases, drugs, variants or studies). For example, mapping 'diabetes' to MONDO_0005015 or 'BRCA1' to ENSG00000139618 */
   mapIds: MappingResults;
   /** Open Targets API metadata, including version and configuration information */
   meta: Meta;

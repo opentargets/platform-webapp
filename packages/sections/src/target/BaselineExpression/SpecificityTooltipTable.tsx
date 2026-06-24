@@ -10,10 +10,30 @@ function formatToPercent(v) {
   return pct.toFixed(1);
 }
 
-function SpecificityTooltipTable({ data, specificityThreshold, groupByTissue, symbol }) {
+function DisplayName({ name, subname }: { name: string; subname?: string }) {
+  return (
+    <Box display="flex">
+      {name}
+      {subname && subname !== name && <>{" "}(<i>max</i>: {subname})</>}
+    </Box>
+  );
+}
+
+function SpecificityTooltipTable({ data, show, specificityThreshold, symbol, subname }) {
+  const name = data._firstLevelName ?? data[`${show}Biosample`]?.biosampleName;
+
+  const lastname = data._firstLevelName
+    ? subname
+    : data[`${show}Biosample`]?.biosampleName;  
+
   return (
     <>
       <TooltipTable>
+        {name && (
+          <TooltipRow label={show === "tissue" ? "Tissue" : "Cell type"}>
+            <DisplayName name={name} subname={subname} />
+          </TooltipRow>
+        )}
         <TooltipRow label="Specificity score">
           <Box display="flex">
             {data.specificity_score == null ? naLabel : `${formatToPercent(data.specificity_score)}%`}
@@ -22,8 +42,8 @@ function SpecificityTooltipTable({ data, specificityThreshold, groupByTissue, sy
       </TooltipTable>
       {data.specificity_score >= specificityThreshold && (
         <Typography variant="caption">
-          {symbol} is in the top {formatToPercent(1 - data.specificity_score)}% of specifically expressed genes for this{" "}
-          {groupByTissue ? "tissue" : "cell type"}
+          {symbol} is in the top {formatToPercent(1 - data.specificity_score)}% of specifically expressed genes for{" "}
+          <strong>{lastname}</strong>
         </Typography>
       )}
     </>

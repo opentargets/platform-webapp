@@ -41,7 +41,6 @@ function ManhattanPlot({ loading, data: originalData }) {
   }
 
   function highlightElement(elmt) {
-    elmt.parentNode.appendChild(elmt);
     elmt.style.fill = markColor;
     elmt.style.strokeOpacity = 1;
     if (elmt.tagName === "line") elmt.style.strokeWidth = 1.7;

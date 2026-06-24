@@ -21,6 +21,39 @@ const dicSummary = [
     label: "SD diff P-Z",
     tooltip: "Standard deviation of the difference between reported and calculated log p-values",
   },
+  {
+    id: "h2",
+    label: "SNP heritability",
+    tooltip: "LDSC-estimated SNP-based heritability (liability scale for case/control traits)",
+  },
+  {
+    id: "h2_se",
+    label: "SNP heritability SE",
+    tooltip: "Standard error of the LDSC SNP-heritability estimate",
+  },
+  {
+    id: "intercept",
+    label: "LDSC intercept",
+    tooltip:
+      "LDSC regression intercept; values above 1 indicate inflation from confounding (e.g. population stratification) rather than polygenic signal",
+  },
+  {
+    id: "intercept_se",
+    label: "LDSC intercept SE",
+    tooltip: "Standard error of the LDSC regression intercept",
+  },
+  {
+    id: "mean_chisq",
+    label: "Mean chi-squared",
+    tooltip:
+      "Mean chi-squared statistic across variants used in LDSC; values above 1 reflect a mix of true polygenic signal and confounding",
+  },
+  {
+    id: "lambda_gc",
+    label: "GC lambda (LDSC)",
+    tooltip:
+      "Genomic control lambda computed from the LDSC-filtered variant set used for heritability estimation",
+  },
 ];
 
 function formatValue(v: number) {
@@ -35,10 +68,9 @@ export default function SummaryStatsTable({ sumstatQCValues }: any) {
       </Typography>
       <table>
         <tbody>
-          {dicSummary.map((sumstat: any) => {
-            const summStatValue = sumstatQCValues.find(
-              (v: any) => v.QCCheckName === sumstat.id
-            ).QCCheckValue;
+          {sumstatQCValues.map(({ QCCheckName, QCCheckValue }) => {
+            const sumstat = dicSummary.find(({ id }) => id === QCCheckName );
+            if (!sumstat) return null;
             return (
               <tr key={v1()}>
                 <td>
@@ -47,7 +79,7 @@ export default function SummaryStatsTable({ sumstatQCValues }: any) {
                   </Tooltip>
                 </td>
                 <Typography sx={{ textAlign: "right" }} component="td" variant="body2">
-                  {formatValue(summStatValue)}
+                  {formatValue(QCCheckValue)}
                 </Typography>
               </tr>
             );

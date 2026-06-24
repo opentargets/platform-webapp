@@ -26,7 +26,7 @@ function getDefaultConfig(): TestConfig {
       alternatives: ["ENSG00000139618"], // BRCA2
     },
     disease: {
-      primary: "EFO_0000612", // Myocardial infarction
+      primary: "MONDO_0005068", // Myocardial infarction
       name: "myocardial infarction",
       alternatives: ["EFO_0000305", "MONDO_0007254"], // Breast carcinoma, Alzheimer disease
       aotfGenes: ["IL6", "ADRB1", "APOE"], // Genes with evidence for testing AOTF table

@@ -93,3 +93,49 @@ export const OptionsControlls = styled("div")`
   justify-content: space-between;
   gap: 12px;
 `;
+
+/* --- Zone components — replaces className-based zone selection --- */
+
+export const NaimingBodyZone = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "var(--table-left-column-width)",
+});
+
+export const EntityBodyZone = styled(GridContainer)({
+  alignItems: "center",
+  height: "32px",
+});
+
+export const MetricsBodyZone = styled("div")({
+  display: "grid",
+  gridTemplateColumns: "repeat(var(--metrics-col-count, 1), 1fr)",
+  alignItems: "center",
+  height: "32px",
+  width: "var(--metrics-zone-width)",
+});
+
+export const NaimingHeaderZone = styled("div")({
+  display: "flex",
+  width: "var(--table-left-column-width)",
+});
+
+export const MetricsHeaderZone = styled("div")({
+  display: "grid",
+  gridTemplateColumns: "repeat(var(--metrics-col-count, 1), 1fr)",
+  width: "var(--metrics-zone-width)",
+});
+
+export const MetricsSpacerCol = styled("div")({
+  width: "var(--metrics-zone-width)",
+});
+
+export const TheaderContainer = styled("div")({
+  display: "flex",
+  flexDirection: "column",
+  position: "sticky",
+  top: 0,
+  backgroundColor: "var(--background-color)",
+  zIndex: 100,
+});

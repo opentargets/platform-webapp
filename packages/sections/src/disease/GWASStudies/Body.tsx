@@ -13,7 +13,7 @@ const columns = [
     id: "id",
     label: "Study",
     enableHiding: false,
-    renderCell: ({ id }) => (
+    renderCell: ({ id }: { id: string }) => (
       <Link asyncTooltip to={`/study/${id}`}>
         {id}
       </Link>
@@ -26,7 +26,7 @@ const columns = [
   {
     id: "nSamples",
     label: "Sample size",
-    renderCell: ({ nSamples }) => {
+    renderCell: ({ nSamples }: { nSamples: number }) => {
       return typeof nSamples === "number" ? nSamples.toLocaleString() : naLabel;
     },
     comparator: (a, b) => a?.nSamples - b?.nSamples,
@@ -35,7 +35,7 @@ const columns = [
   {
     id: "cohorts",
     label: "Cohorts",
-    renderCell: ({ projectId, cohorts, ldPopulationStructure }) => {
+    renderCell: ({ projectId, cohorts, ldPopulationStructure }: { projectId: string; cohorts: string[]; ldPopulationStructure: { ldPopulation: string; relativeSampleSize: number }[] }) => {
       let displayText;
       if (getStudyCategory(projectId) === "FINNGEN") displayText = "FinnGen";
       else if (cohorts?.length) displayText = cohorts.join(", ");
@@ -64,7 +64,7 @@ const columns = [
         displayText
       );
     },
-    exportValue: ({ projectId, cohorts }) =>
+    exportValue: ({ projectId, cohorts }: { projectId: string; cohorts: string[] }) =>
       getStudyCategory(projectId) === "FINNGEN"
         ? "FinnGen"
         : cohorts?.length
@@ -74,7 +74,7 @@ const columns = [
   {
     id: "publication",
     label: "Publication",
-    renderCell: ({ publicationFirstAuthor, publicationDate, pubmedId, projectId }) => {
+    renderCell: ({ publicationFirstAuthor, publicationDate, pubmedId, projectId }: { publicationFirstAuthor: string; publicationDate: string; pubmedId: string; projectId: string } ) => {
       if (!publicationFirstAuthor) return naLabel;
       return (
         <PublicationsDrawer
@@ -87,9 +87,18 @@ const columns = [
         />
       );
     },
-    filterValue: ({ publicationYear, publicationFirstAuthor }) =>
+    filterValue: ({ publicationYear, publicationFirstAuthor }: { publicationYear: string; publicationFirstAuthor: string }) =>
       `${publicationYear} ${publicationFirstAuthor}`,
-    exportValue: ({ pubmedId }) => `${pubmedId}`,
+    exportValue: ({ pubmedId }: { pubmedId: string }) => `${pubmedId}`,
+  },
+  {
+    id: "credibleSets",
+    label: "Credible sets count",
+    renderCell: ({ credibleSets }: { credibleSets: { count: number } }) => {
+      return credibleSets?.count ?? naLabel;
+    },
+    comparator: (a, b) => (a?.credibleSets?.count ?? 0) - (b?.credibleSets?.count ?? 0),
+    sortable: true,
   },
 ];
 
@@ -116,7 +125,7 @@ function Body({ id: efoId, label: diseaseName }: BodyProps): ReactElement {
     <SectionItem
       definition={definition}
       entity="studies"
-      pageEntity="disease"
+      
       showContentLoading
       loadingMessage="Loading data. This may take some time..."
       request={request}

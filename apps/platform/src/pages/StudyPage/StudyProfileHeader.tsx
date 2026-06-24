@@ -125,7 +125,7 @@ function ProfileHeader() {
         <Field testId="field-summary-statistics" loading={loading} title="Summary statistics">
           {!hasSumstats ? (
             "Not Available"
-          ) : sumstatQCValues ? (
+          ) : sumstatQCValues?.length > 0 ? (
             <DetailPopover title="Available">
               <SummaryStatsTable sumstatQCValues={sumstatQCValues} />
             </DetailPopover>

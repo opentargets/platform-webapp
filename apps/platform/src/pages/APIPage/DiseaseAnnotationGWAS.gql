@@ -1,5 +1,5 @@
 query GWASStudiesQuery {
-  studies(diseaseIds: "EFO_0000685") {
+  studies(diseaseIds: "MONDO_0008383") {
     count
     rows {
       id

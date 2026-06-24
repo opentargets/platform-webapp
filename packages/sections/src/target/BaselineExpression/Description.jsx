@@ -4,7 +4,7 @@ function Description({ symbol }) {
   return (
     <>
       RNA and protein baseline expression for <strong>{symbol}</strong> (see{" "}
-      <Link external to="https://home.opentargets.org/documentation#New%20Baseline%20Expression">
+      <Link external to="https://platform-docs.opentargets.org/target/baseline-expression">
         our documentation
       </Link>{" "}
       for more information). Source:{" "}

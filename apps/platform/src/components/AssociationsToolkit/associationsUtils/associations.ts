@@ -1,5 +1,6 @@
 import { ENTITIES } from "./index";
 import { v1 } from "uuid";
+import { ROW_METRICS } from "../static_datasets/rowMetrics";
 
 // Type definitions
 interface DataSource {
@@ -71,7 +72,11 @@ interface EntityData {
   };
 }
 
-interface FormattedAssociationData {
+type RowMetricsData = {
+  [K in typeof ROW_METRICS[number]["id"]]?: number | null;
+};
+
+interface FormattedAssociationData extends RowMetricsData {
   score: number;
   id: string;
   targetSymbol: string;
@@ -221,8 +226,12 @@ export const getAssociationsData = (
   return dataRows.map(row => {
     const dataSources = getDataSourcesData(row);
     const { targetSymbol, diseaseName, id } = getDataRowMetadata(data, row, fixedEntity);
+    const rowMetrics = Object.fromEntries(
+      ROW_METRICS.map(m => [m.id, (row as any)[m.dataField ?? m.id] ?? null])
+    );
     return {
       score: row.score,
+      ...rowMetrics,
       id: id!,
       targetSymbol,
       diseaseName,

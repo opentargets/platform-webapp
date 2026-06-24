@@ -7,12 +7,28 @@ function formatExpression(v) {
   return v?.toFixed?.(3);
 }
 
-function MedianTooltipTable({ data, show, showName, showSource }) {
+function DisplayName({ name, subname }: { name: string; subname?: string }) {
+  return (
+    <Box display="flex">
+      {name}
+      {subname && subname !== name && <>{" "}(<i>max</i>: {subname})</>}
+    </Box>
+  );
+}
+
+function MedianTooltipTable({ data, show, showSource, subname }: { data: any; show: string; showSource: boolean; subname: string }) {
+  const name = data._firstLevelName ?? data[`${show}Biosample`]?.biosampleName;
+
   return (
     <TooltipTable>
-      {showName && data[`${show}Biosample`] && (
+      {name && (
         <TooltipRow label={show === "tissue" ? "Tissue" : "Cell type"}>
-          <Box display="flex">{data[`${show}Biosample`].biosampleName}</Box>
+          <DisplayName name={name} subname={subname} />
+        </TooltipRow>
+      )}
+      {showSource && data?.[`${show}BiosampleFromSource`] && (
+        <TooltipRow label="Reported annotation">
+          <Box display="flex">{data?.[`${show}BiosampleFromSource`]}</Box>
         </TooltipRow>
       )}
       <TooltipRow label="Median expression">
@@ -20,11 +36,6 @@ function MedianTooltipTable({ data, show, showName, showSource }) {
           {formatExpression(data.median)} {data.unit}
         </Box>
       </TooltipRow>
-      {showSource && data?.[`${show}BiosampleFromSource`] && (
-        <TooltipRow label="Reported annotation">
-          <Box display="flex">{data?.[`${show}BiosampleFromSource`]}</Box>
-        </TooltipRow>
-      )}
     </TooltipTable>
   );
 }

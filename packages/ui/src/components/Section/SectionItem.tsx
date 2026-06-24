@@ -8,9 +8,8 @@ import { createShortName } from "../Summary/utils";
 import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
 import { AddToReportButton } from "../Report";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { VIEW } from "@ot/constants";
-import { registerSectionRenderer } from "../../hooks/useReportSectionRenderer";
 
 type definitionType = {
   id: string;
@@ -26,13 +25,15 @@ type SectionItemProps = {
   renderDescription: () => ReactNode;
   renderChart?: () => ReactNode;
   renderBody: () => ReactNode;
+  // check tags
   tags?: string[];
-  chipText: string;
+  chipText?: string;
   entity: string;
-  showEmptySection: boolean;
-  showContentLoading: boolean;
-  loadingMessage: string;
-  defaultView: string;
+  showEmptySection?: boolean;
+  // check use
+  showContentLoading?: boolean;
+  loadingMessage?: string;
+  defaultView?: string;
 };
 
 function SectionItem({

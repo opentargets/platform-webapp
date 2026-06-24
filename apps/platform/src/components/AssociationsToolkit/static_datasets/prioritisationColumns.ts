@@ -146,10 +146,10 @@ const tissueSpecificity: Column = {
   label: "Tissue specificity",
   aggregation: TargetPrioritisationAggregation.SAFETY,
   sectionId: "expressions",
-  description: "HPA category types of elevated expression across tissues for the target",
+  description: "CELLEX calculation of tissue-specific target expression",
   docsLink:
     "https://platform-docs.opentargets.org/web-interface/target-prioritisation#tissue-specificity",
-  sectionProps: { viewMode: "specificity" },
+  sectionProps: { viewMode: "tissue", expandSpecificity: true },
 };
 
 const tissueDistribution: Column = {
@@ -157,10 +157,32 @@ const tissueDistribution: Column = {
   label: "Tissue distribution",
   aggregation: TargetPrioritisationAggregation.SAFETY,
   sectionId: "expressions",
-  description: "HPA category types of detectable expression across tissues for the target",
+  description: "Distribution of any detectable baseline expression for the target across tissues",
   docsLink:
     "https://platform-docs.opentargets.org/web-interface/target-prioritisation#tissue-distribution",
-  sectionProps: { viewMode: "distribution" },
+  sectionProps: { viewMode: "tissue" },
+};
+
+const celltypeSpecificity: Column = {
+  id: "celltypeSpecificity",
+  label: "Cell type specificity",
+  aggregation: TargetPrioritisationAggregation.SAFETY,
+  sectionId: "expressions",
+  description: "CELLEX calculation of cell type-specific target expression",
+  docsLink:
+    "https://platform-docs.opentargets.org/web-interface/target-prioritisation#tissue-specificity",
+  sectionProps: { viewMode: "celltype", expandSpecificity: true },
+};
+
+const celltypeDistribution: Column = {
+  id: "celltypeDistribution",
+  label: "Cell type distribution",
+  aggregation: TargetPrioritisationAggregation.SAFETY,
+  sectionId: "expressions",
+  description: "Distribution of any detectable baseline expression for the target across cell types",
+  docsLink:
+    "https://platform-docs.opentargets.org/web-interface/target-prioritisation#tissue-distribution",
+  sectionProps: { viewMode: "celltype" },
 };
 
 const cols: Column[] = [
@@ -180,6 +202,8 @@ const cols: Column[] = [
   paralogMaxIdentityPercentage,
   tissueSpecificity,
   tissueDistribution,
+  celltypeSpecificity,
+  celltypeDistribution,
 ];
 
 export default cols;

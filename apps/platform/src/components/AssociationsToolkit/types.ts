@@ -1,6 +1,3 @@
-import { DocumentNode } from "graphql";
-import { Facet } from "../Facets/facetsTypes";
-
 export enum ENTITY {
   TARGET = "target",
   DISEASE = "disease",
@@ -31,18 +28,7 @@ export type Column = {
  ***************/
 
 export type Pagination = { pageIndex: number; pageSize: number };
-export enum TABLE_VIEW {
-  MAIN = "MAIN",
-  PRIORITISATION = "PRIORITISATION",
-}
 export type Sorting = { id: string; desc: boolean }[];
-
-export type Data = [any] | []; // TODO: create data type (list of disease || target)
-
-export type RowInteractors = string[];
-export type RowInteractorsKey = string;
-
-export type Interactors = Map<RowInteractorsKey, RowInteractors>;
 
 export type columnAdvanceControl = {
   id: string;
@@ -52,29 +38,12 @@ export type columnAdvanceControl = {
   aggregation: string;
 };
 
-export interface State {
-  sorting: Sorting;
-  loading: boolean; // TODO: more loaders?
+// Reducer-owned state only (URL-backed fields live in AssociationsQueryContext directly)
+export interface QueryState {
   enableIndirect: boolean;
-  query: DocumentNode | null;
-  pagination: Pagination;
-  parentId: string;
-  parentEntity: ENTITY | null;
-  rowEntity: ENTITY | null;
-  tableView: TABLE_VIEW.MAIN | TABLE_VIEW.PRIORITISATION;
-  searchFilter: string;
-  pinnedEntities: string[];
-  advanceOptionsOpen: boolean;
-  isMainView: boolean;
-  bodyData: Data;
-  pinnedData: Data;
-  interactors: Interactors;
   dataSourceControls: Array<columnAdvanceControl>;
   modifiedSourcesDataControls: boolean;
-  facetFilters: Array<Facet>;
-  facetFiltersIds: Array<string>;
-  entitySearch: string;
-  includeMeasurements?: boolean;
+  includeMeasurements: boolean;
 }
 
 /*****************
@@ -82,32 +51,18 @@ export interface State {
  *****************/
 
 export enum ActionType {
-  PAGINATE = "PAGINATE",
-  SORTING = "SORTING",
-  RESET_PAGINATION = "RESET_PAGINATION",
   DATA_SOURCE_CONTROL = "DATA_SOURCE_CONTROL",
   RESET_DATA_SOURCE_CONTROL = "RESET_DATA_SOURCE_CONTROL",
   HANDLE_AGGREGATION_CLICK = "HANDLE_AGGREGATION_CLICK",
-  FACETS_SEARCH = "FACETS_SEARCH",
   SET_INITIAL_STATE = "SET_INITIAL_STATE",
-  ENTITY_SEARCH = "ENTITY_SEARCH",
   SET_INCLUDE_MEASUREMENTS = "SET_INCLUDE_MEASUREMENTS",
+  SET_ENABLE_INDIRECT = "SET_ENABLE_INDIRECT",
 }
 
-export type SetRowInteractorsPayload = {
-  id: RowInteractorsKey;
-  source: string;
-};
-
 export type Action =
-  | { type: ActionType.PAGINATE; pagination: Pagination }
-  | { type: ActionType.SORTING; sorting: Sorting }
-  | { type: ActionType.PAGINATE; pagination: Pagination }
-  | { type: ActionType.RESET_PAGINATION }
   | { type: ActionType.DATA_SOURCE_CONTROL; payload: columnAdvanceControl }
   | { type: ActionType.RESET_DATA_SOURCE_CONTROL }
   | { type: ActionType.HANDLE_AGGREGATION_CLICK; aggregation: string }
-  | { type: ActionType.FACETS_SEARCH; facetFilters: Facet[]; facetFiltersIds: string[] }
   | { type: ActionType.SET_INITIAL_STATE }
-  | { type: ActionType.ENTITY_SEARCH; entitySearch: string }
-  | { type: ActionType.SET_INCLUDE_MEASUREMENTS; includeMeasurements: boolean };
+  | { type: ActionType.SET_INCLUDE_MEASUREMENTS; includeMeasurements: boolean }
+  | { type: ActionType.SET_ENABLE_INDIRECT; enableIndirect: boolean };

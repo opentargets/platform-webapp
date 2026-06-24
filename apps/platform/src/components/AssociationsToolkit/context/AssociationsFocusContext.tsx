@@ -1,12 +1,13 @@
 import type { ReactElement, Dispatch } from "react";
-import { createContext, useContext, useReducer, useEffect, useMemo } from "react";
+import { createContext, useContext, useReducer, useEffect, useMemo, useRef } from "react";
 import {
   TABLE_PREFIX,
   InteractorsSource,
   INTERACTORS_SOURCES,
   INTERACTORS_SOURCE_THRESHOLD,
 } from "../associationsUtils";
-import useAotfContext from "../hooks/useAotfContext";
+import { useAotfQueryState } from "./AssociationsQueryContext";
+import { useAotfURLState } from "./AssociationsURLContext";
 
 // Types
 export type FocusElementTable = "core" | "pinned" | "upload";
@@ -20,6 +21,7 @@ export type FocusElement = {
   section: null | [string, string];
   interactorsSection: null | [string, string];
   interactorsThreshold: number | null;
+  noveltyPanelOpen: boolean;
 };
 
 export type FocusState = FocusElement[];
@@ -35,10 +37,12 @@ export enum FocusActionType {
   CLEAR_FOCUS_CONTEXT_MENU = "CLEAR_FOCUS_CONTEXT_MENU",
   SET_FOCUS_CONTEXT_MENU = "SET_FOCUS_CONTEXT_MENU",
   SET_INTERACTORS_SOURCE = "SET_INTERACTORS_SOURCE",
+  TOGGLE_NOVELTY_PANEL = "TOGGLE_NOVELTY_PANEL",
 }
 
 export type FocusAction =
   | { type: FocusActionType.RESET }
+  | { type: FocusActionType.TOGGLE_NOVELTY_PANEL; focus: { row: string; table: FocusElementTable } }
   | {
       type: FocusActionType.SET_FOCUS_CONTEXT_MENU;
       focus: { row: string; table: FocusElementTable };
@@ -85,6 +89,7 @@ const defaultFocusElement: FocusElement = {
   interactorsSection: null,
   interactorsSource: INTERACTORS_SOURCES.INTACT,
   interactorsThreshold: INTERACTORS_SOURCE_THRESHOLD[INTERACTORS_SOURCES.INTACT],
+  noveltyPanelOpen: false,
 };
 
 const AssociationsFocusContext = createContext<FocusState>([]);
@@ -180,11 +185,12 @@ function updateExistingElementSection(
     return removeElementAtIndex(state, elementIndex);
   }
 
-  // Update to new section
+  // Update to new section, close novelty panel (replace behaviour)
   return updateElementAtIndex(state, elementIndex, {
     section,
     interactorsRow: null,
     interactorsSection: null,
+    noveltyPanelOpen: false,
   });
 }
 
@@ -462,13 +468,9 @@ function shouldKeepContextMenuElement(
   table: FocusElementTable,
   row: string
 ): boolean {
-  const { rowActive, hasSectionActive, interactorsActive } = getFocusElementState(state, {
-    table,
-    row,
-    section: null,
-  });
-
-  return rowActive && (hasSectionActive || interactorsActive);
+  const element = state.find(el => el.table === table && el.row === row);
+  if (!element) return false;
+  return !!(element.section || element.interactors || element.noveltyPanelOpen);
 }
 
 function handleClearFocusContextMenu(focusState: FocusState, action: FocusAction): FocusState {
@@ -483,6 +485,43 @@ function handleClearFocusContextMenu(focusState: FocusState, action: FocusAction
 
   // Remove element
   return focusState.filter(element => element.row !== row || element.table !== table);
+}
+
+function handleToggleNoveltyPanel(focusState: FocusState, action: FocusAction): FocusState {
+  if (action.type !== FocusActionType.TOGGLE_NOVELTY_PANEL) return focusState;
+  const { table, row } = action.focus;
+  const elementIndex = findElementIndex(focusState, table, row);
+  const isOpen = elementIndex !== -1 && focusState[elementIndex].noveltyPanelOpen;
+
+  if (isOpen) {
+    // Toggle off — remove element if nothing else keeps it alive
+    const el = focusState[elementIndex];
+    if (!el.section && !el.interactors) return removeElementAtIndex(focusState, elementIndex);
+    return updateElementAtIndex(focusState, elementIndex, { noveltyPanelOpen: false });
+  }
+
+  // Toggle on — deactivate all other rows in same table (same as section click behaviour).
+  // Keep rows that have interactors but reset their section/novelty; drop the rest.
+  const withOthersClosed = focusState.reduce<FocusState>((acc, el) => {
+    if (el.table === table && el.row !== row) {
+      if (el.interactors) {
+        acc.push({ ...el, section: null, interactorsSection: null, interactorsRow: null, noveltyPanelOpen: false });
+      }
+      // else: drop entirely
+    } else {
+      acc.push(el);
+    }
+    return acc;
+  }, []);
+
+  if (elementIndex !== -1) {
+    return withOthersClosed.map(el =>
+      el.table === table && el.row === row
+        ? { ...el, noveltyPanelOpen: true, section: null }
+        : el
+    );
+  }
+  return [...withOthersClosed, createFocusElement({ table, row, noveltyPanelOpen: true })];
 }
 
 /**
@@ -514,6 +553,9 @@ function focusReducer(focusState: FocusState, action: FocusAction): FocusState {
 
     case FocusActionType.SET_INTERACTORS_THRESHOLD:
       return handleSetInteractorsThreshold(focusState, action);
+
+    case FocusActionType.TOGGLE_NOVELTY_PANEL:
+      return handleToggleNoveltyPanel(focusState, action);
 
     case FocusActionType.RESET:
       return [];
@@ -550,17 +592,71 @@ export function useFocusElement(table: FocusElementTable, row: string) {
   }, [focusState, table, row]);
 }
 
+// Focus URL param helpers
+// Format: "table|rowId|flag1,flag2,..."
+// Flags: "novelty", "interactors", "sectionId+SectionComponent"
+// e.g. "core|ENSG123|novelty,interactors"
+//      "core|ENSG123|clinicalTrials+ClinicalTrials,interactors"
+function parseFocusParam(param: string): FocusState {
+  if (!param) return [];
+  const parts = param.split("|");
+  if (parts.length < 3) return [];
+  const [table, row, flagsStr] = parts;
+  if (!table || !row || !flagsStr) return [];
+
+  const flags = flagsStr.split(",");
+  const noveltyPanelOpen = flags.includes("novelty");
+  const interactors = flags.includes("interactors");
+  const sectionFlag = flags.find(f => f.includes("+"));
+  let section: [string, string] | null = null;
+  if (sectionFlag) {
+    const [s0, s1] = sectionFlag.split("+");
+    if (s0 && s1) section = [s0, s1];
+  }
+
+  if (!noveltyPanelOpen && !interactors && !section) return [];
+  return [createFocusElement({ table: table as FocusElementTable, row, noveltyPanelOpen, interactors, section })];
+}
+
+function serializeActiveFocus(state: FocusState): string {
+  const active = state.filter(el => el.table !== TABLE_PREFIX.INTERACTORS)
+    .find(el => el.noveltyPanelOpen || el.interactors || el.section);
+  if (!active) return "";
+
+  const flags: string[] = [];
+  if (active.noveltyPanelOpen) flags.push("novelty");
+  if (active.interactors) flags.push("interactors");
+  if (active.section) flags.push(`${active.section[0]}+${active.section[1]}`);
+
+  if (!flags.length) return "";
+  return `${active.table}|${active.row}|${flags.join(",")}`;
+}
+
 /**
  * Provider component for focus state
  */
 export function AssociationsFocusProvider({ children }: { children: ReactElement }): ReactElement {
-  const [focusState, dispatch] = useReducer(focusReducer, []);
-  const { id } = useAotfContext();
+  const { focusParam, setFocusParam } = useAotfURLState();
+  const { id } = useAotfQueryState();
+  const hasRendered = useRef(false);
 
-  // Reset focus state when ID changes
+  const [focusState, dispatch] = useReducer(focusReducer, focusParam, parseFocusParam);
+
+  // Reset focus state when ID changes — skip on initial mount so URL-restored state survives
   useEffect(() => {
-    dispatch({ type: FocusActionType.RESET });
+    if (hasRendered.current) {
+      dispatch({ type: FocusActionType.RESET });
+    }
+    hasRendered.current = true;
   }, [id]);
+
+  // Sync active section to URL whenever focus state changes
+  useEffect(() => {
+    const newParam = serializeActiveFocus(focusState);
+    if (newParam !== focusParam) {
+      setFocusParam(newParam);
+    }
+  }, [focusState]);
 
   return (
     <AssociationsFocusContext.Provider value={focusState}>

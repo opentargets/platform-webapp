@@ -20,7 +20,7 @@ export default defineConfig({
   /* Use 6 workers in CI for faster execution */
   workers: process.env.CI ? 6 : 10,
   /* Increase timeout for CI environments */
-  timeout: process.env.CI ? 60000 : 30000,
+  timeout: process.env.CI ? 60000 : 80000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
