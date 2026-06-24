@@ -26,7 +26,7 @@ import * as DrugPharmacogenomics from "./drug/Pharmacogenomics";
 import * as DrugBibliography from "./drug/Bibliography";
 
 // Target sections
-import * as TargetExpression from "./target/Expression";
+
 import * as TargetBaselineExpression from "./target/BaselineExpression";
 import * as TargetDrugs from "./target/Drugs";
 import * as TargetMolecularInteractions from "./target/MolecularInteractions";
@@ -119,7 +119,6 @@ export const registerAllSections = () => {
     { entity: "drug", definition: DrugBibliography.definition, getBodyComponent: DrugBibliography.getBodyComponent },
 
     // Target
-    { entity: "target", definition: TargetExpression.definition, getBodyComponent: TargetExpression.getBodyComponent },
     { entity: "target", definition: TargetBaselineExpression.definition, getBodyComponent: TargetBaselineExpression.getBodyComponent },
     { entity: "target", definition: TargetDrugs.definition, getBodyComponent: TargetDrugs.getBodyComponent },
     { entity: "target", definition: TargetMolecularInteractions.definition, getBodyComponent: TargetMolecularInteractions.getBodyComponent },

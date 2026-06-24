@@ -88,8 +88,8 @@ export const ReportComponentStateProvider: React.FC<{
       value={{
         saveState,
         getAllState,
-        getStclearStateate,
-        ,
+        getState,
+        clearState,
       }}
     >
       {children}
