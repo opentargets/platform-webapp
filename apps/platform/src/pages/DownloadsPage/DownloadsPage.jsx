@@ -1,6 +1,6 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { gql, useQuery } from "@apollo/client";
-import { Alert, Box, Grid, Typography } from "@mui/material";
+import { Alert, Box, Grid, Typography, Tabs, Tab } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Link, OtInvalidResultFilters } from "ui";
 import { getConfig } from "@ot/config";
@@ -14,6 +14,7 @@ import { DownloadsContext } from "./context/DownloadsContext";
 import DownloadsTags from "./DownloadsTags";
 import { Route, Routes } from "react-router-dom";
 import DownloadsDialog from "./DownloadsDialog";
+import { GraphVisualization } from "./graph";
 
 const config = getConfig();
 
@@ -35,6 +36,7 @@ const DOWNLOADS_QUERY = gql`
 function DownloadsPage() {
   const { data, loading, error } = useQuery(DOWNLOADS_QUERY);
   const [state, dispatch] = useReducer(downloadsReducer, initialState, createInitialState);
+  const [viewMode, setViewMode] = useState("cards");
   const classes = useStyles();
 
   useEffect(() => {
@@ -79,40 +81,61 @@ function DownloadsPage() {
 
         <DownloadsTags />
 
-        <Grid container sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
-            <DownloadsFilter />
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            md={9}
-            lg={10}
-            sx={{ display: "flex", flexDirection: "column", gap: 1, pl: { md: 2 } }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
-              All Datasets ({state.count})
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                gap: 2,
-              }}
+        {/* View mode tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+          <Tabs value={viewMode} onChange={(e, newValue) => setViewMode(newValue)}>
+            <Tab label="Card View" value="cards" />
+            <Tab label="Graph View" value="graph" />
+          </Tabs>
+        </Box>
+
+        {/* Card view */}
+        {viewMode === "cards" && (
+          <Grid container sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
+              <DownloadsFilter />
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              md={9}
+              lg={10}
+              sx={{ display: "flex", flexDirection: "column", gap: 1, pl: { md: 2 } }}
             >
-              {state.count > 0 ? (
-                <>
-                  {state.filteredRows.map(e => (
-                    <DownloadsCard key={v1()} data={e} />
-                  ))}
-                </>
-              ) : (
-                <OtInvalidResultFilters />
-              )}
-            </Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
+                All Datasets ({state.count})
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  gap: 2,
+                }}
+              >
+                {state.count > 0 ? (
+                  <>
+                    {state.filteredRows.map(e => (
+                      <DownloadsCard key={v1()} data={e} />
+                    ))}
+                  </>
+                ) : (
+                  <OtInvalidResultFilters />
+                )}
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
+        )}
+
+        {/* Graph view */}
+        {viewMode === "graph" && (
+          <Box sx={{ height: "600px", mb: 2 }}>
+            <GraphVisualization 
+              downloadsData={state.downloadsData}
+              useMockData={true}
+            />
+          </Box>
+        )}
       </>
       <Routes>
         <Route path="/:downloadsRow/:downloadsView" element={<DownloadsDialog />} />
