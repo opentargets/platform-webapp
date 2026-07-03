@@ -182,6 +182,8 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       paralogMaxIdentityPercentage: "compGenomics",
       tissueSpecificity: "expressions",
       tissueDistribution: "expressions",
+      celltypeSpecificity: "expressions",
+      celltypeDistribution: "expressions",
     };
 
     if (genesToTest.length === 0) {

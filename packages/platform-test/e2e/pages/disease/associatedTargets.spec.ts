@@ -344,6 +344,8 @@ test.describe("Disease Page", () => {
         paralogMaxIdentityPercentage: "compGenomics",
         tissueSpecificity: "expressions",
         tissueDistribution: "expressions",
+        celltypeSpecificity: "expressions",
+        celltypeDistribution: "expressions",
       };
 
       if (genesToTest.length === 0) {

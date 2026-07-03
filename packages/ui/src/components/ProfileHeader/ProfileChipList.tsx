@@ -23,10 +23,19 @@ type ChipListProps = {
   children?: ChipListItem[] | string[];
   inline?: boolean;
   loading: boolean;
+  maxTerms?: number;
   title: string;
+  titleVariant?: string;
 };
 
-function ChipList({ children, title, loading = false, inline }: ChipListProps): ReactNode {
+function ChipList({
+  children,
+  title,
+  loading = false,
+  inline,
+  maxTerms = 10,
+  titleVariant = "subtitle2",
+}: ChipListProps): ReactNode {
   const classes = useContainerStyles();
   if (inline && loading) return <Skeleton />;
 
@@ -34,7 +43,7 @@ function ChipList({ children, title, loading = false, inline }: ChipListProps): 
 
   return (
     <Box data-testid={`profile-${title.toLowerCase().replace(/\s+/g, '-')}`}>
-      <Typography variant="subtitle2" display={inline ? "inline" : ""}>
+      <Typography variant={titleVariant} display={inline ? "inline" : ""}>
         {title}
         {inline ? ": " : ""}
       </Typography>
@@ -43,7 +52,7 @@ function ChipList({ children, title, loading = false, inline }: ChipListProps): 
       ) : (
         <LongList
           terms={children}
-          maxTerms={10}
+          maxTerms={maxTerms}
           render={(item: ChipListItem | string) => {
             if (_.isString(item)) {
               return <Chip key={item} data-testid={`chip-${item}`} label={item} title={item} />;

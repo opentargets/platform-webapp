@@ -70,7 +70,7 @@ function ObsTooltip({
       position="absolute"
       top={0}
       left={0}
-      sx={{ pointerEvents: "none" }}
+      sx={{ pointerEvents: "none", zIndex: 1 }}
     >
       <Box
         sx={{

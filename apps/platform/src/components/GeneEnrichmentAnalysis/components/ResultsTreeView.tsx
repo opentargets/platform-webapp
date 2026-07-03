@@ -74,14 +74,10 @@ const DEFAULT_SETTINGS: TreeViewSettings = {
   groupBy: "hierarchy",
 };
 
-/** Helper to get gene list from comma-separated string */
+/** Helper to get gene list from result */
 function getGeneList(result: GseaResult): string[] {
   const genes = result["Leading edge genes"];
-  if (!genes || genes === "") return [];
-  return genes
-    .split(",")
-    .map((g) => g.trim())
-    .filter(Boolean);
+  return genes && Array.isArray(genes) ? genes : [];
 }
 
 /** Helper to get sortable value from result */

@@ -1,6 +1,7 @@
 export * from "./alphaFold";
 export * from "./comparators";
 export * from "./createScopedContext";
+export * from "./drug";
 export * from "./downloads";
 export * from "./fetch";
 export * from "./formatters";

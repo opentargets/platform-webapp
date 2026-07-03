@@ -101,15 +101,12 @@ function ResultsSunburst({ results }: ResultsSunburstProps) {
 
         if (d.depth === 0) {
           tooltip
-            .style("visibility", "visible")
-            .html(`<strong>All Pathways</strong><br/>Total: ${results.length} pathways`);
+            .style("visibility", "none")
+            .html(`<></>`);
         } else if (d.data.data) {
           const pathway = d.data.data;
-          const genes = pathway["Leading edge genes"] || "";
-          const geneList = genes
-            .split(",")
-            .map((g) => g.trim())
-            .filter(Boolean);
+          const genes = pathway["Leading edge genes"] || [];
+          const geneList = Array.isArray(genes) ? genes : [];
 
           tooltip.style("visibility", "visible").html(`
             <strong>${pathway.Pathway}</strong><br/>

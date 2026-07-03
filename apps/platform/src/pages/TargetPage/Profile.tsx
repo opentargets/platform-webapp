@@ -11,12 +11,6 @@ import { Target } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
-import { getConfig } from "@ot/config";
-
-// !! JUST FOR PREVIEW !!
-// const baselineName = getConfig().profile.isPartnerPreview ? "BaselineExpression": "Expression";
-const baselineName = "BaselineExpression";
-
 const targetProfileWidgets = new Map<string, any>([
   [Target.Drugs.definition.id, Target.Drugs],
   [Target.Tractability.definition.id, Target.Tractability],
@@ -24,7 +18,7 @@ const targetProfileWidgets = new Map<string, any>([
   [Target.Pharmacogenomics.definition.id, Target.Pharmacogenomics],
   [Target.QTLCredibleSets.definition.id, Target.QTLCredibleSets],
   [Target.ChemicalProbes.definition.id, Target.ChemicalProbes],
-  [Target[baselineName].definition.id, Target[baselineName]],
+  [Target.BaselineExpression.definition.id, Target.BaselineExpression],
   [Target.DepMap.definition.id, Target.DepMap],
   [Target.SubcellularLocation.definition.id, Target.SubcellularLocation],
   [Target.GeneOntology.definition.id, Target.GeneOntology],

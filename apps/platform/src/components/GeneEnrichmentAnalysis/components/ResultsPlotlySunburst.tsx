@@ -25,12 +25,15 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
     };
   }, [results]);
 
+  // Determine if dataset is large (> 500 pathways)
+  const isLargeDataset = results.length > 500;
+
   const [filters, setFilters] = useState<PathwayFilters>({
     searchText: "",
     selectedCategories: [],
     nesRange: [nesDataRange.min, nesDataRange.max],
     pValueThreshold: 1.0,
-    fdrThreshold: 1.0,
+    fdrThreshold: isLargeDataset ? 0.05 : 1.0,
     showSignificantOnly: false,
   });
 

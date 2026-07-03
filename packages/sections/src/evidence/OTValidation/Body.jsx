@@ -115,18 +115,11 @@ const getColumns = classes => [
     id: "assays",
     label: "OTVL hit",
     renderCell: ({ assays }) => {
-      let sortedAssays = [...assays];
-      if (sortedAssays.length >= 2) {
-        sortedAssays.sort(function (a, b) {
-          if (a.shortName < b.shortName) {
-            return -1;
-          }
-          if (a.shortName > b.shortName) {
-            return 1;
-          }
-          return 0;
-        });
-      }
+      if (!assays?.length) return null;
+      const sortedAssays = assays.toSorted((a, b) => {
+        return ASSAYS_DISPLAY_NAME_MAPPING[a.shortName].localeCompare(
+          ASSAYS_DISPLAY_NAME_MAPPING[b.shortName]);
+      });
       return (
         <>
           {sortedAssays.map(e => (

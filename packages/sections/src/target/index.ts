@@ -3,7 +3,6 @@ export * as CancerHallmarks from "./CancerHallmarks";
 export * as ChemicalProbes from "./ChemicalProbes";
 export * as ComparativeGenomics from "./ComparativeGenomics";
 export * as DepMap from "./DepMap";
-export * as Expression from "./Expression";
 export * as BaselineExpression from "./BaselineExpression";
 export * as GeneOntology from "./GeneOntology";
 export * as GeneticConstraint from "./GeneticConstraint";

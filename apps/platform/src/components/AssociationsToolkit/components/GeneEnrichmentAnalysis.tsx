@@ -8,6 +8,8 @@ import {
 } from "../../GeneEnrichmentAnalysis";
 import { useAotfQueryState } from "../context/AssociationsQueryContext";
 import { useAotfURLState } from "../context/AssociationsURLContext";
+import { useAotfData } from "../context/AssociationsDataContext";
+import { ENTITY } from "../types";
 import type { AssociationsState } from "../../GeneEnrichmentAnalysis/types";
 
 const StyledMenuItem = styled(MenuItem)({
@@ -25,10 +27,11 @@ function buildAssociationsState(params: {
   pinnedEntries: string[];
   uploadedEntries: string[];
   facetFiltersIds: string[];
+  diseaseName: string;
 }): AssociationsState {
   return {
     efoId: params.id,
-    efoName: "",
+    efoName: params.diseaseName,
     filter: params.entitySearch,
     sortBy: params.sorting[0].id,
     enableIndirect: params.enableIndirect,
@@ -46,18 +49,36 @@ function buildAssociationsState(params: {
   };
 }
 
+/** Extract entity name from the query results to avoid refetching */
+function getEntityName(entity: ENTITY, data: any[]): string {
+  console.log(data)
+  if (!data || data.length === 0) return "";
+  
+  if (entity === ENTITY.DISEASE) {
+    return data[0].diseaseName || "";
+  }
+  if (entity === ENTITY.TARGET) {
+    return data[0].target?.approvedSymbol || "";
+  }
+  return "";
+}
+
 function GeneEnrichmentAnalysis() {
   const {
     id,
+    entity,
     entitySearch,
     sorting,
     enableIndirect,
     dataSourceControls,
     facetFiltersIds,
   } = useAotfQueryState();
+  const { data } = useAotfData();
   const { pinnedEntries, uploadedEntries } = useAotfURLState();
 
   const [, dispatch] = useGeneEnrichment();
+
+  const entityName = getEntityName(entity, data);
 
   const associationsState = buildAssociationsState({
     id,
@@ -68,6 +89,7 @@ function GeneEnrichmentAnalysis() {
     pinnedEntries,
     uploadedEntries,
     facetFiltersIds,
+    diseaseName: entityName,
   });
 
   const handleOpenModal = () => {
@@ -84,5 +106,4 @@ function GeneEnrichmentAnalysis() {
     </StyledMenuItem>
   );
 }
-
 export default GeneEnrichmentAnalysis;

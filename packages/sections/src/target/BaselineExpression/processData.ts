@@ -79,7 +79,12 @@ export function processData(
   }
 
   // 1st level and max specificity
-  let maxSpecificity = { datatype: undefined, score: undefined };
+  let maxSpecificity = {
+    datatype: undefined,
+    score: undefined,
+    _firstLevelName: undefined,
+    _firstLevelId: undefined,
+  };
   for (const objects of Object.values(secondLevel)) {
     const firstLevelRow = {};
     for (const obj of objects) {
@@ -117,6 +122,8 @@ export function processData(
         ) {
           firstLevelRow[datatypeId].median = row.median;
           firstLevelRow[datatypeId]._normalisedMedian = row._normalisedMedian;
+          firstLevelRow[datatypeId]._secondLevelMedianName = row._secondLevelName;
+          firstLevelRow[datatypeId]._secondLevelMedianId = row._secondLevelId;
         }
 
         // specificity
@@ -127,12 +134,20 @@ export function processData(
             (currentSpecificity === null || row.specificity_score > currentSpecificity))
         ) {
           firstLevelRow[datatypeId].specificity_score = row.specificity_score;
+          firstLevelRow[datatypeId]._secondLevelSpecificityName = row._secondLevelName;
+          firstLevelRow[datatypeId]._secondLevelSpecificityId = row._secondLevelId;
           if (
             maxSpecificity.score === undefined ||
             (row.specificity_score !== null &&
               (maxSpecificity.score === null || row.specificity_score > maxSpecificity.score))
-          )
-            maxSpecificity = { datatype: datatypeId, score: row.specificity_score };
+          ) {
+            maxSpecificity = {
+              datatype: datatypeId,
+              score: row.specificity_score,
+              _firstLevelName: firstLevelRow._firstLevelName,
+              _firstLevelId: firstLevelRow._firstLevelId,
+            };
+          }
         }
       }
     }

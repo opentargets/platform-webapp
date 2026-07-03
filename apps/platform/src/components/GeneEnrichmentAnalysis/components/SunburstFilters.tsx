@@ -98,13 +98,16 @@ function SunburstFilters({
     onFiltersChange({ ...filters, showSignificantOnly: checked });
   };
 
+  // Determine if dataset is large (> 500 pathways)
+  const isLargeDataset = results.length > 500;
+
   const handleResetFilters = () => {
     onFiltersChange({
       searchText: "",
       selectedCategories: [],
       nesRange: [nesDataRange.min, nesDataRange.max],
       pValueThreshold: 1.0,
-      fdrThreshold: 1.0,
+      fdrThreshold: isLargeDataset ? 0.05 : 1.0,
       showSignificantOnly: false,
     });
   };
@@ -115,7 +118,7 @@ function SunburstFilters({
     filters.nesRange[0] !== nesDataRange.min ||
     filters.nesRange[1] !== nesDataRange.max ||
     filters.pValueThreshold < 1.0 ||
-    filters.fdrThreshold < 1.0 ||
+    filters.fdrThreshold < (isLargeDataset ? 0.05 : 1.0) ||
     filters.showSignificantOnly;
 
   return (

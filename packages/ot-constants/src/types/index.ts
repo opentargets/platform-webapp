@@ -56,6 +56,12 @@ export type AdverseEvents = {
   rows: Array<AdverseEvent>;
 };
 
+/** Aggregation type used to group the data */
+export enum AggregationTypeEnum {
+  DatasourceId = 'datasourceId',
+  Overall = 'overall'
+}
+
 /** Allele frequency of the variant in different populations */
 export type AlleleFrequency = {
   __typename?: 'AlleleFrequency';
@@ -75,9 +81,7 @@ export type AssociatedDisease = {
   /** Associated disease entity */
   disease: Disease;
   /** A measure of how novel the target–disease association is, calculated based on the accumulation of direct evidence over time */
-  noveltyDirect?: Maybe<Scalars['Float']['output']>;
-  /** A measure of how novel the target–disease association is, calculated based on the accumulation of indirect evidence over time */
-  noveltyIndirect?: Maybe<Scalars['Float']['output']>;
+  novelty?: Maybe<Scalars['Float']['output']>;
   /** Overall association score aggregated across all evidence types. A higher score indicates a stronger association between the target and the disease. Scores are normalized to a range of 0-1. */
   score: Scalars['Float']['output'];
 };
@@ -100,10 +104,8 @@ export type AssociatedTarget = {
   datasourceScores: Array<ScoredComponent>;
   /** Association scores computed for every datatype (e.g., Genetic associations, Somatic, Literature) */
   datatypeScores: Array<ScoredComponent>;
-  /** A measure of how novel the target–disease association is, calculated based on the accumulation of direct evidence over time */
-  noveltyDirect?: Maybe<Scalars['Float']['output']>;
-  /** A measure of how novel the target–disease association is, calculated based on the accumulation of indirect evidence over time */
-  noveltyIndirect?: Maybe<Scalars['Float']['output']>;
+  /** A measure of how novel the target–disease association is, calculated based on the accumulation of evidence over time */
+  novelty?: Maybe<Scalars['Float']['output']>;
   /** Overall association score aggregated across all evidence types. A higher score indicates a stronger association between the target and the disease. Scores are normalized to a range of 0-1. */
   score: Scalars['Float']['output'];
   /** Associated target entity */
@@ -119,6 +121,71 @@ export type AssociatedTargets = {
   datasources: Array<DatasourceSettings>;
   /** List of associated targets with their association scores and evidence breakdowns */
   rows: Array<AssociatedTarget>;
+};
+
+/** Association time series entry for a target-disease association. */
+export type AssociationTimeSeries = {
+  __typename?: 'AssociationTimeSeries';
+  /** Aggregation type used to group the data */
+  aggregationType: AggregationTypeEnum;
+  /** Value used for novelty aggregation */
+  aggregationValue: Scalars['String']['output'];
+  /** Association score between the target and disease */
+  associationScore: Scalars['Float']['output'];
+  /** EFO ID of the disease */
+  diseaseId: Scalars['String']['output'];
+  /** Flag indicating whether the novelty calculation is based on direct evidence only or includes indirect evidence */
+  isDirect: Scalars['Boolean']['output'];
+  /** Novelty score indicating how novel the target-disease association is. */
+  novelty?: Maybe<Scalars['Float']['output']>;
+  /** Ensembl ID of the target gene */
+  targetId: Scalars['String']['output'];
+  /** Year of the evidence item used for novelty calculation */
+  year?: Maybe<Scalars['Int']['output']>;
+  /** Yearly count of evidence items */
+  yearlyEvidenceCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** Association time series results for a target-disease association. Provides a temporal view of the association, including the number of studies and variants over time. */
+export type AssociationTimeSeriesResults = {
+  __typename?: 'AssociationTimeSeriesResults';
+  /** Total number of association time series results matching the query filters */
+  count: Scalars['Long']['output'];
+  /** List of assocition time series entries */
+  rows: Array<AssociationTimeSeries>;
+};
+
+export type BaselineExpression = {
+  __typename?: 'BaselineExpression';
+  count: Scalars['Long']['output'];
+  rows: Array<BaselineExpressionRow>;
+};
+
+export type BaselineExpressionRow = {
+  __typename?: 'BaselineExpressionRow';
+  /** Cell type biosample entity */
+  celltypeBiosample?: Maybe<Biosample>;
+  celltypeBiosampleFromSource?: Maybe<Scalars['String']['output']>;
+  /** Cell type biosample parent entity */
+  celltypeBiosampleParent?: Maybe<Biosample>;
+  datasourceId: Scalars['String']['output'];
+  datatypeId: Scalars['String']['output'];
+  distribution_score: Scalars['Float']['output'];
+  max?: Maybe<Scalars['Float']['output']>;
+  median?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  q1?: Maybe<Scalars['Float']['output']>;
+  q3?: Maybe<Scalars['Float']['output']>;
+  qualityControls?: Maybe<Scalars['String']['output']>;
+  specificity_score?: Maybe<Scalars['Float']['output']>;
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  targetId: Scalars['String']['output'];
+  /** Tissue biosample entity */
+  tissueBiosample?: Maybe<Biosample>;
+  tissueBiosampleFromSource?: Maybe<Scalars['String']['output']>;
+  /** Tissue biosample parent entity */
+  tissueBiosampleParent?: Maybe<Biosample>;
+  unit: Scalars['String']['output'];
 };
 
 /** Container for all biological model-related attributes */
@@ -246,13 +313,17 @@ export type ChemicalProbeUrl = {
 
 export type ClinRepDrugListItem = {
   __typename?: 'ClinRepDrugListItem';
+  /** Drug in the report */
   drug?: Maybe<Drug>;
+  /** Drug label in the report */
   drugFromSource?: Maybe<Scalars['String']['output']>;
 };
 
 export type ClinicalDiseaseListItem = {
   __typename?: 'ClinicalDiseaseListItem';
+  /** Disease in the report */
   disease?: Maybe<Disease>;
+  /** Disease label in the report */
   diseaseFromSource?: Maybe<Scalars['String']['output']>;
 };
 
@@ -260,7 +331,9 @@ export type ClinicalIndicationFromDisease = {
   __typename?: 'ClinicalIndicationFromDisease';
   clinicalReports: Array<ClinicalReport>;
   drug?: Maybe<Drug>;
+  /** Hash of drugId, diseaseId. */
   id: Scalars['String']['output'];
+  /** Maximum Clinical Development Status for the association. */
   maxClinicalStage: Scalars['String']['output'];
 };
 
@@ -268,44 +341,86 @@ export type ClinicalIndicationFromDrug = {
   __typename?: 'ClinicalIndicationFromDrug';
   clinicalReports: Array<ClinicalReport>;
   disease?: Maybe<Disease>;
+  /** Hash of drugId, diseaseId. */
   id: Scalars['String']['output'];
+  /** Maximum Clinical Development Status for the association. */
   maxClinicalStage: Scalars['String']['output'];
 };
 
 export type ClinicalReport = {
   __typename?: 'ClinicalReport';
+  /** Harmonised clinical stage */
   clinicalStage: Scalars['String']['output'];
+  /** List of countries where the clinical report was conducted/reported */
   countries: Array<Scalars['String']['output']>;
+  /** Diseases associated with the clinical report. */
   diseases: Array<ClinicalDiseaseListItem>;
+  /** List of drugs mentioned in the report */
   drugs: Array<ClinRepDrugListItem>;
+  /** Whether the clinical report has been reviewed by an expert or not */
   hasExpertReview: Scalars['Boolean']['output'];
+  /** Report ID */
   id: Scalars['String']['output'];
+  /** Clinical phase reported at source */
   phaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Flags related to report concerns */
   qualityControls: Array<Scalars['String']['output']>;
+  /** Side effects associated with the clinical report. */
   sideEffects: Array<ClinicalDiseaseListItem>;
+  /** Source of the clinical report (e.g., AACT) */
   source: Scalars['String']['output'];
+  /** Title of the clinical report */
   title?: Maybe<Scalars['String']['output']>;
+  /** Description of the trial associated with the clinical report */
   trialDescription?: Maybe<Scalars['String']['output']>;
+  /** List of PMIDs linked to the trial associated with the clinical report */
   trialLiterature: Array<Scalars['String']['output']>;
+  /** Number of arms in the trial associated with the clinical report */
   trialNumberOfArms?: Maybe<Scalars['Int']['output']>;
+  /** Official title of the clinical trial as registered */
   trialOfficialTitle?: Maybe<Scalars['String']['output']>;
+  /** Overall status of the trial associated with the clinical report */
   trialOverallStatus?: Maybe<Scalars['String']['output']>;
+  /** Phase of the clinical trial */
   trialPhase?: Maybe<Scalars['String']['output']>;
+  /** Purpose for the intervention of the clinical trial associated with the clinical report */
   trialPrimaryPurpose?: Maybe<Scalars['String']['output']>;
+  /** Start date of the trial associated with the clinical report */
   trialStartDate?: Maybe<Scalars['String']['output']>;
+  /** Assigned categories based on trialWhyStopped */
   trialStopReasonCategories: Array<Scalars['String']['output']>;
+  /** Type of clinical study (e.g. Interventional, Observational) */
   trialStudyType?: Maybe<Scalars['String']['output']>;
+  /** Free-text reason for early stoppage of the trial associated with the clinical report */
   trialWhyStopped?: Maybe<Scalars['String']['output']>;
-  type?: Maybe<Scalars['String']['output']>;
+  /** Type of clinical report. List of possible values: CURATED_RESOURCE, DRUG_LABEL, CLINICAL_TRIAL and REGULATORY_AGENCY. */
+  type?: Maybe<ClinicalReportType>;
+  /** URL linking to the source record */
   url?: Maybe<Scalars['String']['output']>;
+  /** The year to which the clinical report refers. */
   year?: Maybe<Scalars['Int']['output']>;
 };
 
+export enum ClinicalReportType {
+  /** Clinical report derived from clinical trial records. */
+  ClinicalTrial = 'CLINICAL_TRIAL',
+  /** Clinical report curated from a scientific resource. */
+  CuratedResource = 'CURATED_RESOURCE',
+  /** Clinical report extracted from drug labels. */
+  DrugLabel = 'DRUG_LABEL',
+  /** Clinical report issued by regulatory agencies. */
+  RegulatoryAgency = 'REGULATORY_AGENCY'
+}
+
 export type ClinicalTargetFromTarget = {
   __typename?: 'ClinicalTargetFromTarget';
+  /** Reports related with the drug in question and sorted by clinical status. */
   clinicalReports: Array<ClinicalReport>;
+  /** Diseases associated with the clinical reports linked to the drug in question. */
   diseases: Array<ClinicalDiseaseListItem>;
+  /** Drug or clinical candidate entity */
   drug?: Maybe<Drug>;
+  /** Hash between drugId and targetId. */
   id: Scalars['String']['output'];
   maxClinicalStage: Scalars['String']['output'];
 };
@@ -540,6 +655,8 @@ export type Disease = {
   ancestors: Array<Scalars['String']['output']>;
   /** Target–disease associations computed on the fly with configurable datasource weights and filters */
   associatedTargets: AssociatedTargets;
+  /** Association time series */
+  associationTimeSeries: AssociationTimeSeriesResults;
   /** Direct child disease nodes in the ontology */
   children: Array<Disease>;
   /** Cross-references to external disease ontologies */
@@ -595,6 +712,17 @@ export type DiseaseAssociatedTargetsArgs = {
   facetFilters?: InputMaybe<Array<Scalars['String']['input']>>;
   orderByScore?: InputMaybe<Scalars['String']['input']>;
   page?: InputMaybe<Pagination>;
+};
+
+
+/** Core annotation for diseases or phenotypes. A disease or phenotype in the Platform is understood as any disease, phenotype, biological process or measurement that might have any type of causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO) (slim version) is used as scaffold for the disease or phenotype entity. */
+export type DiseaseAssociationTimeSeriesArgs = {
+  aggregationTypes?: InputMaybe<Array<AggregationTypeEnum>>;
+  endYear?: InputMaybe<Scalars['Int']['input']>;
+  ensemblId: Scalars['String']['input'];
+  isDirect: Scalars['Boolean']['input'];
+  page?: InputMaybe<Pagination>;
+  startYear?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -732,6 +860,8 @@ export type Drug = {
   maximumClinicalStage: Scalars['String']['output'];
   /** Mechanisms of action to produce intended pharmacological effects. Curated from scientific literature and post-marketing package inserts */
   mechanismsOfAction?: Maybe<MechanismsOfAction>;
+  /** Molblock */
+  molblock?: Maybe<Scalars['String']['output']>;
   /** Generic name of the drug molecule */
   name: Scalars['String']['output'];
   /** Parent molecule for derivative compounds */
@@ -740,10 +870,10 @@ export type Drug = {
   pharmacogenomics: Array<Pharmacogenomics>;
   /** Semantically similar drugs based on a PubMed word embedding model */
   similarEntities: Array<Similarity>;
-  /** List of alternative names for the drug */
-  synonyms: Array<Scalars['String']['output']>;
-  /** List of brand names for the drug */
-  tradeNames: Array<Scalars['String']['output']>;
+  /** List of alternative names for the drug, each with its source (e.g. ChEMBL, or AACT for names mined from clinical trials) */
+  synonyms: Array<DrugLabelAndSource>;
+  /** List of brand names for the drug, each with its source */
+  tradeNames: Array<DrugLabelAndSource>;
 };
 
 
@@ -770,6 +900,15 @@ export type DrugSimilarEntitiesArgs = {
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   size?: InputMaybe<Scalars['Int']['input']>;
   threshold?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** Label with source information */
+export type DrugLabelAndSource = {
+  __typename?: 'DrugLabelAndSource';
+  /** Label value (e.g., synonym, symbol) */
+  label: Scalars['String']['output'];
+  /** Source database of the label */
+  source: Scalars['String']['output'];
 };
 
 /** Cross-reference information for a drug molecule */
@@ -967,6 +1106,7 @@ export type Evidence = {
   drugFromSource?: Maybe<Scalars['String']['output']>;
   /** Observed patterns of drug response */
   drugResponse?: Maybe<Disease>;
+  /** Earliest data for the evidence */
   evidenceDate?: Maybe<Scalars['String']['output']>;
   /** Description of the interaction between the two genes */
   geneInteractionType?: Maybe<Scalars['String']['output']>;
@@ -1019,11 +1159,13 @@ export type Evidence = {
   projectId?: Maybe<Scalars['String']['output']>;
   /** List of PubMed Central identifiers of full text publication [bioregistry:pmc] */
   pubMedCentralIds?: Maybe<Array<Scalars['String']['output']>>;
+  /** Publication date of the literature reference */
   publicationDate?: Maybe<Scalars['String']['output']>;
   /** Last name and initials of the first author of the publication that references the evidence */
   publicationFirstAuthor?: Maybe<Scalars['String']['output']>;
   /** Year of the publication */
   publicationYear?: Maybe<Scalars['Long']['output']>;
+  /** Evidence quality flags */
   qualityControls: Array<Scalars['String']['output']>;
   /** Pathway, gene set or reaction identifier in Reactome */
   reactionId?: Maybe<Scalars['String']['output']>;
@@ -1485,6 +1627,7 @@ export type LocationAndSource = {
   location: Scalars['String']['output'];
   /** Source database for the subcellular location */
   source: Scalars['String']['output'];
+  targetModifier?: Maybe<Scalars['String']['output']>;
   /** Subcellular location term identifier from SwissProt [bioregistry:sl] */
   termSL?: Maybe<Scalars['String']['output']>;
 };
@@ -1791,7 +1934,7 @@ export type Query = {
   credibleSet?: Maybe<CredibleSet>;
   /** List credible sets filtered by study-locus IDs, study IDs, variant IDs, study types or regions */
   credibleSets: CredibleSets;
-  /** Retrieve a disease or phenotype by identifier (e.g. MONDO_0005068) */
+  /** Retrieve a disease or phenotype by identifier (e.g. EFO_0000400) */
   disease?: Maybe<Disease>;
   /** Retrieve multiple diseases by disease or phenotype identifiers */
   diseases: Array<Disease>;
@@ -1805,7 +1948,7 @@ export type Query = {
   geneOntologyTerms: Array<Maybe<GeneOntologyTerm>>;
   /** List of molecular interaction resources and their versions */
   interactionResources: Array<InteractionResources>;
-  /** Map free-text terms to canonical IDs used as primary identifiers in the Platform (targets, diseases, drugs, variants or studies). For example, mapping 'diabetes' to MONDO_0005015 or 'BRCA1' to ENSG00000139618 */
+  /** Map free-text terms to canonical IDs used as primary identifiers in the Platform (targets, diseases, drugs, variants or studies). For example, mapping 'diabetes' to EFO_0000400 or 'BRCA1' to ENSG00000139618 */
   mapIds: MappingResults;
   /** Open Targets API metadata, including version and configuration information */
   meta: Meta;
@@ -2307,6 +2450,10 @@ export type Target = {
   approvedSymbol: Scalars['String']['output'];
   /** Target-disease associations calculated on-the-fly using configurable data source weights and evidence filters. Returns associations with aggregated scores and evidence counts supporting the target-disease relationship. */
   associatedDiseases: AssociatedDiseases;
+  /** Association time series */
+  associationTimeSeries: AssociationTimeSeriesResults;
+  /** Baseline expression */
+  baselineExpression: BaselineExpression;
   /** Biotype classification of the target gene, indicating if the gene is protein coding */
   biotype: Scalars['String']['output'];
   /** The Ensembl canonical transcript of the target gene */
@@ -2394,6 +2541,23 @@ export type TargetAssociatedDiseasesArgs = {
   facetFilters?: InputMaybe<Array<Scalars['String']['input']>>;
   includeMeasurements?: InputMaybe<Scalars['Boolean']['input']>;
   orderByScore?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Pagination>;
+};
+
+
+/** Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl database and uses the Ensembl gene ID as the  primary identifier. An Ensembl gene ID is considered potential drug target if included in the canonical assembly or if present alternative assemblies but encoding for a reviewed protein product according to the UniProt database. */
+export type TargetAssociationTimeSeriesArgs = {
+  aggregationTypes?: InputMaybe<Array<AggregationTypeEnum>>;
+  efoId: Scalars['String']['input'];
+  endYear?: InputMaybe<Scalars['Int']['input']>;
+  isDirect: Scalars['Boolean']['input'];
+  page?: InputMaybe<Pagination>;
+  startYear?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl database and uses the Ensembl gene ID as the  primary identifier. An Ensembl gene ID is considered potential drug target if included in the canonical assembly or if present alternative assemblies but encoding for a reviewed protein product according to the UniProt database. */
+export type TargetBaselineExpressionArgs = {
   page?: InputMaybe<Pagination>;
 };
 
