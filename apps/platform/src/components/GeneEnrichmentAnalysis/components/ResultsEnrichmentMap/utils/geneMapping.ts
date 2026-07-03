@@ -40,7 +40,7 @@ export async function buildGeneToTargetIdMapping(
 
     const mappings = result.data?.mapIds?.mappings || [];
     if (mappings.length > 0) {
-      console.log(`[GENE_MAPPING] Fetched ${mappings.length} mappings`);
+
     }
     mappings.forEach((mapping_item: any) => {
       const term = mapping_item.term;

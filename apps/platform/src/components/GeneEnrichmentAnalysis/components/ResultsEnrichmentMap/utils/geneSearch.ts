@@ -42,7 +42,6 @@ export function findNodesAndEdgesWithGene(
     }
   }
 
-  console.log(`[GENE_SEARCH] Found ${nodeIds.size} nodes and ${edgeIds.size} edges for: ${searchTerm}`);
   return { nodeIds, edgeIds };
 }
 

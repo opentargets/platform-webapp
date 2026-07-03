@@ -84,7 +84,6 @@ function ResultsEnrichmentMapContent({ results, genes, diseaseId }: ResultsEnric
     genes,
     isLoading,
     (data) => {
-      console.log("Node clicked with data:", data);
       // Hide tooltips when opening modal
       if (cyRef.current && (cyRef.current as any)._hideTooltips) {
         (cyRef.current as any)._hideTooltips();

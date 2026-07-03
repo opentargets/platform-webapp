@@ -102,7 +102,6 @@ export function initializeCytoscapeInstance(
     const node = evt.target;
     const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
     const isMultiSelectKey = isMac ? evt.originalEvent.metaKey : evt.originalEvent.ctrlKey;
- console.log("Node clicked with data:", node.data());
     if (isMultiSelectKey) {
       // Ctrl/Cmd+click: toggle selection for this node
       if (node.selected()) {
@@ -122,9 +121,6 @@ export function initializeCytoscapeInstance(
     }
 
     const selectedCount = cy.nodes(":selected").length;
-    console.log(
-      `[NODE_CLICK] Selected nodes: ${selectedCount}, Node ID: ${node.id()}`
-    );
   });
 
   // Canvas click handler - deselect all when clicking background
@@ -133,7 +129,6 @@ export function initializeCytoscapeInstance(
       // Clicking on canvas, not on any element
       cy.nodes().unselect();
       cy.edges().unselect();
-      console.log("[CANVAS_CLICK] Deselected all elements");
     }
   });
 
@@ -143,7 +138,6 @@ export function initializeCytoscapeInstance(
     if (onEdgeClick) {
       onEdgeClick(edge.data());
     }
-    console.log(`[EDGE_CLICK] Clicked edge: ${edge.id()}`);
   });
 
   // Add keyboard support for selection (attach to container for scoped behavior)
@@ -152,7 +146,6 @@ export function initializeCytoscapeInstance(
       // Ctrl/Cmd+A: select all nodes
       evt.preventDefault();
       cy.nodes().select();
-      console.log(`[KEYBOARD] Selected all ${cy.nodes().length} nodes`);
     }
   };
 
@@ -188,36 +181,21 @@ export function cleanupCytoscapeInstance(
   // Remove hideTooltips reference
   delete (cy as any)._hideTooltips;
 
-  console.log("[CLEANUP] Starting tooltip cleanup, count:", tooltipsRef.current.size);
   let cleanupIndex = 0;
   for (const tooltip of tooltipsRef.current) {
     cleanupIndex++;
     try {
       if (tooltip.parentNode) {
-        console.log(
-          `[CLEANUP_${cleanupIndex}] Removing tooltip, parent: ${(tooltip.parentNode as Element).tagName}`
-        );
         tooltip.parentNode.removeChild(tooltip);
-        console.log(`[CLEANUP_${cleanupIndex}] Successfully removed`);
       } else {
-        console.warn(`[CLEANUP_${cleanupIndex}] Tooltip has no parent node`);
       }
     } catch (err) {
-      console.error(
-        `[CLEANUP_${cleanupIndex}] Failed to removeChild:`,
-        err,
-        "parent:",
-        (tooltip.parentNode as Element)?.tagName
-      );
     }
   }
   tooltipsRef.current.clear();
-  console.log("[CLEANUP] Tooltip cleanup complete");
 
   try {
     cy.destroy();
-    console.log("[CLEANUP] Cytoscape instance destroyed successfully");
   } catch (err) {
-    console.error("[CLEANUP] Failed to destroy cytoscape:", err);
   }
 }

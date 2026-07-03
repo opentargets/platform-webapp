@@ -6,7 +6,6 @@ export function createNodeTooltipHTML(
   data: Record<string, unknown>
 ): string {
   if (viewMode === "genes") {
-    console.log("Creating tooltip for gene node:", data);
     const pathwayList = (data.pathways as string[])?.slice(0, 5).join("<br/>");
     
     return `
