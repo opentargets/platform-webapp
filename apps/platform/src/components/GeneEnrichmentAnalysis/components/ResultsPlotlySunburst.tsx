@@ -2,9 +2,10 @@ import {
   faComputerMouse,
   faHandPointer,
   faUpDownLeftRight,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Chip, Popover } from "@mui/material";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
@@ -16,6 +17,8 @@ interface ResultsPlotlySunburstProps {
 }
 
 function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   // Get initial NES range from data
   const nesDataRange = useMemo(() => {
     const nesValues = results.map((r) => r.NES || 0);
@@ -163,8 +166,57 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
               Shift+drag to pan
             </Typography>
           </Box>
+          <Chip
+            icon={<FontAwesomeIcon icon={faInfoCircle} />}
+            label="About sunburst view"
+            size="small"
+            color="primary"
+            onClick={(e) => setAnchorEl(e.currentTarget as HTMLElement)}
+            sx={{
+              cursor: "pointer",
+              height: 24,
+              fontSize: "0.7rem",
+            }}
+          />
         </Box>
       </Box>
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        PaperProps={{
+          sx: {
+            maxWidth: 500,
+          },
+        }}
+      >
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: "background.paper",
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+            Sunburst View
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6 }}>
+            Radial, multi-level chart where inner rings represent broad categories and outer rings represent specific gene sets.
+          </Typography>
+
+          <Typography variant="body2" sx={{ lineHeight: 1.6, color: "text.secondary" }}>
+            At-a-glance overview of dominant biological areas; spotting clusters of related enrichments; visual communication of findings.
+          </Typography>
+        </Box>
+      </Popover>
       <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
         <PlotlySunburstChart results={filteredResults} />
       </Box>

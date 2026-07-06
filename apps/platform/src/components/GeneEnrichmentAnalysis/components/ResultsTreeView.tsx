@@ -43,6 +43,13 @@ interface ResultsTreeViewProps {
   results: GseaResult[];
 }
 
+interface TreeViewFilters {
+  fdrThreshold: number;
+  pValueThreshold: number;
+  nesRange: [number, number];
+  showSignificantOnly: boolean;
+}
+
 interface TreeViewSettings {
   showPValues: boolean;
   showFDR: boolean;
@@ -577,28 +584,64 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
     initialExpanded.add("significant");
     return initialExpanded;
   });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Get initial NES range from data
+  const nesDataRange = useMemo(() => {
+    const nesValues = results.map((r) => r.NES || 0);
+    return {
+      min: Math.min(...nesValues),
+      max: Math.max(...nesValues),
+    };
+  }, [results]);
+
+  // Determine if dataset is large (> 500 pathways)
+  const isLargeDataset = results.length > 500;
+
+  const [filters, setFilters] = useState<TreeViewFilters>({
+    fdrThreshold: isLargeDataset ? 0.05 : 1.0,
+    pValueThreshold: 1.0,
+    nesRange: [nesDataRange.min, nesDataRange.max],
+    showSignificantOnly: false,
+  });
 
   // Check if results have hierarchy data
   const hasHierarchyData = useMemo(() => {
     return results.some((r) => r["Parent pathway"] && r["Parent pathway"] !== "");
   }, [results]);
 
+  // Filter results based on filters
+  const filteredResults = useMemo(() => {
+    return results.filter((pathway) => {
+      const fdr = pathway.FDR as number;
+      const pValue = pathway["p-value"] as number;
+      const nes = pathway.NES as number;
+      const fdrPass = fdr < filters.fdrThreshold;
+      const pValuePass = pValue < filters.pValueThreshold;
+      const nesPass = nes >= filters.nesRange[0] && nes <= filters.nesRange[1];
+      if (filters.showSignificantOnly && fdr >= 0.05) {
+        return false;
+      }
+      return fdrPass && pValuePass && nesPass;
+    });
+  }, [results, filters]);
+
   // Build hierarchy tree
   const hierarchyTree = useMemo(() => {
     if (settings.groupBy !== "hierarchy") return [];
-    return buildHierarchy(results, settings);
-  }, [results, settings]);
+    return buildHierarchy(filteredResults, settings);
+  }, [filteredResults, settings]);
 
   // Group by significance
   const significanceGroups = useMemo(() => {
     if (settings.groupBy !== "significance") return [];
-    return groupBySignificance(results, settings);
-  }, [results, settings]);
+    return groupBySignificance(filteredResults, settings);
+  }, [filteredResults, settings]);
 
   // Flat sorted results for "none" grouping
   const flatResults = useMemo(() => {
     if (settings.groupBy !== "none") return [];
-    return [...results].sort((a, b) => {
+    return [...filteredResults].sort((a, b) => {
       const aValue = getSortValue(a, settings.sortBy);
       const bValue = getSortValue(b, settings.sortBy);
 
@@ -612,7 +655,7 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
         ? (aValue as number) - (bValue as number)
         : (bValue as number) - (aValue as number);
     });
-  }, [results, settings]);
+  }, [filteredResults, settings]);
 
   const handleSettingsChange = useCallback((key: keyof TreeViewSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -635,7 +678,7 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
     });
   }, []);
 
-  const significantCount = results.filter((r) => r.FDR < 0.05).length;
+  const significantCount = filteredResults.filter((r) => r.FDR < 0.05).length;
   const rootCount = hierarchyTree.length;
 
   if (results.length === 0) {
@@ -648,6 +691,94 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Filters */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          flexShrink: 0,
+          bgcolor: filtersOpen ? "action.hover" : "transparent",
+          transition: "background-color 0.2s",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            cursor: "pointer",
+            "&:hover": { opacity: 0.7 },
+          }}
+          onClick={() => setFiltersOpen(!filtersOpen)}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2" fontWeight={500}>
+              Filters
+            </Typography>
+            <Chip
+              label={`${filteredResults.length} results`}
+              size="small"
+              color={filteredResults.length < results.length ? "primary" : "default"}
+              variant="filled"
+            />
+          </Box>
+          <FontAwesomeIcon
+            icon={faChevronDown}
+            style={{
+              transform: filtersOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s",
+              fontSize: "0.8rem",
+            }}
+          />
+        </Box>
+        {filtersOpen && (
+          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>FDR Threshold</InputLabel>
+              <Select
+                value={filters.fdrThreshold}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, fdrThreshold: e.target.value as number }))
+                }
+                label="FDR Threshold"
+              >
+                <MenuItem value={0.01}>{"< 0.01"}</MenuItem>
+                <MenuItem value={0.05}>{"< 0.05"}</MenuItem>
+                <MenuItem value={0.1}>{"< 0.1"}</MenuItem>
+                <MenuItem value={1.0}>All</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>P-value Threshold</InputLabel>
+              <Select
+                value={filters.pValueThreshold}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, pValueThreshold: e.target.value as number }))
+                }
+                label="P-value Threshold"
+              >
+                <MenuItem value={0.001}>{"< 0.001"}</MenuItem>
+                <MenuItem value={0.01}>{"< 0.01"}</MenuItem>
+                <MenuItem value={0.05}>{"< 0.05"}</MenuItem>
+                <MenuItem value={1.0}>All</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={filters.showSignificantOnly}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, showSignificantOnly: e.target.checked }))
+                  }
+                />
+              }
+              label="Significant only (FDR < 0.05)"
+            />
+          </Box>
+        )}
+      </Box>
       {/* Header */}
       <Box
         sx={{
@@ -677,7 +808,6 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
               View settings
             </Typography>
           </Box>
-          <Chip label={`${results.length} total`} size="small" variant="outlined" />
           <Chip
             label={`${significantCount} significant`}
             color="success"

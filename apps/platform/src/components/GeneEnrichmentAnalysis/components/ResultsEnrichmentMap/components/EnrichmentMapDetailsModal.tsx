@@ -142,7 +142,6 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
   };
 
     const handleViewInAOTF = () => {
-      console.log("Viewing genes in AOTF with diseaseId:", diseaseId, "and genes:", filteredGenes, geneToTargetIdMapping);
         const targetIds = getTargetIdsFromMapping(filteredGenes || [], geneToTargetIdMapping || new Map());
         const aotfLink = buildAOTFLink(diseaseId || "", targetIds);
         window.open(aotfLink, "_blank");

@@ -12,6 +12,9 @@ import {
   EnrichmentMapControlsContext,
 } from "./utils/EnrichmentMapControlsContext";
 import {
+  filterNodesWithoutEdges,
+} from "./utils";
+import {
   useEnrichmentMapState,
   useElementComputation,
   useGeneSearch,
@@ -81,7 +84,6 @@ function ResultsEnrichmentMapContent({ results, genes, diseaseId }: ResultsEnric
     genes,
     isLoading,
     (data) => {
-      console.log("Node clicked with data:", data);
       // Hide tooltips when opening modal
       if (cyRef.current && (cyRef.current as any)._hideTooltips) {
         (cyRef.current as any)._hideTooltips();
@@ -115,19 +117,21 @@ function ResultsEnrichmentMapContent({ results, genes, diseaseId }: ResultsEnric
     }
   }, [filterToggled]);
 
-  // Available pathways for autocomplete
+  // Available pathways for autocomplete (only from displayed nodes)
   const availablePathways = useMemo(() => {
-    return computedElements
+    const { elements: filteredElements } = filterNodesWithoutEdges(computedElements);
+    return filteredElements
       .filter((el) => !el.data?.source)
       .map((el) => (el.data?.displayLabel as string) || (el.data?.id as string))
       .filter((name) => name && name.length > 0)
       .sort();
   }, [computedElements]);
 
-  // Extract unique gene names from computed elements
+  // Extract unique gene names from displayed nodes only
   const uniqueGenes = useMemo(() => {
+    const { elements: filteredElements } = filterNodesWithoutEdges(computedElements);
     const geneSet = new Set<string>();
-    computedElements.forEach((el) => {
+    filteredElements.forEach((el) => {
       if (el.data?.sharedGenes && Array.isArray(el.data.sharedGenes)) {
         el.data.sharedGenes.forEach((gene: string) => geneSet.add(gene));
       }

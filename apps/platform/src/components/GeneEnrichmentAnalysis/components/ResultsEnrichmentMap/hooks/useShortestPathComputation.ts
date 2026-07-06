@@ -19,10 +19,6 @@ export function useShortestPathComputation(
 
     onComputingChange(true);
 
-    console.log(
-      `[SHORTEST_PATH] Computing shortest path between "${selectedPathways.source}" and ` +
-      `"${selectedPathways.target}"`
-    );
     const path = findShortestPath(cyRef.current, selectedPathways.source, selectedPathways.target);
     onPathFound(path);
 
@@ -36,11 +32,6 @@ export function useShortestPathComputation(
       for (const edgeId of path.pathEdgeIds) {
         cyRef.current.getElementById(edgeId).addClass("shortestPath");
       }
-
-      console.log(
-        `[SHORTEST_PATH] Found path with ${path.pathNodeIds.length} pathways and ` +
-        `${path.connectingGenes.length} connecting genes`
-      );
     }
 
     onComputingChange(false);
