@@ -10,6 +10,8 @@ import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
 import PlotlySunburstChart from "./PlotlySunburstChart";
 import SunburstFilters, { type PathwayFilters } from "./SunburstFilters";
+import ZoomableSunburst from "../../Surnburst/ZoomableSunburst";
+import { gseaToSunburst } from "../../Surnburst/utils";
 
 interface ResultsPlotlySunburstProps {
   results: GseaResult[];
@@ -166,7 +168,8 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
         </Box>
       </Box>
       <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
-        <PlotlySunburstChart results={filteredResults} />
+        {/* <PlotlySunburstChart results={filteredResults} /> */}
+        <ZoomableSunburst data={gseaToSunburst(filteredResults)} />
       </Box>
     </Box>
   );
