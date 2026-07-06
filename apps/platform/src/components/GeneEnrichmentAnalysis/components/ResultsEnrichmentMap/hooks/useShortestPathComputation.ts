@@ -32,6 +32,7 @@ export function useShortestPathComputation(
       for (const edgeId of path.pathEdgeIds) {
         cyRef.current.getElementById(edgeId).addClass("shortestPath");
       }
+    }
 
     onComputingChange(false);
   }, [selectedPathways, onPathFound, onComputingChange, cyRef]);

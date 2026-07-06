@@ -39,9 +39,7 @@ export async function buildGeneToTargetIdMapping(
     });
 
     const mappings = result.data?.mapIds?.mappings || [];
-    if (mappings.length > 0) {
 
-    }
     mappings.forEach((mapping_item: any) => {
       const term = mapping_item.term;
       if (mapping_item.hits && mapping_item.hits.length > 0) {
@@ -49,10 +47,6 @@ export async function buildGeneToTargetIdMapping(
         mapping.set(term, targetId);
       }
     });
-
-    console.log(
-      `[GENE_MAPPING] Successfully mapped ${mapping.size}/${uniqueSymbols.length} genes to target IDs`
-    );
   } catch (err) {
     console.warn("[GENE_MAPPING] Error fetching target IDs:", err);
   }

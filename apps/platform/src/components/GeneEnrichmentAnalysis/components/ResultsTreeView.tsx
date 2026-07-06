@@ -655,7 +655,7 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
         ? (aValue as number) - (bValue as number)
         : (bValue as number) - (aValue as number);
     });
-  }, [results, settings]);
+  }, [filteredResults, settings]);
 
   const handleSettingsChange = useCallback((key: keyof TreeViewSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
