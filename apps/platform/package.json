@@ -3,7 +3,7 @@
   "version": "0.1.2",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/opentargets/ot-ui-apps/issues",
+    "url": "https://github.com/opentargets/platform-webapp/issues",
     "email": "support@targetvalidation.org"
   },
   "dependencies": {

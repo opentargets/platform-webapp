@@ -42,7 +42,7 @@ jobs:
       - name: Build docs
         run: yarn build:docs
         env:
-          STORYBOOK_BASE_PATH: /ot-ui-apps/
+          STORYBOOK_BASE_PATH: /platform-webapp/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
