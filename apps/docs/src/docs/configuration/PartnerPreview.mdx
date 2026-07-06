@@ -1,0 +1,129 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Configuration/Partner Preview" />
+
+# Partner Preview configuration
+
+The Open Targets Platform can be customised for partner or private instances via runtime config. Options are defined in `config.js` as defaults and overridden by environment variables set at deploy time.
+
+---
+
+## Basic options
+
+These work regardless of whether `isPartnerPreview` is enabled.
+
+### `configUrlApi`
+
+URL of the Platform GraphQL API.
+
+### `configGeneticsPortalUrl`
+
+URL for links to the Open Targets Genetics portal (no trailing slash).  
+Default: `https://genetics.opentargets.org`
+
+### `configPrimaryColor`
+
+Primary colour used by MUI components and visualisations.  
+Default: `#3489ca` (Open Targets blue)
+
+### `partnerColorRange`
+
+Custom colour scale for heatmap visualisations (associations pages, etc.). Comma-separated list of hex values.  
+Default: `'#e5edf4,#ccdcea,#b2cbe0,#99b9d6,#7fa8cc,#6697c1,#4c85b7,#3274ad,#1963a3,#005299'`
+
+### `isPartnerPreview`
+
+Boolean flag. Enables all partner-specific customisations below. The options in the next sections only take effect when this is `true`.
+
+---
+
+## Profile page widget options
+
+On the Target, Disease, Drug, and Evidence profile pages, you can control which widgets are private (shown with a lock icon) or hidden entirely.
+
+> These options only work when `isPartnerPreview` is `true`.
+
+### Target page
+
+| Option | Effect |
+|---|---|
+| `hideTargetSectionIds` | Comma-separated widget IDs to **hide** on the target profile page |
+| `partnerTargetSectionIds` | Comma-separated widget IDs to mark as **private** (lock icon) |
+
+### Disease page
+
+| Option | Effect |
+|---|---|
+| `hideDiseaseSectionIds` | Comma-separated widget IDs to **hide** on the disease profile page |
+| `partnerDiseaseSectionIds` | Comma-separated widget IDs to mark as **private** |
+
+### Drug page
+
+| Option | Effect |
+|---|---|
+| `hideDrugSectionIds` | Comma-separated widget IDs to **hide** on the drug profile page |
+| `partnerDrugSectionIds` | Comma-separated widget IDs to mark as **private** |
+
+### Evidence page
+
+| Option | Effect |
+|---|---|
+| `hideEvidenceSectionIds` | Comma-separated widget IDs to **hide** on the evidence page |
+| `partnerEvidenceSectionIds` | Comma-separated widget IDs to mark as **private** |
+
+**Example:**
+
+```
+hideTargetSectionIds=bibliography,otProjects
+partnerTargetSectionIds=ot_crispr
+```
+
+---
+
+## Associations page options
+
+On the Target and Disease associations pages, you can customise which data types and data sources appear.
+
+> These options only work when `isPartnerPreview` is `true`.
+
+### `hideDataTypes`
+
+Comma-separated data type IDs to **hide** on associations pages. Hidden data types are excluded from the facets panel and from the heatmap columns.
+
+```
+hideDataTypes=literature,animal_model
+```
+
+### `partnerDataTypes`
+
+Comma-separated data type IDs to mark as **private**. Private data types show a lock icon in the facets panel.
+
+```
+partnerDataTypes=ot_partner
+```
+
+### `partnerDataSources`
+
+Comma-separated data source IDs to mark as **private**. Private data sources show a lock icon in the facets panel.
+
+```
+partnerDataSources=ot_crispr
+```
+
+---
+
+## Marking a section as private in code
+
+When adding a new section that should only appear in partner preview, set `isPrivate: true` in its `definition` object:
+
+```typescript
+export const definition = {
+  id: "my_partner_section",
+  name: "Partner Section",
+  shortName: "PS",
+  hasData: (data) => !!data.myPartnerField,
+  isPrivate: true,
+};
+```
+
+For AOTF data source columns, set `isPrivate: true` in `static_datasets/dataSourcesAssoc.ts` or `prioritisationColumns.ts`. The `isPartnerPreview` flag in `associationsUtils/index.ts` gates their rendering automatically.

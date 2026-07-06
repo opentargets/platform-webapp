@@ -1,0 +1,119 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Components/Table" />
+
+# Table & DataTable
+
+Two table components available from `packages/ui`:
+
+- **`Table`** — for server-side pagination (index-based or cursor-based). Fires callbacks when the user paginates, sorts, or filters so the caller can refetch.
+- **`DataTable`** — a thin wrapper around `Table` for client-side pagination, when all data is already available.
+
+Both are exported from `"ui"`.
+
+---
+
+## Table props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `columns` | `array` | — | Array of [column objects](#column-object). |
+| `rows` | `array` | — | Row data. |
+| `rowCount` | `number` | — | Total rows (server-side mode only — when not all rows are in the browser). |
+| `loading` | `bool` | `false` | Shows a spinner and disables pagination controls. |
+| `pageSize` | `number` | `10` | Rows per page. |
+| `order` | `'asc' \| 'desc'` | `'asc'` | Default sort direction. |
+| `sortBy` | `string` | — | Column `id` to sort by default. |
+| `rowsPerPageOptions` | `array` | `[]` | Page-size options in the dropdown. |
+| `stickyHeader` | `boolean` | `false` | Sticks the header row on scroll. |
+| `fixed` | `bool` | `false` | Sets `table-layout: fixed`. |
+| `hover` | `bool` | `false` | Shades rows on hover. |
+| `noWrap` | `bool` | `true` | Prevents row content from wrapping (enables fixed height). |
+| `noWrapHeader` | `bool` | `true` | Prevents header content from wrapping. |
+| `headerGroups` | `array` | `[]` | If non-empty, renders a first header row with column groups. See [header groups](#header-groups). |
+| `showGlobalFilter` | `bool` | `false` | Shows a global filter input above the table. |
+| `dataDownloader` | `bool` | `false` | Shows the download widget above the table. |
+| `dataDownloaderFileStem` | `string` | `'data'` | File name (without extension) for downloads. |
+| `dataDownloaderRows` | `function \| array` | value of `rows` | Rows (or a function returning rows) passed to the downloader. Useful for downloading the full dataset in server-side mode. |
+| `dataDownloaderColumns` | `array` | value of `columns` | Simplified column list for the download file — only `label` and `exportValue` are required. |
+| `rowIsSelectable` | `bool` | `false` | Makes rows clickable/selectable. |
+| `onRowClick` | `function` | — | Called with `(row, i)` when a row is clicked. |
+| `query` | `string` | — | If provided, shows an API query button. |
+| `variables` | `object` | `{}` | GraphQL variables object passed to the query button. |
+| `ActionsComponent` | `function` | — | Custom pagination controls component. |
+| `onTableAction` | `function` | — | Fired on any table action (page, sort, filter). Receives an [action params object](#action-params). |
+| `onGlobalFilterChange` | `function` | — | Fired when the global filter changes. |
+| `onPageChange` | `function` | — | Fired when the page changes. |
+| `onRowsPerPageChange` | `function` | — | Fired when rows-per-page changes. |
+| `onSortBy` | `function` | — | Fired when the sort column changes. |
+
+---
+
+## DataTable props
+
+`DataTable` shares all of `Table`'s props except the server-side callbacks. It handles pagination, sorting, and filtering internally.
+
+Additional `DataTable`-specific prop:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `onPagination` | `function` | — | Invoked with `(page, pageSize)` on page change. |
+
+---
+
+## Column object
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | Column identifier. Used as the default property path into the row object. |
+| `label` | `string` | No | Header label. Defaults to a capitalised/spaced version of `id`. |
+| `propertyPath` | `string` | No | Dot-path into the row object. Falls back to `id` if omitted. |
+| `renderCell` | `function` | No | `(row) => node` — custom cell renderer. Takes priority over `propertyPath`. |
+| `exportValue` | `false \| function` | No | `(row) => string` for the downloaded file. Set to `false` to exclude the column from exports. |
+| `filterValue` | `false \| function` | No | `(row) => string` for the global filter. Set to `false` to exclude from filtering. |
+| `exportLabel` | `string` | No | Column header in the exported file. Defaults to a start-cased `id`. |
+| `comparator` | `function` | No | `(a, b) => -1 \| 0 \| 1` — custom sort function. Defaults to native comparison. |
+| `sortable` | `bool` | No | Enables column header sort toggle. |
+| `numeric` | `bool` | No | Right-aligns cells and uses monospaced typography. |
+| `width` | `string` | No | Column width in `px` or `%`. Only applied when `fixed` is `true`. |
+| `minWidth` | `string` | No | Minimum column width in `px`. |
+| `labelStyle` | `object` | No | CSS style applied to the column header label. |
+| `tooltip` | `node` | No | Tooltip node shown next to the column header (renders a `?` icon). |
+| `tooltipStyle` | `object` | No | CSS style applied to the tooltip. |
+| `hidden` | `array` | No | MUI breakpoints at which the column is hidden. |
+
+---
+
+## Header groups
+
+Pass `headerGroups` to render a first header row that spans multiple columns:
+
+```ts
+[
+  { id: "group1", label: "Group One", colspan: 3 },
+  { id: "group2", label: "Group Two", colspan: 2 },
+]
+```
+
+---
+
+## Action params
+
+The object passed to `onTableAction`:
+
+| Field | Type | Description |
+|---|---|---|
+| `globalFilter` | `string` | Current global filter input. |
+| `order` | `'asc' \| 'desc'` | Current sort direction. |
+| `sortBy` | `string` | Column `id` currently sorted by. |
+| `page` | `number` | Current page index. |
+
+---
+
+## Table modes
+
+**Client-side** (`DataTable`): all pagination, filtering, and sorting happen in the browser. All rows must be in `rows`.
+
+**Server-side** (`Table`): the table fires `onTableAction` on user interactions. The caller is responsible for re-fetching and updating `rows`. Set `rowCount` to the total row count so pagination controls render correctly.
+
+`dataDownloader` does not work properly in server-side mode unless `dataDownloaderRows` is a function that fetches the full dataset.

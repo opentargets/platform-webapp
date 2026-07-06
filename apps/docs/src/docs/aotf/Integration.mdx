@@ -16,6 +16,82 @@ AOTF lives in `apps/platform`, not in `packages/sections`, because it is deeply 
 
 ---
 
+## Directory structure
+
+```
+AssociationsToolkit/
+├── AssociationsView.tsx          # Top-level entry point — composes all providers + UI
+├── index.ts                      # Public exports
+├── types.ts                      # Shared TypeScript types (ENTITY, QueryState, etc.)
+│
+├── associationsUtils/            # Pure utilities and constants
+│   ├── index.ts                  # getScale, getCellId, getLegend, TABLE_PREFIX,
+│   │                             # tableCSSVariables, serializeSorting, …
+│   ├── associations.ts           # GQL response parsers + data-source score helpers
+│   ├── interactors.ts            # Interactors-specific helpers
+│   └── Legend.ts                 # D3 colour-scale SVG legend builder
+│
+├── static_datasets/              # Static column / metric definitions
+│   ├── dataSourcesAssoc.ts       # DataSourceDef[] — evidence data sources
+│   ├── prioritisationColumns.ts  # Prioritisation column defs
+│   └── rowMetrics.ts             # ROW_METRICS — novelty gauge, METRICS_SORT_FIELD resolver
+│
+├── context/                      # React context providers (one concern each)
+│   ├── AssociationsQueryContext.tsx   # Reducer state + URL-backed query params
+│   ├── AssociationsURLContext.tsx     # UI URL params: display mode, pins, uploads, focus
+│   ├── AssociationsDataContext.tsx    # Fetched data for core / pinned / uploaded rows
+│   ├── AssociationsFocusContext.tsx   # Active row/section state + URL focus sync
+│   ├── aotfActions.ts            # Action creators
+│   └── aotfReducer.ts            # Query state reducer (4 fields)
+│
+├── hooks/
+│   └── useAssociationsData.ts    # Apollo-backed pagination hook used by AssociationsDataContext
+│
+└── components/
+    ├── layout.tsx                # Shared styled layout primitives (zones, containers)
+    │
+    ├── controls/                 # Toolbar controls above the table
+    │   ├── ActiveFiltersPanel.tsx
+    │   ├── AotfApiPlayground.tsx
+    │   ├── ColumnOptionsMenu.tsx
+    │   ├── DisplayModeSwitch.tsx
+    │   ├── ExportMenu.tsx
+    │   ├── FacetsSearch.tsx
+    │   ├── NameFilter.tsx
+    │   └── HeaderControls/       # Per-datasource column weight / required sliders
+    │       ├── HeaderControls.tsx
+    │       ├── RequiredControl.tsx
+    │       ├── SliderControl.tsx
+    │       └── index.ts
+    │
+    ├── data/                     # Data import / export components
+    │   ├── DataDownloader.tsx
+    │   └── DataUploader/
+    │       ├── DataUploader.tsx
+    │       ├── NestedItem.tsx
+    │       ├── ValidationQuery.gql
+    │       └── index.ts
+    │
+    └── Table/                    # Table rendering
+        ├── TableAssociations.tsx # Root table: builds columns, three TanStack table instances
+        ├── TableHeader.tsx       # Sticky column headers with sort / aggregation row
+        ├── TableBody.tsx         # Row rendering, section drawer, interactors expansion
+        ├── TableFooter.tsx       # Pagination + colour-scale legend
+        ├── TableCell.tsx         # Score cell (rectangular / circular, colour-scaled)
+        ├── CellName.tsx          # Name cell with pin/unpin action
+        ├── AggregationsRow.tsx   # Second header row — datasource aggregation buttons
+        ├── AssocTooltip.tsx      # Styled MUI tooltip wrapper
+        ├── MetricCells.tsx       # Novelty gauge cell renderer
+        ├── SectionRender.tsx     # Lazy evidence-section drawer content
+        └── RowInteractors/       # Protein–protein interactors sub-table
+            ├── RowInteractorsWrapper.tsx
+            ├── RowInteractorsTable.tsx
+            ├── useRowInteractors.ts
+            └── InteractorsQuery.gql
+```
+
+---
+
 ## Entry point
 
 ```tsx
