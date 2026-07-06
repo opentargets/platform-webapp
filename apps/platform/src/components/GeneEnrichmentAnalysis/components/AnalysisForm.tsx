@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { AnalysisInputs, AssociationsState, GeneSetSource } from "../types";
+import { GseaLibrariesMap } from "../constants";
 
 interface AnalysisFormProps {
   libraries: string[];
@@ -23,18 +24,32 @@ interface AnalysisFormProps {
   onSubmit: () => void;
 }
 
-const LIBRARY_DISPLAY_NAMES: Record<string, string> = {
-  ReactomePathways_2025: "Reactome 2025",
-  "GO:BP_2025": "Gene Ontology (Biological Process) 2025",
-  "GO:CC_2025": "Gene Ontology (Cellular Component) 2025",
-  "GO:MF_2025": "Gene Ontology (Molecular Function) 2025",
-};
+const LIBRARY_DISPLAY_NAMES: Record<string, string> = GseaLibrariesMap;
 
 /** Extract display name from library path */
 function getLibraryDisplayName(library: string): string {
   const parts = library.split("/");
   const rawName = parts[parts.length - 1] || library;
   return LIBRARY_DISPLAY_NAMES[rawName] ?? rawName;
+}
+
+/** Sort libraries: reactome first, go_* next, chembl last */
+export function sortLibraries(libs: string[]): string[] {
+  return [...libs].sort((a, b) => {
+    const aLower = a.toLowerCase();
+    const bLower = b.toLowerCase();
+
+    // Reactome first
+    if (aLower.includes("reactome") && !bLower.includes("reactome")) return -1;
+    if (!aLower.includes("reactome") && bLower.includes("reactome")) return 1;
+
+    // GO next
+    if (aLower.includes("go_") && !bLower.includes("go_")) return -1;
+    if (!aLower.includes("go_") && bLower.includes("go_")) return 1;
+
+    // ChEMBL last (everything else)
+    return a.localeCompare(b);
+  });
 }
 
 function AnalysisForm({
@@ -87,7 +102,7 @@ function AnalysisForm({
               <MenuItem value="" disabled>
                 Choose a library...
               </MenuItem>
-              {libraries.map((lib) => (
+              {sortLibraries(libraries).map((lib) => (
                 <MenuItem value={lib} key={lib}>
                   {getLibraryDisplayName(lib)}
                 </MenuItem>

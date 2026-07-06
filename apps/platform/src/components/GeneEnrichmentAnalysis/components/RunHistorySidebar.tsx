@@ -26,6 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { AnalysisRun, AssociationsState } from "../types";
+import { GseaLibrariesMap } from "../constants";
 
 interface RunHistorySidebarProps {
   runs: AnalysisRun[];
@@ -76,12 +77,7 @@ function formatTimeAgo(timestamp: number): string {
   return `${days}d ago`;
 }
 
-const LIBRARY_DISPLAY_NAMES: Record<string, string> = {
-  ReactomePathways_2025: "Reactome 2025",
-  "GO:BP_2025": "Gene Ontology (Biological Process) 2025",
-  "GO:CC_2025": "Gene Ontology (Cellular Component) 2025",
-  "GO:MF_2025": "Gene Ontology (Molecular Function) 2025",
-};
+const LIBRARY_DISPLAY_NAMES: Record<string, string> = GseaLibrariesMap
 
 /** Get library display name (extract last part of path) */
 function getLibraryDisplayName(library: string): string {
@@ -189,6 +185,7 @@ function RunHistorySidebar({
         ) : (
           <List dense disablePadding>
             {sortedRuns.map((run) => {
+            
               const isActive = run.id === activeRunId;
               const isStale = isRunStale(run, currentAssociationsState);
               const isRunning = run.status === "pending" || run.status === "fetching_associations" || run.status === "running_gsea";
@@ -202,6 +199,7 @@ function RunHistorySidebar({
                     key={run.id}
                     title={
                       <Box>
+                        <div>{run.efoName}</div>
                         <div>{getLibraryDisplayName(run.inputs.selectedLibrary)}</div>
                         <div>{formatTimeAgo(run.timestamp)}</div>
                         {isComplete && <div>{run.results.length} pathways</div>}
@@ -285,6 +283,9 @@ function RunHistorySidebar({
                       }
                       secondary={
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                            {run.efoName}
+                          </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {formatTimeAgo(run.timestamp)}
                           </Typography>

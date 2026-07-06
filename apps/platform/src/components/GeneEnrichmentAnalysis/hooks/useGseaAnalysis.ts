@@ -30,6 +30,7 @@ export function useGseaAnalysis({ client, state, dispatch }: UseGseaAnalysisPara
       status: "pending",
       inputs: { ...analysisInputs },
       efoId: isStandalone ? "standalone" : associationsState.efoId,
+      efoName: isStandalone ? "Standalone" : associationsState.efoName,
       genes: [],
       results: [],
       inputOverlap: null,
@@ -99,7 +100,16 @@ export function useGseaAnalysis({ client, state, dispatch }: UseGseaAnalysisPara
         analysisDirection: analysisInputs.analysisDirection,
       });
 
-      dispatch(updateRun(runId, { results, inputOverlap, status: "complete" }));
+      // Find max NES and assign it to null NES values
+      const validNesValues = results.map(r => r.NES).filter((nes): nes is number => typeof nes === "number");
+      const maxNes = validNesValues.length > 0 ? Math.max(...validNesValues) : 0;
+      
+      const normalizedResults = results.map(r => ({
+        ...r,
+        NES: r.NES === null || r.NES === undefined ? maxNes : r.NES,
+      }));
+
+      dispatch(updateRun(runId, { results: normalizedResults, inputOverlap, status: "complete" }));
     } catch (error) {
       dispatch(
         updateRun(runId, {

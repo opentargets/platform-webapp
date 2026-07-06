@@ -5,7 +5,7 @@ import { deleteRun, setActiveRun, setAnalysisInputs } from "../actions";
 import { useGseaAnalysis } from "../hooks/useGseaAnalysis";
 import { useGeneEnrichment } from "../Provider";
 import type { GeneSetSource } from "../types";
-import AnalysisForm from "./AnalysisForm";
+import AnalysisForm, { sortLibraries } from "./AnalysisForm";
 import AnalysisResults from "./AnalysisResults";
 import RunHistorySidebar from "./RunHistorySidebar";
 
@@ -30,7 +30,7 @@ function AnalysisContainer() {
   // Set library to first option when available and not already set
   useEffect(() => {
     if (!analysisInputs.selectedLibrary && libraries.length > 0) {
-      dispatch(setAnalysisInputs({ selectedLibrary: libraries[0] }));
+      dispatch(setAnalysisInputs({ selectedLibrary: sortLibraries(libraries)[0] }));
     }
   }, [libraries, analysisInputs.selectedLibrary, dispatch]);
 
@@ -126,7 +126,7 @@ function AnalysisContainer() {
 
     // Analysis complete
     if (step === "complete") {
-      return <AnalysisResults results={results} inputOverlap={inputOverlap} onReset={reset} activeRunId={activeRunId} />;
+      return <AnalysisResults results={results} inputOverlap={inputOverlap} onReset={reset} activeRunId={activeRunId} diseaseId={state.associationsState.efoId} />;
     }
 
     // Default: input form

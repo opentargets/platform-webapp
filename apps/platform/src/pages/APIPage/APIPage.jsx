@@ -31,6 +31,7 @@ import VARIANT_ANNOTATION from "./VariantAnnotation.gql";
 import PPPCRISPRQUERY from "./PPPCrisprQuery.gql";
 import PPPACCOUNTDISEASES from "./PPPAssociatedDisease.gql";
 import TARGETQTLCREDIBLESSETS from "./TargetQTLCredibleSetsQuery.gql";
+import NOVELTYTIMESERIES from "./NoveltyTimeSeries.gql";
 
 const QueryButton = styled(Button)`
   color: #fff;
@@ -138,6 +139,17 @@ function APIPage() {
                     variant="contained"
                     color="primary"
                     onClick={() => setQuery(TARGETQTLCREDIBLESSETS.loc.source.body)}
+                  >
+                    Run sample query
+                  </QueryButton>
+                  <Typography variant="subtitle2" display="block" paragraph>
+                    Explore the novelty time series for the PCSK9–Hypercholesterolemia association
+                  </Typography>
+                  <QueryButton
+                    className={classes.buttonMargin}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setQuery(NOVELTYTIMESERIES.loc.source.body)}
                   >
                     Run sample query
                   </QueryButton>

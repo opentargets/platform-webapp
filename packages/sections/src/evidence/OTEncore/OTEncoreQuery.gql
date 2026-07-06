@@ -32,13 +32,16 @@ query EncoreQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
         cellType
         interactingTargetFromSourceId
         phenotypicConsequenceLogFoldChange
-        phenotypicConsequenceFDR
         phenotypicConsequencePValue
         geneticInteractionScore
-        geneticInteractionPValue
         geneticInteractionFDR
-        geneInteractionType
+        geneticInteractionType
         releaseVersion
+        validationReadouts {
+          isValidated
+          readoutMethodName
+          screen
+        }
       }
     }
   }
