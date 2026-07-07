@@ -1,0 +1,146 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import Mermaid from "../components/Mermaid";
+
+<Meta title="Architecture" />
+
+# Architecture
+
+## Package dependency graph
+
+<Mermaid>{`
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#dbeaf6","primaryBorderColor":"#3489ca","primaryTextColor":"#18405e","lineColor":"#3489ca","clusterBkg":"#eef5fb","clusterBorder":"#3489ca","titleColor":"#18405e","background":"#ffffff","fontFamily":"Inter,sans-serif"}}}%%
+flowchart LR
+  subgraph Apps["Applications"]
+    direction TB
+    platform["apps/platform"]
+    docs["apps/docs"]
+  end
+
+  subgraph Pkgs["Packages"]
+    direction TB
+    sections["packages/sections"]
+    ui["packages/ui"]
+  end
+
+  subgraph Shared["Shared"]
+    direction TB
+    config["@ot/config"]
+    constants["@ot/constants"]
+    utils["@ot/utils"]
+  end
+
+  platform --> sections & ui
+  platform --> config & constants & utils
+  sections --> ui
+  sections --> config & constants & utils
+  ui --> config & utils
+  docs -.-> sections & ui & config
+`}</Mermaid>
+
+Solid arrows are hard dependencies. Dotted arrows indicate that `apps/docs` consumes those packages only for stories and theme bootstrapping.
+
+## Package roles
+
+### `apps/platform`
+
+The deployable React SPA. It owns:
+- **Routing** — React Router v6, one route per entity type (target, disease, drug, variant, study, credible set, evidence)
+- **Page layout** — `ProfileHeader`, `RoutingTabs`, `Section` composition per entity
+- **Feature components** — `AssociationsToolkit`, `GeneEnrichmentAnalysis`, and other analysis widgets that are too platform-specific to live in `packages/sections`
+- **App config bootstrap** — reads `window.configUrlApi`, `window.configProfile`, etc. set by the deployment environment
+
+### `packages/ui`
+
+Shared, low-level React components that have no data-fetching logic. Design-system primitives. Components here should be:
+- Self-contained (no Apollo queries, no domain knowledge)
+- Documented with stories and autodocs
+- Exported from `src/index.tsx`
+
+Current components include: `Link`, `Chip`, `OtTable`, `OtTableSSP`, `DataDownloader`, `ApiPlaygroundDrawer`, `NavBar`, `Footer`, `ObsPlot`, `Section`, `Summary`, `Tooltip`, `Viewer`, providers (`OTApolloProvider`, `ThemeProvider`, `PlatformApiProvider`), and ~60 others.
+
+### `packages/sections`
+
+Composed widgets that combine UI primitives with domain knowledge and GraphQL queries. Organised by entity type:
+
+```
+sections/src/
+├── common/          # Shared section utilities (Bibliography, Literature)
+├── target/          # Target evidence sections
+├── disease/         # Disease evidence sections
+├── drug/            # Drug sections
+├── evidence/        # Evidence page sections
+├── study/           # GWAS study sections
+├── credibleSet/     # Credible set sections
+└── variant/         # Variant sections
+```
+
+Each section typically exports a `Body` component (the data table/chart), a `Summary` component (the card in the section list), and a `definition` object.
+
+### `@ot/config`
+
+Provides two things:
+
+1. **`getConfig()`** — reads runtime configuration injected by the deployment environment via `window.configUrlApi`, `window.configOTAiApi`, `window.configProfile`, etc. Falls back to Vite env vars (`VITE_API_URL`) for local dev.
+2. **MUI theme** — `createTheme()` built from `config.profile.primaryColor` / `secondaryColor`, custom typography variants (`assoc_header`, `monoText`, `controlHeader`), and component overrides.
+
+### `@ot/constants`
+
+Two categories of content:
+
+1. **App constants** — UI labels, colour arrays, clinical stage maps, chunk sizes, data source metadata, QTL study types, ClinVar star maps, and many others (see [Packages/ot-constants](?path=/docs/packages-ot-constants--docs))
+2. **Generated GraphQL types** — `src/types/index.ts` is the output of `graphql-codegen` against the production schema. This is ~140 KB of TypeScript covering every query, mutation, and fragment in the codebase.
+
+### `@ot/utils`
+
+Pure utility functions with no React or Apollo dependencies. Covers: formatters, URL builders, comparators, fetch helpers, literature utilities, search suggestions, study/variant helpers, and a `createScopedContext` factory.
+
+## Data flow
+
+<Mermaid>{`
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#dbeaf6","primaryBorderColor":"#3489ca","primaryTextColor":"#18405e","lineColor":"#3489ca","clusterBkg":"#eef5fb","clusterBorder":"#3489ca","titleColor":"#18405e","background":"#ffffff","fontFamily":"Inter,sans-serif"}}}%%
+graph LR
+  browser["Browser"] --> router["React Router\napps/platform"]
+  router --> page["Page component"]
+  page --> layout["ProfileHeader\n+ RoutingTabs"]
+  layout --> sec["Section[]\npackages/sections"]
+  sec --> hook["usePlatformApi()\npackages/ui"]
+  hook --> apollo["OTApolloProvider\npackages/ui"]
+  apollo --> api["GraphQL API\n@ot/config"]
+  sec --> constants["GraphQL types\n@ot/constants"]
+  sec --> utils["Utilities\n@ot/utils"]
+`}</Mermaid>
+
+## Turbo pipeline
+
+Tasks run with Turbo v2 via `turbo.json` at the repo root. Key tasks:
+
+| Task | Depends on | Output |
+|---|---|---|
+| `build` (platform) | `^build` (packages) | `bundle-platform/**` |
+| `build` (docs) | — | `storybook-static/**` |
+| `dev` | — | persistent (no cache) |
+| `generateAPITypes` | — | `src/types/**`, `graphql.schema.json` |
+| `lint` | — | no output |
+
+`apps/docs/turbo.json` overrides the build output path to `storybook-static/**` via `"extends": ["//"]`.
+
+## Storybook preview environment
+
+The Storybook dev server bootstraps the same providers the platform uses:
+
+```tsx
+// .storybook/preview.ts
+decorators: [
+  (Story) => (
+    <MemoryRouter>
+      <OTApolloProvider config={getConfig()}>
+        <ThemeProvider theme={theme}>
+          <Story />
+        </ThemeProvider>
+      </OTApolloProvider>
+    </MemoryRouter>
+  )
+]
+```
+
+`window.configUrlApi` is set in `.storybook/preview-head.html` to the **production GraphQL endpoint** — stories for sections components can make real API calls.

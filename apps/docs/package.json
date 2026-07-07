@@ -1,0 +1,35 @@
+{
+  "name": "docs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build"
+  },
+  "dependencies": {
+    "@mui/material": "^5.14.1",
+    "@ot/config": "*",
+    "mermaid": "^11.16.0",
+    "polished": "^2.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "6.28.0",
+    "ui": "*"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "10.0.6",
+    "@storybook/react-vite": "^10.0.6",
+    "@types/node": "^24.6.0",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^5.0.4",
+    "graphiql": "^1.4.2",
+    "graphql": "^15.0.0",
+    "remark-gfm": "^4.0.1",
+    "storybook": "^10.0.6",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vite-plugin-simple-gql": "^0.5.0"
+  }
+}

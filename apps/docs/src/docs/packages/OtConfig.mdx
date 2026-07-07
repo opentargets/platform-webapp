@@ -1,0 +1,115 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Packages/ot-config" />
+
+# `@ot/config`
+
+Runtime configuration and MUI theme factory for the Open Targets Platform.
+
+**Package name:** `@ot/config`  
+**Location:** `packages/ot-config/`  
+**Entry point:** `packages/ot-config/src/index.ts`
+
+---
+
+## What it exports
+
+```ts
+export { getEnvironmentConfig } from "./environment";
+export { getConfig } from "./environment";
+// MUI theme created from runtime config
+export { theme } from "./theme";          // re-exported via createTheme()
+export type { Config, Environment } from "./types";
+```
+
+---
+
+## `getConfig()`
+
+Reads runtime configuration from `window.*` globals (set by the deployment environment before React loads) with fallback to Vite env vars for local development.
+
+```ts
+import { getConfig } from "@ot/config";
+
+const config = getConfig();
+// config.urlApi       → GraphQL API endpoint
+// config.urlAiApi     → OT AI API endpoint
+// config.gitVersion   → build SHA, injected at deploy time
+// config.profile      → partner preview flags, colours, etc.
+// config.googleTagManagerID
+// config.geneticsPortalUrl
+```
+
+### Config resolution order
+
+| Field | Window global | Vite env var | Default |
+|---|---|---|---|
+| `urlApi` | `window.configUrlApi` | `VITE_API_URL` | `""` |
+| `urlAiApi` | `window.configOTAiApi` | `VITE_AI_API_URL` | `""` |
+| `gitVersion` | `window.gitVersion` | `VITE_GIT_VERSION` | `""` |
+| `profile` | `window.configProfile` | — | `{ isPartnerPreview: false }` |
+| `googleTagManagerID` | `window.configGoogleTagManagerID` | — | `null` |
+| `geneticsPortalUrl` | `window.configGeneticsPortalUrl` | — | `"https://genetics.opentargets.org"` |
+
+### `Config` type
+
+```ts
+interface Config {
+  urlApi: string;
+  urlAiApi: string;
+  profile: Record<string, unknown>;
+  googleTagManagerID: string | null;
+  geneticsPortalUrl: string;
+  gitVersion: string;
+}
+```
+
+---
+
+## `getEnvironmentConfig(env)`
+
+Returns a hardcoded `Config` for `"development"` or `"production"` environments. Used for local dev tooling — prefer `getConfig()` in application code.
+
+```ts
+import { getEnvironmentConfig } from "@ot/config";
+
+const devConfig = getEnvironmentConfig("development");
+// devConfig.urlApi → "http://localhost:8080"
+```
+
+---
+
+## MUI theme
+
+The theme is created at module evaluation time using `config.profile.primaryColor` and `config.profile.secondaryColor`. It sets:
+
+- `shape.borderRadius: 2`
+- `typography.fontFamily: "Inter"`
+- Custom variants: `assoc_header`, `monoText` (Roboto Mono), `controlHeader`
+- Custom palette tokens: `plain`, `footer`, extended box shadows
+- Component overrides: `MuiButton` (no ripple, border, fixed height 32px), `MuiTab` (no ripple, no text transform)
+
+### Storybook usage
+
+`preview.ts` creates its own theme instance with hardcoded colours (`#3489ca` / `#18405e`) and passes it to `ThemeProvider` — this avoids the circular dependency of `getConfig()` needing `window.configProfile` before the preview head has loaded.
+
+---
+
+## Window augmentation
+
+`@ot/config` extends the global `Window` interface:
+
+```ts
+declare global {
+  interface Window {
+    configUrlApi?: string;
+    configOTAiApi?: string;
+    configProfile?: Record<string, unknown>;
+    configGoogleTagManagerID?: string;
+    configGeneticsPortalUrl?: string;
+    gitVersion?: string;
+  }
+}
+```
+
+This declaration is re-used across the codebase — `window.configUrlApi` is always typed.

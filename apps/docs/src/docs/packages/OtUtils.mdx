@@ -1,0 +1,136 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Packages/ot-utils" />
+
+# `@ot/utils`
+
+Pure utility functions for the Open Targets Platform. No React, no Apollo — safe to use in any context.
+
+**Package name:** `@ot/utils`  
+**Location:** `packages/ot-utils/`  
+**Entry point:** `packages/ot-utils/src/index.ts`
+
+---
+
+## Modules
+
+### `formatters`
+
+Number and string formatting utilities.
+
+```ts
+import { formatSignificantDigits, formatPercentage } from "@ot/utils";
+
+formatSignificantDigits(0.000123)   // → "1.23e-4"
+formatSignificantDigits(12345)      // → "1.23e+4"
+formatSignificantDigits(3.14159)    // → "3.14"
+formatSignificantDigits(null)       // → null
+
+formatPercentage(0.956)   // → "96"    (≥1% → integer)
+formatPercentage(0.005)   // → "0.5"   (<1% → first non-zero decimal)
+formatPercentage(0)       // → "0"
+```
+
+### `urls`
+
+URL builders for external services, all config-aware.
+
+```ts
+import { epmcUrl, otgStudyUrl, otgVariantUrl, europePmcLiteratureQuery } from "@ot/utils";
+
+epmcUrl("33303749")                    // → "https://europepmc.org/article/MED/33303749"
+otgStudyUrl("GCST006614")              // → "${geneticsPortalUrl}/study/GCST006614"
+otgVariantUrl("1_154426264_C_T")       // → "${geneticsPortalUrl}/variant/1_154426264_C_T"
+```
+
+### `fetch`
+
+Typed fetch helpers for the OT AI API and general REST calls. Includes `fetcher` (used by `ApiPlaygroundDrawer` for GraphQL queries).
+
+```ts
+import { fetcher } from "@ot/utils";
+
+const result = await fetcher({
+  url: config.urlApi,
+  query: MY_GQL_QUERY,
+  variables: { id: "ENSG00000141510" },
+});
+```
+
+### `comparators`
+
+Sorting utilities for data tables.
+
+```ts
+import { comparatorFromAccessor, nullishComparator } from "@ot/utils";
+```
+
+### `createScopedContext`
+
+Factory for type-safe scoped React contexts — avoids the `undefined` check boilerplate on every `useContext` call.
+
+```ts
+import { createScopedContext } from "@ot/utils";
+
+const [MyProvider, useMyContext] = createScopedContext<MyState>("MyContext");
+// useMyContext() throws a descriptive error if used outside <MyProvider>
+```
+
+### `interactors`
+
+Helpers for protein–protein interactor data used in the AOTF row expansion.
+
+### `literature`
+
+Utilities for Europe PMC literature queries and result parsing.
+
+### `publicOrPPP`
+
+Helpers for choosing between public and partner-preview (PPP) data sources.
+
+```ts
+import { publicOrPPPData } from "@ot/utils";
+
+const data = publicOrPPPData(publicData, pppData, isPartnerPreview);
+```
+
+### `searchSuggestions`
+
+Default search suggestion generation based on entity type and recent history.
+
+### `study` / `variant`
+
+Domain helpers for GWAS study and variant data normalisation.
+
+### `global`
+
+Shared browser globals and type-safe window utilities.
+
+### `alphaFold`
+
+AlphaFold confidence score colour and label helpers (mirrors the `@ot/constants` AlphaFold exports, providing the functional layer).
+
+### `downloads`
+
+CSV/TSV download helpers used by `DataDownloader`.
+
+---
+
+## Usage pattern
+
+All utilities are exported from the package root:
+
+```ts
+import { formatSignificantDigits, epmcUrl, createScopedContext } from "@ot/utils";
+```
+
+Import only what you need — the package is tree-shaken by Vite.
+
+---
+
+## Adding a utility
+
+1. Add the function to the appropriate module under `packages/ot-utils/src/`
+2. Export it from `packages/ot-utils/src/index.ts`
+3. Functions must be pure (no side effects, no React imports)
+4. TypeScript strict mode applies — fully typed inputs and outputs
