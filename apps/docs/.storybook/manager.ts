@@ -3,8 +3,10 @@ import { create } from "storybook/theming/create";
 
 const theme = create({
   base: "light",
-  brandTitle: "Open Targets UI",
+  brandTitle: "Open Targets",
+  brandImage: "./OT_logo_colour.svg",
   brandUrl: "https://platform.opentargets.org",
+  brandTarget: "_blank",
   colorPrimary: "#3489ca",
   colorSecondary: "#18405e",
   appBg: "#f8fafc",

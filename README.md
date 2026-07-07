@@ -1,5 +1,9 @@
-[![CI](https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml/badge.svg)](https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml)
-[![Development build](https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml/badge.svg)](https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml)
+<div align="center">
+  <img src="apps/docs/public/OT_logo_colour.svg" alt="Open Targets" width="340" />
+  <br /><br />
+  <a href="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml/badge.svg" alt="Development build" /></a>
+</div>
 
 # Open Targets Platform Web App
 
