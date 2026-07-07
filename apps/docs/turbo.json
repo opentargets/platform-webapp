@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "env": ["STORYBOOK_BASE_PATH"],
       "outputs": ["storybook-static/**"]
     }
   }
