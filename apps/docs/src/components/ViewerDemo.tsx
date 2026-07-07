@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
 import { createTheme, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import { ThemeProvider as StylesThemeProvider } from "@mui/styles";
 import { getAlphaFoldConfidence } from "@ot/constants";
-import { Viewer, ViewerProvider, ViewerInteractionProvider } from "ui";
+import { useEffect, useState } from "react";
+import { Viewer, ViewerInteractionProvider, ViewerProvider } from "ui";
 
 type Structure = { structureData: string; info: object };
 
@@ -31,11 +31,11 @@ export default function ViewerDemo() {
 
   useEffect(() => {
     fetch(CIF_URL)
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
       })
-      .then(cif => {
+      .then((cif) => {
         setData([{ structureData: cif, info: {} }]);
         setStatus("ready");
       })
@@ -44,7 +44,15 @@ export default function ViewerDemo() {
 
   if (status === "loading") {
     return (
-      <div style={{ height: 520, display: "flex", alignItems: "center", justifyContent: "center", color: "#5A5F5F" }}>
+      <div
+        style={{
+          height: 520,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#5A5F5F",
+        }}
+      >
         Loading AlphaFold structure for TP53…
       </div>
     );
@@ -52,7 +60,15 @@ export default function ViewerDemo() {
 
   if (status === "error") {
     return (
-      <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", color: "#ec2746" }}>
+      <div
+        style={{
+          height: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#ec2746",
+        }}
+      >
         Could not fetch structure from AlphaFold EBI.
       </div>
     );
