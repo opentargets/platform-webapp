@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@storybook/addon-docs": "10.0.6",
-    "@storybook/addon-themes": "^10.4.6",
     "@storybook/react-vite": "^10.0.6",
     "@types/node": "^24.6.0",
     "@types/react": "^18.0.28",

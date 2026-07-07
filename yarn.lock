@@ -2697,13 +2697,6 @@
     react-dom "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
     ts-dedent "^2.0.0"
 
-"@storybook/addon-themes@^10.4.6":
-  version "10.4.6"
-  resolved "https://registry.yarnpkg.com/@storybook/addon-themes/-/addon-themes-10.4.6.tgz#0e1d23fda734f30abbb246089686f3a57b30eff7"
-  integrity sha512-80d622oB9xWZs3VH4uywkLOA5L2DAx04lVouvCM4XH+pLnJElidoylOLm3i3ByvlGkRjCbB27OUVsW94IgyDrw==
-  dependencies:
-    ts-dedent "^2.0.0"
-
 "@storybook/builder-vite@10.4.6":
   version "10.4.6"
   resolved "https://registry.yarnpkg.com/@storybook/builder-vite/-/builder-vite-10.4.6.tgz#18c70a3f5b3ab520db3a2371922b5e6366e50b66"

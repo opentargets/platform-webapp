@@ -10,7 +10,6 @@ const config: StorybookConfig = {
   ],
 
   addons: [
-    "@storybook/addon-themes",
     {
       name: "@storybook/addon-docs",
       options: {

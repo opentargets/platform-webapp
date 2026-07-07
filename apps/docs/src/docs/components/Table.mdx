@@ -1,10 +1,15 @@
 import { Meta } from "@storybook/addon-docs/blocks";
+import TableDemo from "../../components/TableDemo";
 
 <Meta title="Components/Table" />
 
 # Table & DataTable
 
 Two table components available from `packages/ui`:
+
+<TableDemo />
+
+
 
 - **`Table`** — for server-side pagination (index-based or cursor-based). Fires callbacks when the user paginates, sorts, or filters so the caller can refetch.
 - **`DataTable`** — a thin wrapper around `Table` for client-side pagination, when all data is already available.

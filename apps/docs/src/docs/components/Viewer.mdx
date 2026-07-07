@@ -1,10 +1,15 @@
 import { Meta } from "@storybook/addon-docs/blocks";
+import ViewerDemo from "../../components/ViewerDemo";
 
 <Meta title="Components/Viewer" />
 
 # Viewer
 
 A 3D molecular structure viewer built on [3Dmol.js](https://3dmol.csb.pitt.edu/). Used on target profile pages to show AlphaFold structures and small-molecule binding poses.
+
+<ViewerDemo />
+
+> TP53 (UniProt P04637) AlphaFold structure coloured by pLDDT confidence — blue = very high (> 90), cyan = confident (70–90), yellow = low (50–70), orange = very low (< 50).
 
 **Exports:** `Viewer`, `ViewerProvider`, `ViewerInteractionProvider`  
 **Location:** `packages/ui/src/components/Viewer/`
