@@ -1,0 +1,165 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ColorPalette } from "../components/ColorPalette";
+
+<Meta title="Theme & Colors" />
+
+# Theme & Colors
+
+All color decisions in the platform flow from two sources: the **MUI theme** defined in `@ot/config/src/theme.ts` and the **data-visualization palettes** defined in `@ot/constants` and the AssociationsToolkit.
+
+---
+
+## Theme palette
+
+The two brand colors that seed the MUI theme. `primaryColor` and `secondaryColor` are set in the runtime config profile and can be overridden per deployment.
+
+<ColorPalette
+  title="Primary"
+  description="Default: #3489ca — seeds palette.primary.main. Light (+20%) and dark (−20%) variants are derived with polished."
+  colors={[
+    { name: "primary.light", hex: "#5da3d5" },
+    { name: "primary.main", hex: "#3489ca" },
+    { name: "primary.dark", hex: "#296ea2" },
+  ]}
+/>
+
+<ColorPalette
+  title="Secondary"
+  description="Default: #18405e — seeds palette.secondary.main. Used for the app header, active nav items, and chip backgrounds."
+  colors={[
+    { name: "secondary.light", hex: "#46688e" },
+    { name: "secondary.main", hex: "#18405e" },
+    { name: "secondary.dark", hex: "#13334b" },
+  ]}
+/>
+
+<ColorPalette
+  title="Text & surface"
+  description="Static values applied directly in the theme config."
+  colors={[
+    { name: "text.primary", hex: "#5A5F5F" },
+    { name: "footer bg", hex: "#2e2d35" },
+    { name: "background", hex: "#fafafa" },
+  ]}
+/>
+
+---
+
+## Neutral scale
+
+Defined as CSS custom properties in `associationsUtils/index.ts` and used across the AOTF table for borders, row backgrounds, and controls.
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "grey-lighter", hex: "#f6f6f6" },
+    { name: "grey-light", hex: "#ececec" },
+    { name: "grey-mid", hex: "#e0dede" },
+    { name: "grey-dark", hex: "#b8b8b8" },
+  ]}
+/>
+
+---
+
+## Data visualisation
+
+### Association score scale
+
+A 9-stop blue ramp (`ASSOCIATION_COLORS` in `associationsUtils/index.ts`) mapped with `d3.scaleQuantize` over the `[0, 1]` domain. Low scores get the pale end; high scores get the saturated end.
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "0.0", hex: "#dbeaf6" },
+    { name: "0.1", hex: "#BFDAEE" },
+    { name: "0.2", hex: "#A5CAE6" },
+    { name: "0.3", hex: "#8ABADE" },
+    { name: "0.4", hex: "#6EA9D7" },
+    { name: "0.5", hex: "#4F97CF" },
+    { name: "0.6", hex: "#3583C0" },
+    { name: "0.8", hex: "#2C6EA0" },
+    { name: "1.0", hex: "#245780" },
+  ]}
+/>
+
+### `colorRange` — score heatmap
+
+Defined in `@ot/constants`. A 10-stop blue scale used by non-AOTF score heatmaps (e.g. OtTable cells).
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "0", hex: "#e5edf4" },
+    { name: "1", hex: "#ccdcea" },
+    { name: "2", hex: "#b2cbe0" },
+    { name: "3", hex: "#99b9d6" },
+    { name: "4", hex: "#7fa8cc" },
+    { name: "5", hex: "#6697c1" },
+    { name: "6", hex: "#4c85b7" },
+    { name: "7", hex: "#3274ad" },
+    { name: "8", hex: "#1963a3" },
+    { name: "9", hex: "#005299" },
+  ]}
+/>
+
+### Prioritization scale
+
+A 13-stop diverging palette (`PRIORITISATION_COLORS`) for the target prioritization view. Negative values get reds, neutral gets tan, positive values get greens.
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "−1.0", hex: "#a01813" },
+    { name: "−0.8", hex: "#bc3a19" },
+    { name: "−0.6", hex: "#d65a1f" },
+    { name: "−0.4", hex: "#e08145" },
+    { name: "−0.3", hex: "#e3a772" },
+    { name: "−0.1", hex: "#e6ca9c" },
+    { name: "0.0", hex: "#eceada" },
+    { name: "+0.1", hex: "#c5d2c1" },
+    { name: "+0.3", hex: "#9ebaa8" },
+    { name: "+0.4", hex: "#78a290" },
+    { name: "+0.6", hex: "#528b78" },
+    { name: "+0.8", hex: "#2f735f" },
+    { name: "+1.0", hex: "#2e5943" },
+  ]}
+/>
+
+---
+
+## Novelty categorical colors
+
+Defined as `CATEGORICAL_COLORS` in `NoveltyCharts.tsx`. Used to distinguish individual data sources in the novelty time-series chart. Derived from the IBM Carbon Design categorical palette.
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "Purple", hex: "#6929c4" },
+    { name: "Teal", hex: "#005d5d" },
+    { name: "Magenta", hex: "#9f1853" },
+    { name: "Red", hex: "#fa4d56" },
+    { name: "Dark red", hex: "#570408" },
+    { name: "Green", hex: "#198038" },
+    { name: "Blue", hex: "#002d9c" },
+    { name: "Magenta light", hex: "#ee538b" },
+    { name: "Yellow", hex: "#b28600" },
+    { name: "Teal light", hex: "#009d9a" },
+    { name: "Orange", hex: "#8a3800" },
+    { name: "Purple light", hex: "#a56eff" },
+  ]}
+/>
+
+---
+
+## PharmGKB clinical annotation
+
+Three-level traffic-light scheme used in the PharmGKB section (`PHARM_GKB_COLOR` in `@ot/constants`).
+
+<ColorPalette
+  compact
+  colors={[
+    { name: "Actionable", hex: "#52a237" },
+    { name: "Moderate", hex: "#f0c584" },
+    { name: "Low / no", hex: "#ec2746" },
+  ]}
+/>

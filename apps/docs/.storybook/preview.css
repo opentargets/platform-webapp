@@ -1,0 +1,83 @@
+/* Dark mode canvas */
+html[data-theme="dark"] {
+  background-color: #0e1c2e;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .sbdocs-wrapper {
+  background-color: #0e1c2e;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .sbdocs-content {
+  background-color: #0e1c2e;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .docs-story {
+  background-color: #0e1c2e;
+}
+
+/* Docs page typography */
+.sbdocs h1,
+.sbdocs h2,
+.sbdocs h3,
+.sbdocs h4 {
+  color: #18405e;
+}
+
+html[data-theme="dark"] .sbdocs h1,
+html[data-theme="dark"] .sbdocs h2,
+html[data-theme="dark"] .sbdocs h3,
+html[data-theme="dark"] .sbdocs h4 {
+  color: #5da3d5;
+}
+
+/* h2 border — remove the default bottom border */
+.sbdocs h2 {
+  border-bottom: none;
+}
+
+/* Heading vertical rhythm */
+.sbdocs h1 {
+  margin-top: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.sbdocs h2 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.sbdocs h3 {
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sbdocs h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Dark mode code blocks */
+html[data-theme="dark"] .sbdocs pre,
+html[data-theme="dark"] .sbdocs code {
+  background-color: #152436;
+  color: #e2e8f0;
+}
+
+/* Dark mode table */
+html[data-theme="dark"] .sbdocs table th,
+html[data-theme="dark"] .sbdocs table td {
+  border-color: #1e3347;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .sbdocs table tr:nth-child(even) {
+  background-color: #152436;
+}
+
+/* Dark mode hr */
+html[data-theme="dark"] .sbdocs hr {
+  border-color: #1e3347;
+}

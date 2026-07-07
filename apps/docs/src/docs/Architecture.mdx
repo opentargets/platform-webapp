@@ -1,4 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
+import Mermaid from "../components/Mermaid";
 
 <Meta title="Architecture" />
 
@@ -6,30 +7,37 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 ## Package dependency graph
 
-```
-apps/platform  ──────────────────────────────────────────────────┐
-  (React app)                                                     │
-       │                                                          │
-       ├── packages/ui          (component primitives)            │
-       │        └── @ot/config                                    │
-       │        └── @ot/utils                                     │
-       │                                                          │
-       ├── packages/sections    (composed data widgets)           │
-       │        └── packages/ui                                   │
-       │        └── @ot/config                                    │
-       │        └── @ot/constants                                 │
-       │        └── @ot/utils                                     │
-       │                                                          │
-       ├── @ot/config           (runtime env + MUI theme)         │
-       ├── @ot/constants        (app constants + GQL types)       │
-       └── @ot/utils            (pure utilities)                  │
-                                                                  │
-apps/docs  ──────────────────────────────────────────────────────┘
-  (this Storybook)
-       ├── packages/ui    (stories live in the package itself)
-       ├── packages/sections
-       └── @ot/config     (theme + config bootstrap)
-```
+<Mermaid>{`
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#dbeaf6","primaryBorderColor":"#3489ca","primaryTextColor":"#18405e","lineColor":"#3489ca","clusterBkg":"#eef5fb","clusterBorder":"#3489ca","titleColor":"#18405e","background":"#ffffff","fontFamily":"Inter,sans-serif"}}}%%
+flowchart LR
+  subgraph Apps["Applications"]
+    direction TB
+    platform["apps/platform"]
+    docs["apps/docs"]
+  end
+
+  subgraph Pkgs["Packages"]
+    direction TB
+    sections["packages/sections"]
+    ui["packages/ui"]
+  end
+
+  subgraph Shared["Shared"]
+    direction TB
+    config["@ot/config"]
+    constants["@ot/constants"]
+    utils["@ot/utils"]
+  end
+
+  platform --> sections & ui
+  platform --> config & constants & utils
+  sections --> ui
+  sections --> config & constants & utils
+  ui --> config & utils
+  docs -.-> sections & ui & config
+`}</Mermaid>
+
+Solid arrows are hard dependencies. Dotted arrows indicate that `apps/docs` consumes those packages only for stories and theme bootstrapping.
 
 ## Package roles
 
@@ -88,18 +96,19 @@ Pure utility functions with no React or Apollo dependencies. Covers: formatters,
 
 ## Data flow
 
-```
-Browser request
-  └── apps/platform (React Router)
-        └── Page component (e.g. TargetPage)
-              └── ProfileHeader + RoutingTabs
-                    └── Section[] from packages/sections
-                          ├── usePlatformApi() (Apollo)   ← packages/ui
-                          │     └── OTApolloProvider      ← packages/ui
-                          │           └── configUrlApi    ← @ot/config
-                          ├── GraphQL types               ← @ot/constants
-                          └── Utilities                   ← @ot/utils
-```
+<Mermaid>{`
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#dbeaf6","primaryBorderColor":"#3489ca","primaryTextColor":"#18405e","lineColor":"#3489ca","clusterBkg":"#eef5fb","clusterBorder":"#3489ca","titleColor":"#18405e","background":"#ffffff","fontFamily":"Inter,sans-serif"}}}%%
+graph LR
+  browser["Browser"] --> router["React Router\napps/platform"]
+  router --> page["Page component"]
+  page --> layout["ProfileHeader\n+ RoutingTabs"]
+  layout --> sec["Section[]\npackages/sections"]
+  sec --> hook["usePlatformApi()\npackages/ui"]
+  hook --> apollo["OTApolloProvider\npackages/ui"]
+  apollo --> api["GraphQL API\n@ot/config"]
+  sec --> constants["GraphQL types\n@ot/constants"]
+  sec --> utils["Utilities\n@ot/utils"]
+`}</Mermaid>
 
 ## Turbo pipeline
 
@@ -119,7 +128,7 @@ Tasks run with Turbo v2 via `turbo.json` at the repo root. Key tasks:
 
 The Storybook dev server bootstraps the same providers the platform uses:
 
-```ts
+```tsx
 // .storybook/preview.ts
 decorators: [
   (Story) => (

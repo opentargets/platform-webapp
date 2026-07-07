@@ -6,30 +6,29 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 ## Prerequisites
 
-- Node.js 20+
-- Yarn 1.22.x (`packageManager` is locked in `package.json`)
+- Node.js 22 LTS
+- Yarn 1.22.x (the `packageManager` field in `package.json` locks the version)
 - The repo cloned from [github.com/opentargets/platform-webapp](https://github.com/opentargets/platform-webapp)
 
-## Install and run docs
+## Install and run
 
 ```bash
-# From the repo root — installs all workspaces
+# From the repo root — installs every workspace
 yarn install
 
-# Start the docs dev server (port 6006)
+# Start this Storybook (http://localhost:6006)
 yarn dev:docs
-
-# Build the static site
-yarn build:docs
 ```
 
-## Run the full platform app
+`yarn dev:docs` opens the docs site you are reading now. Sections stories can make real GraphQL calls against the production API, so most components render with live data on first load — no extra setup or local backend required. For how that wiring works, see **Architecture / Storybook preview environment**.
+
+To run the full platform app instead:
 
 ```bash
-yarn dev:platform
+yarn dev:platform   # http://localhost:3000
 ```
 
-## Useful root scripts
+## Root scripts
 
 | Script | What it does |
 |---|---|
@@ -38,18 +37,16 @@ yarn dev:platform
 | `yarn build:docs` | Static Storybook build → `apps/docs/storybook-static/` |
 | `yarn build:platform` | Platform production build |
 | `yarn lint` | Biome check across all workspaces |
-| `yarn lint:fix` | Biome autofix |
-| `yarn check:fix` | Biome format + lint fix |
+| `yarn check:fix` | Biome format + lint autofix |
 
-## Branch conventions
+## Where things live
 
-Active feature branches use the prefix `cc-` (Carlos Cruz). The main integration branch is `main`. The `cc-story` branch carries the Storybook setup and is kept rebased on `main`.
+- **Component stories** live *in the package they document* (`packages/ui`, `packages/sections`) next to the source — never copied into `apps/docs`.
+- **Narrative docs pages** (like this one) are `.mdx` files under `apps/docs/src/docs/`.
+
+Storybook hot-reloads on save, so no config change is needed when you add either.
 
 ## Adding a UI component story
-
-Stories live **in the package they document** — never copy components into `apps/docs`.
-
-1. Create a `MyComponent.stories.tsx` next to the component source:
 
 ```tsx
 // packages/ui/src/components/MyComponent/MyComponent.stories.tsx
@@ -60,7 +57,7 @@ const meta: Meta<typeof MyComponent> = {
   title: "UI Components/MyComponent",
   component: MyComponent,
   parameters: { layout: "centered" },
-  tags: ["autodocs"],   // ← opt-in: generates a Docs page for this component
+  tags: ["autodocs"],   // opt-in: generates a Docs page for this component
 };
 
 export default meta;
@@ -71,11 +68,9 @@ export const Default: Story = {
 };
 ```
 
-2. Storybook hot-reloads automatically — no config change needed.
-
 ## Adding a sections story
 
-Sections are complex, data-fetching widgets. Use the `OTApolloProvider` decorator (already wired in `preview.ts`) and pass static fixture data via `args` or `loaders`.
+Sections are data-fetching widgets. The `OTApolloProvider`, router, and theme decorators are already wired in `.storybook/preview.ts`, so a story only needs its `meta` and args:
 
 ```tsx
 // packages/sections/src/target/MySection/MySection.stories.tsx
@@ -90,11 +85,9 @@ const meta: Meta<typeof MySection> = {
 export default meta;
 ```
 
-The dev server points `window.configUrlApi` at the **production GraphQL endpoint**, so stories can make real API calls during development.
-
 ## Adding a narrative docs page
 
-Drop an `.mdx` file under `apps/docs/src/docs/`. Use `<Meta title="...">` to position it in the sidebar:
+Drop an `.mdx` file under `apps/docs/src/docs/`. The `<Meta title="...">` path sets its position in the sidebar:
 
 ```mdx
 import { Meta } from "@storybook/addon-docs/blocks";
@@ -105,10 +98,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 Content here.
 ```
 
-## Formatting
+## Before you commit
 
-All files use **Biome** (not ESLint/Prettier). Run `yarn check:fix` before committing. A Husky pre-commit hook enforces this.
-
-## TypeScript
-
-Strict mode is enabled in all packages. `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` are all on. Do not use `// @ts-ignore` — fix the types.
+- **Formatting and linting** use Biome (not ESLint/Prettier). Run `yarn check:fix`; a Husky pre-commit hook enforces it.
+- **TypeScript** is strict in every package — `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` are all on. Fix types rather than reaching for `// @ts-ignore`.

@@ -1,22 +1,19 @@
 import { createTheme } from "@mui/material/styles";
+import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { getConfig } from "@ot/config";
 import type { Preview } from "@storybook/react-vite";
 import { darken, lighten } from "polished";
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { OTApolloProvider, ThemeProvider } from "ui";
+import "./preview.css";
 
-// Create theme for Storybook - matching the @ot/config theme structure
 const PRIMARY = "#3489ca";
 const SECONDARY = "#18405e";
 
-const theme = createTheme({
-  shape: {
-    borderRadius: 2,
-  },
-  typography: {
-    fontFamily: '"Inter", sans-serif',
-  },
+const lightTheme = createTheme({
+  shape: { borderRadius: 2 },
+  typography: { fontFamily: '"Inter", sans-serif' },
   palette: {
     primary: {
       light: lighten(0.2, PRIMARY),
@@ -30,15 +27,11 @@ const theme = createTheme({
       dark: darken(0.2, SECONDARY),
       contrastText: "#fff",
     },
-    text: {
-      primary: "#5A5F5F",
-    },
+    text: { primary: "#5A5F5F" },
   },
   components: {
     MuiButton: {
-      defaultProps: {
-        disableRipple: true,
-      },
+      defaultProps: { disableRipple: true },
       styleOverrides: {
         root: {
           border: "1px solid",
@@ -53,19 +46,55 @@ const theme = createTheme({
       },
     },
     MuiTab: {
-      defaultProps: {
-        disableRipple: true,
-      },
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-        },
-      },
+      defaultProps: { disableRipple: true },
+      styleOverrides: { root: { textTransform: "none" } },
     },
   },
 });
 
-// Get config from window (set in preview-head.html)
+const darkTheme = createTheme({
+  shape: { borderRadius: 2 },
+  typography: { fontFamily: '"Inter", sans-serif' },
+  palette: {
+    mode: "dark",
+    primary: {
+      light: lighten(0.2, PRIMARY),
+      main: PRIMARY,
+      dark: darken(0.2, PRIMARY),
+      contrastText: "#fff",
+    },
+    secondary: {
+      light: lighten(0.2, SECONDARY),
+      main: SECONDARY,
+      dark: darken(0.2, SECONDARY),
+      contrastText: "#fff",
+    },
+    text: { primary: "#e2e8f0" },
+    background: { default: "#0e1c2e", paper: "#152436" },
+  },
+  components: {
+    MuiButton: {
+      defaultProps: { disableRipple: true },
+      styleOverrides: {
+        root: {
+          border: "1px solid",
+          padding: "6px 12px",
+          minWidth: "32px",
+          minHeight: "32px",
+          height: "32px",
+          textTransform: "none",
+          color: "#e2e8f0",
+          borderColor: "rgba(255,255,255,0.15)",
+        },
+      },
+    },
+    MuiTab: {
+      defaultProps: { disableRipple: true },
+      styleOverrides: { root: { textTransform: "none" } },
+    },
+  },
+});
+
 const config = getConfig();
 
 const preview: Preview = {
@@ -76,22 +105,45 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    options: {
+      storySort: {
+        order: [
+          "Introduction",
+          "Getting Started",
+          "Architecture",
+          "Theme & Colors",
+          "Packages",
+          "Components",
+          "Configuration",
+          "UI Components",
+          "Sections",
+          ["Associations on the Fly", ["Overview", "Integration"]],
+        ],
+      },
+    },
   },
   decorators: [
-    (Story) =>
-      React.createElement(
+    withThemeByDataAttribute({
+      themes: { light: "light", dark: "dark" },
+      defaultTheme: "light",
+      attributeName: "data-theme",
+    }),
+    (Story, context) => {
+      const isDark = context.globals?.theme === "dark";
+      return React.createElement(
         MemoryRouter,
         { initialEntries: ["/"] },
         React.createElement(OTApolloProvider, {
           config,
           // biome-ignore lint/correctness/noChildrenProp: TODO: fix this
           children: React.createElement(ThemeProvider, {
-            theme,
+            theme: isDark ? darkTheme : lightTheme,
             // biome-ignore lint/correctness/noChildrenProp: TODO: fix this
             children: React.createElement(Story),
           }),
         })
-      ),
+      );
+    },
   ],
 };
 
