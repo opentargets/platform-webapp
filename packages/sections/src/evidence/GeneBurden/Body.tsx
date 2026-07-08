@@ -228,7 +228,7 @@ const getColumns = label => [
 ];
 
 type Props = EvidenceBodyProps;
-export function Body({ id, label, entity }) {
+export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
   const variables = {
     ensemblId: ensgId,
