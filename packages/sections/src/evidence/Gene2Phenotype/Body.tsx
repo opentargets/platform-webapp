@@ -11,7 +11,7 @@ import {
   OtTable,
 } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 import OPEN_TARGETS_GENETICS_QUERY from "./sectionQuery.gql";
@@ -142,8 +142,7 @@ const getColumns = label => [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

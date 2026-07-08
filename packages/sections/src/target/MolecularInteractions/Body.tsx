@@ -11,6 +11,7 @@ import ReactomeTab from "./ReactomeTab";
 import StringTab from "./StringTab";
 
 import INTERACTIONS_STATS_QUERY from "./InteractionsStats.gql";
+import type { TargetBodyProps } from "@ot/constants";
 
 const getSummaryCounts = (ensgId, client) =>
   client.query({
@@ -43,11 +44,7 @@ const sources = [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ label: symbol, id, entity }: Props) {
   const request = usePlatformApi();

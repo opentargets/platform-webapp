@@ -5,7 +5,7 @@ import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTable } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
-import { dataTypesMap, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import UNIPROT_LITERATURE_QUERY from "./UniprotLiteratureQuery.gql";
 
 const getcolumns = label => [
@@ -71,8 +71,7 @@ const getcolumns = label => [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

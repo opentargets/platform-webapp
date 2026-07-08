@@ -17,7 +17,7 @@ import {
 
 import { definition } from ".";
 import Description from "./Description";
-import { dataTypesMap, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 
 import ENCORE_QUERY from "./OTEncoreQuery.gql";
 
@@ -258,8 +258,7 @@ const exportColumns = [
   }
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

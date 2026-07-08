@@ -7,6 +7,7 @@ import { definition } from ".";
 import Description from "./Description";
 
 import MECHANISMS_OF_ACTION_QUERY from "./MechanismsOfActionQuery.gql";
+import type { DrugBodyProps } from "@ot/constants";
 
 const columns = [
   {
@@ -58,11 +59,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
   const variables = { chemblId };

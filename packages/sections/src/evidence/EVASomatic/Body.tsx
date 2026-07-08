@@ -15,7 +15,7 @@ import {
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
-import { dataTypesMap, clinvarStarMap, naLabel } from "@ot/constants";
+import { dataTypesMap, clinvarStarMap, naLabel, EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import EVA_SOMATIC_QUERY from "./EvaSomaticQuery.gql";
 import { definition } from ".";
@@ -259,8 +259,7 @@ const useStyles = makeStyles({
   roleInCancerTitle: { marginRight: ".5rem !important" },
 });
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

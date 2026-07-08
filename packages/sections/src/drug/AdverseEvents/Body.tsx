@@ -9,6 +9,7 @@ import { definition } from ".";
 import Description from "./Description";
 
 import ADVERSE_EVENTS_QUERY from "./AdverseEventsQuery.gql";
+import type { DrugBodyProps } from "@ot/constants";
 
 const useStyles = makeStyles(theme => ({
   levelBarContainer: {
@@ -67,11 +68,7 @@ const getColumns = (critVal, maxLlr, classes) => [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
   const classes = useStyles();

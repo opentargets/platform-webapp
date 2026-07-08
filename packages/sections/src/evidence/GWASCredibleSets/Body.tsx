@@ -13,7 +13,7 @@ import {
 } from "ui";
 import { variantComparator, mantissaExponentComparator } from "@ot/utils";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap, EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./sectionQuery.gql";
@@ -200,8 +200,7 @@ function getColumns(targetSymbol, targetId) {
   ];
 }
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

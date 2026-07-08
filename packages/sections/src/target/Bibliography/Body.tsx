@@ -1,12 +1,9 @@
 import { Body as Bibliography } from "../../common/Literature";
 import { definition } from ".";
 import TARGET_LITERATURE_OCURRENCES from "./SimilarEntities.gql";
+import type { TargetBodyProps } from "@ot/constants";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id, label: name, entity }: Props) {
   return (

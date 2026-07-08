@@ -4,7 +4,7 @@ import { SectionItem, Link, Tooltip, OtTable, TooltipStyledLabel } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 
 import CRISPR_QUERY from "./OTCrisprQuery.gql";
 
@@ -138,8 +138,7 @@ const exportColumns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

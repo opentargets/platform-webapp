@@ -5,7 +5,7 @@ import { v1 } from "uuid";
 
 import { ChipList, Link, SectionItem, PublicationsDrawer, OtTable } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
 
@@ -124,8 +124,7 @@ const useStyles = makeStyles({
   roleInCancerTitle: { marginRight: ".5rem !important" },
 });
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

@@ -24,7 +24,7 @@ import GuineaPigIcon from "./GuineaPigIcon";
 import MouseIcon from "./MouseIcon";
 
 import { identifiersOrgLink } from "@ot/utils";
-import { decimalPlaces, VIEW } from "@ot/constants";
+import { decimalPlaces, VIEW, TargetBodyProps} from "@ot/constants";
 
 const VIEW_MODES = {
   default: "default",
@@ -135,10 +135,7 @@ function getColumns(classes) {
   ];
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
+type Props = TargetBodyProps & {
   viewMode?: string;
 };
 

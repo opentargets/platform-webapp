@@ -5,7 +5,7 @@ import { Link, SectionItem, Tooltip, ClinvarStars, OtTable } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import CHEMICAL_PROBES_QUERY from "./ChemicalProbes.gql";
-import { naLabel, defaultRowsPerPageOptions } from "@ot/constants";
+import { naLabel, defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
 import _ from "lodash";
 
 /**
@@ -87,11 +87,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id, label: symbol, entity }: Props) {
   const variables = { ensemblId: id };

@@ -9,15 +9,12 @@ import { useState, useEffect } from "react";
 import Table from "./Table";
 import Viewer from "./Viewer";
 import { getSegments, restructureRowProperties } from "./helpers";
+import type { TargetBodyProps } from "@ot/constants";
 
 const experimentalResultsStem = "https://rest.uniprot.org/uniprotkb/";
 const alphaFoldResultsStem = "https://alphafold.ebi.ac.uk/api/prediction/";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const [rowResults, setRowResults] = useState(null);

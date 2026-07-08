@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { definition } from ".";
 import Description from "./Description";
 import TRACTABILITY_QUERY from "./TractabilityQuery.gql";
+import type { TargetBodyProps } from "@ot/constants";
 
 const useStyles = makeStyles(theme => ({
   modality: {
@@ -86,11 +87,7 @@ function ModalityList({ modality, data }) {
   );
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ label: symbol, id: ensemblId, entity }: Props) {
   // const request = usePlatformApi(Summary.fragments.TractabilitySummaryFragment);

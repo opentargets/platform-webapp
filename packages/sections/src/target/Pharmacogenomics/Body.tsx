@@ -12,7 +12,7 @@ import {
 } from "ui";
 
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
-import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource } from "@ot/constants";
+import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, TargetBodyProps} from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
@@ -279,11 +279,7 @@ function getColumns(classes) {
   ];
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const classes = useStyles();

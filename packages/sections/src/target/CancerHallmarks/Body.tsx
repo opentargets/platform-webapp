@@ -5,7 +5,7 @@ import { ChipList, SectionItem, PublicationsDrawer, OtTable } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
-import { defaultRowsPerPageOptions } from "@ot/constants";
+import { defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
 
 import HALLMARKS_QUERY from "./Hallmarks.gql";
 
@@ -57,11 +57,7 @@ const useStyles = makeStyles({
   roleInCancerTitle: { marginRight: ".5rem !important" },
 });
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Section({ id, label: symbol, entity }: Props) {
   const variables = { ensemblId: id };

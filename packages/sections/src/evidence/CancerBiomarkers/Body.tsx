@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client";
 import { Typography } from "@mui/material";
 import { Link, Tooltip, SectionItem, PublicationsDrawer, OtTable, TableDrawer } from "ui";
 
-import { defaultRowsPerPageOptions, sectionsBaseSizeQuery, naLabel } from "@ot/constants";
+import { defaultRowsPerPageOptions, sectionsBaseSizeQuery, naLabel, EvidenceBodyProps} from "@ot/constants";
 import { epmcUrl } from "@ot/utils";
 import Description from "./Description";
 import BiomarkersDrawer from "./BiomarkersDrawer";
@@ -87,8 +87,7 @@ const getColumns = label => [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

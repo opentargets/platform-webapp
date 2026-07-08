@@ -6,7 +6,7 @@ import Description from "./Description";
 import { sentenceCase } from "@ot/utils";
 import EXPRESSION_ATLAS_QUERY from "./ExpressionAtlasQuery.gql";
 import { definition } from ".";
-import { dataTypesMap, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 
 const columns = [
   {
@@ -99,8 +99,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

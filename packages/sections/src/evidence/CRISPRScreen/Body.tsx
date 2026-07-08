@@ -6,8 +6,7 @@ import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  sectionsBaseSizeQuery,
-} from "@ot/constants";
+  sectionsBaseSizeQuery,, EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 
 import CRISPR_QUERY from "./CrisprScreenQuery.gql";
@@ -193,8 +192,7 @@ const exportColumns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

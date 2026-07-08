@@ -6,12 +6,9 @@ import ONTOLOGY_QUERY from "./OntologyQuery.gql";
 import { useQuery } from "@apollo/client";
 import { definition } from ".";
 import OntologySubgraph from "./OntologySubgraph";
+import type { DiseaseBodyProps } from "@ot/constants";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = DiseaseBodyProps;
 
 function Body({ id: efoId, label, entity }: Props) {
   const request = useQuery(ONTOLOGY_QUERY, {

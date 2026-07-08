@@ -5,6 +5,7 @@ import { definition } from ".";
 import Description from "./Description";
 import MOUSE_PHENOTYPES_QUERY from "./MousePhenotypes.gql";
 import AllelicCompositionDrawer from "./AllelicCompositionDrawer";
+import type { TargetBodyProps } from "@ot/constants";
 
 const columns = [
   {
@@ -63,11 +64,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id, label: symbol, entity }: Props) {
   const variables = { ensemblId: id };

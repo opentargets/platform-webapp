@@ -9,7 +9,7 @@ import { v1 } from "uuid";
 
 import { definition } from ".";
 import Description from "./Description";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import VALIDATION_QUERY from "./OTValidationQuery.gql";
 
 const useStyles = makeStyles(theme => ({
@@ -203,8 +203,7 @@ const exportColumns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

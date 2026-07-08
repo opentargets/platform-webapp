@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
 
 import SafetyStudiesDrawer from "./SafetyStudiesDrawer";
-import { naLabel, defaultRowsPerPageOptions } from "@ot/constants";
+import { naLabel, defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -146,11 +146,7 @@ function getColumns(classes, symbol) {
   ];
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const classes = useStyles();

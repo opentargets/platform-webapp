@@ -17,8 +17,7 @@ import {
   defaultRowsPerPageOptions,
   variantConsequenceSource,
   sectionsBaseSizeQuery,
-  naLabel,
-} from "@ot/constants";
+  naLabel,, EvidenceBodyProps} from "@ot/constants";
 import UNIPROT_VARIANTS_QUERY from "./UniprotVariantsQuery.gql";
 
 function getColumns(label) {
@@ -159,8 +158,7 @@ function getColumns(label) {
   ];
 }
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

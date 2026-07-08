@@ -3,7 +3,7 @@ import _ from "lodash";
 import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
 
 import Description from "./Description";
-import { naLabel } from "@ot/constants";
+import { naLabel, DiseaseBodyProps} from "@ot/constants";
 
 import PHENOTYPES_BODY_QUERY from "./PhenotypesQuery.gql";
 import { definition } from ".";
@@ -178,11 +178,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = DiseaseBodyProps;
 
 function Body({ label: name, id: efoId, entity }: Props) {
   const variables = {

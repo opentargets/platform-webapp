@@ -8,7 +8,7 @@ import Description from "./Description";
 import PATHWAYS_QUERY from "./Pathways.gql";
 
 import { identifiersOrgLink } from "@ot/utils";
-import { defaultRowsPerPageOptions } from "@ot/constants";
+import { defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
 
 function getColumns(symbol) {
   return [
@@ -38,11 +38,7 @@ function getColumns(symbol) {
   ];
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const variables = { ensemblId };

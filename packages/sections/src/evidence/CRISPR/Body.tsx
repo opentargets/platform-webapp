@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { SectionItem, TableDrawer, OtTable, Link } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery } from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 
@@ -46,8 +46,7 @@ const columns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

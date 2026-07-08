@@ -13,7 +13,7 @@ import {
   OtTableSSP,
 } from "ui";
 import { epmcUrl, sentenceCase, identifiersOrgLink } from "@ot/utils";
-import { dataTypesMap, clinvarStarMap, naLabel, variantConsequenceSource } from "@ot/constants";
+import { dataTypesMap, clinvarStarMap, naLabel, variantConsequenceSource, EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import CLINVAR_QUERY from "./ClinvarQuery.gql";
@@ -286,8 +286,7 @@ function getColumns(label) {
   ];
 }
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

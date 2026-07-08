@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client";
 import { SectionItem, Link, Tooltip, OtTable } from "ui";
 
 import { definition } from ".";
-import { naLabel } from "@ot/constants";
+import { naLabel, TargetBodyProps} from "@ot/constants";
 import { formatSignificantDigits } from "@ot/utils";
 import Description from "./Description";
 import upperBin6Map from "./upperBin6Map";
@@ -106,11 +106,7 @@ function getColumns(ensemblId, symbol) {
   ];
 }
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const variables = { ensemblId };

@@ -5,12 +5,9 @@ import { definition } from ".";
 import Description from "./Description";
 import DepmapPlot from "./DepmapPlot";
 import DEPMAP_QUERY from "./Depmap.gql";
+import type { TargetBodyProps } from "@ot/constants";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Section({ id, label: symbol, entity }: Props) {
   const variables = { ensemblId: id };

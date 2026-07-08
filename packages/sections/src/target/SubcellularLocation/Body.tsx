@@ -5,12 +5,9 @@ import { definition } from ".";
 import Description from "./Description";
 import SUBCELLULAR_LOCATION_QUERY from "./SubcellularLocation.gql";
 import SubcellularViz from "./SubcellularViz";
+import type { TargetBodyProps } from "@ot/constants";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const request = useQuery(SUBCELLULAR_LOCATION_QUERY, {

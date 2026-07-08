@@ -6,7 +6,7 @@ import { makeStyles } from "@mui/styles";
 import { useQuery } from "@apollo/client";
 
 import Description from "./Description";
-import { defaultRowsPerPageOptions } from "@ot/constants";
+import { defaultRowsPerPageOptions, DiseaseBodyProps} from "@ot/constants";
 import { definition } from ".";
 import OT_PROJECTS_QUERY from "./OTProjectsQuery.gql";
 
@@ -43,11 +43,7 @@ const getColumns = classes => [
   },
 ];
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
-};
+type Props = DiseaseBodyProps;
 
 function Body({ label, id: efoId, entity }: Props) {
   const classes = useStyles();

@@ -4,7 +4,7 @@ import { SectionItem, Link, getPage, Table } from "ui";
 
 import Description from "./Description";
 import { europePmcLiteratureQuery } from "@ot/utils";
-import { dataTypesMap, naLabel } from "@ot/constants";
+import { dataTypesMap, naLabel, EvidenceBodyProps} from "@ot/constants";
 import Publication from "./Publication";
 import EUROPE_PMC_QUERY from "./sectionQuery.gql";
 import { definition } from ".";
@@ -99,8 +99,7 @@ function mergeData(rows, literatureData) {
 /*
  * EuropePMC widget does NOT require the count prop
  */
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };

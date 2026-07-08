@@ -10,11 +10,9 @@ import { definition } from ".";
 import Description from "./Description";
 import GtexTab, { getData as getGtexData } from "./GtexTab";
 import SummaryTab, { getData as getSummaryData } from "./SummaryTab";
+import type { TargetBodyProps } from "@ot/constants";
 
-type Props = {
-  id: string;
-  entity: string;
-  label: string;
+type Props = TargetBodyProps & {
   viewMode?: string;
   expandSpecificity?: boolean;
 };

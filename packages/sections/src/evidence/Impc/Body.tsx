@@ -16,7 +16,7 @@ import Description from "./Description";
 import INTOGEN_QUERY from "./sectionQuery.gql";
 
 import { sentenceCase } from "@ot/utils";
-import { dataTypesMap, naLabel } from "@ot/constants";
+import { dataTypesMap, naLabel, EvidenceBodyProps} from "@ot/constants";
 import { useState } from "react";
 
 const columns = [
@@ -155,8 +155,7 @@ const exportColumns = [
   },
 ];
 
-type Props = {
-  id: { ensgId: string; efoId: string };
+type Props = EvidenceBodyProps;
   entity: string;
   label: { symbol: string; name: string };
 };
