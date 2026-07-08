@@ -4,9 +4,9 @@ import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import DRUG_WARNINGS_QUERY from "./DrugWarningsQuery.gql";
-import { naLabel, DrugBodyProps} from "@ot/constants";
+import { naLabel, DrugBodyProps, DrugWarning } from "@ot/constants";
 
-const replaceSemicolonWithUnderscore = id => id.replace(":", "_");
+const replaceSemicolonWithUnderscore = (id: string) => id.replace(":", "_");
 
 const columns = [
   {
@@ -16,7 +16,7 @@ const columns = [
   {
     id: "efoTerm",
     label: "Adverse event",
-    renderCell: ({ efoTerm, efoId, description }) => {
+    renderCell: ({ efoTerm, efoId, description }: DrugWarning) => {
       if (efoId)
         return (
           <Tooltip title={`Description: ${description}`} showHelpIcon>
@@ -32,7 +32,7 @@ const columns = [
     id: "toxicityClass",
     label: "ChEMBL warning class",
     enableHiding: false,
-    renderCell: ({ toxicityClass, efoIdForWarningClass, description }) => {
+    renderCell: ({ toxicityClass, efoIdForWarningClass, description }: DrugWarning) => {
       if (efoIdForWarningClass)
         return (
           <Link external to={`/disease/${replaceSemicolonWithUnderscore(efoIdForWarningClass)}`}>
@@ -45,13 +45,13 @@ const columns = [
   {
     id: "country",
     label: "Country / region",
-    renderCell: ({ country }) => country ?? naLabel,
+    renderCell: ({ country }: DrugWarning) => country ?? naLabel,
   },
-  { id: "year", label: "Year", renderCell: ({ year }) => year ?? naLabel },
+  { id: "year", label: "Year", renderCell: ({ year }: DrugWarning) => year ?? naLabel },
   {
     id: "references",
     label: "References",
-    renderCell: ({ references }) => {
+    renderCell: ({ references }: DrugWarning) => {
       const sources = new Set(); // used to collect unique sources
       const refs = [];
 
