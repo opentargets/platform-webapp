@@ -11,7 +11,7 @@ import {
 } from "ui";
 
 import { definition } from ".";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 import Description from "./Description";
 

@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
 
 import SafetyStudiesDrawer from "./SafetyStudiesDrawer";
-import { naLabel, defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
+import { naLabel, defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
 
 import { definition } from ".";
 import Description from "./Description";

@@ -5,7 +5,7 @@ import { Link, SectionItem, Tooltip, ClinvarStars, OtTable } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import CHEMICAL_PROBES_QUERY from "./ChemicalProbes.gql";
-import { naLabel, defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
+import { naLabel, defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
 import _ from "lodash";
 
 /**

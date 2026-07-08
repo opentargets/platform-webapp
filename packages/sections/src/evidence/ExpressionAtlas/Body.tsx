@@ -6,7 +6,7 @@ import Description from "./Description";
 import { sentenceCase } from "@ot/utils";
 import EXPRESSION_ATLAS_QUERY from "./ExpressionAtlasQuery.gql";
 import { definition } from ".";
-import { dataTypesMap, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 
 const columns = [
   {

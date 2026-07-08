@@ -14,7 +14,7 @@ import {
 import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl } from "@ot/utils";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 
 import GENE_BURDEN_QUERY from "./GeneBurdenQuery.gql";
 

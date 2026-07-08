@@ -13,7 +13,7 @@ import {
 } from "ui";
 import { variantComparator, mantissaExponentComparator } from "@ot/utils";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap, type EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./sectionQuery.gql";

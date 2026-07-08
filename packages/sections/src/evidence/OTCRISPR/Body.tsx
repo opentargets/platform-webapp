@@ -4,7 +4,7 @@ import { SectionItem, Link, Tooltip, OtTable, TooltipStyledLabel } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 
 import CRISPR_QUERY from "./OTCrisprQuery.gql";
 

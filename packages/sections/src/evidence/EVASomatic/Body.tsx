@@ -15,7 +15,7 @@ import {
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
-import { dataTypesMap, clinvarStarMap, naLabel, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, clinvarStarMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import EVA_SOMATIC_QUERY from "./EvaSomaticQuery.gql";
 import { definition } from ".";

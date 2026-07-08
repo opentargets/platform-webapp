@@ -3,7 +3,7 @@ import _ from "lodash";
 import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
 
 import Description from "./Description";
-import { naLabel, DiseaseBodyProps} from "@ot/constants";
+import { naLabel, type DiseaseBodyProps} from "@ot/constants";
 
 import PHENOTYPES_BODY_QUERY from "./PhenotypesQuery.gql";
 import { definition } from ".";
