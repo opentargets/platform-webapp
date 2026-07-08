@@ -17,7 +17,7 @@ import {
 
 import { definition } from ".";
 import Description from "./Description";
-import { dataTypesMap, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 
 import ENCORE_QUERY from "./OTEncoreQuery.gql";
 

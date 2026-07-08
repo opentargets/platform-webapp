@@ -5,7 +5,7 @@ import { ChipList, SectionItem, PublicationsDrawer, OtTable } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
-import { defaultRowsPerPageOptions, TargetBodyProps} from "@ot/constants";
+import { defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
 
 import HALLMARKS_QUERY from "./Hallmarks.gql";
 

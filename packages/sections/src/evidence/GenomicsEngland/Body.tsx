@@ -6,7 +6,7 @@ import { v1 } from "uuid";
 import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTable } from "ui";
 
 import { definition } from ".";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 

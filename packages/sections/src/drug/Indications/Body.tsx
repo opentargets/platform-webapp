@@ -8,7 +8,7 @@ import {
 import { useCallback } from "react";
 import Description from "./Description";
 import INDICATIONS_QUERY from "./IndicationsQuery.gql";
-import { DrugBodyProps } from "@ot/constants";
+import { type DrugBodyProps } from "@ot/constants";
 import { definition } from ".";
 import IndicationsTable from "./IndicationsTable";
 

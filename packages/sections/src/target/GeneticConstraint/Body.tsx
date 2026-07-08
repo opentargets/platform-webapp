@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client";
 import { SectionItem, Link, Tooltip, OtTable } from "ui";
 
 import { definition } from ".";
-import { naLabel, TargetBodyProps} from "@ot/constants";
+import { naLabel, type TargetBodyProps} from "@ot/constants";
 import { formatSignificantDigits } from "@ot/utils";
 import Description from "./Description";
 import upperBin6Map from "./upperBin6Map";

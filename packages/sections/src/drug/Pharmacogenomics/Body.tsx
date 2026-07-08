@@ -15,7 +15,7 @@ import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./Pharmacogenomics.gql";
-import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, DrugBodyProps, Pharmacogenomics } from "@ot/constants";
+import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type DrugBodyProps, type Pharmacogenomics } from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";

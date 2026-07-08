@@ -24,7 +24,7 @@ import GuineaPigIcon from "./GuineaPigIcon";
 import MouseIcon from "./MouseIcon";
 
 import { identifiersOrgLink } from "@ot/utils";
-import { decimalPlaces, VIEW, TargetBodyProps} from "@ot/constants";
+import { decimalPlaces, VIEW, type TargetBodyProps} from "@ot/constants";
 
 const VIEW_MODES = {
   default: "default",
