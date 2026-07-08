@@ -287,9 +287,6 @@ function getColumns(label) {
 }
 
 type Props = EvidenceBodyProps;
-  entity: string;
-  label: { symbol: string; name: string };
-};
 
 function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;

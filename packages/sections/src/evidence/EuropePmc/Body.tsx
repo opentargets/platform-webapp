@@ -100,9 +100,6 @@ function mergeData(rows, literatureData) {
  * EuropePMC widget does NOT require the count prop
  */
 type Props = EvidenceBodyProps;
-  entity: string;
-  label: { symbol: string; name: string };
-};
 
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;

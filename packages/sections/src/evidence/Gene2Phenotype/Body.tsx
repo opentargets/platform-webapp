@@ -143,9 +143,6 @@ const getColumns = label => [
 ];
 
 type Props = EvidenceBodyProps;
-  entity: string;
-  label: { symbol: string; name: string };
-};
 
 function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props) {
   const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };

@@ -125,9 +125,6 @@ const useStyles = makeStyles({
 });
 
 type Props = EvidenceBodyProps;
-  entity: string;
-  label: { symbol: string; name: string };
-};
 
 function Body({ id, label, entity }: Props) {
   const classes = useStyles();
