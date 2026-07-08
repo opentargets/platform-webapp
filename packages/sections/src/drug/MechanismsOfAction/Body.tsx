@@ -7,7 +7,7 @@ import { definition } from ".";
 import Description from "./Description";
 
 import MECHANISMS_OF_ACTION_QUERY from "./MechanismsOfActionQuery.gql";
-import type { DrugBodyProps } from "@ot/constants";
+import type { DrugBodyProps, MechanismOfActionRow } from "@ot/constants";
 
 const columns = [
   {
@@ -22,9 +22,9 @@ const columns = [
   {
     id: "targets",
     label: "Human targets",
-    filterValue: row => row.targets.map(target => target.approvedSymbol).join(" "),
-    exportValue: row => row.targets.map(target => target.approvedSymbol).join(),
-    renderCell: ({ targets }) => {
+    filterValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(" "),
+    exportValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(),
+    renderCell: ({ targets }: MechanismOfActionRow) => {
       if (!targets) return "non-human";
 
       const targetList = targets.map(target => ({
@@ -39,9 +39,9 @@ const columns = [
   {
     id: "references",
     label: "References",
-    filterValue: row => row.references.map(reference => reference.source).join(" "),
-    exportValue: row => row.references.map(reference => reference.source).join(),
-    renderCell: row =>
+    filterValue: (row: MechanismOfActionRow) => row.references?.map(r => r.source).join(" "),
+    exportValue: (row: MechanismOfActionRow) => row.references?.map(r => r.source).join(),
+    renderCell: (row: MechanismOfActionRow) =>
       !row.references
         ? "n/a"
         : row.references.map((r, i) => (

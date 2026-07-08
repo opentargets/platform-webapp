@@ -15,7 +15,7 @@ import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./Pharmacogenomics.gql";
-import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, DrugBodyProps} from "@ot/constants";
+import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, DrugBodyProps, Pharmacogenomics } from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
@@ -43,7 +43,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const getLevelElementClassName = level => {
+const getLevelElementClassName = (level: string) => {
   switch (level) {
     case "1":
       return "green";
@@ -76,7 +76,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "gene",
       label: "Gene",
-      renderCell: ({ target }) => {
+      renderCell: ({ target }: Pharmacogenomics) => {
         if (target) {
           return (
             <Link asyncTooltip to={`/target/${target.id}`}>
@@ -86,13 +86,13 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         }
         return naLabel;
       },
-      filterValue: ({ target }) => `${target}`,
+      filterValue: ({ target }: Pharmacogenomics) => `${target}`,
     },
     {
       id: "variantRsId",
       label: "rsID",
       enableHiding: false,
-      renderCell: ({ variantRsId }) =>
+      renderCell: ({ variantRsId }: Pharmacogenomics) =>
         variantRsId ? (
           <Link
             external
@@ -107,7 +107,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "starAllele",
       label: "Star Allele",
-      renderCell: ({ haplotypeId, haplotypeFromSourceId }) => {
+      renderCell: ({ haplotypeId, haplotypeFromSourceId }: Pharmacogenomics) => {
         const displayId = haplotypeId || haplotypeFromSourceId || naLabel;
         const LinkComponent = haplotypeFromSourceId && (
           <Link external to={`https://www.pharmgkb.org/haplotype/${haplotypeFromSourceId}`}>
@@ -133,12 +133,12 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }) => genotypeId || naLabel,
+      renderCell: ({ genotypeId }: Pharmacogenomics) => genotypeId || naLabel,
     },
     {
       id: "variantConsequence",
       label: "Variant Consequence",
-      renderCell: ({ variantFunctionalConsequence, genotypeId }) => {
+      renderCell: ({ variantFunctionalConsequence, genotypeId }: Pharmacogenomics) => {
         const pvparams = genotypeId?.split(",")[0].split("_") || [];
         return (
           <div style={{ display: "flex", gap: "5px" }}>
@@ -163,13 +163,13 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           </div>
         );
       },
-      filterValue: ({ variantFunctionalConsequence }) =>
+      filterValue: ({ variantFunctionalConsequence }: Pharmacogenomics) =>
         sentenceCase(variantFunctionalConsequence?.label),
     },
     {
       id: "drugResponse",
       label: "Drug Response Phenotype",
-      renderCell: ({ phenotypeText, phenotypeFromSourceId, genotypeAnnotationText }) => {
+      renderCell: ({ phenotypeText, phenotypeFromSourceId, genotypeAnnotationText }: Pharmacogenomics) => {
         let phenotypeTextElement;
 
         if (phenotypeText) {
@@ -192,25 +192,25 @@ function Body({ id: chemblId, label: name, entity }: Props) {
 
         return phenotypeTextElement;
       },
-      filterValue: ({ phenotypeText }) => `${phenotypeText}`,
+      filterValue: ({ phenotypeText }: Pharmacogenomics) => `${phenotypeText}`,
     },
     {
       id: "drugResponseCategory",
       label: "Drug Response Category",
-      renderCell: ({ pgxCategory }) => pgxCategory || naLabel,
-      filterValue: ({ pgxCategory }) => pgxCategory,
+      renderCell: ({ pgxCategory }: Pharmacogenomics) => pgxCategory || naLabel,
+      filterValue: ({ pgxCategory }: Pharmacogenomics) => pgxCategory,
     },
     {
       id: "directionality",
       label: "Directionality",
-      renderCell: ({ variantAnnotation }) => (
+      renderCell: ({ variantAnnotation }: Pharmacogenomics) => (
         <DirectionalityDrawer variantAnnotation={variantAnnotation} caption="Directionality" />
       ),
     },
     {
       id: "isDirectTarget",
       label: "Direct Drug Target",
-      renderCell: ({ isDirectTarget }) => {
+      renderCell: ({ isDirectTarget }: Pharmacogenomics) => {
         const ICON_NAME = isDirectTarget ? faCircleCheck : faCircleXmark;
         return <FontAwesomeIcon icon={ICON_NAME} size="lg" className={classes.blueIcon} />;
       },
@@ -228,7 +228,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           </Link>
         </>
       ),
-      renderCell: ({ evidenceLevel }) => {
+      renderCell: ({ evidenceLevel }: Pharmacogenomics) => {
         if (evidenceLevel) {
           const levelClass = getLevelElementClassName(evidenceLevel);
           return (
@@ -239,12 +239,12 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         }
         return naLabel;
       },
-      filterValue: ({ evidenceLevel }) => `Level ${evidenceLevel}`,
+      filterValue: ({ evidenceLevel }: Pharmacogenomics) => `Level ${evidenceLevel}`,
     },
     {
       id: "source",
       label: "Source",
-      renderCell: ({ studyId }) =>
+      renderCell: ({ studyId }: Pharmacogenomics) =>
         studyId ? (
           <Link external to={`https://www.pharmgkb.org/clinicalAnnotation/${studyId}`}>
             ClinPGx
@@ -256,7 +256,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "literature",
       label: "Literature",
-      renderCell: ({ literature }) => {
+      renderCell: ({ literature }: Pharmacogenomics) => {
         const literatureList =
           literature?.reduce((acc, id) => {
             if (id === "NA") return acc;

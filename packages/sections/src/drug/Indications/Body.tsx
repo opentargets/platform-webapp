@@ -8,10 +8,13 @@ import {
 import { useCallback } from "react";
 import Description from "./Description";
 import INDICATIONS_QUERY from "./IndicationsQuery.gql";
+import { DrugBodyProps } from "@ot/constants";
 import { definition } from ".";
 import IndicationsTable from "./IndicationsTable";
 
-function Body({ id: chemblId, label: name, entity }) {
+type Props = DrugBodyProps;
+
+function Body({ id: chemblId, label: name, entity }: Props) {
   const variables = { chemblId };
   const request = useQuery(INDICATIONS_QUERY, { variables });
 

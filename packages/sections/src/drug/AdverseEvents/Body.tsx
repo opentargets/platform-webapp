@@ -9,7 +9,7 @@ import { definition } from ".";
 import Description from "./Description";
 
 import ADVERSE_EVENTS_QUERY from "./AdverseEventsQuery.gql";
-import type { DrugBodyProps } from "@ot/constants";
+import type { DrugBodyProps, AdverseEvent } from "@ot/constants";
 
 const useStyles = makeStyles(theme => ({
   levelBarContainer: {
@@ -24,11 +24,11 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const getColumns = (critVal, maxLlr, classes) => [
+const getColumns = (critVal: number, maxLlr: number, classes: Record<string, string>) => [
   {
     id: "name",
     label: "Adverse event (MedDRA)",
-    renderCell: d =>
+    renderCell: (d: AdverseEvent) =>
       d.meddraCode ? (
         <Link to={`https://identifiers.org/meddra:${d.meddraCode}`} external>
           <Typography variant="body2" noWrap display="block" title={_.upperFirst(d.name)}>
@@ -49,7 +49,7 @@ const getColumns = (critVal, maxLlr, classes) => [
   {
     id: "llr",
     label: `Log likelihood ratio (CV = ${critVal.toFixed(2)})`,
-    renderCell: d => {
+    renderCell: (d: AdverseEvent) => {
       const w = ((d.logLR / maxLlr) * 85).toFixed(2); // scale to max 85% of the width to allows space for label
       return (
         <div className={classes.levelBarContainer}>
