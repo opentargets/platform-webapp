@@ -1,7 +1,3 @@
-import { getConfig } from "@ot/config";
-
-const config = getConfig();
-
 interface RequestOptions {
   method: string;
   headers: Record<string, string>;
@@ -16,14 +12,6 @@ interface SearchPostResult {
 
 export function epmcUrl(id: string): string {
   return `https://europepmc.org/article/MED/${id}`;
-}
-
-export function otgStudyUrl(id: string): string {
-  return `${config.geneticsPortalUrl}/study/${id}`;
-}
-
-export function otgVariantUrl(id: string): string {
-  return `${config.geneticsPortalUrl}/variant/${id}`;
 }
 
 export function europePmcLiteratureQuery(ids: string[]): string {
