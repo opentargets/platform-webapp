@@ -17,7 +17,7 @@ import {
   defaultRowsPerPageOptions,
   variantConsequenceSource,
   sectionsBaseSizeQuery,
-  naLabel,, EvidenceBodyProps} from "@ot/constants";
+  naLabel, EvidenceBodyProps} from "@ot/constants";
 import UNIPROT_VARIANTS_QUERY from "./UniprotVariantsQuery.gql";
 
 function getColumns(label) {

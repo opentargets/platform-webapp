@@ -6,7 +6,7 @@ import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  sectionsBaseSizeQuery,, EvidenceBodyProps} from "@ot/constants";
+  sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 
