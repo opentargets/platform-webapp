@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol }) {
+type Props = { symbol: string };
+function Description({ symbol }: Props) {
   return (
     <>
       Phenotypes associated with <strong>{symbol}</strong> murine homologue(s). Source:{" "}

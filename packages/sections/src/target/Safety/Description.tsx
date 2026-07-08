@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol }) {
+type Props = { symbol: string };
+function Description({ symbol }: Props) {
   return (
     <>
       Reported safety effects and risk information for <strong>{symbol}</strong>. Source:{" "}

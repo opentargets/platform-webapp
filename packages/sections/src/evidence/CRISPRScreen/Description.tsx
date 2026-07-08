@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-const Description = ({ symbol, name }) => (
+type Props = { symbol: string; name: string };
+const Description = ({ symbol, name }: Props) => (
   <>
     CRISPR knockout screens from public CRISPR datasources, associating <strong>{symbol}</strong>{" "}
     and CRISPR results. Sources:{" "}

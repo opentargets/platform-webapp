@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ name }) {
+type Props = { name: string };
+function Description({ name }: Props) {
   return (
     <>
       Significant post-marketing adverse events for <strong>{name}</strong> estimated from reports

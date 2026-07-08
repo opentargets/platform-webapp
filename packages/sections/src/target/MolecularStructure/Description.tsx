@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol }) {
+type Props = { symbol: string };
+function Description({ symbol }: Props) {
   return (
     <>
       Structural protein information for <strong>{symbol}</strong>. Source:{" "}

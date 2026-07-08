@@ -1,4 +1,4 @@
-const upperBin6Map = {
+const upperBin6Map: Record<number, string> = {
   0: "very high constraint",
   1: "high constraint",
   2: "medium constraint",

@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, name }) {
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
   return (
     <>
       Literature-curated list of pathway reactions affected by genetic alterations or changes in

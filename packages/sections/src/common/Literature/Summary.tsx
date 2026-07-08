@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 
 import { SummaryItem, usePlatformApi } from "ui";
+import { WidgetDefinition } from "../../types/widget";
 
 const SIMILARENTTIES_SUMMARY_FRAGMENT = gql`
   fragment SimilarEntitiesDisease on Disease {
@@ -10,7 +11,9 @@ const SIMILARENTTIES_SUMMARY_FRAGMENT = gql`
   }
 `;
 
-function Summary({ definition }) {
+type Props = { definition: WidgetDefinition };
+
+function Summary({ definition }: Props) {
   const request = usePlatformApi(SIMILARENTTIES_SUMMARY_FRAGMENT);
 
   return (

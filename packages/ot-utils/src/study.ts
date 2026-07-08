@@ -1,16 +1,22 @@
-export function getStudyCategory(projectId) {
+export function getStudyCategory(projectId: string): string {
   if (!projectId) return "";
   if (projectId === "GCST") return "GWAS";
   if (projectId.startsWith("FINNGEN")) return "FINNGEN";
   return "QTL";
 }
 
-export const getStudyTypeDisplay = (studyType) => {
+export const getStudyTypeDisplay = (studyType: string | null | undefined): string | null | undefined => {
   if (studyType) return studyType?.replace(/(qtl|gwas)/gi, (match) => match.toUpperCase());
   return studyType;
 };
 
-export const getStudyItemMetaData = ({ studyType, credibleSetsCount, nSamples }) => {
+type StudyMetaParams = {
+  studyType: string | null | undefined;
+  credibleSetsCount: number;
+  nSamples: number;
+};
+
+export const getStudyItemMetaData = ({ studyType, credibleSetsCount, nSamples }: StudyMetaParams): string => {
   let metaData = "";
   if (studyType) metaData += `Study type: ${getStudyTypeDisplay(studyType)}`;
   if (credibleSetsCount > -1)

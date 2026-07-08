@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, name }) {
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
   return (
     <>
       95% GWAS credible sets prioritising <strong>{symbol}</strong> as likely causal gene for{" "}

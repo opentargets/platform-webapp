@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, name }) {
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
   return (
     <>
       Supporting diagnostic evidence associating <strong>{symbol}</strong> with{" "}

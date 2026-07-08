@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol }) {
+type Props = { symbol: string };
+function Description({ symbol }: Props) {
   return (
     <>
       Gene Essentiality assessment for <strong>{symbol}</strong> obtained through CRISPR

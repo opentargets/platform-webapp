@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol }) {
+type Props = { symbol: string };
+function Description({ symbol }: Props) {
   return (
     <>
       Genetic variants in <strong>{symbol}</strong> that have been associated with drug response

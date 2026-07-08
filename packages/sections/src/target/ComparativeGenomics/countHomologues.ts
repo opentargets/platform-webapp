@@ -1,4 +1,9 @@
-export default function countHomologues(homologues) {
+type Homologue = { homologyType: string };
+
+export default function countHomologues(homologues: Homologue[]): {
+  orthologueCount: number;
+  paralogueCount: number;
+} {
   let orthologueCount = 0;
   let paralogueCount = 0;
   homologues.forEach(({ homologyType }) => {

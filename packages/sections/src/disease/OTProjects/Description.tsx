@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ name }) {
+type Props = { name: string };
+function Description({ name }: Props) {
   return (
     <>
       Active and closed projects for <strong>{name}</strong>. Source:{" "}

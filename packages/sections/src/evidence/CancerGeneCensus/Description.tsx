@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, diseaseName }) {
+type Props = { symbol: string; diseaseName: string };
+function Description({ symbol, diseaseName }: Props) {
   return (
     <>
       Catalogue of somatic mutations that causally implicate <strong>{symbol}</strong> in{" "}

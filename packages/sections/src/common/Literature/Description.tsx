@@ -2,7 +2,8 @@ import { Link } from "ui";
 
 const url = "http://platform-docs.opentargets.org/bibliography";
 
-function Description({ name }) {
+type Props = { name: string };
+function Description({ name }: Props) {
   return (
     <>
       Scientific literature mentioning NLP-recognised entity <strong>{name}</strong> and other

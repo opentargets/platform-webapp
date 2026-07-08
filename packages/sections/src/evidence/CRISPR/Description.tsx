@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, name }) {
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
   return (
     <>
       Cancer cell line dependencies identified using CRISPR-Cas9 whole genome screenings pinpointing

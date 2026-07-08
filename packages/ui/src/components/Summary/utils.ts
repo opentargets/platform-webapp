@@ -1,8 +1,21 @@
-import { gql } from "@apollo/client";
+import { gql, DocumentNode } from "@apollo/client";
 
-export function createSummaryFragment(sections, entity, fragmentName) {
-  const sectionFragments = [];
-  const sectionFragmentNames = [];
+type SummaryComponent = {
+  fragments?: Record<string, DocumentNode>;
+};
+
+type ShortNameDefinition = {
+  shortName?: string;
+  name: string;
+};
+
+export function createSummaryFragment(
+  sections: SummaryComponent[],
+  entity: string,
+  fragmentName?: string
+): DocumentNode {
+  const sectionFragments: DocumentNode[] = [];
+  const sectionFragmentNames: string[] = [];
   const fragmentNameStr = fragmentName || `${entity}ProfileSummaryFragment`;
 
   sections.forEach(Summary => {
@@ -28,10 +41,9 @@ export function createSummaryFragment(sections, entity, fragmentName) {
       ""
     )}
   `;
-
 }
 
-export function createShortName(definition) {
+export function createShortName(definition: ShortNameDefinition): string {
   return (
     definition.shortName ||
     definition.name

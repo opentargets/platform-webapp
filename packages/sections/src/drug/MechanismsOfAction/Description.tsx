@@ -2,7 +2,15 @@ import { Link } from "ui";
 import { Fragment } from "react";
 import { v1 } from "uuid";
 
-function Description({ name, parentMolecule, childMolecules }) {
+type Molecule = { id: string; name: string };
+
+type Props = {
+  name: string;
+  parentMolecule: Molecule | Molecule[];
+  childMolecules: Molecule | Molecule[];
+};
+
+function Description({ name, parentMolecule, childMolecules }: Props) {
   const parentMoleculesArray = Array.isArray(parentMolecule) ? parentMolecule : [parentMolecule];
   const childMoleculesArray = Array.isArray(childMolecules) ? childMolecules : [childMolecules];
   const molecules = [...childMoleculesArray, ...parentMoleculesArray];

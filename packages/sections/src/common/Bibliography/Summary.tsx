@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { SummaryItem } from "ui";
 
 import { getStats } from "./Api";
+import { WidgetDefinition } from "../../types/widget";
 
-function Summary({ definition, id }) {
+type Props = { definition: WidgetDefinition; id: string };
+
+function Summary({ definition, id }: Props) {
   const [request, setRequest] = useState({ loading: true });
 
   useEffect(() => {

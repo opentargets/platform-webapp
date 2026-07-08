@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ name }) {
+type Props = { name: string };
+function Description({ name }: Props) {
   return (
     <>
       Manually curated withdrawn and black box warnings for <strong>{name}</strong>. Source:{" "}

@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, name }) {
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
   return (
     <>
       Data generated for targets identified in selected OTAR primary projects and have undergone

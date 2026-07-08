@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ symbol, diseaseName }) {
+type Props = { symbol: string; diseaseName: string };
+function Description({ symbol, diseaseName }: Props) {
   return (
     <>
       Gene-Disease Validity curation assesing the strength of the evidence supporting or refuting a

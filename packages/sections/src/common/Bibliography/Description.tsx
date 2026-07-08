@@ -1,6 +1,7 @@
 import { Link } from "ui";
 
-function Description({ label }) {
+type Props = { label: string };
+function Description({ label }: Props) {
   return (
     <>
       Scientific literature related to <strong>{label}</strong> based on text mining PubMed
