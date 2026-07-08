@@ -37,7 +37,6 @@ const config = getConfig();
 // config.gitVersion   → build SHA, injected at deploy time
 // config.profile      → partner preview flags, colours, etc.
 // config.googleTagManagerID
-// config.geneticsPortalUrl
 ```
 
 ### Config resolution order
@@ -49,7 +48,6 @@ const config = getConfig();
 | `gitVersion` | `window.gitVersion` | `VITE_GIT_VERSION` | `""` |
 | `profile` | `window.configProfile` | — | `{ isPartnerPreview: false }` |
 | `googleTagManagerID` | `window.configGoogleTagManagerID` | — | `null` |
-| `geneticsPortalUrl` | `window.configGeneticsPortalUrl` | — | `"https://genetics.opentargets.org"` |
 
 ### `Config` type
 
@@ -59,7 +57,6 @@ interface Config {
   urlAiApi: string;
   profile: Record<string, unknown>;
   googleTagManagerID: string | null;
-  geneticsPortalUrl: string;
   gitVersion: string;
 }
 ```
@@ -106,7 +103,6 @@ declare global {
     configOTAiApi?: string;
     configProfile?: Record<string, unknown>;
     configGoogleTagManagerID?: string;
-    configGeneticsPortalUrl?: string;
     gitVersion?: string;
   }
 }
