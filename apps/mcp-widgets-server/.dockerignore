@@ -1,0 +1,33 @@
+# Build context is the monorepo root.
+# Paths here are relative to the repo root.
+
+# Dependencies (reinstalled inside the image)
+node_modules
+**/node_modules
+
+# Other apps — only mcp-widgets-server is needed
+apps/platform/
+apps/platform-test/
+
+# Package sources not needed at server runtime
+packages/ui/src
+packages/ot-config/src
+packages/ot-constants/src
+packages/ot-utils/src
+packages/tsconfig/
+
+# Widget build artifacts that are not the pre-built bundles
+apps/mcp-widgets-server/widget-src/
+apps/mcp-widgets-server/vite/
+apps/mcp-widgets-server/scripts/
+apps/mcp-widgets-server/certs/
+
+# Misc
+**/.DS_Store
+**/*.swp
+**/.env
+**/.env.local
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+.git/
