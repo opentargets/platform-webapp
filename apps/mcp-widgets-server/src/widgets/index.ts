@@ -56,11 +56,14 @@ function loadSectionQuery(sectionPath: string): { query: string; operationName: 
 
 /** Derives a WidgetDef from a SectionDef registry entry. */
 function deriveSectionWidgetDef(def: SectionDef): WidgetDef {
-  // If primaryPrefetch is provided, use it; otherwise auto-detect from .gql file
-  const prefetchBase = def.primaryPrefetch ?? (() => {
-    const { query, operationName } = loadSectionQuery(def.sectionPath);
-    return { query, operationName };
-  })();
+  // directFetch widgets skip server-side prefetch entirely — no query file needed.
+  const prefetchBase = def.directFetch
+    ? null
+    : (def.primaryPrefetch ??
+      (() => {
+        const { query, operationName } = loadSectionQuery(def.sectionPath);
+        return { query, operationName };
+      })());
 
   const sectionId = sectionPathToId(def.sectionPath);
   const sectionName = def.sectionPath.split("/").pop()!;
@@ -77,12 +80,15 @@ function deriveSectionWidgetDef(def: SectionDef): WidgetDef {
     bundleFile: `${sectionId}.js`,
     title: `${readableName} Widget`,
     successMessage: `${readableName} widget rendered successfully in the chat interface.`,
-    prefetch: {
-      operationName: prefetchBase.operationName,
-      query: prefetchBase.query,
-      extraVariables: def.prefetchExtraVariables,
-      extraPrefetches: def.extraPrefetches,
-    },
+    prefetch: prefetchBase
+      ? {
+          operationName: prefetchBase.operationName,
+          query: prefetchBase.query,
+          extraVariables: def.prefetchExtraVariables,
+          extraPrefetches: def.extraPrefetches,
+        }
+      : undefined,
+    directFetch: def.directFetch,
   };
 }
 

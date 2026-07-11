@@ -26,8 +26,8 @@ export type SectionDef = {
   prefetchExtraVariables?: Record<string, unknown>;
   /**
    * Override the auto-detected primary GQL query. Use when the section's query
-   * variable doesn't match the tool's input param (e.g. SharedTraitStudies needs
-   * diseaseIds, but the tool input is studyId).
+   * variable doesn't match the tool's input param. Only applies when directFetch
+   * is unset — every current entry is directFetch, so this is currently unused.
    */
   primaryPrefetch?: { query: string; operationName: string };
   /**
@@ -43,6 +43,12 @@ export type SectionDef = {
       responseKey: string;
     };
   }>;
+  /**
+   * Experimental: skip server-side prefetch entirely and let the widget iframe fetch
+   * the GraphQL API directly, allowlisted via CSP connectDomains. When set, no
+   * `prefetch` config is derived and the fetch interceptor is bypassed client-side.
+   */
+  directFetch?: boolean;
 };
 
 const TARGET_INPUT = [
@@ -84,6 +90,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows cancer hallmark annotations for a target gene — which hallmarks it promotes or " +
       "suppresses, with supporting publication evidence.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -93,6 +100,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows chemical probes available for a target gene — highly selective tool compounds " +
       "used in pharmacological research, with probe quality scores and sources.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -102,6 +110,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows comparative genomics data for a target gene — orthologues across species " +
       "(human, mouse, rat, zebrafish, etc.) with homology scores.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -111,6 +120,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows DepMap CRISPR gene essentiality data for a target — cancer cell line " +
       "dependency scores across tissue types from the Cancer Dependency Map.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -120,6 +130,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows drugs and clinical candidates associated with a target gene — approved drugs, " +
       "clinical-stage compounds, mechanisms of action, and disease indications.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -130,6 +141,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "median TPM values, tissue specificity scores, and distribution scores from GTEx, HPA, " +
       "and other sources.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -139,6 +151,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Gene Ontology (GO) annotations for a target gene — molecular functions, " +
       "biological processes, and cellular components.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -148,6 +161,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows genetic constraint metrics for a target gene (pLI, LOEUF, Z-scores) from " +
       "gnomAD — indicating intolerance to loss-of-function variants.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -157,6 +171,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows mouse phenotype data for a target gene from IMPC — phenotypic categories " +
       "observed in knockout mice with significance scores.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -166,6 +181,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Reactome pathway memberships for a target gene — biological pathways and " +
       "hierarchical pathway categories.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -175,6 +191,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows pharmacogenomics data for a target gene — genetic variants that affect drug " +
       "response and their clinical annotations from PharmGKB.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -184,7 +201,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows QTL credible sets linked to a target gene — eQTL and sQTL fine-mapped " +
       "credible sets from GTEx and other QTL datasets.",
     inputParams: TARGET_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
   {
     entity: "target",
@@ -194,6 +211,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows target safety information — adverse effects, safety risk information, " +
       "and experimental toxicity data from curated sources.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
   {
     entity: "target",
@@ -203,6 +221,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows tractability assessment for a target gene — small molecule, antibody, PROTAC, " +
       "and other drug modality predictions with supporting evidence buckets.",
     inputParams: TARGET_INPUT,
+    directFetch: true,
   },
 
   // ── DISEASE ─────────────────────────────────────────────────────────────────
@@ -214,6 +233,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows drugs approved or in clinical trials for a disease — drug names, " +
       "clinical phases, mechanisms of action, and linked targets.",
     inputParams: DISEASE_INPUT,
+    directFetch: true,
   },
   {
     entity: "disease",
@@ -223,6 +243,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Open Targets experimental projects related to a disease — OTAR-funded " +
       "functional genomics and validation studies.",
     inputParams: DISEASE_INPUT,
+    directFetch: true,
   },
   {
     entity: "disease",
@@ -232,6 +253,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows the disease ontology subgraph for a disease — its position in the EFO " +
       "hierarchy with parent and child disease terms.",
     inputParams: DISEASE_INPUT,
+    directFetch: true,
   },
   {
     entity: "disease",
@@ -241,7 +263,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows phenotype annotations for a disease — HPO phenotype terms linked to " +
       "the disease with evidence from curated sources.",
     inputParams: DISEASE_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
 
   // ── DRUG ────────────────────────────────────────────────────────────────────
@@ -253,7 +275,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows adverse event data for a drug from FDA FAERS — significant adverse events " +
       "by MedDRA term with likelihood ratio scores.",
     inputParams: DRUG_INPUT,
-    prefetchExtraVariables: { size: 25, index: 0 },
+    directFetch: true,
   },
   {
     entity: "drug",
@@ -262,41 +284,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows drug clinical indications with investigational and approved indications from clinical trial records, including disease names, maximum clinical stage, and individual trial records in a detail panel.",
     inputParams: DRUG_INPUT,
-    extraPrefetches: [
-      {
-        operationName: "ClinicalRecordsQuery",
-        query: `
-          query ClinicalRecordsQuery($clinicalReportsIds: [String!]!) {
-            clinicalReports(clinicalReportsIds: $clinicalReportsIds) {
-              clinicalStage
-              id
-              source
-              trialLiterature
-              title
-              trialOverallStatus
-              trialStartDate
-              type
-              year
-            }
-          }
-        `,
-        variables: (_inputValue: string, primaryData: unknown) => {
-          const rows = (primaryData as any)?.drug?.indications?.rows ?? [];
-          const allIds: string[] = [];
-          for (const row of rows) {
-            for (const report of (row.clinicalReports ?? [])) {
-              allIds.push(report.id);
-            }
-          }
-          return { clinicalReportsIds: allIds };
-        },
-        filteredBy: {
-          requestVarName: "clinicalReportsIds",
-          itemIdField: "id",
-          responseKey: "clinicalReports",
-        },
-      },
-    ],
+    directFetch: true,
   },
   {
     entity: "drug",
@@ -306,6 +294,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows drug safety warnings for a drug — black box warnings, withdrawn status, " +
       "and year of withdrawal with regulatory authority details.",
     inputParams: DRUG_INPUT,
+    directFetch: true,
   },
   {
     entity: "drug",
@@ -315,6 +304,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows mechanisms of action for a drug — target proteins, action types " +
       "(agonist, antagonist, inhibitor, etc.), and source references.",
     inputParams: DRUG_INPUT,
+    directFetch: true,
   },
   {
     entity: "drug",
@@ -324,6 +314,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows pharmacogenomics data for a drug — genetic variants that affect drug " +
       "response, phenotype categories, and clinical significance.",
     inputParams: DRUG_INPUT,
+    directFetch: true,
   },
 
   // ── EVIDENCE ─────────────────────────────────────────────────────────────────
@@ -335,7 +326,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows CRISPR screen evidence linking a target to a disease — cancer cell " +
       "line screens showing gene essentiality in disease-relevant models.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -345,7 +336,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows CRISPR modifier screen evidence — genetic interaction screens " +
       "identifying target-disease associations through functional genomics.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -355,6 +346,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows cancer biomarker evidence — genomic alterations in the target gene " +
       "associated with drug response in specific cancer types.",
     inputParams: EVIDENCE_INPUT,
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -364,7 +356,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Cancer Gene Census evidence — curated cancer driver gene annotations " +
       "from COSMIC linking the target to the disease.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -374,7 +366,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows clinical precedence evidence linking a target gene to a disease — approved and " +
       "investigational drugs, clinical phases, and trial outcomes.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 10, cursor: null },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -384,7 +376,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows ClinGen curated evidence — expert-curated gene-disease validity " +
       "classifications with supporting evidence summaries.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -394,7 +386,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows ClinVar/EVA genetic evidence — clinically interpreted variants in the " +
       "target gene associated with the disease, with pathogenicity classifications.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 10, cursor: null },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -404,7 +396,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows ClinVar somatic evidence — somatic variants in the target gene " +
       "associated with the disease from clinical submissions.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 10, cursor: null },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -414,7 +406,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Expression Atlas evidence — differential expression studies showing " +
       "the target gene is up- or down-regulated in the disease context.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -424,7 +416,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows GWAS credible set evidence — fine-mapped GWAS loci where the target " +
       "gene is the top L2G candidate for the disease.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -434,7 +426,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Gene2Phenotype curated evidence — expert-curated gene-disease " +
       "associations from the G2P database with confidence levels.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -444,7 +436,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows gene burden evidence — rare variant collapsing analyses associating " +
       "the target gene with the disease from biobank studies.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -454,7 +446,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Genomics England PanelApp evidence — curated gene-disease associations " +
       "from the GEL rare disease gene panels.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -464,7 +456,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows IMPC mouse model evidence — phenotypes observed in knockout mice " +
       "that map to the human disease.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 10, cursor: null },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -474,7 +466,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows IntOGen cancer driver evidence — somatic mutation enrichment analysis " +
       "identifying the target gene as a cancer driver in the disease.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -484,7 +476,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Open Targets CRISPR evidence — OT-funded CRISPR validation screens " +
       "supporting the target-disease association.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -494,7 +486,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Open Targets ENCORE combinatorial CRISPR screen evidence — genetic " +
       "interaction data from OT's double-KO screens.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -504,7 +496,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Open Targets validation evidence — OT-funded experimental validation " +
       "studies supporting the target-disease hypothesis.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -514,7 +506,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Orphanet rare disease evidence — curated gene-disease associations " +
       "from the Orphanet rare disease database.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -524,7 +516,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows Reactome pathway evidence — pathway disruption events linking the " +
       "target gene to the disease through biological pathways.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -534,7 +526,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows UniProt literature evidence — manually curated disease annotations " +
       "from UniProtKB with supporting PubMed references.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
   {
     entity: "evidence",
@@ -544,7 +536,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows UniProt variant evidence — manually curated disease-causing variants " +
       "in the target gene from UniProtKB.",
     inputParams: EVIDENCE_INPUT,
-    prefetchExtraVariables: { size: 500 },
+    directFetch: true,
   },
 
   // ── CREDIBLE SET ─────────────────────────────────────────────────────────────
@@ -555,6 +547,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows the Locus-to-Gene (L2G) heatmap for a credible set — gene prioritisation scores and SHAP feature contributions used to identify causal genes at GWAS loci.",
     inputParams: CREDIBLE_SET_INPUT,
+    directFetch: true,
   },
   {
     entity: "credibleSet",
@@ -563,7 +556,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows GWAS colocalisation results for a credible set — other GWAS traits and studies whose signals co-localise at this locus, with posterior probabilities.",
     inputParams: CREDIBLE_SET_INPUT,
-    prefetchExtraVariables: { size: 50, index: 0 },
+    directFetch: true,
   },
   {
     entity: "credibleSet",
@@ -572,7 +565,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows molecular QTL colocalisation for a credible set — eQTL, pQTL and sQTL signals from GTEx and other resources that co-localise at this locus.",
     inputParams: CREDIBLE_SET_INPUT,
-    prefetchExtraVariables: { size: 50, index: 0 },
+    directFetch: true,
   },
   {
     entity: "credibleSet",
@@ -581,7 +574,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows the variants within a credible set — posterior inclusion probabilities, allele frequencies, and functional annotations for all tagged variants.",
     inputParams: CREDIBLE_SET_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
   {
     entity: "credibleSet",
@@ -590,6 +583,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows enhancer-to-gene (E2G) predictions for a credible set — regulatory links between non-coding variants and target genes from Activity-by-Contact and other models.",
     inputParams: CREDIBLE_SET_INPUT,
+    directFetch: true,
   },
 
   // ── STUDY ────────────────────────────────────────────────────────────────────
@@ -600,7 +594,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows GWAS credible sets for a study — Manhattan plot of fine-mapped loci with lead variants, p-values, fine-mapping confidence, and top L2G gene scores.",
     inputParams: STUDY_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
   {
     entity: "study",
@@ -609,6 +603,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows QTL credible sets for a molecular QTL study — fine-mapped loci with lead variants and associated gene targets.",
     inputParams: STUDY_INPUT,
+    directFetch: true,
   },
   {
     entity: "study",
@@ -617,44 +612,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows other GWAS studies that share the same disease or phenotype associations as a given study, with sample sizes, cohorts, and publications.",
     inputParams: STUDY_INPUT,
-    primaryPrefetch: {
-      operationName: "StudyDiseasesForSharedTraits",
-      query: `query StudyDiseasesForSharedTraits($studyId: String!) { study(studyId: $studyId) { diseases { id } } }`,
-    },
-    extraPrefetches: [
-      {
-        operationName: "SharedTraitStudiesQuery",
-        query: `query SharedTraitStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
-  sharedTraitStudies: studies(diseaseIds: $diseaseIds, page: { size: $size, index: $index }) {
-    count
-    rows {
-      id
-      traitFromSource
-      projectId
-      diseases {
-        id
-        name
-      }
-      publicationFirstAuthor
-      publicationDate
-      publicationJournal
-      nSamples
-      cohorts
-      ldPopulationStructure {
-        ldPopulation
-        relativeSampleSize
-      }
-      pubmedId
-    }
-  }
-}`,
-        variables: (_inputValue: string, primaryData: unknown) => ({
-          diseaseIds: (primaryData as any)?.study?.diseases?.map((d: { id: string }) => d.id) ?? [],
-          size: 500,
-          index: 0,
-        }),
-      },
-    ],
+    directFetch: true,
   },
 
   // ── VARIANT ──────────────────────────────────────────────────────────────────
@@ -665,6 +623,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows in-silico predictor scores for a variant — AlphaMissense, SIFT, LOFTEE, FoldX, GERP, VEP, and LoF curation scores as a normalised dot plot from likely benign to likely deleterious.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -673,6 +632,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows ClinVar/EVA clinical evidence for a variant — variant classifications, conditions, review status, and supporting evidence from clinical databases.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -681,6 +641,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows enhancer-to-gene (E2G) predictions for a variant — regulatory links to target genes from Activity-by-Contact and other functional genomics models.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -689,7 +650,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows GWAS credible sets containing a variant — fine-mapped loci across studies where this variant is included, with study traits and posterior probabilities.",
     inputParams: VARIANT_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -698,6 +659,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows pharmacogenomics annotations for a variant — drug-gene interactions and phenotype associations from PharmGKB and other resources.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -706,7 +668,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows molecular QTL credible sets for a variant — eQTL, pQTL, and sQTL fine-mapped loci containing this variant across tissues and cell types.",
     inputParams: VARIANT_INPUT,
-    prefetchExtraVariables: { size: 500, index: 0 },
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -715,6 +677,7 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows UniProt protein variant annotations for a variant — functional consequence, pathogenicity classification, and protein domain context.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
   {
     entity: "variant",
@@ -723,5 +686,6 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows Ensembl Variant Effect Predictor (VEP) annotations for a variant — transcript consequences, amino acid changes, and regulatory feature impacts across all overlapping genes.",
     inputParams: VARIANT_INPUT,
+    directFetch: true,
   },
 ];

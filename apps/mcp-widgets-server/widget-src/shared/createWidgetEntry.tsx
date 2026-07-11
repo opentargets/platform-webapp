@@ -89,10 +89,16 @@ function applyData(pf: PrefetchResult) {
 
 const _originalFetch = window.fetch.bind(window);
 
+// Set by the HTML shell before this bundle runs. When true, this widget skips
+// server-side prefetch entirely and fetches the GraphQL API directly — the
+// interceptor must get out of the way and let requests through unmolested.
+const _isDirectFetch = Boolean((window as { __OT_DIRECT_FETCH__?: boolean }).__OT_DIRECT_FETCH__);
+
 window.fetch = function otFetchInterceptor(
   url: RequestInfo | URL,
   opts?: RequestInit
 ): Promise<Response> {
+  if (_isDirectFetch) return _originalFetch(url as RequestInfo, opts);
   try {
     // Cached URL assets (e.g. AlphaFold CIF files fetched by the 3D widget)
     const urlStr =
@@ -209,6 +215,10 @@ export function mountWidget<TArgs extends Record<string, unknown>>(
               (rawArgs ?? {}) as Record<string, unknown>
             );
             if (extracted) setArgs(extracted);
+
+            // directFetch widgets have no server-side prefetch to fetch — the
+            // widget's own Apollo client hits the GraphQL API directly instead.
+            if (_isDirectFetch) return;
 
             const toolName = (
               window as { __OT_WIDGET_TOOL__?: string }
