@@ -8,30 +8,53 @@
  * This stub file replaces those imports at build time (via the stubUiBarrel
  * Vite plugin in vite.widget.config.ts).
  */
-import type { ReactNode } from "react";
+import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import { Box } from "@mui/material";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import RealLink from "@ot/ui/components/Link/Link";
+import { getApp } from "@widget-shared/createWidgetEntry";
 
-/** Link: opens OT platform pages in a new tab, or follows external URLs */
-export function Link({
-  to,
-  children,
-}: {
-  to?: string;
-  children?: ReactNode;
-  external?: boolean;
-  asyncTooltip?: boolean;
-  newTab?: boolean;
-  footer?: boolean;
-  tooltip?: unknown;
-  className?: string;
-  ariaLabel?: string;
-  onClick?: () => void;
-}) {
-  const href =
-    !to ? "#" : to.startsWith("/") ? `https://platform.opentargets.org${to}` : to;
+/**
+ * Link: reuses the real platform Link (packages/ui/src/components/Link/Link.tsx)
+ * for its actual styling/hover behavior, but always forces `external` — the widget
+ * has no real <Routes> for RouterLink to navigate to (it's a standalone component
+ * in a bare <MemoryRouter>), so internal-style paths ("/target/ENSG...") are
+ * resolved to absolute platform URLs.
+ *
+ * Navigation goes through app.openLink() rather than the native <a target="_blank">
+ * click — MCP App iframes are sandboxed by the host, which may not grant popup
+ * permissions, so raw anchor-tag navigation is unreliable. openLink() is the
+ * spec-sanctioned way to ask the host to open a URL in the real browser.
+ */
+export function Link({ to, onClick, ...rest }: ComponentProps<typeof RealLink>) {
+  const resolvedTo = to?.startsWith("/") ? `https://platform.opentargets.org${to}` : to;
+
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    onClick?.();
+    if (resolvedTo) getApp()?.openLink({ url: resolvedTo }).catch(() => {});
+  };
+
   return (
-    <a href={href} target="_blank" rel="noreferrer">
-      {children}
-    </a>
+    <RealLink {...rest} to={resolvedTo} external newTab onClick={handleClick as () => void} />
+  );
+}
+
+/**
+ * Navigate: mirrors packages/ui/src/components/Navigate.tsx exactly, but composed
+ * with the Link above instead of importing the real component directly — the real
+ * Navigate.tsx imports Link via a relative path ("./Link"), which bypasses this
+ * stub file entirely and would reintroduce the broken-click issue Link fixes.
+ */
+export function Navigate({ to }: { to?: string }) {
+  return (
+    <Link asyncTooltip to={to}>
+      <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+        View
+        <FontAwesomeIcon size="sm" icon={faArrowRightToBracket} />
+      </Box>
+    </Link>
   );
 }
 
@@ -144,32 +167,9 @@ export function DisplayVariantId({
   return <span>{display}</span>;
 }
 
-/** Navigate: renders a "View →" link to an OT platform page */
-export function Navigate({ to }: { to?: string }) {
-  const href = !to ? "#" : to.startsWith("/") ? `https://platform.opentargets.org${to}` : to;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        textDecoration: "none",
-        color: "inherit",
-      }}
-    >
-      View →
-    </a>
-  );
-}
-
-/** ClinvarStars: renders a star rating (★ filled, ☆ empty) */
-export function ClinvarStars({ num = 0, length = 4 }: { num?: number; length?: number }) {
-  const stars = Array.from({ length }, (_, i) => (i < num ? "★" : "☆")).join("");
-  return <span style={{ color: "#FFC107", letterSpacing: 1 }}>{stars}</span>;
-}
+// ClinvarStars is a pure presentational component (no navigation/routing
+// dependency), so it's reused directly — no adapter needed.
+export { default as ClinvarStars } from "@ot/ui/components/ClinvarStars";
 
 /** L2GScoreIndicator: renders the L2G score as tabular text */
 export function L2GScoreIndicator({

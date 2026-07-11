@@ -10,6 +10,11 @@ import { WIDGET_REGISTRY } from "./widgets/index.js";
 
 const PUBLIC_API_URL = "https://api.platform.opentargets.org/api/v4/graphql";
 
+// Same profile mechanism the real platform app uses: apps/platform/index.html loads
+// <script src="/profiles/{name}.js"> before its app bundle, setting window.configProfile.
+// OT_PROFILE picks which file — "platform" (public) or "ppp" (partner preview).
+const PROFILES_ROOT = new URL("../../../apps/platform/public/profiles", import.meta.url).pathname;
+
 /**
  * Builds a self-contained HTML string with the widget IIFE bundle inlined.
  * The widget's own Apollo client fetches the GraphQL API directly from the
@@ -20,6 +25,8 @@ async function makeWidgetShell(bundleFile: string, title: string): Promise<strin
   const bundlePath = new URL(`../dist/widgets/${bundleFile}`, import.meta.url).pathname;
   const bundleJs = await readFile(bundlePath, "utf-8");
   const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
+  const profileName = process.env.OT_PROFILE ?? "platform";
+  const profileJs = await readFile(`${PROFILES_ROOT}/${profileName}.js`, "utf-8");
 
   return `<!doctype html>
 <html>
@@ -37,8 +44,8 @@ async function makeWidgetShell(bundleFile: string, title: string): Promise<strin
     </style>
     <script>
       window.__OT_API_URL__ = "${apiUrl}";
-      window.configProfile = { isPartnerPreview: false, partnerTargetSectionIds: [], partnerDiseaseSectionIds: [], partnerDrugSectionIds: [], partnerEvidenceSectionIds: [], partnerDataTypes: [], partnerDataSources: [] };
     </script>
+    <script>${profileJs}</script>
   </head>
   <body>
     <div id="root"></div>

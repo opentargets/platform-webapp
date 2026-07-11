@@ -24,17 +24,16 @@ export { default as CompactAlphaFoldDomainLegend } from "@ot/ui/components/Viewe
 export { default as CompactAlphaFoldHydrophobicityLegend } from "@ot/ui/components/Viewer/CompactAlphaFoldHydrophobicityLegend";
 
 // ---- Shared widget stubs (reused from the main ui stub) ----
-export { SectionItem, SummaryItem, DisplayVariantId, usePlatformApi, useBatchQuery } from "./ui-index";
+export {
+  Link,
+  SectionItem,
+  SummaryItem,
+  DisplayVariantId,
+  usePlatformApi,
+  useBatchQuery,
+} from "./ui-index";
 
 // ---- Stubs ----
-
-export function Link({ children, to }: { children: React.ReactNode; to: string }) {
-  return (
-    <a href={to} target="_blank" rel="noopener noreferrer">
-      {children}
-    </a>
-  );
-}
 
 export function DataDownloader() {
   return null;

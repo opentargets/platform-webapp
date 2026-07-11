@@ -112,46 +112,15 @@ export function createPlatformStubsPlugin(): Plugin {
     MONO_ROOT,
     "packages/ui/src/components/ApiPlaygroundDrawer.tsx"
   );
-  // @ot/config's theme.ts calls lighten/darken (polished) on getConfig() colors at
-  // module-load time. In the widget sandbox window.configProfile is absent so
-  // primaryColor/secondaryColor are undefined → polished throws error #3.
-  // Stub both files by absolute path (same pattern as OTApolloProvider/DataDownloader)
-  // so polished is never invoked regardless of how the module is resolved.
-  const otConfigThemePath = resolve(MONO_ROOT, "packages/ot-config/src/theme.ts");
-  const otConfigEnvPath = resolve(MONO_ROOT, "packages/ot-config/src/environment.ts");
+  // @ot/config's theme.ts/environment.ts are NOT stubbed — the widget HTML shell
+  // (src/mcp-server.ts) sets window.configProfile from the real profile file before
+  // the bundle script runs, so getConfig() and theme.ts's lighten/darken calls resolve
+  // real colors safely. See widget-src/shared/createWidgetEntry.tsx, which imports the
+  // real theme from "@ot/config" directly (aliased below).
 
   return {
     name: "platform-stubs",
     load(id: string) {
-      if (id === otConfigThemePath) {
-        return `
-import { createTheme } from "@mui/material";
-const PRIMARY = "#3489ca";
-const SECONDARY = "#ff6350";
-export const theme = createTheme({
-  palette: { primary: { main: PRIMARY }, secondary: { main: SECONDARY } },
-});
-`;
-      }
-      if (id === otConfigEnvPath) {
-        const PRIMARY = "#3489ca";
-        const SECONDARY = "#ff6350";
-        return `
-const PRIMARY = "${PRIMARY}";
-const SECONDARY = "${SECONDARY}";
-export function getConfig() {
-  return {
-    urlApi: ${JSON.stringify(OT_API_URL)},
-    urlAiApi: "",
-    profile: { primaryColor: PRIMARY, secondaryColor: SECONDARY, isPartnerPreview: false, partnerTargetSectionIds: [], partnerDiseaseSectionIds: [], partnerDrugSectionIds: [], partnerEvidenceSectionIds: [], partnerDataTypes: [], partnerDataSources: [] },
-    googleTagManagerID: null,
-    geneticsPortalUrl: "https://genetics.opentargets.org",
-    gitVersion: "",
-  };
-}
-export function getEnvironmentConfig() { return getConfig(); }
-`;
-      }
       if (id === otAsyncTooltipPath) {
         return `
 import React from "react";
@@ -234,6 +203,7 @@ export function createWidgetBuildConfig(opts: WidgetBuildOptions): UserConfig {
         "@ot/sections": resolve(MONO_ROOT, "packages/sections/src"),
         "@ot/constants": resolve(MONO_ROOT, "packages/ot-constants/src"),
         "@ot/utils": resolve(MONO_ROOT, "packages/ot-utils/src"),
+        "@ot/config": resolve(MONO_ROOT, "packages/ot-config/src"),
         "@widget-shared": resolve(ROOT, "widget-src/shared"),
       },
     },
