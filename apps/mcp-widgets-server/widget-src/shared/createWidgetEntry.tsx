@@ -1,14 +1,10 @@
 /**
- * Factory that wires up the App class, fetch interceptor, ResizeObserver
- * height reporting, Emotion cache, and MUI theme for a widget IIFE bundle.
+ * Factory that wires up the App class, ResizeObserver height reporting,
+ * Emotion cache, and MUI theme for a widget IIFE bundle.
  *
- * Data delivery pattern (per MCP Apps spec examples):
- *   ontoolinput fires → app.callServerTool("ot_fetch_widget_data") →
- *   read result.structuredContent → populate fetch interceptor cache →
- *   Apollo queries resolve from cache.
- *
- * app.ontoolresult is kept as a primary path for when Claude Desktop fixes
- * the structuredContent stripping bug (#696 in ext-apps).
+ * The widget's Apollo client fetches GraphQL data directly from the iframe —
+ * the MCP server allowlists the API origin (and any extra origins the widget
+ * needs) via CSP connectDomains on the resource. No server-side prefetch.
  *
  * autoResize: false — we report only HEIGHT manually so AppFrame never sets a
  * pixel width on the proxy iframe (which would collapse the layout to the
@@ -32,139 +28,6 @@ const apolloClient = new ApolloClient({
   uri: (window as { __OT_API_URL__?: string }).__OT_API_URL__ ?? __OT_API_URL__,
   cache: new InMemoryCache(),
 });
-
-// ── Prefetch data types ───────────────────────────────────────────────────────
-
-interface FilteredOp {
-  operationName: string;
-  allItems: unknown[];
-  itemIdField: string;
-  requestVarName: string;
-  responseKey: string;
-}
-
-interface PrefetchResult {
-  operations?: Array<{ operationName: string; data: unknown }>;
-  filteredOps?: FilteredOp[];
-  urlData?: Array<{ url: string; text: string; contentType: string }>;
-}
-
-// ── Module-scope data store ───────────────────────────────────────────────────
-// Shared between the fetch interceptor and applyData. Module scope guarantees
-// the interceptor is in place before Apollo Client makes its first request.
-
-const _gql: Record<string, unknown> = {};
-const _gqlPending: Record<string, Array<(data: unknown) => void>> = {};
-const _filteredOps: Record<string, FilteredOp> = {};
-let _urls: Array<{ url: string; text: string; contentType: string }> = [];
-
-function clearDataStore() {
-  for (const k of Object.keys(_gql)) delete _gql[k];
-  for (const k of Object.keys(_gqlPending)) delete _gqlPending[k];
-  for (const k of Object.keys(_filteredOps)) delete _filteredOps[k];
-  _urls = [];
-}
-
-function applyData(pf: PrefetchResult) {
-  _urls = pf.urlData ?? [];
-
-  for (const fo of pf.filteredOps ?? []) {
-    _filteredOps[fo.operationName] = fo;
-  }
-
-  for (const op of pf.operations ?? []) {
-    if (op.operationName === undefined) continue;
-    _gql[op.operationName] = op.data;
-    const waiting = _gqlPending[op.operationName];
-    if (waiting) {
-      for (const resolve of waiting) resolve(op.data);
-      delete _gqlPending[op.operationName];
-    }
-  }
-}
-
-// ── window.fetch interceptor ──────────────────────────────────────────────────
-// Must be set up at module scope (before any Apollo query runs) so every
-// GraphQL request is routed through the prefetch cache.
-
-const _originalFetch = window.fetch.bind(window);
-
-// Set by the HTML shell before this bundle runs. When true, this widget skips
-// server-side prefetch entirely and fetches the GraphQL API directly — the
-// interceptor must get out of the way and let requests through unmolested.
-const _isDirectFetch = Boolean((window as { __OT_DIRECT_FETCH__?: boolean }).__OT_DIRECT_FETCH__);
-
-window.fetch = function otFetchInterceptor(
-  url: RequestInfo | URL,
-  opts?: RequestInit
-): Promise<Response> {
-  if (_isDirectFetch) return _originalFetch(url as RequestInfo, opts);
-  try {
-    // Cached URL assets (e.g. AlphaFold CIF files fetched by the 3D widget)
-    const urlStr =
-      typeof url === "string" ? url : url instanceof URL ? url.href : (url as Request).url;
-    const urlEntry = _urls.find(e => e.url === urlStr);
-    if (urlEntry) {
-      return Promise.resolve(
-        new Response(urlEntry.text, {
-          status: 200,
-          headers: { "Content-Type": urlEntry.contentType },
-        })
-      );
-    }
-
-    // GraphQL POST requests
-    if (opts?.method === "POST" && typeof opts.body === "string") {
-      const body = JSON.parse(opts.body) as { operationName?: string; variables?: Record<string, unknown> };
-      const op = body.operationName;
-      if (op) {
-        // Filtered operation — server prefetches all items; interceptor filters by request vars
-        const fo = _filteredOps[op];
-        if (fo) {
-          const reqIds = ((body.variables ?? {})[fo.requestVarName] ?? []) as unknown[];
-          const idSet = new Set(reqIds);
-          const filtered = (fo.allItems as Record<string, unknown>[]).filter(
-            item => idSet.has(item[fo.itemIdField])
-          );
-          const data: Record<string, unknown> = {};
-          data[fo.responseKey] = filtered;
-          return Promise.resolve(
-            new Response(JSON.stringify({ data }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            })
-          );
-        }
-
-        // Already cached
-        if (_gql[op] !== undefined) {
-          return Promise.resolve(
-            new Response(JSON.stringify({ data: _gql[op] }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            })
-          );
-        }
-
-        // Pend until applyData populates this operation
-        return new Promise((resolve, reject) => {
-          if (!_gqlPending[op]) _gqlPending[op] = [];
-          _gqlPending[op].push(data =>
-            resolve(
-              new Response(JSON.stringify({ data }), {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-              })
-            )
-          );
-          setTimeout(() => reject(new Error(`OT data timeout for ${op}`)), 30000);
-        });
-      }
-    }
-  } catch (_) {}
-
-  return _originalFetch(url as RequestInfo, opts);
-};
 
 // ── Widget entry factory ──────────────────────────────────────────────────────
 
@@ -198,48 +61,12 @@ export function mountWidget<TArgs extends Record<string, unknown>>(
 
       async function connect() {
         try {
-          // ontoolresult: primary path for when Claude Desktop fixes #696
-          app.ontoolresult = result => {
-            if (result.structuredContent) {
-              applyData(result.structuredContent as PrefetchResult);
-            }
-          };
-
           // ontoolinput: set BEFORE connect() so we never miss the initial event.
-          // Calls callServerTool to fetch prefetched data (request/response path,
-          // not a notification — avoids the structuredContent stripping bug #696).
-          app.ontoolinput = async ({ arguments: rawArgs }) => {
-            clearDataStore();
-
+          app.ontoolinput = ({ arguments: rawArgs }) => {
             const extracted = config.extractArgs(
               (rawArgs ?? {}) as Record<string, unknown>
             );
             if (extracted) setArgs(extracted);
-
-            // directFetch widgets have no server-side prefetch to fetch — the
-            // widget's own Apollo client hits the GraphQL API directly instead.
-            if (_isDirectFetch) return;
-
-            const toolName = (
-              window as { __OT_WIDGET_TOOL__?: string }
-            ).__OT_WIDGET_TOOL__;
-
-            if (toolName) {
-              try {
-                const result = await app.callServerTool({
-                  name: "ot_fetch_widget_data",
-                  arguments: {
-                    tool: toolName,
-                    inputJson: JSON.stringify(rawArgs ?? {}),
-                  },
-                });
-                if (result.structuredContent) {
-                  applyData(result.structuredContent as PrefetchResult);
-                }
-              } catch (e) {
-                console.error(`[${config.appName}] callServerTool failed:`, e);
-              }
-            }
           };
 
           await app.connect();
