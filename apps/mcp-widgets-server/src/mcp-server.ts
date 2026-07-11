@@ -20,7 +20,12 @@ const PUBLIC_API_URL = "https://api.platform.opentargets.org/api/v4/graphql";
  * window.__OT_WIDGET_TOOL__ is set here so createWidgetEntry.tsx knows which
  * tool to call via callServerTool without needing to parse hostContext.
  */
-async function makeWidgetShell(bundleFile: string, title: string, toolName: string): Promise<string> {
+async function makeWidgetShell(
+  bundleFile: string,
+  title: string,
+  toolName: string,
+  directFetch?: boolean
+): Promise<string> {
   const bundlePath = new URL(`../dist/widgets/${bundleFile}`, import.meta.url).pathname;
   const bundleJs = await readFile(bundlePath, "utf-8");
   const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
@@ -42,6 +47,7 @@ async function makeWidgetShell(bundleFile: string, title: string, toolName: stri
     <script>
       window.__OT_API_URL__ = "${apiUrl}";
       window.__OT_WIDGET_TOOL__ = "${toolName}";
+      window.__OT_DIRECT_FETCH__ = ${directFetch ? "true" : "false"};
       window.configProfile = { isPartnerPreview: false, partnerTargetSectionIds: [], partnerDiseaseSectionIds: [], partnerDrugSectionIds: [], partnerEvidenceSectionIds: [], partnerDataTypes: [], partnerDataSources: [] };
     </script>
   </head>
@@ -214,11 +220,24 @@ export function createMcpServer(): McpServer {
     );
 
     // Resource handler — serves the HTML shell immediately (no blocking).
-    // Data is not embedded here; it arrives via AppBridge tool-result postMessage.
+    // Data is not embedded here; it arrives via AppBridge tool-result postMessage,
+    // except for directFetch widgets, which fetch the GraphQL API directly (see CSP below).
     registerAppResource(server, def.title, resourceUri, { mimeType: RESOURCE_MIME_TYPE }, async () => {
       console.error(`[mcp] resource READ: ${resourceUri}`);
-      const html = await makeWidgetShell(def.bundleFile, def.title, def.toolName);
-      return { contents: [{ uri: resourceUri, mimeType: RESOURCE_MIME_TYPE, text: html }] };
+      const html = await makeWidgetShell(def.bundleFile, def.title, def.toolName, def.directFetch);
+      const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
+      return {
+        contents: [
+          {
+            uri: resourceUri,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            ...(def.directFetch
+              ? { _meta: { ui: { csp: { connectDomains: [apiUrl] } } } }
+              : {}),
+          },
+        ],
+      };
     });
   }
 

@@ -62,4 +62,9 @@ export type WidgetDef = {
      */
     extractExtraFetches?: (data: unknown) => Array<{ url: string; contentType: string }>;
   };
+  /**
+   * Experimental: when true, no server-side prefetch runs. The widget iframe fetches
+   * the GraphQL API directly instead, allowlisted via the resource's CSP connectDomains.
+   */
+  directFetch?: boolean;
 };
