@@ -10,11 +10,9 @@ apps/mcp-widgets-server/
 │   ├── widgets/
 │   │   ├── index.ts            # Widget registry builder + sectionPathToId utility
 │   │   ├── molecular-structure.ts  # Manual widget def (AlphaFold 3D viewer)
-│   │   └── types.ts            # WidgetDef type, makeWidgetShell, toAnthropicTool
-│   ├── mcp-server.ts           # MCP tool + resource registration, GraphQL prefetch
-│   ├── chat.ts                 # Chat workspace HTTP handler
+│   │   └── types.ts            # WidgetDef type
+│   ├── mcp-server.ts           # MCP tool + resource registration, widget HTML shell, CSP
 │   ├── index.ts                # Server entrypoint
-│   ├── otp-client.ts           # OT GraphQL client helpers
 │   └── stdio.ts                # stdio MCP transport
 │
 ├── widget-src/                 # Browser-side React code (compiled to IIFE bundles)
@@ -36,14 +34,14 @@ apps/mcp-widgets-server/
 | | `src/` | `widget-src/` |
 |---|---|---|
 | **Runs in** | Node.js (server / MCP host) | Browser (iframe inside Claude Desktop) |
-| **Purpose** | Registers MCP tools, fetches GraphQL data server-side, serves widget HTML | React components compiled into self-contained IIFE bundles |
+| **Purpose** | Registers MCP tools, serves the widget HTML shell + CSP allowlist | React components compiled into self-contained IIFE bundles |
 | **Output** | Running MCP server process | `dist/widgets/*.js` IIFE bundle files |
 | **Build tool** | `tsx` (TypeScript execution) | Vite (browser bundle) |
 
-When Claude calls an MCP tool, `src/mcp-server.ts` runs the GraphQL prefetch and returns data
-via `_meta.prefetchedData`. The widget HTML shell (with the bundle inlined) renders in an iframe,
-and a `postMessage` interceptor delivers the prefetched data to Apollo without any live network
-requests from the widget.
+When Claude calls an MCP tool, `src/mcp-server.ts` serves the widget HTML shell (bundle inlined)
+as an MCP App resource, with `_meta.ui.csp.connectDomains` allowlisting the GraphQL API origin
+(and any extra origins the widget needs, via `WidgetDef.extraConnectDomains`). The widget's own
+Apollo client then fetches data directly from the iframe — there is no server-side prefetch.
 
 ---
 
@@ -53,8 +51,9 @@ requests from the widget.
 2. Run `yarn build:widgets:<entity>` (or `yarn build:widgets:sections` for all)
 3. Restart Claude Desktop
 
-For sections where the GQL query variable does not match the input param name (or that need a
-two-step prefetch), use `primaryPrefetch` and/or `extraPrefetches` in the `SectionDef`.
+If the section fetches anything beyond the OT GraphQL API (e.g. a third-party CDN), add its
+origin to `extraConnectDomains` in the derived `WidgetDef` (see `molecular-structure.ts` for
+an example with AlphaFold and UniProt).
 
 ---
 
@@ -160,7 +159,7 @@ two-step prefetch), use `primaryPrefetch` and/or `extraPrefetches` in the `Secti
 
 | Tool name | Section | Notes |
 |-----------|---------|-------|
-| `get_molecular_structure_widget` | `variant/MolecularStructure` | Custom 3D AlphaFold viewer; prefetches CIF file server-side |
+| `get_molecular_structure_widget` | `variant/MolecularStructure` | Custom 3D AlphaFold viewer; fetches CIF/pathogenicity/domain data directly from AlphaFold + UniProt (extra CSP `connectDomains`) |
 
 ---
 
