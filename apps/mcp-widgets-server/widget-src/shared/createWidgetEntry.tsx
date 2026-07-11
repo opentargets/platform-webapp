@@ -18,7 +18,7 @@ import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import { MemoryRouter } from "react-router-dom";
-import { theme } from "./theme";
+import { theme } from "@ot/config";
 
 // __OT_API_URL__ is injected at build time by Vite's define (from OT_API_URL in .env).
 // window.__OT_API_URL__ can override it at runtime (set by the HTML shell script).
@@ -28,6 +28,16 @@ const apolloClient = new ApolloClient({
   uri: (window as { __OT_API_URL__?: string }).__OT_API_URL__ ?? __OT_API_URL__,
   cache: new InMemoryCache(),
 });
+
+// ── Shared App instance accessor ──────────────────────────────────────────────
+// Each widget bundle mounts exactly one widget (one mountWidget() call), so a
+// single module-scope reference is enough. Used by the Link stub (ui-index.tsx)
+// to route external navigation through app.openLink() — raw <a target="_blank">
+// clicks are unreliable inside the sandboxed MCP App iframe.
+let currentApp: App | null = null;
+export function getApp(): App | null {
+  return currentApp;
+}
 
 // ── Widget entry factory ──────────────────────────────────────────────────────
 
@@ -52,6 +62,7 @@ export function mountWidget<TArgs extends Record<string, unknown>>(
   });
 
   const app = new App({ name: config.appName, version: "0.1.0" }, {}, { autoResize: false });
+  currentApp = app;
 
   function Root() {
     const [args, setArgs] = useState<TArgs | null>(null);
