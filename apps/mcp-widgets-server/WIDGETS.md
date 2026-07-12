@@ -48,81 +48,98 @@ Apollo client then fetches data directly from the iframe — there is no server-
 ## How to add a new section widget
 
 1. Add an entry to `src/sections/registry.ts`
-2. Run `yarn build:widgets:<entity>` (or `yarn build:widgets:sections` for all)
+2. Run `yarn build:widgets:<entity>` (or `yarn build:widgets` for all)
 3. Restart Claude Desktop
 
-If the section fetches anything beyond the OT GraphQL API (e.g. a third-party CDN), add its
-origin to `extraConnectDomains` in the derived `WidgetDef` (see `molecular-structure.ts` for
-an example with AlphaFold and UniProt).
+If the section fetches anything beyond the OT GraphQL API (e.g. a third-party CDN), set
+`extraConnectDomains` on the `SectionDef` entry itself (see `target/Bibliography`,
+`evidence/EuropePmc`, `target/SubcellularLocation`, or `target/MolecularStructure` for examples).
+
+If the section imports a package directly rather than through a shared `ui` wrapper (e.g. `3dmol`),
+set `extraDedupe` too — see `target/MolecularStructure`. Before adding a new section, check it for
+components that import platform modules (`Link`, `useConfigContext`, etc.) via a **relative path**
+rather than the `"ui"` barrel — those bypass the widget stubs in `widget-src/shared/stubs/` and need
+handling at the Vite-plugin level (`createPlatformStubsPlugin` in `vite/widget.config.base.ts`), not
+just a barrel re-export. This bit `PublicationWrapper`/`ConfigurationProvider`/`Link` and
+`OtAsyncTooltip`/`OtGenomicLocation` during the initial migration — grep the section's files for
+`^import` and check anything not going through `"ui"`.
 
 ---
 
-## Included section widgets (61 total)
+## Included section widgets (69 total)
 
-### Target (14 sections)
+### Target (18 sections)
 
-| Tool name | Section | Input |
-|-----------|---------|-------|
-| `get_target_cancer_hallmarks_widget` | `target/CancerHallmarks` | `ensemblId` |
-| `get_target_chemical_probes_widget` | `target/ChemicalProbes` | `ensemblId` |
-| `get_target_comparative_genomics_widget` | `target/ComparativeGenomics` | `ensemblId` |
-| `get_target_depmap_widget` | `target/DepMap` | `ensemblId` |
-| `get_target_drugs_widget` | `target/Drugs` | `ensemblId` |
-| `get_target_expression_widget` | `target/Expression` | `ensemblId` |
-| `get_target_gene_ontology_widget` | `target/GeneOntology` | `ensemblId` |
-| `get_target_genetic_constraint_widget` | `target/GeneticConstraint` | `ensemblId` |
-| `get_target_mouse_phenotypes_widget` | `target/MousePhenotypes` | `ensemblId` |
-| `get_target_pathways_widget` | `target/Pathways` | `ensemblId` |
-| `get_target_pharmacogenomics_widget` | `target/Pharmacogenomics` | `ensemblId` |
-| `get_target_qtl_credible_sets_widget` | `target/QTLCredibleSets` | `ensemblId` |
-| `get_target_safety_widget` | `target/Safety` | `ensemblId` |
-| `get_target_tractability_widget` | `target/Tractability` | `ensemblId` |
+| Tool name | Section | Input | Notes |
+|-----------|---------|-------|-------|
+| `get_target_cancer_hallmarks_widget` | `target/CancerHallmarks` | `ensemblId` | |
+| `get_target_chemical_probes_widget` | `target/ChemicalProbes` | `ensemblId` | |
+| `get_target_comparative_genomics_widget` | `target/ComparativeGenomics` | `ensemblId` | |
+| `get_target_depmap_widget` | `target/DepMap` | `ensemblId` | |
+| `get_target_drugs_widget` | `target/Drugs` | `ensemblId` | |
+| `get_target_baseline_expression_widget` | `target/BaselineExpression` | `ensemblId` | |
+| `get_target_bibliography_widget` | `target/Bibliography` | `ensemblId` | |
+| `get_target_gene_ontology_widget` | `target/GeneOntology` | `ensemblId` | |
+| `get_target_genetic_constraint_widget` | `target/GeneticConstraint` | `ensemblId` | |
+| `get_target_molecular_interactions_widget` | `target/MolecularInteractions` | `ensemblId` | |
+| `get_target_molecular_structure_widget` | `target/MolecularStructure` | `ensemblId` | Experimental PDB + AlphaFold viewer; raw `3dmol` usage (`extraDedupe`) and 3 extra CSP domains (UniProt, AlphaFold, PDBe) — distinct from the manual `variant/MolecularStructure` widget |
+| `get_target_mouse_phenotypes_widget` | `target/MousePhenotypes` | `ensemblId` | |
+| `get_target_pathways_widget` | `target/Pathways` | `ensemblId` | |
+| `get_target_pharmacogenomics_widget` | `target/Pharmacogenomics` | `ensemblId` | |
+| `get_target_qtl_credible_sets_widget` | `target/QTLCredibleSets` | `ensemblId` | |
+| `get_target_safety_widget` | `target/Safety` | `ensemblId` | |
+| `get_target_subcellular_location_widget` | `target/SubcellularLocation` | `ensemblId` | |
+| `get_target_tractability_widget` | `target/Tractability` | `ensemblId` | |
 
-### Disease (4 sections)
+### Disease (6 sections)
 
 | Tool name | Section | Input |
 |-----------|---------|-------|
 | `get_disease_drugs_widget` | `disease/Drugs` | `efoId` |
+| `get_disease_bibliography_widget` | `disease/Bibliography` | `efoId` |
+| `get_disease_gwas_studies_widget` | `disease/GWASStudies` | `efoId` |
 | `get_disease_ot_projects_widget` | `disease/OTProjects` | `efoId` |
 | `get_disease_ontology_widget` | `disease/Ontology` | `efoId` |
 | `get_disease_phenotypes_widget` | `disease/Phenotypes` | `efoId` |
 
-### Drug (5 sections)
+### Drug (6 sections)
 
 | Tool name | Section | Input | Notes |
 |-----------|---------|-------|-------|
 | `get_drug_adverse_events_widget` | `drug/AdverseEvents` | `chemblId` | |
-| `get_drug_indications_widget` | `drug/ClinicalIndications` | `chemblId` | Two-query: indications + `ClinicalRecordsQuery` (filtered on row click) |
+| `get_drug_bibliography_widget` | `drug/Bibliography` | `chemblId` | |
+| `get_drug_indications_widget` | `drug/Indications` | `chemblId` | Two-query: indications + `ClinicalRecordsQuery` (filtered on row click) |
 | `get_drug_warnings_widget` | `drug/DrugWarnings` | `chemblId` | |
 | `get_drug_mechanisms_of_action_widget` | `drug/MechanismsOfAction` | `chemblId` | |
 | `get_drug_pharmacogenomics_widget` | `drug/Pharmacogenomics` | `chemblId` | |
 
-### Evidence (20 sections)
+### Evidence (23 sections)
 
-| Tool name | Section | Input |
-|-----------|---------|-------|
-| `get_evidence_crispr_widget` | `evidence/CRISPR` | `ensemblId` + `efoId` |
-| `get_evidence_crispr_screen_widget` | `evidence/CRISPRScreen` | `ensemblId` + `efoId` |
-| `get_evidence_cancer_biomarkers_widget` | `evidence/CancerBiomarkers` | `ensemblId` + `efoId` |
-| `get_evidence_cancer_gene_census_widget` | `evidence/CancerGeneCensus` | `ensemblId` + `efoId` |
-| `get_evidence_chembl_widget` | `evidence/Chembl` | `ensemblId` + `efoId` |
-| `get_evidence_clingen_widget` | `evidence/ClinGen` | `ensemblId` + `efoId` |
-| `get_evidence_eva_widget` | `evidence/EVA` | `ensemblId` + `efoId` |
-| `get_evidence_eva_somatic_widget` | `evidence/EVASomatic` | `ensemblId` + `efoId` |
-| `get_evidence_expression_atlas_widget` | `evidence/ExpressionAtlas` | `ensemblId` + `efoId` |
-| `get_evidence_gwas_credible_sets_widget` | `evidence/GWASCredibleSets` | `ensemblId` + `efoId` |
-| `get_evidence_gene2phenotype_widget` | `evidence/Gene2Phenotype` | `ensemblId` + `efoId` |
-| `get_evidence_gene_burden_widget` | `evidence/GeneBurden` | `ensemblId` + `efoId` |
-| `get_evidence_genomics_england_widget` | `evidence/GenomicsEngland` | `ensemblId` + `efoId` |
-| `get_evidence_impc_widget` | `evidence/Impc` | `ensemblId` + `efoId` |
-| `get_evidence_intogen_widget` | `evidence/IntOgen` | `ensemblId` + `efoId` |
-| `get_evidence_ot_crispr_widget` | `evidence/OTCRISPR` | `ensemblId` + `efoId` |
-| `get_evidence_ot_encore_widget` | `evidence/OTEncore` | `ensemblId` + `efoId` |
-| `get_evidence_ot_validation_widget` | `evidence/OTValidation` | `ensemblId` + `efoId` |
-| `get_evidence_orphanet_widget` | `evidence/Orphanet` | `ensemblId` + `efoId` |
-| `get_evidence_reactome_widget` | `evidence/Reactome` | `ensemblId` + `efoId` |
-| `get_evidence_uniprot_literature_widget` | `evidence/UniProtLiterature` | `ensemblId` + `efoId` |
-| `get_evidence_uniprot_variants_widget` | `evidence/UniProtVariants` | `ensemblId` + `efoId` |
+| Tool name | Section | Input | Notes |
+|-----------|---------|-------|-------|
+| `get_evidence_crispr_widget` | `evidence/CRISPR` | `ensemblId` + `efoId` | |
+| `get_evidence_crispr_screen_widget` | `evidence/CRISPRScreen` | `ensemblId` + `efoId` | |
+| `get_evidence_cancer_biomarkers_widget` | `evidence/CancerBiomarkers` | `ensemblId` + `efoId` | |
+| `get_evidence_cancer_gene_census_widget` | `evidence/CancerGeneCensus` | `ensemblId` + `efoId` | |
+| `get_evidence_chembl_widget` | `evidence/Chembl` | `ensemblId` + `efoId` | |
+| `get_evidence_clingen_widget` | `evidence/ClinGen` | `ensemblId` + `efoId` | |
+| `get_evidence_eva_widget` | `evidence/EVA` | `ensemblId` + `efoId` | |
+| `get_evidence_eva_somatic_widget` | `evidence/EVASomatic` | `ensemblId` + `efoId` | |
+| `get_evidence_europe_pmc_widget` | `evidence/EuropePmc` | `ensemblId` + `efoId` | Fetches publication details directly from EuropePMC (extra CSP `connectDomains`) |
+| `get_evidence_expression_atlas_widget` | `evidence/ExpressionAtlas` | `ensemblId` + `efoId` | |
+| `get_evidence_gwas_credible_sets_widget` | `evidence/GWASCredibleSets` | `ensemblId` + `efoId` | |
+| `get_evidence_gene2phenotype_widget` | `evidence/Gene2Phenotype` | `ensemblId` + `efoId` | |
+| `get_evidence_gene_burden_widget` | `evidence/GeneBurden` | `ensemblId` + `efoId` | |
+| `get_evidence_genomics_england_widget` | `evidence/GenomicsEngland` | `ensemblId` + `efoId` | |
+| `get_evidence_impc_widget` | `evidence/Impc` | `ensemblId` + `efoId` | |
+| `get_evidence_intogen_widget` | `evidence/IntOgen` | `ensemblId` + `efoId` | |
+| `get_evidence_ot_crispr_widget` | `evidence/OTCRISPR` | `ensemblId` + `efoId` | |
+| `get_evidence_ot_encore_widget` | `evidence/OTEncore` | `ensemblId` + `efoId` | |
+| `get_evidence_ot_validation_widget` | `evidence/OTValidation` | `ensemblId` + `efoId` | |
+| `get_evidence_orphanet_widget` | `evidence/Orphanet` | `ensemblId` + `efoId` | |
+| `get_evidence_reactome_widget` | `evidence/Reactome` | `ensemblId` + `efoId` | |
+| `get_evidence_uniprot_literature_widget` | `evidence/UniProtLiterature` | `ensemblId` + `efoId` | |
+| `get_evidence_uniprot_variants_widget` | `evidence/UniProtVariants` | `ensemblId` + `efoId` | |
 
 ### Credible Set (5 sections)
 
@@ -169,14 +186,8 @@ These sections exist in `packages/sections/src` but are not in the registry.
 
 | Section | Entity | Reason excluded |
 |---------|--------|-----------------|
-| `target/BaselineExpression` | Target | Requires symbol lookup first (two-query with TargetSymbol); `target/Expression` covers expression data |
-| `target/Bibliography` | Target | Uses SimilarEntities API with cursor pagination; publication rendering complexity |
-| `target/MolecularInteractions` | Target | Four separate databases (IntAct, Reactome, SIGNOR, STRING), each with its own query |
-| `target/MolecularStructure` | Target | 3D viewer — covered by `get_molecular_structure_widget` (manual) |
-| `target/OverlappingVariants` | Target | Interactive genome browser with complex stateful viewer |
-| `target/SubcellularLocation` | Target | Custom SVG-based subcellular location visualisation with no standard table |
-| `disease/Bibliography` | Disease | SimilarEntities cursor pagination; publication rendering complexity |
-| `disease/GWASStudies` | Disease | Requires `diseaseIds: [String!]!` array input, not a single EFO ID |
-| `drug/Bibliography` | Drug | SimilarEntities cursor pagination |
-| `evidence/EuropePmc` | Evidence | SentenceMatch + Publication components with cursor pagination |
 | `variant/MolecularStructure` | Variant | Covered by `get_molecular_structure_widget` (manual) |
+
+Note: `target/Bibliography`, `disease/Bibliography`, `drug/Bibliography`, `disease/GWASStudies`, `target/MolecularInteractions`, `target/SubcellularLocation`, `evidence/EuropePmc`, and `target/MolecularStructure` were previously listed here but turned out not to be real blockers. The first four were mostly documentation drift — the widget entry codegen just renders `Body` directly and lets it fetch its own data, so cursor pagination and array-shaped GraphQL variables inside `Body` don't matter. `MolecularInteractions` needed a one-line `usePlatformApi()` stub fix; `SubcellularLocation` and `EuropePmc` needed one `extraConnectDomains` entry each. `target/MolecularStructure` was a genuine miscategorization — it was claimed to be "covered by the manual widget," but it's a distinct component (its own experimental-PDB + AlphaFold viewer, own CIF parser) live on the platform (unlike `target/OverlappingVariants` below); it needed new per-section `extraDedupe` support (for its direct `3dmol` usage) plus 3 CSP domains. All eight are now in the registry above — every excluded section that's actually live on the platform has been migrated.
+
+Note: `target/OverlappingVariants` was previously listed here but is out of scope entirely — it's not rendered on the real Open Targets Platform (disabled/commented out in `apps/platform/src/pages/TargetPage/Profile.tsx`), so there's no live platform widget to migrate.

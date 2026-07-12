@@ -95,5 +95,6 @@ export function createSectionWidgetConfig(
     outputFile: `${sectionId}.js`,
     emptyOutDir: opts?.emptyOutDir ?? false,
     plugins: [createUiBarrelStub(), createPlatformStubsPlugin()],
+    extraDedupe: def.extraDedupe,
   });
 }
