@@ -8,44 +8,28 @@
  * This stub file replaces those imports at build time (via the stubUiBarrel
  * Vite plugin in vite.widget.config.ts).
  */
-import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Box } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
-import RealLink from "@ot/ui/components/Link/Link";
-import { getApp } from "@widget-shared/createWidgetEntry";
+import { getConfig } from "@ot/config";
 
 /**
- * Link: reuses the real platform Link (packages/ui/src/components/Link/Link.tsx)
- * for its actual styling/hover behavior, but always forces `external` — the widget
- * has no real <Routes> for RouterLink to navigate to (it's a standalone component
- * in a bare <MemoryRouter>), so internal-style paths ("/target/ENSG...") are
- * resolved to absolute platform URLs.
- *
- * Navigation goes through app.openLink() rather than the native <a target="_blank">
- * click — MCP App iframes are sandboxed by the host, which may not grant popup
- * permissions, so raw anchor-tag navigation is unreliable. openLink() is the
- * spec-sanctioned way to ask the host to open a URL in the real browser.
+ * Link: `@ot/ui/components/Link/Link` (the real component's own module path) is
+ * intercepted at the Vite-plugin level (createPlatformStubsPlugin, widget.config.base.ts)
+ * to force external-only, openLink()-routed navigation — that covers this barrel import
+ * AND the several real components that import Link via a relative path instead
+ * (PublicationWrapper.tsx, Footer.tsx), which would otherwise bypass a stub living only
+ * in this file. Re-exported here just to satisfy the "ui" barrel surface.
  */
-export function Link({ to, onClick, ...rest }: ComponentProps<typeof RealLink>) {
-  const resolvedTo = to?.startsWith("/") ? `https://platform.opentargets.org${to}` : to;
-
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    onClick?.();
-    if (resolvedTo) getApp()?.openLink({ url: resolvedTo }).catch(() => {});
-  };
-
-  return (
-    <RealLink {...rest} to={resolvedTo} external newTab onClick={handleClick as () => void} />
-  );
-}
+import Link from "@ot/ui/components/Link/Link";
+export { Link };
 
 /**
  * Navigate: mirrors packages/ui/src/components/Navigate.tsx exactly, but composed
  * with the Link above instead of importing the real component directly — the real
- * Navigate.tsx imports Link via a relative path ("./Link"), which bypasses this
- * stub file entirely and would reintroduce the broken-click issue Link fixes.
+ * Navigate.tsx imports Link via a relative path ("./Link"), which (before the
+ * plugin-level interception above) would have bypassed a stub living only in this file.
  */
 export function Navigate({ to }: { to?: string }) {
   return (
@@ -206,9 +190,33 @@ export { default as RecordsCards } from "@ot/ui/components/ClinicalReports/Recor
 export { default as ClinicalReportsMasterDetailFrame } from "@ot/ui/components/ClinicalReports/ClinicalReportsMasterDetailFrame";
 export { default as ClinicalRecordDrawer } from "@ot/ui/components/ClinicalReports/ClinicalRecordDrawer";
 
-/** usePlatformApi: returns null — fragments are not needed inside the widget */
+/**
+ * usePlatformApi: in the real app, calling this with no fragment (as MolecularInteractions
+ * Body.tsx does — the only live caller across all migrated sections, confirmed via
+ * repo-wide grep) returns the raw PlatformApiContext: the *entire* already-fetched target
+ * profile page query, cached by a page-level provider the widget has no equivalent of
+ * (that whole-page prefetch architecture was removed — see [[project-mcp-server-review]]).
+ *
+ * MolecularInteractions passes this straight through as SectionItem's `request` prop.
+ * SectionItem gates ALL rendering on `definition.hasData(data[entity])`, which for this
+ * section checks `data.interactions?.count > 0` — an empty/null data object makes
+ * SectionItem decide there's "no data" and return null, so the section would never
+ * render for any target. Returning a truthy `interactions.count` here just lets the
+ * *real* per-tab gating take over: each of the 4 tabs (Intact/Signor/Reactome/String)
+ * independently re-fetches and checks its own real count via client.query. The only
+ * cost is a target with truly zero interactions across all 4 sources shows an
+ * all-disabled-tabs section instead of no section at all — a minor degradation, not
+ * a correctness bug for the vast majority of targets that do have some data.
+ *
+ * If usePlatformApi() ever gets a second caller with a different `hasData` shape,
+ * this hardcoded shape will need revisiting — it's tailored to this one call site.
+ */
 export function usePlatformApi() {
-  return null;
+  return {
+    loading: false,
+    error: undefined,
+    data: { target: { interactions: { count: 1 } } },
+  };
 }
 
 /** useApolloClient: standard Apollo client from the widget's ApolloProvider */
@@ -217,6 +225,7 @@ export { useApolloClient } from "@apollo/client";
 // ── Real components (direct paths, bypass barrel) ────────────────────────────
 export { default as ChipList } from "@ot/ui/components/ChipList";
 export { default as SectionLoader } from "@ot/ui/components/Section/SectionLoader";
+export { default as OtGenomicLocation } from "@ot/ui/components/GenomicLocation";
 export { default as DirectionOfEffectIcon } from "@ot/ui/components/DirectionOfEffectIcon";
 export { default as DirectionOfEffectTooltip } from "@ot/ui/components/DirectionOfEffectTooltip";
 export { default as OtTableSSP } from "@ot/ui/components/OtTable/OtTableSSP";
@@ -242,9 +251,26 @@ export { default as PublicationSummaryLabel } from "@ot/ui/components/Publicatio
 export { default as PublicationWrapper } from "@ot/ui/components/PublicationsDrawer/PublicationWrapper";
 export { default as SummaryLoader } from "@ot/ui/components/PublicationsDrawer/SummaryLoader";
 export { default as useBatchDownloader } from "@ot/ui/hooks/useBatchDownloader";
-export { useConfigContext } from "@ot/ui/providers/ConfigurationProvider";
+/**
+ * useConfigContext: the widget has no <OTConfigurationProvider> ancestor (that provider
+ * throws without a real Config object, and also wires up a second Apollo client/theme/API
+ * metadata provider the widget doesn't need). Real config is still available via getConfig()
+ * from @ot/config — the same window.configProfile-based resolution createWidgetEntry.tsx
+ * already uses for `theme` — so components reading config.profile.* (PartnerLockIcon,
+ * SwissbioViz) get real values. urlAiApi resolves empty (no AI backend wired for the widget),
+ * which keeps AI-summary features (PublicationWrapper/Publication) off rather than crashing.
+ */
+export function useConfigContext() {
+  return { config: getConfig() };
+}
 
-// ── Viewer stubs (3D viewer sections are excluded; these prevent missing-export errors) ─
+// ── Viewer stubs ───────────────────────────────────────────────────────────────
+// ViewerProvider/useViewerState etc. only carry real shared state in the manual
+// molecular-structure widget, which uses its own ui-ms-index.tsx stub with the real
+// versions instead of these. Sections that reference these hooks without that
+// provider (e.g. target/MolecularStructure's Viewer.tsx, which manages its own local
+// state and doesn't need shared viewer context) get inert values here — their own
+// code already handles the "no provider" case gracefully (see ViewerLegend.tsx).
 export function ViewerProvider({ children }: { children: React.ReactNode }) { return <>{children}</>; }
 export function ViewerInteractionProvider({ children }: { children: React.ReactNode }) { return <>{children}</>; }
 export function useViewerState() { return {}; }

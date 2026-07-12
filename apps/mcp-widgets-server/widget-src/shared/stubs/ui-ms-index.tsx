@@ -31,6 +31,7 @@ export {
   DisplayVariantId,
   usePlatformApi,
   useBatchQuery,
+  OtGenomicLocation,
 } from "./ui-index";
 
 // ---- Stubs ----
@@ -48,9 +49,6 @@ export function ObsTooltip() {
   return null;
 }
 export function Tooltip({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-export function OtAsyncTooltip({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 

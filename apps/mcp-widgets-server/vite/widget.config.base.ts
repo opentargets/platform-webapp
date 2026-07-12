@@ -99,13 +99,28 @@ export function createPlatformStubsPlugin(): Plugin {
     MONO_ROOT,
     "packages/ui/src/providers/OTApolloProvider/OTApolloProvider.tsx"
   );
-  // OtAsyncTooltip imports OtGenomicLocation from the ui barrel, but that
-  // component does not exist yet in the codebase. Stub the whole component
-  // so widgets that transitively import it (via OtTable etc.) don't break.
-  const otAsyncTooltipPath = resolve(
+  // useConfigContext() is imported both via the "ui" barrel (stubbed in ui-index.tsx)
+  // AND by several components via a relative path straight to this module
+  // (PublicationWrapper.tsx, PartnerLockIcon.tsx, Footer.tsx) — the relative imports
+  // bypass the "ui" barrel stub entirely. Stub the module itself so every import
+  // style gets the same safe, non-null config instead of crashing on the real
+  // provider's default context value ({ config: null }, since there's no
+  // <OTConfigurationProvider> ancestor in the widget).
+  const configurationProviderPath = resolve(
     MONO_ROOT,
-    "packages/ui/src/components/OtAsyncTooltip/OtAsyncTooltip.tsx"
+    "packages/ui/src/providers/ConfigurationProvider.tsx"
   );
+  // Link.tsx is imported both via the "ui" barrel (wrapped in ui-index.tsx to force
+  // external navigation through app.openLink()) AND by several real components via a
+  // relative path straight to this module (PublicationWrapper.tsx, Footer.tsx) — those
+  // relative imports get the unwrapped real component, which renders a plain <a> with
+  // no target="_blank" for "external" links and native RouterLink navigation otherwise.
+  // Clicking it inside the sandboxed MCP App iframe navigates the iframe itself away
+  // from the widget (no popup permission, no real <Routes> to land on) — the widget
+  // "disappearing" the user saw. Stub the module itself, mirroring the real component's
+  // styling classes exactly, but unconditionally routing through openLink() — there is
+  // no legitimate internal-navigation case inside a standalone widget iframe.
+  const linkComponentPath = resolve(MONO_ROOT, "packages/ui/src/components/Link/Link.tsx");
   // ApiPlaygroundDrawer dynamically imports "graphiql" which is not available
   // in the widget build environment. Stub it out as a no-op component.
   const apiPlaygroundDrawerPath = resolve(
@@ -121,12 +136,6 @@ export function createPlatformStubsPlugin(): Plugin {
   return {
     name: "platform-stubs",
     load(id: string) {
-      if (id === otAsyncTooltipPath) {
-        return `
-import React from "react";
-export default function OtAsyncTooltip({ children }) { return React.createElement(React.Fragment, null, children); }
-`;
-      }
       if (id === apiPlaygroundDrawerPath) {
         return "export default function ApiPlaygroundDrawer() { return null; }";
       }
@@ -140,6 +149,103 @@ export default function OtAsyncTooltip({ children }) { return React.createElemen
         return `
 export { useApolloClient } from "@apollo/client";
 export function OTApolloProvider({ children }) { return children; }
+`;
+      }
+      if (id === configurationProviderPath) {
+        return `
+import { getConfig } from "@ot/config";
+export function useConfigContext() { return { config: getConfig() }; }
+export function OTConfigurationProvider({ children }) { return children; }
+export const OTConfigurationContext = undefined;
+`;
+      }
+      if (id === linkComponentPath) {
+        return `
+import React from "react";
+import { makeStyles } from "@mui/styles";
+import classNames from "classnames";
+import { getApp } from "@widget-shared/createWidgetEntry";
+import OtAsyncTooltip from "@ot/ui/components/OtAsyncTooltip/OtAsyncTooltip";
+
+const useStyles = makeStyles((theme) => ({
+  base: {
+    fontSize: "inherit",
+    "text-decoration-color": "transparent",
+    "-webkit-text-decoration-color": "transparent",
+  },
+  baseDefault: {
+    color: theme.palette.primary.main,
+    "&:hover": {
+      color: theme.palette.primary.dark,
+      "text-decoration-color": theme.palette.primary.dark,
+      "-webkit-text-decoration-color": theme.palette.primary.dark,
+    },
+  },
+  baseTooltip: {
+    color: theme.palette.primary.main,
+    "&:hover": { color: theme.palette.primary.dark },
+    textDecoration: "none",
+  },
+  baseFooter: {
+    color: "white",
+    "text-decoration-color": "transparent",
+    "-webkit-text-decoration-color": "transparent",
+    "&:hover": {
+      color: theme.palette.primary.light,
+      "text-decoration-color": theme.palette.primary.light,
+      "-webkit-text-decoration-color": theme.palette.primary.light,
+    },
+    display: "flex",
+    alignItems: "center",
+  },
+}));
+
+function Link({ children, to, onClick, footer, tooltip, asyncTooltip, className, ariaLabel }) {
+  const classes = useStyles();
+  const ariaLabelProp = ariaLabel ? { "aria-label": ariaLabel } : {};
+  const resolvedTo = to && to.startsWith("/") ? "https://platform.opentargets.org" + to : to;
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (onClick) onClick();
+    if (resolvedTo) {
+      const app = getApp();
+      if (app) app.openLink({ url: resolvedTo }).catch(() => {});
+    }
+  };
+
+  const anchor = React.createElement(
+    "a",
+    {
+      className: classNames(
+        classes.base,
+        {
+          [classes.baseDefault]: !footer && !tooltip,
+          [classes.baseFooter]: footer,
+          [classes.baseTooltip]: tooltip,
+        },
+        className
+      ),
+      href: resolvedTo,
+      onClick: handleClick,
+      ...ariaLabelProp,
+    },
+    children
+  );
+
+  // Real Link.tsx only shows the OtAsyncTooltip hover-preview for internal
+  // (non-external) RouterLink navigation. This widget always renders a plain
+  // <a> (see above), so asyncTooltip is keyed off the prop alone, same "/entity/id"
+  // path-parsing the real component uses.
+  if (asyncTooltip && to) {
+    const args = to.split("/");
+    return React.createElement(OtAsyncTooltip, { entity: args[1], id: args[2] }, anchor);
+  }
+
+  return anchor;
+}
+
+export default Link;
 `;
       }
     },

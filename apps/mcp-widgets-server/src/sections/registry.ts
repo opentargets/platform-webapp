@@ -20,7 +20,27 @@ export type SectionDef = {
   description: string;
   /** Input parameters. One for single-entity sections, two for evidence. */
   inputParams: ReadonlyArray<{ name: string; description: string }>;
+  /**
+   * Extra origins to allowlist in CSP connectDomains beyond the GraphQL API, for sections
+   * whose Body fetches other external resources directly from the iframe (e.g. Bibliography
+   * sections fetching publication details from EuropePMC).
+   */
+  extraConnectDomains?: string[];
+  /**
+   * Extra packages to force-dedupe in the Vite build, for sections that import a package
+   * directly (not through a shared ui wrapper) where multiple bundled copies could conflict
+   * (e.g. "3dmol", which the manual molecular-structure widget already requires this for).
+   */
+  extraDedupe?: string[];
 };
+
+const EUROPE_PMC_DOMAIN = ["https://www.ebi.ac.uk"];
+const SWISSBIOPICS_DOMAIN = ["https://www.swissbiopics.org"];
+const MOLECULAR_STRUCTURE_DOMAINS = [
+  "https://rest.uniprot.org",
+  "https://alphafold.ebi.ac.uk",
+  "https://www.ebi.ac.uk",
+];
 
 const TARGET_INPUT = [
   { name: "ensemblId", description: "Ensembl gene ID (e.g. ENSG00000157764 for BRAF)" },
@@ -110,6 +130,16 @@ export const SECTION_REGISTRY: SectionDef[] = [
   },
   {
     entity: "target",
+    sectionPath: "target/Bibliography",
+    toolName: "get_target_bibliography_widget",
+    description:
+      "Shows scientific literature mentioning a target gene and other co-occurring entities " +
+      "recognised via NLP — publication list with PMIDs and publication dates.",
+    inputParams: TARGET_INPUT,
+    extraConnectDomains: EUROPE_PMC_DOMAIN,
+  },
+  {
+    entity: "target",
     sectionPath: "target/GeneOntology",
     toolName: "get_target_gene_ontology_widget",
     description:
@@ -164,12 +194,42 @@ export const SECTION_REGISTRY: SectionDef[] = [
   },
   {
     entity: "target",
+    sectionPath: "target/MolecularInteractions",
+    toolName: "get_target_molecular_interactions_widget",
+    description:
+      "Shows molecular interaction partners for a target gene — protein-protein and " +
+      "functional interactions from IntAct, Signor, Reactome, and STRING.",
+    inputParams: TARGET_INPUT,
+  },
+  {
+    entity: "target",
+    sectionPath: "target/MolecularStructure",
+    toolName: "get_target_molecular_structure_widget",
+    description:
+      "Shows experimental and predicted 3D protein structures for a target gene — PDB " +
+      "structures and the AlphaFold model, in an interactive 3D viewer.",
+    inputParams: TARGET_INPUT,
+    extraConnectDomains: MOLECULAR_STRUCTURE_DOMAINS,
+    extraDedupe: ["3dmol"],
+  },
+  {
+    entity: "target",
     sectionPath: "target/Safety",
     toolName: "get_target_safety_widget",
     description:
       "Shows target safety information — adverse effects, safety risk information, " +
       "and experimental toxicity data from curated sources.",
     inputParams: TARGET_INPUT,
+  },
+  {
+    entity: "target",
+    sectionPath: "target/SubcellularLocation",
+    toolName: "get_target_subcellular_location_widget",
+    description:
+      "Shows subcellular location annotations for a target gene's protein — cellular " +
+      "compartments from the Human Protein Atlas and UniProt, with a diagram of the cell.",
+    inputParams: TARGET_INPUT,
+    extraConnectDomains: SWISSBIOPICS_DOMAIN,
   },
   {
     entity: "target",
@@ -189,6 +249,25 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows drugs approved or in clinical trials for a disease — drug names, " +
       "clinical phases, mechanisms of action, and linked targets.",
+    inputParams: DISEASE_INPUT,
+  },
+  {
+    entity: "disease",
+    sectionPath: "disease/Bibliography",
+    toolName: "get_disease_bibliography_widget",
+    description:
+      "Shows scientific literature mentioning a disease and other co-occurring entities " +
+      "recognised via NLP — publication list with PMIDs and publication dates.",
+    inputParams: DISEASE_INPUT,
+    extraConnectDomains: EUROPE_PMC_DOMAIN,
+  },
+  {
+    entity: "disease",
+    sectionPath: "disease/GWASStudies",
+    toolName: "get_disease_gwas_studies_widget",
+    description:
+      "Shows GWAS studies associated with a disease from the GWAS Catalog and FinnGen — " +
+      "reported trait, sample size, cohorts, publication, and credible set counts.",
     inputParams: DISEASE_INPUT,
   },
   {
@@ -228,6 +307,16 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows adverse event data for a drug from FDA FAERS — significant adverse events " +
       "by MedDRA term with likelihood ratio scores.",
     inputParams: DRUG_INPUT,
+  },
+  {
+    entity: "drug",
+    sectionPath: "drug/Bibliography",
+    toolName: "get_drug_bibliography_widget",
+    description:
+      "Shows scientific literature mentioning a drug and other co-occurring entities " +
+      "recognised via NLP — publication list with PMIDs and publication dates.",
+    inputParams: DRUG_INPUT,
+    extraConnectDomains: EUROPE_PMC_DOMAIN,
   },
   {
     entity: "drug",
@@ -337,6 +426,16 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows ClinVar somatic evidence — somatic variants in the target gene " +
       "associated with the disease from clinical submissions.",
     inputParams: EVIDENCE_INPUT,
+  },
+  {
+    entity: "evidence",
+    sectionPath: "evidence/EuropePmc",
+    toolName: "get_evidence_europe_pmc_widget",
+    description:
+      "Shows text-mined literature evidence linking a target gene to a disease — " +
+      "publications from Europe PMC with matched sentences and disease/phenotype context.",
+    inputParams: EVIDENCE_INPUT,
+    extraConnectDomains: EUROPE_PMC_DOMAIN,
   },
   {
     entity: "evidence",

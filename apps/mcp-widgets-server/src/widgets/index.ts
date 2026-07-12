@@ -32,6 +32,7 @@ function deriveSectionWidgetDef(def: SectionDef): WidgetDef {
     bundleFile: `${sectionId}.js`,
     title: `${readableName} Widget`,
     successMessage: `${readableName} widget rendered successfully in the chat interface.`,
+    extraConnectDomains: def.extraConnectDomains,
   };
 }
 
