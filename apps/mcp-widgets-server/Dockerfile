@@ -39,6 +39,10 @@ COPY apps/mcp-widgets-server/dist  apps/mcp-widgets-server/dist
 # Only .gql files are needed; .tsx source is not used at server runtime.
 COPY packages/sections/src         packages/sections/src
 
+# Profile config scripts — read per-request by makeWidgetShell (OT_PROFILE env var
+# picks "platform" or "ppp") and inlined into every widget's HTML shell.
+COPY apps/platform/public/profiles apps/platform/public/profiles
+
 # Cloud Run injects PORT (default 8080). OT_API_URL can be overridden at deploy time.
 ENV PORT=8080
 ENV NODE_ENV=production
