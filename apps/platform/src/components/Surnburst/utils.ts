@@ -4,14 +4,14 @@ import type { ArcData, PartitionNode, DataNode } from "./types";
  * Determines if an arc should be visible at the current zoom level
  */
 export function arcVisible(d: ArcData): boolean {
-  return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
+  return d.y1 <= 100 && d.y0 >= 1 && d.x1 > d.x0;
 }
 
 /**
  * Determines if a label should be visible at the current zoom level
  */
 export function labelVisible(d: ArcData): boolean {
-  return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.035;
+  return d.y1 <= 100 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
 }
 
 /**
@@ -48,6 +48,16 @@ export function getBreadcrumbTrail(node: PartitionNode): string {
     .reverse()
     .filter(Boolean)
     .join(" › ");
+}
+
+/**
+ * Returns the breadcrumb trail as an array of nodes (for clickable breadcrumbs)
+ */
+export function getBreadcrumbNodes(node: PartitionNode): PartitionNode[] {
+  return node
+    .ancestors()
+    .map((d) => d as PartitionNode)
+    .reverse();
 }
 
 /**

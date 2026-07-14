@@ -1,6 +1,6 @@
 import React from "react";
 import type { PartitionNode } from "./types";
-import { arcVisible, getColorForNode } from "./utils";
+import { arcVisible } from "./utils";
 
 interface SunburstArcsProps {
   nodes: PartitionNode[];
@@ -19,32 +19,29 @@ export const SunburstArcs: React.FC<SunburstArcsProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
-  // Memoize visible nodes for performance with large datasets
-  const visibleNodes = nodes.filter((d) => {
-    if (!d.current) return false;
-    const arcData = d.target ?? d.current;
-    return arcVisible(arcData);
-  });
-
+  // Render ALL nodes — D3 binds by index so we must not filter here.
+  // Visibility is controlled by fillOpacity (set by D3 in useLayoutEffect).
   return (
     <>
-      {visibleNodes.map((d, i) => {
-        const arcPath = (arc as any)(d.current);
+      {nodes.map((d, i) => {
+        const arcData = d.current;
+        const arcPath = (arc as any)(arcData);
+        const visible = arcVisible(arcData);
 
         return (
           <path
             key={`${d.data.name}-${i}`}
             className="arc"
             d={arcPath ?? undefined}
-            fill={getColorForNode(d, colorMap)}
-            fillOpacity={d.children ? 0.9 : 0.75}
+            fill={colorMap.get(d) ?? "#ccc"}
+            fillOpacity={visible ? 1 : 0}
             stroke="#fff"
             strokeWidth={1}
             style={{ cursor: d.children ? "pointer" : "default" }}
             onClick={() => d.children && onArcClick(d)}
             onMouseEnter={() => onMouseEnter(d)}
             onMouseLeave={onMouseLeave}
-            pointerEvents="auto"
+            pointerEvents={visible ? "auto" : "none"}
           />
         );
       })}

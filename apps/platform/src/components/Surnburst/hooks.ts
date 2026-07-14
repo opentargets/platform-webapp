@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import * as d3 from "d3";
 import type { DataNode, ArcData, PartitionNode } from "./types";
+import { mapToPrioritizationColor } from "../GeneEnrichmentAnalysis/utils/colorPalettes";
 
 /**
  * Determines if an arc should be visible at the current zoom level
  */
 function isArcVisible(arcData: ArcData): boolean {
-  return arcData.y1 <= 3 && arcData.y0 >= 1 && arcData.x1 > arcData.x0;
+  return arcData.y1 <= 100 && arcData.y0 >= 1 && arcData.x1 > arcData.x0;
 }
 
 /**
@@ -48,7 +49,7 @@ export function useSunburstPartition(data: DataNode, maxDepth: number = 10) {
         if (d.depth === 0) return false; // Skip root
         // Keep node if it passes visibility check or has visible children
         const arcData = (d as PartitionNode).current;
-        return isArcVisible(arcData) || d.children?.length > 0;
+        return isArcVisible(arcData) || (d.children?.length ?? 0) > 0;
       });
     return descendants;
   }, [root]);
@@ -58,28 +59,18 @@ export function useSunburstPartition(data: DataNode, maxDepth: number = 10) {
 
 /**
  * Hook to create the D3 arc generator
- * Optimized with safe undefined checks
+ * Optimized with proper padding and radius scaling like the reference implementation
  */
 export function useSunburstArc(radius: number) {
-  const arc = useMemo(
-    () => {
-      return (d3.arc() as any)
-        .startAngle((d: ArcData) => d?.x0 ?? 0)
-        .endAngle((d: ArcData) => d?.x1 ?? 0)
-        .padAngle((d: ArcData) => Math.min((d?.x1 - d?.x0) / 2 || 0, 0.002))
-        .padRadius(radius * 1.5)
-        .innerRadius((d: ArcData) => Math.sqrt(d?.y0 ?? 0) * radius)
-        .outerRadius((d: ArcData) =>
-          Math.max(
-            Math.sqrt(d?.y0 ?? 0) * radius,
-            Math.sqrt(d?.y1 ?? 0) * radius - 1
-          )
-        );
-    },
-    [radius]
-  );
-
-  return arc;
+  return useMemo(() => {
+    return (d3.arc() as any)
+      .startAngle((d: ArcData) => d.x0)
+      .endAngle((d: ArcData) => d.x1)
+      .padAngle((d: ArcData) => Math.min((d.x1 - d.x0) / 2, 0.005))
+      .padRadius(radius * 1.5)
+      .innerRadius((d: ArcData) => d.y0 * radius)
+      .outerRadius((d: ArcData) => Math.max(d.y0 * radius, d.y1 * radius - 1));
+  }, [radius]);
 }
 
 /**
@@ -107,18 +98,33 @@ export function useSunburstFocus(root: PartitionNode) {
 }
 
 /**
- * Hook to create color mapping for nodes
+ * Hook to create color mapping for nodes based on NES values.
+ * Matches the old ResultsSunburst implementation exactly:
+ * each node uses its own NES (or 0 if absent), colored against the global NES range.
  */
 export function useSunburstColorMap(
   root: PartitionNode,
-  colors: string[]
+  _colors: string[]
 ) {
   const colorMap = useMemo(() => {
-    const map = new Map();
-    const topLevel = (root.children as PartitionNode[]) ?? [];
-    topLevel.forEach((c, i) => map.set(c, colors[i % colors.length]));
+    const map = new Map<PartitionNode, string>();
+
+    const allNodes = root.descendants() as PartitionNode[];
+    const nesValues = allNodes
+      .map((n) => n.data.NES)
+      .filter((v): v is number => v !== undefined && v !== null);
+
+    const minNES = nesValues.length ? Math.min(...nesValues) : -1;
+    const maxNES = nesValues.length ? Math.max(...nesValues) : 1;
+
+    allNodes.forEach((node) => {
+      if (node.depth === 0) return;
+      const nes = node.data.NES ?? 0;
+      map.set(node, mapToPrioritizationColor(nes, minNES, maxNES));
+    });
+
     return map;
-  }, [root, colors]);
+  }, [root]);
 
   return colorMap;
 }

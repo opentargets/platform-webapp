@@ -1,5 +1,5 @@
 import React from "react";
-import type { PartitionNode } from "./types";
+import type { ArcData, PartitionNode } from "./types";
 import { labelVisible, labelTransform } from "./utils";
 
 interface SunburstLabelsProps {
@@ -7,37 +7,52 @@ interface SunburstLabelsProps {
   radius: number;
 }
 
+/**
+ * Computes a font size that fills the arc without overflowing it.
+ * Constrained by both the arc length (angular span at midpoint) and radial thickness.
+ */
+function computeFontSize(d: ArcData, radius: number, name: string): number {
+  const midRadius = ((d.y0 + d.y1) / 2) * radius;
+  const arcLength = midRadius * (d.x1 - d.x0);
+  const radialHeight = (d.y1 - d.y0) * radius;
+
+  // Use 0.65 ratio — conservative estimate of character width relative to font size.
+  // This ensures even wide characters (m, w, M) don't overflow.
+  const charWidthRatio = 0.65;
+  const maxFromArcLength = arcLength / (charWidthRatio * Math.max(name.length, 1));
+  // Leave 25% padding inside radial thickness
+  const maxFromRadialHeight = radialHeight * 0.75;
+
+  return Math.min(maxFromArcLength, maxFromRadialHeight);
+}
+
 export const SunburstLabels: React.FC<SunburstLabelsProps> = ({
   nodes,
   radius,
 }) => {
-  // Filter to only render visible labels for performance
-  const visibleLabels = nodes.filter((d) => {
-    if (!d.current) return false;
-    return labelVisible(d.target ?? d.current);
-  });
-
   return (
     <>
-      {visibleLabels.map((d, i) => (
-        <text
-          key={`${d.data.name}-label-${i}`}
-          className="arc-label"
-          transform={labelTransform(d.current, radius)}
-          dy="0.32em"
-          fontSize={11}
-          fill="#fff"
-          fillOpacity={1}
-          pointerEvents="none"
-          style={{
-            paintOrder: "stroke",
-            stroke: "rgba(0,0,0,0.25)",
-            strokeWidth: 2,
-          }}
-        >
-          {d.data.name}
-        </text>
-      ))}
+      {nodes.map((d, i) => {
+        const arcData = d.target ?? d.current;
+        const fontSize = computeFontSize(arcData, radius, d.data.name);
+        return (
+          <text
+            key={`${d.data.name}-label-${i}`}
+            className="arc-label"
+            transform={labelTransform(arcData, radius)}
+            dy="0.35em"
+            fillOpacity={labelVisible(arcData) ? 1 : 0}
+            fill="#000"
+            pointerEvents="none"
+            textAnchor="middle"
+            style={{
+              fontSize: `${fontSize}px`,
+            }}
+          >
+            {d.data.name}
+          </text>
+        );
+      })}
     </>
   );
 };

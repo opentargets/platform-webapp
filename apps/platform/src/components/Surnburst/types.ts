@@ -4,6 +4,9 @@ export interface DataNode {
   name: string;
   children?: DataNode[];
   value?: number;
+  NES?: number; // Normalized Enrichment Score for coloring
+  data?: any; // Full GSEA result data or other metadata
+  id?: string; // Pathway/node ID
 }
 
 export interface ArcData {

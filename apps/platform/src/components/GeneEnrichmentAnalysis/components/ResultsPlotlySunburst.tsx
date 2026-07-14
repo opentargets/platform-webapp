@@ -11,7 +11,7 @@ import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
 import PlotlySunburstChart from "./PlotlySunburstChart";
 import SunburstFilters, { type PathwayFilters } from "./SunburstFilters";
 import ZoomableSunburst from "../../Surnburst/ZoomableSunburst";
-import { gseaToSunburst } from "../../Surnburst/utils";
+import {gseaToSunburst} from "../../Surnburst/utils/gseaToSunburst";
 
 interface ResultsPlotlySunburstProps {
   results: GseaResult[];
@@ -35,7 +35,7 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
     selectedCategories: [],
     nesRange: [nesDataRange.min, nesDataRange.max],
     pValueThreshold: 1.0,
-    fdrThreshold: isLargeDataset ? 0.05 : 1.0,
+    fdrThreshold: 1.0, // Show all pathways by default
     showSignificantOnly: false,
   });
 
@@ -169,7 +169,12 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
       </Box>
       <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
         {/* <PlotlySunburstChart results={filteredResults} /> */}
-        <ZoomableSunburst data={gseaToSunburst(filteredResults)} />
+        {(() => {
+          const sunburstData = gseaToSunburst(filteredResults);
+          console.log("Sunburst data structure:", sunburstData);
+          console.log("Filtered results:", filteredResults.length, "pathways");
+          return <ZoomableSunburst data={sunburstData} />;
+        })()}
       </Box>
     </Box>
   );

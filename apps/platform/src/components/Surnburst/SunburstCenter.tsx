@@ -22,14 +22,14 @@ export const SunburstCenter: React.FC<SunburstCenterProps> = ({
 
   return (
     <>
-      {/* Center circle: click to zoom out */}
+      {/* Center circle: always opaque to mask arcs animating through the center */}
       <circle
-        r={radius * 0.55}
+        r={radius}
         fill="#fff"
-        fillOpacity={isZoomedOut ? 0 : 0.7}
+        fillOpacity={1}
         pointerEvents={isZoomedOut ? "none" : "auto"}
-        style={{ cursor: "pointer" }}
-        onClick={onZoomOut}
+        style={{ cursor: isZoomedOut ? "default" : "pointer" }}
+        onClick={isZoomedOut ? undefined : onZoomOut}
       />
 
       {centerLabel && (
