@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState, useCallback, useEffect } from "react";
+import { useLayoutEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
 import { Box, IconButton } from "@mui/material";
 import {
   faArrowRotateLeft,
   faCompress,
+  faDownload,
   faMagnifyingGlassMinus,
   faMagnifyingGlassPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -21,12 +22,8 @@ import { SunburstLabels } from "./SunburstLabels";
 import { SunburstCenter } from "./SunburstCenter";
 import { SunburstBreadcrumb } from "./SunburstBreadcrumb";
 import { SunburstTooltip } from "./SunburstTooltip";
+import { useZoom } from "./useZoom";
 import { PRIORITISATION_COLORS } from "../GeneEnrichmentAnalysis/utils/colorPalettes";
-
-
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 20;
-const ZOOM_STEP = 0.15;
 
 export default function ZoomableSunburst({
   data,
@@ -36,15 +33,29 @@ export default function ZoomableSunburst({
   centerLabel = true,
   fontFamily = "system-ui, -apple-system, Segoe UI, sans-serif",
 }: ZoomableSunburstProps) {
-  const gRef = useRef(null);
-  const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef(null);
   const [hovered, setHovered] = useState<PartitionNode | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const isPanning = useRef(false);
-  const lastMouse = useRef({ x: 0, y: 0 });
+
+  // Use zoom hook for all zoom/pan functionality
+  const {
+    gRef,
+    svgRef,
+    panState,
+    isPanning,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleZoomIn,
+    handleZoomOut,
+    handleReset,
+  } = useZoom();
+
+  // Custom mouse move to track tooltip position
+  const customHandleMouseMove = useCallback((e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
+    handleMouseMove(e);
+  }, [handleMouseMove]);
 
   const radius = Math.min(width, height) / 2 / 1.5;
 
@@ -54,56 +65,64 @@ export default function ZoomableSunburst({
   const { focus, handleClick } = useSunburstFocus(root);
   const colorMap = useSunburstColorMap(root, colors);
 
-  const active = focus ?? root;
+  // Reset hierarchy to top level
+  const handleHierarchyReset = useCallback(() => {
+    handleClick(root);
+  }, [handleClick, root]);
 
-  // Scroll to zoom - attach in capture phase so it fires before any other listeners
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-      setZoom((prev) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)));
+  // Download sunburst as PNG
+  const handleDownloadPng = useCallback(() => {
+    const svgElement = svgRef.current;
+    const gElement = gRef.current;
+    if (!svgElement || !gElement) return;
+
+    // Get the bounding box of the g element
+    const bbox = (gElement as any).getBBox();
+    const padding = 20;
+    const scale = 2;
+
+    // Create canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = (bbox.width + padding * 2) * scale;
+    canvas.height = (bbox.height + padding * 2) * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, bbox.width + padding * 2, bbox.height + padding * 2);
+
+    // Clone SVG and set viewBox to just the content
+    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+    clonedSvg.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+    clonedSvg.setAttribute("width", String(bbox.width));
+    clonedSvg.setAttribute("height", String(bbox.height));
+
+    // Serialize and create image
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(clonedSvg);
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, padding, padding, bbox.width, bbox.height);
+      canvas.toBlob((pngBlob) => {
+        if (pngBlob) {
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const link = document.createElement("a");
+          link.download = "sunburst.png";
+          link.href = pngUrl;
+          link.click();
+          URL.revokeObjectURL(pngUrl);
+          URL.revokeObjectURL(url);
+        }
+      }, "image/png");
     };
-    el.addEventListener("wheel", onWheel, { capture: true, passive: false });
-    return () => el.removeEventListener("wheel", onWheel, { capture: true });
-  }, []);
+    img.src = url;
+  }, [svgRef, gRef]);
 
-  // Pan handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 1 && !e.shiftKey) return; // middle click or shift+click to pan
-    e.preventDefault();
-    isPanning.current = true;
-    lastMouse.current = { x: e.clientX, y: e.clientY };
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
-    if (!isPanning.current) return;
-    const dx = e.clientX - lastMouse.current.x;
-    const dy = e.clientY - lastMouse.current.y;
-    lastMouse.current = { x: e.clientX, y: e.clientY };
-    setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    isPanning.current = false;
-  }, []);
-
-  // Zoom controls
-  const handleZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(MAX_ZOOM, prev + ZOOM_STEP * 2));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoom((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP * 2));
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  }, []);
+  const active = focus ?? root;
 
   // Animation
   useLayoutEffect(() => {
@@ -188,7 +207,7 @@ export default function ZoomableSunburst({
         flexDirection: "column",
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
+      onMouseMove={customHandleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
@@ -216,7 +235,7 @@ export default function ZoomableSunburst({
           borderColor: "divider",
         }}
       >
-        <IconButton size="small" onClick={handleReset} title="Reset">
+        <IconButton size="small" onClick={handleHierarchyReset} title="Reset to top level">
           <FontAwesomeIcon icon={faArrowRotateLeft} fontSize="0.85rem" />
         </IconButton>
         <Box sx={{ borderTop: "1px solid", borderColor: "divider" }} />
@@ -229,22 +248,13 @@ export default function ZoomableSunburst({
         <IconButton size="small" onClick={handleReset} title="Reset zoom">
           <FontAwesomeIcon icon={faCompress} fontSize="0.85rem" />
         </IconButton>
+        <Box sx={{ borderTop: "1px solid", borderColor: "divider" }} />
+        <IconButton size="small" onClick={handleDownloadPng} title="Download PNG">
+          <FontAwesomeIcon icon={faDownload} fontSize="0.85rem" />
+        </IconButton>
       </Box>
 
-      {zoom !== 1 && (
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: 8,
-            right: 8,
-            zIndex: 10,
-            fontSize: "0.75rem",
-            color: "text.secondary",
-          }}
-        >
-          {Math.round(zoom * 100)}%
-        </Box>
-      )}
+
 
       <svg
         ref={svgRef}
@@ -261,10 +271,9 @@ export default function ZoomableSunburst({
         <g
           ref={gRef}
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "0 0",
             transformBox: "view-box",
-            transition: isPanning.current ? "none" : "transform 0.3s ease-out",
+            transform: `translate(0px, 0px) scale(1)`,
           }}
         >
           <SunburstArcs
