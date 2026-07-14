@@ -1,7 +1,17 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useGenTrackTooltipState, useGenTrackTooltipDispatch } from "../../providers/GenTrackTooltipProvider";
 import { Box } from "@mui/material";
+
+function prefersAfterAnchor(anchorStart: number, anchorEnd: number, tooltipSize: number, viewportSize: number) {
+  const spaceBefore = anchorStart;
+  const spaceAfter = viewportSize - anchorEnd;
+  const fitsBefore = spaceBefore >= tooltipSize;
+  const fitsAfter = spaceAfter >= tooltipSize;
+
+  if (fitsBefore !== fitsAfter) return fitsAfter;
+  return spaceAfter >= spaceBefore;
+}
 
 function GenTrackTooltip({
   width,  
@@ -10,7 +20,7 @@ function GenTrackTooltip({
   
   // following props can be a function: (datum, otherData) => value
   xAnchor = "right",   // "left" | "right" | "center" | "adapt" | "plotLeft" | "plotRight";
-  yAnchor = "bottom",  // "top" | "bottom" | "center" | "adapt" | "plotTop" | "plotBottom";
+  yAnchor = "bottom",  // "top" | "bottom" | "center" | "adapt" | "anchorAdapt" | "plotTop" | "plotBottom";
   dx = 0,
   dy = 0,
   tooltipWidth = 0,
@@ -19,15 +29,34 @@ function GenTrackTooltip({
 }) {
   const anchorRef = useRef<HTMLDivElement>(null);
   const tooltipBoxRef = useRef<HTMLDivElement | null>(null);
+  const [tooltipSize, setTooltipSize] = useState({ width: tooltipWidth, height: 0 });
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
 
   const genTrackTooltipState = useGenTrackTooltipState();
   const { datum, otherData, globalXY, activeCanvas, sticky, stickyGenomicX, stickyLabelCenter } = (genTrackTooltipState as any) ?? {};
 
+  useLayoutEffect(() => {
+    const box = tooltipBoxRef.current;
+    if (!box) return;
+
+    const updateSize = () => {
+      const { width: nextWidth, height: nextHeight } = box.getBoundingClientRect();
+      setTooltipSize(size => size.width === nextWidth && size.height === nextHeight
+        ? size
+        : { width: nextWidth, height: nextHeight });
+    };
+    updateSize();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [datum, otherData, activeCanvas, canvasType]);
+
   // rAF loop: while sticky, track gene X (pan/zoom) + Y (scroll) imperatively, and auto-dismiss when needed
   // MUST be before any conditional returns (Rules of Hooks)
   useEffect(() => {
     if (!sticky || !scalesRef || stickyGenomicX == null) return;
+    const stickyYAnchor = typeof yAnchor === "function" ? yAnchor(datum) : yAnchor;
     const initialScales = (scalesRef as any)?.current;
     // Capture view state at sticky start — used to detect pan/zoom and resize
     const initialCanvasWidth = initialScales?.canvasWidth ?? 0;
@@ -77,15 +106,28 @@ function GenTrackTooltip({
         const originXV = anchorRect.left;
         const screenX = stickyGenomicX * scales.xScale + scales.xOffset;
         let newLeft: number;
-        if (xAnchor === "right" || (xAnchor === "adapt" && screenX > width / 2)) {
-          newLeft = originXV + screenX - tooltipWidth + dx;
+        const anchorX = originXV + screenX;
+        const adaptiveTooltipWidth = box.getBoundingClientRect().width || tooltipWidth;
+        if (xAnchor === "right" || (xAnchor === "adapt" && !prefersAfterAnchor(anchorX, anchorX, adaptiveTooltipWidth, window.innerWidth))) {
+          newLeft = anchorX - adaptiveTooltipWidth + dx;
         } else {
-          newLeft = originXV + screenX + dx;
+          newLeft = anchorX + dx;
         }
         if (newLeft < 0) newLeft = 0;
         box.style.left = `${newLeft}px`;
-        // Y: recompute from boxTopPageY each frame to follow page scroll
-        if (globalXY?.boxTopPageY != null) {
+        // Y: recompute from anchor bounds each frame to follow page scroll.
+        if (stickyYAnchor === "anchorAdapt" && globalXY?.boxTopPageY != null && globalXY?.boxBottomPageY != null) {
+          const boxTop = globalXY.boxTopPageY - window.scrollY;
+          const boxBottom = globalXY.boxBottomPageY - window.scrollY;
+          const tooltipHeight = box.getBoundingClientRect().height;
+          if (!prefersAfterAnchor(boxTop, boxBottom, tooltipHeight + (dy || 4), window.innerHeight)) {
+            box.style.top = `${boxTop - (dy || 4)}px`;
+            box.style.transform = "translateY(-100%)";
+          } else {
+            box.style.top = `${boxBottom + (dy || 4)}px`;
+            box.style.transform = "";
+          }
+        } else if (globalXY?.boxTopPageY != null) {
           const newTop = globalXY.boxTopPageY - window.scrollY - (dy || 4);
           box.style.top = `${newTop}px`;
           box.style.transform = "translateY(-100%)";
@@ -95,23 +137,25 @@ function GenTrackTooltip({
     };
     rafId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(rafId);
-  }, [sticky, scalesRef, stickyGenomicX, stickyLabelCenter, datum, globalXY, xAnchor, tooltipWidth, dx, dy, width, genTrackTooltipDispatch]);
+  }, [sticky, scalesRef, stickyGenomicX, stickyLabelCenter, datum, globalXY, xAnchor, yAnchor, tooltipWidth, dx, dy, width, genTrackTooltipDispatch]);
 
   if (!genTrackTooltipState) return <div ref={anchorRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />;
   if (!datum && !otherData) return <div ref={anchorRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />;
   if (activeCanvas !== canvasType) return <div ref={anchorRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />;
 
   if (typeof xAnchor === "function") xAnchor = xAnchor(datum);
-  if (typeof yAnchor === "function") yAnchor = yAnchor(datum);
+  let resolvedYAnchor = yAnchor;
+  if (typeof resolvedYAnchor === "function") resolvedYAnchor = resolvedYAnchor(datum);
   if (typeof dx === "function") dx = xAnchor(datum);
   if (typeof dy === "function") dy = xAnchor(datum);
 
-  const { x, y, boxTopPageY } = globalXY;
+  const { x, y, boxTopPageY, boxBottomPageY } = globalXY ?? {};
 
   // All coordinates are viewport-relative (position: fixed), which avoids all scroll/page-coord issues.
   const anchorRect = anchorRef.current?.getBoundingClientRect();
   const originXV = anchorRect?.left ?? 0; // viewport X of canvas left edge
   const originYV = anchorRect?.top ?? 0;  // viewport Y of canvas top edge
+  const adaptiveTooltipWidth = tooltipSize.width || tooltipWidth;
 
   // Compute viewport-left X
   let fixedLeft: number;
@@ -121,10 +165,10 @@ function GenTrackTooltip({
     fixedLeft = originXV + width - tooltipWidth;
   } else if (xAnchor === "center") {
     fixedLeft = originXV + x - tooltipWidth / 2;
-  } else if (xAnchor === "left" || (xAnchor === "adapt" && x < width / 2)) {
+  } else if (xAnchor === "left" || (xAnchor === "adapt" && prefersAfterAnchor(originXV + x, originXV + x, adaptiveTooltipWidth, window.innerWidth))) {
     fixedLeft = originXV + x + dx;
   } else {
-    fixedLeft = originXV + x - tooltipWidth + dx;
+    fixedLeft = originXV + x - (xAnchor === "adapt" ? adaptiveTooltipWidth : tooltipWidth) + dx;
   }
   // Clamp left edge to viewport
   if (fixedLeft < 0) fixedLeft = 0;
@@ -132,19 +176,30 @@ function GenTrackTooltip({
   // Compute viewport-top Y — boxTopPageY is page-absolute, convert to viewport
   let fixedTop: number;
   let transformY: string | undefined;
-  if (yAnchor === "plotTop") {
+  if (resolvedYAnchor === "plotTop") {
     fixedTop = originYV;
-  } else if (yAnchor === "plotBottom") {
+  } else if (resolvedYAnchor === "plotBottom") {
     fixedTop = originYV + height;
     transformY = "-100%";
-  } else if (yAnchor === "center") {
+  } else if (resolvedYAnchor === "center") {
     fixedTop = originYV + y;
     transformY = "-50%";
-  } else if (yAnchor === "boxTop" && boxTopPageY !== undefined) {
+  } else if (resolvedYAnchor === "boxTop" && boxTopPageY !== undefined) {
     // boxTopPageY is page-absolute; convert to viewport by subtracting scrollY
     fixedTop = boxTopPageY - window.scrollY - (dy || 4);
     transformY = "-100%";
-  } else if (yAnchor === "bottom" || (yAnchor === "adapt" && y > height / 2)) {
+  } else if (resolvedYAnchor === "anchorAdapt" && boxTopPageY !== undefined && boxBottomPageY !== undefined) {
+    // Choose the side with more room in the viewport, anchored to its bounds.
+    const boxTop = boxTopPageY - window.scrollY;
+    const boxBottom = boxBottomPageY - window.scrollY;
+    if (!prefersAfterAnchor(boxTop, boxBottom, tooltipSize.height + (dy || 4), window.innerHeight)) {
+      fixedTop = boxTop - (dy || 4);
+      transformY = "-100%";
+    } else {
+      fixedTop = boxBottom + (dy || 4);
+      transformY = undefined;
+    }
+  } else if (resolvedYAnchor === "bottom" || (resolvedYAnchor === "adapt" && y > height / 2)) {
     fixedTop = originYV + y - dy;
     transformY = "-100%";
   } else {

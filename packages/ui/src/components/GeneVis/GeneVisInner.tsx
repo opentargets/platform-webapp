@@ -278,7 +278,7 @@ function GeneVisInner({
         InnerTooltip={UnifiedTooltip}
         innerTooltipProps={{
           xAnchor: "adapt",
-          yAnchor: "boxTop",
+          yAnchor: "anchorAdapt",
           tooltipWidth: TOOLTIP_WIDTH,
           scalesRef: innerScalesRef,
           onDatumClick: (datum: any) => {

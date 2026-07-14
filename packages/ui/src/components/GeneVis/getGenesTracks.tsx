@@ -150,13 +150,15 @@ export function getGenesTracks({
                     const scales = scalesRef.current;
                     const ysi = trackId ? scales?.yScales.get(trackId) : undefined;
                     const boxScreenY = ysi ? boxY * ysi.yScale + ysi.yOffset + (ysi.containerY ?? 0) : e.global.y;
+                    const boxScreenHeight = ysi ? boxHeight * ysi.yScale : 0;
                     const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
                     const cursorPageY = (nativeEvent?.clientY ?? 0) + window.scrollY;
                     const canvasPageY = cursorPageY - e.global.y;
                     const boxTopPageY = canvasPageY + boxScreenY;
+                    const boxBottomPageY = boxTopPageY + boxScreenHeight;
                     // genomicX from cursor position (not labelCenter) so sticky tooltip has no jump on click
                     const genomicX = scales ? (e.global.x - scales.xOffset) / scales.xScale : labelCenter;
-                    const hoverXY = { x: e.global.x, y: e.global.y, boxTopPageY, genomicX };
+                    const hoverXY = { x: e.global.x, y: e.global.y, boxTopPageY, boxBottomPageY, genomicX };
                     genTrackTooltipDispatch({ type: "setDatum", value: target });
                     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
                     genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
