@@ -37,8 +37,8 @@ export const SunburstArcs: React.FC<SunburstArcsProps> = ({
             fillOpacity={visible ? 1 : 0}
             stroke="#fff"
             strokeWidth={1}
-            style={{ cursor: d.children ? "pointer" : "default" }}
-            onClick={() => d.children && onArcClick(d)}
+            style={{ cursor: "pointer" }}
+            onClick={() => onArcClick(d)}
             onMouseEnter={() => onMouseEnter(d)}
             onMouseLeave={onMouseLeave}
             pointerEvents={visible ? "auto" : "none"}

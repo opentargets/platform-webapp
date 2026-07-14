@@ -1,53 +1,55 @@
 import React from "react";
-import type { ArcData, PartitionNode } from "./types";
-import { labelVisible, labelTransform } from "./utils";
+import type { PartitionNode } from "./types";
+import { labelVisible, getArcSpace, getContrastColor } from "./utils";
 
 interface SunburstLabelsProps {
   nodes: PartitionNode[];
   radius: number;
+  colorMap: Map<PartitionNode, string>;
 }
 
 /**
- * Computes a font size that fills the arc without overflowing it.
- * Constrained by both the arc length (angular span at midpoint) and radial thickness.
+ * Computes font size that fits within the arc without overflowing.
+ * Constrained by both the radial height (text length) and arc length (text height).
  */
-function computeFontSize(d: ArcData, radius: number, name: string): number {
-  const midRadius = ((d.y0 + d.y1) / 2) * radius;
-  const arcLength = midRadius * (d.x1 - d.x0);
-  const radialHeight = (d.y1 - d.y0) * radius;
+function computeFontSize(
+  name: string,
+  midArcLength: number,
+  radialHeight: number
+): number {
+  const charWidthRatio = 0.72;
+  const chars = Math.max(name.length, 1);
 
-  // Use 0.65 ratio — conservative estimate of character width relative to font size.
-  // This ensures even wide characters (m, w, M) don't overflow.
-  const charWidthRatio = 0.65;
-  const maxFromArcLength = arcLength / (charWidthRatio * Math.max(name.length, 1));
-  // Leave 25% padding inside radial thickness
-  const maxFromRadialHeight = radialHeight * 0.75;
+  // Text runs radially: length along radius, width constrained by arc length
+  const maxFromRadial = radialHeight / (charWidthRatio * chars);
+  const maxFromArcWidth = midArcLength * 0.9;
 
-  return Math.min(maxFromArcLength, maxFromRadialHeight);
+  return Math.min(maxFromRadial, maxFromArcWidth);
 }
 
-export const SunburstLabels: React.FC<SunburstLabelsProps> = ({
-  nodes,
-  radius,
-}) => {
+export const SunburstLabels: React.FC<SunburstLabelsProps> = ({ nodes, radius, colorMap }) => {
   return (
     <>
       {nodes.map((d, i) => {
         const arcData = d.target ?? d.current;
-        const fontSize = computeFontSize(arcData, radius, d.data.name);
+        const { radialHeight, midArcLength } = getArcSpace(arcData, radius);
+        const fontSize = computeFontSize(d.data.name, midArcLength, radialHeight);
+        const x = (((arcData.x0 + arcData.x1) / 2) * 180) / Math.PI;
+        const y = ((arcData.y0 + arcData.y1) / 2) * radius;
+        const transform = `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+        const bgColor = colorMap.get(d) ?? "#fff";
+        const textColor = getContrastColor(bgColor);
         return (
           <text
             key={`${d.data.name}-label-${i}`}
             className="arc-label"
-            transform={labelTransform(arcData, radius)}
+            transform={transform}
             dy="0.35em"
             fillOpacity={labelVisible(arcData) ? 1 : 0}
-            fill="#000"
+            fill={textColor}
             pointerEvents="none"
             textAnchor="middle"
-            style={{
-              fontSize: `${fontSize}px`,
-            }}
+            style={{ fontSize: `${fontSize}px` }}
           >
             {d.data.name}
           </text>
@@ -56,3 +58,4 @@ export const SunburstLabels: React.FC<SunburstLabelsProps> = ({
     </>
   );
 };
+

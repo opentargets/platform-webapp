@@ -15,6 +15,37 @@ export function labelVisible(d: ArcData): boolean {
 }
 
 /**
+ * Returns "#fff" or "#000" depending on whether the background color is dark or light.
+ * Uses WCAG relative luminance formula.
+ */
+export function getContrastColor(hexColor: string): string {
+  let hex = hexColor.replace("#", "");
+  // Expand 3-char shorthand (#fff → ffffff)
+  if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  // Gamma correction
+  const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  return L > 0.179 ? "#000" : "#fff";
+}
+
+/**
+ * Returns the available space for an arc and which dimension dominates.
+ * - radialHeight: pixel height from inner to outer edge
+ * - midArcLength: pixel arc length at the midpoint radius
+ * - dominant: "tangential" if arc is wider than tall, "radial" otherwise
+ */
+export function getArcSpace(d: ArcData, radius: number) {
+  const angularSpan = d.x1 - d.x0;
+  const radialHeight = (d.y1 - d.y0) * radius;
+  const midArcLength = ((d.y0 + d.y1) / 2) * radius * angularSpan;
+  const dominant: "tangential" | "radial" = midArcLength >= radialHeight ? "tangential" : "radial";
+  return { radialHeight, midArcLength, dominant };
+}
+
+/**
  * Calculates the SVG transform for positioning and rotating a label
  */
 export function labelTransform(d: ArcData, radius: number): string {

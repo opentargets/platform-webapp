@@ -20,6 +20,7 @@ import { SunburstArcs } from "./SunburstArcs";
 import { SunburstLabels } from "./SunburstLabels";
 import { SunburstCenter } from "./SunburstCenter";
 import { SunburstBreadcrumb } from "./SunburstBreadcrumb";
+import { SunburstTooltip } from "./SunburstTooltip";
 import { PRIORITISATION_COLORS } from "../GeneEnrichmentAnalysis/utils/colorPalettes";
 
 
@@ -39,6 +40,7 @@ export default function ZoomableSunburst({
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef(null);
   const [hovered, setHovered] = useState<PartitionNode | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
@@ -77,6 +79,7 @@ export default function ZoomableSunburst({
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
     if (!isPanning.current) return;
     const dx = e.clientX - lastMouse.current.x;
     const dy = e.clientY - lastMouse.current.y;
@@ -163,19 +166,19 @@ export default function ZoomableSunburst({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus, nodes, arc, radius]);
 
-  // Compute display values
-  const displayName = hovered
-    ? hovered.data.name
-    : active === root
-      ? data.name || ""
-      : (active as PartitionNode).data.name;
+  // Compute display values — only reflect active drill-down, not hover
+  const displayName = active === root
+    ? data.name || ""
+    : (active as PartitionNode).data.name;
 
   const displayChain = getBreadcrumbNodes(active as PartitionNode);
 
   return (
-    <Box
-      ref={containerRef}
-      sx={{
+    <>
+      <SunburstTooltip node={hovered} x={mousePos.x} y={mousePos.y} />
+      <Box
+        ref={containerRef}
+        sx={{
         width: "100%",
         height: "100%",
         fontFamily,
@@ -189,7 +192,12 @@ export default function ZoomableSunburst({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <SunburstBreadcrumb trail={displayChain} onNavigate={handleClick} />
+      <SunburstBreadcrumb
+        trail={displayChain}
+        onNavigate={handleClick}
+        onHover={(node, e) => { setHovered(node); setMousePos({ x: e.clientX, y: e.clientY }); }}
+        onHoverEnd={() => setHovered(null)}
+      />
 
       {/* Zoom controls */}
       <Box
@@ -268,7 +276,7 @@ export default function ZoomableSunburst({
             onMouseLeave={() => setHovered(null)}
           />
 
-          <SunburstLabels nodes={nodes} radius={radius} />
+          <SunburstLabels nodes={nodes} radius={radius} colorMap={colorMap} />
 
           <SunburstCenter
             radius={radius}
@@ -276,10 +284,14 @@ export default function ZoomableSunburst({
             root={root}
             displayName={displayName}
             centerLabel={centerLabel}
+            colorMap={colorMap}
             onZoomOut={() => active.parent && handleClick(active.parent)}
+            onMouseEnter={(e) => { setHovered(active as PartitionNode); setMousePos({ x: e.clientX, y: e.clientY }); }}
+            onMouseLeave={() => setHovered(null)}
           />
         </g>
       </svg>
     </Box>
+    </>
   );
 }
