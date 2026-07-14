@@ -34,7 +34,7 @@ export function GeneEnrichmentProvider({ children }: GeneEnrichmentProviderProps
   const { isPartnerPreview } = usePermissions();
 
   useEffect(() => {
-    if (!isPartnerPreview) return;
+    // if (!isPartnerPreview) return;
     async function fetchLibraries() {
       dispatch(fetchLibrariesRequest());
       try {

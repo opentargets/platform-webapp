@@ -8,6 +8,7 @@ import { ResultsEnrichmentMap } from "./ResultsEnrichmentMap/";
 import { EnrichmentMapControlsProvider } from "./ResultsEnrichmentMap/utils/EnrichmentMapControlsContext";
 import ResultsTable from "./ResultsTable";
 import ResultsTreeView from "./ResultsTreeView";
+import PlotlySunburstChart from "./PlotlySunburstChart";
 
 type ViewMode = "table" | "tree" | "plotly" | "network";
 
@@ -90,7 +91,7 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
       {/* Scrollable content */}
       <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'plotly'].includes(viewMode) ? 0 : 2 }}>
         {viewMode === "table" && <ResultsTable results={results} />}
-        {viewMode === "tree" && <ResultsTreeView results={results} />}
+        {viewMode === "tree" && <PlotlySunburstChart results={results} />}
         {/* {viewMode === "sunburst" && <ResultsSunburst results={results} />} */}
         {viewMode === "plotly" && <ResultsPlotlySunburst key={activeRunId} results={results} />}
          {viewMode === "network" && <ResultsEnrichmentMap results={results} diseaseId={diseaseId} />}
