@@ -23,6 +23,7 @@ function GenTrackTooltip({
   yAnchor = "bottom",  // "top" | "bottom" | "center" | "adapt" | "anchorAdapt" | "plotTop" | "plotBottom";
   dx = 0,
   dy = 0,
+  gap = 0,
   tooltipWidth = 0,
   scalesRef = null,    // optional: when provided + sticky, tooltip X tracks gene during pan/zoom
   children
@@ -109,9 +110,9 @@ function GenTrackTooltip({
         const anchorX = originXV + screenX;
         const adaptiveTooltipWidth = box.getBoundingClientRect().width || tooltipWidth;
         if (xAnchor === "right" || (xAnchor === "adapt" && !prefersAfterAnchor(anchorX, anchorX, adaptiveTooltipWidth, window.innerWidth))) {
-          newLeft = anchorX - adaptiveTooltipWidth + dx;
+          newLeft = anchorX - adaptiveTooltipWidth + dx - gap;
         } else {
-          newLeft = anchorX + dx;
+          newLeft = anchorX + dx + gap;
         }
         if (newLeft < 0) newLeft = 0;
         box.style.left = `${newLeft}px`;
@@ -146,8 +147,8 @@ function GenTrackTooltip({
   if (typeof xAnchor === "function") xAnchor = xAnchor(datum);
   let resolvedYAnchor = yAnchor;
   if (typeof resolvedYAnchor === "function") resolvedYAnchor = resolvedYAnchor(datum);
-  if (typeof dx === "function") dx = xAnchor(datum);
-  if (typeof dy === "function") dy = xAnchor(datum);
+  if (typeof dx === "function") dx = dx(datum, otherData);
+  if (typeof dy === "function") dy = dy(datum, otherData);
 
   const { x, y, boxTopPageY, boxBottomPageY } = globalXY ?? {};
 
@@ -166,9 +167,9 @@ function GenTrackTooltip({
   } else if (xAnchor === "center") {
     fixedLeft = originXV + x - tooltipWidth / 2;
   } else if (xAnchor === "left" || (xAnchor === "adapt" && prefersAfterAnchor(originXV + x, originXV + x, adaptiveTooltipWidth, window.innerWidth))) {
-    fixedLeft = originXV + x + dx;
+    fixedLeft = originXV + x + dx + gap;
   } else {
-    fixedLeft = originXV + x - (xAnchor === "adapt" ? adaptiveTooltipWidth : tooltipWidth) + dx;
+    fixedLeft = originXV + x - (xAnchor === "adapt" ? adaptiveTooltipWidth : tooltipWidth) + dx - gap;
   }
   // Clamp left edge to viewport
   if (fixedLeft < 0) fixedLeft = 0;
@@ -199,7 +200,17 @@ function GenTrackTooltip({
       fixedTop = boxBottom + (dy || 4);
       transformY = undefined;
     }
-  } else if (resolvedYAnchor === "bottom" || (resolvedYAnchor === "adapt" && y > height / 2)) {
+  } else if (resolvedYAnchor === "adapt") {
+    const anchorY = globalXY?.pointerPageY != null
+      ? globalXY.pointerPageY - window.scrollY
+      : originYV + y;
+    if (!prefersAfterAnchor(anchorY, anchorY, tooltipSize.height + (dy || 4), window.innerHeight)) {
+      fixedTop = anchorY - (dy || 4);
+      transformY = "-100%";
+    } else {
+      fixedTop = anchorY + (dy || 4);
+    }
+  } else if (resolvedYAnchor === "bottom") {
     fixedTop = originYV + y - dy;
     transformY = "-100%";
   } else {

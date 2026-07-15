@@ -131,8 +131,12 @@ export function getVariantTrack({ data }: { data: any }) {
                 tint={primaryColor}
                 eventMode="static"
                 pointerover={(e: any) => {
+                  const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
+                  const pointerPageY = nativeEvent?.clientY != null
+                    ? nativeEvent.clientY + window.scrollY
+                    : undefined;
                   genTrackTooltipDispatch({ type: "setDatum", value: variant });
-                  genTrackTooltipDispatch({ type: "setGlobalXY", value: { x: e.global.x, y: e.global.y } });
+                  genTrackTooltipDispatch({ type: "setGlobalXY", value: { x: e.global.x, y: e.global.y, pointerPageY } });
                 }}
                 pointerout={() => {
                   genTrackTooltipDispatch({ type: "setDatum", value: null });

@@ -120,10 +120,14 @@ Inside either the `Track` itself or one of its ancestors, it is standard use `us
 
 Use the `Tooltip` and `InnerTooltip` properties of the `GenTrack` component to pass tooltip components for top-level and inner tracks respectively.
 
-`yAnchor: "adapt"` positions the tooltip relative to the pointer. Use
+`yAnchor: "adapt"` positions the tooltip above or below the pointer, choosing
+the side with more room in the viewport. Use
 `yAnchor: "anchorAdapt"` when `globalXY` also contains `boxTopPageY` and
 `boxBottomPageY`; it positions the tooltip above or below those generic anchor
 bounds, choosing the side with more room in the viewport.
+
+For a nested canvas, include `pointerPageY` in `globalXY` so `"adapt"` can use
+the browser pointer position rather than canvas-relative coordinates.
 
 If using `Tooltip` or `InnerTooltip`, wrap the GenTrack content in a `GenTrackTooltipProvider`, e.g.
 
