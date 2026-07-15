@@ -1,16 +1,19 @@
-import { Box, Skeleton, Divider, Typography } from "@mui/material";
+import { Box, Skeleton, Divider, Typography, Chip } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLazyQuery } from "@apollo/client";
 import { useEffect } from "react";
+import { DisplayVariantId, OtGenomicLocation } from "../..";
 import { useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { useGenTrackState } from "../../providers/GenTrackProvider";
 import { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY } from "../OtAsyncTooltip/utils/asyncTooltipUtil";
 import { getEntityIcon, getEntityDescription } from "../OtAsyncTooltip/utils/asyncTooltipUtil";
 import { naLabel } from "@ot/constants";
-import { OtGenomicLocation } from "../..";
 import { GenomicLocationPresentationType } from "@ot/constants";
 import HeatmapTable from "../HeatmapTable/HeatmapTable";
 import L2G_QUERY from "../../components/HeatmapTable/Locus2GeneQuery.gql";
+import TooltipTable from "../TooltipTable";
+import TooltipRow from "../TooltipRow";
+import ScientificNotation from "../ScientificNotation";
 
 export const TOOLTIP_WIDTH = 400;
 
@@ -50,6 +53,13 @@ function UnifiedTooltip() {
   );
   // Show L2G heatmap for any gene that has L2G data (regardless of score)
   const hasL2G = !!geneL2G;
+
+  // Find locus statistics for current variant (if applicable)
+  const variantLocus = entityType === "variant" && trackData?.locus?.rows?.find(
+    (row: { variant: { id: string } }) => row.variant.id === datum?.id
+  );
+  const leadVariantId = trackData?.variant?.id;
+  const isLeadVariant = entityType === "variant" && datum?.id === leadVariantId;
 
   // Determine tooltip width based on whether we're showing the heatmap
   const tooltipWidth = hasL2G ? 550 : TOOLTIP_WIDTH;
@@ -143,6 +153,81 @@ function UnifiedTooltip() {
                 disabledLegend
                 singleRowMode
               />
+          </Box>
+        </Box>
+      )}
+      {entityType === "variant" && (
+        <Box sx={{ mt: 1 }}>
+          <Divider />
+          <Box sx={{ pl: 1, pt: 1 }}>
+            <Typography
+              variant="body2"
+              component="div"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                color: theme => theme.palette.grey[900],
+                fontSize: 13.1,
+                fontWeight: 600,
+              }}
+            >
+              Credible set statistics for{" "}
+              <DisplayVariantId
+                variantId={datum?.id}
+                referenceAllele={datum?.referenceAllele}
+                alternateAllele={datum?.alternateAllele}
+                expand={false}
+              />
+              {isLeadVariant && (
+                <Chip
+                  label="lead"
+                  variant="outlined"
+                  size="small"
+                  sx={{ fontWeight: 400 }}
+                />
+              )}
+            </Typography>
+            <Box sx={{ pl: 0 }}>
+              <TooltipTable>
+                <TooltipRow label="P-value">
+                  {typeof variantLocus?.pValueMantissa === "number" &&
+                  typeof variantLocus?.pValueExponent === "number" ? (
+                    <ScientificNotation
+                      number={[variantLocus.pValueMantissa, variantLocus.pValueExponent]}
+                      dp={2}
+                    />
+                  ) : (
+                    naLabel
+                  )}
+                </TooltipRow>
+                <TooltipRow label="Beta">
+                  {typeof variantLocus?.beta === "number"
+                    ? variantLocus.beta.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Standard error">
+                  {typeof variantLocus?.standardError === "number"
+                    ? variantLocus.standardError.toFixed(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="LD (r²)">
+                  {typeof variantLocus?.r2Overall === "number"
+                    ? variantLocus.r2Overall.toFixed(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Posterior probability">
+                  {typeof variantLocus?.posteriorProbability === "number"
+                    ? variantLocus.posteriorProbability.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="log(BF)">
+                  {typeof variantLocus?.logBF === "number"
+                    ? variantLocus.logBF.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+              </TooltipTable>
+            </Box>
           </Box>
         </Box>
       )}
