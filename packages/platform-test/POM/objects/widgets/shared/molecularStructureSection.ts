@@ -1,7 +1,29 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Molecular Structure section on Variant page
+ * Interactor for the Molecular Structure section on Variant pages.
+ *
+ * Displays 3D protein structure visualization showing the variant's location
+ * within the protein. Uses AlphaFold predicted structures when experimental
+ * structures are unavailable. Features include:
+ * - **3D structure viewer**: Interactive protein structure visualization
+ * - **Variant mapping**: Highlights the variant position on the structure
+ * - **Confidence scores**: AlphaFold pLDDT scores for structure reliability
+ *
+ * Helps understand the potential structural impact of amino acid changes.
+ *
+ * @example
+ * ```typescript
+ * const structure = new MolecularStructureSection(page);
+ * await structure.waitForLoad();
+ *
+ * // Check if structure is available
+ * const hasStructure = await structure.hasStructureViewer();
+ * const viewerVisible = await structure.isAlphaFoldViewerVisible();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `molecular-structure`
  */
 export class MolecularStructureSection {
   constructor(private page: Page) {}

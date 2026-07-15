@@ -1,9 +1,32 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Cancer Hallmarks section on Target page
- * Displays cancer hallmarks with role in cancer chips and a table of hallmark effects
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Cancer Hallmarks section on Target pages.
+ *
+ * Displays cancer hallmark annotations based on the "Hallmarks of Cancer" framework,
+ * showing the target's role in cancer progression. The section includes:
+ * - **Role in Cancer chips**: Visual indicators of oncogene/tumor suppressor roles
+ * - **Hallmark effects table**: Detailed breakdown of hallmark impacts with literature evidence
+ *
+ * Data is sourced from manually curated literature with links to supporting publications.
+ *
+ * @example
+ * ```typescript
+ * const cancerHallmarks = new CancerHallmarksSection(page);
+ * await cancerHallmarks.waitForLoad();
+ *
+ * // Check role in cancer
+ * const roleLabel = await cancerHallmarks.getRoleInCancerChipLabel(0);
+ *
+ * // Search hallmarks table
+ * await cancerHallmarks.search("proliferation");
+ *
+ * // Access publications
+ * await cancerHallmarks.clickPublicationsDrawer();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `cancerhallmarks`
  */
 export class CancerHallmarksSection {
   constructor(private page: Page) {}

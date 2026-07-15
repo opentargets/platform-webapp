@@ -32,7 +32,9 @@
     "check": "npx biome check --formatter-enabled=true .",
     "check:fix": "npx biome check --formatter-enabled=true --write .",
     "prepare": "husky install",
-    "test_workflow": "act -W '.github/workflows/e2e-ci.yml' --action-offline-mode --container-architecture linux/amd64"
+    "test_workflow": "act -W '.github/workflows/e2e-ci.yml' --action-offline-mode --container-architecture linux/amd64",
+    "docs:test_interactors": "turbo run docs:test_interactors --filter=platform-test",
+    "docs:test_interactors:serve": "turbo run docs:test_interactors:serve --filter=platform-test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

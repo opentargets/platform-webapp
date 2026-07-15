@@ -1,8 +1,33 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Genetic Constraint section on Target page
- * Displays constraint metrics from gnomAD
+ * Interactor for the Genetic Constraint section on Target pages.
+ *
+ * Displays evolutionary constraint metrics from gnomAD (Genome Aggregation Database),
+ * indicating how tolerant a gene is to different types of mutations. Metrics include:
+ * - **pLI (Loss-of-function intolerance)**: Probability gene is intolerant to LoF variants
+ * - **LOEUF**: Loss-of-function observed/expected upper bound fraction
+ * - **Missense constraint**: Z-score for missense variant depletion
+ * - **Synonymous constraint**: Z-score for synonymous variant depletion
+ *
+ * High constraint scores suggest the gene is essential and mutations may be disease-causing.
+ *
+ * @example
+ * ```typescript
+ * const constraint = new GeneticConstraintSection(page);
+ * await constraint.waitForLoad();
+ *
+ * // Get constraint metrics
+ * const rowCount = await constraint.getTableRows();
+ * const constraintType = await constraint.getConstraintType(0);
+ * const score = await constraint.getScore(0);
+ *
+ * // Link to gnomAD
+ * await constraint.clickGnomadLink();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `geneticconstraint`
  */
 export class GeneticConstraintSection {
   constructor(private page: Page) {}

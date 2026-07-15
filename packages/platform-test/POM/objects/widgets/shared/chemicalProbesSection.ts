@@ -1,9 +1,35 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Chemical Probes section on Target page
- * Displays chemical probes with quality ratings and mechanisms of action
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Chemical Probes section on Target pages.
+ *
+ * Displays high-quality chemical probes that can be used to investigate
+ * target biology. Data is sourced from the Chemical Probes Portal and includes:
+ * - **Probe names**: Identifiers with links to external resources
+ * - **Quality ratings**: Probe quality assessments (e.g., "Best available", "Historical")
+ * - **Mechanisms of action**: How the probe interacts with the target
+ * - **Selectivity information**: Off-target effects and specificity data
+ *
+ * Chemical probes are small molecules designed to selectively modulate protein
+ * function for research purposes.
+ *
+ * @example
+ * ```typescript
+ * const chemicalProbes = new ChemicalProbesSection(page);
+ * await chemicalProbes.waitForLoad();
+ *
+ * // Check if probes are available
+ * const hasProbes = await chemicalProbes.isTableVisible();
+ *
+ * // Search for specific probe
+ * await chemicalProbes.search("JQ1");
+ *
+ * // Download probe data
+ * await chemicalProbes.clickDataDownloader();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `chemicalprobes`
  */
 export class ChemicalProbesSection {
   constructor(private page: Page) {}

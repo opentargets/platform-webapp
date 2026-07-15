@@ -1,8 +1,32 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Pathways section on Target page
- * Displays Reactome pathway membership
+ * Interactor for the Pathways section on Target pages.
+ *
+ * Displays biological pathway membership from Reactome, showing which cellular
+ * processes and signaling cascades involve the target gene. Information includes:
+ * - **Pathway name**: Specific pathway the target participates in
+ * - **Top-level pathway**: Parent category (e.g., Signal Transduction, Metabolism)
+ * - **Pathway browser link**: Direct link to interactive Reactome pathway diagram
+ *
+ * Helps understand the broader biological context and functions of a target.
+ *
+ * @example
+ * ```typescript
+ * const pathways = new PathwaysSection(page);
+ * await pathways.waitForLoad();
+ *
+ * // Get pathway details
+ * const rowCount = await pathways.getTableRows();
+ * const pathwayName = await pathways.getPathwayName(0);
+ * const topLevel = await pathways.getTopLevelPathway(0);
+ *
+ * // Navigate to Reactome
+ * await pathways.clickPathwayBrowserLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `pathways`
  */
 export class PathwaysSection {
   constructor(private page: Page) {}

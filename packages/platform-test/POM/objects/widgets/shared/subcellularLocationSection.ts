@@ -1,9 +1,35 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Subcellular Location section on Target page
- * Displays protein localization data with a visualization
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Subcellular Location section on Target pages.
+ *
+ * Displays protein localization data from the Human Protein Atlas (HPA) and
+ * UniProt, showing where in the cell the protein is found. Features include:
+ * - **Cell diagram**: Visual representation of protein location
+ * - **Location tabs**: HPA Main, HPA Additional, HPA Extracellular, UniProt
+ * - **Confidence levels**: Reliability of localization data
+ *
+ * Important for understanding protein function and drug accessibility.
+ *
+ * @example
+ * ```typescript
+ * const location = new SubcellularLocationSection(page);
+ * await location.waitForLoad();
+ *
+ * // Check visualization
+ * const diagramVisible = await location.isCellDiagramVisible();
+ *
+ * // Switch between data sources
+ * await location.clickHpaMainTab();
+ * await location.clickUniprotTab();
+ *
+ * // Get location details
+ * const locationCount = await location.getLocationCount();
+ * const locationName = await location.getLocationName(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `subcellularlocation`
  */
 export class SubcellularLocationSection {
   constructor(private page: Page) {}

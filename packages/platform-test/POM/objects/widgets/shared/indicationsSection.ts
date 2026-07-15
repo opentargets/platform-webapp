@@ -1,12 +1,32 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Clinical Indications section (Master-Detail layout)
+ * Interactor for the Indications section on Drug pages.
  *
- * Structure:
- * - Master panel (left): IndicationsTable - list of indication cards
- * - Detail panel (right): RecordsCards - clinical reports for selected indication
- * - StageFilter - visual pipeline showing clinical stages
+ * Displays therapeutic indications (approved uses) for a drug, sourced from
+ * ChEMBL and other regulatory databases. Information includes:
+ * - **Indication name**: Disease or condition the drug treats
+ * - **Max phase**: Highest clinical trial phase reached
+ * - **References**: Links to supporting regulatory sources
+ *
+ * Shows both approved indications and those in clinical development.
+ *
+ * @example
+ * ```typescript
+ * const indications = new IndicationsSection(page);
+ * await indications.waitForLoad();
+ *
+ * // Get indication details
+ * const rowCount = await indications.getTableRows();
+ * const indicationName = await indications.getIndicationName(0);
+ * const maxPhase = await indications.getMaxPhase(0);
+ *
+ * // Navigate to disease page
+ * await indications.clickIndicationLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `indications`
  */
 export class IndicationsSection {
   constructor(private page: Page) {}

@@ -11,7 +11,6 @@ export interface WidgetInfo {
   displayName?: string | null;
   sources?: Record<string, string>;
   sourcePaths?: Record<string, string>;
-  suggestedTestIdChanges?: TestIdChanges;
 }
 
 export interface PageInfo {
@@ -63,17 +62,6 @@ export interface PageAnalysis {
   reasoning: string;
 }
 
-export interface TestIdChanges {
-  changes: TestIdChange[];
-}
-
-export interface TestIdChange {
-  file: string;
-  description: string;
-  originalCode: string;
-  newCode: string;
-}
-
 export interface WidgetAnalysis {
   uiComponents: string[];
   hasTable: boolean;
@@ -105,7 +93,7 @@ export interface GenerationResult {
     applied: number;
     failed: number;
     modifiedFiles: string[];
-    method: 'ast' | 'llm' | 'none';
+    method: 'llm+ast' | 'none';
   };
   interactorPath?: string;
   testPath?: string;
@@ -174,31 +162,4 @@ export const ENTITY_TYPES = [
 
 export type EntityType = typeof ENTITY_TYPES[number];
 
-/**
- * AST Processing Types
- */
-export interface DataTestIdSuggestion {
-  element: string;
-  testId: string;
-  file?: string;
-  reason?: string;
-}
 
-export interface ASTFileResult {
-  name: string;
-  path: string;
-  modified: boolean;
-  testIdsAdded: number;
-  error?: string;
-  newCode?: string;
-}
-
-export interface ASTProcessingResult {
-  totalApplied: number;
-  files: ASTFileResult[];
-}
-
-export interface ASTProcessingOptions {
-  dryRun?: boolean;
-  verbose?: boolean;
-}

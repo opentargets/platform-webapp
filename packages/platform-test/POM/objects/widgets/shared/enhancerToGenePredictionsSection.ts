@@ -1,7 +1,31 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Enhancer-to-Gene Predictions section on Variant page
+ * Interactor for the Enhancer-to-Gene (E2G) Predictions section on Variant pages.
+ *
+ * Displays predictions linking non-coding variants in enhancer regions to their
+ * potential target genes. Uses machine learning models to predict regulatory
+ * relationships based on:
+ * - **E2G Score**: Confidence score for the enhancer-gene link
+ * - **Target gene**: The predicted regulated gene
+ * - **Tissue/cell type**: Context where the regulation is predicted
+ * - **Distance**: Genomic distance between variant and gene
+ *
+ * Helps interpret the functional impact of non-coding GWAS variants.
+ *
+ * @example
+ * ```typescript
+ * const e2g = new EnhancerToGenePredictionsSection(page);
+ * await e2g.waitForLoad();
+ *
+ * // Get predictions
+ * const rowCount = await e2g.getTableRows();
+ * const geneName = await e2g.getTargetGeneName(0);
+ * const score = await e2g.getE2GScore(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `enhancer-to-gene-predictions`
  */
 export class EnhancerToGenePredictionsSection {
   constructor(private page: Page) {}

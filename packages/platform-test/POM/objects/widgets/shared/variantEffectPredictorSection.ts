@@ -1,7 +1,35 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Variant Effect Predictor/Transcript Consequences section
+ * Interactor for the Variant Effect Predictor (VEP) / Transcript Consequences section.
+ *
+ * Displays predicted consequences of a variant on overlapping transcripts,
+ * computed using Ensembl's Variant Effect Predictor. Information includes:
+ * - **Gene**: Affected gene with link to target page
+ * - **Transcript ID**: Specific transcript affected
+ * - **Predicted consequence**: SO term describing the variant effect
+ * - **Impact**: Severity classification (HIGH, MODERATE, LOW, MODIFIER)
+ * - **Amino acid change**: For coding variants, the resulting protein change
+ *
+ * Essential for understanding the functional impact of genetic variants.
+ *
+ * @example
+ * ```typescript
+ * const vep = new VariantEffectPredictorSection(page);
+ * await vep.waitForLoad();
+ *
+ * // Get transcript consequences
+ * const rowCount = await vep.getTableRows();
+ * const geneName = await vep.getGeneName(0);
+ * const consequence = await vep.getPredictedConsequence(0);
+ * const impact = await vep.getImpact(0);
+ *
+ * // Navigate to gene
+ * await vep.clickGeneLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `variant-effect-predictor`
  */
 export class VariantEffectPredictorSection {
   constructor(private page: Page) {}

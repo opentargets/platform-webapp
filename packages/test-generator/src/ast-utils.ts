@@ -45,4 +45,11 @@ export {
   type ProcessWidgetResult,
   type ProcessWidgetOptions,
   type WidgetInput,
+  
+  // LLM-guided transformer (combines LLM reasoning with AST reliability)
+  applyTestIdSuggestions,
+  applyTestIdSuggestionsToFiles,
+  type LLMTestIdSuggestion,
+  type SuggestionApplicationResult,
+  type FileTransformResult,
 } from './ast';

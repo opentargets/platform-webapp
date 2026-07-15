@@ -1,8 +1,35 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Shared interactor for GWAS Credible Sets section
- * Used in both Variant and Study pages
+ * Interactor for the GWAS Credible Sets section (shared across Variant and Study pages).
+ *
+ * Displays fine-mapped credible sets from GWAS studies, representing the set of
+ * variants most likely to contain the causal variant. Information includes:
+ * - **Credible set ID**: Unique identifier linking to detailed credible set page
+ * - **Lead variant**: The most significant variant in the set
+ * - **Study information**: GWAS study ID and reported trait
+ * - **L2G gene**: Top gene from Locus-to-Gene prediction
+ * - **Posterior probability**: Statistical confidence for causal variants
+ *
+ * Used for both Variant pages (showing credible sets containing the variant)
+ * and Study pages (showing all credible sets from a study).
+ *
+ * @example
+ * ```typescript
+ * const gwasCredibleSets = new GWASCredibleSetsSection(page);
+ * await gwasCredibleSets.waitForLoad();
+ *
+ * // Get credible set details
+ * const rowCount = await gwasCredibleSets.getTableRows();
+ * const credibleSetId = await gwasCredibleSets.getCredibleSetId(0);
+ *
+ * // Navigate to related pages
+ * await gwasCredibleSets.clickCredibleSetLink(0);
+ * await gwasCredibleSets.clickStudyLink(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `gwas-credible-sets`
  */
 export class GWASCredibleSetsSection {
   constructor(private page: Page) {}

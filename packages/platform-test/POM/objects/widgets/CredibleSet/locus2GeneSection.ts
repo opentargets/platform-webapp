@@ -1,17 +1,39 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Locus-to-Gene (L2G) section on Credible Set page
- * Section ID: locus2gene
+ * Interactor for Locus-to-Gene (L2G) section on Credible Set page.
+ *
+ * The L2G section displays gene prioritization scores based on various
+ * evidence sources. Uses a HeatmapTable to visualize scores across
+ * different features.
+ *
+ * @example
+ * ```typescript
+ * const l2g = new Locus2GeneSection(page);
+ * await l2g.waitForLoad();
+ * const geneCount = await l2g.getTableRows();
+ * const topGene = await l2g.getTargetGeneName(0);
+ * const score = await l2g.getL2GScore(0);
+ * ```
+ *
+ * @category CredibleSet
+ * @remarks Section ID: `locus2gene`
  */
 export class Locus2GeneSection {
   constructor(private page: Page) {}
 
-  // Section container
+  /**
+   * Get the main section container element.
+   * @returns Locator for the section container
+   */
   getSection(): Locator {
     return this.page.locator("[data-testid='section-locus2gene']");
   }
 
+  /**
+   * Check if the section is currently visible on the page.
+   * @returns Promise resolving to true if visible, false otherwise
+   */
   async isSectionVisible(): Promise<boolean> {
     return await this.getSection()
       .isVisible()

@@ -1,7 +1,33 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Mechanisms of Action section
+ * Interactor for the Mechanisms of Action section on Drug pages.
+ *
+ * Displays how a drug exerts its therapeutic effect, including the molecular
+ * targets and the type of interaction. Data sourced from ChEMBL includes:
+ * - **Mechanism of action**: Description of drug-target interaction
+ * - **Target name**: Protein or gene the drug acts upon
+ * - **Action type**: Inhibitor, agonist, antagonist, etc.
+ * - **References**: Supporting literature and database links
+ *
+ * Essential for understanding drug pharmacology and potential off-target effects.
+ *
+ * @example
+ * ```typescript
+ * const moa = new MechanismsOfActionSection(page);
+ * await moa.waitForLoad();
+ *
+ * // Get mechanism details
+ * const rowCount = await moa.getTableRows();
+ * const mechanism = await moa.getMechanismOfAction(0);
+ * const targetName = await moa.getTargetName(0);
+ *
+ * // Navigate to target page
+ * await moa.clickTargetLink(0, 0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `mechanismsofaction`
  */
 export class MechanismsOfActionSection {
   constructor(private page: Page) {}

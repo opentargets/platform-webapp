@@ -54,3 +54,11 @@ export {
   type ProcessWidgetOptions,
   type WidgetInput,
 } from './widget-processor';
+
+export {
+  applyTestIdSuggestions,
+  applyTestIdSuggestionsToFiles,
+  type LLMTestIdSuggestion,
+  type SuggestionApplicationResult,
+  type FileTransformResult,
+} from './llm-guided-transformer';

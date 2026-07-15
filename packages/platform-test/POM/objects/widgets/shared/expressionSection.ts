@@ -1,18 +1,40 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Baseline Expression section on Target page
- * Displays RNA and protein expression data with tabs (Summary, GTEx)
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for Baseline Expression section on Target page.
+ *
+ * Displays RNA and protein expression data with multiple tabs:
+ * - **Summary**: Overview of expression across tissues
+ * - **GTEx**: Detailed GTEx expression data
+ *
+ * Uses data-testid selectors for reliable, predictable testing.
+ *
+ * @example
+ * ```typescript
+ * const expression = new ExpressionSection(page);
+ * await expression.waitForLoad();
+ * await expression.clickGtexTab();
+ * const isGtexVisible = await expression.isGtexContentVisible();
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `expressions`
  */
 export class ExpressionSection {
   constructor(private page: Page) {}
 
-  // Section container
+  /**
+   * Get the main section container element.
+   * @returns Locator for the section container
+   */
   getSection(): Locator {
     return this.page.locator("[data-testid='section-expressions']");
   }
 
+  /**
+   * Check if the section is currently visible.
+   * @returns Promise resolving to true if visible, false otherwise
+   */
   async isSectionVisible(): Promise<boolean> {
     return await this.getSection()
       .isVisible()

@@ -1,6 +1,49 @@
 # Test Generator
 
-Automated test generation for Open Targets Platform widgets using LLM (Claude) + AST analysis.
+Automated test generation for Open Targets Platform **widgets** and **pages** using LLM (Claude) with structured reasoning protocols.
+
+## Key Features
+
+- 🔍 **Widget & Page Detection**: Automatically detects new widgets and pages added in PRs
+- 🤖 **LLM Analysis with Structured Reasoning**: Uses Claude with "Thought-Action-Observation" protocols
+- 🎯 **Intelligent Rendering Technology Detection**: Distinguishes Canvas/WebGL, SVG, and DOM components
+- 🧠 **Smart data-testid Injection**: LLM verifies prop spreading before suggesting test IDs
+- 🔗 **Prop Drilling Support**: Adds `testId` props to components that don't spread props
+- 📝 **POM Interactor Generation**: Creates Playwright Page Object Model interactors
+- 🧪 **Test Suite Generation**: Creates comprehensive Playwright test suites
+- 🔄 **GitHub Action Integration**: Creates separate PR with generated tests
+
+## LLM Reasoning Protocol
+
+The test generator uses structured "Thought-Action-Observation" prompts to ensure reliable code generation:
+
+### Tech-Stack Analysis (Required Before Code Generation)
+
+```
+Step 1: IDENTIFY - Extract key UI imports from source
+Step 2: DEDUCE - Determine DOM structure (Canvas/SVG/DOM)
+Step 3: STRATEGIZE - Choose appropriate selector approach
+```
+
+### Rendering Technology Classification
+
+| Import Pattern | Technology | DOM Queryable? |
+|----------------|------------|----------------|
+| `@pixi/react`, Stage, Container, Sprite | Canvas | No (only `<canvas>` element) |
+| `three`, WebGLRenderer | WebGL | No (only `<canvas>` element) |
+| `<svg>`, `<path>`, `<rect>` in JSX | SVG | Yes |
+| `d3-selection`, `d3-axis` (DOM bindings) | SVG | Yes |
+| `d3-array`, `d3-scale`, `d3-format` | Math only | N/A (no rendering) |
+| `recharts`, `visx`, `nivo` | SVG | Yes |
+| MUI components, HTML elements | DOM | Yes |
+
+### Failure Mode Guards
+
+| Failure Mode | Mitigation |
+|--------------|------------|
+| **Prompt Drift** | Concise numbered steps + decision matrices |
+| **Over-Inference** | Explicit warnings (e.g., "d3-scale is math, NOT SVG") |
+| **Non-Determinism** | Required output format with reasoning blocks |
 
 ## Flow Diagram
 
@@ -18,12 +61,11 @@ Automated test generation for Open Targets Platform widgets using LLM (Claude) +
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │  PHASE 1: DETECTION                                                              │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                                                            │  │
 │  │   ┌─────────────┐      ┌─────────────────┐      ┌────────────────────┐    │  │
-│  │   │  Git Diff   │─────▶│ Widget Detector │─────▶│ New Widget Paths   │    │  │
-│  │   │ (vs base)   │      │                 │      │ (packages/sections)│    │  │
-│  │   └─────────────┘      └─────────────────┘      └────────────────────┘    │  │
-│  │                                                                            │  │
+│  │   │  Git Diff   │─────▶│ Widget/Page     │─────▶│ Detected Items     │    │  │
+│  │   │ (vs base)   │      │ Detector        │      │ • Widgets          │    │  │
+│  │   └─────────────┘      └─────────────────┘      │ • Pages            │    │  │
+│  │                                                 └────────────────────┘    │  │
 │  └────────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
                                        │
@@ -31,34 +73,33 @@ Automated test generation for Open Targets Platform widgets using LLM (Claude) +
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │  PHASE 2: SOURCE COLLECTION                                                      │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                                                            │  │
 │  │   ┌─────────────┐      ┌─────────────────┐      ┌────────────────────┐    │  │
-│  │   │Widget Path  │─────▶│ Source Reader   │─────▶│ Widget Sources     │    │  │
-│  │   │             │      │                 │      │ • Body.tsx         │    │  │
-│  │   └─────────────┘      │ • Reads files   │      │ • Summary.tsx      │    │  │
-│  │                        │ • Follows imports│      │ • Local components │    │  │
+│  │   │Widget/Page  │─────▶│ Source Reader   │─────▶│ Collected Sources  │    │  │
+│  │   │ Path        │      │ • Reads files   │      │ • Body.tsx         │    │  │
+│  │   └─────────────┘      │ • Follows imports│     │ • Local components │    │  │
 │  │   ┌─────────────┐      │ • Finds UI deps │      │ • GraphQL queries  │    │  │
-│  │   │ UI Package  │─────▶│                 │─────▶│ • UI component src │    │  │
+│  │   │ UI Package  │─────▶│                 │─────▶│ • UI package source│    │  │
 │  │   │ (components)│      └─────────────────┘      └────────────────────┘    │  │
 │  │   └─────────────┘                                                          │  │
-│  │                                                                            │  │
 │  └────────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
                                        │
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│  PHASE 3: LLM ANALYSIS                                                           │
+│  PHASE 3: LLM ANALYSIS (Structured Reasoning Protocol)                           │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                                                            │  │
-│  │   ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐   │  │
-│  │   │ Widget Sources  │─────▶│   Claude LLM    │─────▶│ Widget Analysis │   │  │
-│  │   │ + UI Sources    │      │                 │      │ • hasTable      │   │  │
-│  │   └─────────────────┘      │ Analyzes:       │      │ • hasChart      │   │  │
-│  │                            │ • Components    │      │ • interactions  │   │  │
-│  │                            │ • Interactions  │      │ • testIds needed│   │  │
-│  │                            │ • Data flow     │      └─────────────────┘   │  │
-│  │                            └─────────────────┘                             │  │
-│  │                                                                            │  │
+│  │   ┌─────────────────┐      ┌─────────────────────────────────────────┐    │  │
+│  │   │ Widget Sources  │─────▶│   Claude LLM with Reasoning Protocol   │    │  │
+│  │   │ + UI Sources    │      │                                         │    │  │
+│  │   └─────────────────┘      │  Step 1: IDENTIFY - Extract imports     │    │  │
+│  │                            │  Step 2: DEDUCE - Determine DOM type    │    │  │
+│  │   ┌─────────────────┐      │  Step 3: STRATEGIZE - Choose approach   │    │  │
+│  │   │ Widget Analysis │◀─────│                                         │    │  │
+│  │   │ • hasTable      │      │  Classification applied before code gen │    │  │
+│  │   │ • hasChart      │      └─────────────────────────────────────────┘    │  │
+│  │   │ • renderingType │                                                      │  │
+│  │   │ • interactions  │                                                      │  │
+│  │   └─────────────────┘                                                      │  │
 │  └────────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
                                        │
@@ -67,17 +108,16 @@ Automated test generation for Open Targets Platform widgets using LLM (Claude) +
 ┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
 │  PHASE 4A: DATA-TESTID INJECTION    │  │  PHASE 4B: TEST GENERATION              │
 │  ┌───────────────────────────────┐  │  │  ┌─────────────────────────────────────┐│
-│  │                               │  │  │  │                                     ││
+│  │  Component Analysis Checklist │  │  │  │  Code Generation with Analysis      ││
 │  │  ┌───────────┐ ┌───────────┐  │  │  │  │  ┌───────────┐    ┌─────────────┐  ││
-│  │  │ LLM-based │ │   Code    │  │  │  │  │  │  Claude   │───▶│ Interactor  │  ││
-│  │  │ Analysis  │─▶│  Changes  │  │  │  │  │  │   LLM     │    │   (.ts)     │  ││
-│  │  │           │ │           │  │  │  │  │  │           │    └─────────────┘  ││
-│  │  │ Checks:   │ │ Applies:  │  │  │  │  │  │ Generates │                     ││
-│  │  │ • Props   │ │ • testids │  │  │  │  │  │ code for  │    ┌─────────────┐  ││
-│  │  │ • Context │ │ to source │  │  │  │  │  │ detected  │───▶│ Test Suite  │  ││
-│  │  │ • DOM     │ │ files     │  │  │  │  │  │ features  │    │  (.spec.ts) │  ││
-│  │  └───────────┘ └───────────┘  │  │  │  │  └───────────┘    └─────────────┘  ││
-│  │                               │  │  │  │                                     ││
+│  │  │ Checklist │ │ Applicator│  │  │  │  │  │  Claude   │───▶│ Interactor  │  ││
+│  │  │           │─▶│           │  │  │  │  │  │   LLM     │    │   (.ts)     │  ││
+│  │  │ • DOM? Y/N│ │ • testids │  │  │  │  │  │           │    └─────────────┘  ││
+│  │  │ • Props?  │ │ • testId  │  │  │  │  │  │ Tech-Stack│                     ││
+│  │  │ • Canvas? │ │   props   │  │  │  │  │  │ Analysis  │    ┌─────────────┐  ││
+│  │  │ • Context?│ │ • prop    │  │  │  │  │  │ Required  │───▶│ Test Suite  │  ││
+│  │  └───────────┘ │   drilling│  │  │  │  │  │ First     │    │  (.spec.ts) │  ││
+│  │                └───────────┘  │  │  │  │  └───────────┘    └─────────────┘  ││
 │  └───────────────────────────────┘  │  │  └─────────────────────────────────────┘│
 └─────────────────────────────────────┘  └─────────────────────────────────────────┘
                           │                         │
@@ -86,67 +126,69 @@ Automated test generation for Open Targets Platform widgets using LLM (Claude) +
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │  PHASE 5: OUTPUT                                                                 │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                                                            │  │
-│  │   Modified Widget Files          Generated Test Files                      │  │
+│  │   Modified Source Files           Generated Test Files                     │  │
 │  │   ┌─────────────────────┐       ┌─────────────────────────────────────┐   │  │
 │  │   │ packages/sections/  │       │ packages/platform-test/             │   │  │
-│  │   │   src/{entity}/     │       │   POM/objects/{Widget}Interactor.ts │   │  │
-│  │   │     {Widget}/       │       │   e2e/pages/{entity}/{Widget}.spec  │   │  │
-│  │   │       Body.tsx ✏️   │       │   fixtures/testConfig.ts ✏️         │   │  │
-│  │   └─────────────────────┘       └─────────────────────────────────────┘   │  │
+│  │   │   src/{entity}/     │       │   POM/objects/widgets/{Widget}/     │   │  │
+│  │   │     {Widget}/       │       │     {widget}Section.ts              │   │  │
+│  │   │       Body.tsx ✏️   │       │   POM/page/{entity}/                │   │  │
+│  │   │       (testId prop) │       │     {entity}.ts                     │   │  │
+│  │   └─────────────────────┘       │   e2e/pages/{entity}/               │   │  │
+│  │                                 │     {widgetname}.spec.ts            │   │  │
+│  │                                 └─────────────────────────────────────┘   │  │
 │  │                                                                            │  │
-│  │                    ┌─────────────────────────────────┐                     │  │
-│  │                    │  Create PR with generated tests │                     │  │
-│  │                    │  (branch: auto-tests/*)         │                     │  │
-│  │                    └─────────────────────────────────┘                     │  │
-│  │                                                                            │  │
+│  │                    ┌─────────────────────────────────────────┐             │  │
+│  │                    │  Create PR with generated tests         │             │  │
+│  │                    │  (branch: auto-tests/*)                 │             │  │
+│  │                    └─────────────────────────────────────────┘             │  │
 │  └────────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Detailed Component Flow
+### data-testid Decision Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                         LLM-BASED DATA-TESTID ANALYSIS                          │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
-   Widget Source                    UI Package Sources              LLM Decision
-   ─────────────                    ──────────────────              ────────────
+   Component Analysis Checklist (LLM completes for each component):
 
-   Body.tsx                         SectionItem.tsx
-   ┌──────────────────┐            ┌────────────────────┐
-   │ <SectionItem     │            │ Already generates  │         ❌ SKIP
-   │   definition=..  │ ─────────▶ │ data-testid from   │ ──────▶ (built-in
-   │   ...            │            │ definition.id      │          testid)
-   │ />               │            └────────────────────┘
-   └──────────────────┘
+   ┌────────────────────────────────────────────────────────────────────────────┐
+   │  1. [ ] Does it render a DOM element? (Check JSX return)                   │
+   │  2. [ ] Does it spread props? (Look for {...props} or {...rest})           │
+   │  3. [ ] Is it a canvas/WebGL component? (Check imports)                    │
+   │  4. [ ] Is it a provider/context wrapper? (Returns only children?)         │
+   └────────────────────────────────────────────────────────────────────────────┘
 
-   BodyContent.tsx                  GenTrackProvider.tsx
-   ┌──────────────────┐            ┌────────────────────┐
-   │ <GenTrackProvider│            │ createScopedContext│         ❌ SKIP
-   │   initialState=  │ ─────────▶ │ (Context Provider) │ ──────▶ (no DOM
-   │   ...            │            │ No DOM rendered    │          rendered)
-   │ >                │            └────────────────────┘
-   └──────────────────┘
+   Decision Matrix:
 
-   BodyContentInner.tsx             OtTable.tsx
-   ┌──────────────────┐            ┌────────────────────┐
-   │ <OtTable         │            │ Spreads props to   │         ✅ ADD
-   │   columns=...    │ ─────────▶ │ root MUI Table     │ ──────▶ data-testid=
-   │   data=...       │            │ Accepts data-testid│          "widget-table"
-   │ />               │            └────────────────────┘
-   └──────────────────┘
+   ┌──────────────┬────────────────┬─────────┬──────────────────────────────────┐
+   │ Renders DOM? │ Spreads Props? │ Canvas? │ Action                           │
+   ├──────────────┼────────────────┼─────────┼──────────────────────────────────┤
+   │ Yes          │ Yes            │ No      │ ✓ Can add data-testid directly   │
+   │ Yes          │ No             │ No      │ ✓ Needs testId prop added        │
+   │ Yes          │ -              │ Yes     │ ✗ Add to DOM wrapper, not canvas │
+   │ No           │ -              │ -       │ ✗ Skip (no DOM output)           │
+   └──────────────┴────────────────┴─────────┴──────────────────────────────────┘
+
+   Example Flow:
+
+   ┌──────────────────┐     ┌────────────────────┐
+   │ <OtTable         │────▶│ Spreads props to   │────▶ ✅ ADD data-testid
+   │   columns=...    │     │ root MUI Table     │
+   └──────────────────┘     └────────────────────┘
+
+   ┌──────────────────┐     ┌────────────────────┐
+   │ <GenTrackProvider│────▶│ Context Provider   │────▶ ❌ SKIP (no DOM)
+   │   initialState=  │     │ Returns children   │
+   └──────────────────┘     └────────────────────┘
+
+   ┌──────────────────┐     ┌────────────────────┐
+   │ <Stage>          │────▶│ @pixi/react import │────▶ ❌ SKIP (Canvas)
+   │   <Container>    │     │ Renders to canvas  │      Add to wrapper instead
+   └──────────────────┘     └────────────────────┘
 ```
-
-## Features
-
-- 🔍 **Widget Detection**: Automatically detects new widgets added in PRs
-- 🤖 **LLM Analysis**: Uses Claude to analyze widget structure and generate appropriate tests
-- 🧠 **Intelligent data-testid**: LLM checks UI component sources to verify prop acceptance
-- 📝 **Interactor Generation**: Creates Playwright Page Object Model interactors
-- 🧪 **Test Generation**: Creates comprehensive Playwright test suites
-- 🔄 **GitHub Action**: Creates separate PR with generated tests
 
 ## Installation
 
@@ -226,38 +268,6 @@ jobs:
           original-pr-number: ${{ github.event.pull_request.number }}
 ```
 
-### Manual Dispatch
-
-```yaml
-on:
-  workflow_dispatch:
-    inputs:
-      target_branch:
-        description: 'Branch to generate tests for'
-        required: true
-        type: string
-      pr_number:
-        description: 'Original PR number (optional)'
-        required: false
-        type: string
-
-jobs:
-  generate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.target_branch }}
-
-      - name: Generate Tests
-        uses: ./packages/test-generator
-        with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          source-branch: ${{ inputs.target_branch }}
-          original-pr-number: ${{ inputs.pr_number }}
-```
-
 ### Action Inputs
 
 | Input | Description | Required | Default |
@@ -283,18 +293,6 @@ jobs:
 | `generated-branch` | Name of the branch with generated tests |
 | `pr-number` | PR number for generated tests |
 | `pr-url` | PR URL for generated tests |
-
-### How It Works
-
-1. **Detection**: Compares current branch to `base-branch` to find new widget directories
-2. **Generation**: Uses Claude LLM to analyze widgets and generate tests
-3. **Branch Creation**: Creates a new branch `auto-tests/{source-branch}-{run-number}`
-4. **PR Creation**: Opens a PR from the generated branch to the source branch
-
-The generated PR follows the project's PR template format with:
-- Description of detected widgets
-- List of generated files
-- Checklist for review
 
 ## Programmatic API
 
@@ -330,38 +328,39 @@ for (const widget of widgets) {
 
 ## How It Works
 
-### 1. Widget Detection
+### 1. Widget & Page Detection
 
-The detector analyzes git diff between the PR branch and base branch to find new widget directories in `packages/sections/src/*/`.
+The detector analyzes git diff between the PR branch and base branch to find new:
+- **Widgets** in `packages/sections/src/*/`
+- **Pages** in `apps/platform/src/pages/`
 
 ### 2. Source Collection
 
-For each widget, it reads:
-- `index.tsx` - Widget entry point
+For each widget/page, it reads:
+- `index.tsx` - Entry point
 - `Body.tsx` - Main component
 - `Summary.tsx` - Summary component (if exists)
-- `Description.tsx` - Description component (if exists)
 - All imported local components
 - GraphQL query files
-- **UI component source files** (from `packages/ui/src/`) for components imported from `"ui"`
+- **UI component source files** (from `packages/ui/src/`) for prop spreading analysis
 
-### 3. LLM Analysis
+### 3. LLM Analysis with Structured Reasoning
 
-Claude analyzes the widget code to understand:
-- What UI components are present (tables, charts, etc.)
-- What interactions are available
-- What existing data-testid attributes exist
-- What test scenarios make sense
+Claude analyzes the code using a required protocol:
 
-### 4. LLM-based Data-testid Analysis
+1. **IDENTIFY**: Extract actual imports from source code
+2. **DEDUCE**: Determine DOM structure based on imports (Canvas/SVG/DOM)
+3. **STRATEGIZE**: Choose appropriate testing approach
 
-The LLM receives both widget sources AND UI component sources to intelligently determine:
-- **Which components render DOM** (can accept data-testid)
-- **Which are Context Providers** (skip - no DOM rendered)
-- **Which have built-in testid mechanisms** (skip - like SectionItem)
-- **The exact code modifications needed**
+This structured approach prevents common LLM errors like assuming SVG for canvas-based components.
 
-This approach avoids static heuristics by letting the LLM inspect actual component implementations.
+### 4. data-testid Analysis & Application
+
+The LLM receives both widget sources AND UI component sources to:
+- **Check prop spreading** - Can the component accept data-testid?
+- **Identify providers** - Skip context-only components
+- **Handle canvas components** - Add testid to wrapper, not canvas internals
+- **Support prop drilling** - Add testId prop where props aren't spread
 
 ### 5. Code Generation
 
@@ -369,6 +368,7 @@ Based on the analysis:
 - Generates Playwright interactor classes following POM pattern
 - Generates comprehensive test suites
 - Only includes methods/tests for features that actually exist
+- Uses exact import paths and class names (no guessing)
 
 ## Configuration
 
@@ -378,12 +378,82 @@ Default configuration:
 const DEFAULT_CONFIG = {
   model: 'claude-sonnet-4-20250514',
   maxTokens: 4096,
-  widgetBasePath: 'packages/sections/src',
-  interactorOutputPath: 'packages/platform-test/POM/objects',
+  sectionsPath: 'packages/sections/src',
+  interactorOutputPath: 'packages/platform-test/POM/objects/widgets',
   testOutputPath: 'packages/platform-test/e2e/pages',
   fixturesPath: 'packages/platform-test/fixtures/testConfig.ts',
 };
+
+const PAGE_CONFIG = {
+  pagesPath: 'apps/platform/src/pages',
+  pageInteractorOutputPath: 'packages/platform-test/POM/page',
+  pageTestOutputPath: 'packages/platform-test/e2e/pages',
+};
 ```
+
+## Architecture
+
+```
+packages/test-generator/
+├── src/
+│   ├── index.ts              # Package exports
+│   ├── types.ts              # TypeScript types
+│   ├── cli.ts                # Command-line interface
+│   │
+│   ├── detector/             # Widget/Page detection module
+│   │   ├── index.ts          # Module exports
+│   │   ├── git-utils.ts      # Git diff operations
+│   │   ├── widget-detector.ts # Detects new widgets in PRs
+│   │   ├── page-detector.ts  # Detects page components
+│   │   └── source-reader.ts  # Reads widget & UI sources
+│   │
+│   ├── generator/            # Code generation module
+│   │   ├── index.ts          # Module exports
+│   │   ├── orchestrator.ts   # Widget generation pipeline
+│   │   ├── page-orchestrator.ts # Page generation pipeline
+│   │   ├── analyzer.ts       # LLM widget analysis (with reasoning protocol)
+│   │   ├── page-analyzer.ts  # LLM page analysis
+│   │   ├── llm-client.ts     # Claude API client
+│   │   ├── prompt-formatter.ts # Formats LLM prompts
+│   │   ├── testid-applicator.ts # Applies data-testid + prop drilling
+│   │   ├── interactor-generator.ts # Widget POM interactors
+│   │   ├── page-interactor-generator.ts # Page POM interactors
+│   │   ├── test-generator.ts # Widget Playwright tests
+│   │   ├── page-test-generator.ts # Page Playwright tests
+│   │   └── file-io.ts        # File write operations
+│   │
+│   └── ast/                  # AST utilities module
+│       ├── index.ts          # Module exports
+│       ├── analyzer.ts       # Component analysis
+│       ├── parser.ts         # Babel parsing
+│       ├── transformer.ts    # Code transforms
+│       ├── import-extractor.ts # Import analysis
+│       ├── jsx-utils.ts      # JSX manipulation
+│       └── widget-processor.ts # Widget-specific processing
+│
+├── action.yml                # GitHub Action definition
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+### Module Responsibilities
+
+| Module | Purpose |
+|--------|---------|
+| **detector/** | Finds new widgets/pages via git diff, reads source files, extracts UI component dependencies |
+| **generator/** | LLM-powered analysis with structured reasoning, generates interactors & tests, applies data-testid changes |
+| **ast/** | Babel/recast utilities for code transformation (format-preserving) |
+
+## Entity Types Supported
+
+- `target`
+- `disease`
+- `drug`
+- `evidence`
+- `variant`
+- `study`
+- `credibleSet`
 
 ## Development
 
@@ -400,53 +470,6 @@ npm test
 # Lint
 npm run lint
 ```
-
-## Architecture
-
-```
-packages/test-generator/
-├── src/
-│   ├── index.ts              # Package exports
-│   ├── types.ts              # TypeScript types
-│   ├── cli.ts                # Command-line interface
-│   │
-│   ├── detector/             # Widget detection module
-│   │   ├── index.ts          # Module exports
-│   │   ├── git-utils.ts      # Git diff operations
-│   │   ├── widget-detector.ts # Detects new widgets in PRs
-│   │   ├── page-detector.ts  # Detects page components
-│   │   └── source-reader.ts  # Reads widget & UI sources
-│   │
-│   ├── generator/            # Code generation module
-│   │   ├── index.ts          # Module exports
-│   │   ├── orchestrator.ts   # Coordinates generation pipeline
-│   │   ├── analyzer.ts       # LLM-based widget analysis
-│   │   ├── llm-client.ts     # Claude API client
-│   │   ├── prompt-formatter.ts # Formats LLM prompts
-│   │   ├── testid-applicator.ts # Applies data-testid changes
-│   │   ├── interactor-generator.ts # Generates POM interactors
-│   │   ├── test-generator.ts # Generates Playwright tests
-│   │   └── file-io.ts        # File write operations
-│   │
-│   └── ast/                  # AST utilities module
-│       ├── index.ts          # Module exports
-│       ├── transformer.ts    # Babel/recast transforms
-│       ├── jsx-utils.ts      # JSX manipulation helpers
-│       └── widget-processor.ts # Widget-specific processing
-│
-├── action.yml                # GitHub Action definition
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-### Module Responsibilities
-
-| Module | Purpose |
-|--------|---------|
-| **detector/** | Finds new widgets via git diff, reads source files, extracts UI component dependencies |
-| **generator/** | LLM-powered analysis, generates interactors & tests, applies data-testid changes |
-| **ast/** | Babel/recast utilities for code transformation (format-preserving) |
 
 ## License
 

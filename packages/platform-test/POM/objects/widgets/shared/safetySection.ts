@@ -1,9 +1,34 @@
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * Interactor for Safety section on Target page
- * Displays known safety liabilities with effects and biosamples
- * Uses only data-testid selectors for reliable, predictable testing
+ * Interactor for the Safety section on Target pages.
+ *
+ * Displays known safety liabilities associated with modulating the target,
+ * aggregated from multiple sources including literature and toxicology databases.
+ * Information includes:
+ * - **Safety event**: Type of adverse effect observed
+ * - **Biosystems/Organs**: Affected biological systems
+ * - **Effects**: Specific observed outcomes
+ * - **Studies**: Links to supporting studies and publications
+ *
+ * Critical for target safety assessment in drug discovery.
+ *
+ * @example
+ * ```typescript
+ * const safety = new SafetySection(page);
+ * await safety.waitForLoad();
+ *
+ * // Get safety liabilities
+ * const rowCount = await safety.getTableRowCount();
+ * const eventName = await safety.getSafetyEventName(0);
+ *
+ * // Access supporting evidence
+ * await safety.clickBiosystemsDrawer(0);
+ * await safety.clickPublicationsDrawer(0);
+ * ```
+ *
+ * @category shared
+ * @remarks Section ID: `safety`
  */
 export class SafetySection {
   constructor(private page: Page) {}
