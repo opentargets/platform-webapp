@@ -1,0 +1,370 @@
+name: Generate Tests for New Widgets and Pages
+
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - 'packages/sections/src/**'
+      - 'apps/platform/src/pages/**'
+  
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to generate tests for'
+        required: true
+        type: string
+      pr_number:
+        description: 'Original PR number (optional, for linking in comments)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build test-generator package
+        run: |
+          cd packages/test-generator
+          yarn build
+
+      - name: Fetch base branch for comparison
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            git fetch origin main:main
+            echo "BASE_BRANCH=main" >> $GITHUB_ENV
+          else
+            git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
+            echo "BASE_BRANCH=origin/${{ github.base_ref }}" >> $GITHUB_ENV
+          fi
+
+      - name: Detect new widgets and pages
+        id: detect
+        run: |
+          # Run from workspace root so git paths resolve correctly
+          node packages/test-generator/dist/cli.js detect \
+            --base-branch ${{ env.BASE_BRANCH }} \
+            --output-file /tmp/widgets.json \
+            --pages-output-file /tmp/pages.json \
+            --verbose
+          
+          # Count widgets
+          if [ -f /tmp/widgets.json ]; then
+            WIDGET_COUNT=$(cat /tmp/widgets.json | jq 'length')
+            echo "widget_count=$WIDGET_COUNT" >> $GITHUB_OUTPUT
+            WIDGETS_JSON=$(cat /tmp/widgets.json)
+            echo "widgets_json<<EOF" >> $GITHUB_OUTPUT
+            echo "$WIDGETS_JSON" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "📦 Found $WIDGET_COUNT new widget(s)"
+          else
+            echo "widget_count=0" >> $GITHUB_OUTPUT
+            echo "widgets_json=[]" >> $GITHUB_OUTPUT
+            echo "✅ No new widgets detected"
+          fi
+          
+          # Count pages
+          if [ -f /tmp/pages.json ]; then
+            PAGE_COUNT=$(cat /tmp/pages.json | jq 'length')
+            echo "page_count=$PAGE_COUNT" >> $GITHUB_OUTPUT
+            PAGES_JSON=$(cat /tmp/pages.json)
+            echo "pages_json<<EOF" >> $GITHUB_OUTPUT
+            echo "$PAGES_JSON" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "📄 Found $PAGE_COUNT new page(s)"
+          else
+            echo "page_count=0" >> $GITHUB_OUTPUT
+            echo "pages_json=[]" >> $GITHUB_OUTPUT
+            echo "✅ No new pages detected"
+          fi
+          
+          # Calculate total count
+          TOTAL_COUNT=$((${WIDGET_COUNT:-0} + ${PAGE_COUNT:-0}))
+          echo "count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Generate tests
+        id: generate
+        if: steps.detect.outputs.count > 0
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Generate widget tests if widgets detected
+          if [ "${{ steps.detect.outputs.widget_count }}" -gt 0 ]; then
+            echo "Generating widget tests..."
+            node packages/test-generator/dist/cli.js generate \
+              --widgets-file /tmp/widgets.json \
+              --skip-pages \
+              --verbose
+          fi
+          
+          # Generate page tests if pages detected
+          if [ "${{ steps.detect.outputs.page_count }}" -gt 0 ]; then
+            echo "Generating page tests..."
+            node packages/test-generator/dist/cli.js generate \
+              --pages-file /tmp/pages.json \
+              --skip-widgets \
+              --verbose
+          fi
+
+      - name: Commit generated files
+        if: steps.detect.outputs.count > 0
+        id: commit
+        env:
+          WIDGETS_JSON: ${{ steps.detect.outputs.widgets_json }}
+          PAGES_JSON: ${{ steps.detect.outputs.pages_json }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          
+          # Determine the source branch (where widget changes were detected)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SOURCE_BRANCH="${{ inputs.target_branch }}"
+          else
+            SOURCE_BRANCH="${{ github.head_ref }}"
+          fi
+          echo "source_branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Create a new branch for generated tests
+          GENERATED_BRANCH="auto-tests/${SOURCE_BRANCH}-${{ github.run_number }}"
+          echo "generated_branch=$GENERATED_BRANCH" >> $GITHUB_OUTPUT
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "$GENERATED_BRANCH"
+          
+          # Build commit message with detected items
+          COMMIT_MSG="chore: auto-generate tests for new widgets and pages"
+          COMMIT_MSG="$COMMIT_MSG"$'\n\n'"Generated by test-generator package."
+          
+          if [ -f /tmp/widgets.json ]; then
+            WIDGET_NAMES=$(cat /tmp/widgets.json | jq -r '.[].name' | tr '\n' ', ' | sed 's/,$//')
+            if [ -n "$WIDGET_NAMES" ]; then
+              COMMIT_MSG="$COMMIT_MSG"$'\n\n'"Widgets: ${WIDGET_NAMES}"
+            fi
+          fi
+          
+          if [ -f /tmp/pages.json ]; then
+            PAGE_NAMES=$(cat /tmp/pages.json | jq -r '.[].name' | tr '\n' ', ' | sed 's/,$//')
+            if [ -n "$PAGE_NAMES" ]; then
+              COMMIT_MSG="$COMMIT_MSG"$'\n'"Pages: ${PAGE_NAMES}"
+            fi
+          fi
+          
+          git add .
+          git commit -m "$COMMIT_MSG"
+          
+          git push origin "$GENERATED_BRANCH"
+
+      - name: Create PR for generated tests
+        if: steps.commit.outputs.has_changes == 'true'
+        id: create_pr
+        uses: actions/github-script@v7
+        env:
+          WIDGETS_JSON: ${{ steps.detect.outputs.widgets_json }}
+          PAGES_JSON: ${{ steps.detect.outputs.pages_json }}
+          GENERATED_BRANCH: ${{ steps.commit.outputs.generated_branch }}
+          SOURCE_BRANCH: ${{ steps.commit.outputs.source_branch }}
+          ORIGINAL_PR_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || inputs.pr_number }}
+        with:
+          script: |
+            const generatedBranch = process.env.GENERATED_BRANCH;
+            const sourceBranch = process.env.SOURCE_BRANCH;
+            const widgetsJson = process.env.WIDGETS_JSON || '[]';
+            const pagesJson = process.env.PAGES_JSON || '[]';
+            const newWidgets = JSON.parse(widgetsJson);
+            const newPages = JSON.parse(pagesJson);
+            const prNumber = process.env.ORIGINAL_PR_NUMBER;
+            
+            // Build lists
+            const widgetList = newWidgets.map(w => `- **${w.name}** (${w.entity})`).join('\n');
+            const pageList = newPages.map(p => `- **${p.name}** (${p.entityType || p.type})`).join('\n');
+            const widgetNames = newWidgets.map(w => w.name);
+            const pageNames = newPages.map(p => p.name);
+            const allNames = [...widgetNames, ...pageNames].join(', ');
+            
+            const prBodyLines = [
+              '# [Platform-test]: Auto-generated tests for new widgets and pages',
+              '',
+              '## Description',
+              '',
+              `This PR contains auto-generated Playwright tests, Page Object Model interactors, and data-testid attributes${prNumber ? ' detected in #' + prNumber : ''}.`,
+              '',
+              `**Items:** ${allNames}`,
+              `**Source Branch:** \`${sourceBranch}\``,
+              '',
+              '## Type of change',
+              '',
+              '- [x] New feature (non-breaking change which adds functionality)',
+              '',
+              '## Generated Files',
+              ''
+            ];
+            
+            if (newWidgets.length > 0) {
+              prBodyLines.push('### Detected Widgets');
+              prBodyLines.push(widgetList);
+              prBodyLines.push('');
+            }
+            
+            if (newPages.length > 0) {
+              prBodyLines.push('### Detected Pages');
+              prBodyLines.push(pageList);
+              prBodyLines.push('');
+            }
+            
+            prBodyLines.push(
+              '### Files Added/Modified',
+              '- Widget interactors in `packages/platform-test/POM/objects/widgets/`',
+              '- Page interactors in `packages/platform-test/POM/page/`',
+              '- Widget test specs in `packages/platform-test/e2e/pages/`',
+              '- Page test specs in `packages/platform-test/e2e/pages/`',
+              '- Fixture updates in `packages/platform-test/fixtures/testConfig.ts`',
+              '- Data-testid attributes added to source components',
+              '',
+              '## How Has This Been Tested?',
+              '',
+              '- [ ] Run the generated Playwright tests locally',
+              '- [ ] Verify data-testid attributes are correctly placed in the DOM',
+              '',
+              '## Checklist:',
+              '',
+              '- [x] I have commented my code, particularly in hard-to-understand areas',
+              '- [ ] My changes generate no new warnings',
+              '- [x] I have made corresponding changes to the documentation',
+              '',
+              '---',
+              '',
+              '> **Note:** Please review the generated tests and adjust as needed. The LLM-generated code may require fine-tuning based on actual component behavior and data availability.',
+              '',
+              `_Merge this PR into \`${sourceBranch}\` to add the generated tests to your branch._`
+            );
+            
+            const prBody = prBodyLines.join('\n');
+
+            // Create PR from generated tests branch to the source branch
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Platform-test]: Auto-generated tests for ${allNames}`,
+              head: generatedBranch,
+              base: sourceBranch,
+              body: prBody
+            });
+            
+            core.setOutput('pr_number', pr.data.number);
+            core.setOutput('pr_url', pr.data.html_url);
+            return pr.data;
+
+      - name: Comment on original PR
+        if: steps.commit.outputs.has_changes == 'true' && (github.event_name == 'pull_request' || inputs.pr_number != '')
+        uses: actions/github-script@v7
+        env:
+          WIDGETS_JSON: ${{ steps.detect.outputs.widgets_json }}
+          PAGES_JSON: ${{ steps.detect.outputs.pages_json }}
+        with:
+          script: |
+            const widgetsJson = process.env.WIDGETS_JSON || '[]';
+            const pagesJson = process.env.PAGES_JSON || '[]';
+            const newWidgets = JSON.parse(widgetsJson);
+            const newPages = JSON.parse(pagesJson);
+            const testPrUrl = '${{ steps.create_pr.outputs.pr_url }}';
+            const testPrNumber = '${{ steps.create_pr.outputs.pr_number }}';
+            
+            // Build item list
+            let itemList = '';
+            if (newWidgets.length > 0) {
+              itemList += '**Widgets:**\n' + newWidgets.map(w => `- **${w.name}** (${w.entity})`).join('\n') + '\n\n';
+            }
+            if (newPages.length > 0) {
+              itemList += '**Pages:**\n' + newPages.map(p => `- **${p.name}** (${p.entityType || p.type})`).join('\n');
+            }
+            
+            // Get the original PR number
+            let originalPrNumber;
+            if ('${{ github.event_name }}' === 'pull_request') {
+              originalPrNumber = ${{ github.event.pull_request.number || 0 }};
+            } else {
+              originalPrNumber = parseInt('${{ inputs.pr_number }}', 10);
+            }
+            
+            if (!originalPrNumber) return;
+            
+            await github.rest.issues.createComment({
+              issue_number: originalPrNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 Auto-Generated Tests Available\n\nI detected the following new widgets/pages and generated tests for them:\n\n${itemList}\n\n### 📋 Review & Merge Generated Tests\n\nA separate PR has been created with the generated tests:\n\n**➡️ [PR #${testPrNumber}: Auto-generated tests](${testPrUrl})**\n\nPlease review the generated code and merge that PR into this branch to include the tests.\n\n### Generated Files\n- Widget interactors in \`packages/platform-test/POM/objects/widgets/\`\n- Page interactors in \`packages/platform-test/POM/page/\`\n- Test specs in \`packages/platform-test/e2e/pages/\`\n- Fixture updates in \`packages/platform-test/fixtures/testConfig.ts\`\n- Data-testid attributes added to source components\n\n> **Note:** The LLM-generated code may require fine-tuning based on actual component behavior and data availability.`
+            });
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Test Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "**Trigger:** Manual dispatch for branch \`${{ inputs.target_branch }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          WIDGET_COUNT="${{ steps.detect.outputs.widget_count }}"
+          PAGE_COUNT="${{ steps.detect.outputs.page_count }}"
+          
+          if [ "$WIDGET_COUNT" = "0" ] && [ "$PAGE_COUNT" = "0" ]; then
+            echo "✅ No new widgets or pages detected." >> $GITHUB_STEP_SUMMARY
+          else
+            if [ "$WIDGET_COUNT" != "0" ]; then
+              echo "📦 **Widgets detected:** $WIDGET_COUNT" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              if [ -f /tmp/widgets.json ]; then
+                echo "### Detected Widgets" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                cat /tmp/widgets.json | jq -r '.[] | "- **\(.name)** (\(.entity))"' >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            
+            if [ "$PAGE_COUNT" != "0" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "📄 **Pages detected:** $PAGE_COUNT" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              if [ -f /tmp/pages.json ]; then
+                echo "### Detected Pages" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                cat /tmp/pages.json | jq -r '.[] | "- **\(.name)** (\(.entityType // .type))"' >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            
+            if [ "${{ steps.commit.outputs.has_changes }}" = "true" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Generated PR" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ Created branch: \`${{ steps.commit.outputs.generated_branch }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "🔗 PR: ${{ steps.create_pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

@@ -1,0 +1,56 @@
+{
+  "name": "@ot/test-generator",
+  "version": "1.0.0",
+  "description": "Automated test generation for Open Targets Platform widgets using AI and AST-based code modification",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "test-generator": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --write src/",
+    "test": "node --test",
+    "detect": "node dist/cli.js detect",
+    "generate": "node dist/cli.js generate",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "open-targets",
+    "playwright",
+    "test-generation",
+    "github-action",
+    "ast",
+    "code-generation"
+  ],
+  "author": "Open Targets",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@babel/generator": "^7.23.0",
+    "@babel/parser": "^7.23.0",
+    "@babel/traverse": "^7.23.0",
+    "@babel/types": "^7.23.0",
+    "recast": "^0.23.4"
+  },
+  "devDependencies": {
+    "@types/babel__generator": "^7.6.8",
+    "@types/babel__traverse": "^7.20.5",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opentargets/ot-ui-apps.git",
+    "directory": "packages/test-generator"
+  },
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md"
+  ]
+}
