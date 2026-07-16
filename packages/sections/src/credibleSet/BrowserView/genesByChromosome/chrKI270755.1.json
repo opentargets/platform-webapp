@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ENSG00000309258",
+    "name": null,
+    "start": 26350,
+    "end": 27723,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 26350,
+        "end": 26743
+      },
+      {
+        "start": 27337,
+        "end": 27723
+      }
+    ]
+  }
+]

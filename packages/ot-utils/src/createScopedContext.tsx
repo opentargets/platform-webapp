@@ -16,8 +16,8 @@ export function createScopedContext({
     }
 
     const [state, dispatch] = useReducer(wrappedReducer, {
-      ...initialState,
       ...extraStateProperties,
+      ...initialState,
     });
 
     return (

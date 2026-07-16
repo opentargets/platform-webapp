@@ -103,3 +103,9 @@ export { default as PlatformApiProvider } from "./providers/PlatformApiProvider"
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerProvider";
 export * from "./providers/ViewerInteractionProvider";
+
+export * from "./providers/GenTrackProvider";
+export * from "./providers/GenTrackTooltipProvider";
+export { default as GenTrack } from "./components/GenTrack/GenTrack";
+export { DataSprite, DataRect, DataText, DataVLine, type ScalesRef } from "./components/GenTrack";
+export { default as GeneVis } from "./components/GeneVis/GeneVis";

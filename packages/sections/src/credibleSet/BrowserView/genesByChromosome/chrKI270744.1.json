@@ -1,0 +1,140 @@
+[
+  {
+    "id": "ENSG00000300074",
+    "name": null,
+    "start": 424,
+    "end": 6215,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 6071,
+        "end": 6215
+      },
+      {
+        "start": 424,
+        "end": 701
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000300051",
+    "name": null,
+    "start": 5313,
+    "end": 80720,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 8412,
+        "end": 8510
+      },
+      {
+        "start": 15733,
+        "end": 15866
+      },
+      {
+        "start": 41505,
+        "end": 43788
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000278625",
+    "name": "U6",
+    "start": 51009,
+    "end": 51114,
+    "strand": -1,
+    "biotype": "snRNA",
+    "exons": [
+      {
+        "start": 51009,
+        "end": 51114
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000300093",
+    "name": null,
+    "start": 65348,
+    "end": 66807,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 65348,
+        "end": 65480
+      },
+      {
+        "start": 65773,
+        "end": 66807
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000294644",
+    "name": null,
+    "start": 90023,
+    "end": 112250,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 112095,
+        "end": 112250
+      },
+      {
+        "start": 99608,
+        "end": 99860
+      },
+      {
+        "start": 95689,
+        "end": 95960
+      },
+      {
+        "start": 90023,
+        "end": 90289
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307470",
+    "name": null,
+    "start": 124346,
+    "end": 140980,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 140167,
+        "end": 140947
+      },
+      {
+        "start": 134713,
+        "end": 134839
+      },
+      {
+        "start": 133998,
+        "end": 134211
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000300846",
+    "name": null,
+    "start": 142831,
+    "end": 150130,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 142831,
+        "end": 142950
+      },
+      {
+        "start": 149709,
+        "end": 150130
+      }
+    ]
+  }
+]

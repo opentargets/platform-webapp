@@ -1,0 +1,70 @@
+[
+  {
+    "id": "ENSG00000278294",
+    "name": "5_8S_rRNA",
+    "start": 217250,
+    "end": 217401,
+    "strand": -1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 217250,
+        "end": 217401
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000308580",
+    "name": null,
+    "start": 378910,
+    "end": 380941,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 380822,
+        "end": 380941
+      },
+      {
+        "start": 379948,
+        "end": 380020
+      },
+      {
+        "start": 378910,
+        "end": 379063
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000278457",
+    "name": "5S_rRNA",
+    "start": 380608,
+    "end": 380726,
+    "strand": 1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 380608,
+        "end": 380726
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307034",
+    "name": null,
+    "start": 384845,
+    "end": 385228,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 384845,
+        "end": 384963
+      },
+      {
+        "start": 385081,
+        "end": 385228
+      }
+    ]
+  }
+]

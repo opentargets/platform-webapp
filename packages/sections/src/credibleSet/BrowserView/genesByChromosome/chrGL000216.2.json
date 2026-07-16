@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ENSG00000274202",
+    "name": "U2",
+    "start": 93197,
+    "end": 93309,
+    "strand": -1,
+    "biotype": "snRNA",
+    "exons": [
+      {
+        "start": 93197,
+        "end": 93309
+      }
+    ]
+  }
+]

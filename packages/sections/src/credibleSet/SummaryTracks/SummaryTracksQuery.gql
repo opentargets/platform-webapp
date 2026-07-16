@@ -1,0 +1,125 @@
+query SummaryTracksQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
+  credibleSet(studyLocusId: $studyLocusId) {
+    molqtlcolocalisation: colocalisation(
+        studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+        page: { size: $size, index: $index }
+    ) {
+      count
+      rows {
+        otherStudyLocus {
+          studyLocusId
+          isTransQtl
+          study {
+            id
+            studyType
+            target {
+              approvedSymbol
+              id
+            }
+          }
+          variant {
+            id
+            chromosome
+            position
+          }
+        }
+        colocalisationMethod
+        clpp
+        betaRatioSignAverage
+      }
+    }
+    colocalisation(studyTypes: [gwas], page: { size: $size, index: $index }) {
+      count
+      rows {
+        otherStudyLocus {
+          studyLocusId
+          study {
+            id
+            projectId
+            traitFromSource
+            publicationFirstAuthor
+          }
+          variant {
+            id
+            chromosome
+            position
+            referenceAllele
+            alternateAllele
+          }
+          pValueMantissa
+          pValueExponent
+        }
+        numberColocalisingVariants
+        colocalisationMethod
+        h3
+        h4
+        clpp
+        betaRatioSignAverage
+      }
+    }
+    variant {
+      id
+      chromosome
+      position
+      referenceAllele
+      alternateAllele
+      enhancerToGenes(page: { size: 3000, index: 0 }) {  # E2G
+        count
+        rows {
+          chromosome
+          start
+          end
+          target {
+            id
+            approvedSymbol
+          }
+          score
+        }
+      }
+    }
+    studyLocusId
+    locus(page: { size: $size, index: $index }) {
+      count
+      rows {
+        logBF
+        posteriorProbability
+        variant {
+          id
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+          mostSevereConsequence {
+            id
+            label
+          }
+        }
+        pValueMantissa
+        pValueExponent
+        beta
+        standardError
+        r2Overall
+      }
+    }
+    l2GPredictions {
+      count
+      rows {
+        score
+        target {
+          id
+          approvedSymbol
+          genomicLocation {
+            chromosome
+            start
+            end
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+
+

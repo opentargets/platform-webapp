@@ -1,0 +1,228 @@
+[
+  {
+    "id": "ENSG00000297072",
+    "name": null,
+    "start": 12391,
+    "end": 52469,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 50803,
+        "end": 50905
+      },
+      {
+        "start": 19398,
+        "end": 20512
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000278573",
+    "name": null,
+    "start": 59711,
+    "end": 60316,
+    "strand": 1,
+    "biotype": "pseudogene",
+    "exons": [
+      {
+        "start": 59711,
+        "end": 60178
+      },
+      {
+        "start": 60182,
+        "end": 60316
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276017",
+    "name": null,
+    "start": 72411,
+    "end": 74814,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 72411,
+        "end": 74814
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000303733",
+    "name": null,
+    "start": 77655,
+    "end": 81153,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 77655,
+        "end": 77747
+      },
+      {
+        "start": 79555,
+        "end": 81153
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000305236",
+    "name": null,
+    "start": 83271,
+    "end": 85531,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 83271,
+        "end": 83392
+      },
+      {
+        "start": 84285,
+        "end": 85531
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000301131",
+    "name": null,
+    "start": 90950,
+    "end": 98156,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 97525,
+        "end": 98156
+      },
+      {
+        "start": 96868,
+        "end": 96991
+      },
+      {
+        "start": 96035,
+        "end": 96189
+      },
+      {
+        "start": 90959,
+        "end": 91387
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000309233",
+    "name": null,
+    "start": 109600,
+    "end": 110784,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 109600,
+        "end": 109749
+      },
+      {
+        "start": 110467,
+        "end": 110784
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000278817",
+    "name": null,
+    "start": 131494,
+    "end": 137392,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 131494,
+        "end": 131755
+      },
+      {
+        "start": 131836,
+        "end": 131996
+      },
+      {
+        "start": 135443,
+        "end": 135543
+      },
+      {
+        "start": 136159,
+        "end": 136299
+      },
+      {
+        "start": 136845,
+        "end": 137392
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000277196",
+    "name": null,
+    "start": 138082,
+    "end": 161852,
+    "strand": -1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 161689,
+        "end": 161750
+      },
+      {
+        "start": 156289,
+        "end": 156497
+      },
+      {
+        "start": 150987,
+        "end": 151021
+      },
+      {
+        "start": 150350,
+        "end": 150499
+      },
+      {
+        "start": 148414,
+        "end": 148478
+      },
+      {
+        "start": 148116,
+        "end": 148232
+      },
+      {
+        "start": 147624,
+        "end": 147703
+      },
+      {
+        "start": 146640,
+        "end": 146721
+      },
+      {
+        "start": 145004,
+        "end": 145096
+      },
+      {
+        "start": 144749,
+        "end": 144895
+      },
+      {
+        "start": 143614,
+        "end": 143789
+      },
+      {
+        "start": 142194,
+        "end": 142292
+      },
+      {
+        "start": 138743,
+        "end": 138831
+      },
+      {
+        "start": 138082,
+        "end": 138667
+      }
+    ]
+  }
+]

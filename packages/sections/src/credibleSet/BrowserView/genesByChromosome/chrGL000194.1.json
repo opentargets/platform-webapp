@@ -1,0 +1,116 @@
+[
+  {
+    "id": "ENSG00000298793",
+    "name": null,
+    "start": 10561,
+    "end": 28352,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 28267,
+        "end": 28329
+      },
+      {
+        "start": 19439,
+        "end": 20555
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000298772",
+    "name": null,
+    "start": 30694,
+    "end": 57443,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 30703,
+        "end": 30830
+      },
+      {
+        "start": 38418,
+        "end": 38615
+      },
+      {
+        "start": 44045,
+        "end": 44282
+      },
+      {
+        "start": 49028,
+        "end": 49194
+      },
+      {
+        "start": 56885,
+        "end": 57443
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000277400",
+    "name": null,
+    "start": 53590,
+    "end": 115018,
+    "strand": -1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 114986,
+        "end": 115018
+      },
+      {
+        "start": 112792,
+        "end": 112850
+      },
+      {
+        "start": 53590,
+        "end": 55676
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000274847",
+    "name": "MAFIP",
+    "start": 53594,
+    "end": 115055,
+    "strand": -1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 114986,
+        "end": 115055
+      },
+      {
+        "start": 112792,
+        "end": 112850
+      },
+      {
+        "start": 55446,
+        "end": 55676
+      },
+      {
+        "start": 53594,
+        "end": 54832
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000306938",
+    "name": null,
+    "start": 145900,
+    "end": 156852,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 145900,
+        "end": 146064
+      },
+      {
+        "start": 156490,
+        "end": 156852
+      }
+    ]
+  }
+]
