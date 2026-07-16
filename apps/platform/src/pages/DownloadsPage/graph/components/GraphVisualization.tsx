@@ -32,7 +32,6 @@ interface SelectedNodeInfo {
  */
 const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   downloadsData,
-  useMockData = true,
   sx = {},
 }) => {
   // State
@@ -42,7 +41,6 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Get graph data
   const { nodes, edges } = useGraphData({
     downloadsData,
-    useMockData,
   });
 
   // Get layout configuration

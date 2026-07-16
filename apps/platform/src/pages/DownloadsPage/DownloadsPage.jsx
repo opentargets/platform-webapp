@@ -132,7 +132,6 @@ function DownloadsPage() {
           <Box sx={{ height: "600px", mb: 2 }}>
             <GraphVisualization 
               downloadsData={state.downloadsData}
-              useMockData={true}
             />
           </Box>
         )}

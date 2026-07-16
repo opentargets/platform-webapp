@@ -50,6 +50,143 @@ interface TransformedGraph {
 }
 
 /**
+ * Croissant (schema.org-style) RecordSet metadata types.
+ * This is the shape of items inside the Downloads page's `recordSet` field
+ * (56 datasets describing the Open Targets data model).
+ */
+export interface CroissantFieldReference {
+  field: { '@id': string };
+}
+
+export interface CroissantField {
+  '@type'?: string;
+  '@id': string;
+  name: string;
+  description?: string;
+  dataType?: string;
+  repeated?: boolean;
+  references?: CroissantFieldReference;
+  subField?: CroissantField[];
+}
+
+export interface CroissantRecordSet {
+  '@type'?: string;
+  '@id': string;
+  name: string;
+  description?: string;
+  key?: { '@id': string } | Array<{ '@id': string }>;
+  field: CroissantField[];
+}
+
+/**
+ * Dataset ids that represent the platform's master/core entities
+ */
+const CORE_RECORD_SET_IDS = new Set(['target', 'disease', 'drug_molecule', 'variant', 'study']);
+
+/**
+ * Dataset ids that behave as ontology/reference lookup tables rather than
+ * evidence datasets tied directly to a core entity
+ */
+const ATTRIBUTE_RECORD_SET_IDS = new Set(['go', 'reactome', 'so', 'biosample', 'disease_hpo']);
+
+/**
+ * Classify a RecordSet (dataset) id into one of the three graph node types
+ */
+export const classifyRecordSetType = (id: string): 'core' | 'evidence' | 'attribute' => {
+  if (CORE_RECORD_SET_IDS.has(id)) return 'core';
+  if (ATTRIBUTE_RECORD_SET_IDS.has(id)) return 'attribute';
+  return 'evidence';
+};
+
+/**
+ * Strip the trailing "[Category]" tag Open Targets appends to RecordSet
+ * descriptions, e.g. "...evidence data. [Target-Disease]" -> "...evidence data."
+ */
+const stripCategoryTag = (description = ''): string =>
+  description.replace(/\s*\[[^\]]*\]\s*$/, '').trim();
+
+/**
+ * Recursively walk a RecordSet's fields (and any nested subFields) collecting
+ * the id of every dataset referenced through a foreign key ("references")
+ */
+const collectReferencedDatasetIds = (fields: CroissantField[] = []): string[] => {
+  const referenced: string[] = [];
+
+  fields.forEach((field) => {
+    const refFieldId = field.references?.field?.['@id'];
+    if (refFieldId) {
+      const datasetId = refFieldId.split('/').slice(0, -1).join('/');
+      if (datasetId) referenced.push(datasetId);
+    }
+    if (field.subField?.length) {
+      referenced.push(...collectReferencedDatasetIds(field.subField));
+    }
+  });
+
+  return referenced;
+};
+
+/**
+ * Transform the Downloads page's `recordSet` (Croissant schema) data into a
+ * Cytoscape-compatible graph: one node per dataset, and one edge per unique
+ * foreign key relationship between datasets (deduplicated, self-references
+ * and references to datasets outside the recordSet are dropped).
+ */
+export const transformRecordSetToGraph = (
+  recordSets: CroissantRecordSet[] = []
+): TransformedGraph => {
+  const datasetIds = new Set(recordSets.map((recordSet) => recordSet['@id']));
+
+  const nodes: CytoscapeNode[] = recordSets.map((recordSet) => ({
+    data: {
+      id: recordSet['@id'],
+      label: recordSet.name,
+      description: stripCategoryTag(recordSet.description),
+      fieldCount: recordSet.field?.length ?? 0,
+      type: classifyRecordSetType(recordSet['@id']),
+    },
+  }));
+
+  const seenEdges = new Set<string>();
+  const edges: CytoscapeEdge[] = [];
+
+  recordSets.forEach((recordSet) => {
+    const referencedIds = collectReferencedDatasetIds(recordSet.field);
+
+    referencedIds.forEach((targetId) => {
+      if (targetId === recordSet['@id'] || !datasetIds.has(targetId)) return;
+
+      const edgeKey = `${recordSet['@id']}->${targetId}`;
+      if (seenEdges.has(edgeKey)) return;
+      seenEdges.add(edgeKey);
+
+      edges.push({
+        data: {
+          id: `edge-${edges.length}`,
+          source: recordSet['@id'],
+          target: targetId,
+        },
+      });
+    });
+  });
+
+  // Compute connection count per node (used for tooltip/legend display)
+  const degreeMap = new Map<string, number>();
+  nodes.forEach((node) => degreeMap.set(node.data.id, 0));
+  edges.forEach((edge) => {
+    degreeMap.set(edge.data.source, (degreeMap.get(edge.data.source) || 0) + 1);
+    degreeMap.set(edge.data.target, (degreeMap.get(edge.data.target) || 0) + 1);
+  });
+
+  const nodesWithDegree = nodes.map((node) => ({
+    ...node,
+    data: { ...node.data, degree: degreeMap.get(node.data.id) || 0 },
+  }));
+
+  return { nodes: nodesWithDegree, edges };
+};
+
+/**
  * Extract foreign key relationships from schema fields
  */
 const extractReferences = (fields: SchemaField[]): string[] => {
@@ -212,6 +349,7 @@ export default {
   transformDownloadsToGraph,
   transformDownloadsToNodes,
   transformSchemaToEdges,
+  transformRecordSetToGraph,
   createSimpleGraph,
   mergeGraphs,
   filterGraphByNodeType,

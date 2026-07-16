@@ -4,9 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { transformDownloadsToGraph } from '../utils/dataTransformer';
-import getMockGraphData from '../utils/mockSchema';
-
+import { transformDownloadsToGraph, transformRecordSetToGraph } from '../utils/dataTransformer';
 interface UseGraphDataOptions {
   downloadsData?: any;
   useMockData?: boolean;
@@ -24,13 +22,15 @@ interface GraphDataResult {
  */
 export const useGraphData = ({
   downloadsData,
-  useMockData = false,
 }: UseGraphDataOptions = {}): GraphDataResult => {
   const graphData = useMemo(() => {
     try {
-      // Use mock data if requested or if no real data provided
-      if (useMockData || !downloadsData) {
-        return getMockGraphData();
+      // Croissant metadata shape: { ..., recordSet: [{ '@id', name, field, ... }] }
+      if (downloadsData && Array.isArray(downloadsData.recordSet)) {
+        const recordSets = downloadsData.recordSet.filter(
+          (recordSet: any) => recordSet['@type'] === 'cr:RecordSet'
+        );
+        return transformRecordSetToGraph(recordSets);
       }
 
       // Handle array of downloads
@@ -50,13 +50,13 @@ export const useGraphData = ({
         return transformDownloadsToGraph(datasets);
       }
 
-      // Fallback to mock data
-      return getMockGraphData();
+      return { nodes: [], edges: [] };
     } catch (error) {
       console.error('Error transforming graph data:', error);
-      return getMockGraphData();
+      return { nodes: [], edges: [] };
     }
-  }, [downloadsData, useMockData]);
+  }, [downloadsData]);
+
 
   return {
     nodes: graphData.nodes,

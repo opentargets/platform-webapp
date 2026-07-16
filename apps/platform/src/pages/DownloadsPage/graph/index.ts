@@ -16,7 +16,7 @@ export { useGraphInteractions, useGraphManipulation } from './hooks/useGraphInte
 export { useGraphLayout, getAvailableLayouts } from './hooks/useGraphLayout';
 
 // Utilities
-export { transformDownloadsToGraph, createSimpleGraph, mergeGraphs, filterGraphByNodeType } from './utils/dataTransformer';
+export { transformDownloadsToGraph, transformRecordSetToGraph, createSimpleGraph, mergeGraphs, filterGraphByNodeType } from './utils/dataTransformer';
 export { classifyNode, enrichNodesWithClassification, getNodeTypes } from './utils/nodeClassifier';
 export { getLayoutConfig, getResponsiveLayoutConfig, getDefaultLayoutConfig, LAYOUT_PRESETS } from './utils/layoutConfig';
 export { getStylesheet, getDarkThemeStylesheet, getHighContrastStylesheet } from './utils/styleConfig';
