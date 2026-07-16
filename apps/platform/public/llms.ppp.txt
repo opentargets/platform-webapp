@@ -1,0 +1,40 @@
+# Open Targets Partner Preview Platform
+
+> The Open Targets Partner Preview Platform (PPP) is the partner-private instance of the Open Targets Platform. Alongside all public data it exposes partner-private datasets and widgets. This file orients AI agents to the Platform's resources and APIs.
+
+The Platform is organised around entity pages — target, disease, drug, variant, study and credible set — each aggregating evidence and associations for that entity. Pages live under `https://partner-platform.opentargets.org/<entity>/<id>` (for example `/target/ENSG00000169174`). Programmatic access is via the GraphQL API listed below. This partner instance additionally surfaces partner-private datasets and widgets.
+
+## Documentation
+
+- [Documentation home](https://platform-docs.opentargets.org)
+- [Partner Preview documentation](https://home.opentargets.org/ppp-documentation): partner-only docs, in addition to the public documentation
+- [Data sources](https://platform-docs.opentargets.org/data-sources)
+- [Data access](https://platform-docs.opentargets.org/data-access)
+
+## API
+
+- [GraphQL endpoint](https://api.partner-platform.opentargets.org/api/v4/graphql)
+- [GraphQL browser / playground](https://api.partner-platform.opentargets.org/api/v4/graphql/browser)
+- [GraphQL schema](https://api.partner-platform.opentargets.org/api/v4/graphql/schema)
+- [API how-to](https://platform-docs.opentargets.org/data-access/graphql-api)
+- [Partner Specific sample API queries](https://partner-platform.opentargets.org/api)
+
+## Data request and download
+
+- [Request data](https://home.opentargets.org/data-request)
+- [Google Cloud bucket](gs://open-targets-ppp-data-releases/)
+
+## Source & citation
+
+- [GitHub organisation](https://github.com/opentargets)
+- [Release software versions](https://github.com/opentargets/ot-snapshot)
+- [Release notes](https://home.opentargets.org/ppp-release-notes)
+- [How to cite](https://platform-docs.opentargets.org/citation#latest-publication)
+
+## Community
+
+- [Community forum](https://community.opentargets.org)
+- [Feature requests](https://community.opentargets.org/c/feature-requests/16)
+- [Report a bug](https://github.com/opentargets/issues)
+- [Blog](https://blog.opentargets.org)
+- [Partner support email](mailto:partner-support@opentargets.org)

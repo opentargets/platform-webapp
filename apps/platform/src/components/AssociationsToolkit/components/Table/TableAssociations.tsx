@@ -147,13 +147,16 @@ const metricsColumns = ROW_METRICS.filter(
     id: metric.id,
     enableSorting: metric.sortable,
     isPrivate: metric.isPrivate,
+    docsLink: metric.docsLink,
     header: (
-      <Typography
-        variant="assoc_header"
-        data-testid={`table-header-${metric.id}`}
-      >
-        {metric.label}
-      </Typography>
+      <AggregationsTooltip title={metric.description} placement="right">
+        <Typography
+          variant="assoc_header"
+          data-testid={`table-header-${metric.id}`}
+        >
+          {metric.label}
+        </Typography>
+      </AggregationsTooltip>
     ),
     cell: (cell: any) => {
       const customRenderer = CUSTOM_CELL_RENDERERS[metric.id];

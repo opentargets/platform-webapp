@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Box, Chip, CircularProgress, Typography } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Box, Chip, CircularProgress, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { grey } from "@mui/material/colors";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine } from "@fortawesome/free-solid-svg-icons";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
-import { OverallChart, SourcesChart, useNoveltyTimeSeries } from "./NoveltyCharts";
+import { defaulDatasourcesWeigths } from "../../associationsUtils";
+import { DATASOURCE_COLOR_MAP, OverallChart, SourcesChart, useNoveltyTimeSeries } from "./NoveltyCharts";
 
 const CHART_HEIGHT = 150;
 
@@ -14,11 +15,20 @@ interface NoveltyInlinePanelProps {
 }
 
 export function NoveltyInlinePanel({ rowId }: NoveltyInlinePanelProps) {
-  const { id: parentId, entity, enableIndirect } = useAotfQueryState();
+  const { id: parentId, entity, enableIndirect, dataSourceControls } = useAotfQueryState();
   const theme = useTheme();
 
   const targetId = entity === "target" ? parentId : rowId;
   const diseaseId = entity === "target" ? rowId : parentId;
+
+  const modifiedWeights = useMemo(
+    () =>
+      dataSourceControls.some(control => {
+        const defaultControl = defaulDatasourcesWeigths.find(d => d.id === control.id);
+        return defaultControl != null && control.weight !== defaultControl.weight;
+      }),
+    [dataSourceControls]
+  );
 
   const { overallRows, dsRows, dsLabels, loading, error, targetName, diseaseName } =
     useNoveltyTimeSeries({ targetId, diseaseId, isDirect: !enableIndirect, skip: false });
@@ -41,6 +51,14 @@ export function NoveltyInlinePanel({ rowId }: NoveltyInlinePanelProps) {
 
   return (
     <Box sx={{ background: grey[100], px: 3, pt: 2, pb: 2 }}>
+      {modifiedWeights && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <Typography variant="caption" component="div">
+            Novelty values are not recalculated based on your data source weight changes.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Title */}
       <Box
         sx={{
@@ -119,16 +137,27 @@ export function NoveltyInlinePanel({ rowId }: NoveltyInlinePanelProps) {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
-                {dsLabels.map(label => (
-                  <Chip
-                    key={label}
-                    label={label}
-                    size="small"
-                    onClick={() => toggleLabel(label)}
-                    variant={selectedLabels.has(label) ? "filled" : "outlined"}
-                    sx={{ fontSize: 11, height: 20, transition: "all 150ms ease" }}
-                  />
-                ))}
+                {dsLabels.map(label => {
+                  const chipColor = DATASOURCE_COLOR_MAP[label] ?? "#bdbdbd";
+                  const isActive = selectedLabels.has(label);
+                  return (
+                    <Chip
+                      key={label}
+                      label={label}
+                      size="small"
+                      onClick={() => toggleLabel(label)}
+                      sx={{
+                        fontSize: 11,
+                        height: 20,
+                        transition: "all 150ms ease",
+                        bgcolor: chipColor,
+                        color: "#fff",
+                        opacity: isActive ? 1 : 0.35,
+                        "&:hover": { bgcolor: chipColor, opacity: isActive ? 0.85 : 0.5 },
+                      }}
+                    />
+                  );
+                })}
               </Box>
             </Box>
             <Box sx={{ mt: "auto" }}>

@@ -1,0 +1,257 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Associations/Integration" />
+
+# AOTF Integration Guide
+
+This page documents the context architecture, provider composition, and integration points for `AssociationsToolkit`.
+
+## Location
+
+```
+apps/platform/src/components/AssociationsToolkit/
+```
+
+AOTF lives in `apps/platform`, not in `packages/sections`, because it is deeply tied to platform routing and URL state. It is not (currently) a shared package-level component.
+
+---
+
+## Directory structure
+
+```
+AssociationsToolkit/
+├── AssociationsView.tsx          # Top-level entry point — composes all providers + UI
+├── index.ts                      # Public exports
+├── types.ts                      # Shared TypeScript types (ENTITY, QueryState, etc.)
+│
+├── associationsUtils/            # Pure utilities and constants
+│   ├── index.ts                  # getScale, getCellId, getLegend, TABLE_PREFIX,
+│   │                             # tableCSSVariables, serializeSorting, …
+│   ├── associations.ts           # GQL response parsers + data-source score helpers
+│   ├── interactors.ts            # Interactors-specific helpers
+│   └── Legend.ts                 # D3 colour-scale SVG legend builder
+│
+├── static_datasets/              # Static column / metric definitions
+│   ├── dataSourcesAssoc.ts       # DataSourceDef[] — evidence data sources
+│   ├── prioritisationColumns.ts  # Prioritisation column defs
+│   └── rowMetrics.ts             # ROW_METRICS — novelty gauge, METRICS_SORT_FIELD resolver
+│
+├── context/                      # React context providers (one concern each)
+│   ├── AssociationsQueryContext.tsx   # Reducer state + URL-backed query params
+│   ├── AssociationsURLContext.tsx     # UI URL params: display mode, pins, uploads, focus
+│   ├── AssociationsDataContext.tsx    # Fetched data for core / pinned / uploaded rows
+│   ├── AssociationsFocusContext.tsx   # Active row/section state + URL focus sync
+│   ├── aotfActions.ts            # Action creators
+│   └── aotfReducer.ts            # Query state reducer (4 fields)
+│
+├── hooks/
+│   └── useAssociationsData.ts    # Apollo-backed pagination hook used by AssociationsDataContext
+│
+└── components/
+    ├── layout.tsx                # Shared styled layout primitives (zones, containers)
+    │
+    ├── controls/                 # Toolbar controls above the table
+    │   ├── ActiveFiltersPanel.tsx
+    │   ├── AotfApiPlayground.tsx
+    │   ├── ColumnOptionsMenu.tsx
+    │   ├── DisplayModeSwitch.tsx
+    │   ├── ExportMenu.tsx
+    │   ├── FacetsSearch.tsx
+    │   ├── NameFilter.tsx
+    │   └── HeaderControls/       # Per-datasource column weight / required sliders
+    │       ├── HeaderControls.tsx
+    │       ├── RequiredControl.tsx
+    │       ├── SliderControl.tsx
+    │       └── index.ts
+    │
+    ├── data/                     # Data import / export components
+    │   ├── DataDownloader.tsx
+    │   └── DataUploader/
+    │       ├── DataUploader.tsx
+    │       ├── NestedItem.tsx
+    │       ├── ValidationQuery.gql
+    │       └── index.ts
+    │
+    └── Table/                    # Table rendering
+        ├── TableAssociations.tsx # Root table: builds columns, three TanStack table instances
+        ├── TableHeader.tsx       # Sticky column headers with sort / aggregation row
+        ├── TableBody.tsx         # Row rendering, section drawer, interactors expansion
+        ├── TableFooter.tsx       # Pagination + colour-scale legend
+        ├── TableCell.tsx         # Score cell (rectangular / circular, colour-scaled)
+        ├── CellName.tsx          # Name cell with pin/unpin action
+        ├── AggregationsRow.tsx   # Second header row — datasource aggregation buttons
+        ├── AssocTooltip.tsx      # Styled MUI tooltip wrapper
+        ├── MetricCells.tsx       # Novelty gauge cell renderer
+        ├── SectionRender.tsx     # Lazy evidence-section drawer content
+        └── RowInteractors/       # Protein–protein interactors sub-table
+            ├── RowInteractorsWrapper.tsx
+            ├── RowInteractorsTable.tsx
+            ├── useRowInteractors.ts
+            └── InteractorsQuery.gql
+```
+
+---
+
+## Entry point
+
+```tsx
+import { AssociationsView } from "src/components/AssociationsToolkit";
+import TARGET_ASSOCIATIONS_QUERY from "./TargetAssociationsQuery.gql";
+
+<AssociationsView
+  id="ENSG00000141510"   // Ensembl gene ID (target) or EFO ID (disease)
+  entity="target"        // "target" | "disease"
+  query={TARGET_ASSOCIATIONS_QUERY}
+/>
+```
+
+`AssociationsView` composes all four context providers and renders the toolbar + table. It is the only export you need at the call site.
+
+---
+
+## Context provider stack
+
+Providers must be nested in this exact order (inner-to-outer dependencies):
+
+```
+AssociationsQueryProvider     ← must be outermost (data fetching depends on query state)
+  AssociationsURLProvider     ← must be inside Query (URL state reads query params)
+    AssociationsDataProvider  ← must be inside URL (data fetch reads URL state)
+      AssociationsFocusProvider  ← must be innermost (focus state reads data)
+        <toolbar + table UI>
+```
+
+### `AssociationsQueryProvider`
+
+**Hook:** `useAotfQueryState()`, `useAotfQueryDispatch()`
+
+Owns the **reducer-based query state**. State is URL-backed via `useSearchParams`:
+
+| Field | Type | Default | URL param |
+|---|---|---|---|
+| `pagination` | `{ page, pageSize }` | `{ page: 0, pageSize: 25 }` | `page`, `pageSize` |
+| `sorting` | `{ id, desc }[]` | `[{ id: "score", desc: true }]` | `sort` |
+| `facets` | `FacetItem[]` | `[]` | `facets` |
+| `nameFilter` | `string` | `""` | `q` |
+| `enableIndirect` | `boolean` | `true` | — |
+| `dataSourceControls` | `Record<string, { weight, required }>` | equal weights | — |
+
+**Actions** (dispatched via `useAotfQueryDispatch()`):
+
+```ts
+SET_PAGINATION | SET_SORTING | SET_FACETS | SET_NAME_FILTER
+SET_ENABLE_INDIRECT | SET_DATASOURCE_CONTROLS | RESET_DATASOURCE_CONTROLS
+```
+
+### `AssociationsURLProvider`
+
+**Hook:** `useAotfURLState()`
+
+Owns display-mode and selection state backed by URL search params:
+
+| Field | URL param | Type |
+|---|---|---|
+| `displayedTable` | `table` | `"associations" \| "prioritisations"` |
+| `pinnedIds` | `pinned` | `string[]` |
+| `uploadedIds` | `uploaded` | `string[]` |
+| `weightsControlsOpen` | `weights` | `boolean` |
+
+### `AssociationsDataProvider`
+
+**Hook:** `useAotfData()`
+
+Fetches data using `useAssociationsData` (Apollo-backed). Provides:
+
+```ts
+{
+  data: AssociationRow[];          // core table rows
+  pinnedData: AssociationRow[];    // rows for pinned IDs
+  uploadedData: AssociationRow[];  // rows for uploaded IDs
+  loading: boolean;
+  error: ApolloError | undefined;
+  count: number;                   // total rows matching current filters
+}
+```
+
+### `AssociationsFocusProvider`
+
+**Hook:** `useAssociationsFocus()`, `useFocusElementState()`
+
+Tracks the active row + open evidence section. Initialised from the `focus` URL param and written back on user interaction.
+
+---
+
+## Types
+
+```ts
+// apps/platform/src/components/AssociationsToolkit/types.ts
+
+export type ENTITY = "target" | "disease";
+
+export interface QueryState {
+  pagination: { page: number; pageSize: number };
+  sorting: { id: string; desc: boolean }[];
+  facets: FacetItem[];
+  nameFilter: string;
+  enableIndirect: boolean;
+  dataSourceControls: Record<string, DataSourceControl>;
+}
+
+export interface DataSourceControl {
+  weight: number;
+  required: boolean;
+}
+
+export interface AssociationRow {
+  id: string;
+  score: number;
+  datatypeScores: DatatypeScore[];
+  datasourceScores: DatasourceScore[];
+  // entity-specific fields depending on ENTITY type
+}
+```
+
+---
+
+## GQL query conventions
+
+Each entity page provides its own query document:
+
+```
+apps/platform/src/pages/TargetPage/TargetAssociations/TargetAssociationsQuery.gql
+apps/platform/src/pages/DiseasePage/DiseaseAssociations/DiseaseAssociationsQuery.gql
+```
+
+The query must select fields matching what `useAssociationsData` expects to parse. The `vite-plugin-simple-gql` Vite plugin transforms `.gql` imports to typed JavaScript at build time.
+
+---
+
+## Analysis integrations
+
+The **Analysis menu** button in the AOTF toolbar can hand off the current association set to downstream analysis tools. The handoff utility is at:
+
+```
+apps/platform/src/components/GeneEnrichmentAnalysis/utils/aotfHandoff.ts
+```
+
+It serialises the current query state (entity ID, filters, sort, facets) for the receiving analysis component.
+
+---
+
+## Extending AOTF
+
+### Adding a toolbar control
+
+1. Create a new component under `components/controls/`
+2. Import and render it inside the toolbar `<Box>` in `AssociationsView.tsx`
+3. Use `useAotfURLState()` or `useAotfQueryDispatch()` to read/write state
+
+### Adding a new column type
+
+See [Overview → Adding a new data source column](?path=/docs/associations-on-the-fly-overview--docs).
+
+### Adding a new analysis tool
+
+1. Add an entry to the analysis menu in `components/AnalysisMenu.tsx`
+2. Use `aotfHandoff` to pass current state to the analysis page
+3. Register a route in `apps/platform/src/App.tsx` if a new page is needed

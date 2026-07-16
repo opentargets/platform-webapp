@@ -6,6 +6,7 @@ import {
   useEffect,
   useReducer,
 } from "react";
+import { usePermissions } from "ui";
 import { fetchLibrariesFailure, fetchLibrariesRequest, fetchLibrariesSuccess } from "./actions";
 import { PATHWAYS_API_BASE_URL } from "./config";
 import { geneEnrichmentReducer, initialState } from "./reducer";
@@ -30,9 +31,10 @@ interface GeneEnrichmentProviderProps {
 
 export function GeneEnrichmentProvider({ children }: GeneEnrichmentProviderProps): ReactElement {
   const [state, dispatch] = useReducer(geneEnrichmentReducer, initialState);
+  const { isPartnerPreview } = usePermissions();
 
-  // Fetch libraries on mount
   useEffect(() => {
+    if (!isPartnerPreview) return;
     async function fetchLibraries() {
       dispatch(fetchLibrariesRequest());
       try {
@@ -46,7 +48,7 @@ export function GeneEnrichmentProvider({ children }: GeneEnrichmentProviderProps
       }
     }
     fetchLibraries();
-  }, []);
+  }, [isPartnerPreview]);
 
   return (
     <GeneEnrichmentStateContext.Provider value={state}>

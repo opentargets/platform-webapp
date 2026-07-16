@@ -118,10 +118,7 @@ function getColumns() {
       renderCell: (row: GseaResult) => {
         const genes = row["Leading edge genes"];
         if (!genes || genes === "") return "-";
-        const geneList = genes
-          .split(",")
-          .map((g) => g.trim())
-          .filter(Boolean);
+        const geneList = genes.filter(Boolean);
         if (geneList.length === 0) return "-";
         const displayGenes = geneList.slice(0, 5);
         const remaining = geneList.length - 5;
