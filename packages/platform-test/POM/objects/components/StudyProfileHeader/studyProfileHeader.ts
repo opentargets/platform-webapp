@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 import { GWASFields } from "./GWASFields";
 import { PublicationFields } from "./PublicationFields";
 import { QTLFields } from "./QTLFields";
@@ -122,7 +123,7 @@ export class StudyProfileHeader {
     // Wait for the profile header block to be visible
     await this.page.waitForSelector("[data-testid='profile-page-header-block']", {
       state: "visible",
-      timeout: 10000,
+      timeout: WIDGET_LOAD_TIMEOUT,
     });
 
     // Wait for skeleton loaders within the header to disappear
@@ -147,7 +148,7 @@ export class StudyProfileHeader {
           const headerText = document.querySelector("[data-testid='profile-page-header-text']");
           return headerText?.textContent && headerText.textContent.trim().length > 0;
         },
-        { timeout: 10000 }
+        { timeout: WIDGET_LOAD_TIMEOUT }
       )
       .catch(() => {
         // Header text might not be available
