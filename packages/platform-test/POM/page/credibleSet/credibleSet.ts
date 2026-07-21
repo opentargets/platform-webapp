@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
 
 export class CredibleSetPage {
   page: Page;
@@ -39,7 +40,7 @@ export class CredibleSetPage {
     await this.page
       .waitForSelector("[data-testid='profile-page-header-block']", {
         state: "visible",
-        timeout: 20000,
+        timeout: WIDGET_LOAD_TIMEOUT,
       })
       .catch(() => {
         // Fallback if test-id not present
@@ -124,7 +125,7 @@ export class CredibleSetPage {
     const section = this.page.locator(`[data-testid='${sectionTestId}']`);
 
     // Wait for section to be visible
-    await section.waitFor({ state: "visible", timeout: 20000 });
+    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
 
     // Wait for skeleton loaders to disappear
     await this.page

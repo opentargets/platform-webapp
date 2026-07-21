@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 export class SharedTraitStudiesSection {
   page: Page;
@@ -117,7 +118,7 @@ export class SharedTraitStudiesSection {
 
   // Wait for section to load
   async waitForSectionLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 20000 });
+    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
     await this.page.waitForTimeout(500);
   }
 }

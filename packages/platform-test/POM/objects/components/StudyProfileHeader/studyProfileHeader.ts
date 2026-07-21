@@ -4,6 +4,7 @@ import { PublicationFields } from "./PublicationFields";
 import { QTLFields } from "./QTLFields";
 import { SampleFields } from "./SampleFields";
 import { StatisticsFields } from "./StatisticsFields";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Main class for Study Profile Header interactions
@@ -122,7 +123,7 @@ export class StudyProfileHeader {
     // Wait for the profile header block to be visible
     await this.page.waitForSelector("[data-testid='profile-page-header-block']", {
       state: "visible",
-      timeout: 20000,
+      timeout: WIDGET_LOAD_TIMEOUT,
     });
 
     // Wait for skeleton loaders within the header to disappear
@@ -147,7 +148,7 @@ export class StudyProfileHeader {
           const headerText = document.querySelector("[data-testid='profile-page-header-text']");
           return headerText?.textContent && headerText.textContent.trim().length > 0;
         },
-        { timeout: 20000 }
+        { timeout: WIDGET_LOAD_TIMEOUT }
       )
       .catch(() => {
         // Header text might not be available

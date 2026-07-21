@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
 
 export class VariantPage {
   page: Page;
@@ -29,7 +30,7 @@ export class VariantPage {
     await this.page
       .waitForSelector("[data-testid='section-loader']", {
         state: "hidden",
-        timeout: 20000,
+        timeout: WIDGET_LOAD_TIMEOUT,
       })
       .catch(() => {
         // If no loader found, that's fine - means sections loaded quickly
@@ -80,7 +81,7 @@ export class VariantPage {
     const section = this.page.locator(`[data-testid='${sectionTestId}']`);
 
     // Wait for section to be visible
-    await section.waitFor({ state: "visible", timeout: 20000 });
+    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
 
     // Wait for any skeleton loaders within the section to disappear
     const skeletons = section.locator(".MuiSkeleton-root");
