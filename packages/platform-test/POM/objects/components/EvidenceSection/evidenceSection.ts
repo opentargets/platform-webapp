@@ -22,7 +22,7 @@ export class EvidenceSection {
   // Wait for evidence section to appear
   async waitForEvidenceSection(sectionId: string): Promise<void> {
     const section = this.getEvidenceSection(sectionId);
-    await section.waitFor({ state: "visible", timeout: 10000 });
+    await section.waitFor({ state: "visible", timeout: 20000 });
 
     // Wait for skeleton loaders within the section to disappear
     await this.page

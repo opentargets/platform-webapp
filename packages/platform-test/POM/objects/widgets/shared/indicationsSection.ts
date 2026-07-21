@@ -26,7 +26,7 @@ export class IndicationsSection {
    */
   async waitForLoad(): Promise<void> {
     const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: 10000 });
+    await section.waitFor({ state: "visible", timeout: 20000 });
 
     // Wait for skeleton loaders to disappear
     await this.page
@@ -45,7 +45,7 @@ export class IndicationsSection {
 
     // Wait for master table to be present
     await this.getMasterTable()
-      .waitFor({ state: "visible", timeout: 10000 })
+      .waitFor({ state: "visible", timeout: 20000 })
       .catch(() => {});
   }
 

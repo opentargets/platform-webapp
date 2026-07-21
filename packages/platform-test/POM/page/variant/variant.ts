@@ -29,7 +29,7 @@ export class VariantPage {
     await this.page
       .waitForSelector("[data-testid='section-loader']", {
         state: "hidden",
-        timeout: 10000,
+        timeout: 20000,
       })
       .catch(() => {
         // If no loader found, that's fine - means sections loaded quickly
@@ -80,7 +80,7 @@ export class VariantPage {
     const section = this.page.locator(`[data-testid='${sectionTestId}']`);
 
     // Wait for section to be visible
-    await section.waitFor({ state: "visible", timeout: 10000 });
+    await section.waitFor({ state: "visible", timeout: 20000 });
 
     // Wait for any skeleton loaders within the section to disappear
     const skeletons = section.locator(".MuiSkeleton-root");

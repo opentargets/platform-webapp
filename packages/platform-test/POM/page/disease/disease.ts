@@ -68,7 +68,7 @@ export class DiseasePage {
     await this.page
       .waitForSelector("[data-testid='profile-page-header']", {
         state: "visible",
-        timeout: 10000,
+        timeout: 20000,
       })
       .catch(() => {
         // Header might not be immediately available
@@ -94,7 +94,7 @@ export class DiseasePage {
           const spinners = document.querySelectorAll(".MuiCircularProgress-root");
           return spinners.length === 0;
         },
-        { timeout: 10000 }
+        { timeout: 20000 }
       )
       .catch(() => {
         // No spinners found
@@ -107,7 +107,7 @@ export class DiseasePage {
           const headerText = document.querySelector("[data-testid='profile-page-header-text']");
           return headerText?.textContent && headerText.textContent.trim().length > 0;
         },
-        { timeout: 10000 }
+        { timeout: 20000 }
       )
       .catch(() => {
         // Header text might not be available

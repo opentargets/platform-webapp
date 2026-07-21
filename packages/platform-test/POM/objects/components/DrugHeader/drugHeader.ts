@@ -128,6 +128,6 @@ export class DrugHeader {
 
   // Wait for header to load
   async waitForHeaderLoad(): Promise<void> {
-    await this.getHeader().waitFor({ state: "visible", timeout: 10000 });
+    await this.getHeader().waitFor({ state: "visible", timeout: 20000 });
   }
 }

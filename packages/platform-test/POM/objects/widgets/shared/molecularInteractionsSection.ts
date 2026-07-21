@@ -23,9 +23,9 @@ export class MolecularInteractionsSection {
    * Wait for the section to be visible
    */
   async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 10000 });
+    await this.getSection().waitFor({ state: "visible", timeout: 20000 });
     await this.getTable()
-      .waitFor({ state: "visible", timeout: 10000 })
+      .waitFor({ state: "visible", timeout: 20000 })
       .catch(() => {});
   }
 

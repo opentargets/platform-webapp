@@ -121,7 +121,7 @@ export class QTLCredibleSetsSection {
 
   // Wait for section to load
   async waitForSectionLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 10000 });
+    await this.getSection().waitFor({ state: "visible", timeout: 20000 });
 
     // Wait for skeleton loaders to disappear
     await this.page

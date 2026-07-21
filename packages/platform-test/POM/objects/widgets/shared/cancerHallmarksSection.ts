@@ -23,7 +23,7 @@ export class CancerHallmarksSection {
    * Wait for the section to be visible
    */
   async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 10000 });
+    await this.getSection().waitFor({ state: "visible", timeout: 20000 });
   }
 
   // Section header

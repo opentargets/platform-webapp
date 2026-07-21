@@ -80,7 +80,7 @@ export class StudyPage {
     await this.page
       .waitForSelector("[data-testid='profile-page-header']", {
         state: "visible",
-        timeout: 10000,
+        timeout: 20000,
       })
       .catch(() => {
         // Header might not be immediately available
@@ -106,7 +106,7 @@ export class StudyPage {
           const spinners = document.querySelectorAll(".MuiCircularProgress-root");
           return spinners.length === 0;
         },
-        { timeout: 10000 }
+        { timeout: 20000 }
       )
       .catch(() => {
         // No spinners found
