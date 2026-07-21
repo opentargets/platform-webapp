@@ -14,7 +14,7 @@
     "polished": "^2.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "6.28.0",
+    "react-router-dom": "6.30.4",
     "ui": "*"
   },
   "devDependencies": {
@@ -26,6 +26,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "graphiql": "^1.4.2",
     "graphql": "^15.0.0",
+    "graphql-tag": "^2.12.6",
     "remark-gfm": "^4.0.1",
     "storybook": "^10.0.6",
     "typescript": "~5.9.3",
