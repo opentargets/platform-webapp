@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router";
 
 import { BasePage, ScrollToTop } from "ui";
 

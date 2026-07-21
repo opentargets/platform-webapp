@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router";
 import { SearchProvider, PrivateRoute, OTConfigurationProvider, FromGeneticsModal } from "ui";
 import { getConfig } from "@ot/config";
 
@@ -7,7 +7,7 @@ import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
 import HomePage from "./pages/HomePage/HomePage";
 import SearchPage from "./pages/SearchPage";
-import DiseasePage from "./pages/DiseasePage/DiseasePage";
+import DiseasePage from "./pages/DiseasePage";
 import DownloadsPage from "./pages/DownloadsPage";
 import DrugPage from "./pages/DrugPage";
 import TargetPage from "./pages/TargetPage";

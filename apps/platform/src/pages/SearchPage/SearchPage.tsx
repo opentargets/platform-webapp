@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import queryString from "query-string";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { LoadingBackdrop, BasePage, useApolloClient } from "ui";
 
 import SEARCH_PAGE_QUERY from "./SearchPageQuery.gql";

@@ -1,6 +1,6 @@
 import { Box, Container, Typography } from "@mui/material";
 import { useEffect, type ReactElement } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { BasePage } from "ui";
 import { setAssociationsState, setStandaloneGenes } from "../../components/GeneEnrichmentAnalysis/actions";
 import StandaloneAnalysisContainer from "../../components/GeneEnrichmentAnalysis/components/StandaloneAnalysisContainer";

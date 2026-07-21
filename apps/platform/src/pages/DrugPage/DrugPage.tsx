@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { BasePage, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
-import { useLocation, useParams, Routes, Route, Link } from "react-router-dom";
+import { useLocation, useParams, Routes, Route, Link } from "react-router";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";

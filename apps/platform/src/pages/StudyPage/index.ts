@@ -1,1 +1,1 @@
-export { default } from "./StudyPage";
+export { default } from "./StudyPageWrapper";

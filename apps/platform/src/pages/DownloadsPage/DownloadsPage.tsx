@@ -12,7 +12,7 @@ import { createInitialState, downloadsReducer, initialState } from "./context/do
 import { setDownloadsData, setError, setLoading } from "./context/downloadsActions";
 import { DownloadsContext } from "./context/DownloadsContext";
 import DownloadsTags from "./DownloadsTags";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router";
 import DownloadsDialog from "./DownloadsDialog";
 
 const config = getConfig();

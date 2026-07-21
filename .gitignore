@@ -8,6 +8,14 @@ node_modules
 .pnp
 .pnp.js
 
+# yarn berry (not using zero-installs)
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
 # testing
 coverage
 
