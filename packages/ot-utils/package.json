@@ -13,6 +13,7 @@
     "check:fix": "biome check --formatter-enabled=true --write ."
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.13",
     "@types/node": "^18.0.0",
     "@types/react": "^18.0.28",
     "typescript": "^5.0.0"
@@ -22,6 +23,7 @@
     "@ot/config": "*",
     "@ot/constants": "*",
     "d3-format": "^3.0.1",
+    "lodash": "^4.17.21",
     "polished": "^4.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

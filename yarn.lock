@@ -3133,9 +3133,11 @@ __metadata:
     "@mui/material": "npm:^5.14.1"
     "@ot/config": "npm:*"
     "@ot/constants": "npm:*"
+    "@types/lodash": "npm:^4.17.13"
     "@types/node": "npm:^18.0.0"
     "@types/react": "npm:^18.0.28"
     d3-format: "npm:^3.0.1"
+    lodash: "npm:^4.17.21"
     polished: "npm:^4.3.1"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
@@ -4596,6 +4598,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.17.13":
+  version: 4.17.24
+  resolution: "@types/lodash@npm:4.17.24"
+  checksum: 10c0/b72f60d4daacdad1fa643edb3faba204c02a01eb1ac00a83ff73496a6d236fc55e459c06106e8ced42277dba932d087d8fc090f8de4ef590d3f91e6d6f7ce85a
+  languageName: node
+  linkType: hard
+
 "@types/mdast@npm:^4.0.0":
   version: 4.0.4
   resolution: "@types/mdast@npm:4.0.4"
@@ -4732,15 +4741,6 @@ __metadata:
   peerDependencies:
     "@types/react": "*"
   checksum: 10c0/0441b8b47c69312c89ec0760ba477ba1a0808a10ceef8dc1c64b1013ed78517332c30f18681b0ec0b53542731f1ed015169fed1d127cc91222638ed955478ec7
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:*":
-  version: 19.2.17
-  resolution: "@types/react@npm:19.2.17"
-  dependencies:
-    csstype: "npm:^3.2.2"
-  checksum: 10c0/bc2c4af96b3e480604424de70d5ebda90c5f4b485df471858c0bc2d7d70364b606ec3c4d8579f94f01aa0c6c0591f56bcf14cba5689f5eea4b74250ccdc3a232
   languageName: node
   linkType: hard
 
@@ -10228,6 +10228,7 @@ __metadata:
     "@ot/utils": "npm:*"
     "@tanstack/react-table": "npm:^8.5.11"
     "@types/d3": "npm:^7.4.0"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@types/react-helmet": "npm:^6.1.6"
@@ -11124,6 +11125,7 @@ __metadata:
     "@ot/constants": "npm:*"
     "@ot/utils": "npm:*"
     "@types/d3-format": "npm:^3.0.1"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@uidotdev/usehooks": "npm:^2.4.1"
@@ -12354,6 +12356,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "ui@workspace:packages/ui"
   dependencies:
+    3dmol: "npm:^2.4.2"
     "@apollo/client": "npm:3.10.8"
     "@fortawesome/fontawesome-svg-core": "npm:^6.1.1"
     "@fortawesome/free-solid-svg-icons": "npm:^6.4.2"
@@ -12369,6 +12372,7 @@ __metadata:
     "@tanstack/react-table": "npm:^8.16.0"
     "@tanstack/table-core": "npm:^8.16.0"
     "@types/d3-format": "npm:^3.0.1"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@types/react-scroll": "npm:^1.8.10"
