@@ -35,7 +35,6 @@ export class CredibleSetPage {
    * Wait for the credible set page to load
    */
   async waitForCredibleSetPageLoad(): Promise<void> {
-    await this.page.waitForLoadState("networkidle");
     // Wait for header to be visible
     await this.page
       .waitForSelector("[data-testid='profile-page-header-block']", {

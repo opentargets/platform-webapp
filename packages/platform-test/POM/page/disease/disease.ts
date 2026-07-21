@@ -59,7 +59,7 @@ export class DiseasePage {
   async clickFirstStudyInEvidence(): Promise<void> {
     const firstStudyLink = await this.getFirstStudyLinkInEvidence();
     await firstStudyLink.click();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForURL(/\/study\//);
   }
 
   // Wait for page load - check for loaders to disappear
