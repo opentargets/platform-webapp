@@ -1,10 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 import { GWASFields } from "./GWASFields";
 import { PublicationFields } from "./PublicationFields";
 import { QTLFields } from "./QTLFields";
 import { SampleFields } from "./SampleFields";
 import { StatisticsFields } from "./StatisticsFields";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Main class for Study Profile Header interactions

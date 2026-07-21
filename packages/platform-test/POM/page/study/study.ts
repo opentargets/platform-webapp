@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
-import { GWASStudiesSection } from "../../objects/widgets/GWAS/gwasStudiesSection";
 import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
+import { GWASStudiesSection } from "../../objects/widgets/GWAS/gwasStudiesSection";
 
 export class StudyPage {
   page: Page;
