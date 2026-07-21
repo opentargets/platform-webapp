@@ -17,7 +17,6 @@
   "dependencies": {
     "3dmol": "^2.4.2",
     "@apollo/client": "3.10.8",
-    "@ebi-gene-expression-group/expression-atlas-heatmap-highcharts": "^5.4.1-beta1",
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-brands-svg-icons": "^6.1.1",
     "@fortawesome/free-regular-svg-icons": "^6.1.1",
@@ -40,11 +39,11 @@
     "react": "^18.2.0",
     "react-helmet": "^6.0.0",
     "react-measure": "^2.1.2",
-    "react-router-dom": "6.28.0",
+    "react-router-dom": "6.30.4",
     "tsparticles": "^2.0.6",
     "typeface-inter": "^3.3.0",
     "ui": "*",
-    "uuid": "^9.0.0"
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@types/d3-format": "^3.0.1",
