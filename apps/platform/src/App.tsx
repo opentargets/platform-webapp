@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router";
 import { SearchProvider, PrivateRoute, OTConfigurationProvider, FromGeneticsModal } from "ui";
 import { getConfig } from "@ot/config";
 

@@ -6,7 +6,7 @@ import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext } from "react";
 import { setActiveFilter } from "./context/downloadsActions";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 function DownloadsCard({ data }: { data: Record<string, unknown> }) {
   const { state, dispatch } = useContext(DownloadsContext);

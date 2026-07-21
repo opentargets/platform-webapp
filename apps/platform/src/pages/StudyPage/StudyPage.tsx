@@ -2,7 +2,7 @@ import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
 import { BasePage, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
-import { useLocation, useParams, Link } from "react-router-dom";
+import { useLocation, useParams, Link } from "react-router";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import STUDY_PAGE_QUERY from "./StudyPage.gql";

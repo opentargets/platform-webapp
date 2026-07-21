@@ -3133,9 +3133,11 @@ __metadata:
     "@mui/material": "npm:^5.14.1"
     "@ot/config": "npm:*"
     "@ot/constants": "npm:*"
+    "@types/lodash": "npm:^4.17.13"
     "@types/node": "npm:^18.0.0"
     "@types/react": "npm:^18.0.28"
     d3-format: "npm:^3.0.1"
+    lodash: "npm:^4.17.21"
     polished: "npm:^4.3.1"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
@@ -3590,13 +3592,6 @@ __metadata:
   version: 2.11.8
   resolution: "@popperjs/core@npm:2.11.8"
   checksum: 10c0/4681e682abc006d25eb380d0cf3efc7557043f53b6aea7a5057d0d1e7df849a00e281cd8ea79c902a35a414d7919621fc2ba293ecec05f413598e0b23d5a1e63
-  languageName: node
-  linkType: hard
-
-"@remix-run/router@npm:1.23.3":
-  version: 1.23.3
-  resolution: "@remix-run/router@npm:1.23.3"
-  checksum: 10c0/73622465dd9e9a2c5a7ced7d1151ea6e9195a8a979c99b4f70a67093eeff7f339daf03a7c6304709a9c27deb2081a8fff6737663aacb33529c1a12a0a0827a17
   languageName: node
   linkType: hard
 
@@ -4589,10 +4584,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/history@npm:^4.7.11":
-  version: 4.7.11
-  resolution: "@types/history@npm:4.7.11"
-  checksum: 10c0/3facf37c2493d1f92b2e93a22cac7ea70b06351c2ab9aaceaa3c56aa6099fb63516f6c4ec1616deb5c56b4093c026a043ea2d3373e6c0644d55710364d02c934
+"@types/lodash@npm:^4.17.13":
+  version: 4.17.24
+  resolution: "@types/lodash@npm:4.17.24"
+  checksum: 10c0/b72f60d4daacdad1fa643edb3faba204c02a01eb1ac00a83ff73496a6d236fc55e459c06106e8ced42277dba932d087d8fc090f8de4ef590d3f91e6d6f7ce85a
   languageName: node
   linkType: hard
 
@@ -4696,27 +4691,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-router-dom@npm:^5.3.3":
-  version: 5.3.3
-  resolution: "@types/react-router-dom@npm:5.3.3"
-  dependencies:
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-    "@types/react-router": "npm:*"
-  checksum: 10c0/a9231a16afb9ed5142678147eafec9d48582809295754fb60946e29fcd3757a4c7a3180fa94b45763e4c7f6e3f02379e2fcb8dd986db479dcab40eff5fc62a91
-  languageName: node
-  linkType: hard
-
-"@types/react-router@npm:*":
-  version: 5.1.20
-  resolution: "@types/react-router@npm:5.1.20"
-  dependencies:
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-  checksum: 10c0/1f7eee61981d2f807fa01a34a0ef98ebc0774023832b6611a69c7f28fdff01de5a38cabf399f32e376bf8099dcb7afaf724775bea9d38870224492bea4cb5737
-  languageName: node
-  linkType: hard
-
 "@types/react-scroll@npm:^1.8.10":
   version: 1.8.10
   resolution: "@types/react-scroll@npm:1.8.10"
@@ -4732,15 +4706,6 @@ __metadata:
   peerDependencies:
     "@types/react": "*"
   checksum: 10c0/0441b8b47c69312c89ec0760ba477ba1a0808a10ceef8dc1c64b1013ed78517332c30f18681b0ec0b53542731f1ed015169fed1d127cc91222638ed955478ec7
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:*":
-  version: 19.2.17
-  resolution: "@types/react@npm:19.2.17"
-  dependencies:
-    csstype: "npm:^3.2.2"
-  checksum: 10c0/bc2c4af96b3e480604424de70d5ebda90c5f4b485df471858c0bc2d7d70364b606ec3c4d8579f94f01aa0c6c0591f56bcf14cba5689f5eea4b74250ccdc3a232
   languageName: node
   linkType: hard
 
@@ -5742,6 +5707,13 @@ __metadata:
   version: 2.0.0
   resolution: "convert-source-map@npm:2.0.0"
   checksum: 10c0/8f2f7a27a1a011cc6cc88cc4da2d7d0cfa5ee0369508baae3d98c260bb3ac520691464e5bbe4ae7cdf09860c1d69ecc6f70c63c6e7c7f7e3f18ec08484dc7d9b
+  languageName: node
+  linkType: hard
+
+"cookie@npm:^1.0.1":
+  version: 1.1.1
+  resolution: "cookie@npm:1.1.1"
+  checksum: 10c0/79c4ddc0fcad9c4f045f826f42edf54bcc921a29586a4558b0898277fa89fb47be95bc384c2253f493af7b29500c830da28341274527328f18eba9f58afa112c
   languageName: node
   linkType: hard
 
@@ -6820,7 +6792,7 @@ __metadata:
     polished: "npm:^2.3.0"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
-    react-router-dom: "npm:6.30.4"
+    react-router: "npm:^7.18.1"
     remark-gfm: "npm:^4.0.1"
     storybook: "npm:^10.0.6"
     typescript: "npm:~5.9.3"
@@ -10228,10 +10200,10 @@ __metadata:
     "@ot/utils": "npm:*"
     "@tanstack/react-table": "npm:^8.5.11"
     "@types/d3": "npm:^7.4.0"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@types/react-helmet": "npm:^6.1.6"
-    "@types/react-router-dom": "npm:^5.3.3"
     "@vitejs/plugin-react": "npm:^4.0.4"
     classnames: "npm:^2.2.6"
     cross-fetch: "npm:^3.1.4"
@@ -10256,7 +10228,7 @@ __metadata:
     react-gtm-module: "npm:^2.0.11"
     react-helmet: "npm:^6.0.0"
     react-plotly.js: "npm:^2.6.0"
-    react-router-dom: "npm:6.30.4"
+    react-router: "npm:^7.18.1"
     react-tsparticles: "npm:^2.0.6"
     rollup-plugin-visualizer: "npm:^5.14.0"
     sass: "npm:^1.49.10"
@@ -10578,27 +10550,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-router-dom@npm:6.30.4":
-  version: 6.30.4
-  resolution: "react-router-dom@npm:6.30.4"
+"react-router@npm:^7.18.1":
+  version: 7.18.1
+  resolution: "react-router@npm:7.18.1"
   dependencies:
-    "@remix-run/router": "npm:1.23.3"
-    react-router: "npm:6.30.4"
+    cookie: "npm:^1.0.1"
+    set-cookie-parser: "npm:^2.6.0"
   peerDependencies:
-    react: ">=16.8"
-    react-dom: ">=16.8"
-  checksum: 10c0/1b25ab26a288da852f7b58eec5c14b3f37919e6773a557cd846d3a05d7a7d890c8d49bda93c0a7f497f240df1df8b0ad50635f990aafb55f2fc545ad8269a822
-  languageName: node
-  linkType: hard
-
-"react-router@npm:6.30.4":
-  version: 6.30.4
-  resolution: "react-router@npm:6.30.4"
-  dependencies:
-    "@remix-run/router": "npm:1.23.3"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/fb6de7d1002bcab9ea12c4072d93792eca494f1e4f30cfec334ccb6523756d23ce3e093c7c1241399296cebed94789a3fb89f96ee76004e0e746458a8f6bab33
+    react: ">=18"
+    react-dom: ">=18"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+  checksum: 10c0/1a559de58d656bad5565f2232e4f4fab7e9f5282dfaf95bc24f195a06e7e85b281077fe5c21ed3ff527e3d90d930447e0d0bb0f0713950d2a56ad0f0377a7d09
   languageName: node
   linkType: hard
 
@@ -11124,6 +11088,7 @@ __metadata:
     "@ot/constants": "npm:*"
     "@ot/utils": "npm:*"
     "@types/d3-format": "npm:^3.0.1"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@uidotdev/usehooks": "npm:^2.4.1"
@@ -11138,7 +11103,7 @@ __metadata:
     react-dom: "npm:^18.2.0"
     react-helmet: "npm:^6.0.0"
     react-measure: "npm:^2.1.2"
-    react-router-dom: "npm:6.30.4"
+    react-router: "npm:^7.18.1"
     tsconfig: "npm:*"
     tsparticles: "npm:^2.0.6"
     typeface-inter: "npm:^3.3.0"
@@ -11181,6 +11146,13 @@ __metadata:
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
   checksum: 10c0/9f8c1b2d800800d0b589de1477c753492de5c1548d4ade52f57f1d1f5e04af5481554d75ce5e5c43d4004b80a3eb714398d6907027dc0534177b7539119f4454
+  languageName: node
+  linkType: hard
+
+"set-cookie-parser@npm:^2.6.0":
+  version: 2.7.2
+  resolution: "set-cookie-parser@npm:2.7.2"
+  checksum: 10c0/4381a9eb7ee951dfe393fe7aacf76b9a3b4e93a684d2162ab35594fa4053cc82a4d7d7582bf397718012c9adcf839b8cd8f57c6c42901ea9effe33c752da4a45
   languageName: node
   linkType: hard
 
@@ -12354,6 +12326,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "ui@workspace:packages/ui"
   dependencies:
+    3dmol: "npm:^2.4.2"
     "@apollo/client": "npm:3.10.8"
     "@fortawesome/fontawesome-svg-core": "npm:^6.1.1"
     "@fortawesome/free-solid-svg-icons": "npm:^6.4.2"
@@ -12369,6 +12342,7 @@ __metadata:
     "@tanstack/react-table": "npm:^8.16.0"
     "@tanstack/table-core": "npm:^8.16.0"
     "@types/d3-format": "npm:^3.0.1"
+    "@types/lodash": "npm:^4.17.13"
     "@types/react": "npm:^18.0.28"
     "@types/react-dom": "npm:^18.0.11"
     "@types/react-scroll": "npm:^1.8.10"
@@ -12385,7 +12359,7 @@ __metadata:
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-helmet: "npm:^6.1.0"
-    react-router-dom: "npm:6.30.4"
+    react-router: "npm:^7.18.1"
     react-scroll: "npm:^1.8.9"
     storybook: "npm:^10.0.6"
     tsconfig: "npm:*"

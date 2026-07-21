@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { BasePage } from "ui";
 import DownloadsLoading from "./DownloadsLoading";
 

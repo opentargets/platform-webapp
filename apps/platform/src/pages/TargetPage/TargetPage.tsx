@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Link, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useParams } from "react-router";
 import { BasePage, ScrollToTop } from "ui";
 import { getUniprotIds } from "@ot/utils";
 

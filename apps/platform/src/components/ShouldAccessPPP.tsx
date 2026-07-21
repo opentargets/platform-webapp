@@ -10,7 +10,7 @@ import {
   styled,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { isOnPublic, testPPPaccess } from "@ot/utils";
 import { PPP_WEB_URL } from "@ot/constants";
 

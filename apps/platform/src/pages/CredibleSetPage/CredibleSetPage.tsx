@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
+import { useLocation, useParams, Link } from "react-router";
 import { useQuery } from "@apollo/client";
 import { Box, Tabs, Tab } from "@mui/material";
 import { BasePage, ScrollToTop } from "ui";

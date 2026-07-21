@@ -1,5 +1,5 @@
 import { Suspense, Children, cloneElement } from "react";
-import { generatePath, Route, Routes, useNavigate, useMatch } from "react-router-dom";
+import { generatePath, Route, Routes, useNavigate, useMatch } from "react-router";
 import { Tabs, Box } from "@mui/material";
 import { v1 } from "uuid";
 import LoadingBackdrop from "../LoadingBackdrop";
