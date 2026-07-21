@@ -1,1 +1,1 @@
-export { default } from "./CredibleSetPage";
+export { default } from "./CredibleSetPageWrapper";

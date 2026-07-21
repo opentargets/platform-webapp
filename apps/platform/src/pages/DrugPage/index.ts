@@ -1,1 +1,1 @@
-export { default } from "./DrugPage";
+export { default } from "./DrugPageWrapper";

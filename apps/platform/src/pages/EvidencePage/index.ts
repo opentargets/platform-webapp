@@ -1,1 +1,1 @@
-export { default } from "./EvidencePage";
+export { default } from "./EvidencePageWrapper";
