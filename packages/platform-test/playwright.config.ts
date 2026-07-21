@@ -21,6 +21,12 @@ export default defineConfig({
   workers: process.env.CI ? 6 : 10,
   /* Increase timeout for CI environments */
   timeout: process.env.CI ? 60000 : 80000,
+  /* Default expect() timeout is 5000ms, which doesn't leave enough headroom for
+   * lazy-loaded route chunks to fetch on a cold page load (page components are
+   * now code-split), on top of normal query latency. */
+  expect: {
+    timeout: 10000,
+  },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
