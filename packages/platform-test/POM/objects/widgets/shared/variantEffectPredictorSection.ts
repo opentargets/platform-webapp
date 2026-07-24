@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Interactor for Variant Effect Predictor/Transcript Consequences section
@@ -22,7 +23,7 @@ export class VariantEffectPredictorSection {
    */
   async waitForLoad(): Promise<void> {
     const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: 10000 });
+    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
 
     // Wait for skeleton loaders to disappear
     await this.page

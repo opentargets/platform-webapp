@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Interactor for Chemical Probes section on Target page
@@ -23,7 +24,7 @@ export class ChemicalProbesSection {
    * Wait for the section to be visible
    */
   async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 10000 });
+    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
   }
 
   // Section header
