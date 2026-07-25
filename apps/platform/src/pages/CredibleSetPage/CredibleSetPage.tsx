@@ -1,20 +1,25 @@
 import { ReactElement } from "react";
-import { useLocation, useParams, Link } from "react-router";
-import { useQuery } from "@apollo/client";
+import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
 import { Box, Tabs, Tab } from "@mui/material";
 import { PageMeta, ScrollToTop } from "ui";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import CREDIBLE_SET_PAGE_QUERY from "./CredibleSetPage.gql";
 import Profile from "./Profile";
+import { apolloClient } from "../../apolloClient";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: CREDIBLE_SET_PAGE_QUERY,
+    variables: { studyLocusId: params.studyLocusId },
+  });
+  return data;
+}
 
 function CredibleSetPage(): ReactElement {
   const location = useLocation();
   const { studyLocusId } = useParams() as { studyLocusId: string };
-
-  const { loading, data } = useQuery(CREDIBLE_SET_PAGE_QUERY, {
-    variables: { studyLocusId },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data?.credibleSet) {
     return <NotFoundPage />;
@@ -33,7 +38,7 @@ function CredibleSetPage(): ReactElement {
         location={location}
       />
       <Header
-        loading={loading}
+        loading={false}
         studyId={studyId ?? ""}
         variantId={variantId ?? ""}
         referenceAllele={referenceAllele ?? ""}

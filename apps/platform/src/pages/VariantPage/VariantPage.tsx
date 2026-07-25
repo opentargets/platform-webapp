@@ -1,20 +1,25 @@
-import { useQuery } from "@apollo/client";
 import { ReactElement } from "react";
-import { useLocation, useParams, Link } from "react-router";
+import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
 import { Box, Tabs, Tab } from "@mui/material";
 import { PageMeta, ScrollToTop } from "ui";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import VARIANT_PAGE_QUERY from "./VariantPage.gql";
 import Profile from "./Profile";
+import { apolloClient } from "../../apolloClient";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: VARIANT_PAGE_QUERY,
+    variables: { variantId: params.varId },
+  });
+  return data;
+}
 
 function VariantPage(): ReactElement {
   const location = useLocation();
   const { varId } = useParams() as { varId: string };
-
-  const { loading, data } = useQuery(VARIANT_PAGE_QUERY, {
-    variables: { variantId: varId },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.variant) {
     return <NotFoundPage />;
@@ -27,7 +32,7 @@ function VariantPage(): ReactElement {
         description={`Annotation information for ${varId}`}
         location={location}
       />
-      <Header loading={loading} variantId={varId} variantPageData={data?.variant} />
+      <Header loading={false} variantId={varId} variantPageData={data?.variant} />
       <ScrollToTop />
 
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>

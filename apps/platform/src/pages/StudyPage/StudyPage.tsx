@@ -1,20 +1,25 @@
 import { ReactElement } from "react";
-import { useQuery } from "@apollo/client";
 import { PageMeta, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
-import { useLocation, useParams, Link } from "react-router";
+import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import STUDY_PAGE_QUERY from "./StudyPage.gql";
 import Profile from "./Profile";
+import { apolloClient } from "../../apolloClient";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: STUDY_PAGE_QUERY,
+    variables: { studyId: params.studyId },
+  });
+  return data;
+}
 
 function StudyPage(): ReactElement {
   const location = useLocation();
   const { studyId } = useParams() as { studyId: string };
-
-  const { loading, data } = useQuery(STUDY_PAGE_QUERY, {
-    variables: { studyId },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.study) {
     return <NotFoundPage />;
@@ -31,7 +36,7 @@ function StudyPage(): ReactElement {
         location={location}
       />
       <Header
-        loading={loading}
+        loading={false}
         studyId={studyId}
         backgroundTraits={study?.backgroundTraits}
         targetId={study?.target?.id}

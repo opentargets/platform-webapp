@@ -1,23 +1,27 @@
-import { useQuery } from "@apollo/client";
 import { PageMeta, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
-import { useLocation, useParams, Routes, Route, Link } from "react-router";
+import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Routes, Route, Link } from "react-router";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import DRUG_PAGE_QUERY from "./DrugPage.gql";
+import { apolloClient } from "../../apolloClient";
 
 import Profile from "./Profile";
 import { ReactNode } from "react";
 
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: DRUG_PAGE_QUERY,
+    variables: { chemblId: params.chemblId },
+  });
+  return data;
+}
 
 function DrugPage(): ReactNode {
   const location = useLocation();
   const { chemblId } = useParams();
-
-  const { loading, data } = useQuery(DRUG_PAGE_QUERY, {
-    variables: { chemblId: chemblId! },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.drug) {
     return <NotFoundPage />;
@@ -33,7 +37,7 @@ function DrugPage(): ReactNode {
         location={location}
       />
       <Header
-        loading={loading}
+        loading={false}
         chemblId={chemblId}
         name={name}
         crossReferences={crossReferences}

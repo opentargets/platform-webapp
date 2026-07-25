@@ -1,13 +1,13 @@
 import { lazy, ReactElement, Suspense } from "react";
-import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Link, Route, Routes, useLocation, useParams } from "react-router";
+import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
 import { LoadingBackdrop, PageMeta, ScrollToTop } from "ui";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 
 import DISEASE_PAGE_QUERY from "./DiseasePage.gql";
+import { apolloClient } from "../../apolloClient";
 
 const Associations = lazy(() => import("./DiseaseAssociations"));
 const Profile = lazy(() => import("./Profile"));
@@ -16,13 +16,18 @@ type DiseaseURLParams = {
   efoId: string;
 };
 
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: DISEASE_PAGE_QUERY,
+    variables: { efoId: params.efoId },
+  });
+  return data;
+}
+
 function DiseasePage(): ReactElement {
   const location = useLocation();
   const { efoId } = useParams<DiseaseURLParams>();
-  const { loading, data } = useQuery(DISEASE_PAGE_QUERY, {
-    variables: { efoId: efoId! },
-
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.disease) {
     return <NotFoundPage />;
@@ -45,7 +50,7 @@ function DiseasePage(): ReactElement {
         }
         location={location}
       />
-      <Header loading={loading} efoId={efoId} name={name} dbXRefs={dbXRefs} />
+      <Header loading={false} efoId={efoId} name={name} dbXRefs={dbXRefs} />
       <ScrollToTop />
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>

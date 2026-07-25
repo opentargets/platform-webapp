@@ -100,6 +100,7 @@ export { default as Page } from "./pages/Page";
 export * from "./providers/APIMetadataProvider";
 export * from "./providers/ConfigurationProvider";
 export * from "./providers/OTApolloProvider/OTApolloProvider";
+export { createApolloClient } from "./providers/OTApolloProvider/apollo";
 export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerProvider";

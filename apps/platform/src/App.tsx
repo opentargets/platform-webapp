@@ -9,6 +9,8 @@ import RootLayout from "./layouts/RootLayout";
 import StandardLayout from "./layouts/StandardLayout";
 import HomePage from "./pages/HomePage/HomePage";
 import NotFoundPage from "./pages/NotFoundPage/NotFoundPage";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
+import { apolloClient } from "./apolloClient";
 
 const config = getConfig();
 
@@ -40,39 +42,65 @@ const router = createBrowserRouter([
           {
             path: "/target/:ensgId/*",
             lazy: () =>
-              import("./pages/TargetPage/TargetPage").then(m => ({ Component: m.default })),
+              import("./pages/TargetPage/TargetPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/disease/:efoId/*",
             lazy: () =>
-              import("./pages/DiseasePage/DiseasePage").then(m => ({ Component: m.default })),
+              import("./pages/DiseasePage/DiseasePage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/evidence/:ensgId/:efoId/*",
             lazy: () =>
-              import("./pages/EvidencePage/EvidencePage").then(m => ({ Component: m.default })),
+              import("./pages/EvidencePage/EvidencePage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/drug/:chemblId/*",
             lazy: () =>
-              import("./pages/DrugPage/DrugPage").then(m => ({ Component: m.default })),
+              import("./pages/DrugPage/DrugPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/variant/:varId/*",
             lazy: () =>
-              import("./pages/VariantPage/VariantPage").then(m => ({ Component: m.default })),
+              import("./pages/VariantPage/VariantPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/study/:studyId/*",
             lazy: () =>
-              import("./pages/StudyPage/StudyPage").then(m => ({ Component: m.default })),
+              import("./pages/StudyPage/StudyPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             path: "/credible-set/:studyLocusId/*",
             lazy: () =>
               import("./pages/CredibleSetPage/CredibleSetPage").then(m => ({
                 Component: m.default,
+                loader: m.loader,
               })),
+            errorElement: <RouteErrorBoundary />,
           },
           {
             element: <PrivateRoute />,
@@ -102,7 +130,7 @@ const router = createBrowserRouter([
 
 function App(): ReactElement {
   return (
-    <OTConfigurationProvider config={config}>
+    <OTConfigurationProvider config={config} client={apolloClient}>
       <SearchProvider
         searchQuery={SEARCH_QUERY}
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."

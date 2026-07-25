@@ -1,13 +1,13 @@
 import { lazy, ReactElement, Suspense } from "react";
-import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Link, Route, Routes, useLocation, useParams } from "react-router";
+import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
 import { LoadingBackdrop, PageMeta, ScrollToTop } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import TARGET_PAGE_QUERY from "./TargetPage.gql";
+import { apolloClient } from "../../apolloClient";
 
 const Profile = lazy(() => import("./Profile"));
 const Associations = lazy(() => import("./TargetAssociations"));
@@ -16,20 +16,25 @@ type TargetURLParams = {
   ensgId: string;
 };
 
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: TARGET_PAGE_QUERY,
+    variables: { ensgId: params.ensgId },
+  });
+  return data;
+}
+
 function TargetPage(): ReactElement {
   const location = useLocation();
   const { ensgId } = useParams<TargetURLParams>();
-
-  const { loading, data } = useQuery(TARGET_PAGE_QUERY, {
-    variables: { ensgId },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.target) {
     return <NotFoundPage />;
   }
 
   const { approvedSymbol: symbol, approvedName } = data?.target || {};
-  const uniprotIds = loading ? null : getUniprotIds(data.target.proteinIds);
+  const uniprotIds = getUniprotIds(data.target.proteinIds);
   const crisprId = data?.target.dbXrefs.find(p => p.source === "ProjectScore")?.id;
 
   return (
@@ -49,7 +54,7 @@ function TargetPage(): ReactElement {
       />
       <ScrollToTop />
       <Header
-        loading={loading}
+        loading={false}
         ensgId={ensgId}
         uniprotIds={uniprotIds}
         symbol={symbol}
