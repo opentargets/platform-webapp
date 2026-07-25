@@ -1,4 +1,4 @@
-import { Avatar, Card, CardHeader, Typography, styled } from "@mui/material";
+import { Avatar, Card, Typography, styled } from "@mui/material";
 
 export const StyledAvatar = styled(Avatar, {
   shouldForwardProp: prop => prop !== "hasData" && prop !== "error",
@@ -46,11 +46,6 @@ export const StyledSubheader = styled(Typography)(({ theme }) => ({
   color: theme.palette.secondary.main,
 }));
 
-export const StyledCardHeader = styled(CardHeader)({
-  paddingTop: 8,
-  paddingBottom: 8,
-});
-
 // NOTE: the old `cardError` class was referenced in SummaryItem's classNames() call
 // but never existed in makeStyles, so it was always a no-op (JSS silently applied
 // no class). No `error` prop is carried here for the same reason.
@@ -66,10 +61,15 @@ export const StyledCard = styled(Card, {
       transition: "background-color ease-in-out 300ms",
       backgroundColor: theme.palette.primary.dark,
     },
-    [`&:hover ${StyledTitle}`]: { color: "white" },
-    [`&:hover ${StyledSubtitle}`]: { color: "white" },
-    [`&:hover ${StyledSubheader}`]: { color: "white" },
-    [`&:hover ${StyledAvatar}`]: {
+    // NOTE: this project's Vite build has no @emotion/babel-plugin configured, so
+    // emotion's `${StyledComponent}` selector-interpolation feature (which needs that
+    // plugin to tag components with a stable target class) silently resolves to
+    // "no_component_selector" instead of a real selector. Targeting plain, manually
+    // assigned class names below instead, which works without the plugin.
+    "&:hover .summaryItemTitle": { color: "white" },
+    "&:hover .summaryItemSubtitle": { color: "white" },
+    "&:hover .summaryItemSubheader": { color: "white" },
+    "&:hover .summaryItemAvatar": {
       color: theme.palette.primary.dark,
       backgroundColor: "white !important",
     },

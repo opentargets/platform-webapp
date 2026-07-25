@@ -1,10 +1,9 @@
-import { Grid, LinearProgress, Skeleton } from "@mui/material";
+import { CardHeader, Grid, LinearProgress, Skeleton } from "@mui/material";
 import { scroller } from "react-scroll";
 
 import {
   StyledAvatar,
   StyledCard,
-  StyledCardHeader,
   StyledSubheader,
   StyledSubtitle,
   StyledTitle,
@@ -34,25 +33,30 @@ function SummaryItem<T>({ definition, request, subText }: { definition: any; req
         elevation={0}
         variant="outlined"
       >
-        <StyledCardHeader
+        <CardHeader
           avatar={
-            <StyledAvatar hasData={hasData} error={!!error}>
+            <StyledAvatar className="summaryItemAvatar" hasData={hasData} error={!!error}>
               {shortName}
             </StyledAvatar>
           }
           title={
             <>
-              <StyledTitle hasData={hasData} error={!!error} variant="body2">
+              <StyledTitle
+                className="summaryItemTitle"
+                hasData={hasData}
+                error={!!error}
+                variant="body2"
+              >
                 {loading && <Skeleton width={100} />}
                 {!loading && definition.name} {definition.isPrivate ? <PartnerLockIcon /> : null}
               </StyledTitle>
               {subText ? (
-                <StyledSubtitle hasData={hasData} variant="caption">
+                <StyledSubtitle className="summaryItemSubtitle" hasData={hasData} variant="caption">
                   {subText}
                 </StyledSubtitle>
               ) : null}
 
-              <StyledSubheader>
+              <StyledSubheader className="summaryItemSubheader">
                 {error && "An error occurred while loading this section"}
               </StyledSubheader>
             </>
