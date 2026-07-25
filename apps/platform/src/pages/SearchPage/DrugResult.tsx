@@ -1,30 +1,23 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrescriptionBottleAlt } from "@fortawesome/free-solid-svg-icons";
 
 import { LongText, Highlights, Link } from "ui";
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    marginBottom: "30px",
-  },
-  subtitle: {
-    fontSize: "20px",
-    fontWeight: 500,
-  },
-  icon: {
-    color: theme.palette.primary.main,
-  },
-}));
+const StyledLink = styled(Link)({
+  fontSize: "20px",
+  fontWeight: 500,
+});
 
 function DrugResult({ data, highlights }) {
-  const classes = useStyles();
+  const theme = useTheme();
   return (
-    <div className={classes.container}>
-      <Link to={`/drug/${data.id}`} className={classes.subtitle}>
-        <FontAwesomeIcon icon={faPrescriptionBottleAlt} className={classes.icon} /> {data.name}
-      </Link>
+    <div style={{ marginBottom: "30px" }}>
+      <StyledLink to={`/drug/${data.id}`}>
+        <FontAwesomeIcon icon={faPrescriptionBottleAlt} color={theme.palette.primary.main} />{" "}
+        {data.name}
+      </StyledLink>
       {data.description && (
         <Typography variant="body2" component="div">
           <LongText lineLimit={4}>{data.description}</LongText>
