@@ -22,7 +22,9 @@ export const StyledAvatar = styled(Avatar)(({ theme }) => ({
   backgroundColor: theme.palette.primary.dark,
 }));
 
-export const StyledTitle = styled("div")<{ error?: boolean }>(({ theme, error }) => ({
+export const StyledTitle = styled("div", {
+  shouldForwardProp: prop => prop !== "error",
+})<{ error?: boolean }>(({ theme, error }) => ({
   color: error ? theme.palette.secondary.main : theme.palette.grey[700],
   fontWeight: "bold !important",
   fontSize: "1.2rem !important",
