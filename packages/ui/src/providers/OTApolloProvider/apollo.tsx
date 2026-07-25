@@ -49,14 +49,29 @@ export const createApolloClient = (config: Config) => {
         // root `credibleSet` result) don't select studyLocusId at that level, so a
         // function is used instead of a plain keyFields array - it falls back to
         // Apollo's default (embedded) behavior for those instead of throwing, while
-        // still normalizing everywhere studyLocusId is present. Note: this does NOT
-        // fix the separate stale-UI/refetch-loop bug when navigating between two
-        // credible sets - that traces to PlatformApiProvider's useQuery interaction
-        // with React Router's transitions and needs its own dedicated investigation.
+        // still normalizing everywhere studyLocusId is present.
         CredibleSet: {
           keyFields: (obj, { readField }) => {
             const studyLocusId = readField("studyLocusId", obj as any);
             return studyLocusId ? `CredibleSet:${studyLocusId}` : false;
+          },
+          // Each credibleSet widget's Summary fragment selects a shallow/count-only
+          // version of its own field (e.g. `colocalisation(...) { count }`), while its
+          // full Body query selects a deep version with different args - genuinely
+          // different, arg-keyed cache entries on the same normalized entity, not real
+          // collisions, but Apollo warns without an explicit merge policy to prove it.
+          fields: {
+            colocalisation: { merge: true },
+            locus: { merge: true },
+            l2GPredictions: { merge: true },
+          },
+        },
+        // Same pattern as CredibleSet.colocalisation/l2GPredictions above:
+        // EnhancerToGenePredictionsSummaryFragment selects `variant.enhancerToGenes {
+        // count }` while EnhancerToGenePredictionsQuery selects the full paginated rows.
+        Variant: {
+          fields: {
+            enhancerToGenes: { merge: true },
           },
         },
       },
