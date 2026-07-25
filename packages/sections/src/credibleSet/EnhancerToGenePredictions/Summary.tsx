@@ -10,7 +10,7 @@ function Summary() {
 }
 
 Summary.fragments = {
-  EnhancerToGenePredictionsSummaryFragment: ENHANCER_TO_GENE_PREDICTIONS_SUMMARY,
+  CredibleSetEnhancerToGenePredictionsSummaryFragment: ENHANCER_TO_GENE_PREDICTIONS_SUMMARY,
 };
 
 export default Summary;

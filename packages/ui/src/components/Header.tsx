@@ -76,7 +76,7 @@ function Header({
             <Grid container sx={{ mb: { xs: 2, md: 0 } }}>
               <Typography
                 variant="body2"
-                sx={{ "& > :not(:first-child):before": { content: '" | "' } }}
+                sx={{ "& > :not(:first-of-type):before": { content: '" | "' } }}
                 data-testid="external-links"
               >
                 {loading ? <Skeleton width="50vw" /> : externalLinks}

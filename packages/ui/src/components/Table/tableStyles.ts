@@ -50,7 +50,7 @@ export const StyledHeaderCell = styled(TableCell, {
   shouldForwardProp: prop => prop !== "isHeaderGroup" && prop !== "sticky" && prop !== "noWrapHeader",
 })<{ isHeaderGroup?: boolean; sticky?: boolean; noWrapHeader?: boolean }>(
   ({ theme, isHeaderGroup, sticky, noWrapHeader }) => ({
-    "&:first-child": {
+    "&:first-of-type": {
       paddingLeft: "1rem",
     },
     "&:last-child": {
@@ -59,7 +59,7 @@ export const StyledHeaderCell = styled(TableCell, {
     padding: "1rem .5rem !important",
     ...(isHeaderGroup && {
       borderLeft: "1px solid #E0E0E0",
-      "&:first-child": {
+      "&:first-of-type": {
         borderLeft: "none",
       },
     }),
@@ -86,7 +86,7 @@ export const StyledBodyCell = styled(TableCell, {
   shouldForwardProp: prop => prop !== "numeric" && prop !== "sticky" && prop !== "noWrap",
 })<{ numeric?: boolean; sticky?: boolean; noWrap?: boolean }>(
   ({ theme, numeric, sticky, noWrap }) => ({
-    "&:first-child": {
+    "&:first-of-type": {
       paddingLeft: "1rem",
     },
     "&:last-child": {

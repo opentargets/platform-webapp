@@ -10,12 +10,12 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
   if (footer)
     return {
       color: "white",
-      "text-decoration-color": "transparent",
-      "-webkit-text-decoration-color": "transparent",
+      "textDecorationColor": "transparent",
+      "WebkitTextDecorationColor": "transparent",
       "&:hover": {
         color: theme.palette.primary.light,
-        "text-decoration-color": theme.palette.primary.light,
-        "-webkit-text-decoration-color": theme.palette.primary.light,
+        "textDecorationColor": theme.palette.primary.light,
+        "WebkitTextDecorationColor": theme.palette.primary.light,
       },
       display: "flex",
       alignItems: "center",
@@ -30,8 +30,8 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
     color: theme.palette.primary.main,
     "&:hover": {
       color: theme.palette.primary.dark,
-      "text-decoration-color": theme.palette.primary.dark,
-      "-webkit-text-decoration-color": theme.palette.primary.dark,
+      "textDecorationColor": theme.palette.primary.dark,
+      "WebkitTextDecorationColor": theme.palette.primary.dark,
     },
   };
 };
@@ -39,8 +39,8 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
 const StyledA = styled("a", { shouldForwardProp })<{ footer?: boolean; hasTooltip?: boolean }>(
   ({ theme, footer, hasTooltip }) => ({
     fontSize: "inherit",
-    "text-decoration-color": "transparent",
-    "-webkit-text-decoration-color": "transparent",
+    "textDecorationColor": "transparent",
+    "WebkitTextDecorationColor": "transparent",
     ...linkVariantStyles(theme, footer, hasTooltip),
   })
 );
@@ -50,8 +50,8 @@ const StyledRouterLink = styled(RouterLink, { shouldForwardProp })<{
   hasTooltip?: boolean;
 }>(({ theme, footer, hasTooltip }) => ({
   fontSize: "inherit",
-  "text-decoration-color": "transparent",
-  "-webkit-text-decoration-color": "transparent",
+  "textDecorationColor": "transparent",
+  "WebkitTextDecorationColor": "transparent",
   ...linkVariantStyles(theme, footer, hasTooltip),
 }));
 
