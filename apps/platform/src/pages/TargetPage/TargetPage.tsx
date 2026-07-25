@@ -2,7 +2,7 @@ import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Link, Route, Routes, useLocation, useParams } from "react-router";
-import { BasePage, ScrollToTop } from "ui";
+import { PageMeta, ScrollToTop } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
 import Header from "./Header";
@@ -33,57 +33,56 @@ function TargetPage(): ReactElement {
   const crisprId = data?.target.dbXrefs.find(p => p.source === "ProjectScore")?.id;
 
   return (
-    <BasePage
-      title={
-        location.pathname.includes("associations")
-          ? `Diseases associated with ${symbol}`
-          : `${symbol} profile page`
-      }
-      description={
-        location.pathname.includes("associations")
-          ? `Ranked list of diseases and phenotypes associated with ${symbol}`
-          : `Annotation information for ${symbol}`
-      }
-      location={location}
-    >
-      <>
-        <ScrollToTop />
-        <Header
-          loading={loading}
-          ensgId={ensgId}
-          uniprotIds={uniprotIds}
-          symbol={symbol}
-          name={approvedName}
-          crisprId={crisprId}
-        />
+    <>
+      <PageMeta
+        title={
+          location.pathname.includes("associations")
+            ? `Diseases associated with ${symbol}`
+            : `${symbol} profile page`
+        }
+        description={
+          location.pathname.includes("associations")
+            ? `Ranked list of diseases and phenotypes associated with ${symbol}`
+            : `Annotation information for ${symbol}`
+        }
+        location={location}
+      />
+      <ScrollToTop />
+      <Header
+        loading={loading}
+        ensgId={ensgId}
+        uniprotIds={uniprotIds}
+        symbol={symbol}
+        name={approvedName}
+        crisprId={crisprId}
+      />
 
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={location.pathname}>
-            <Tab
-              label={
-                <Box sx={{ textTransform: "capitalize" }}>
-                  <div>Associated diseases</div>
-                </Box>
-              }
-              value={`/target/${ensgId}/associations`}
-              component={Link}
-              to={`/target/${ensgId}/associations`}
-            />
-            <Tab
-              label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
-              value={`/target/${ensgId}`}
-              component={Link}
-              to={`/target/${ensgId}`}
-            />
-          </Tabs>
-        </Box>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={location.pathname}>
+          <Tab
+            label={
+              <Box sx={{ textTransform: "capitalize" }}>
+                <div>Associated diseases</div>
+              </Box>
+            }
+            value={`/target/${ensgId}/associations`}
+            component={Link}
+            to={`/target/${ensgId}/associations`}
+          />
+          <Tab
+            label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
+            value={`/target/${ensgId}`}
+            component={Link}
+            to={`/target/${ensgId}`}
+          />
+        </Tabs>
+      </Box>
 
-        <Routes>
-          <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
-          <Route path="/associations" element={<Associations ensgId={ensgId} />} />
-        </Routes>
-      </>
-    </BasePage>
+      <Routes>
+        <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
+        <Route path="/associations" element={<Associations ensgId={ensgId} />} />
+      </Routes>
+    </>
   );
 }
 

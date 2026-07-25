@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { useLocation } from "react-router";
 import { Box, Grid, Typography } from "@mui/material";
-import { Link } from "ui";
+import { Link, PageMeta } from "ui";
 import ProjectCard from "./ProjectCard";
 import ProjectsFilter, { EMPTY_FILTERS } from "./ProjectsFilter";
 import projectsData from "./projects-data.json";
@@ -69,6 +70,7 @@ function matchesFilters(project, filters) {
 }
 
 function ProjectPage() {
+  const location = useLocation();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
   const filteredProjects = useMemo(
@@ -78,6 +80,11 @@ function ProjectPage() {
 
   return (
     <>
+      <PageMeta
+        title="Projects page | Open Targets Platform"
+        description="Projects page | Open Targets Platform"
+        location={location}
+      />
       <Typography variant="h4" component="h1" paragraph>
         Open Targets Projects
       </Typography>

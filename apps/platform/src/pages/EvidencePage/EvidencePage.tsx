@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { useLocation, useParams } from "react-router";
 
-import { BasePage, ScrollToTop } from "ui";
+import { PageMeta, ScrollToTop } from "ui";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
@@ -26,17 +26,16 @@ function EvidencePage() {
   const { name } = data?.disease || {};
 
   return (
-    <BasePage
-      title={`Evidence for ${symbol} and ${name}`}
-      description={`${symbol} is associated with ${name} through Open Targets Platform evidence that is aggregated from genetic evidence, somatic mutations, known drugs, differential expression experiments, pathways & systems biology, text mining, and animal model data sources`}
-      location={location}
-    >
-      <>
-      <Header loading={loading}  symbol={symbol} name={name} />
+    <>
+      <PageMeta
+        title={`Evidence for ${symbol} and ${name}`}
+        description={`${symbol} is associated with ${name} through Open Targets Platform evidence that is aggregated from genetic evidence, somatic mutations, known drugs, differential expression experiments, pathways & systems biology, text mining, and animal model data sources`}
+        location={location}
+      />
+      <Header loading={loading} symbol={symbol} name={name} />
       <ScrollToTop />
       <Profile ensgId={ensgId!} efoId={efoId!} symbol={symbol!} name={name!} />
-      </>
-    </BasePage>
+    </>
   );
 }
 

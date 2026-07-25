@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { BasePage, ScrollToTop } from "ui";
+import { PageMeta, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
 import { useLocation, useParams, Routes, Route, Link } from "react-router";
 
@@ -26,34 +26,33 @@ function DrugPage(): ReactNode {
   const { name, crossReferences } = data?.drug || {};
 
   return (
-    <BasePage
-      title={`${name || chemblId} profile page`}
-      description={`Annotation information for ${name || chemblId}`}
-      location={location}
-    >
-      <>
-        <Header
-          loading={loading}
-          chemblId={chemblId}
-          name={name}
-          crossReferences={crossReferences}
-        />
-        <ScrollToTop />
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={location.pathname}>
-            <Tab
-              label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
-              value={`/drug/${chemblId}`}
-              component={Link}
-              to={`/drug/${chemblId}`}
-            />
-          </Tabs>
-        </Box>
-        <Routes>
-          <Route path="/" element={<Profile chemblId={chemblId} name={name} />} />
-        </Routes>
-      </>
-    </BasePage>
+    <>
+      <PageMeta
+        title={`${name || chemblId} profile page`}
+        description={`Annotation information for ${name || chemblId}`}
+        location={location}
+      />
+      <Header
+        loading={loading}
+        chemblId={chemblId}
+        name={name}
+        crossReferences={crossReferences}
+      />
+      <ScrollToTop />
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={location.pathname}>
+          <Tab
+            label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
+            value={`/drug/${chemblId}`}
+            component={Link}
+            to={`/drug/${chemblId}`}
+          />
+        </Tabs>
+      </Box>
+      <Routes>
+        <Route path="/" element={<Profile chemblId={chemblId} name={name} />} />
+      </Routes>
+    </>
   );
 }
 

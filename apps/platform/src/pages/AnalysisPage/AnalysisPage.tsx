@@ -1,7 +1,7 @@
 import { Box, Container, Typography } from "@mui/material";
 import { useEffect, type ReactElement } from "react";
 import { useSearchParams } from "react-router";
-import { BasePage } from "ui";
+import { PageMeta } from "ui";
 import { setAssociationsState, setStandaloneGenes } from "../../components/GeneEnrichmentAnalysis/actions";
 import StandaloneAnalysisContainer from "../../components/GeneEnrichmentAnalysis/components/StandaloneAnalysisContainer";
 import { GeneEnrichmentProvider, useGeneEnrichmentDispatch } from "../../components/GeneEnrichmentAnalysis/Provider";
@@ -36,7 +36,8 @@ function AnalysisPageInner(): ReactElement {
 
 function AnalysisPage(): ReactElement {
   return (
-    <BasePage>
+    <>
+      <PageMeta />
       <GeneEnrichmentProvider>
         <Container maxWidth={false} sx={{ pt: 4, pb: 6, display: "flex", flexDirection: "column", flex: 1 }}>
           <Typography variant="h4" sx={{ mb: 0.5 }}>
@@ -58,7 +59,7 @@ function AnalysisPage(): ReactElement {
           </Box>
         </Container>
       </GeneEnrichmentProvider>
-    </BasePage>
+    </>
   );
 }
 

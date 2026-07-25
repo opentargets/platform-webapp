@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
-import { BasePage, ScrollToTop } from "ui";
+import { PageMeta, ScrollToTop } from "ui";
 import { Box, Tabs, Tab } from "@mui/material";
 import { useLocation, useParams, Link } from "react-router";
 import Header from "./Header";
@@ -24,40 +24,39 @@ function StudyPage(): ReactElement {
   const projectId = study?.projectId;
 
   return (
-    <BasePage
-      title={`${study?.id} profile page`}
-      description={`Annotation information for ${study?.id}`}
-      location={location}
-    >
-      <>
-        <Header
-          loading={loading}
-          studyId={studyId}
-          backgroundTraits={study?.backgroundTraits}
-          targetId={study?.target?.id}
-          diseases={study?.diseases}
-          projectId={projectId}
-        />
-        <ScrollToTop />
+    <>
+      <PageMeta
+        title={`${study?.id} profile page`}
+        description={`Annotation information for ${study?.id}`}
+        location={location}
+      />
+      <Header
+        loading={loading}
+        studyId={studyId}
+        backgroundTraits={study?.backgroundTraits}
+        targetId={study?.target?.id}
+        diseases={study?.diseases}
+        projectId={projectId}
+      />
+      <ScrollToTop />
 
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={location.pathname}>
-            <Tab
-              label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
-              value={`/study/${studyId}`}
-              component={Link}
-              to={`/study/${studyId}`}
-            />
-          </Tabs>
-        </Box>
-        <Profile
-          studyId={studyId}
-          studyType={studyType}
-          projectId={projectId}
-          diseases={study?.diseases}
-        />
-      </>
-    </BasePage>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={location.pathname}>
+          <Tab
+            label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
+            value={`/study/${studyId}`}
+            component={Link}
+            to={`/study/${studyId}`}
+          />
+        </Tabs>
+      </Box>
+      <Profile
+        studyId={studyId}
+        studyType={studyType}
+        projectId={projectId}
+        diseases={study?.diseases}
+      />
+    </>
   );
 }
 
