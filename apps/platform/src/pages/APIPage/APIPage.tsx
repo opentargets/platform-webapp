@@ -9,7 +9,6 @@ import {
   Typography,
   styled,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fetcher } from "@ot/utils";
@@ -52,17 +51,7 @@ const GraphiQL = lazy(() =>
   })
 );
 
-const useStyles = makeStyles({
-  container: {
-    minHeight: "600px !important",
-  },
-  buttonMargin: {
-    marginBottom: "12px",
-  },
-});
-
 function APIPage() {
-  const classes = useStyles();
   const [query, setQuery] = useState("");
 
   return (
@@ -99,7 +88,7 @@ function APIPage() {
         </Link>
         .
       </Typography>
-      <Grid className={classes.container} container spacing={3}>
+      <Grid sx={{ minHeight: "600px !important" }} container spacing={3}>
         <Grid item md={3} xl={2}>
           <Typography variant="h5" paragraph>
             Example queries
@@ -115,7 +104,7 @@ function APIPage() {
                     Explore prepublication OT CRISPR evidence that supports a specific target-disease association
                   </Typography>
                   <QueryButton
-                    className={classes.buttonMargin}
+                    sx={{ marginBottom: "12px" }}
                     variant="contained"
                     color="primary"
                     onClick={() => setQuery(PPPCRISPRQUERY.loc.source.body)}
@@ -136,7 +125,7 @@ function APIPage() {
                     Explore molQTL credible sets for INSL6, including the ones from OTAR projects studies such as OTAR2057 IBDverse and OTAR2065 Neuroinflammation
                   </Typography>
                   <QueryButton
-                    className={classes.buttonMargin}
+                    sx={{ marginBottom: "12px" }}
                     variant="contained"
                     color="primary"
                     onClick={() => setQuery(TARGETQTLCREDIBLESSETS.loc.source.body)}
@@ -147,7 +136,7 @@ function APIPage() {
                     Explore the novelty time series for the PCSK9–Hypercholesterolemia association
                   </Typography>
                   <QueryButton
-                    className={classes.buttonMargin}
+                    sx={{ marginBottom: "12px" }}
                     variant="contained"
                     color="primary"
                     onClick={() => setQuery(NOVELTYTIMESERIES.loc.source.body)}
@@ -168,7 +157,7 @@ function APIPage() {
                   Find targets associated with a specific disease or phenotype
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(DISEASE_ASSOCS.loc.source.body)}
@@ -198,7 +187,7 @@ function APIPage() {
                   Explore evidence that supports a specific target-disease association
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(TARGET_DISEASE_EVIDENCE.loc.source.body)}
@@ -218,7 +207,7 @@ function APIPage() {
                   Find tractability and safety information for a specific target
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(TARGET_ANNOTATION.loc.source.body)}
@@ -229,7 +218,7 @@ function APIPage() {
                   Explore molQTL credible sets for INSL6, including the ones from OTAR projects studies
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(TARGETQTLCREDIBLESSETS.loc.source.body)}
@@ -249,7 +238,7 @@ function APIPage() {
                   Find clinical signs and symptoms for a specific disease
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(DISEASE_ANNOTATION.loc.source.body)}
@@ -260,7 +249,7 @@ function APIPage() {
                   GWAS associated with a specified disease
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(DISEASE_ANNOTATION_GWAS.loc.source.body)}
@@ -280,7 +269,7 @@ function APIPage() {
                   Find approval status and withdrawn and black-box warning for a specific drug
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(DRUG_ANNOTATION.loc.source.body)}
@@ -301,7 +290,7 @@ function APIPage() {
                   containing a specified variant
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(VARIANT_ANNOTATION.loc.source.body)}
@@ -321,7 +310,7 @@ function APIPage() {
                   Information about a specified study
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(STUDY_ANNOTATION.loc.source.body)}
@@ -341,7 +330,7 @@ function APIPage() {
                   Colocalisation metrics for overlapping GWAS credible sets
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(CREDIBLE_SET_ANNOTATION.loc.source.body)}
@@ -361,7 +350,7 @@ function APIPage() {
                   Example query for KRAS
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(SEARCH_ANNOTATION.loc.source.body)}
@@ -372,7 +361,7 @@ function APIPage() {
                   Example query to get how many entries there are in each entity category for PCSK9
                 </Typography>
                 <QueryButton
-                  className={classes.buttonMargin}
+                  sx={{ marginBottom: "12px" }}
                   variant="contained"
                   color="primary"
                   onClick={() => setQuery(SEARCH_ASSOCS.loc.source.body)}
