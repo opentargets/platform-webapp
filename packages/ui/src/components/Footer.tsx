@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { makeStyles } from "@mui/styles";
 
 import Link from "./Link";
 import { EmailLink } from "./EmailLink";
@@ -12,23 +12,7 @@ import { useAPIMetadata } from "../providers/APIMetadataProvider";
 
 const FOOTER_BACKGROUND_COLOR = "#2e2d35";
 
-const useStyles = makeStyles(() => ({
-  footer: {
-    backgroundColor: FOOTER_BACKGROUND_COLOR,
-    color: "#fff",
-    margin: 0,
-    width: "100%",
-  },
-}));
-
-const useLinkStyles = makeStyles(() => ({
-  iconClass: {
-    marginRight: "10px",
-  },
-  linkContainer: {
-    marginBottom: "8px",
-  },
-}));
+const iconClassStyle = { marginRight: "10px" };
 
 export type FooterExternalLink = {
   url: string;
@@ -38,7 +22,6 @@ export type FooterExternalLink = {
 };
 
 const FooterLink = ({ label, url, icon }: FooterExternalLink) => {
-  const classes = useLinkStyles();
   return (
     <Grid item xs={12} sx={{ mb: 1 }}>
       <Typography color="inherit">
@@ -46,7 +29,7 @@ const FooterLink = ({ label, url, icon }: FooterExternalLink) => {
           <EmailLink href={url} label={label} icon={icon} />
         ) : (
           <Link ariaLabel={`Read more about ${label} on this link`} external footer to={url}>
-            {icon && <FontAwesomeIcon className={classes.iconClass} icon={icon} size="lg" />}
+            {icon && <FontAwesomeIcon style={iconClassStyle} icon={icon} size="lg" />}
             {label}
           </Link>
         )}
@@ -66,30 +49,21 @@ const FooterSectionHeading = ({ children }: FooterSectionHeadingProps) => (
   </Grid>
 );
 
-const useSocialLinkStyle = makeStyles(() => ({
-  iconsContainer: {
-    maxWidth: "235px",
-  },
-  socialIcon: {
-    fontSize: "30px",
-    color: "white",
-  },
-}));
+const socialIconStyle = { fontSize: "30px", color: "white" };
 
 type FooterSocialProps = {
   social: FooterExternalLink[];
 };
 const FooterSocial = ({ social }: FooterSocialProps) => {
-  const classes = useSocialLinkStyle();
   const socialsWithIcons = social.filter(s => s.icon);
   return (
     <>
       <FooterSectionHeading>Follow us</FooterSectionHeading>
-      <Grid className={classes.iconsContainer} container justifyContent="space-between">
+      <Grid sx={{ maxWidth: "235px" }} container justifyContent="space-between">
         {socialsWithIcons.map(({ icon, url, label }, i) => (
           <Grid item key={i}>
             <Link external footer to={url} ariaLabel={label}>
-              <FontAwesomeIcon className={classes.socialIcon} icon={icon!} />
+              <FontAwesomeIcon style={socialIconStyle} icon={icon!} />
             </Link>
           </Grid>
         ))}
@@ -98,12 +72,6 @@ const FooterSocial = ({ social }: FooterSocialProps) => {
   );
 };
 
-const useSectionStyles = makeStyles({
-  section: {
-    width: "100%",
-  },
-});
-
 type FooterSectionProps = {
   heading: React.ReactNode;
   links: FooterExternalLink[];
@@ -111,10 +79,9 @@ type FooterSectionProps = {
   children?: React.ReactNode;
 };
 const FooterSection = ({ heading, links, social, children }: FooterSectionProps) => {
-  const classes = useSectionStyles();
   return (
     <Grid item xs={12} sm={6} md={3} container direction="column" justifyContent="space-between">
-      <Grid item className={classes.section}>
+      <Grid item sx={{ width: "100%" }}>
         <FooterSectionHeading>{heading}</FooterSectionHeading>
         {links.map((link, i) => {
           if (link.showOnlyPartner) {
@@ -140,46 +107,39 @@ const FooterSection = ({ heading, links, social, children }: FooterSectionProps)
 };
 
 // Creative Commons License
-const useLicenseStyles = makeStyles({
-  icon: {
-    marginLeft: "3px",
-    verticalAlign: "middle",
-  },
-  link: {
-    display: "inline-block",
-  },
+const licenseIconStyle = { marginLeft: "3px", verticalAlign: "middle" as const };
+
+const StyledLicenseLink = styled(Link)({
+  display: "inline-block",
 });
 
 type LicenseCC0Props = {
   link: FooterExternalLink;
 };
 const LicenseCC0 = ({ link }: LicenseCC0Props) => {
-  const classes = useLicenseStyles();
   return (
     <div>
       <Typography color="inherit" variant="caption">
-        <Link
+        <StyledLicenseLink
           ariaLabel={`Read more about ${link.label} on this link`}
           to={link.url}
           external
           footer
-          className={classes.link}
         >
           {link.label}
-        </Link>{" "}
+        </StyledLicenseLink>{" "}
         is marked with{" "}
-        <Link
+        <StyledLicenseLink
           to="http://creativecommons.org/publicdomain/zero/1.0?ref=chooser-v1"
           external
           footer
-          className={classes.link}
           ariaLabel={`Read more about creative commons license on this link`}
         >
           CC0 1.0
           <img
             alt="cc0 license image 1"
             aria-label="cc0 license image 1"
-            className={classes.icon}
+            style={licenseIconStyle}
             src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"
             height="22px"
             width="22px"
@@ -187,12 +147,12 @@ const LicenseCC0 = ({ link }: LicenseCC0Props) => {
           <img
             alt="cc0 license image 2"
             aria-label="cc0 license image 2"
-            className={classes.icon}
+            style={licenseIconStyle}
             src="https://mirrors.creativecommons.org/presskit/icons/zero.svg?ref=chooser-v1"
             height="22px"
             width="22px"
           />
-        </Link>
+        </StyledLicenseLink>
       </Typography>
     </div>
   );
@@ -221,9 +181,19 @@ type FooterProps = {
   externalLinks: FooterExternalLinks;
 };
 const Footer = ({ externalLinks }: FooterProps) => {
-  const classes = useStyles();
   return (
-    <Grid sx={{ p: 3 }} className={classes.footer} container justifyContent="center" spacing={3}>
+    <Grid
+      sx={{
+        p: 3,
+        backgroundColor: FOOTER_BACKGROUND_COLOR,
+        color: "#fff",
+        margin: 0,
+        width: "100%",
+      }}
+      container
+      justifyContent="center"
+      spacing={3}
+    >
       <Grid item container xs={12} md={10} spacing={2}>
         <FooterSection heading="About" links={externalLinks.about}>
           <LicenseCC0 link={externalLinks.license} />
