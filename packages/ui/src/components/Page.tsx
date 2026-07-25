@@ -20,11 +20,14 @@ function Page({ header, footer, children }: PageProps) {
       }}
     >
       {header}
+      {/* NOTE: see packages/ui/src/pages/Page.tsx - the old JSS `margin: 0` rule here
+          never actually beat MuiGrid-spacing-xs-3's own default negative margin.
+          Omitted so the real historical margin applies. */}
       <Grid
         container
         justifyContent="center"
         spacing={3}
-        sx={{ margin: 0, padding: "24px", width: "100%", flex: "1 0 auto" }}
+        sx={{ padding: "24px", width: "100%", flex: "1 0 auto" }}
       >
         <Grid item xs={12} md={11} sx={{ pb: 3 }}>
           {children}
