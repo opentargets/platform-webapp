@@ -1,5 +1,5 @@
 import { Grid, Typography, Box, Theme } from "@mui/material";
-import { makeStyles, useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
 import { Footer, GlobalSearch, Link, NavBar, usePermissions } from "ui";
 
@@ -15,7 +15,6 @@ import {
   faSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { getConfig } from "@ot/config";
 import {
   appTitle,
   appDescription,
@@ -28,23 +27,6 @@ import Splash from "./Splash";
 import Version from "./Version";
 import HomePageSuggestions from "./HomePageSuggestions";
 import ShouldAccessPPP from "../../components/ShouldAccessPPP";
-
-const config = getConfig();
-
-const useStyles = makeStyles<Theme>(() => ({
-  links: {
-    marginTop: "12px",
-  },
-  api: {
-    marginTop: "38px",
-  },
-  dataPolicy: {
-    padding: "10px",
-    marginTop: "30px",
-    border: "2px solid",
-    borderColor: config.profile.primaryColor as string,
-  },
-}));
 
 function AboutPPP(): JSX.Element {
   return (
@@ -137,7 +119,6 @@ function HomePage(): JSX.Element {
   const releaseNotesURL = isPartnerPreview
     ? "http://home.opentargets.org/ppp-release-notes"
     : "https://platform-docs.opentargets.org/release-notes";
-  const classes = useStyles();
 
   const handleScrollDown = (): void => {
     window.scrollTo({ top: window.innerHeight, left: 0, behavior: "smooth" });
@@ -151,7 +132,7 @@ function HomePage(): JSX.Element {
         <meta name="description" content={appDescription} />
         <link rel="canonical" href={appCanonicalUrl} />
       </Helmet>
-      <Grid container justifyContent="center" alignItems="center" className={classes.hpSection}>
+      <Grid container justifyContent="center" alignItems="center">
         <Splash />
         <NavBar name="platform" homepage items={mainMenuItems} placement="bottom-end" />
         <HomeBox>
