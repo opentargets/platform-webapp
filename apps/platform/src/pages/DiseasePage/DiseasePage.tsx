@@ -1,15 +1,16 @@
-import { ReactElement } from "react";
+import { lazy, ReactElement, Suspense } from "react";
 import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Link, Route, Routes, useLocation, useParams } from "react-router";
-import { PageMeta, ScrollToTop } from "ui";
+import { LoadingBackdrop, PageMeta, ScrollToTop } from "ui";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 
 import DISEASE_PAGE_QUERY from "./DiseasePage.gql";
-import Associations from "./DiseaseAssociations";
-import Profile from "./Profile";
+
+const Associations = lazy(() => import("./DiseaseAssociations"));
+const Profile = lazy(() => import("./Profile"));
 
 type DiseaseURLParams = {
   efoId: string;
@@ -62,10 +63,12 @@ function DiseasePage(): ReactElement {
           />
         </Tabs>
       </Box>
-      <Routes>
-        <Route path="/" element={<Profile efoId={efoId!} name={name!} />} />
-        <Route path="/associations" element={<Associations efoId={efoId!} />} />
-      </Routes>
+      <Suspense fallback={<LoadingBackdrop height={800} />}>
+        <Routes>
+          <Route path="/" element={<Profile efoId={efoId!} name={name!} />} />
+          <Route path="/associations" element={<Associations efoId={efoId!} />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

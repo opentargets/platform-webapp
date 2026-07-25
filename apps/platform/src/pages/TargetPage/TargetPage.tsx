@@ -1,16 +1,16 @@
-import { ReactElement } from "react";
+import { lazy, ReactElement, Suspense } from "react";
 import { useQuery } from "@apollo/client";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Link, Route, Routes, useLocation, useParams } from "react-router";
-import { PageMeta, ScrollToTop } from "ui";
+import { LoadingBackdrop, PageMeta, ScrollToTop } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import TARGET_PAGE_QUERY from "./TargetPage.gql";
 
-import Profile from "./Profile";
-import Associations from "./TargetAssociations";
+const Profile = lazy(() => import("./Profile"));
+const Associations = lazy(() => import("./TargetAssociations"));
 
 type TargetURLParams = {
   ensgId: string;
@@ -78,10 +78,12 @@ function TargetPage(): ReactElement {
         </Tabs>
       </Box>
 
-      <Routes>
-        <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
-        <Route path="/associations" element={<Associations ensgId={ensgId} />} />
-      </Routes>
+      <Suspense fallback={<LoadingBackdrop height={800} />}>
+        <Routes>
+          <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
+          <Route path="/associations" element={<Associations ensgId={ensgId} />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }
