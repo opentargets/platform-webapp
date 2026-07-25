@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Chip, Grid } from "@mui/material";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { Link, useSearchState } from "ui";
 
 const StyledChip = styled(Chip)(({ theme }) => ({
