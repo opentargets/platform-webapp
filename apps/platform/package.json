@@ -65,7 +65,7 @@
     "format:fix": "biome format --write .",
     "check": "biome check --formatter-enabled=true .",
     "check:fix": "biome check --formatter-enabled=true --write .",
-    "analyze": "source-map-explorer 'build/static/js/*.js'"
+    "analyze": "ANALYZE=true vite build"
   },
   "browserslist": [
     ">0.2%",
@@ -84,7 +84,6 @@
     "graphql-tag": "^2.12.6",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.49.10",
-    "source-map-explorer": "^2.0.0",
     "tsconfig": "*",
     "typescript": "^5.2.2",
     "vite": "^6.1.1",

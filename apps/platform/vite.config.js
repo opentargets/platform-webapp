@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 import gql from "vite-plugin-simple-gql";
 import svgrPlugin from "vite-plugin-svgr";
+import { visualizer } from "rollup-plugin-visualizer";
 
 const getGitVersion = () => {
   try {
@@ -35,5 +36,12 @@ export default defineConfig({
       },
     }),
     viteCompression(),
+    process.env.ANALYZE &&
+      visualizer({
+        filename: "./bundle-platform/stats.html",
+        gzipSize: true,
+        brotliSize: true,
+        template: "treemap",
+      }),
   ],
 });

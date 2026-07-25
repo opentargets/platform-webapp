@@ -7,7 +7,6 @@ import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
 import RootLayout from "./layouts/RootLayout";
 import StandardLayout from "./layouts/StandardLayout";
-import HomePage from "./pages/HomePage/HomePage";
 import NotFoundPage from "./pages/NotFoundPage/NotFoundPage";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { apolloClient } from "./apolloClient";
@@ -19,7 +18,11 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     hydrateFallbackElement: <LoadingBackdrop height={400} />,
     children: [
-      { index: true, element: <HomePage /> },
+      {
+        index: true,
+        lazy: () =>
+          import("./pages/HomePage/HomePage").then(m => ({ Component: m.default })),
+      },
       {
         element: <StandardLayout />,
         children: [
