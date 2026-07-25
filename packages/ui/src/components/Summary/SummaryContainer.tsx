@@ -1,14 +1,15 @@
-import { Grid } from "@mui/material";
+import { Grid, styled } from "@mui/material";
 
-import summaryStyles from "./summaryStyles";
+const StyledGrid = styled(Grid)({
+  marginBottom: "2rem",
+  marginTop: "2rem !important",
+});
 
 function SummaryContainer({ children }) {
-  const classes = summaryStyles();
-
   return (
-    <Grid id="summary-section" className={classes.summaryContainer} container spacing={1}>
+    <StyledGrid id="summary-section" container spacing={1}>
       {children}
-    </Grid>
+    </StyledGrid>
   );
 }
 
