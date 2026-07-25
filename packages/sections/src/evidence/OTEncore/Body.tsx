@@ -1,6 +1,5 @@
-import classNames from "classnames";
 import { useQuery } from "@apollo/client";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { faArrowAltCircleUp, faArrowAltCircleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Chip } from "@mui/material";
@@ -27,25 +26,7 @@ export const methodDisplayNameMapping = {
   Confluence: "Cell Confluence",
 };
 
-const useStyles = makeStyles(theme => ({
-  primaryColor: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
-  grey: {
-    color: theme.palette.grey[300],
-  },
-  circleUp: {
-    marginRight: "10px",
-  },
-  hsWhite: {
-    backgroundColor: "#ffffff !important",
-    color: `${theme.palette.grey[600]} !important`,
-    border: `1px solid ${theme.palette.grey[600]} !important`,
-  },
-}));
-
-const getColumns = classes => [
+const getColumns = theme => [
   {
     id: "disease",
     label: "Reported disease",
@@ -91,7 +72,11 @@ const getColumns = classes => [
         items={row.biomarkerList.map(bm => ({
           label: bm.name,
           tooltip: bm.description,
-          customClass: classes.hsWhite,
+          sx: {
+            backgroundColor: "#ffffff !important",
+            color: `${theme.palette.grey[600]} !important`,
+            border: `1px solid ${theme.palette.grey[600]} !important`,
+          },
         }))}
       />
     ),
@@ -122,17 +107,22 @@ const getColumns = classes => [
           <FontAwesomeIcon
             icon={faArrowAltCircleUp}
             size="lg"
-            className={classNames(
-              row.phenotypicConsequenceLogFoldChange >= 0 ? classes.primaryColor : classes.grey,
-              classes.circleUp
-            )}
+            color={
+              row.phenotypicConsequenceLogFoldChange >= 0
+                ? theme.palette.primary.main
+                : theme.palette.grey[300]
+            }
+            style={{ marginRight: "10px", cursor: "pointer" }}
           />
           <FontAwesomeIcon
             icon={faArrowAltCircleDown}
             size="lg"
-            className={
-              row.phenotypicConsequenceLogFoldChange < 0 ? classes.primaryColor : classes.grey
+            color={
+              row.phenotypicConsequenceLogFoldChange < 0
+                ? theme.palette.primary.main
+                : theme.palette.grey[300]
             }
+            style={{ cursor: "pointer" }}
           />
         </span>
       </Tooltip>
@@ -271,7 +261,7 @@ function Body({ id, label, entity }: Props) {
   const request = useQuery(ENCORE_QUERY, {
     variables,
   });
-  const classes = useStyles();
+  const theme = useTheme();
 
   return (
     <SectionItem
@@ -283,7 +273,7 @@ function Body({ id, label, entity }: Props) {
       renderBody={() => {
         return (
           <OtTable
-            columns={getColumns(classes)}
+            columns={getColumns(theme)}
             rows={request.data?.disease.otEncoreSummary.rows}
             dataDownloader
             dataDownloaderColumns={exportColumns}

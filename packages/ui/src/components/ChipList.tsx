@@ -1,4 +1,4 @@
-import { Box, Chip, Tooltip, styled } from "@mui/material";
+import { Box, Chip, SxProps, Theme, Tooltip, styled } from "@mui/material";
 import { v1 } from "uuid";
 import { naLabel } from "@ot/constants";
 import { ElementType, ReactElement } from "react";
@@ -17,6 +17,7 @@ const StyledChip = styled(Chip)({
 
 type ChipListItem = {
   customClass?: string;
+  sx?: SxProps<Theme>;
   label: string;
   tooltip?: string;
   url?: string;
@@ -60,6 +61,7 @@ function ChipList({ items, small }: ChipListProps): ReactElement[] | string {
           component={component}
           href={item.url}
           className={item.customClass}
+          sx={item.sx}
           clickable={!!item.url}
           target="_blank"
           noopener="true"
