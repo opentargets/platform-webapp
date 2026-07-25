@@ -1,14 +1,12 @@
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { curveMonotoneX, line as d3Line, max } from "d3";
 import { coordCenter, dagStratify, decrossTwoLayer, layeringLongestPath, sugiyama } from "d3-dag";
 import { withContentRect } from "react-measure";
 import { Link } from "react-router";
 import OntologyTooltip from "./OntologyTooltip";
 
-const useStyles = makeStyles({
-  labelText: {
-    "&:hover": { fontWeight: "700" },
-  },
+const StyledLink = styled(Link)({
+  "&:hover": { fontWeight: "700" },
 });
 
 
@@ -67,7 +65,6 @@ const radius = diameter / 2;
 const yOffset = 100;
 
 function OntologySubgraph({ name, data, measureRef, contentRect }) {
-  const classes = useStyles();
   const dagData = buildDag(data);
   const dag = dagStratify()(dagData);
   const width = contentRect.bounds.width;
@@ -168,7 +165,7 @@ function OntologySubgraph({ name, data, measureRef, contentRect }) {
           </g>
           <g transform={`translate(0, ${yOffset})`}>
             {nodes.map(node => (
-              <Link to={`/disease/${node.data.id}`} className={classes.labelText} key={node.id}>
+              <StyledLink to={`/disease/${node.data.id}`} key={node.id}>
                 <OntologyTooltip title={`${node.data.name || "No name"} | ID: ${node.id}`}>
                   <g>
                     <text
@@ -204,7 +201,7 @@ function OntologySubgraph({ name, data, measureRef, contentRect }) {
                     )}
                   </g>
                 </OntologyTooltip>
-              </Link>
+              </StyledLink>
             ))}
           </g>
         </svg>
