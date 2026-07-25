@@ -1,4 +1,4 @@
-import { Grid, LinearProgress, Skeleton, Typography } from "@mui/material";
+import { Grid, LinearProgress, Skeleton } from "@mui/material";
 import { scroller } from "react-scroll";
 
 import {
@@ -53,11 +53,7 @@ function SummaryItem<T>({ definition, request, subText }: { definition: any; req
               ) : null}
 
               <StyledSubheader>
-                {error && (
-                  <Typography variant="body2">
-                    An error occurred while loading this section
-                  </Typography>
-                )}
+                {error && "An error occurred while loading this section"}
               </StyledSubheader>
             </>
           }
