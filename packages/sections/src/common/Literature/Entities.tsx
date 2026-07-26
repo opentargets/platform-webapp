@@ -1,8 +1,7 @@
-import { Chip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { useApolloClient, Grow } from "ui";
+import { useApolloClient, Grow, MuiChip as Chip } from "ui";
 
 const StyledChipRow = styled("div")(({ theme }) => ({
   display: "flex",

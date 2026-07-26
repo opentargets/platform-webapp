@@ -1,16 +1,16 @@
-import { Chip } from "@mui/material";
 import { credsetConfidenceMap, naLabel, table5HChunkSize } from "@ot/constants";
 import { mantissaExponentComparator, variantComparator } from "@ot/utils";
 import {
-	ClinvarStars,
-	DisplayVariantId,
-	Link,
-	Navigate,
-	OtTable,
-	ScientificNotation,
-	SectionItem,
-	Tooltip,
-	useBatchQuery,
+  ClinvarStars,
+  DisplayVariantId,
+  Link,
+  Navigate,
+  OtTable,
+  ScientificNotation,
+  SectionItem,
+  Tooltip,
+  useBatchQuery,
+  MuiChip as Chip,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";

@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { createViewer } from "3dmol";
 import { parseCif } from "./parseCif";
 import { schemeSet1, schemeDark2 } from "d3";
-import { ViewerLegend, Tooltip, Box, Typography } from "ui";
+import { ViewerLegend, Tooltip, Box, Typography, MuiButton as Button } from "ui";
 import { getAlphaFoldConfidence } from "@ot/constants";
 import { isAlphaFold, zipToObject, modulo, hoverManagerFactory, onClickCapture } from "./helpers";
 import InfoPopper from "./InfoPopper";

@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { Link as MuiLink } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,6 +12,7 @@ import {
   Paper,
   Typography,
   ButtonBase,
+  MuiLink,
 } from "ui";
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({

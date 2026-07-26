@@ -1,4 +1,4 @@
-import { Chip, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { credsetConfidenceMap, naLabel } from "@ot/constants";
 import { Fragment } from "react";
@@ -16,6 +16,7 @@ import {
   Box,
   Skeleton,
   Typography,
+  MuiChip as Chip,
 } from "ui";
 
 const palette = [

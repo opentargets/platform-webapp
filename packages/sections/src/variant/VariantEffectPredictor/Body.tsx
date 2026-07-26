@@ -1,6 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Chip } from "@mui/material";
-import { Link, SectionItem, Tooltip, OtTable, Box } from "ui";
+import { Link, SectionItem, Tooltip, OtTable, Box, MuiChip as Chip } from "ui";
 import { Fragment } from "react";
 import { definition } from "../VariantEffectPredictor";
 import Description from "../VariantEffectPredictor/Description";

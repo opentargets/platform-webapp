@@ -137,3 +137,8 @@ export {
   TextField,
   Typography,
 } from "@mui/material";
+
+/* Raw MUI Chip/Button/Tooltip/Link, aliased since this package already has
+   custom wrapped Chip/Button/Tooltip/Link exported under those bare names.
+   TODO: audit remaining raw usages — some may fit the custom wrapper instead. */
+export { Chip as MuiChip, Button as MuiButton, Tooltip as MuiTooltip, Link as MuiLink } from "@mui/material";

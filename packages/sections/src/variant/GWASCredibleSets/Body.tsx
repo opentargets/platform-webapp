@@ -10,8 +10,8 @@ import {
   useBatchQuery,
   Navigate,
   Box,
+  MuiChip as Chip,
 } from "ui";
-import { Chip } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";

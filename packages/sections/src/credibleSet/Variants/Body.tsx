@@ -1,4 +1,3 @@
-import { Chip } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -8,6 +7,7 @@ import {
   useBatchQuery,
   SectionLoader,
   Box,
+  MuiChip as Chip,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";

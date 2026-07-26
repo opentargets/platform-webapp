@@ -1,4 +1,4 @@
-import { Tooltip as MUITooltip } from "@mui/material";
+import { MuiTooltip as MUITooltip } from "ui";
 import { styled } from "@mui/material/styles";
 
 const StyledTooltip = styled(MUITooltip)(({ theme }) => ({

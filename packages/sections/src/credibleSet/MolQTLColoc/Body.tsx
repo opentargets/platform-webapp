@@ -7,13 +7,13 @@ import {
   Tooltip,
   useBatchQuery,
   Navigate,
+  MuiChip as Chip,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import MOLQTL_COLOC_QUERY from "./MolQTLColocQuery.gql";
 import { mantissaExponentComparator, variantComparator } from "@ot/utils";
-import { Chip } from "@mui/material";
 
 const columns = [
   {
