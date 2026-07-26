@@ -1,5 +1,5 @@
 import { Chip as MUIChip, styled, type ChipProps as MuiChipProps } from "@mui/material";
-import type { ReactElement } from "react";
+import { forwardRef } from "react";
 
 // The compact sizing only applies to the default look (outlined/small, the
 // original "tag chip" this component was built for) — callers that explicitly
@@ -20,6 +20,10 @@ const StyledMUIChip = styled(MUIChip)(({ variant, size }) =>
 // (color, sx, clickable, onClick, etc.) since {...props} is spread last.
 type ChipProps = MuiChipProps;
 
-export default function Chip(props: ChipProps): ReactElement {
-  return <StyledMUIChip variant="outlined" size="small" {...props} />;
-}
+// forwardRef because MUI's real Chip forwards its ref (needed e.g. as the
+// direct child of Grow/Fade/Collapse, which attach a ref to measure/animate it).
+const Chip = forwardRef<HTMLDivElement, ChipProps>(function Chip(props, ref) {
+  return <StyledMUIChip ref={ref} variant="outlined" size="small" {...props} />;
+});
+
+export default Chip;
