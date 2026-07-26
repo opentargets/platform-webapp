@@ -30,11 +30,10 @@ type PopoverButtonProps = {
   sx?: SxProps<Theme>;
 };
 
-const Button = styled(MuiButton)({
-  "& .MuiButton-startIcon": {
-    fontSize: "14px !important",
-  },
-});
+// Swap point for a future design-system migration — currently a no-op wrapper
+// around MuiButton (previously forced startIcon to a fixed 14px regardless of
+// size="small"/"large", which only happened to match the "medium" default).
+const Button = styled(MuiButton)({});
 
 const ButtonPrimary = styled(Button)(({ theme }) => ({
   border: theme.palette.primary.dark,
@@ -42,9 +41,6 @@ const ButtonPrimary = styled(Button)(({ theme }) => ({
   color: theme.palette.primary.contrastText,
   "&:hover": {
     backgroundColor: theme.palette.secondary.main,
-  },
-  "& .MuiButton-startIcon": {
-    fontSize: "14px !important",
   },
 }));
 

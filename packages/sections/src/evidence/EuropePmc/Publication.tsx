@@ -7,7 +7,7 @@ import {
   useConfigContext,
   Box,
   Typography,
-  MuiButton as Button,
+  Button,
 } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleNodes, faCircleMinus, faCirclePlus } from "@fortawesome/free-solid-svg-icons";

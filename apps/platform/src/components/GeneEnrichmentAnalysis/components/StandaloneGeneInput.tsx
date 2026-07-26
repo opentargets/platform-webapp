@@ -9,7 +9,7 @@ import {
   Select,
   TextField,
   Typography,
-  MuiButton as Button,
+  Button,
 } from "ui";
 import { useEffect, useRef, useState } from "react";
 import type { AnalysisInputs, Gene } from "../types";

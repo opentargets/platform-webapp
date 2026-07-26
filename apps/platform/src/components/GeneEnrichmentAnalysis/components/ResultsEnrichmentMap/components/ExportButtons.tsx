@@ -1,4 +1,4 @@
-import { Box, Menu, MenuItem, CircularProgress, MuiButton as Button } from "ui";
+import { Box, Menu, MenuItem, CircularProgress, Button } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";

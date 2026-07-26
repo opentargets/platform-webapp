@@ -7,7 +7,7 @@ import {
   ListItem,
   ListItemText,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
   MuiTooltip as Tooltip,
   Divider,
