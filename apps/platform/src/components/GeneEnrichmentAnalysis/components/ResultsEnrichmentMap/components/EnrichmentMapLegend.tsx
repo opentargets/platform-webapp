@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Typography, Chip, Popover } from "@mui/material";
+import { Box, Typography, Popover, MuiChip as Chip } from "ui";
 import { PRIORITISATION_COLORS } from "../../../utils/colorPalettes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointer } from "@fortawesome/free-regular-svg-icons";

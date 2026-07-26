@@ -1,7 +1,6 @@
 import { ReactElement } from "react";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
-import { Box, Tabs, Tab } from "@mui/material";
-import { PageMeta, ScrollToTop } from "ui";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab } from "ui";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import CREDIBLE_SET_PAGE_QUERY from "./CredibleSetPage.gql";

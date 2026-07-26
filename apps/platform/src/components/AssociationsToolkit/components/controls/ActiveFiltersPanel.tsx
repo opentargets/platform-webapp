@@ -8,8 +8,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Chip,  Typography } from "@mui/material";
-import { Tooltip } from "ui";
+import { Tooltip, Box, Typography, MuiChip as Chip } from "ui";
 import type { Facet } from "../../Facets/facetsTypes";
 import { setIncludeMeasurements } from "../../context/aotfActions";
 import { useAotfQueryState, useAotfQueryDispatch } from "../../context/AssociationsQueryContext";

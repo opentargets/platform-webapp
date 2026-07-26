@@ -4,6 +4,7 @@ import {
   ProfileChipList,
   Field,
   Tooltip,
+  Box,
 } from "ui";
 import { useTheme } from "@mui/material/styles";
 import TargetDescription from "./TargetDescription";
@@ -11,7 +12,6 @@ import TargetDescription from "./TargetDescription";
 import { clearDescriptionCodes } from "@ot/utils";
 
 import TARGET_PROFILE_HEADER_FRAGMENT from "./TargetProfileHeader.gql";
-import { Box } from "@mui/material";
 import { getGenomicLocation } from "@ot/constants";
 import GenomicLocation from "ui/src/components/GenomicLocation";
 

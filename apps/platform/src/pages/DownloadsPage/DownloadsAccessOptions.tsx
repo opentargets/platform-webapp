@@ -1,5 +1,4 @@
-import { Box, Typography } from "@mui/material";
-import { Link, OtBtnGroup, OtCodeBlock } from "ui";
+import { Link, OtBtnGroup, OtCodeBlock, Box, Typography } from "ui";
 import { singleBtnGroupObj } from "ui/src/components/OtBtnGroup";
 
 const FTP = "ftp-location";

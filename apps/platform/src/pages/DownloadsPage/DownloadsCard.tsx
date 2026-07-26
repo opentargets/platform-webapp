@@ -1,7 +1,15 @@
-import { Box, Button, Card, CardActions, CardContent, Chip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faDatabase } from "@fortawesome/free-solid-svg-icons";
-import { OtLongText } from "ui";
+import {
+  OtLongText,
+  Box,
+  Card,
+  CardActions,
+  CardContent,
+  Typography,
+  MuiButton as Button,
+  MuiChip as Chip,
+} from "ui";
 import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext } from "react";

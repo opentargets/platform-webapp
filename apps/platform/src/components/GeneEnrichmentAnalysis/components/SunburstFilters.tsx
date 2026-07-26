@@ -3,8 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Autocomplete,
   Box,
-  Button,
-  Chip,
   Collapse,
   FormControl,
   FormControlLabel,
@@ -15,7 +13,9 @@ import {
   Switch,
   TextField,
   Typography,
-} from "@mui/material";
+  MuiButton as Button,
+  MuiChip as Chip,
+} from "ui";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 

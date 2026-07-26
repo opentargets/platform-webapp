@@ -1,4 +1,18 @@
-import { Box, FormControl, InputLabel, MenuItem, Select, Slider, Typography, TextField, InputAdornment, Autocomplete, Chip, Button, Tooltip } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Slider,
+  Typography,
+  TextField,
+  InputAdornment,
+  Autocomplete,
+  MuiChip as Chip,
+  MuiButton as Button,
+  MuiTooltip as Tooltip,
+} from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faXmark, faChevronUp, faChevronDown, faFilter, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import { useContext, useState, useMemo } from "react";

@@ -1,7 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { gql, useQuery } from "@apollo/client";
-import { Alert, Box, GridLegacy, Typography } from "@mui/material";
-import { Link, OtInvalidResultFilters } from "ui";
+import { Link, OtInvalidResultFilters, Alert, Box, GridLegacy, Typography } from "ui";
 import { getConfig } from "@ot/config";
 import { v1 } from "uuid";
 import DownloadsCard from "./DownloadsCard";

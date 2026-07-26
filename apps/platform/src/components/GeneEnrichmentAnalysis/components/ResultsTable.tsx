@@ -1,5 +1,4 @@
-import { Box, Chip, Tooltip } from "@mui/material";
-import { Link, OtTable } from "ui";
+import { Link, OtTable, Box, MuiChip as Chip, MuiTooltip as Tooltip } from "ui";
 import type { GseaResult } from "../api/gseaApi";
 
 interface ResultsTableProps {

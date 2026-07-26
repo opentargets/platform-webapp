@@ -6,9 +6,8 @@ import {
   faStethoscope,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Chip, GridLegacy } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { Link, useSearchState } from "ui";
+import { Link, useSearchState, GridLegacy, MuiChip as Chip } from "ui";
 
 const StyledChip = styled(Chip)(({ theme }) => ({
   border: 1,

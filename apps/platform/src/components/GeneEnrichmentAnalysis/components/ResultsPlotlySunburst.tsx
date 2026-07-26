@@ -5,7 +5,7 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Typography, Chip, Popover } from "@mui/material";
+import { Box, Typography, Popover, MuiChip as Chip } from "ui";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";

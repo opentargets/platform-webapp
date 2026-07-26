@@ -3,16 +3,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Box,
   Typography,
-  Divider,
-  Chip,
-  Stack,
-  Link as MuiLink,
   IconButton,
-  Tooltip,
-} from "@mui/material";
+  MuiButton as Button,
+  MuiChip as Chip,
+  MuiLink,
+  MuiTooltip as Tooltip,
+  Divider,
+  Stack,
+} from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faCheck} from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useMemo } from "react";

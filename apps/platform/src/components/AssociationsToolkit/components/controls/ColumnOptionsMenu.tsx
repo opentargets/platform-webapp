@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Box } from "@mui/material";
+import { Box, MuiButton as Button } from "ui";
 import { faCaretUp, faCaretDown, faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { styled } from "@mui/material/styles";

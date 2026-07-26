@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect, useRef } from "react";
 import { v1 } from "uuid";
-import { Typography, Skeleton } from "@mui/material";
+import { Typography, Skeleton } from "ui";
 import { styled } from "@mui/material/styles";
 
 const StyledTextContainer = styled("span")({

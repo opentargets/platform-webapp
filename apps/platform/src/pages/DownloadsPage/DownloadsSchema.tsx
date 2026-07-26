@@ -1,5 +1,4 @@
-import { Box } from "@mui/material";
-import { OtCodeBlock } from "ui";
+import { OtCodeBlock, Box } from "ui";
 import DownloadsSchemaBuilder from "./DownloadsSchemaBuilder";
 
 function DownloadsSchema({ data }: { data: Record<string, unknown> }) {

@@ -1,8 +1,7 @@
 import FileSaver from "file-saver";
-import { Box, Chip, Divider, Popover } from "@mui/material";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext, useState } from "react";
-import { Link, PublicationsDrawer } from "ui";
+import { Link, PublicationsDrawer, Box, Popover, MuiChip as Chip, Divider } from "ui";
 import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignLeft, faFileLines, faTableList } from "@fortawesome/free-solid-svg-icons";

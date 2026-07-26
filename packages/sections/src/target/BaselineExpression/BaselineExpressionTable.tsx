@@ -9,8 +9,6 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  ToggleButton,
-  ToggleButtonGroup,
 } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
 import { theme } from "@ot/config";
@@ -42,6 +40,8 @@ import {
   IconButton,
   Paper,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "ui";
 import MedianTooltipTable from "./MedianTooltipTable";
 import SpecificityTooltipTable from "./SpecificityTooltipTable";

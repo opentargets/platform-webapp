@@ -1,8 +1,7 @@
 import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
-import { Highlights, Link, DisplayVariantId, LongText } from "ui";
-import { Box, Typography } from "@mui/material";
+import { Highlights, Link, DisplayVariantId, LongText, Box, Typography } from "ui";
 
 const StyledLink = styled(Link)({
   fontSize: "20px",

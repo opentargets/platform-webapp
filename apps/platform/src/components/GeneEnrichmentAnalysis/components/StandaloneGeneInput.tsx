@@ -3,14 +3,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Alert,
   Box,
-  Button,
   FormControl,
   MenuItem,
   Paper,
   Select,
   TextField,
   Typography,
-} from "@mui/material";
+  MuiButton as Button,
+} from "ui";
 import { useEffect, useRef, useState } from "react";
 import type { AnalysisInputs, Gene } from "../types";
 import { genesToText, parseGeneList } from "../utils/parseGeneList";

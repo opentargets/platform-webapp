@@ -1,4 +1,14 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Autocomplete, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Autocomplete,
+  TextField,
+  Typography,
+  MuiButton as Button,
+} from "ui";
 import { useState } from "react";
 import type { ShortestPathResult } from "../../utils/shortestPath";
 

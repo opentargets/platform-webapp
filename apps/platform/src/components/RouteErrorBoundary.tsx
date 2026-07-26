@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography, MuiButton as Button } from "ui";
 import { useRouteError } from "react-router";
 
 function RouteErrorBoundary() {

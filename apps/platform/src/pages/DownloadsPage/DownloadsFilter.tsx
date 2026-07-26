@@ -1,4 +1,4 @@
-import { Box, Checkbox, Chip, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, FormGroup, Paper, Typography, MuiChip as Chip } from "ui";
 import { v1 } from "uuid";
 import DownloadsSearchInput from "./DownloadsSearchInput";
 import { DownloadsContext } from "./context/DownloadsContext";

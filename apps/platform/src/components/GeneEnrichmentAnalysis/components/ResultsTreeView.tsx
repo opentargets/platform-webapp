@@ -11,31 +11,31 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
-  Button,
-  Chip,
   Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   FormControlLabel,
   IconButton,
   InputLabel,
-  Link,
   List,
   ListItem,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   MenuItem,
   Paper,
   Select,
   Switch,
-  Tooltip,
   Typography,
-} from "@mui/material";
+  MuiButton as Button,
+  MuiChip as Chip,
+  MuiLink as Link,
+  MuiTooltip as Tooltip,
+  Divider,
+  ListItemButton,
+} from "ui";
 import { useCallback, useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 
