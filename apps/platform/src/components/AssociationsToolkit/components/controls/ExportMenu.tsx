@@ -32,6 +32,7 @@ function ExportMenu() {
         disableElevation
         iconSize="lg"
         sx={{ height: 1, maxHeight: "45px" }}
+        noBorder
       />
 
       <Popover

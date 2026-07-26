@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   Button,
+  ButtonNoBorder,
   Link,
   Tooltip,
   useApolloClient,
@@ -405,7 +406,7 @@ function DataUploader() {
 
   return (
     <div>
-      <Button
+      <ButtonNoBorder
         aria-describedby={popoverId}
         onClick={handleClickBTN}
         disableElevation
@@ -416,7 +417,7 @@ function DataUploader() {
           <FontAwesomeIcon icon={faFileImport} size="lg" />
         </Box>
         {`Upload ${entityToUploadLabel}`}
-      </Button>
+      </ButtonNoBorder>
       <Dialog
         onClose={handleClosePopover}
         open={open}

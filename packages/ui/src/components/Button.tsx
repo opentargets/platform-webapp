@@ -28,6 +28,7 @@ type PopoverButtonProps = {
     | "9x"
     | "10x";
   sx?: SxProps<Theme>;
+  noBorder?: boolean;
 };
 
 // Swap point for a future design-system migration — currently a no-op wrapper
@@ -44,6 +45,13 @@ const ButtonPrimary = styled(Button)(({ theme }) => ({
   },
 }));
 
+// The app theme forces a 1px grey border onto every MuiButton root by default
+// (see ot-config's theme.ts). This variant opts a button back out of that —
+// for toolbar-style trigger buttons where the border doesn't read as intentional.
+const ButtonNoBorder = styled(Button)({
+  border: "none",
+});
+
 const PopoverButton: React.FC<PopoverButtonProps> = ({
   popoverId,
   handleClick,
@@ -55,9 +63,11 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
   iconSize,
   sx,
   testId,
+  noBorder = false,
 }) => {
+  const ButtonComponent = noBorder ? ButtonNoBorder : Button;
   return (
-    <Button
+    <ButtonComponent
       aria-describedby={popoverId}
       aria-label={ariaLabel}
       data-testid={testId}
@@ -73,8 +83,8 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
       <Box component="span" sx={{ ml: 1 }}>
         {open ? <FontAwesomeIcon icon={faCaretUp} /> : <FontAwesomeIcon icon={faCaretDown} />}
       </Box>
-    </Button>
+    </ButtonComponent>
   );
 };
 
-export { PopoverButton, ButtonPrimary, Button };
+export { PopoverButton, ButtonPrimary, Button, ButtonNoBorder };

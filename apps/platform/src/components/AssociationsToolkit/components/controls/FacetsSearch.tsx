@@ -34,6 +34,7 @@ function FacetsSearch(): ReactElement {
         iconSize="lg"
         sx={{ height: 1, maxHeight: "45px" }}
         testId="facets-search-button"
+        noBorder
       />
 
       <Popover

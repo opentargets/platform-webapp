@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button } from "ui";
+import { Box, ButtonNoBorder } from "ui";
 import { faCaretUp, faCaretDown, faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -22,7 +22,7 @@ function DataMenu() {
 
   return (
     <>
-      <Button
+      <ButtonNoBorder
         data-testid="column-options-button"
         aria-describedby={id}
         onClick={handleClick}
@@ -43,7 +43,7 @@ function DataMenu() {
             <FontAwesomeIcon icon={faCaretDown} />
           )}
         </Box>
-      </Button>
+      </ButtonNoBorder>
     </>
   );
 }
