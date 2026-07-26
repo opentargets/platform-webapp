@@ -42,6 +42,16 @@ export const createApolloClient = (config: Config) => {
         InSilicoPredictor: {
           keyFields: ["method"],
         },
+        // Biosample has no `id`/`_id` field but does have a stable natural key
+        // (biosampleId), so it's embedded rather than normalized by default - the
+        // same root cause as the CredibleSet/AlleleFrequency/InSilicoPredictor
+        // entries above. Fixed the same way, at the type level, so it's normalized
+        // consistently everywhere it's queried (Study.biosample, EnhancerToGene
+        // rows, MolQTLColoc rows, etc.) rather than needing a merge policy on each
+        // individual parent field that happens to embed it.
+        Biosample: {
+          keyFields: ["biosampleId"],
+        },
         // CredibleSet has no `id`/`_id` field, so Apollo can't auto-normalize it -
         // every query touching Query.credibleSet(studyLocusId) collided in the same
         // embedded field-level cache slot instead of a shared entity, causing the
