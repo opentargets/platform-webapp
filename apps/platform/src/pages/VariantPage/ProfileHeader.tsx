@@ -6,8 +6,10 @@ import {
   Link,
   LongText,
   ProfileDescription,
+  Box,
+  Paper,
+  Typography,
 } from "ui";
-import { Box, Paper, Typography } from "@mui/material";
 import { identifiersOrgLink } from "@ot/utils";
 
 import VARIANT_PROFILE_HEADER_FRAGMENT from "./ProfileHeader.gql";

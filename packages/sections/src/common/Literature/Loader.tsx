@@ -1,4 +1,4 @@
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography, CircularProgress } from "ui";
 import { useEffect, useState } from "react";
 
 function Loader({ message = "", pageSize = 5 }) {

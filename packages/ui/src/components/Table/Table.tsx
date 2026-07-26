@@ -1,6 +1,7 @@
 /* eslint-disable */
+
+import { GridLegacy, TableRow as MUITableRow, TableBody, TablePagination } from "@mui/material";
 import { useState } from "react";
-import { TableBody, TablePagination, TableRow as MUITableRow, GridLegacy } from "@mui/material";
 
 import DataDownloader from "../DataDownloader";
 import GlobalFilter from "./GlobalFilter";
@@ -53,7 +54,7 @@ const Table = ({
   const emptyRows = pageSize - rows.length;
   const [selectedRow, setSelectedRow] = useState(0);
 
-  const handleGlobalFilterChange = newGlobalFilter => {
+  const handleGlobalFilterChange = (newGlobalFilter) => {
     if (newGlobalFilter !== globalFilter) {
       onGlobalFilterChange(newGlobalFilter);
     }
@@ -63,7 +64,7 @@ const Table = ({
     onSortBy(sortBy);
   };
 
-  const handleChangeRowsPerPage = event => {
+  const handleChangeRowsPerPage = (event) => {
     onRowsPerPageChange(Number(event.target.value));
   };
   const handleChangePage = (_, page) => {
@@ -120,7 +121,7 @@ const Table = ({
                 key={i}
                 row={row}
                 noWrap={noWrap}
-                onClick={event => handleClick(event, row, i)}
+                onClick={(event) => handleClick(event, row, i)}
                 selected={rowIsSelectable && selectedRow === i}
               />
             ))}

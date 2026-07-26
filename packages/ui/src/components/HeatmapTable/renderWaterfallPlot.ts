@@ -29,15 +29,15 @@ export function renderWaterfallPlot({
       labelArrow: false,
       domain: xDomain,
       ticks: xTicks,
-      tickFormat: v => (Number.isInteger(v) ? String(v) : v),
+      tickFormat: (v) => (Number.isInteger(v) ? String(v) : v),
     },
     y: {
       type: "band",
-      domain: features.map(d => d.name),
+      domain: features.map((d) => d.name),
       reverse: true,
       axis: null,
       grid: true,
-      inset: -1,  // force x-axis upwards to correct position
+      inset: -1, // force x-axis upwards to correct position
     },
     marks: [
       // column headers
@@ -46,7 +46,7 @@ export function renderWaterfallPlot({
         y: "name",
         dx: dxName,
         dy: dyHeader,
-        text: d => "Feature",
+        text: (d) => "Feature",
         fontWeight: 500,
         textAnchor: "end",
         fontSize: textFontSize,
@@ -57,7 +57,7 @@ export function renderWaterfallPlot({
         y: "name",
         dx: dxValue,
         dy: dyHeader,
-        text: d => "Value",
+        text: (d) => "Value",
         fontWeight: 500,
         fontSize: textFontSize,
         textAnchor: "end",
@@ -66,7 +66,7 @@ export function renderWaterfallPlot({
       PlotLib.text(features.slice(-1), {
         x: "_end",
         y: "name",
-        text: d => `Shapley\n(sum: ${d._end.toFixed(3)})`,
+        text: (d) => `Shapley\n(sum: ${d._end.toFixed(3)})`,
         lineHeight: 1.2,
         dy: dyHeader,
         fontWeight: 500,
@@ -88,7 +88,7 @@ export function renderWaterfallPlot({
       PlotLib.text(features, {
         x: xDomain[0],
         y: "name",
-        text: d => d.value.toFixed(3),
+        text: (d) => d.value.toFixed(3),
         dx: dxValue,
         textAnchor: "end",
         fontSize: 11.5,
@@ -114,19 +114,19 @@ export function renderWaterfallPlot({
       PlotLib.text(labelBase ? features.slice(0, 1) : [], {
         x: shapBaseValue,
         y: "name",
-        text: d => `Base: ${shapBaseValue.toFixed(3)}`,
+        text: (d) => `Base: ${shapBaseValue.toFixed(3)}`,
         dy: 40,
         fontSize: textFontSize,
       }),
 
       // bars
       PlotLib.ruleY(
-        features.filter(d => Math.abs(d.shapValue) > 0.0005),
+        features.filter((d) => Math.abs(d.shapValue) > 0.0005),
         {
           x1: "_start",
           x2: "_end",
           y: "name",
-          stroke: d => (d.shapValue < 0 ? negColor : posColor),
+          stroke: (d) => (d.shapValue < 0 ? negColor : posColor),
           strokeWidth: 10,
         }
       ),
@@ -151,11 +151,11 @@ export function renderWaterfallPlot({
 
       // show shap values in or next to bars
       PlotLib.text(
-        features.filter(d => d.shapValue > 0.0005),
+        features.filter((d) => d.shapValue > 0.0005),
         {
           x: "_end",
           y: "name",
-          text: d => `+${d.shapValue.toFixed(3)}`,
+          text: (d) => `+${d.shapValue.toFixed(3)}`,
           textAnchor: "start",
           dx: 3,
           fontSize: 11,
@@ -163,11 +163,11 @@ export function renderWaterfallPlot({
         }
       ),
       PlotLib.text(
-        features.filter(d => d.shapValue < -0.0005),
+        features.filter((d) => d.shapValue < -0.0005),
         {
           x: "_end",
           y: "name",
-          text: d => d.shapValue.toFixed(3),
+          text: (d) => d.shapValue.toFixed(3),
           textAnchor: "end",
           dx: -3,
           fontSize: 11,

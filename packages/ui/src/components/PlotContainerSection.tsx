@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type PlotContainerSectionProps = {
   children: ReactNode;
@@ -7,7 +7,7 @@ type PlotContainerSectionProps = {
 
 function PlotContainerSection({ children }: PlotContainerSectionProps): ReactNode {
   return (
-    <Box sx={{ padding: "4px 0", borderBottom: theme => `1px solid ${theme.palette.grey[300]}` }}>
+    <Box sx={{ padding: "4px 0", borderBottom: (theme) => `1px solid ${theme.palette.grey[300]}` }}>
       {children}
     </Box>
   );

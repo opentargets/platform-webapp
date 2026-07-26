@@ -1,4 +1,3 @@
-import { Typography } from "@mui/material";
 
 import {
   Link,
@@ -9,6 +8,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTableSSP,
+  Typography,
 } from "ui";
 
 import { definition } from ".";

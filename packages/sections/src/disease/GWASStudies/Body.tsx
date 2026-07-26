@@ -1,6 +1,14 @@
 import { ReactElement } from "react";
-import { Box, Typography } from "@mui/material";
-import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTable, useBatchQuery } from "ui";
+import {
+  Link,
+  SectionItem,
+  Tooltip,
+  PublicationsDrawer,
+  OtTable,
+  useBatchQuery,
+  Box,
+  Typography,
+} from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { epmcUrl, getStudyCategory } from "@ot/utils";
 import Description from "./Description";

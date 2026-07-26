@@ -1,7 +1,7 @@
-import { createContext, useState, useEffect, useContext } from "react";
-import useDebounce from "../../hooks/useDebounce";
-import { DocumentNode } from "@apollo/client";
+import type { DocumentNode } from "@apollo/client";
 import { getSuggestedSearch } from "@ot/utils";
+import { createContext, useContext, useEffect, useState } from "react";
+import useDebounce from "../../hooks/useDebounce";
 
 const searchSuggestions = getSuggestedSearch();
 

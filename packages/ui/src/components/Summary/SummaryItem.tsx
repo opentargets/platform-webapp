@@ -1,6 +1,6 @@
 import { CardHeader, GridLegacy, LinearProgress, Skeleton } from "@mui/material";
 import { scroller } from "react-scroll";
-
+import PartnerLockIcon from "../PartnerLockIcon";
 import {
   StyledAvatar,
   StyledCard,
@@ -9,9 +9,16 @@ import {
   StyledTitle,
 } from "./SummaryItem.styles";
 import { createShortName } from "./utils";
-import PartnerLockIcon from "../PartnerLockIcon";
 
-function SummaryItem<T>({ definition, request, subText }: { definition: any; request: { loading: boolean; error?: any; data: T }; subText?: React.ReactNode }) {
+function SummaryItem<T>({
+  definition,
+  request,
+  subText,
+}: {
+  definition: any;
+  request: { loading: boolean; error?: any; data: T };
+  subText?: React.ReactNode;
+}) {
   const { loading, error, data } = request;
   const shortName = createShortName(definition);
   const hasData = !loading && !error && data && definition.hasData(data);

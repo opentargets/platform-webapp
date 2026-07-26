@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState, memo, useCallback, Fragment, useMemo } from "react";
-import { Box, styled } from "@mui/material";
 import { useLazyQuery } from "@apollo/client";
+import { Box, styled } from "@mui/material";
+import { Fragment, memo, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import useListOption from "../../hooks/useListOption";
 import GlobalSearchListHeader from "./GlobalSearchListHeader";
 import GlobalSearchListItem from "./GlobalSearchListItem";
+import GlobalSearchLoadingState from "./GlobalSearchLoadingState";
 import { defaultEntityFilterState, SearchContext } from "./SearchContext";
 import {
   formatSearchData,
@@ -10,8 +12,6 @@ import {
   TOTAL_ENTITIES,
   TOTAL_SEARCH_RESULTS,
 } from "./utils/searchUtils";
-import useListOption from "../../hooks/useListOption";
-import GlobalSearchLoadingState from "./GlobalSearchLoadingState";
 import VariantMessage from "./VariantMessage";
 
 const VARIANT_COMPONENTS = {
@@ -87,7 +87,7 @@ function GlobalSearchList({ inputValue }) {
     selected = index;
     const items = document.querySelectorAll(".search-list-item");
     if (items.length) {
-      items.forEach(el => {
+      items.forEach((el) => {
         el.classList.remove("search-list-item-active");
       });
       items[index].classList.add("search-list-item-active");
@@ -98,7 +98,7 @@ function GlobalSearchList({ inputValue }) {
     }
   }, []);
 
-  const onKeyDownHandler = useCallback(e => {
+  const onKeyDownHandler = useCallback((e) => {
     if (e.key === "Escape") {
       setOpen(false);
       e.preventDefault();
@@ -122,7 +122,7 @@ function GlobalSearchList({ inputValue }) {
   }, []);
 
   const handleItemClick = useCallback(
-    item => {
+    (item) => {
       setOpen(false);
       openListItem(item, filterState);
       setFilterState(defaultEntityFilterState);
@@ -142,11 +142,11 @@ function GlobalSearchList({ inputValue }) {
         size: Math.ceil(TOTAL_SEARCH_RESULTS / selectedEntityFilterLength),
       },
     })
-      .then(res => {
+      .then((res) => {
         const formattedData = formatSearchData(res.data);
         setSearchResult({ ...formattedData });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
   }
@@ -201,7 +201,7 @@ function GlobalSearchList({ inputValue }) {
     >
       <GlobalSearchListHeader listHeader="Search Suggestions" />
       <List tabIndex={-1} sx={{ display: "flex", flexWrap: "wrap" }}>
-        {searchSuggestions.map(item => (
+        {searchSuggestions.map((item) => (
           <GlobalSearchListItem
             key={item.id || item.symbol}
             item={item}
@@ -270,7 +270,7 @@ function GlobalSearchList({ inputValue }) {
               >
                 <GlobalSearchListHeader listHeader={key} />
                 <List tabIndex={-1}>
-                  {value.map(item => (
+                  {value.map((item) => (
                     <GlobalSearchListItem
                       key={item.id || item.symbol}
                       item={item}
@@ -306,7 +306,7 @@ function GlobalSearchList({ inputValue }) {
         >
           <GlobalSearchListHeader listHeader="recent" />
           <List tabIndex={-1}>
-            {recentItems.map(item => (
+            {recentItems.map((item) => (
               <GlobalSearchListItem
                 key={item.id || item.symbol}
                 item={item}

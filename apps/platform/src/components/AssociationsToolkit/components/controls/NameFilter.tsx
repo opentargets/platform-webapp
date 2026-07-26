@@ -1,8 +1,8 @@
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, InputAdornment, styled, TextField } from "@mui/material";
+import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useDebounce } from "ui";
+import { useDebounce, Box, InputAdornment, TextField } from "ui";
 import { useAotfQueryState, useAotfQueryDispatch } from "../../context/AssociationsQueryContext";
 
 const NameFilterInput = styled(TextField)(() => ({

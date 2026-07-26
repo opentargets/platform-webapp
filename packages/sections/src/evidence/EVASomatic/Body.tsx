@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Box, Typography } from "@mui/material";
 import {
   SectionItem,
   ChipList,
@@ -11,6 +10,8 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableSSP,
+  Box,
+  Typography,
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 

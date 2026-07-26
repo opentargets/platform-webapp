@@ -6,6 +6,8 @@ import {
   DirectionOfEffectTooltip,
   OtTable,
   ClinicalRecordDrawer,
+  Box,
+  Typography,
 } from "ui";
 import { useQuery } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,7 +16,6 @@ import { clinicalStageCategories, naLabel, dataTypesMap, sectionsBaseSizeQuery, 
 import Description from "./Description";
 import { definition } from ".";
 import CLINICAL_PRECEDENCE_QUERY from "./ClinicalPrecedence.gql";
-import { Box, Typography } from "@mui/material";
 
 const exportColumns = [
   {

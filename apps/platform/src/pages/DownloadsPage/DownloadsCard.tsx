@@ -1,7 +1,15 @@
-import { Box, Button, Card, CardActions, CardContent, Chip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faDatabase } from "@fortawesome/free-solid-svg-icons";
-import { OtLongText } from "ui";
+import {
+  LongText,
+  Box,
+  Card,
+  CardActions,
+  CardContent,
+  Typography,
+  Button,
+  Chip,
+} from "ui";
 import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext } from "react";
@@ -64,9 +72,9 @@ function DownloadsCard({ data }: { data: Record<string, unknown> }) {
             </Typography>
           </Box>
 
-          <OtLongText variant="body2" lineLimit={2} displayText="... more">
+          <LongText variant="body2" lineLimit={2} displayText="... more">
             {data.description}
-          </OtLongText>
+          </LongText>
         </Box>
 
         <Box>
@@ -75,6 +83,7 @@ function DownloadsCard({ data }: { data: Record<string, unknown> }) {
               data.categories.map(c => (
                 <Chip
                   key={v1()}
+                  variant="filled"
                   size="small"
                   label={c}
                   clickable

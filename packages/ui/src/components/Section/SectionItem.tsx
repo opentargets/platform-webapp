@@ -1,7 +1,11 @@
 import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
+import { VIEW } from "@ot/constants";
+import { type ReactNode, useEffect, useState } from "react";
 import { Element } from "react-scroll";
-
 import ErrorBoundary from "../ErrorBoundary";
+import PartnerLockIcon from "../PartnerLockIcon";
+import { SummaryLoader } from "../PublicationsDrawer";
+import { createShortName } from "../Summary/utils";
 import SectionError from "./SectionError";
 import {
   CardHeaderContainer,
@@ -12,12 +16,7 @@ import {
   StyledDescription,
   StyledTitle,
 } from "./SectionItem.styles";
-import { createShortName } from "../Summary/utils";
-import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
-import { ReactNode, useEffect, useState } from "react";
-import { VIEW } from "@ot/constants";
-import { SummaryLoader } from "../PublicationsDrawer";
 
 type definitionType = {
   id: string;
@@ -98,7 +97,7 @@ function SectionItem({
 
   return (
     <GridLegacy item xs={12}>
-      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
+      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}>
         <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>
@@ -108,14 +107,12 @@ function SectionItem({
                 {/* HEADER, SUB-HEADER & CHIP */}
                 <Box sx={{ flex: 1 }}>
                   <StyledTitle
-                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}-header`}
+                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}-header`}
                     error={!!error}
                   >
                     {definition.name}
                     {definition.isPrivate && <PartnerLockIcon />}
-                    {chipText && (
-                      <StyledChip sx={{ typography: "caption" }}>{chipText}</StyledChip>
-                    )}
+                    {chipText && <StyledChip sx={{ typography: "caption" }}>{chipText}</StyledChip>}
                   </StyledTitle>
                   <StyledDescription data-testid="section-description" variant="body2">
                     {renderDescription()}

@@ -1,9 +1,8 @@
-import { Box } from "@mui/material";
-import { Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 
-import { ReactNode } from "react";
-import Link from "../components/Link";
+import type { ReactNode } from "react";
 import BrokenSearchIcon from "../components/icons/BrokenSearchIcon";
+import Link from "../components/Link";
 
 const hiddenMobileSx = {
   "@media (max-width: 767px)": {
@@ -37,7 +36,7 @@ function EmptyPage({
       <Box
         sx={[
           hiddenMobileSx,
-          theme => ({
+          (theme) => ({
             borderRight: `1px solid ${theme.palette.grey[500]}`,
             height: "65%",
             margin: "0 4em",
@@ -50,23 +49,25 @@ function EmptyPage({
         </Typography>
         <Box sx={{ padding: "4em 0" }}>
           <Typography>
-            We can't find the page you're looking for.
-
-            You could try:
+            We can't find the page you're looking for. You could try:
             <ul>
-            <li>search for a target, disease, drug, variant, or study in the search bar</li>
-            <li>check our{" "}
-            <Link external to={documentationLink}>
-              Documentation
-            </Link>{" "}
-            to see if we've moved the page you are looking for</li>
-            <li>get in touch on the{" "}
-            <Link external to={communityLink}>
-              Community
-            </Link>{" "}
-            to report the error</li>
+              <li>search for a target, disease, drug, variant, or study in the search bar</li>
+              <li>
+                check our{" "}
+                <Link external to={documentationLink}>
+                  Documentation
+                </Link>{" "}
+                to see if we've moved the page you are looking for
+              </li>
+              <li>
+                get in touch on the{" "}
+                <Link external to={communityLink}>
+                  Community
+                </Link>{" "}
+                to report the error
+              </li>
             </ul>
-            <br/>
+            <br />
             Thanks!
           </Typography>
         </Box>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { LiteratureProvider, useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { Box } from "@mui/material";
-import { SectionItem, useApolloClient } from "ui";
+import { SectionItem, useApolloClient, Box } from "ui";
 import PublicationsList from "./PublicationsList";
 import Description from "./Description";
 import Entities from "./Entities";

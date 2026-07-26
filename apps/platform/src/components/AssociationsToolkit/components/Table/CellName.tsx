@@ -1,18 +1,17 @@
 import { useState, useRef, MouseEvent } from "react";
+import { styled, useMediaQuery } from "@mui/material";
 import {
-  styled,
   Typography,
   MenuList,
   MenuItem,
   ListItemText,
   ListItemIcon,
-  Divider,
   Popover,
   Box,
   Fade,
   Skeleton,
-  useMediaQuery,
-} from "@mui/material";
+  Divider,
+} from "ui";
 import {
   faThumbTack,
   faEllipsisVertical,

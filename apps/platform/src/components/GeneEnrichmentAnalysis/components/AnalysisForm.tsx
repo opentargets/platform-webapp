@@ -1,17 +1,17 @@
 import {
   Box,
-  Button,
-  Chip,
   FormControl,
   FormControlLabel,
-  FormHelperText,
   MenuItem,
   Paper,
-  Radio,
-  RadioGroup,
   Select,
   Typography,
-} from "@mui/material";
+  Button,
+  Chip,
+  FormHelperText,
+  Radio,
+  RadioGroup,
+} from "ui";
 import type { AnalysisInputs, AssociationsState, GeneSetSource } from "../types";
 import { GseaLibrariesMap } from "../constants";
 

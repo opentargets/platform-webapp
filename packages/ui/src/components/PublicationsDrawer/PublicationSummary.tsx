@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { Collapse, Box, Typography, Button } from "@mui/material";
-
 import { faCircleNodes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Button, Collapse, Typography } from "@mui/material";
 import { publicationSummaryQuery } from "@ot/utils";
+import { useEffect, useState } from "react";
 import PublicationActionsTooltip from "./PublicationActionsTooltip";
-import SummaryLoader from "./SummaryLoader";
 import PublicationSummaryLabel from "./PublicationSummaryLabel";
+import SummaryLoader from "./SummaryLoader";
 
 type LoadingState = true | false;
 type CollapsedState = true | false;
@@ -27,23 +26,23 @@ function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): J
   const [collapseOpen, setCollapseOpen] = useState<CollapsedState>(false);
 
   const handleChange = () => {
-    setCollapseOpen(prev => !prev);
+    setCollapseOpen((prev) => !prev);
   };
 
   function requestSummary({ baseUrl, requestOptions }: any) {
     fetch(baseUrl, requestOptions)
-      .then(response => {
+      .then((response) => {
         if (response.ok) return response.json();
-        return response.json().then(err => {
+        return response.json().then((err) => {
           throw new Error(err.error);
         });
       })
-      .then(data => {
+      .then((data) => {
         setSummaryText(data.text);
         setError(null);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
@@ -106,7 +105,7 @@ function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): J
       </PublicationActionsTooltip>
       <Collapse in={collapseOpen}>
         <Box
-          sx={theme => ({
+          sx={(theme) => ({
             background: theme.palette.grey[100],
             marginTop: "10px",
             marginBottom: "10px",
