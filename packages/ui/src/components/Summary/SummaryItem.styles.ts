@@ -23,7 +23,6 @@ export const StyledTitle = styled(Typography, {
       : hasData
         ? theme.palette.text.primary
         : theme.palette.grey[500],
-    fontWeight: hasData ? "bold" : undefined,
   })
 );
 
