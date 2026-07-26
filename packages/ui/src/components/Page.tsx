@@ -11,7 +11,7 @@ function Page({ header, footer, children }: PageProps) {
   return (
     <Box
       sx={{
-        background: "grey.50",
+        backgroundColor: "grey.50",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
