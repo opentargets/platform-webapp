@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Grid, IconButton } from "@mui/material";
+import { GridLegacy, IconButton } from "@mui/material";
 import { faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -27,8 +27,8 @@ function GlobalFilter({ onGlobalFilterChange }) {
   );
 
   return (
-    <Grid container>
-      <Grid item xs={12}>
+    <GridLegacy container>
+      <GridLegacy item xs={12}>
         <StyledGlobalFilterInput
           autoComplete="off"
           startAdornment={<FontAwesomeIcon icon={faMagnifyingGlass} />}
@@ -44,8 +44,8 @@ function GlobalFilter({ onGlobalFilterChange }) {
           onChange={handleInputChange}
           value={inputValue}
         />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 }
 

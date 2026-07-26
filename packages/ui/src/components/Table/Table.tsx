@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState } from "react";
-import { TableBody, TablePagination, TableRow as MUITableRow, Grid } from "@mui/material";
+import { TableBody, TablePagination, TableRow as MUITableRow, GridLegacy } from "@mui/material";
 
 import DataDownloader from "../DataDownloader";
 import GlobalFilter from "./GlobalFilter";
@@ -78,8 +78,8 @@ const Table = ({
   };
 
   return (
-    <Grid container direction="column">
-      <Grid item container>
+    <GridLegacy container direction="column">
+      <GridLegacy item container>
         <StyledFilterGrid item xs={12} md={4} lg={4}>
           {showGlobalFilter && <GlobalFilter onGlobalFilterChange={handleGlobalFilterChange} />}
         </StyledFilterGrid>
@@ -100,7 +100,7 @@ const Table = ({
             />
           )}
         </StyledDownloaderGrid>
-      </Grid>
+      </GridLegacy>
       <StyledTableContainer sx={containerSx}>
         <StyledMuiTable fixed={fixed} sx={tableSx}>
           <TableHeader
@@ -134,10 +134,10 @@ const Table = ({
           </TableBody>
         </StyledMuiTable>
       </StyledTableContainer>
-      <Grid item container justifyContent="center">
+      <GridLegacy item container justifyContent="center">
         {loading && <StyledProgress size={22} />}
-      </Grid>
-      <Grid item container justifyContent="flex-end">
+      </GridLegacy>
+      <GridLegacy item container justifyContent="flex-end">
         {showPagination ? (
           <TablePagination
             ActionsComponent={ActionsComponent}
@@ -162,8 +162,8 @@ const Table = ({
         ) : (
           <StyledPaginationPlaceholder />
         )}
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 };
 

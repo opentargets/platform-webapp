@@ -5,7 +5,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
-  Grid,
+  GridLegacy,
   Typography,
   styled,
 } from "@mui/material";
@@ -88,8 +88,8 @@ function APIPage() {
         </Link>
         .
       </Typography>
-      <Grid sx={{ minHeight: "600px !important" }} container spacing={3}>
-        <Grid item md={3} xl={2}>
+      <GridLegacy sx={{ minHeight: "600px !important" }} container spacing={3}>
+        <GridLegacy item md={3} xl={2}>
           <Typography variant="h5" paragraph>
             Example queries
           </Typography>
@@ -371,13 +371,13 @@ function APIPage() {
               </div>
             </AccordionDetails>
           </Accordion>
-        </Grid>
-        <Grid item md={9} xl={10}>
+        </GridLegacy>
+        <GridLegacy item md={9} xl={10}>
           <Suspense fallback={<LoadingBackdrop />}>
             <GraphiQL fetcher={fetcher} query={query} />
           </Suspense>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
     </>
   );
 }

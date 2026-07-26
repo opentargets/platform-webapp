@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, GridLegacy } from "@mui/material";
 import { ReactNode } from "react";
 
 type PageProps = {
@@ -26,16 +26,16 @@ function Page({ header, footer, children }: PageProps): ReactNode {
           elsewhere in this migration). Omitted here so the real historical margin
           (MUI's own spacing-driven negative margin) applies, rather than the
           never-applied "margin: 0" intent. */}
-      <Grid
+      <GridLegacy
         container
         justifyContent="center"
         spacing={3}
         sx={{ padding: "24px", width: "100%", flex: "1 0 auto" }}
       >
-        <Grid item xs={12} md={11} sx={{ pb: 3 }}>
+        <GridLegacy item xs={12} md={11} sx={{ pb: 3 }}>
           {children}
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
       {footer}
     </Box>
   );

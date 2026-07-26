@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Box, Grid, Fade, Skeleton, Typography } from "@mui/material";
+import { Box, GridLegacy, Fade, Skeleton, Typography } from "@mui/material";
 import { PublicationWrapper, Table, useApolloClient } from "ui";
 import Loader from "./Loader";
 import { PublicationType, DetailsStateType } from "./types";
@@ -43,14 +43,14 @@ function SkeletonRow() {
       <Box mb={2}>
         <Skeleton height={44} />
         <Skeleton width="60%" height={44} />
-        <Grid container wrap="nowrap">
+        <GridLegacy container wrap="nowrap">
           <Box width={130} mr={1}>
             <Skeleton height={44} />
           </Box>
           <Box width={130}>
             <Skeleton height={44} />
           </Box>
-        </Grid>
+        </GridLegacy>
       </Box>
     </Fade>
   );

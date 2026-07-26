@@ -1,4 +1,4 @@
-import { CardHeader, Grid, LinearProgress, Skeleton } from "@mui/material";
+import { CardHeader, GridLegacy, LinearProgress, Skeleton } from "@mui/material";
 import { scroller } from "react-scroll";
 
 import {
@@ -25,7 +25,7 @@ function SummaryItem<T>({ definition, request, subText }: { definition: any; req
   };
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+    <GridLegacy item xs={12} sm={6} md={4} lg={3} xl={2}>
       <StyledCard
         data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
         hasData={hasData}
@@ -64,7 +64,7 @@ function SummaryItem<T>({ definition, request, subText }: { definition: any; req
         />
         {loading && <LinearProgress />}
       </StyledCard>
-    </Grid>
+    </GridLegacy>
   );
 }
 

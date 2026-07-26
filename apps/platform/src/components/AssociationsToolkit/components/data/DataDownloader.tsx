@@ -2,7 +2,7 @@ import FileSaver from "file-saver";
 import { useState, useMemo, useEffect, useReducer } from "react";
 import {
   Button,
-  Grid,
+  GridLegacy,
   Typography,
   Snackbar,
   Slide,
@@ -440,18 +440,18 @@ function DataDownloader() {
               <Typography>Download data as:</Typography>
             </Box>
             <Box>
-              <Grid container alignItems="center" spacing={3}>
-                <Grid item>
+              <GridLegacy container alignItems="center" spacing={3}>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadJSON} size="small">
                     JSON
                   </Button>
-                </Grid>
-                <Grid item>
+                </GridLegacy>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadTSV} size="small">
                     TSV
                   </Button>
-                </Grid>
-              </Grid>
+                </GridLegacy>
+              </GridLegacy>
             </Box>
           </Box>
         </DialogContent>

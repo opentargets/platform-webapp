@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { v1 } from "uuid";
-import { Autocomplete, Box, Button, Chip, Grid, TextField, Typography } from "@mui/material";
+import { Autocomplete, Box, Button, Chip, GridLegacy, TextField, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 // TODO: note this component is not actually used.
 // Only SimplePublication is used in evidence bibliography
@@ -203,14 +203,14 @@ class Section extends Component<Props> {
         request={{ loading: isLoading, error: hasError, data: hasData }}
         renderDescription={() => <Description label={label} />}
         renderBody={() => (
-          <Grid
+          <GridLegacy
             container
             direction="column"
             justifyContent="flex-start"
             alignItems="stretch"
             spacing={2}
           >
-            <Grid item xs={12}>
+            <GridLegacy item xs={12}>
               <StyledFilterCategoryContainer>
                 <Typography>Tag category:</Typography>
                 {/* Dropdown menu */}
@@ -258,16 +258,16 @@ class Section extends Component<Props> {
                     ))
                   : null}
               </Box>
-            </Grid>
+            </GridLegacy>
 
-            <Grid item xs={12}>
+            <GridLegacy item xs={12}>
               {/* Total result */}
               <Typography variant="body2" sx={{ marginBottom: "2rem" }}>
                 Showing {Math.min(hits.length, bibliographyCount)} of {bibliographyCount} results
               </Typography>
 
               {/* Publications */}
-              <Grid
+              <GridLegacy
                 container
                 direction="column"
                 justifyContent="flex-start"
@@ -275,7 +275,7 @@ class Section extends Component<Props> {
                 spacing={2}
               >
                 {hits.map((hitItem, i) => (
-                  <Grid item xs={12} key={hitItem._source.pub_id}>
+                  <GridLegacy item xs={12} key={hitItem._source.pub_id}>
                     <Publication
                       pmId={hitItem._source.pub_id}
                       title={hitItem._source.title}
@@ -292,14 +292,14 @@ class Section extends Component<Props> {
                       }}
                       hasAbstract={hitItem._source.abstract}
                     />
-                  </Grid>
+                  </GridLegacy>
                 ))}
-              </Grid>
-            </Grid>
+              </GridLegacy>
+            </GridLegacy>
 
             {/* Load more, if any */}
             {hits.length < bibliographyCount ? (
-              <Grid item xs={12}>
+              <GridLegacy item xs={12}>
                 <Button
                   variant="contained"
                   size="medium"
@@ -311,9 +311,9 @@ class Section extends Component<Props> {
                 >
                   Load more papers
                 </Button>
-              </Grid>
+              </GridLegacy>
             ) : null}
-          </Grid>
+          </GridLegacy>
         )}
       />
     );

@@ -1,15 +1,8 @@
 /* eslint-disable */
 import _ from "lodash";
-import {
-  Hidden, // note this is deprecated in MUI 5
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  useMediaQuery,
-} from "@mui/material";
+import { TableHead, TableRow, TableSortLabel, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
-import { getHiddenBreakpoints } from "./utils";
 import { StyledHeaderCell, StyledHeaderLabelSpan } from "./tableStyles";
 import Tooltip from "../Tooltip";
 import useDynamicColspan from "../../hooks/useDynamicColspans";
@@ -100,30 +93,29 @@ function TableHeader({ columns, headerGroups, noWrapHeader, order, onRequestSort
       ) : null}
       <TableRow>
         {columns.map((column, index) => (
-          <Hidden {...getHiddenBreakpoints(column)} key={index}>
-            <HeaderCell
-              align={column.align ? column.align : column.numeric ? "right" : "left"}
-              label={column.label || _.startCase(column.id)}
-              noWrapHeader={noWrapHeader}
-              sortable={column.sortable}
-              sortParams={
-                column.sortable
-                  ? {
-                      active: sortBy === column.id,
-                      direction: sortBy === column.id ? order : "asc",
-                      onClick: createSortHandler(column.id),
-                    }
-                  : null
-              }
-              labelStyle={column.labelStyle}
-              classes={column.classes}
-              sticky={column.sticky}
-              tooltip={column.tooltip}
-              tooltipStyle={column.tooltipStyle}
-              width={column.width}
-              minWidth={column.minWidth}
-            />
-          </Hidden>
+          <HeaderCell
+            key={index}
+            align={column.align ? column.align : column.numeric ? "right" : "left"}
+            label={column.label || _.startCase(column.id)}
+            noWrapHeader={noWrapHeader}
+            sortable={column.sortable}
+            sortParams={
+              column.sortable
+                ? {
+                    active: sortBy === column.id,
+                    direction: sortBy === column.id ? order : "asc",
+                    onClick: createSortHandler(column.id),
+                  }
+                : null
+            }
+            labelStyle={column.labelStyle}
+            classes={column.classes}
+            sticky={column.sticky}
+            tooltip={column.tooltip}
+            tooltipStyle={column.tooltipStyle}
+            width={column.width}
+            minWidth={column.minWidth}
+          />
         ))}
       </TableRow>
     </TableHead>

@@ -1,5 +1,5 @@
 import {
-  Grid,
+  GridLegacy,
   Card,
   Typography,
   Checkbox,
@@ -224,8 +224,8 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
       <Typography variant="h5" gutterBottom>
         {data.search.total} results for &quot;<strong>{q}</strong>&quot;
       </Typography>
-      <Grid container spacing={2} sx={{ display: "flex", height: "100%" }}>
-        <Grid item md={3}>
+      <GridLegacy container spacing={2} sx={{ display: "flex", height: "100%" }}>
+        <GridLegacy item md={3}>
           <Typography variant="body2">Refine by:</Typography>
           <FormGroup>
             <SearchFilters
@@ -234,8 +234,8 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
               setEntity={onSetEntity}
             />
           </FormGroup>
-        </Grid>
-        <Grid
+        </GridLegacy>
+        <GridLegacy
           item
           md={6}
           sx={{
@@ -248,15 +248,15 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
           ) : (
             <NoResultsContainer q={q} />
           )}
-        </Grid>
+        </GridLegacy>
 
         {topHit ? (
-          <Grid item md={3}>
+          <GridLegacy item md={3}>
             {" "}
             <TopHitDetail topHit={topHit} />{" "}
-          </Grid>
+          </GridLegacy>
         ) : null}
-      </Grid>
+      </GridLegacy>
     </>
   );
 }

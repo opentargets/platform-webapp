@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { GridLegacy, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -23,7 +23,7 @@ export type FooterExternalLink = {
 
 const FooterLink = ({ label, url, icon }: FooterExternalLink) => {
   return (
-    <Grid item xs={12} sx={{ mb: 1 }}>
+    <GridLegacy item xs={12} sx={{ mb: 1 }}>
       <Typography color="inherit">
         {url.startsWith("mailto") ? (
           <EmailLink href={url} label={label} icon={icon} />
@@ -34,7 +34,7 @@ const FooterLink = ({ label, url, icon }: FooterExternalLink) => {
           </Link>
         )}
       </Typography>
-    </Grid>
+    </GridLegacy>
   );
 };
 
@@ -42,11 +42,11 @@ type FooterSectionHeadingProps = {
   children: React.ReactNode;
 };
 const FooterSectionHeading = ({ children }: FooterSectionHeadingProps) => (
-  <Grid item xs={12}>
+  <GridLegacy item xs={12}>
     <Typography variant="h6" component="div" color="inherit">
       {children}
     </Typography>
-  </Grid>
+  </GridLegacy>
 );
 
 const socialIconStyle = { fontSize: "30px", color: "white" };
@@ -59,15 +59,15 @@ const FooterSocial = ({ social }: FooterSocialProps) => {
   return (
     <>
       <FooterSectionHeading>Follow us</FooterSectionHeading>
-      <Grid sx={{ maxWidth: "235px" }} container justifyContent="space-between">
+      <GridLegacy sx={{ maxWidth: "235px" }} container justifyContent="space-between">
         {socialsWithIcons.map(({ icon, url, label }, i) => (
-          <Grid item key={i}>
+          <GridLegacy item key={i}>
             <Link external footer to={url} ariaLabel={label}>
               <FontAwesomeIcon style={socialIconStyle} icon={icon!} />
             </Link>
-          </Grid>
+          </GridLegacy>
         ))}
-      </Grid>
+      </GridLegacy>
     </>
   );
 };
@@ -80,8 +80,8 @@ type FooterSectionProps = {
 };
 const FooterSection = ({ heading, links, social, children }: FooterSectionProps) => {
   return (
-    <Grid item xs={12} sm={6} md={3} container direction="column" justifyContent="space-between">
-      <Grid item sx={{ width: "100%" }}>
+    <GridLegacy item xs={12} sm={6} md={3} container direction="column" justifyContent="space-between">
+      <GridLegacy item sx={{ width: "100%" }}>
         <FooterSectionHeading>{heading}</FooterSectionHeading>
         {links.map((link, i) => {
           if (link.showOnlyPartner) {
@@ -94,15 +94,15 @@ const FooterSection = ({ heading, links, social, children }: FooterSectionProps)
             return <FooterLink key={i} label={link.label} url={link.url} icon={link.icon} />;
           }
         })}
-      </Grid>
+      </GridLegacy>
 
       {social ? (
-        <Grid item>
+        <GridLegacy item>
           <FooterSocial social={social} />
-        </Grid>
+        </GridLegacy>
       ) : null}
       {children}
-    </Grid>
+    </GridLegacy>
   );
 };
 
@@ -182,7 +182,7 @@ type FooterProps = {
 };
 const Footer = ({ externalLinks }: FooterProps) => {
   return (
-    <Grid
+    <GridLegacy
       sx={{
         p: 3,
         backgroundColor: FOOTER_BACKGROUND_COLOR,
@@ -194,7 +194,7 @@ const Footer = ({ externalLinks }: FooterProps) => {
       justifyContent="center"
       spacing={3}
     >
-      <Grid item container xs={12} md={10} spacing={2}>
+      <GridLegacy item container xs={12} md={10} spacing={2}>
         <FooterSection heading="About" links={externalLinks.about}>
           <LicenseCC0 link={externalLinks.license} />
           <DeployedVersion />
@@ -202,8 +202,8 @@ const Footer = ({ externalLinks }: FooterProps) => {
         <FooterSection heading="Help" links={externalLinks.help} social={externalLinks.social} />
         <FooterSection heading="Partners" links={externalLinks.partners} />
         <FooterSection heading="About Open Targets" links={externalLinks.network} />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 };
 

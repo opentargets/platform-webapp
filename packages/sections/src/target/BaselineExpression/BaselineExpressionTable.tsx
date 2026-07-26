@@ -3,7 +3,7 @@ import { faCaretDown, faCaretUp, faCircle, faSquare } from "@fortawesome/free-so
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
-  Grid,
+  GridLegacy,
   IconButton,
   Paper,
   Table,
@@ -848,8 +848,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>{DownloaderComponent}</Box>
         </Box>
       </Box>
-      <Grid justifyContent="center" container>
-        <Grid item xs={12} md={10}>
+      <GridLegacy justifyContent="center" container>
+        <GridLegacy item xs={12} md={10}>
           <TableContainer component={Paper} elevation={0}>
             <Table size="small" sx={{ ...mainTableSx, fontSize: "0.75rem" }}>
               <TableHead>
@@ -1094,8 +1094,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
               </TableBody>
             </Table>
           </TableContainer>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
     </Box>
   );
 };

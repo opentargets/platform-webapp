@@ -1,13 +1,13 @@
-import { Box, CircularProgress, Grid, Input, TableCell, TableContainer, TableRow, Table as MuiTable, styled } from "@mui/material";
+import { Box, CircularProgress, GridLegacy, Input, TableCell, TableContainer, TableRow, Table as MuiTable, styled } from "@mui/material";
 
-export const StyledFilterGrid = styled(Grid)(({ theme }) => ({
+export const StyledFilterGrid = styled(GridLegacy)(({ theme }) => ({
   order: 0,
   [theme.breakpoints.down("sm")]: {
     order: 1,
   },
 }));
 
-export const StyledDownloaderGrid = styled(Grid)(({ theme }) => ({
+export const StyledDownloaderGrid = styled(GridLegacy)(({ theme }) => ({
   order: 1,
   marginLeft: "auto",
   [theme.breakpoints.down("sm")]: {

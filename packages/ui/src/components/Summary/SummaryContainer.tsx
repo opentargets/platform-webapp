@@ -1,6 +1,6 @@
-import { Grid, styled } from "@mui/material";
+import { GridLegacy, styled } from "@mui/material";
 
-const StyledGrid = styled(Grid)({
+const StyledGrid = styled(GridLegacy)({
   marginBottom: "2rem",
   marginTop: "2rem !important",
 });

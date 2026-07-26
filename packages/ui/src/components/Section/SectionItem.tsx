@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Grid, Skeleton } from "@mui/material";
+import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
 import { Element } from "react-scroll";
 
 import ErrorBoundary from "../ErrorBoundary";
@@ -97,7 +97,7 @@ function SectionItem({
   }
 
   return (
-    <Grid item xs={12}>
+    <GridLegacy item xs={12}>
       <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
         <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
@@ -134,7 +134,7 @@ function SectionItem({
           </Card>
         </Element>
       </section>
-    </Grid>
+    </GridLegacy>
   );
 }
 

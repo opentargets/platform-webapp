@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, GridLegacy } from "@mui/material";
 import { ReactElement } from "react";
 
 type PageProps = {
@@ -23,16 +23,16 @@ function Page({ header, footer, children }: PageProps) {
       {/* NOTE: see packages/ui/src/pages/Page.tsx - the old JSS `margin: 0` rule here
           never actually beat MuiGrid-spacing-xs-3's own default negative margin.
           Omitted so the real historical margin applies. */}
-      <Grid
+      <GridLegacy
         container
         justifyContent="center"
         spacing={3}
         sx={{ padding: "24px", width: "100%", flex: "1 0 auto" }}
       >
-        <Grid item xs={12} md={11} sx={{ pb: 3 }}>
+        <GridLegacy item xs={12} md={11} sx={{ pb: 3 }}>
           {children}
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
       {footer}
     </Box>
   );

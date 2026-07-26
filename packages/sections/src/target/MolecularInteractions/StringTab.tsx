@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { useState, useEffect } from "react";
-import { Grid } from "@mui/material";
+import { GridLegacy } from "@mui/material";
 import { scaleQuantize } from "d3";
 import { Link, Legend, OtTable, useApolloClient } from "ui";
 import { colorRange } from "@ot/constants";
@@ -160,8 +160,8 @@ function StringTab({ ensgId, symbol }) {
   }, [ensgId]);
 
   return (
-    <Grid container spacing={4}>
-      <Grid item xs={12}>
+    <GridLegacy container spacing={4}>
+      <GridLegacy item xs={12}>
         {/* table 1: this is the only table and will need to be a HEATMAP */}
         <OtTable
           showGlobalFilter
@@ -173,8 +173,8 @@ function StringTab({ ensgId, symbol }) {
           loading={loading}
         />
         <Legend url="https://string-db.org/cgi/info" />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 }
 

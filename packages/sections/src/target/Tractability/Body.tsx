@@ -2,7 +2,7 @@ import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons"
 import { v1 } from "uuid";
 import { SectionItem, EllsWrapper } from "ui";
 import { useQuery } from "@apollo/client";
-import { Grid, Typography } from "@mui/material";
+import { GridLegacy, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -87,16 +87,16 @@ function Body({ label: symbol, id: ensemblId, entity }: Props) {
       renderDescription={() => <Description symbol={symbol} />}
       showContentLoading={true}
       renderBody={() => (
-        <Grid data-testid="tractability-grid" container spacing={3}>
+        <GridLegacy data-testid="tractability-grid" container spacing={3}>
           {modalities.map(m => (
-            <Grid data-testid={`tractability-modality-${m.modality.toLowerCase()}`} item xs={6} sm={3} key={v1()}>
+            <GridLegacy data-testid={`tractability-modality-${m.modality.toLowerCase()}`} item xs={6} sm={3} key={v1()}>
               <Typography data-testid={`tractability-modality-title-${m.modality.toLowerCase()}`} variant="subtitle1" gutterBottom>
                 {m.label}
               </Typography>
               <ModalityList modality={m.modality} data={request.data?.target.tractability} />
-            </Grid>
+            </GridLegacy>
           ))}
-        </Grid>
+        </GridLegacy>
       )}
     />
   );

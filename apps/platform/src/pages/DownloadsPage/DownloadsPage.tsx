@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { gql, useQuery } from "@apollo/client";
-import { Alert, Box, Grid, Typography } from "@mui/material";
+import { Alert, Box, GridLegacy, Typography } from "@mui/material";
 import { Link, OtInvalidResultFilters } from "ui";
 import { getConfig } from "@ot/config";
 import { v1 } from "uuid";
@@ -71,11 +71,11 @@ function DownloadsPage() {
 
         <DownloadsTags />
 
-        <Grid container sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
+        <GridLegacy container sx={{ display: "flex", justifyContent: "space-between" }}>
+          <GridLegacy item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
             <DownloadsFilter />
-          </Grid>
-          <Grid
+          </GridLegacy>
+          <GridLegacy
             item
             xs={12}
             md={9}
@@ -103,8 +103,8 @@ function DownloadsPage() {
                 <OtInvalidResultFilters />
               )}
             </Box>
-          </Grid>
-        </Grid>
+          </GridLegacy>
+        </GridLegacy>
       </>
       <Routes>
         <Route path="/:downloadsRow/:downloadsView" element={<DownloadsDialog />} />

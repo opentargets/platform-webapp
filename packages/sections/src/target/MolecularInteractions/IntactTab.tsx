@@ -1,6 +1,6 @@
 import { Link, Tooltip, DataTable, EllsWrapper, useApolloClient } from "ui";
 import { useState, useEffect } from "react";
-import { Grid, Typography } from "@mui/material";
+import { GridLegacy, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { MethodIconText, MethodIconArrow } from "./custom/MethodIcons";
@@ -258,8 +258,8 @@ function IntactTab({ ensgId, symbol }) {
   }, [ensgId]);
 
   return (
-    <Grid container spacing={10}>
-      <Grid item xs={12} md={5}>
+    <GridLegacy container spacing={10}>
+      <GridLegacy item xs={12} md={5}>
         {/* table 1: interactions */}
         <Typography variant="body1" gutterBottom>
           Interactors of
@@ -295,10 +295,10 @@ function IntactTab({ ensgId, symbol }) {
           query={INTERACTIONS_QUERY.loc.source.body}
           variables={variables}
         />
-      </Grid>
+      </GridLegacy>
 
       {/* table 2: evidence */}
-      <Grid item xs={12} md={7}>
+      <GridLegacy item xs={12} md={7}>
         <Typography variant="body1" gutterBottom>
           Interaction evidence of
           <br />
@@ -323,8 +323,8 @@ function IntactTab({ ensgId, symbol }) {
           rowsPerPageOptions={defaultRowsPerPageOptions}
           loading={loading}
         />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 }
 
