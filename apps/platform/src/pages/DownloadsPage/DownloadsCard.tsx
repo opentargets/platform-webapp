@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faDatabase } from "@fortawesome/free-solid-svg-icons";
 import {
-  OtLongText,
+  LongText,
   Box,
   Card,
   CardActions,
@@ -72,9 +72,9 @@ function DownloadsCard({ data }: { data: Record<string, unknown> }) {
             </Typography>
           </Box>
 
-          <OtLongText variant="body2" lineLimit={2} displayText="... more">
+          <LongText variant="body2" lineLimit={2} displayText="... more">
             {data.description}
-          </OtLongText>
+          </LongText>
         </Box>
 
         <Box>

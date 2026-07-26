@@ -7,12 +7,12 @@ export type singleBtnGroupObj = {
   component: ReactNode;
 };
 
-type OtBtnGroupPropType = {
+type BtnGroupPropType = {
   btnGroup: Record<string, singleBtnGroupObj>;
   defaultActiveId?: string;
 };
 
-function OtBtnGroup({ btnGroup, defaultActiveId }: OtBtnGroupPropType) {
+function BtnGroup({ btnGroup, defaultActiveId }: BtnGroupPropType) {
   const defaultId = defaultActiveId || Object.keys(btnGroup)[0];
   const [activeId, setActiveId] = useState(defaultId);
 
@@ -57,4 +57,4 @@ function OtBtnGroup({ btnGroup, defaultActiveId }: OtBtnGroupPropType) {
     </Box>
   );
 }
-export default OtBtnGroup;
+export default BtnGroup;

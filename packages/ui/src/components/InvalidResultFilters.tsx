@@ -2,7 +2,7 @@ import { faFilterCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Typography } from "@mui/material";
 
-function OtInvalidResultFilters() {
+function InvalidResultFilters() {
   return (
     <Box
       sx={{
@@ -38,4 +38,4 @@ function OtInvalidResultFilters() {
     </Box>
   );
 }
-export default OtInvalidResultFilters;
+export default InvalidResultFilters;

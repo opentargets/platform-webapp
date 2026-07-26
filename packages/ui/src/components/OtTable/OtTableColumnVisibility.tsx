@@ -14,7 +14,7 @@ import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { OtTableColumnVisibilityProps } from "./table.types";
-import OtPopper from "../OtPopper";
+import Popper from "../Popper";
 
 function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): ReactElement {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>();
@@ -47,7 +47,7 @@ function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): React
         </Button>
       </Badge>
 
-      <OtPopper id={id} open={open} anchorEl={anchorEl}>
+      <Popper id={id} open={open} anchorEl={anchorEl}>
         <ClickAwayListener onClickAway={handleClose}>
           <Box>
             <FormGroup>
@@ -71,7 +71,7 @@ function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): React
             </FormGroup>
           </Box>
         </ClickAwayListener>
-      </OtPopper>
+      </Popper>
     </>
   );
 }

@@ -16,7 +16,7 @@ import { clinicalStageCategories, clinicalReportsSourcesInfo, stopReasonMap } fr
 import { useApolloClient } from "@apollo/client";
 import Link from "../Link";
 import { PublicationsList } from "../PublicationsDrawer";
-import OtLongText from "../OtLongText";
+import LongText from "../LongText";
 import Tooltip from "../Tooltip";
 import useDelayedFlag from "../../hooks/useDelayedFlag";
 import { sentenceCase } from "@ot/utils";
@@ -282,11 +282,11 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
               )}
             </Box>
             {trialWhyStopped && (
-              <OtLongText variant="body2" lineLimit={2}>
+              <LongText variant="body2" lineLimit={2} displayText="...show more">
                 <Box sx={{ whiteSpace: "pre-wrap", tabSize: 4, fontSize: "13px" }}>
                   {trialWhyStopped}
                 </Box>
-              </OtLongText>
+              </LongText>
             )}
           </Box>
         </FieldRow>
@@ -294,7 +294,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
       {dedupedDiseases.length > 0 && (
         <FieldRow label="Diseases">
-          <OtLongText variant="body2" lineLimit={3}>
+          <LongText variant="body2" lineLimit={3} displayText="...show more">
             <Box component="span" sx={{ fontSize: 14 }}>
               {dedupedDiseases.map((d: any, index: any) => (
                 <span key={index}>
@@ -320,13 +320,13 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
                 </span>
               ))}
             </Box>
-          </OtLongText>
+          </LongText>
         </FieldRow>
       )}
 
       {dedupedDrugs.length > 0 && (
         <FieldRow label="Drugs">
-          <OtLongText variant="body2" lineLimit={3}>
+          <LongText variant="body2" lineLimit={3} displayText="...show more">
             <Box component="span" sx={{ fontSize: 14 }}>
               {dedupedDrugs.map((d, index) => (
                 <span key={index}>
@@ -352,7 +352,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
                 </span>
               ))}
             </Box>
-          </OtLongText>
+          </LongText>
         </FieldRow>
       )}
 

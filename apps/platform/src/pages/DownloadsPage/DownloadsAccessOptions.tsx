@@ -1,5 +1,5 @@
-import { Link, OtBtnGroup, OtCodeBlock, Box, Typography } from "ui";
-import { singleBtnGroupObj } from "ui/src/components/OtBtnGroup";
+import { Link, BtnGroup, CodeBlock, Box, Typography } from "ui";
+import { singleBtnGroupObj } from "ui/src/components/BtnGroup";
 
 const FTP = "ftp-location";
 const GCP = "gcp-location";
@@ -72,14 +72,14 @@ function DownloadsAccessOptions({ data, locationUrl, version }: DownloadsAccessO
         <Typography mb={1} variant="body1">
           File Location:{" "}
         </Typography>
-        <OtBtnGroup btnGroup={getFilteredData({ allDataObj: LOCATION_MAP, containedInArray })} />
+        <BtnGroup btnGroup={getFilteredData({ allDataObj: LOCATION_MAP, containedInArray })} />
       </Box>
 
       <Box tabIndex={-1} sx={{ wordBreak: "break-all", typography: "subtitle2", mb: 4 }}>
         <Typography mb={1} variant="body1">
           Access Script:{" "}
         </Typography>
-        <OtBtnGroup btnGroup={getFilteredData({ allDataObj: SCRIPT_MAP, containedInArray })} />
+        <BtnGroup btnGroup={getFilteredData({ allDataObj: SCRIPT_MAP, containedInArray })} />
       </Box>
     </>
   );
@@ -88,11 +88,11 @@ function DownloadsAccessOptions({ data, locationUrl, version }: DownloadsAccessO
 function HttpLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={link}>
+      <CodeBlock textToCopy={link}>
         <Link to={link} external>
           {link}
         </Link>
-      </OtCodeBlock>
+      </CodeBlock>
     </Box>
   );
 }
@@ -121,7 +121,7 @@ function GcpLocationMemo() {
 function GcpLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={link}> {link}</OtCodeBlock>
+      <CodeBlock textToCopy={link}> {link}</CodeBlock>
     </Box>
   );
 }
@@ -129,7 +129,7 @@ function GcpLocation({ link }: { link: string }) {
 function AwsLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={link}> {link}</OtCodeBlock>
+      <CodeBlock textToCopy={link}> {link}</CodeBlock>
     </Box>
   );
 }
@@ -137,7 +137,7 @@ function AwsLocation({ link }: { link: string }) {
 function FtpLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={link}>{link}</OtCodeBlock>
+      <CodeBlock textToCopy={link}>{link}</CodeBlock>
     </Box>
   );
 }
@@ -148,7 +148,7 @@ function WgetScript({ link }: { link: string }) {
 
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={WgetCmd}>{WgetCmd}</OtCodeBlock>
+      <CodeBlock textToCopy={WgetCmd}>{WgetCmd}</CodeBlock>
     </Box>
   );
 }
@@ -158,7 +158,7 @@ function RsyncScript({ version, path, link }: { version: string; path: string; l
   const RsyncCmd = `rsync -rpltvz --delete rsync.ebi.ac.uk::${rsyncLink} .`;
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={RsyncCmd}>{RsyncCmd}</OtCodeBlock>
+      <CodeBlock textToCopy={RsyncCmd}>{RsyncCmd}</CodeBlock>
     </Box>
   );
 }
@@ -168,7 +168,7 @@ function GcpScript({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
       <GcpLocationMemo />
-      <OtCodeBlock textToCopy={cmd}>{cmd}</OtCodeBlock>
+      <CodeBlock textToCopy={cmd}>{cmd}</CodeBlock>
     </Box>
   );
 }
@@ -177,7 +177,7 @@ function AwsScript({ link }: { link: string }) {
   const cmd = `aws s3 cp --recursive --no-sign-request ${link}/ .`;
   return (
     <Box sx={{ p: 2 }}>
-      <OtCodeBlock textToCopy={cmd}>{cmd}</OtCodeBlock>
+      <CodeBlock textToCopy={cmd}>{cmd}</CodeBlock>
     </Box>
   );
 }

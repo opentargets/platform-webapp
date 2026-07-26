@@ -13,7 +13,7 @@ import {
   TextField,
 } from "@mui/material";
 import { v1 } from "uuid";
-import OtPopper from "../OtPopper";
+import Popper from "../Popper";
 
 function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): ReactElement {
   /*****************************************
@@ -64,7 +64,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
       </IconButton>
 
       {/* FILTER POPOVER */}
-      <OtPopper id={id} open={open} anchorEl={anchorEl}>
+      <Popper id={id} open={open} anchorEl={anchorEl}>
         <ClickAwayListener onClickAway={handleClose}>
           <GridLegacy container direction="column" spacing={2}>
             {/* INPUT FOR COLUMN FILTER */}
@@ -118,7 +118,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
             </GridLegacy>
           </GridLegacy>
         </ClickAwayListener>
-      </OtPopper>
+      </Popper>
 
       <div className="h-1" />
     </>

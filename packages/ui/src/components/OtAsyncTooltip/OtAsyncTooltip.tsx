@@ -19,7 +19,7 @@ import {
 import { GenomicLocationPresentationType, IGeneomicLocation, naLabel } from "@ot/constants";
 
 import StudyPublication from "../StudyPublication";
-import { OtGenomicLocation } from "../..";
+import { GenomicLocation } from "../..";
 
 const DELAY_REQUEST = 1000;
 
@@ -206,7 +206,7 @@ function AsyncTooltipDataView({
           {hasGeneLoc && (
             <Box sx={{ mt: 1, px:1, typography: "body2" }} component="span">
               <Divider />
-              <OtGenomicLocation type={GenomicLocationPresentationType.PLAIN} geneLoc={data?.genomicLocation!} />
+              <GenomicLocation type={GenomicLocationPresentationType.PLAIN} geneLoc={data?.genomicLocation!} />
             </Box>
           )}
       {showSubText && (
