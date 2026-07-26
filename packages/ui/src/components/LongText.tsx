@@ -1,5 +1,5 @@
-import { useState, useLayoutEffect, useRef, PropsWithChildren } from "react";
 import { Box, Typography } from "@mui/material";
+import { type PropsWithChildren, useLayoutEffect, useRef, useState } from "react";
 
 type LongTextProps = {
   lineLimit: number;

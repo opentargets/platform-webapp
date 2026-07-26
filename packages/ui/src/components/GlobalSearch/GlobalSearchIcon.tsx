@@ -18,13 +18,7 @@ function GlobalSearchIcon({ entity }: { entity: string }) {
         return <FontAwesomeIcon icon={faStar} style={labelIconStyle} />;
       case "drugs":
       case "drug":
-        return (
-          <FontAwesomeIcon
-            icon={faPrescriptionBottleAlt}
-            fixedWidth
-            style={labelIconStyle}
-          />
-        );
+        return <FontAwesomeIcon icon={faPrescriptionBottleAlt} fixedWidth style={labelIconStyle} />;
       case "diseases":
       case "disease":
         return <FontAwesomeIcon icon={faStethoscope} fixedWidth style={labelIconStyle} />;

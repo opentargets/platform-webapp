@@ -1,4 +1,4 @@
-import { Typography, Paper, GridLegacy, LinearProgress } from "@mui/material";
+import { GridLegacy, LinearProgress, Paper, Typography } from "@mui/material";
 import { v1 } from "uuid";
 
 import PlotContainerSection from "./PlotContainerSection";

@@ -1,24 +1,24 @@
-import { useState } from "react";
+import { faChevronDown, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  AccordionSummary,
-  AccordionDetails,
   Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
+  Button,
+  ButtonBase,
+  Drawer,
   IconButton,
   List,
   ListItem,
-  Drawer,
-  Typography,
   Paper,
-  Button,
-  ButtonBase,
+  Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { faXmark, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import _ from "lodash";
-import { v1 } from "uuid";
 import { naLabel } from "@ot/constants";
+import _ from "lodash";
+import { useState } from "react";
+import { v1 } from "uuid";
 
 import Link from "../Link";
 
@@ -95,11 +95,11 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
         {entries[0].name}
       </Link>
     ) : (
-      entries[0].name ?? naLabel
+      (entries[0].name ?? naLabel)
     );
   }
 
-  const toggleDrawer = event => {
+  const toggleDrawer = (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
       return;
     }
@@ -125,7 +125,7 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
       </StyledPaperTitle>
 
       <StyledBody>
-        {Object.keys(groupedEntries).map(group => (
+        {Object.keys(groupedEntries).map((group) => (
           <StyledAccordion
             elevation={0}
             key={group}
@@ -143,7 +143,7 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
             </AccordionSummary>
             <AccordionDetails>
               <List>
-                {groupedEntries[group].map(entry => (
+                {groupedEntries[group].map((entry) => (
                   <ListItem key={v1()}>
                     {entry.url ? (
                       <Link external to={entry.url}>

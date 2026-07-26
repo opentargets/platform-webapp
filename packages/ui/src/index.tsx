@@ -1,113 +1,9 @@
-export { default as ApiPlaygroundDrawer } from "./components/ApiPlaygroundDrawer";
-export { default as Chip } from "./components/Chip/Chip";
-export { default as ChipList } from "./components/ChipList";
-export { default as ClinvarStars } from "./components/ClinvarStars";
-export { default as ColorRamp } from "./components/ColorRamp.tsx";
-export { default as CopyUrlButton } from "./components/CopyUrlButton";
-export { default as DataDownloader } from "./components/DataDownloader";
-export { default as DetailPopover } from "./components/DetailPopover";
-export { default as DirectionalityDrawer } from "./components/DirectionalityDrawer";
-export { default as DirectionOfEffectIcon } from "./components/DirectionOfEffectIcon";
-export { default as DirectionOfEffectTooltip } from "./components/DirectionOfEffectTooltip";
-export { default as DisplaySampleSize } from "./components/DisplaySampleSize";
-export { default as DisplayVariantId } from "./components/DisplayVariantId";
-export * from "./components/DownloadSvgPlot";
-export { default as EllsWrapper } from "./components/EllsWrapper";
-export { default as EntityPanel } from "./components/EntityPanel/EntityPanel";
-export { default as ErrorBoundary } from "./components/ErrorBoundary";
-export * from "./components/ExternalLink";
-export { default as FacetsSelect } from "./components/FacetsSelect/FacetsSelect";
-export * from "./components/Footer";
-export { default as Footer } from "./components/Footer";
-export { default as FromGeneticsModal } from "./components/FromGeneticsModal";
-export { default as GlobalSearch } from "./components/GlobalSearch/GlobalSearch";
-/* PROVIDERS */
-export * from "./components/GlobalSearch/SearchContext";
-export { default as Header } from "./components/Header";
-export * from "./components/HeatmapTable";
-export { default as Highlights } from "./components/Highlights";
-export { default as BrokenSearchIcon } from "./components/icons/BrokenSearchIcon";
-export * from "./components/Button";
-export { default as KnownDrugsSourceDrawer } from "./components/KnownDrugsSourceDrawer";
-export { default as LabelChip } from "./components/LabelChip";
-export { default as Legend } from "./components/Legend";
-export { default as Link } from "./components/Link/Link";
-export { default as LoadingBackdrop } from "./components/LoadingBackdrop";
-export { default as LongList } from "./components/LongList";
-export { default as LongText } from "./components/LongText";
-export { default as MouseModelAllelicComposition } from "./components/MouseModelAllelicComposition";
-export { default as NavBar } from "./components/NavBar";
-export { default as Navigate } from "./components/Navigate";
-export { default as NavigationProgress } from "./components/NavigationProgress";
-export { default as NewChip } from "./components/NewChip";
-export { default as ObsChart } from "./components/ObsPlot/ObsChart";
-export { default as ObsPlot } from "./components/ObsPlot/ObsPlot";
-export { default as ObsTooltip } from "./components/ObsPlot/ObsTooltip";
-export { default as TooltipRow } from "./components/TooltipRow";
-export { default as TooltipTable } from "./components/TooltipTable";
-export { default as OtAsyncTooltip } from "./components/OtAsyncTooltip/OtAsyncTooltip";
-export { default as BtnGroup } from "./components/BtnGroup";
-export { default as CodeBlock } from "./components/CodeBlock";
-export { default as CopyToClipboard } from "./components/CopyToClipboard";
-export { default as InvalidResultFilters } from "./components/InvalidResultFilters";
-export { default as Popper } from "./components/Popper";
-export { default as ScoreLinearBar } from "./components/ScoreLinearBar";
-export { default as OtTable } from "./components/OtTable/OtTable";
-export { default as OtTableSSP } from "./components/OtTable/OtTableSSP";
-export { default as PageMeta } from "./components/PageMeta";
-export { default as PartnerLockIcon } from "./components/PartnerLockIcon";
-export { default as PrivateRoute } from "./components/PrivateRoute";
-export { default as PrivateWrapper } from "./components/PrivateWrapper";
-export * from "./components/ProfileHeader";
-export * from "./components/PublicationsDrawer";
-export * from "./components/RoutingTabs";
-export { default as ScientificNotation } from "./components/ScientificNotation";
-export { default as ScrollToTop } from "./components/ScrollToTop";
-export * from "./components/Section";
-export { default as StudyPublication } from "./components/StudyPublication";
-export { default as GenomicLocation } from "./components/GenomicLocation";
-export { default as SummaryContainer } from "./components/Summary/SummaryContainer";
-export { default as SummaryItem } from "./components/Summary/SummaryItem";
-export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer";
-export * as summaryUtils from "./components/Summary/utils";
-export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
-export * from "./components/Table";
-export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
-export { default as TooltipStyledLabel } from "./components/TooltipStyledLabel";
-export { default as Viewer } from "./components/Viewer/LazyViewer";
-export { default as ViewerDropdown } from "./components/Viewer/ViewerDropdown";
-export { default as ViewerRadios } from "./components/Viewer/ViewerRadios";
-export { default as ViewerTrack } from "./components/Viewer/ViewerTrack";
-export { default as ViewerLegend } from "./components/Viewer/ViewerLegend";
-export { default as RecordsCards } from "./components/ClinicalReports/RecordsCards";
-export { default as ClinicalRecordDrawer } from "./components/ClinicalReports/ClinicalRecordDrawer";
-export { default as ClinicalReportsMasterDetailFrame } from "./components/ClinicalReports/ClinicalReportsMasterDetailFrame";
-export { default as useBatchDownloader } from "./hooks/useBatchDownloader";
-export { default as useBatchQuery } from "./hooks/useBatchQuery";
-export { default as useCursorBatchDownloader } from "./hooks/useCursorBatchDownloader";
-export { default as useDebounce } from "./hooks/useDebounce";
-export { default as usePermissions } from "./hooks/usePermissions";
-export { default as useClinicalReportsMasterDetail } from "./hooks/useClinicalReportsMasterDetail";
-/* HOOKS */
-export { default as usePlatformApi } from "./hooks/usePlatformApi";
-export { default as useStateParams } from "./hooks/useStateParams";
-export { default as useDelayedFlag} from "./hooks/useDelayedFlag";
-/* SHARED PAGES  */
-export { default as EmptyPage } from "./pages/EmptyPage";
-export { default as NotFoundPage } from "./pages/NotFoundPage";
-export { default as Page } from "./pages/Page";
-export * from "./providers/APIMetadataProvider";
-export * from "./providers/ConfigurationProvider";
-export * from "./providers/OTApolloProvider/OTApolloProvider";
-export { createApolloClient } from "./providers/OTApolloProvider/apollo";
-export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";
-export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
-export * from "./providers/ViewerProvider";
-export * from "./providers/ViewerInteractionProvider";
-
 /* MUI PRIMITIVES — re-exported as a swap point for a future design-system migration.
    Chip/Button/Tooltip/Link are NOT re-exported here since this package already has
    custom wrapped versions of those under the same names (see components/ above). */
+/* Raw MUI Chip/Button/Tooltip/Link, aliased since this package already has
+   custom wrapped Chip/Button/Tooltip/Link exported under those bare names.
+   TODO: audit remaining raw usages — some may fit the custom wrapper instead. */
 export {
   Accordion,
   AccordionDetails,
@@ -116,12 +12,14 @@ export {
   AlertTitle,
   Autocomplete,
   Box,
+  Button as MuiButton,
   ButtonBase,
   Card,
   CardActions,
   CardContent,
   CardHeader,
   Checkbox,
+  Chip as MuiChip,
   CircularProgress,
   Collapse,
   Container,
@@ -137,11 +35,12 @@ export {
   FormControlLabel,
   FormGroup,
   FormHelperText,
-  Grow,
   GridLegacy,
+  Grow,
   IconButton,
   InputAdornment,
   InputLabel,
+  Link as MuiLink,
   List,
   ListItem,
   ListItemButton,
@@ -166,18 +65,120 @@ export {
   Step,
   StepLabel,
   Stepper,
-  Switch,
   SvgIcon,
+  Switch,
   Tab,
-  Tabs,
   TablePagination,
+  Tabs,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip as MuiTooltip,
   Typography,
 } from "@mui/material";
-
-/* Raw MUI Chip/Button/Tooltip/Link, aliased since this package already has
-   custom wrapped Chip/Button/Tooltip/Link exported under those bare names.
-   TODO: audit remaining raw usages — some may fit the custom wrapper instead. */
-export { Chip as MuiChip, Button as MuiButton, Tooltip as MuiTooltip, Link as MuiLink } from "@mui/material";
+export { default as ApiPlaygroundDrawer } from "./components/ApiPlaygroundDrawer";
+export { default as BtnGroup } from "./components/BtnGroup";
+export * from "./components/Button";
+export { default as Chip } from "./components/Chip/Chip";
+export { default as ChipList } from "./components/ChipList";
+export { default as ClinicalRecordDrawer } from "./components/ClinicalReports/ClinicalRecordDrawer";
+export { default as ClinicalReportsMasterDetailFrame } from "./components/ClinicalReports/ClinicalReportsMasterDetailFrame";
+export { default as RecordsCards } from "./components/ClinicalReports/RecordsCards";
+export { default as ClinvarStars } from "./components/ClinvarStars";
+export { default as CodeBlock } from "./components/CodeBlock";
+export { default as ColorRamp } from "./components/ColorRamp.tsx";
+export { default as CopyToClipboard } from "./components/CopyToClipboard";
+export { default as CopyUrlButton } from "./components/CopyUrlButton";
+export { default as DataDownloader } from "./components/DataDownloader";
+export { default as DetailPopover } from "./components/DetailPopover";
+export { default as DirectionalityDrawer } from "./components/DirectionalityDrawer";
+export { default as DirectionOfEffectIcon } from "./components/DirectionOfEffectIcon";
+export { default as DirectionOfEffectTooltip } from "./components/DirectionOfEffectTooltip";
+export { default as DisplaySampleSize } from "./components/DisplaySampleSize";
+export { default as DisplayVariantId } from "./components/DisplayVariantId";
+export * from "./components/DownloadSvgPlot";
+export { default as EllsWrapper } from "./components/EllsWrapper";
+export { default as EntityPanel } from "./components/EntityPanel/EntityPanel";
+export { default as ErrorBoundary } from "./components/ErrorBoundary";
+export * from "./components/ExternalLink";
+export { default as FacetsSelect } from "./components/FacetsSelect/FacetsSelect";
+export * from "./components/Footer";
+export { default as Footer } from "./components/Footer";
+export { default as FromGeneticsModal } from "./components/FromGeneticsModal";
+export { default as GenomicLocation } from "./components/GenomicLocation";
+export { default as GlobalSearch } from "./components/GlobalSearch/GlobalSearch";
+/* PROVIDERS */
+export * from "./components/GlobalSearch/SearchContext";
+export { default as Header } from "./components/Header";
+export * from "./components/HeatmapTable";
+export { default as Highlights } from "./components/Highlights";
+export { default as InvalidResultFilters } from "./components/InvalidResultFilters";
+export { default as BrokenSearchIcon } from "./components/icons/BrokenSearchIcon";
+export { default as KnownDrugsSourceDrawer } from "./components/KnownDrugsSourceDrawer";
+export { default as LabelChip } from "./components/LabelChip";
+export { default as Legend } from "./components/Legend";
+export { default as Link } from "./components/Link/Link";
+export { default as LoadingBackdrop } from "./components/LoadingBackdrop";
+export { default as LongList } from "./components/LongList";
+export { default as LongText } from "./components/LongText";
+export { default as MouseModelAllelicComposition } from "./components/MouseModelAllelicComposition";
+export { default as NavBar } from "./components/NavBar";
+export { default as Navigate } from "./components/Navigate";
+export { default as NavigationProgress } from "./components/NavigationProgress";
+export { default as NewChip } from "./components/NewChip";
+export { default as ObsChart } from "./components/ObsPlot/ObsChart";
+export { default as ObsPlot } from "./components/ObsPlot/ObsPlot";
+export { default as ObsTooltip } from "./components/ObsPlot/ObsTooltip";
+export { default as OtAsyncTooltip } from "./components/OtAsyncTooltip/OtAsyncTooltip";
+export { default as OtTable } from "./components/OtTable/OtTable";
+export { default as OtTableSSP } from "./components/OtTable/OtTableSSP";
+export { default as PageMeta } from "./components/PageMeta";
+export { default as PartnerLockIcon } from "./components/PartnerLockIcon";
+export { default as Popper } from "./components/Popper";
+export { default as PrivateRoute } from "./components/PrivateRoute";
+export { default as PrivateWrapper } from "./components/PrivateWrapper";
+export * from "./components/ProfileHeader";
+export * from "./components/PublicationsDrawer";
+export * from "./components/RoutingTabs";
+export { default as ScientificNotation } from "./components/ScientificNotation";
+export { default as ScoreLinearBar } from "./components/ScoreLinearBar";
+export { default as ScrollToTop } from "./components/ScrollToTop";
+export * from "./components/Section";
+export { default as StudyPublication } from "./components/StudyPublication";
+export { default as SummaryContainer } from "./components/Summary/SummaryContainer";
+export { default as SummaryItem } from "./components/Summary/SummaryItem";
+export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer";
+export * as summaryUtils from "./components/Summary/utils";
+export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
+export * from "./components/Table";
+export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
+export { default as TooltipRow } from "./components/TooltipRow";
+export { default as TooltipStyledLabel } from "./components/TooltipStyledLabel";
+export { default as TooltipTable } from "./components/TooltipTable";
+export { default as Viewer } from "./components/Viewer/LazyViewer";
+export { default as ViewerDropdown } from "./components/Viewer/ViewerDropdown";
+export { default as ViewerLegend } from "./components/Viewer/ViewerLegend";
+export { default as ViewerRadios } from "./components/Viewer/ViewerRadios";
+export { default as ViewerTrack } from "./components/Viewer/ViewerTrack";
+export { default as useBatchDownloader } from "./hooks/useBatchDownloader";
+export { default as useBatchQuery } from "./hooks/useBatchQuery";
+export { default as useClinicalReportsMasterDetail } from "./hooks/useClinicalReportsMasterDetail";
+export { default as useCursorBatchDownloader } from "./hooks/useCursorBatchDownloader";
+export { default as useDebounce } from "./hooks/useDebounce";
+export { default as useDelayedFlag } from "./hooks/useDelayedFlag";
+export { default as usePermissions } from "./hooks/usePermissions";
+/* HOOKS */
+export { default as usePlatformApi } from "./hooks/usePlatformApi";
+export { default as useStateParams } from "./hooks/useStateParams";
+/* SHARED PAGES  */
+export { default as EmptyPage } from "./pages/EmptyPage";
+export { default as NotFoundPage } from "./pages/NotFoundPage";
+export { default as Page } from "./pages/Page";
+export * from "./providers/APIMetadataProvider";
+export * from "./providers/ConfigurationProvider";
+export { createApolloClient } from "./providers/OTApolloProvider/apollo";
+export * from "./providers/OTApolloProvider/OTApolloProvider";
+export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";
+export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
+export * from "./providers/ViewerInteractionProvider";
+export * from "./providers/ViewerProvider";

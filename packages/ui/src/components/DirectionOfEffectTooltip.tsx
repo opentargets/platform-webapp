@@ -1,6 +1,6 @@
-import OTTooltip from "./Tooltip";
+import type { ReactElement } from "react";
 import Link from "./Link";
-import { ReactElement } from "react";
+import OTTooltip from "./Tooltip";
 
 type DirectionOfEffectTooltipProps = {
   docsUrl: string;

@@ -1,27 +1,27 @@
-import { Box, IconButton } from "@mui/material";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBackwardStep,
-  faForwardStep,
   faChevronLeft,
   faChevronRight,
+  faForwardStep,
 } from "@fortawesome/free-solid-svg-icons";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, IconButton } from "@mui/material";
+
 export function PaginationActionsComplete({ count, page, rowsPerPage, onPageChange }) {
-  const handleFirstPageButtonClick = event => {
+  const handleFirstPageButtonClick = (event) => {
     onPageChange(event, 0);
   };
 
-  const handleBackButtonClick = event => {
+  const handleBackButtonClick = (event) => {
     onPageChange(event, page - 1);
   };
 
-  const handleNextButtonClick = event => {
+  const handleNextButtonClick = (event) => {
     onPageChange(event, page + 1);
   };
 
-  const handleLastPageButtonClick = event => {
+  const handleLastPageButtonClick = (event) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
 

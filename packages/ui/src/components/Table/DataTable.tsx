@@ -1,10 +1,9 @@
 /* eslint-disable */
 import { useState } from "react";
-
+import { getComparator, globalFilter } from "./sortingAndFiltering";
 import Table from "./Table";
-import { getPage } from "./utils";
-import { globalFilter, getComparator } from "./sortingAndFiltering";
 import { PaginationActionsComplete } from "./TablePaginationActions";
+import { getPage } from "./utils";
 
 function DataTable({
   noWrap,
@@ -36,22 +35,22 @@ function DataTable({
   const [sortOrder, setSortOrder] = useState(order);
   const showPagination = rows.length > [...rowsPerPageOptions, initialPageSize].sort()[0];
 
-  const handleGlobalFilterChange = globalFilter => {
+  const handleGlobalFilterChange = (globalFilter) => {
     setGlobalFilterVal(globalFilter);
     setPage(0);
   };
 
-  const handleSortBy = sortBy => {
+  const handleSortBy = (sortBy) => {
     setSortColumn(sortBy);
     setSortOrder(sortColumn === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
   };
 
-  const handlePageChange = page => {
+  const handlePageChange = (page) => {
     setPage(page);
     onPagination(page, pageSize);
   };
 
-  const handleRowsPerPageChange = newPageSize => {
+  const handleRowsPerPageChange = (newPageSize) => {
     const newPageSizeNumber = Number(newPageSize);
     setPageSize(newPageSizeNumber);
     setPage(0);
@@ -60,7 +59,7 @@ function DataTable({
   let processedRows = [...rows];
 
   if (globalFilterVal) {
-    processedRows = processedRows.filter(row => globalFilter(row, columns, globalFilterVal));
+    processedRows = processedRows.filter((row) => globalFilter(row, columns, globalFilterVal));
   }
 
   if (sortColumn) {

@@ -1,5 +1,5 @@
 import { Box, Divider } from "@mui/material";
-import { ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { v1 } from "uuid";
 
 export type singleBtnGroupObj = {
@@ -21,9 +21,9 @@ function BtnGroup({ btnGroup, defaultActiveId }: BtnGroupPropType) {
   }
 
   return (
-    <Box sx={{ border: theme => `1px solid ${theme.palette.grey[400]}`, borderRadius: 3 }}>
+    <Box sx={{ border: (theme) => `1px solid ${theme.palette.grey[400]}`, borderRadius: 3 }}>
       <Box sx={{ paddingX: 1 }}>
-        {Object.keys(btnGroup).map(e => (
+        {Object.keys(btnGroup).map((e) => (
           <Box
             component="button"
             sx={{
@@ -36,13 +36,13 @@ function BtnGroup({ btnGroup, defaultActiveId }: BtnGroupPropType) {
               marginX: 1,
               typography: "subtitle2",
               transition: "all ease 200ms",
-              color: theme => `${theme.palette.grey[700]}`,
+              color: (theme) => `${theme.palette.grey[700]}`,
               "&:hover": {
-                borderBottom: theme => `2px solid ${theme.palette.grey[500]}`,
+                borderBottom: (theme) => `2px solid ${theme.palette.grey[500]}`,
               },
               ...(activeId === e && {
-                borderBottom: theme => `2px solid ${theme.palette.primary.dark}`,
-                color: theme => `${theme.palette.primary.dark}`,
+                borderBottom: (theme) => `2px solid ${theme.palette.primary.dark}`,
+                color: (theme) => `${theme.palette.primary.dark}`,
               }),
             }}
             onClick={() => setActiveTab(e)}

@@ -32,9 +32,12 @@ function useListOption() {
     if (newOption.entity === "search") {
       navigateToSearchResultsPage({ navigate, newOption, activeSearchEntities });
     } else {
-      navigatetoBuiltPath(navigate, `/${newOption.entity}/${newOption.id}${
-        entitiesWitAssociations.indexOf(newOption.entity) > -1 ? "/associations" : ""
-      }`);
+      navigatetoBuiltPath(
+        navigate,
+        `/${newOption.entity}/${newOption.id}${
+          entitiesWitAssociations.indexOf(newOption.entity) > -1 ? "/associations" : ""
+        }`
+      );
     }
   };
 
@@ -43,10 +46,11 @@ function useListOption() {
 
 function navigateToSearchResultsPage({ navigate, newOption, activeSearchEntities = [] }) {
   // Use requestAnimationFrame same as navigatetoBuiltPath to prevent freeze
-  const path = activeSearchEntities.length === TOTAL_ENTITIES || activeSearchEntities.length === 0
-    ? `/search?q=${newOption.name}&page=1`
-    : `/search?q=${newOption.name}&page=1&entities=${activeSearchEntities.join()}`;
-  
+  const path =
+    activeSearchEntities.length === TOTAL_ENTITIES || activeSearchEntities.length === 0
+      ? `/search?q=${newOption.name}&page=1`
+      : `/search?q=${newOption.name}&page=1&entities=${activeSearchEntities.join()}`;
+
   requestAnimationFrame(() => {
     navigate(path);
   });

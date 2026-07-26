@@ -1,4 +1,4 @@
-import { Chip as MUIChip, styled, type ChipProps as MuiChipProps } from "@mui/material";
+import { Chip as MUIChip, type ChipProps as MuiChipProps, styled } from "@mui/material";
 import { forwardRef } from "react";
 
 // The compact sizing only applies to the default look (outlined/small, the

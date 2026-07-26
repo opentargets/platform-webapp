@@ -1,5 +1,10 @@
-import { useMemo, createContext, ReactNode } from "react";
-import { useQuery, DocumentNode, QueryResult, OperationVariables } from "@apollo/client";
+import {
+  type DocumentNode,
+  type OperationVariables,
+  type QueryResult,
+  useQuery,
+} from "@apollo/client";
+import { createContext, type ReactNode, useMemo } from "react";
 
 interface PlatformApiContextValue {
   entity: string;
@@ -12,7 +17,7 @@ interface PlatformApiContextValue {
 
 const PlatformApiContext = createContext<PlatformApiContextValue | undefined>(undefined);
 
-interface PlatformApiProviderProps <T, K extends OperationVariables> {
+interface PlatformApiProviderProps<T, K extends OperationVariables> {
   entity: string;
   query: DocumentNode;
   variables?: K;
@@ -30,21 +35,19 @@ function PlatformApiProvider<T, K extends OperationVariables>({
   const { loading, error, data, refetch, fetchMore } = request;
 
   const platformApiValue = useMemo(
-    () => ({ 
-      loading, 
-      error, 
-      data, 
-      refetch, 
-      fetchMore, 
-      entity 
+    () => ({
+      loading,
+      error,
+      data,
+      refetch,
+      fetchMore,
+      entity,
     }),
     [loading, error, data, refetch, fetchMore, entity]
   );
 
   return (
-    <PlatformApiContext.Provider value={platformApiValue}>
-      {children}
-    </PlatformApiContext.Provider>
+    <PlatformApiContext.Provider value={platformApiValue}>{children}</PlatformApiContext.Provider>
   );
 }
 

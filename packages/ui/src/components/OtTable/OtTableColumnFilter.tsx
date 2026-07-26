@@ -1,7 +1,5 @@
-import { ReactElement, useState } from "react";
-import { Column } from "@tanstack/react-table";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Badge,
   ClickAwayListener,
@@ -12,6 +10,8 @@ import {
   ListItemButton,
   TextField,
 } from "@mui/material";
+import type { Column } from "@tanstack/react-table";
+import { type ReactElement, useState } from "react";
 import { v1 } from "uuid";
 import Popper from "../Popper";
 
@@ -70,11 +70,11 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
             {/* INPUT FOR COLUMN FILTER */}
             <GridLegacy sx={{ width: 1 }} item>
               <TextField
-                sx={{ width: 1, padding: theme => `${theme.spacing(1)} ${theme.spacing(1.5)}` }}
+                sx={{ width: 1, padding: (theme) => `${theme.spacing(1)} ${theme.spacing(1.5)}` }}
                 autoFocus
                 variant="standard"
                 value={columnFilterInputValue}
-                onChange={e => setColumnFilterInputValue(e.target.value)}
+                onChange={(e) => setColumnFilterInputValue(e.target.value)}
                 placeholder={`Search..`}
                 InputProps={{
                   endAdornment: (
@@ -91,7 +91,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
             <GridLegacy item>
               <List aria-label="filter-list">
                 {Object.keys(sortedUniqueValues).map(
-                  keyName =>
+                  (keyName) =>
                     /****************************************************
                      *  STRING.SEARCH FUNCTION FILTERS THE LIST OF  *
                      * UNIQUE VALUES WITHOUT HAVING TO MODIFY ANY STATE *

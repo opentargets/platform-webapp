@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
-import CopyToClipboard from "./CopyToClipboard";
 import type { ReactNode } from "react";
+import CopyToClipboard from "./CopyToClipboard";
 
 type CodeBlockPropTypes = {
   children: ReactNode;
@@ -11,7 +11,7 @@ function CodeBlock({ children, textToCopy }: CodeBlockPropTypes) {
   return (
     <Box
       sx={{
-        background: theme => theme.palette.grey[100],
+        background: (theme) => theme.palette.grey[100],
         pb: textToCopy ? 3 : 1,
         borderRadius: 3,
         px: 3,

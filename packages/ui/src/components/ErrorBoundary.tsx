@@ -1,5 +1,5 @@
-import { Component } from "react";
 import { Typography } from "@mui/material";
+import { Component } from "react";
 import Link from "./Link";
 
 const defaultConfig = {

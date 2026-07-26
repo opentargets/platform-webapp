@@ -6,8 +6,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, ButtonBase, Divider, Drawer, IconButton, Paper, Typography } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
-import { useState } from "react";
 import { naLabel } from "@ot/constants";
+import { useState } from "react";
 import { v1 } from "uuid";
 import Link from "./Link";
 import OtTable from "./OtTable/OtTable";
@@ -79,7 +79,7 @@ export function DirectionalityList({ variantAnnotation }) {
               mr: 1,
               mt: "2px",
               alignItems: "center",
-              background: theme => theme.palette.grey[200],
+              background: (theme) => theme.palette.grey[200],
               borderRadius: 4,
               // minWidth: "40px",
               maxWidth: "40px",
@@ -89,7 +89,9 @@ export function DirectionalityList({ variantAnnotation }) {
             <Tooltip title={getTooltipTitle(directionality)} style={{ background: `red` }}>
               <FontAwesomeIcon
                 color={
-                  directionality === "increased" ? theme.palette.primary.dark : theme.palette.grey[400]
+                  directionality === "increased"
+                    ? theme.palette.primary.dark
+                    : theme.palette.grey[400]
                 }
                 icon={LABEL.increased.icon}
                 size="lg"

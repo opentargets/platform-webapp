@@ -1,4 +1,4 @@
-import { Action, ActionType } from "../types/tableTypes";
+import { type Action, ActionType } from "../types/tableTypes";
 
 export function onPageSizeChange(pageSize: number): Action {
   return {

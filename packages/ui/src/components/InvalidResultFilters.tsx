@@ -18,7 +18,7 @@ function InvalidResultFilters() {
       <Box
         sx={{
           borderRadius: "50%",
-          backgroundColor: theme => theme.palette.grey[300],
+          backgroundColor: (theme) => theme.palette.grey[300],
           display: "flex",
           width: "100px",
           height: "100px",
