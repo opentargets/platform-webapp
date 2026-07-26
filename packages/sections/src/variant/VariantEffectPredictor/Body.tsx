@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, OtTable, Box, MuiChip as Chip } from "ui";
+import { Link, SectionItem, Tooltip, OtTable, Box, Chip } from "ui";
 import { Fragment } from "react";
 import { definition } from "../VariantEffectPredictor";
 import Description from "../VariantEffectPredictor/Description";
@@ -70,12 +70,7 @@ const columns = [
         displayElement = (
           <>
             {displayElement}{" "}
-            <Chip
-              variant="outlined"
-              size="small"
-              sx={{ typography: "caption" }}
-              label="protein coding"
-            />{" "}
+            <Chip sx={{ typography: "caption" }} label="protein coding" />{" "}
           </>
         );
       }
@@ -110,12 +105,7 @@ const columns = [
         displayElement = (
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {displayElement}&nbsp;{" "}
-            <Chip
-              variant="outlined"
-              size="small"
-              sx={{ typography: "caption" }}
-              label={aminoAcidChange}
-            />
+            <Chip sx={{ typography: "caption" }} label={aminoAcidChange} />
           </Box>
         );
       if (codons) {

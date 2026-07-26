@@ -1,5 +1,5 @@
-import { Chip as MUIChip, styled } from "@mui/material";
-import { ReactElement } from "react";
+import { Chip as MUIChip, styled, type ChipProps as MuiChipProps } from "@mui/material";
+import type { ReactElement } from "react";
 
 const StyledMUIChip = styled(MUIChip)({
   height: "20px",
@@ -8,24 +8,10 @@ const StyledMUIChip = styled(MUIChip)({
   maxWidth: "100%",
 });
 
-type ChipProps = {
-  className?: string;
-  disabled?: boolean;
-  label: ReactElement;
-  title?: string;
-  "data-testid"?: string;
-};
+// Fixed to "outlined"/"small" — callers get the full rest of MUI's ChipProps
+// (color, sx, clickable, onClick, etc.) via Omit rather than a hand-picked subset.
+type ChipProps = Omit<MuiChipProps, "variant" | "size">;
 
-export default function Chip({ className, label, title, disabled, ...rest }: ChipProps): ReactElement {
-  return (
-    <StyledMUIChip
-      className={className}
-      label={label}
-      title={title}
-      variant="outlined"
-      size="small"
-      disabled={disabled}
-      {...rest}
-    />
-  );
+export default function Chip(props: ChipProps): ReactElement {
+  return <StyledMUIChip variant="outlined" size="small" {...props} />;
 }

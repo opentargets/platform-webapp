@@ -10,7 +10,7 @@ import {
   SectionItem,
   Tooltip,
   useBatchQuery,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
@@ -72,7 +72,7 @@ const columns = [
         <>
           {`${type.slice(0, -3)}${type.slice(-3).toUpperCase()}`}{" "}
           {isTransQtl && (
-            <Chip label="trans" variant="outlined" size="small" />
+            <Chip label="trans" />
           )}
         </>
       );

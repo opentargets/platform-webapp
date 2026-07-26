@@ -7,7 +7,7 @@ import {
   useBatchQuery,
   SectionLoader,
   Box,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";
@@ -50,7 +50,7 @@ function getColumns({ leadVariantId }: getColumnsType) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
-              <Chip label="lead" variant="outlined" size="small" />
+              <Chip label="lead" />
             </Box>
           );
         }

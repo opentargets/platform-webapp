@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Drawer, IconButton, Paper, Typography, ButtonBase, MuiLink as MUILink } from "ui";
+import { Drawer, IconButton, Paper, Typography, ButtonBase } from "ui";
 import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

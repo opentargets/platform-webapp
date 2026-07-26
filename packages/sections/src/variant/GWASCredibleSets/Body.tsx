@@ -10,7 +10,7 @@ import {
   useBatchQuery,
   Navigate,
   Box,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
@@ -58,7 +58,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
-              <Chip label="self" variant="outlined" size="small" />
+              <Chip label="self" />
             </Box>
           );
         }

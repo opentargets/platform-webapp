@@ -12,7 +12,6 @@ import {
   Paper,
   Typography,
   ButtonBase,
-  MuiLink,
 } from "ui";
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({

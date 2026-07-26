@@ -73,7 +73,7 @@ export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer
 export * as summaryUtils from "./components/Summary/utils";
 export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
 export * from "./components/Table";
-export { default as Tooltip } from "./components/Tooltip";
+export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
 export { default as TooltipStyledLabel } from "./components/TooltipStyledLabel";
 export { default as Viewer } from "./components/Viewer/LazyViewer";
 export { default as ViewerDropdown } from "./components/Viewer/ViewerDropdown";

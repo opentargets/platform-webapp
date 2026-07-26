@@ -7,7 +7,7 @@ import {
   Tooltip,
   useBatchQuery,
   Navigate,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";
@@ -47,7 +47,7 @@ const columns = [
       return (
         <>
           {studyType}{" "}
-          {otherStudyLocus.isTransQtl && <Chip label="trans" variant="outlined" size="small" />}
+          {otherStudyLocus.isTransQtl && <Chip label="trans" />}
         </>
       );
     },

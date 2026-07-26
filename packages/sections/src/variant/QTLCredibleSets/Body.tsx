@@ -10,7 +10,7 @@ import {
   useBatchQuery,
   Navigate,
   Box,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 
 import { definition } from ".";
@@ -57,7 +57,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
-              <Chip label="self" variant="outlined" size="small" />
+              <Chip label="self" />
             </Box>
           );
         }
@@ -90,7 +90,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
         return (
           <>
             {`${type.slice(0, -3)}${type.slice(-3).toUpperCase()}`}{" "}
-            {isTransQtl && <Chip label="trans" variant="outlined" size="small" />}
+            {isTransQtl && <Chip label="trans" />}
           </>
         );
       },
