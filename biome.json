@@ -29,6 +29,7 @@
       "!**/*.d.ts",
       "!**/generated",
       "!**/apps/platform/src",
+      "!**/packages/ui",
       "!**/packages/sections",
       "!**/packages/ot-config",
       "**/packages/ot-constants",
