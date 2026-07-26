@@ -9,7 +9,7 @@ import {
   CardActions,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 
 type Disease = { label?: string; disease_id: string };

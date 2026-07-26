@@ -9,7 +9,7 @@ import {
   TextField,
   InputAdornment,
   Autocomplete,
-  MuiChip as Chip,
+  Chip,
   Button,
   MuiTooltip as Tooltip,
 } from "ui";

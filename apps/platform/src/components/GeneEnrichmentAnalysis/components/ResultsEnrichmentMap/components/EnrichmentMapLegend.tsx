@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Typography, Popover, MuiChip as Chip } from "ui";
+import { Box, Typography, Popover, Chip } from "ui";
 import { PRIORITISATION_COLORS } from "../../../utils/colorPalettes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointer } from "@fortawesome/free-regular-svg-icons";
@@ -60,6 +60,7 @@ export function EnrichmentMapLegend({ nesRange }: EnrichmentMapLegendProps) {
                 <Chip
                   icon={<FontAwesomeIcon icon={faInfoCircle} />}
                   label="About network view"
+                  variant="filled"
                   size="small"
                   color="primary"
                   onClick={(e) => setAnchorEl(e.currentTarget as HTMLElement)}

@@ -7,7 +7,7 @@ import {
   Select,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
   FormHelperText,
   Radio,
   RadioGroup,

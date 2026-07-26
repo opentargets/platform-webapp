@@ -7,7 +7,7 @@ import {
   Typography,
   IconButton,
   Button,
-  MuiChip as Chip,
+  Chip,
   MuiLink,
   MuiTooltip as Tooltip,
   Divider,
@@ -221,6 +221,7 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
               >
                 <Chip
                   label={gene}
+                  variant="filled"
                   size="small"
                   component="span"
                   sx={{

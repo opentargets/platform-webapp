@@ -30,7 +30,7 @@ import {
   Switch,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
   MuiLink as Link,
   MuiTooltip as Tooltip,
   Divider,
@@ -914,7 +914,12 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
                       primary={
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                           <Typography variant="subtitle2">{group.label}</Typography>
-                          <Chip label={group.results.length} size="small" color={group.color} />
+                          <Chip
+                            label={group.results.length}
+                            variant="filled"
+                            size="small"
+                            color={group.color}
+                          />
                         </Box>
                       }
                     />
@@ -1096,23 +1101,38 @@ function ResultsTreeView({ results }: ResultsTreeViewProps) {
               <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", mt: 2 }}>
                 <Chip
                   label={`NES: ${selectedResult.NES?.toFixed(3)}`}
+                  variant="filled"
+                  size="medium"
                   color={Math.abs(selectedResult.NES) > 1.5 ? "success" : "default"}
                 />
                 <Chip
                   label={`ES: ${selectedResult.ES?.toFixed(3)}`}
+                  variant="filled"
+                  size="medium"
                   color={Math.abs(selectedResult.ES) > 0.3 ? "success" : "default"}
                 />
                 <Chip
                   label={`P-value: ${selectedResult["p-value"]?.toExponential(2)}`}
+                  variant="filled"
+                  size="medium"
                   color={selectedResult["p-value"] < 0.05 ? "success" : "default"}
                 />
                 <Chip
                   label={`FDR: ${selectedResult.FDR?.toExponential(2)}`}
+                  variant="filled"
+                  size="medium"
                   color={selectedResult.FDR < 0.05 ? "success" : "default"}
                 />
-                <Chip label={`Pathway size: ${selectedResult["Pathway size"]}`} color="primary" />
+                <Chip
+                  label={`Pathway size: ${selectedResult["Pathway size"]}`}
+                  variant="filled"
+                  size="medium"
+                  color="primary"
+                />
                 <Chip
                   label={`Overlap genes: ${selectedResult["Number of input genes"]}`}
+                  variant="filled"
+                  size="medium"
                   color="secondary"
                 />
               </Box>

@@ -7,7 +7,7 @@ import {
   Paper,
   TextField,
   Typography,
-  MuiChip as Chip,
+  Chip,
   Divider,
   Radio,
   RadioGroup,
@@ -104,6 +104,7 @@ function ProjectsFilter({ filters, filterGroups, onChange }: Props) {
                   clear
                 </Box>
               }
+              variant="filled"
               size="small"
               clickable
               sx={{ fontWeight: "normal", typography: "caption" }}

@@ -8,7 +8,7 @@ import {
   CardContent,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
@@ -83,6 +83,7 @@ function DownloadsCard({ data }: { data: Record<string, unknown> }) {
               data.categories.map(c => (
                 <Chip
                   key={v1()}
+                  variant="filled"
                   size="small"
                   label={c}
                   clickable

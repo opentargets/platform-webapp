@@ -5,7 +5,7 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Typography, Popover, MuiChip as Chip } from "ui";
+import { Box, Typography, Popover, Chip } from "ui";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
@@ -169,6 +169,7 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
           <Chip
             icon={<FontAwesomeIcon icon={faInfoCircle} />}
             label="About sunburst view"
+            variant="filled"
             size="small"
             color="primary"
             onClick={(e) => setAnchorEl(e.currentTarget as HTMLElement)}

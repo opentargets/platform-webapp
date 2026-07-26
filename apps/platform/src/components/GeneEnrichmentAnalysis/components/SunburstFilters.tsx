@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
@@ -200,7 +200,13 @@ function SunburstFilters({
               )}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option} label={option} size="small" />
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option}
+                    label={option}
+                    variant="filled"
+                    size="small"
+                  />
                 ))
               }
               limitTags={1}
