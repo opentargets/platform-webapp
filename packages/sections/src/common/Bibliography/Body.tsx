@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
   Button,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 import Description from "./Description";
 
@@ -242,6 +242,8 @@ class Section extends Component<Props> {
                     i > 0 ? (
                       <StyledChip
                         key={v1()}
+                        variant="filled"
+                        size="medium"
                         color="primary"
                         label={sel.label || sel.key}
                         onDelete={() => this.deselectChip(i)}
@@ -260,6 +262,7 @@ class Section extends Component<Props> {
                       <StyledChip
                         key={v1()}
                         variant="outlined"
+                        size="medium"
                         label={agg.label || agg.key}
                         onClick={() => this.selectChip(agg)}
                       />

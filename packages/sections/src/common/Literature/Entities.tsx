@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { useApolloClient, Grow, MuiChip as Chip } from "ui";
+import { useApolloClient, Grow, Chip } from "ui";
 
 const StyledChipRow = styled("div")(({ theme }) => ({
   display: "flex",
@@ -81,6 +81,7 @@ function EntitiesToSelect({ id }) {
             title="Missing object entity"
             color="secondary"
             variant="outlined"
+            size="medium"
           />
         </Grow>
       );
@@ -97,6 +98,7 @@ function EntitiesToSelect({ id }) {
           title={`Score: ${e.score} ID: ${e.object.id}`}
           color="primary"
           variant="outlined"
+          size="medium"
         />
       </Grow>
     ) : null;
@@ -150,13 +152,15 @@ export default function Entities({ name, id }) {
   return (
     <div>
       <StyledChipRow>
-        <Chip label={name} title={`ID: ${id}`} color="primary" />
+        <Chip label={name} title={`ID: ${id}`} color="primary" variant="filled" size="medium" />
         {selectedChips.map((e, i) => (
           <Grow in key={e.object.id}>
             <Chip
               label={e.object.name}
               title={`Score: ${e.score} ID: ${e.object.id}`}
               color="primary"
+              variant="filled"
+              size="medium"
               clickable
               disabled={loadingEntities}
               onClick={() => {

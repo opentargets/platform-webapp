@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import { useTheme } from "@mui/material/styles";
-import { Link, SectionItem, ChipList, OtTable, Tooltip, Box, MuiChip as Chip } from "ui";
+import { Link, SectionItem, ChipList, OtTable, Tooltip, Box, Chip } from "ui";
 import { v1 } from "uuid";
 
 import { definition } from ".";
@@ -109,6 +109,7 @@ const getColumns = theme => [
               <Tooltip title={e.description}>
                 <Chip
                   label={ASSAYS_DISPLAY_NAME_MAPPING[e.shortName]}
+                  variant="filled"
                   size="small"
                   color={e.isHit ? "primary" : "default"}
                 />

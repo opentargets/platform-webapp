@@ -12,7 +12,7 @@ import {
   OtTable,
   ScientificNotation,
   Box,
-  MuiChip as Chip,
+  Chip,
 } from "ui";
 
 import { definition } from ".";
@@ -171,6 +171,7 @@ const getColumns = theme => [
               <Tooltip title={`Screen: ${screen}`}>
                 <Chip
                   label={methodDisplayNameMapping[readoutMethodName]}
+                  variant="filled"
                   size="small"
                   color={isValidated ? "primary" : "default"}
                 />
