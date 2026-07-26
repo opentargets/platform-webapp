@@ -58,6 +58,8 @@ Shared, low-level React components that have no data-fetching logic. Design-syst
 
 Current components include: `Link`, `Chip`, `OtTable`, `OtTableSSP`, `DataDownloader`, `ApiPlaygroundDrawer`, `NavBar`, `Footer`, `ObsPlot`, `Section`, `Summary`, `Tooltip`, `Viewer`, providers (`OTApolloProvider`, `ThemeProvider`, `PlatformApiProvider`), and ~60 others.
 
+`ui` also re-exports ~60 `@mui/material` primitives (`Box`, `Typography`, `Dialog*`, `Card*`, `Menu*`, etc.) as a plain pass-through facade. `packages/sections` and `apps/platform` import these from `ui` rather than `@mui/material` directly, making `ui` the single swap point for the in-progress MUI → shadcn/ui migration. `Chip`, `Button`, `Tooltip`, and `Link` are custom wrapped components — the raw MUI versions are available aliased as `MuiChip`, `MuiButton`, `MuiTooltip`, `MuiLink` for the rare case a call site needs the unstyled original. `styled`/`useTheme`/`Theme` are deliberately excluded from the facade and still imported directly from `@mui/material/styles` — they're theming utilities, not components, and aren't affected by the shadcn swap.
+
 ### `packages/sections`
 
 Composed widgets that combine UI primitives with domain knowledge and GraphQL queries. Organised by entity type:
