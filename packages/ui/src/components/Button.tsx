@@ -31,7 +31,6 @@ type PopoverButtonProps = {
 };
 
 const Button = styled(MuiButton)({
-  border: "none",
   "& .MuiButton-startIcon": {
     fontSize: "14px !important",
   },

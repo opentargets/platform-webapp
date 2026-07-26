@@ -29,7 +29,7 @@ import {
   Select,
   Switch,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
   MuiLink as Link,
   MuiTooltip as Tooltip,

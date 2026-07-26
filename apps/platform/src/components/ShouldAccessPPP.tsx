@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
-  MuiButton as Button,
+  Button,
   DialogContentText,
   Snackbar,
 } from "ui";

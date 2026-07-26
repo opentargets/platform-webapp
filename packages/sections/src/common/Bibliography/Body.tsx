@@ -13,7 +13,7 @@ import {
   GridLegacy,
   TextField,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
 } from "ui";
 import Description from "./Description";

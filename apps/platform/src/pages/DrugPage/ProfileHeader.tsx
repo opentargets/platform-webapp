@@ -7,7 +7,7 @@ import {
   ProfileHeader as BaseProfileHeader,
   Paper,
   Modal,
-  MuiButton as Button,
+  Button,
 } from "ui";
 import { Fragment, useState } from "react";
 import { parseDrugLabels } from "@ot/utils";

@@ -7,7 +7,7 @@ import {
   Autocomplete,
   TextField,
   Typography,
-  MuiButton as Button,
+  Button,
 } from "ui";
 import { useState } from "react";
 import type { ShortestPathResult } from "../../utils/shortestPath";

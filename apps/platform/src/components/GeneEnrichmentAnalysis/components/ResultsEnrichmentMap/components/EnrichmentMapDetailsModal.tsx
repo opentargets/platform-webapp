@@ -6,7 +6,7 @@ import {
   Box,
   Typography,
   IconButton,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
   MuiLink,
   MuiTooltip as Tooltip,

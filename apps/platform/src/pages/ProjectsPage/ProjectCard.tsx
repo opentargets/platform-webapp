@@ -8,7 +8,7 @@ import {
   CardContent,
   CardActions,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
 } from "ui";
 

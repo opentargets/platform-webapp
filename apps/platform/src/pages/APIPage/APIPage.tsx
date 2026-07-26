@@ -6,7 +6,7 @@ import {
   PrivateWrapper,
   GridLegacy,
   Typography,
-  MuiButton as Button,
+  Button,
   Accordion,
   AccordionSummary,
   AccordionDetails,

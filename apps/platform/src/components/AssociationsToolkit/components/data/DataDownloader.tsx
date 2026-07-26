@@ -24,7 +24,7 @@ import {
   ListItemText,
   Box,
   ListItemIcon,
-  MuiButton as Button,
+  Button,
   Snackbar,
   Accordion,
   AccordionSummary,

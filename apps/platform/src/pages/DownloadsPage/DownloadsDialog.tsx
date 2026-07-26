@@ -10,7 +10,7 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
-  MuiButton as Button,
+  Button,
 } from "ui";
 import { useContext, useEffect, useMemo } from "react";
 import { DownloadsContext } from "./context/DownloadsContext";

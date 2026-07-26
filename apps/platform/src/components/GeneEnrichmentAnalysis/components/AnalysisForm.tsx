@@ -6,7 +6,7 @@ import {
   Paper,
   Select,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
   FormHelperText,
   Radio,

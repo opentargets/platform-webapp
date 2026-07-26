@@ -10,7 +10,7 @@ import {
   InputAdornment,
   Autocomplete,
   MuiChip as Chip,
-  MuiButton as Button,
+  Button,
   MuiTooltip as Tooltip,
 } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

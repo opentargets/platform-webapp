@@ -1,4 +1,4 @@
-import { Box, Typography, MuiButton as Button } from "ui";
+import { Box, Typography, Button } from "ui";
 import { useRouteError } from "react-router";
 
 function RouteErrorBoundary() {

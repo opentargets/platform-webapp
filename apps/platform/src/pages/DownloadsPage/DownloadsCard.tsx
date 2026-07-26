@@ -7,7 +7,7 @@ import {
   CardActions,
   CardContent,
   Typography,
-  MuiButton as Button,
+  Button,
   MuiChip as Chip,
 } from "ui";
 import { v1 } from "uuid";
