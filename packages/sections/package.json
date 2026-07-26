@@ -22,7 +22,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
-    "@mui/material": "^5.14.1",
+    "@mui/material": "^6.5.0",
     "@observablehq/plot": "^0.6.15",
     "@ot/config": "*",
     "@ot/constants": "*",
