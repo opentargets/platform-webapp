@@ -1,7 +1,7 @@
 import { faFileArrowDown } from "@fortawesome/free-solid-svg-icons";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { PopoverButton, MenuList, Popover } from "ui";
+import { PopoverButton, ButtonNoBorder, MenuList, Popover } from "ui";
 import AotfApiPlayground from "./AotfApiPlayground";
 import DataDownloader from "../data/DataDownloader";
 
@@ -32,7 +32,7 @@ function ExportMenu() {
         disableElevation
         iconSize="lg"
         sx={{ height: 1, maxHeight: "45px" }}
-        noBorder
+        as={ButtonNoBorder}
       />
 
       <Popover

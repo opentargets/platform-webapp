@@ -1,7 +1,7 @@
 import { faCaretDown, faCaretUp, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button as MuiButton, type SxProps, styled, type Theme } from "@mui/material";
-import type { MouseEventHandler } from "react";
+import type { ComponentType, MouseEventHandler } from "react";
 
 type PopoverButtonProps = {
   popoverId?: string;
@@ -28,7 +28,7 @@ type PopoverButtonProps = {
     | "9x"
     | "10x";
   sx?: SxProps<Theme>;
-  noBorder?: boolean;
+  as?: ComponentType<React.ComponentProps<typeof MuiButton>>;
 };
 
 // Swap point for a future design-system migration — currently a no-op wrapper
@@ -46,10 +46,14 @@ const ButtonPrimary = styled(Button)(({ theme }) => ({
 }));
 
 // The app theme forces a 1px grey border onto every MuiButton root by default
-// (see ot-config's theme.ts). This variant opts a button back out of that —
-// for toolbar-style trigger buttons where the border doesn't read as intentional.
+// (see ot-config's theme.ts). This variant hides that border until hover, for
+// toolbar-style trigger buttons where a permanent border doesn't read as
+// intentional but a hover affordance still should.
 const ButtonNoBorder = styled(Button)({
-  border: "none",
+  border: "1px solid transparent",
+  "&:hover": {
+    border: "1px solid rgb(196,196,196)",
+  },
 });
 
 const PopoverButton: React.FC<PopoverButtonProps> = ({
@@ -63,9 +67,8 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
   iconSize,
   sx,
   testId,
-  noBorder = false,
+  as: ButtonComponent = Button,
 }) => {
-  const ButtonComponent = noBorder ? ButtonNoBorder : Button;
   return (
     <ButtonComponent
       aria-describedby={popoverId}
