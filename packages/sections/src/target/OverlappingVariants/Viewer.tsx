@@ -1,8 +1,8 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Button } from "@mui/material";
 import { createViewer } from "3dmol";
 import { useStateValue, useActions } from "./Context";
 import { useState, useEffect, useRef } from "react";
-import { ViewerLegend } from "ui";
+import { ViewerLegend, Box, Typography } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import {

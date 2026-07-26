@@ -9,8 +9,9 @@ import {
   L2GScoreIndicator,
   useBatchQuery,
   Navigate,
+  Box,
 } from "ui";
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";

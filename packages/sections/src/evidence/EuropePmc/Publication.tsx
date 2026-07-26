@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { v1 } from "uuid";
-import { Box, Button, Typography } from "@mui/material";
+import { Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { PublicationSummaryLabel, SummaryLoader, useConfigContext } from "ui";
+import { PublicationSummaryLabel, SummaryLoader, useConfigContext, Box, Typography } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleNodes, faCircleMinus, faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 

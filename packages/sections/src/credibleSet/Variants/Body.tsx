@@ -1,4 +1,4 @@
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -7,6 +7,7 @@ import {
   OtTable,
   useBatchQuery,
   SectionLoader,
+  Box,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";

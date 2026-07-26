@@ -105,3 +105,35 @@ export { default as PlatformApiProvider } from "./providers/PlatformApiProvider"
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerProvider";
 export * from "./providers/ViewerInteractionProvider";
+
+/* MUI PRIMITIVES — re-exported as a swap point for a future design-system migration.
+   Chip/Button/Tooltip/Link are NOT re-exported here since this package already has
+   custom wrapped versions of those under the same names (see components/ above). */
+export {
+  Alert,
+  AlertTitle,
+  Autocomplete,
+  Box,
+  ButtonBase,
+  Checkbox,
+  CircularProgress,
+  Collapse,
+  Drawer,
+  Fade,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  Grow,
+  GridLegacy,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  Paper,
+  Skeleton,
+  Slider,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from "@mui/material";

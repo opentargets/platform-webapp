@@ -2,10 +2,6 @@ import { faSquareCaretUp } from "@fortawesome/free-regular-svg-icons";
 import { faCaretDown, faCaretUp, faCircle, faSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Box,
-  GridLegacy,
-  IconButton,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -15,7 +11,6 @@ import {
   TableSortLabel,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
 import { theme } from "@ot/config";
@@ -38,7 +33,16 @@ import {
 } from "@tanstack/react-table";
 import type React from "react";
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { Link, ScientificNotation, Tooltip } from "ui";
+import {
+  Link,
+  ScientificNotation,
+  Tooltip,
+  Box,
+  GridLegacy,
+  IconButton,
+  Paper,
+  Typography,
+} from "ui";
 import MedianTooltipTable from "./MedianTooltipTable";
 import SpecificityTooltipTable from "./SpecificityTooltipTable";
 import DetailPlot from "./DetailPlot";

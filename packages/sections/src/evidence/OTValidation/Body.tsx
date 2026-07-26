@@ -2,9 +2,9 @@ import { useQuery } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Link, SectionItem, ChipList, OtTable, Tooltip } from "ui";
+import { Link, SectionItem, ChipList, OtTable, Tooltip, Box } from "ui";
 import { v1 } from "uuid";
 
 import { definition } from ".";

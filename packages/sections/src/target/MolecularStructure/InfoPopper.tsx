@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
-import { Box, Button, Typography } from "@mui/material";
-import { Tooltip } from "ui";
+import { Button } from "@mui/material";
+import { Tooltip, Box, Typography } from "ui";
 
 function InfoPopper() {
   const [isClicked, setIsClicked] = useState(false);

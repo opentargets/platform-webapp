@@ -1,8 +1,7 @@
 import { useStateValue, useActions } from "./Context";
-import { Autocomplete, Box, TextField, Slider, Typography } from "@mui/material";
 import { VARIANT_CONSEQUENCES, DATASOURCES } from "@ot/constants";
 import { useState, useEffect } from "react";
-import { FacetsSelect } from "ui";
+import { FacetsSelect, Autocomplete, Box, TextField, Slider, Typography } from "ui";
 
 function VariantFilter() {
   const { state } = useStateValue();

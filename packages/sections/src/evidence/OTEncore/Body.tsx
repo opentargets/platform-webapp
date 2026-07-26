@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material/styles";
 import { faArrowAltCircleUp, faArrowAltCircleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import { v1 } from "uuid";
 import {
   Link,
@@ -12,6 +12,7 @@ import {
   ChipList,
   OtTable,
   ScientificNotation,
+  Box,
 } from "ui";
 
 import { definition } from ".";

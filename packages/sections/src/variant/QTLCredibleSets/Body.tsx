@@ -9,8 +9,9 @@ import {
   ClinvarStars,
   useBatchQuery,
   Navigate,
+  Box,
 } from "ui";
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 
 import { definition } from ".";
 import Description from "./Description";

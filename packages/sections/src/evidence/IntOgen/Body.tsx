@@ -1,7 +1,17 @@
-import { Box, List, ListItem, Typography } from "@mui/material";
 import { useQuery } from "@apollo/client";
 import { v1 } from "uuid";
-import { ChipList, Link, SectionItem, Tooltip, ScientificNotation, OtTable } from "ui";
+import {
+  ChipList,
+  Link,
+  SectionItem,
+  Tooltip,
+  ScientificNotation,
+  OtTable,
+  Box,
+  List,
+  ListItem,
+  Typography,
+} from "ui";
 
 import { definition } from ".";
 import methods from "./methods";
