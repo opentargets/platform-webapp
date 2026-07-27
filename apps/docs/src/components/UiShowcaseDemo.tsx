@@ -1,4 +1,3 @@
-import { Stack, ThemeProvider, Typography } from "@mui/material";
 import { theme } from "@ot/config";
 import {
   BtnGroup,
@@ -10,7 +9,10 @@ import {
   LabelChip,
   LongText,
   NewChip,
+  Stack,
+  ThemeProvider,
   Tooltip,
+  Typography,
 } from "ui";
 
 function GroupLabel({ children }: { children: string }) {
