@@ -1,7 +1,10 @@
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
@@ -48,9 +51,11 @@ const VARIANT_PROFILE_QUERY = gql`
 
 type ProfileProps = {
   varId: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
 };
 
-function Profile({ varId }: ProfileProps) {
+function Profile({ varId, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={VARIANT}
@@ -58,6 +63,12 @@ function Profile({ varId }: ProfileProps) {
       variables={{ variantId: varId }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={varId}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={VARIANT_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={VARIANT_WIDGETS} />
       </SummaryContainer>
