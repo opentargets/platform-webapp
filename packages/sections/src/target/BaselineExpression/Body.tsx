@@ -57,7 +57,7 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
       showContentLoading={true}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => (
-        <Fragment key={crypto.randomUUID()}>
+        <Fragment>
           <Tabs value={tab} onChange={handleChangeTab} style={{ marginBottom: "1rem" }}>
             <Tab value="summary" label="Summary" />
             <Tab value="gtex" label="Variation (GTEx)" />
