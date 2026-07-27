@@ -46,6 +46,20 @@ yarn dev:platform   # http://localhost:3000
 
 Storybook hot-reloads on save, so no config change is needed when you add either.
 
+## Importing MUI components
+
+In `packages/sections` and `apps/platform`, import MUI primitives from `ui` rather than `@mui/material` directly:
+
+```tsx
+// Do
+import { Box, Typography, Dialog } from "ui";
+
+// Don't
+import { Box, Typography, Dialog } from "@mui/material";
+```
+
+`ui` re-exports these as a facade so it stays the single point of change for the ongoing MUI → shadcn/ui migration (see **Architecture / packages/ui**). `styled` and `useTheme` are the exception — keep importing those from `@mui/material/styles`.
+
 ## Adding a UI component story
 
 ```tsx

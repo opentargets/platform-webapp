@@ -1,0 +1,48 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import UiShowcaseDemo from "../../components/UiShowcaseDemo";
+
+<Meta title="Components/Showcase" />
+
+# UI Component Showcase
+
+Live gallery of the smaller `packages/ui` primitives touched by the MUI facade migration (#1004) —
+prop shapes here reflect the current, post-migration behavior. For `Table`/`DataTable` and the 3D
+`Viewer`, see their own dedicated pages.
+
+<UiShowcaseDemo />
+
+---
+
+## Buttons
+
+- **`Button`** — thin `styled()` wrapper around MUI's `Button`, currently a no-op pass-through. The
+  app theme (`@ot/config`) forces a 1px border onto every `MuiButton` root by default.
+- **`ButtonPrimary`** — `Button` filled with the brand primary color.
+- **`ButtonNoBorder`** — hides that theme-forced border until hover. Built for AOTF's toolbar
+  triggers (Advanced filters, Column options, Upload, Export), whose "no border" look turned out to
+  be intentional, not a default.
+- **`PopoverButton`** — takes its visual variant via an `as` prop (`Button` by default), not a
+  boolean flag, so it composes with any of the above. Not shown live here since it requires a
+  FontAwesome `IconDefinition`; see `packages/ui/src/components/Button.tsx`.
+- **`BtnGroup`** — a tab-like switcher over arbitrary `ReactNode` content, keyed by an object rather
+  than an array.
+
+## Chips & labels
+
+- **`Chip`** — defaults to `variant="outlined"` `size="small"`, but takes the full MUI `ChipProps`
+  (`color`, `sx`, `clickable`, `onClick`, ...) so any caller can override. `forwardRef`-wrapped so it
+  works as a direct child of `Grow`/`Fade`/`Collapse`.
+- **`ChipList`** — renders a list of `{ label, tooltip?, url? }` items; a chip becomes a clickable
+  link when `url` is set.
+- **`LabelChip`** — a two-part label/value pill (e.g. `VEP` / `Missense variant`) with an optional
+  link and tooltip.
+- **`NewChip`** — small "new" badge. Currently unused anywhere in this monorepo — kept for future
+  use, not deleted speculatively.
+
+## Text & tooltips
+
+- **`LongText`** — clamps content to `lineLimit` lines and reveals a "show more" toggle when it
+  overflows. `displayText` overrides the toggle's label (e.g. for a translated string) instead of
+  the default `"show more"`/`"hide"`.
+- **`Tooltip`** — themed wrapper around MUI's `Tooltip`. Pass `showHelpIcon` to render a `?`
+  superscript trigger instead of wrapping the children directly.

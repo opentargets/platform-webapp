@@ -31,3 +31,72 @@
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
 }
+
+/* Tables — hairline horizontal rules, navy header row, zebra body */
+.sbdocs table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.sbdocs thead tr {
+  background: #18405e;
+}
+
+.sbdocs th {
+  /* !important: beats Storybook's own emotion-injected table text color,
+     which loads after this stylesheet and wins the specificity tie */
+  color: #ffffff !important;
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+}
+
+.sbdocs td {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid #d7e6f2;
+}
+
+.sbdocs tbody tr:nth-of-type(even) {
+  background: #f8fafc;
+}
+
+/* Code — hairline border, blue-tinted background, mono face */
+.sbdocs pre {
+  background: #f3f8fc;
+  border: 1px solid #d7e6f2;
+  border-radius: 2px;
+  padding: 1rem;
+}
+
+.sbdocs pre code {
+  font-family: "Roboto Mono", monospace;
+  color: #18405e;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.sbdocs :not(pre) > code {
+  font-family: "Roboto Mono", monospace;
+  background: #eef5fb;
+  border: 1px solid #d7e6f2;
+  border-radius: 2px;
+  padding: 0.1rem 0.35rem;
+  color: #18405e;
+}
+
+/* Blockquotes as callouts — left accent bar, tinted background */
+.sbdocs blockquote {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #3489ca;
+  background: #eef5fb;
+  color: #5a5f5f;
+}
+
+.sbdocs blockquote p {
+  margin: 0;
+}
