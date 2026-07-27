@@ -1,7 +1,10 @@
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   summaryUtils,
   SectionsRenderer,
@@ -56,10 +59,23 @@ const TARGET_PROFILE_QUERY = gql`
   ${TARGET_PROFILE_SUMMARY_FRAGMENT}
 `;
 
-function Profile({ ensgId, symbol }: { ensgId: string; symbol: string }) {
+type ProfileProps = {
+  ensgId: string;
+  symbol: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
+};
+
+function Profile({ ensgId, symbol, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider entity={TARGET} query={TARGET_PROFILE_QUERY} variables={{ ensgId }}>
       <ProfileHeader />
+      <StickyProfileHeader
+        title={symbol}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={TARGET_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={TARGET_WIDGETS} />
       </SummaryContainer>
