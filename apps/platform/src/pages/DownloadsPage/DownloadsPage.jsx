@@ -129,10 +129,8 @@ function DownloadsPage() {
 
         {/* Graph view */}
         {viewMode === "graph" && (
-          <Box sx={{ height: "600px", mb: 2 }}>
-            <GraphVisualization 
-              downloadsData={state.downloadsData}
-            />
+          <Box sx={{ mb: 2 }}>
+            <GraphVisualization />
           </Box>
         )}
       </>

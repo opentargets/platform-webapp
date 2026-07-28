@@ -3,19 +3,17 @@
  * Main container orchestrating graph visualization
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Box, Grid, Typography, Paper } from '@mui/material';
-import { Core } from 'cytoscape';
 import GraphCanvas from './GraphCanvas';
 import GraphLegend from './GraphLegend';
 import GraphControls from './GraphControls';
 import GraphTooltip from './GraphTooltip';
 import useGraphData from '../hooks/useGraphData';
 import useGraphLayout from '../hooks/useGraphLayout';
+import { GraphController } from '../hooks/useForceGraph';
 
 interface GraphVisualizationProps {
-  downloadsData?: any;
-  useMockData?: boolean;
   sx?: any;
 }
 
@@ -31,23 +29,43 @@ interface SelectedNodeInfo {
  * Main graph visualization component with all interactive features
  */
 const GraphVisualization: React.FC<GraphVisualizationProps> = ({
-  downloadsData,
   sx = {},
 }) => {
   // State
   const [selectedNode, setSelectedNode] = useState<SelectedNodeInfo | null>(null);
-  const [cy, setCy] = useState<Core | null>(null);
+  const [controller, setController] = useState<GraphController | null>(null);
+  
+  // Get graph data from schema context
+  const { nodes: allNodes, edges: allEdges } = useGraphData();
+  
+  // Extract all unique categories from nodes
+  const allCategories = useMemo(
+    () => Array.from(new Set(allNodes.map((n) => n.data?.type).filter(Boolean))),
+    [allNodes]
+  );
+  
+  const [visibleCategories, setVisibleCategories] = useState<string[]>(allCategories);
 
-  // Get graph data
-  const { nodes, edges } = useGraphData({
-    downloadsData,
-  });
+  // Filter nodes and edges based on visible categories
+  const { nodes, edges } = useMemo(() => {
+    const visibleNodeIds = new Set(
+      allNodes
+        .filter((node) => visibleCategories.includes(node.data.type))
+        .map((node) => node.data.id)
+    );
+
+    const filteredNodes = allNodes.filter((node) => visibleNodeIds.has(node.data.id));
+    const filteredEdges = allEdges.filter(
+      (edge) => visibleNodeIds.has(edge.data.source) && visibleNodeIds.has(edge.data.target)
+    );
+
+    return { nodes: filteredNodes, edges: filteredEdges };
+  }, [allNodes, allEdges, visibleCategories]);
 
   // Get layout configuration
   const { layoutConfig } = useGraphLayout({
     nodeCount: nodes.length,
     edgeCount: edges.length,
-    defaultLayoutMode: 'cose',
     responsive: true,
   });
 
@@ -72,8 +90,18 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     setSelectedNode(null);
   }, []);
 
-  const handleCytoscapeReady = useCallback((cyInstance: Core | null) => {
-    setCy(cyInstance);
+  const handleGraphReady = useCallback((graphController: GraphController | null) => {
+    setController(graphController);
+  }, []);
+
+  const handleCategoryToggle = useCallback((category: string, visible: boolean) => {
+    setVisibleCategories((prev) => {
+      if (visible) {
+        return [...prev, category];
+      } else {
+        return prev.filter((c) => c !== category);
+      }
+    });
   }, []);
 
   // Note: Available layouts can be retrieved with getAvailableLayouts() if needed
@@ -103,45 +131,33 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         </Typography>
 
         {/* Main layout */}
-        <Box sx={{ flex: 1, display: 'flex', gap: 2, minHeight: 0 }}>
+        <Box sx={{ display: 'flex', gap: 2, minHeight: 0, flex: 1 }}>
           {/* Graph canvas */}
-          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <GraphCanvas
-              nodes={nodes}
-              edges={edges}
-              selectedNode={selectedNode?.id}
-              onNodeSelect={handleNodeSelect}
-              onNodeDeselect={handleNodeDeselect}
-              onEdgeSelect={(edgeId) => {
-                // Handle edge selection if needed
-                console.log('Selected edge:', edgeId);
-              }}
-              layoutConfig={layoutConfig}
-              onCytoscapeReady={handleCytoscapeReady}
-              sx={{
-                flex: 1,
-              }}
-            />
-          </Box>
+
 
           {/* Sidebar */}
           <Box
             sx={{
-              width: 300,
+              width: 320,
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
               overflowY: 'auto',
+              pr: 1,
             }}
           >
             {/* Tooltip/Details */}
             <GraphTooltip selectedNode={selectedNode} />
 
             {/* Controls */}
-            <GraphControls cy={cy} onReset={handleNodeDeselect} />
+            <GraphControls controller={controller} onReset={handleNodeDeselect} />
 
             {/* Legend */}
-            <GraphLegend />
+            <GraphLegend 
+              nodes={allNodes}
+              visibleCategories={visibleCategories}
+              onCategoryToggle={handleCategoryToggle}
+            />
 
             {/* Stats */}
             <Paper sx={{ p: 1.5 }}>
@@ -180,6 +196,24 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
                 Physics-based positioning for organic hub-and-spoke topology
               </Typography>
             </Paper>
+          </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: 600, flex: 1 }}>
+            <GraphCanvas
+              nodes={nodes}
+              edges={edges}
+              selectedNode={selectedNode?.id}
+              onNodeSelect={handleNodeSelect}
+              onNodeDeselect={handleNodeDeselect}
+              onEdgeSelect={(edgeId) => {
+                // Handle edge selection if needed
+                console.log('Selected edge:', edgeId);
+              }}
+              layoutConfig={layoutConfig}
+              onGraphReady={handleGraphReady}
+              sx={{
+                height: '100%',
+              }}
+            />
           </Box>
         </Box>
       </Paper>

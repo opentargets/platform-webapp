@@ -50,6 +50,14 @@ interface TransformedGraph {
 }
 
 /**
+ * Convert TransformedGraph to Cytoscape-compatible ElementDefinition array
+ * Flattens nodes and edges into a single array for use with Cytoscape constructor
+ */
+export const toCytoscapeElements = (graph: TransformedGraph): Array<CytoscapeNode | CytoscapeEdge> => {
+  return [...graph.nodes, ...graph.edges];
+};
+
+/**
  * Croissant (schema.org-style) RecordSet metadata types.
  * This is the shape of items inside the Downloads page's `recordSet` field
  * (56 datasets describing the Open Targets data model).
@@ -79,23 +87,27 @@ export interface CroissantRecordSet {
 }
 
 /**
- * Dataset ids that represent the platform's master/core entities
+ * Extract category tags from description (e.g., "[Target-Disease]" -> "Target-Disease")
  */
-const CORE_RECORD_SET_IDS = new Set(['target', 'disease', 'drug_molecule', 'variant', 'study']);
+const extractCategoryFromDescription = (description?: string): string => {
+  if (!description) return 'uncategorized';
+  const match = description.match(/\[(.*?)\]/);
+  if (match && match[1] && match[0] !== '[]') {
+    // Return the first category if multiple are separated by commas
+    return match[1].split(',')[0].trim();
+  }
+  return 'uncategorized';
+};
 
 /**
- * Dataset ids that behave as ontology/reference lookup tables rather than
- * evidence datasets tied directly to a core entity
+ * Classify a RecordSet by extracting its category from the description tag
+ * This matches the same categorization logic used in the downloads filter
  */
-const ATTRIBUTE_RECORD_SET_IDS = new Set(['go', 'reactome', 'so', 'biosample', 'disease_hpo']);
-
-/**
- * Classify a RecordSet (dataset) id into one of the three graph node types
- */
-export const classifyRecordSetType = (id: string): 'core' | 'evidence' | 'attribute' => {
-  if (CORE_RECORD_SET_IDS.has(id)) return 'core';
-  if (ATTRIBUTE_RECORD_SET_IDS.has(id)) return 'attribute';
-  return 'evidence';
+export const classifyRecordSetType = (
+  id: string,
+  description?: string
+): string => {
+  return extractCategoryFromDescription(description);
 };
 
 /**
@@ -143,7 +155,7 @@ export const transformRecordSetToGraph = (
       label: recordSet.name,
       description: stripCategoryTag(recordSet.description),
       fieldCount: recordSet.field?.length ?? 0,
-      type: classifyRecordSetType(recordSet['@id']),
+      type: classifyRecordSetType(recordSet['@id'], recordSet.description),
     },
   }));
 
@@ -183,7 +195,10 @@ export const transformRecordSetToGraph = (
     data: { ...node.data, degree: degreeMap.get(node.data.id) || 0 },
   }));
 
-  return { nodes: nodesWithDegree, edges };
+  // Enrich nodes with proper classification (type: core/evidence/attribute, colors, sizes)
+  const enrichedNodes = enrichNodesWithClassification(nodesWithDegree, edges);
+
+  return { nodes: enrichedNodes, edges };
 };
 
 /**
@@ -258,37 +273,8 @@ export const transformDownloadsToGraph = (
   return { nodes, edges };
 };
 
-/**
- * Create a simple graph from just node names and relationships
- * Useful when full schema data isn't available
- */
-export const createSimpleGraph = (
-  nodeNames: string[],
-  relationships: Array<[string, string]>
-): TransformedGraph => {
-  const nodes: CytoscapeNode[] = nodeNames.map((name) => ({
-    data: {
-      id: name.toLowerCase(),
-      label: name,
-      type: 'evidence',
-    },
-  }));
 
-  const edges: CytoscapeEdge[] = relationships.map((rel, idx) => ({
-    data: {
-      id: `edge-${idx}`,
-      source: rel[0].toLowerCase(),
-      target: rel[1].toLowerCase(),
-    },
-  }));
 
-  const enrichedNodes = enrichNodesWithClassification(nodes, edges);
-
-  return {
-    nodes: enrichedNodes,
-    edges,
-  };
-};
 
 /**
  * Merge multiple graph data sources into one
@@ -350,7 +336,7 @@ export default {
   transformDownloadsToNodes,
   transformSchemaToEdges,
   transformRecordSetToGraph,
-  createSimpleGraph,
+  toCytoscapeElements,
   mergeGraphs,
   filterGraphByNodeType,
 };

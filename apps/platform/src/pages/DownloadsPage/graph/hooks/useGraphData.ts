@@ -1,14 +1,11 @@
 /**
  * Hook: useGraphData
- * Transforms downloads data into graph nodes and edges with proper classification
+ * Transforms schema data into graph nodes and edges with proper classification
  */
 
-import { useMemo } from 'react';
-import { transformDownloadsToGraph, transformRecordSetToGraph } from '../utils/dataTransformer';
-interface UseGraphDataOptions {
-  downloadsData?: any;
-  useMockData?: boolean;
-}
+import { useContext, useMemo } from 'react';
+import { DownloadsContext } from '../../context/DownloadsContext';
+import { transformRecordSetToGraph } from '../utils/dataTransformer';
 
 interface GraphDataResult {
   nodes: any[];
@@ -18,50 +15,33 @@ interface GraphDataResult {
 }
 
 /**
- * Transform raw downloads data into Cytoscape-compatible graph structure
+ * Transform schema data into Cytoscape-compatible graph structure
+ * Builds relationships based purely on the Croissant schema metadata
  */
-export const useGraphData = ({
-  downloadsData,
-}: UseGraphDataOptions = {}): GraphDataResult => {
+export const useGraphData = (): GraphDataResult => {
+  const { state } = useContext(DownloadsContext);
+
   const graphData = useMemo(() => {
     try {
-      // Croissant metadata shape: { ..., recordSet: [{ '@id', name, field, ... }] }
-      if (downloadsData && Array.isArray(downloadsData.recordSet)) {
-        const recordSets = downloadsData.recordSet.filter(
-          (recordSet: any) => recordSet['@type'] === 'cr:RecordSet'
-        );
-        return transformRecordSetToGraph(recordSets);
+      if (!state.schemaRows || !Array.isArray(state.schemaRows)) {
+        return { nodes: [], edges: [] };
       }
 
-      // Handle array of downloads
-      if (Array.isArray(downloadsData)) {
-        return transformDownloadsToGraph(
-          downloadsData.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description,
-          }))
-        );
-      }
-
-      // Handle object with downloads property
-      if (downloadsData && typeof downloadsData === 'object') {
-        const datasets = downloadsData.downloads || downloadsData.data || [];
-        return transformDownloadsToGraph(datasets);
-      }
-
-      return { nodes: [], edges: [] };
+      // Filter to Croissant RecordSet items and transform to graph
+      const recordSets = state.schemaRows.filter(
+        (recordSet: any) => recordSet['@type'] === 'cr:RecordSet'
+      );
+      return transformRecordSetToGraph(recordSets);
     } catch (error) {
       console.error('Error transforming graph data:', error);
       return { nodes: [], edges: [] };
     }
-  }, [downloadsData]);
-
+  }, [state.schemaRows]);
 
   return {
     nodes: graphData.nodes,
     edges: graphData.edges,
-    loading: false,
+    loading: state.loading,
     error: null,
   };
 };

@@ -3,6 +3,8 @@
  * Returns styling information for force-directed graph visualization
  */
 
+import { getCategoryColor } from './colorPool';
+
 type NodeType = 'core' | 'evidence' | 'attribute';
 
 interface NodeConfig {
@@ -109,14 +111,7 @@ export const classifyNode = (
   };
 };
 
-interface EnrichedNodeData extends Record<string, any> {
-  id: string;
-  label: string;
-  type: NodeType;
-  size: number;
-  color: string;
-  degree: number;
-}
+
 
 interface CytoscapeNode {
   data: any;
@@ -130,6 +125,17 @@ export const enrichNodesWithClassification = (
   nodes: CytoscapeNode[],
   edges: Array<{ data: { source: string; target: string } }>
 ): CytoscapeNode[] => {
+  // Extract unique categories and sort them (same as legend)
+  const uniqueCategories = Array.from(
+    new Set(nodes.map((node) => node.data.type || 'uncategorized'))
+  ).sort();
+
+  // Create dynamic color mapping using the same getCategoryColor function as the legend
+  const categoryColorMap = new Map<string, string>();
+  uniqueCategories.forEach((category, index) => {
+    categoryColorMap.set(category, getCategoryColor(index));
+  });
+
   // Calculate degree for each node
   const degreeMap = new Map<string, number>();
   nodes.forEach((node) => {
@@ -143,18 +149,28 @@ export const enrichNodesWithClassification = (
     degreeMap.set(target, (degreeMap.get(target) || 0) + 1);
   });
 
-  // Classify each node
+  // Classify each node with dynamically assigned colors
   return nodes.map((node) => {
     const degree = degreeMap.get(node.data.id) || 0;
-    const classification = classifyNode(node.data.id, node.data.label, degree);
+    const originalType = node.data.type || 'uncategorized';
+    const color = categoryColorMap.get(originalType) || '#757575';
+    
+    // Determine size based on degree
+    let size = 40;
+    if (degree > 5) size = 80;
+    else if (degree > 2) size = 60;
 
     return {
       ...node,
       data: {
         ...node.data,
-        ...classification,
+        type: originalType,
+        color,
+        size,
+        borderWidth: 2,
+        degree,
       },
-      classes: [node.data.type || 'attribute'],
+      classes: [originalType],
     };
   });
 };

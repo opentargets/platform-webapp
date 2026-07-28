@@ -28,6 +28,7 @@ const GraphTooltip: React.FC<GraphTooltipProps> = ({
     return (
       <Card sx={{ ...sx }}>
         <CardContent>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>Selected Node Details</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Select a node to view details
           </Typography>

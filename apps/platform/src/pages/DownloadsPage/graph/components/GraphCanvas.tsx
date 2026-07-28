@@ -1,13 +1,12 @@
 /**
  * Component: GraphCanvas
- * Cytoscape container and instance manager
+ * D3 force-directed graph container and renderer
  */
 
 import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useCytoscapeInstance } from '../hooks/useCytoscapeInstance';
-import { useGraphInteractions, useGraphManipulation } from '../hooks/useGraphInteractions';
-import { Core } from 'cytoscape';
+import { useForceGraph, GraphController } from '../hooks/useForceGraph';
+import type { ForceLayoutConfig } from '../utils/layoutConfig';
 
 interface GraphCanvasProps {
   nodes: any[];
@@ -16,13 +15,13 @@ interface GraphCanvasProps {
   onNodeSelect?: (nodeId: string) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string) => void;
-  layoutConfig?: any;
-  onCytoscapeReady?: (cy: Core | null) => void;
+  layoutConfig?: ForceLayoutConfig;
+  onGraphReady?: (controller: GraphController | null) => void;
   sx?: any;
 }
 
 /**
- * GraphCanvas manages Cytoscape instance lifecycle and interactions
+ * GraphCanvas manages the D3 force simulation lifecycle and interactions
  */
 const GraphCanvas = React.memo(
   ({
@@ -33,43 +32,24 @@ const GraphCanvas = React.memo(
     onNodeDeselect,
     onEdgeSelect,
     layoutConfig,
-    onCytoscapeReady,
+    onGraphReady,
     sx = {},
   }: GraphCanvasProps) => {
-    const { cy, containerRef, isReady } = useCytoscapeInstance({
+    console.log('GraphCanvas render', { nodes, edges, selectedNode });
+    const { containerRef, isReady, controller } = useForceGraph({
       nodes,
       edges,
+      selectedNode,
       layoutConfig,
-    });
-
-    // Set up interaction handlers
-    useGraphInteractions({
-      cy,
       onNodeSelect,
       onNodeDeselect,
       onEdgeSelect,
     });
 
-    // Get manipulation utilities
-    const { selectNode, deselectAll } = useGraphManipulation(cy);
-
-    // Handle external node selection
+    // Notify parent once the graph controller is ready
     useEffect(() => {
-      if (!isReady || !cy) return;
-
-      if (selectedNode) {
-        selectNode(selectedNode);
-      } else {
-        deselectAll();
-      }
-    }, [selectedNode, isReady, cy, selectNode, deselectAll]);
-
-    // Notify parent when Cytoscape is ready
-    useEffect(() => {
-      if (isReady) {
-        onCytoscapeReady?.(cy);
-      }
-    }, [isReady, cy, onCytoscapeReady]);
+      onGraphReady?.(isReady ? controller : null);
+    }, [isReady, controller, onGraphReady]);
 
     return (
       <Box
@@ -80,6 +60,10 @@ const GraphCanvas = React.memo(
           backgroundColor: '#fafafa',
           border: '1px solid #e0e0e0',
           borderRadius: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           ...sx,
         }}
       />
@@ -90,3 +74,4 @@ const GraphCanvas = React.memo(
 GraphCanvas.displayName = 'GraphCanvas';
 
 export default GraphCanvas;
+
