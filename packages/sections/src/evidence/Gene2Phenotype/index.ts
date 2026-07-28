@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Gene2Phenotype",
   shortName: "GP",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.gene2Phenotype?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

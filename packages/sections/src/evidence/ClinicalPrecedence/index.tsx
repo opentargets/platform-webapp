@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Clinical Precedence",
   shortName: "CP",
+  category: ["Target-Disease", "Drug"],
   hasData: (data: EvidenceData) => (data.clinical_precedence?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

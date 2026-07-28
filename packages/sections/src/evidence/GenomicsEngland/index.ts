@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "GEL PanelApp",
   shortName: "GE",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.genomicsEngland?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

@@ -5,6 +5,7 @@ export const definition = {
   id: "interactions",
   name: "Molecular Interactions",
   shortName: "MI",
+  category: "Target",
   hasData: (data: TargetData) => (data.interactions?.count || 0) > 0 || false,
 };
 

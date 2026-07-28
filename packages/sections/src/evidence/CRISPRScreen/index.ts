@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "CRISPR Screens",
   shortName: "CS",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.CrisprScreenSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

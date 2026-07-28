@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "GWAS associations",
   shortName: "GW",
+  category: "Disease-Variant",
   hasData: (data: EvidenceData) => (data.gwasCredibleSets?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

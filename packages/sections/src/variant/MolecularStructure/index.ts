@@ -5,6 +5,7 @@ export const definition = {
   id: "molecular_structure",
   name: "Molecular Structure",
   shortName: "MS",
+  category: "Target-Variant",
   hasData: (data: Variant) =>
     (data.proteinCodingCoordinates?.count || 0) > 0 &&
     data.proteinCodingCoordinates?.rows?.[0]?.referenceAminoAcid !== "-",

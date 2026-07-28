@@ -1,4 +1,5 @@
 import { ComponentType } from 'react';
+import type { Category } from 'ui';
 
 /**
  * Generic widget interface for profile sections
@@ -11,6 +12,7 @@ export interface Widget {
     shortName: string;
     hasData: (data: any) => boolean | undefined;
     isPrivate?: boolean;
+    category?: Category | Category[];
   };
   Summary: ComponentType<any>;
   getBodyComponent: () => ComponentType<any>;
@@ -26,6 +28,7 @@ export interface WidgetDefinition {
   shortName: string;
   hasData: (data: any) => boolean | undefined;
   isPrivate: boolean;
+  category?: Category | Category[];
 }
 
 /**

@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Gene Burden",
   shortName: "GB",
+  category: ["Target-Disease", "Disease-Variant"],
   hasData: (data: EvidenceData) => (data.geneBurdenSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

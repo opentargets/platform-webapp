@@ -5,6 +5,7 @@ export const definition = {
   id: "pharmacogenetics",
   name: "Pharmacogenetics",
   shortName: "PGx",
+  category: "Drug",
   hasData: (data: Variant) => (data.pharmacogenomics?.length || 0) > 0,
 };
 

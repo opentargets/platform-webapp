@@ -5,6 +5,7 @@ export const definition = {
   id: "geneOntology",
   name: "Gene Ontology",
   shortName: "GO",
+  category: "Target",
   hasData: (data: TargetData) => (data.geneOntology?.length || 0) > 0,
 };
 

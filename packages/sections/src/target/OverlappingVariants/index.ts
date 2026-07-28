@@ -6,6 +6,7 @@ export const definition = {
   id,
   name: "Protein Coding Variants",
   shortName: "PC",
+  category: "Target-Variant",
   hasData: (data: TargetData) => (data.proteinCodingCoordinates?.count || 0) > 0,
 };
 

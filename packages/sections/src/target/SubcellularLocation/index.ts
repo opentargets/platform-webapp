@@ -5,6 +5,7 @@ export const definition = {
   id: "subcellularLocation",
   name: "Subcellular Location",
   shortName: "SL",
+  category: "Target",
   hasData: (data: TargetData) => (data.subcellularLocations?.length || 0) > 0,
 };
 

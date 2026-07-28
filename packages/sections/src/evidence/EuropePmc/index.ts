@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Europe PMC",
   shortName: "EP",
+  category: "Literature",
   hasData: (data: EvidenceData) => (data.europePmc?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

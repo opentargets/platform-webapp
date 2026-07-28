@@ -4,6 +4,7 @@ export const definition = {
   id: "phenotypes",
   name: "Clinical signs and symptoms",
   shortName: "CS",
+  category: "Disease",
   hasData: (data: any) => (data.phenotypes?.count || 0) > 0,
 };
 
