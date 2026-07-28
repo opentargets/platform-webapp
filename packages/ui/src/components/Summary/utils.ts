@@ -4,11 +4,6 @@ type SummaryComponent = {
   fragments?: Record<string, DocumentNode>;
 };
 
-type ShortNameDefinition = {
-  shortName?: string;
-  name: string;
-};
-
 export function createSummaryFragment(
   sections: SummaryComponent[],
   entity: string,
@@ -43,15 +38,4 @@ export function createSummaryFragment(
       ""
     )}
   `;
-}
-
-export function createShortName(definition: ShortNameDefinition): string {
-  return (
-    definition.shortName ||
-    definition.name
-      .split(" ")
-      .slice(0, 2)
-      .map((w) => w[0].toUpperCase())
-      .join("")
-  );
 }

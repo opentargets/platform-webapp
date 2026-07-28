@@ -1,13 +1,14 @@
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Avatar, Box, Menu, MenuItem, TextField, Typography } from "@mui/material";
+import { Box, Menu, MenuItem, TextField, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
-import { createShortName } from "../Summary/utils";
+import CategoryAvatar from "../CategoryAvatar";
+import type { Category } from "../Summary/categoryConfig";
 import {
   PROFILE_TABS_SENTINEL_ID,
   SCROLL_OFFSET,
@@ -23,6 +24,7 @@ type WidgetDefinition = {
   shortName?: string;
   hasData: (data: any) => boolean | undefined;
   isPrivate?: boolean;
+  category?: Category | Category[];
 };
 
 type StickyProfileHeaderProps = {
@@ -31,13 +33,6 @@ type StickyProfileHeaderProps = {
   externalLinks?: ReactNode;
   widgets: { definition: WidgetDefinition }[];
 };
-
-function avatarSx(hasData: boolean) {
-  return {
-    bgcolor: hasData ? "primary.dark" : "grey.300",
-    color: hasData ? "white" : "grey.600",
-  };
-}
 
 function StickyProfileHeader({
   title,
@@ -121,9 +116,7 @@ function StickyProfileHeader({
           </Box>
 
           <WidgetSelector onClick={(event) => setAnchorEl(event.currentTarget)}>
-            <Avatar sx={{ width: 24, height: 24, fontSize: "0.7rem", ...avatarSx(activeHasData) }}>
-              {createShortName(activeWidget.definition)}
-            </Avatar>
+            <CategoryAvatar definition={activeWidget.definition} hasData={activeHasData} size={24} />
             <AnimatedWidgetName key={activeId} variant="body2" noWrap>
               {activeWidget.definition.name}
             </AnimatedWidgetName>
@@ -149,9 +142,12 @@ function StickyProfileHeader({
                   disabled={!hasData}
                   onClick={() => handleSelect(widget.definition.id)}
                 >
-                  <Avatar sx={{ width: 20, height: 20, fontSize: "0.65rem", mr: 1, ...avatarSx(hasData) }}>
-                    {createShortName(widget.definition)}
-                  </Avatar>
+                  <CategoryAvatar
+                    definition={widget.definition}
+                    hasData={hasData}
+                    size={20}
+                    sx={{ mr: 1 }}
+                  />
                   {widget.definition.name}
                 </MenuItem>
               );

@@ -74,9 +74,7 @@ function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps)
       />
 
       <SummaryContainer>
-        {/* TODO: remove this once we have a proper variants section. look at the parent prop */}
-        <CredibleSet.Variants.Summary />
-        <SummaryRenderer widgets={CREDIBLE_SET_WIDGETS} />
+        <SummaryRenderer widgets={CREDIBLE_SET_STICKY_WIDGETS} />
       </SummaryContainer>
 
       <SectionContainer>

@@ -6,6 +6,7 @@ import {
   SectionContainer,
   StickyProfileHeader,
   SummaryContainer,
+  SummaryRenderer,
   SectionLoader,
   summaryUtils,
 } from "ui";
@@ -75,14 +76,9 @@ function Profile({ studyId, studyType, diseases, Icon, externalLinks }: ProfileP
       />
 
       <SummaryContainer>
-        {/* TODO: remove this, check the studyType property */}
-        {studyType === "gwas" && (
-          <>
-            <Study.GWASCredibleSets.Summary />
-            <Study.SharedTraitStudies.Summary />
-          </>
-        )}
-        {studyType !== "gwas" && <Study.QTLCredibleSets.Summary />}
+        <SummaryRenderer
+          widgets={studyType === "gwas" ? GWAS_STUDY_WIDGETS : QTL_STUDY_WIDGETS}
+        />
       </SummaryContainer>
 
       <SectionContainer>
