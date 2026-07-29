@@ -186,6 +186,7 @@ function StickyProfileHeader({
                     bgcolor: "primary.dark",
                     color: "common.white",
                     "& .MuiChip-deleteIcon": { color: "common.white" },
+                    "& .MuiChip-deleteIcon:hover": { color: "grey.300" },
                   }}
                 />
               </Box>
