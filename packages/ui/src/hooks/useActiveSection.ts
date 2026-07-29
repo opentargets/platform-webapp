@@ -12,7 +12,16 @@ function useActiveSection(ids: string[]): string | null {
   const [activeId, setActiveId] = useState<string | null>(ids[0] ?? null);
 
   useEffect(() => {
-    if (ids.length === 0) return undefined;
+    if (ids.length === 0) {
+      setActiveId(null);
+      return undefined;
+    }
+
+    // ids changes when the caller re-filters the section list (e.g. a
+    // category filter) - if the previous activeId fell out of the new
+    // list, it would otherwise keep pointing at a now-hidden section
+    // until the next scroll-triggered intersection event.
+    setActiveId((prev) => (prev && ids.includes(prev) ? prev : ids[0]));
 
     const visible = new Set<string>();
     const observed = new Set<string>();

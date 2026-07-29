@@ -3,7 +3,7 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Menu, MenuItem, TextField, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
@@ -89,9 +89,23 @@ function StickyProfileHeader({
   // navigate() re-renders the whole matched route tree on each call, which
   // is both wasteful and was surfacing an unrelated remount bug in one of
   // the section bodies.
+  //
+  // hasBeenVisible guards the "clear the hash" branch below so it only
+  // fires once the user has actually scrolled down into the sections at
+  // least once - otherwise a deep link (page loaded with a hash already in
+  // the URL) would have its hash stripped in the instant before the
+  // sentinel's IntersectionObserver reports its first isVisible=true.
+  const hasBeenVisible = useRef(false);
   useEffect(() => {
-    if (!isVisible || !activeId) return;
-    window.history.replaceState(null, "", `#${activeId}`);
+    if (isVisible) {
+      hasBeenVisible.current = true;
+      if (activeId) window.history.replaceState(null, "", `#${activeId}`);
+    } else if (hasBeenVisible.current && window.location.hash) {
+      // Scrolled back above the sticky trigger - clear the section hash so
+      // a refresh lands at the top of the page instead of re-scrolling
+      // into whichever section was last active.
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
   }, [isVisible, activeId]);
 
   const filteredWidgets = categoryWidgets.filter((widget) =>
