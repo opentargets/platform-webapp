@@ -17,11 +17,15 @@ const NameFilterInput = styled(TextField)(() => ({
   },
 }));
 
-function DownloadsSearchInput() {
+interface DownloadsSearchInputProps {
+  sx?: object;
+}
+
+function DownloadsSearchInput({ sx = {} }: DownloadsSearchInputProps) {
   const { state, dispatch } = useContext(DownloadsContext);
 
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={sx}>
       <NameFilterInput
         value={state.freeTextQuery}
         onChange={event => {

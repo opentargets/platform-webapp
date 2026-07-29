@@ -1,87 +1,133 @@
-import { Box, Checkbox, Chip, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
-import { v1 } from "uuid";
+import { Box, Chip, Paper, Typography } from "@mui/material";
+import { useContext, useMemo } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDiagramProject, faTrash } from "@fortawesome/free-solid-svg-icons";
 import DownloadsSearchInput from "./DownloadsSearchInput";
 import { DownloadsContext } from "./context/DownloadsContext";
-import { useContext } from "react";
 import { clearFilterData, setActiveFilter } from "./context/downloadsActions";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import { getCategoryColor } from "./categoryColors";
+import { getCategoryColor, tintHex } from "./categoryColors";
 
-function DownloadsFilter() {
+export interface ConnectionFilter {
+  id: string;
+  label: string;
+  count: number;
+}
+
+interface DownloadsFilterProps {
+  /** The dataset + neighbours filter dropped in by clicking a graph node, if any */
+  connectionFilter?: ConnectionFilter | null;
+  onClearConnectionFilter?: () => void;
+  /** Number of cards currently visible after all filters are applied */
+  resultCount: number;
+}
+
+function DownloadsFilter({
+  connectionFilter,
+  onClearConnectionFilter,
+  resultCount,
+}: DownloadsFilterProps) {
   const { state, dispatch } = useContext(DownloadsContext);
 
-  function handleChangeFilter(item, e) {
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    state.rows.forEach((row: any) => {
+      (row.categories || []).forEach((category: string) => {
+        counts[category] = (counts[category] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [state.rows]);
+
+  function handleToggleCategory(category: string) {
     const currentFilters = [...state.selectedFilters];
-    if (currentFilters.includes(item)) {
-      currentFilters.splice(currentFilters.indexOf(item), 1);
-    } else currentFilters.push(item);
+    if (currentFilters.includes(category)) {
+      currentFilters.splice(currentFilters.indexOf(category), 1);
+    } else currentFilters.push(category);
     dispatch(setActiveFilter(currentFilters));
   }
 
   function handleClearAll() {
     dispatch(clearFilterData());
+    onClearConnectionFilter?.();
   }
+
+  const hasActiveFilters =
+    state.selectedFilters.length > 0 || Boolean(state.freeTextQuery) || Boolean(connectionFilter);
 
   return (
     <Paper
       variant="outlined"
       elevation={0}
-      sx={{ mb: 2, maxWidth: "350px", width: "100%", height: "fit-content" }}
+      sx={{
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        mb: 3,
+        px: 2,
+        py: 1.5,
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 1.25,
+        backgroundColor: "background.paper",
+      }}
     >
-      <Box sx={{ p: 3 }}>
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{
-            wordBreak: "break-all",
-            fontWeight: "bold",
-            mb: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          Filters
-          <Chip
-            label={
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <FontAwesomeIcon icon={faTrash} />
-                clear
-              </Box>
-            }
-            size="small"
-            clickable
-            sx={{ fontWeight: "normal", typography: "caption" }}
-            onClick={handleClearAll}
-          />
-        </Typography>
-        <Box>
-          <DownloadsSearchInput />
-        </Box>
+      <DownloadsSearchInput sx={{ width: 220, flexShrink: 0 }} />
 
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: "bold", mt: 2 }}>
-          Data Categories
-        </Typography>
-        <FormGroup>
-          {state.allUniqueCategories.map(item => (
-            <FormControlLabel
-              key={v1()}
-              control={
-                <Checkbox
-                  checked={state.selectedFilters.includes(item)}
-                  onChange={changeEvent => handleChangeFilter(item, changeEvent)}
-                  sx={{
-                    color: getCategoryColor(item),
-                    "&.Mui-checked": { color: getCategoryColor(item) },
-                  }}
-                />
-              }
-              label={item}
-            />
-          ))}
-        </FormGroup>
-      </Box>
+      {state.allUniqueCategories.map(category => {
+        const active = state.selectedFilters.includes(category);
+        const color = getCategoryColor(category);
+        return (
+          <Chip
+            key={category}
+            label={`${category} (${categoryCounts[category] || 0})`}
+            clickable
+            size="small"
+            onClick={() => handleToggleCategory(category)}
+            sx={{
+              fontWeight: 500,
+              borderColor: color,
+              color: active ? "#fff" : color,
+              backgroundColor: active ? color : tintHex(color, 0.08),
+              "&:hover": {
+                backgroundColor: active ? color : tintHex(color, 0.18),
+              },
+            }}
+          />
+        );
+      })}
+
+      {connectionFilter && (
+        <Chip
+          size="small"
+          icon={<FontAwesomeIcon icon={faDiagramProject} size="xs" />}
+          label={`${connectionFilter.label} + ${connectionFilter.count} connected`}
+          onDelete={onClearConnectionFilter}
+          color="primary"
+          variant="outlined"
+        />
+      )}
+
+      <Box sx={{ flex: 1 }} />
+
+      <Typography variant="body2" sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
+        {resultCount} of {state.rows.length}
+      </Typography>
+
+      {hasActiveFilters && (
+        <Chip
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FontAwesomeIcon icon={faTrash} />
+              clear
+            </Box>
+          }
+          size="small"
+          clickable
+          sx={{ fontWeight: "normal", typography: "caption" }}
+          onClick={handleClearAll}
+        />
+      )}
     </Paper>
   );
 }

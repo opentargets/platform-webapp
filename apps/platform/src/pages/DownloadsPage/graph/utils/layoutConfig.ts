@@ -12,6 +12,8 @@ export interface ForceLayoutConfig {
   linkStrength: number;
   /** Extra spacing added to d3.forceCollide() radius */
   collidePadding: number;
+  /** Strength of the per-tick pull of each node toward its group's (category) centroid */
+  clusterStrength: number;
   /** Simulation cooling rate */
   alphaDecay: number;
   /** Simulation friction */
@@ -44,6 +46,7 @@ export const getLayoutConfig = ({
     linkDistance,
     linkStrength: 0.4,
     collidePadding: 12,
+    clusterStrength: 0.15,
     alphaDecay: 0.02,
     velocityDecay: 0.35,
   };

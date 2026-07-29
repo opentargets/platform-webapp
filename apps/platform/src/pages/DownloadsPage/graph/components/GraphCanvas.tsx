@@ -12,6 +12,8 @@ interface GraphCanvasProps {
   nodes: any[];
   edges: any[];
   selectedNode?: string | null;
+  /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
+  externalHighlightId?: string | null;
   onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string) => void;
@@ -29,6 +31,7 @@ const GraphCanvas = React.memo(
     nodes,
     edges,
     selectedNode,
+    externalHighlightId,
     onNodeSelect,
     onNodeDeselect,
     onEdgeSelect,
@@ -41,6 +44,7 @@ const GraphCanvas = React.memo(
       nodes,
       edges,
       selectedNode,
+      externalHighlightId,
       layoutConfig,
       onNodeSelect,
       onNodeDeselect,
@@ -58,7 +62,7 @@ const GraphCanvas = React.memo(
         sx={{
           width: '100%',
           height: '100%',
-          minHeight: 'min(70vh, 720px)',
+          minHeight: 320,
           backgroundColor: '#fff',
           border: '1px solid',
           borderColor: 'grey.300',

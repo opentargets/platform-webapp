@@ -110,12 +110,17 @@ function VersionTag() {
 
 function DOITag() {
   const { state } = useContext(DownloadsContext);
-  const PMID = /(?<=PMID:).*?(?=,\s)/gm.exec(state.downloadsData?.citeAs);
+  // `.exec()` returns a match array (or null), not the matched text - grab
+  // the captured PMID digits (group 1) rather than passing the array/null
+  // straight through as the entry name, which broke the drawer's fetch.
+  const pmid = /PMID:\s*(\d+)/i.exec(state.downloadsData?.citeAs ?? "")?.[1];
+
+  if (!pmid) return null;
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       <PublicationsDrawer
-        entries={[{ name: PMID, url: epmcUrl(PMID) }]}
+        entries={[{ name: pmid, url: epmcUrl(pmid) }]}
         customLabel={
           <Chip
             component="span"
