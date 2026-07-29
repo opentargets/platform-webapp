@@ -3,11 +3,14 @@ import {
   PlatformApiProvider,
   SectionContainer,
   StickyProfileHeader,
+  SummaryCategoryProvider,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
   SectionsRenderer,
   SectionLoader,
+  primaryCategory,
+  useSummaryCategory,
 } from "ui";
 
 import ProfileHeader from "./ProfileHeader";
@@ -58,6 +61,37 @@ const CREDIBLE_SET_PROFILE_QUERY = gql`
 
 const VariantsSection = CredibleSet.Variants.getBodyComponent();
 
+type CredibleSetSectionsProps = {
+  studyLocusId: string;
+  variantId: string;
+};
+
+// Manual (non-SectionsRenderer) Variants section, gated by the same category
+// filter as SectionsRenderer so it hides/shows consistently with it.
+function CredibleSetSections({ studyLocusId, variantId }: CredibleSetSectionsProps) {
+  const { activeCategory } = useSummaryCategory();
+  const variantsActive =
+    activeCategory === "All" ||
+    primaryCategory(CredibleSet.Variants.definition) === activeCategory;
+
+  return (
+    <>
+      {/* TODO: remove this once we have a proper variants section. look at the parent prop */}
+      {variantsActive && (
+        <Suspense fallback={<SectionLoader />}>
+          <VariantsSection id={studyLocusId} leadVariantId={variantId} entity={CREDIBLE_SET} />
+        </Suspense>
+      )}
+      <SectionsRenderer
+        id={studyLocusId}
+        label={CREDIBLE_SET}
+        entity={CREDIBLE_SET}
+        widgets={CREDIBLE_SET_WIDGETS}
+      />
+    </>
+  );
+}
+
 function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
@@ -66,29 +100,22 @@ function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps)
       variables={{ studyLocusId: studyLocusId, variantIds: [variantId] }}
     >
       <ProfileHeader />
-      <StickyProfileHeader
-        title={studyLocusId}
-        Icon={Icon}
-        externalLinks={externalLinks}
-        widgets={CREDIBLE_SET_STICKY_WIDGETS}
-      />
-
-      <SummaryContainer>
-        <SummaryRenderer widgets={CREDIBLE_SET_STICKY_WIDGETS} />
-      </SummaryContainer>
-
-      <SectionContainer>
-        {/* TODO: remove this once we have a proper variants section. look at the parent prop */}
-        <Suspense fallback={<SectionLoader />}>
-          <VariantsSection id={studyLocusId} leadVariantId={variantId} entity={CREDIBLE_SET} />
-        </Suspense>
-        <SectionsRenderer
-          id={studyLocusId}
-          label={CREDIBLE_SET}
-          entity={CREDIBLE_SET}
-          widgets={CREDIBLE_SET_WIDGETS}
+      <SummaryCategoryProvider>
+        <StickyProfileHeader
+          title={studyLocusId}
+          Icon={Icon}
+          externalLinks={externalLinks}
+          widgets={CREDIBLE_SET_STICKY_WIDGETS}
         />
-      </SectionContainer>
+
+        <SummaryContainer>
+          <SummaryRenderer widgets={CREDIBLE_SET_STICKY_WIDGETS} />
+        </SummaryContainer>
+
+        <SectionContainer>
+          <CredibleSetSections studyLocusId={studyLocusId} variantId={variantId} />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

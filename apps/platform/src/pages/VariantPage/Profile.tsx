@@ -5,6 +5,7 @@ import {
   PlatformApiProvider,
   SectionContainer,
   StickyProfileHeader,
+  SummaryCategoryProvider,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
@@ -63,18 +64,25 @@ function Profile({ varId, Icon, externalLinks }: ProfileProps) {
       variables={{ variantId: varId }}
     >
       <ProfileHeader />
-      <StickyProfileHeader
-        title={varId}
-        Icon={Icon}
-        externalLinks={externalLinks}
-        widgets={VARIANT_WIDGETS}
-      />
-      <SummaryContainer>
-        <SummaryRenderer widgets={VARIANT_WIDGETS} />
-      </SummaryContainer>
-      <SectionContainer>
-        <SectionsRenderer widgets={VARIANT_WIDGETS} id={varId} entity={VARIANT} label={VARIANT} />
-      </SectionContainer>
+      <SummaryCategoryProvider>
+        <StickyProfileHeader
+          title={varId}
+          Icon={Icon}
+          externalLinks={externalLinks}
+          widgets={VARIANT_WIDGETS}
+        />
+        <SummaryContainer>
+          <SummaryRenderer widgets={VARIANT_WIDGETS} />
+        </SummaryContainer>
+        <SectionContainer>
+          <SectionsRenderer
+            widgets={VARIANT_WIDGETS}
+            id={varId}
+            entity={VARIANT}
+            label={VARIANT}
+          />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

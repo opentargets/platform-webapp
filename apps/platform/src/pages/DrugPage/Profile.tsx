@@ -2,6 +2,7 @@ import {
   PlatformApiProvider,
   SectionContainer,
   StickyProfileHeader,
+  SummaryCategoryProvider,
   SummaryContainer,
   SectionsRenderer,
   SummaryRenderer,
@@ -57,18 +58,20 @@ function Profile({ chemblId, name, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider entity={DRUG} query={DRUG_PROFILE_QUERY} variables={{ chemblId }}>
       <ProfileHeader chemblId={chemblId} />
-      <StickyProfileHeader
-        title={name}
-        Icon={Icon}
-        externalLinks={externalLinks}
-        widgets={DRUG_WIDGETS}
-      />
-      <SummaryContainer>
-        <SummaryRenderer widgets={DRUG_WIDGETS} />
-      </SummaryContainer>
-      <SectionContainer>
-        <SectionsRenderer id={chemblId} label={name} entity={DRUG} widgets={DRUG_WIDGETS} />
-      </SectionContainer>
+      <SummaryCategoryProvider>
+        <StickyProfileHeader
+          title={name}
+          Icon={Icon}
+          externalLinks={externalLinks}
+          widgets={DRUG_WIDGETS}
+        />
+        <SummaryContainer>
+          <SummaryRenderer widgets={DRUG_WIDGETS} />
+        </SummaryContainer>
+        <SectionContainer>
+          <SectionsRenderer id={chemblId} label={name} entity={DRUG} widgets={DRUG_WIDGETS} />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

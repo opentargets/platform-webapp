@@ -1,6 +1,8 @@
 import { Suspense, useMemo } from "react";
 import type { Widget } from "sections";
 import usePermissions from "../../hooks/usePermissions";
+import { primaryCategory } from "../Summary/categoryConfig";
+import { useSummaryCategory } from "../Summary/SummaryCategoryContext";
 import SectionLoader from "./SectionLoader";
 
 type SectionsRendererProps = {
@@ -12,6 +14,7 @@ type SectionsRendererProps = {
 
 function SectionsRenderer({ id, label, entity, widgets }: SectionsRendererProps) {
   const { isPartnerPreview } = usePermissions();
+  const { activeCategory } = useSummaryCategory();
 
   // widget.getBodyComponent() creates a brand-new React.lazy() wrapper on every
   // call, so it must only be invoked once per widget. Calling it inline during
@@ -29,6 +32,9 @@ function SectionsRenderer({ id, label, entity, widgets }: SectionsRendererProps)
       {bodyComponents.map(({ widget, Body }) => {
         const isPrivate = widget.definition.isPrivate;
         if (isPrivate && !isPartnerPreview) {
+          return null;
+        }
+        if (activeCategory !== "All" && primaryCategory(widget.definition) !== activeCategory) {
           return null;
         }
         return (

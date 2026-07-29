@@ -8,7 +8,8 @@ import { useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
 import CategoryAvatar from "../CategoryAvatar";
-import type { Category } from "../Summary/categoryConfig";
+import { primaryCategory, type Category } from "../Summary/categoryConfig";
+import { useSummaryCategory } from "../Summary/SummaryCategoryContext";
 import {
   PROFILE_TABS_SENTINEL_ID,
   SCROLL_OFFSET,
@@ -43,13 +44,26 @@ function StickyProfileHeader({
   const theme = useTheme();
   const navigate = useNavigate();
   const { data, entity } = usePlatformApi();
+  const { activeCategory } = useSummaryCategory();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [filterText, setFilterText] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
-  const ids = useMemo(() => widgets.map((widget) => widget.definition.id), [widgets]);
+  // Keep the nav in sync with the category filter applied to the Summary/
+  // Section widgets below - a hidden widget shouldn't be selectable or
+  // trackable as the "active" one.
+  const categoryWidgets = useMemo(
+    () =>
+      activeCategory === "All"
+        ? widgets
+        : widgets.filter((widget) => primaryCategory(widget.definition) === activeCategory),
+    [widgets, activeCategory]
+  );
+
+  const ids = useMemo(() => categoryWidgets.map((widget) => widget.definition.id), [categoryWidgets]);
   const activeId = useActiveSection(ids);
-  const activeWidget = widgets.find((widget) => widget.definition.id === activeId) ?? widgets[0];
+  const activeWidget =
+    categoryWidgets.find((widget) => widget.definition.id === activeId) ?? categoryWidgets[0];
 
   const entityData = data?.[entity];
 
@@ -79,7 +93,7 @@ function StickyProfileHeader({
     window.history.replaceState(null, "", `#${activeId}`);
   }, [isVisible, activeId]);
 
-  const filteredWidgets = widgets.filter((widget) =>
+  const filteredWidgets = categoryWidgets.filter((widget) =>
     widget.definition.name.toLowerCase().includes(filterText.toLowerCase())
   );
 
@@ -90,7 +104,7 @@ function StickyProfileHeader({
     setFilterText("");
   };
 
-  if (widgets.length === 0) return null;
+  if (categoryWidgets.length === 0) return null;
 
   const activeHasData = entityData ? !!activeWidget.definition.hasData(entityData) : true;
 

@@ -30,3 +30,10 @@ export const CATEGORY_ICONS: Record<Category, IconDefinition> = {
   "Disease-Variant": faVial,
   Literature: faBook,
 };
+
+export function primaryCategory(definition: {
+  category?: Category | Category[];
+}): Category | undefined {
+  const category = definition.category;
+  return Array.isArray(category) ? category[0] : category;
+}

@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import {
   PlatformApiProvider,
   SectionContainer,
+  SummaryCategoryProvider,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
@@ -99,13 +100,15 @@ function Profile({
     >
       <ProfileHeader />
 
-      <SummaryContainer>
-        <SummaryRenderer widgets={EVIDENCE_WIDGETS} />
-      </SummaryContainer>
+      <SummaryCategoryProvider>
+        <SummaryContainer>
+          <SummaryRenderer widgets={EVIDENCE_WIDGETS} />
+        </SummaryContainer>
 
-      <SectionContainer>
-        <SectionsRenderer id={id} label={label} entity={DISEASE} widgets={EVIDENCE_WIDGETS} />
-      </SectionContainer>
+        <SectionContainer>
+          <SectionsRenderer id={id} label={label} entity={DISEASE} widgets={EVIDENCE_WIDGETS} />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

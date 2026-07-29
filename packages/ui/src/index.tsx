@@ -150,8 +150,10 @@ export { default as SummaryContainer } from "./components/Summary/SummaryContain
 export { default as SummaryItem } from "./components/Summary/SummaryItem";
 export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer";
 export * as summaryUtils from "./components/Summary/utils";
-export { CATEGORIES, CATEGORY_ICONS } from "./components/Summary/categoryConfig";
+export { CATEGORIES, CATEGORY_ICONS, primaryCategory } from "./components/Summary/categoryConfig";
 export type { Category } from "./components/Summary/categoryConfig";
+export { SummaryCategoryProvider, useSummaryCategory } from "./components/Summary/SummaryCategoryContext";
+export type { CategoryFilter } from "./components/Summary/SummaryCategoryContext";
 export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
 export { default as StickyProfileHeader } from "./components/StickyProfileHeader";
 export { PROFILE_TABS_SENTINEL_ID } from "./components/Section/scrollOffset";

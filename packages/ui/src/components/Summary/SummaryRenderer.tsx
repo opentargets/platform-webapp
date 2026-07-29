@@ -1,11 +1,11 @@
 import { Box, GridLegacy } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
 import type { Widget } from "sections";
 import { v1 } from "uuid";
 import usePermissions from "../../hooks/usePermissions";
 import Chip from "../Chip/Chip";
-import { CATEGORIES, CATEGORY_ICONS, type Category } from "./categoryConfig";
+import { CATEGORIES, CATEGORY_ICONS, primaryCategory } from "./categoryConfig";
+import { useSummaryCategory } from "./SummaryCategoryContext";
 
 type SummaryRendererProps = {
   widgets: Widget[];
@@ -13,21 +13,16 @@ type SummaryRendererProps = {
   keyPrefix?: string;
 };
 
-function primaryCategory(widget: Widget): Category | undefined {
-  const category = widget.definition.category;
-  return Array.isArray(category) ? category[0] : category;
-}
-
 function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: SummaryRendererProps) {
   const { isPartnerPreview } = usePermissions();
-  const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
+  const { activeCategory, setActiveCategory } = useSummaryCategory();
 
   const visibleWidgets = widgets.filter(
     widget => !widget.definition.isPrivate || isPartnerPreview
   );
 
   const presentCategories = CATEGORIES.filter(category =>
-    visibleWidgets.some(widget => primaryCategory(widget) === category)
+    visibleWidgets.some(widget => primaryCategory(widget.definition) === category)
   );
 
   // Keep the same order the widgets are displayed in elsewhere on the page
@@ -35,7 +30,7 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
   const filteredWidgets =
     activeCategory === "All"
       ? visibleWidgets
-      : visibleWidgets.filter(widget => primaryCategory(widget) === activeCategory);
+      : visibleWidgets.filter(widget => primaryCategory(widget.definition) === activeCategory);
 
   return (
     <GridLegacy item xs={12}>
