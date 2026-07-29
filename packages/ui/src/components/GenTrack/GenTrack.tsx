@@ -11,6 +11,7 @@ import GenTrackTooltip from "./GenTrackTooltip";
 import { useGenTrackTooltipDispatch, useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { ScalesProvider, type ScalesRef } from "./ScalesContext";
 import { TrackRegistryProvider, type TrackTransform } from "./TrackRegistry";
+import { CrosshairOverlay } from "./CrosshairOverlay";
 
 function px(num) {
   return `${num}px`;
@@ -28,13 +29,15 @@ interface TooltipLayerProps {
   tooltipProps: object;
   cursor?: string;
   onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
+  crosshairs?: boolean;
 }
 
-const TooltipLayer = memo(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown }: TooltipLayerProps) {
+const TooltipLayer = memo(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = false }: TooltipLayerProps) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
   const { onDatumClick } = (tooltipProps as Record<string, any>);
+  const tooltipLayerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = () => {
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: canvasType });
@@ -56,10 +59,11 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
     canvasType === "inner" && genTrackTooltipState?.hover?.datum && onDatumClick ? "pointer" : "default"
   );
 
-  if (!children) return null;
+  if (!children && !crosshairs) return null;
   
   return (
     <Box 
+      ref={tooltipLayerRef}
       sx={{ 
         position: "absolute", 
         inset: 0, 
@@ -71,6 +75,9 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
       onClick={handleClick}
       onMouseDown={onMouseDown}
     >
+      {crosshairs && (
+        <CrosshairOverlay width={width} height={height} containerRef={tooltipLayerRef} />
+      )}
       <GenTrackTooltip width={width} height={height} canvasType={canvasType} {...tooltipProps}>
         {children}
       </GenTrackTooltip>
@@ -187,6 +194,7 @@ interface InnerPanDragTooltipLayerProps {
   scalesRefHolder: React.MutableRefObject<ScalesRef | null>;
   updateViewWindow: (start: number, end: number) => void;
   children: React.ReactNode;
+  crosshairs?: boolean;
 }
 
 function InnerPanDragTooltipLayer({
@@ -200,6 +208,7 @@ function InnerPanDragTooltipLayer({
   scalesRefHolder,
   updateViewWindow,
   children,
+  crosshairs = false,
 }: InnerPanDragTooltipLayerProps) {
   const innerPanDrag = useInnerPanDrag(
     canvasWidth,
@@ -218,6 +227,7 @@ function InnerPanDragTooltipLayer({
       tooltipProps={tooltipProps}
       cursor={innerPanDrag.cursor}
       onMouseDown={innerPanDrag.handleMouseDown}
+      crosshairs={crosshairs}
     >
       {children}
     </TooltipLayer>
@@ -441,6 +451,7 @@ interface GenTrackInnerProps {
   overlayZoombar?: boolean;
   initialZoom?: [number | null, number | null];
   zoomLines?: boolean;
+  crosshairs?: boolean;
   overlayGraphics?: React.ReactNode;
   innerOverlayGraphics?: React.ReactNode;
   onInnerScalesReady?: (scalesRef: React.RefObject<ScalesRef>) => void;
@@ -473,6 +484,7 @@ function GenTrackInner({
   overlayZoombar = false,
   initialZoom = [null, null],
   zoomLines,
+  crosshairs = true,
   overlayGraphics,
   innerOverlayGraphics,
   onInnerScalesReady,
@@ -827,7 +839,7 @@ function GenTrackInner({
                   _suppressTooltip={!!InnerTooltip}
                 />
                 {/* Inner tooltip rendered here — outside the outer canvas stacking context — so it paints above the zoombar */}
-                {InnerTooltip && canvasWidth > 0 && (
+                {(InnerTooltip || crosshairs) && canvasWidth > 0 && (
                   <Box sx={{
                     position: "absolute",
                     top: 0,
@@ -847,8 +859,9 @@ function GenTrackInner({
                       xMax={xMax}
                       scalesRefHolder={innerScalesRefHolder}
                       updateViewWindow={updateViewWindow}
+                      crosshairs={crosshairs}
                     >
-                      <InnerTooltip />
+                      {InnerTooltip ? <InnerTooltip /> : null}
                     </InnerPanDragTooltipLayer>
                   </Box>
                 )}
