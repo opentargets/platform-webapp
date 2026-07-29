@@ -28,7 +28,7 @@ function AnalysisMenu() {
   }
 
   if(!isPartnerPreview) {
-    return null;
+    // return null;
   }
 
   return (
