@@ -3,6 +3,7 @@ import { Sprite, useTick, useApp } from '@pixi/react';
 import { Sprite as PixiSprite, Graphics as PixiGraphics, Application as PixiApplication, Texture } from 'pixi.js';
 import type { RefObject } from 'react';
 import type { ScalesRef } from './ScalesContext';
+import { useGenTrackDragState } from '../../providers/GenTrackDragProvider';
 
 const _rectTextureCache = new WeakMap<PixiApplication, Texture>();
 
@@ -111,6 +112,7 @@ export function DataSprite({
   ...spriteProps
 }: DataSpriteProps) {
   const app = useApp();
+  const isInnerDragging = useGenTrackDragState();
   const isCircular = shape === 'circle' || shape === 'ring';
 
   const resolvedTexture = texture ?? (
@@ -185,6 +187,7 @@ export function DataSprite({
       y={initialScreenY}
       visible={isPositioned}
       {...spriteProps}
+      eventMode={isInnerDragging ? "none" : spriteProps.eventMode}
       {...(resolvedAnchor !== undefined && { anchor: resolvedAnchor })}
     />
   );

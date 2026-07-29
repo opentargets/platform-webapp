@@ -2,10 +2,11 @@ import { Box } from "@mui/material";
 import { Stage, Container, useApp } from '@pixi/react';
 import { useMeasure } from "@uidotdev/usehooks";
 import { useRef, useEffect, memo, useCallback, useState } from "react";
-import PanZoomPanel from "./PanZoomPanel";
+import PanZoomPanel, { type PanZoomPanelHandle } from "./PanZoomPanel";
 import NestedXInfo from "./NestedXInfo";
 import type { XAxisHandle } from "../GeneVis/XAxis";
 import { useGenTrackState } from "../../providers/GenTrackProvider";
+import { GenTrackDragProvider, useGenTrackDragDispatch, useGenTrackDragState } from "../../providers/GenTrackDragProvider";
 import GenTrackTooltip from "./GenTrackTooltip";
 import { useGenTrackTooltipDispatch, useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { ScalesProvider, type ScalesRef } from "./ScalesContext";
@@ -15,17 +16,24 @@ function px(num) {
   return `${num}px`;
 }
 
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
 interface TooltipLayerProps {
   children: React.ReactNode;
   width: number;
   height: number;
   canvasType: string;
   tooltipProps: object;
+  cursor?: string;
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
 }
 
-const TooltipLayer = memo(function TooltipLayer({ children, width, height, canvasType, tooltipProps }: TooltipLayerProps) {
+const TooltipLayer = memo(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown }: TooltipLayerProps) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
+  const isInnerDragging = useGenTrackDragState();
   const { onDatumClick } = (tooltipProps as Record<string, any>);
 
   const handleMouseEnter = () => {
@@ -37,11 +45,16 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
   };
 
   const handleClick = () => {
+    if (isInnerDragging) return;
     const hover = genTrackTooltipState?.hover;
     if (canvasType === "inner" && hover?.datum && onDatumClick) {
       onDatumClick(hover.datum);
     }
   };
+
+  const computedCursor = cursor ?? (
+    canvasType === "inner" && genTrackTooltipState?.hover?.datum && onDatumClick ? "pointer" : "default"
+  );
 
   if (!children) return null;
   
@@ -51,11 +64,12 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
         position: "absolute", 
         inset: 0, 
         pointerEvents: "auto",
-        cursor: canvasType === "inner" && genTrackTooltipState?.hover?.datum && onDatumClick ? "pointer" : "default",
+        cursor: computedCursor,
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
+      onMouseDown={onMouseDown}
     >
       <GenTrackTooltip width={width} height={height} canvasType={canvasType} {...tooltipProps}>
         {children}
@@ -63,6 +77,152 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
     </Box>
   );
 });
+
+function useInnerPanDrag(
+  canvasWidth: number,
+  xMin: number,
+  xMax: number,
+  scalesRefHolder: React.MutableRefObject<ScalesRef | null>,
+  updateViewWindow: (start: number, end: number) => void,
+  onDatumClick?: (datum: any) => void,
+) {
+  const genTrackTooltipState = useGenTrackTooltipState() as any;
+  const setIsInnerDragging = useGenTrackDragDispatch();
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartClientX = useRef(0);
+  const dragStartStart = useRef(0);
+  const dragStartEnd = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const pendingViewRef = useRef<{ start: number; end: number } | null>(null);
+
+  const scheduleViewUpdate = useCallback((start: number, end: number) => {
+    pendingViewRef.current = { start, end };
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        if (pendingViewRef.current) {
+          updateViewWindow(pendingViewRef.current.start, pendingViewRef.current.end);
+          pendingViewRef.current = null;
+        }
+        rafRef.current = null;
+      });
+    }
+  }, [updateViewWindow]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const scales = scalesRefHolder.current;
+    if (!scales || canvasWidth <= 0) return;
+    const span = dragStartEnd.current - dragStartStart.current;
+    if (span <= 0) return;
+    const dxPx = e.clientX - dragStartClientX.current;
+    const dxData = (dxPx / canvasWidth) * span;
+    const newStart = clamp(dragStartStart.current - dxData, xMin, xMax - span);
+    const newEnd = newStart + span;
+    scheduleViewUpdate(newStart, newEnd);
+  }, [canvasWidth, xMin, xMax, scalesRefHolder, scheduleViewUpdate]);
+
+  const handleMouseUp = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (pendingViewRef.current) {
+      updateViewWindow(pendingViewRef.current.start, pendingViewRef.current.end);
+      pendingViewRef.current = null;
+    }
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    setIsDragging(false);
+    // Keep the flag true through the overlay's click event; clear afterwards.
+    setTimeout(() => setIsInnerDragging(false), 0);
+  }, [updateViewWindow, handleMouseMove, setIsInnerDragging]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const hover = genTrackTooltipState?.hover;
+    if (hover?.datum) return;
+    const scales = scalesRefHolder.current;
+    if (!scales || canvasWidth <= 0) return;
+    const span = (scales.viewEnd ?? xMax) - (scales.viewStart ?? xMin);
+    const fullSpan = xMax - xMin;
+    if (span <= 0 || span >= fullSpan) return;
+    e.preventDefault();
+    dragStartClientX.current = e.clientX;
+    dragStartStart.current = scales.viewStart ?? xMin;
+    dragStartEnd.current = scales.viewEnd ?? xMax;
+    setIsDragging(true);
+    setIsInnerDragging(true);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [canvasWidth, xMin, xMax, scalesRefHolder, genTrackTooltipState, setIsInnerDragging, handleMouseMove, handleMouseUp]);
+
+  // Clean up listeners if the overlay is unmounted while a drag is in progress
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      setIsInnerDragging(false);
+    };
+  }, [handleMouseMove, handleMouseUp, setIsInnerDragging]);
+
+  const cursor = isDragging
+    ? "move"
+    : genTrackTooltipState?.hover?.datum
+      ? (onDatumClick ? "pointer" : "default")
+      : "crosshair";
+
+  return { cursor, handleMouseDown, isDragging };
+}
+
+interface InnerPanDragTooltipLayerProps {
+  width: number;
+  height: number;
+  canvasType: string;
+  tooltipProps: object;
+  canvasWidth: number;
+  xMin: number;
+  xMax: number;
+  scalesRefHolder: React.MutableRefObject<ScalesRef | null>;
+  updateViewWindow: (start: number, end: number) => void;
+  children: React.ReactNode;
+}
+
+function InnerPanDragTooltipLayer({
+  width,
+  height,
+  canvasType,
+  tooltipProps,
+  canvasWidth,
+  xMin,
+  xMax,
+  scalesRefHolder,
+  updateViewWindow,
+  children,
+}: InnerPanDragTooltipLayerProps) {
+  const innerPanDrag = useInnerPanDrag(
+    canvasWidth,
+    xMin,
+    xMax,
+    scalesRefHolder,
+    updateViewWindow,
+    (tooltipProps as any)?.onDatumClick,
+  );
+
+  return (
+    <TooltipLayer
+      width={width}
+      height={height}
+      canvasType={canvasType}
+      tooltipProps={tooltipProps}
+      cursor={innerPanDrag.cursor}
+      onMouseDown={innerPanDrag.handleMouseDown}
+    >
+      {children}
+    </TooltipLayer>
+  );
+}
 
 interface TrackProps {
   isInner: boolean;
@@ -435,6 +595,8 @@ function GenTrackInner({
     }
   }, [canvasWidth, xMin, xMax, updateZoomLines, updateWindowUnderlay]);
 
+  const panZoomPanelRef = useRef<PanZoomPanelHandle | null>(null);
+
   // Callback to update view window (used by PanZoomPanel) — no React state, purely imperative
   const updateViewWindow = useCallback((start: number, end: number) => {
     // Push to inner scalesRef (the zoomed canvas)
@@ -450,12 +612,14 @@ function GenTrackInner({
     updateZoomLines(start, end, canvasWidth);
     updateWindowUnderlay(start, end, canvasWidth);
     innerXAxisHandleRef.current?.update(start, end);
+    panZoomPanelRef.current?.updateView(start, end);
   }, [canvasWidth, updateZoomLines, updateWindowUnderlay]);
 
 
   return (
     <ScalesProvider scalesRef={scalesRef}>
       <TrackRegistryProvider>
+        <GenTrackDragProvider>
         <Box
           ref={widthRef}
           sx={{ display: "flex", flexDirection: "column" }}
@@ -601,6 +765,7 @@ function GenTrackInner({
                   >
                     <Box sx={{ pointerEvents: "auto" }}>
                       <PanZoomPanel
+                        ref={panZoomPanelRef}
                         viewStart={scalesRef.current?.viewStart ?? xMin}
                         viewEnd={scalesRef.current?.viewEnd ?? xMax}
                         onViewChange={updateViewWindow}
@@ -626,6 +791,7 @@ function GenTrackInner({
                   pl: px(yInfoWidth + yInfoGap),
                 }}>
                   <PanZoomPanel
+                    ref={panZoomPanelRef}
                     viewStart={scalesRef.current?.viewStart ?? xMin}
                     viewEnd={scalesRef.current?.viewEnd ?? xMax}
                     onViewChange={updateViewWindow}
@@ -671,14 +837,19 @@ function GenTrackInner({
                     zIndex: 20,
                     pointerEvents: "none",
                   }}>
-                    <TooltipLayer
+                    <InnerPanDragTooltipLayer
                       width={canvasWidth}
                       height={innerScalesRefHolder.current?.canvasHeight ?? canvasHeight}
                       canvasType="inner"
                       tooltipProps={innerTooltipProps}
+                      canvasWidth={canvasWidth}
+                      xMin={xMin}
+                      xMax={xMax}
+                      scalesRefHolder={innerScalesRefHolder}
+                      updateViewWindow={updateViewWindow}
                     >
                       <InnerTooltip />
-                    </TooltipLayer>
+                    </InnerPanDragTooltipLayer>
                   </Box>
                 )}
               </Box>
@@ -686,6 +857,7 @@ function GenTrackInner({
           )}
 
         </Box>
+        </GenTrackDragProvider>
       </TrackRegistryProvider>
     </ScalesProvider>
   );

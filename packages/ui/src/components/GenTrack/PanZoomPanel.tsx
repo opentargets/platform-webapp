@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
+}
+
+export interface PanZoomPanelHandle {
+  updateView: (start: number, end: number) => void;
 }
 
 interface PanZoomPanelProps {
@@ -27,7 +31,7 @@ interface DragState {
   end: number;
 }
 
-function PanZoomPanel({ viewStart, viewEnd, onViewChange, canvasWidth, xMin, xMax, height = 20, windowHeight, backgroundColor = 'transparent' }: PanZoomPanelProps) {
+const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function PanZoomPanel({ viewStart, viewEnd, onViewChange, canvasWidth, xMin, xMax, height = 20, windowHeight, backgroundColor = 'transparent' }: PanZoomPanelProps, ref) {
   const dragState = useRef<DragState | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const windowRef = useRef<HTMLDivElement | null>(null);
@@ -199,6 +203,15 @@ function PanZoomPanel({ viewStart, viewEnd, onViewChange, canvasWidth, xMin, xMa
     handleMouseUpRef.current = handleMouseUp;
   }, [handleMouseUp]);
 
+  // Allow the parent to update our window position during inner-canvas drag
+  useImperativeHandle(ref, () => ({
+    updateView: (start: number, end: number) => {
+      internalViewRef.current = { start, end };
+      setInternalView({ start, end });
+      updateDOM(start, end);
+    },
+  }), [updateDOM]);
+
   return (
     <Box
       ref={containerRef}
@@ -310,6 +323,6 @@ function PanZoomPanel({ viewStart, viewEnd, onViewChange, canvasWidth, xMin, xMa
       />
     </Box>
   );
-}
+});
 
 export default PanZoomPanel;

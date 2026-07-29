@@ -9,9 +9,9 @@ export const { ScopedProvider, useScopedState, useScopedDispatch } =
       xMax: 100,
     },
     extraActions: {
-      setData: (state, action) => ({ ...state, data: action.value }),
-      setXMin: (state, action) => ({ ...state, xMin: action.value }),
-      setXMax: (state, action) => ({ ...state, xMax: action.value }),
+      setData: (state: any, action: any) => ({ ...state, data: action.value }),
+      setXMin: (state: any, action: any) => ({ ...state, xMin: action.value }),
+      setXMax: (state: any, action: any) => ({ ...state, xMax: action.value }),
     }
   });
 

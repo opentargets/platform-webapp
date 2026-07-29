@@ -116,6 +116,17 @@ Inside either the `Track` itself or one of its ancestors, it is standard use `us
 
 `YInfo` components belonging to an outer `GenTrack` can set the outer or inner state (`useGenTrackDispatch` and `useGenTrackInnerDispatch`). `YInfo` components inside an inner `GenTrack` can access the outer state (`useGenTrackState`).
 
+#### Inner track panning
+
+When `innerTracks` are used (zoomed tracks), the inner/zoomed canvas supports horizontal drag-to-pan:
+
+- The cursor becomes a `crosshair` over the inner canvas when panning is available.
+- It switches to `move` while dragging.
+- Panning is disabled when the cursor is over a datum that triggers a tooltip (so tooltip interactions still work).
+- Panning updates the view in real time and keeps the outer `PanZoomPanel` window in sync.
+
+This only applies to the inner (zoomed) canvas; the outer top-level tracks are already panned by dragging the `PanZoomPanel` window.
+
 #### Tooltip
 
 Use the `Tooltip` and `InnerTooltip` properties of the `GenTrack` component to pass tooltip components for top-level and inner tracks respectively.
