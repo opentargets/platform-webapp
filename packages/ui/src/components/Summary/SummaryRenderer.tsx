@@ -1,10 +1,9 @@
 import { Box, GridLegacy } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { Widget } from "sections";
 import { v1 } from "uuid";
 import usePermissions from "../../hooks/usePermissions";
-import Chip from "../Chip/Chip";
-import { CATEGORIES, CATEGORY_ICONS, primaryCategory } from "./categoryConfig";
+import CategoryFilterChips from "./CategoryFilterChips";
+import { CATEGORIES, primaryCategory } from "./categoryConfig";
 import { useSummaryCategory } from "./SummaryCategoryContext";
 
 type SummaryRendererProps = {
@@ -15,7 +14,7 @@ type SummaryRendererProps = {
 
 function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: SummaryRendererProps) {
   const { isPartnerPreview } = usePermissions();
-  const { activeCategory, setActiveCategory } = useSummaryCategory();
+  const { activeCategory } = useSummaryCategory();
 
   const visibleWidgets = widgets.filter(
     widget => !widget.definition.isPrivate || isPartnerPreview
@@ -34,56 +33,7 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
 
   return (
     <GridLegacy item xs={12}>
-      {presentCategories.length > 1 && (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: "18px" }}>
-          <Chip
-            label="All"
-            clickable
-            variant="filled"
-            onClick={() => setActiveCategory("All")}
-            sx={{
-              height: 26,
-              borderRadius: 2,
-              fontSize: "0.7rem",
-              ...(activeCategory === "All" && {
-                bgcolor: "primary.dark",
-                color: "common.white",
-                "&:hover": {
-                  bgcolor: "secondary.main",
-                  color: "common.white",
-                },
-              }),
-            }}
-          />
-          {presentCategories.map(category => (
-            <Chip
-              key={category}
-              label={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
-                  <FontAwesomeIcon icon={CATEGORY_ICONS[category]} style={{ fontSize: 12 }} />
-                  {category}
-                </Box>
-              }
-              clickable
-              variant="filled"
-              onClick={() => setActiveCategory(category)}
-              sx={{
-                height: 26,
-                borderRadius: 2,
-                fontSize: "0.7rem",
-                ...(activeCategory === category && {
-                  bgcolor: "primary.dark",
-                  color: "common.white",
-                  "&:hover": {
-                    bgcolor: "secondary.main",
-                    color: "common.white",
-                  },
-                }),
-              }}
-            />
-          ))}
-        </Box>
-      )}
+      <CategoryFilterChips categories={presentCategories} sx={{ mb: "18px" }} />
       <Box
         sx={{
           display: "grid",

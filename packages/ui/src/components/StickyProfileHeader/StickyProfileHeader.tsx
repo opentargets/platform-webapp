@@ -8,7 +8,8 @@ import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
 import CategoryAvatar from "../CategoryAvatar";
-import { primaryCategory, type Category } from "../Summary/categoryConfig";
+import CategoryFilterChips from "../Summary/CategoryFilterChips";
+import { CATEGORIES, primaryCategory, type Category } from "../Summary/categoryConfig";
 import { useSummaryCategory } from "../Summary/SummaryCategoryContext";
 import {
   PROFILE_TABS_SENTINEL_ID,
@@ -59,6 +60,13 @@ function StickyProfileHeader({
         ? widgets
         : widgets.filter((widget) => primaryCategory(widget.definition) === activeCategory),
     [widgets, activeCategory]
+  );
+
+  // Full (unfiltered) category set so the chip row always shows every
+  // category available on this page, even while one is active.
+  const presentCategories = useMemo(
+    () => CATEGORIES.filter((category) => widgets.some((widget) => primaryCategory(widget.definition) === category)),
+    [widgets]
   );
 
   const ids = useMemo(() => categoryWidgets.map((widget) => widget.definition.id), [categoryWidgets]);
@@ -167,6 +175,7 @@ function StickyProfileHeader({
               onKeyDown={(event) => event.stopPropagation()}
               sx={{ px: 1.5, pb: 1, width: "100%" }}
             />
+            <CategoryFilterChips categories={presentCategories} sx={{ px: 1.5, pb: 1 }} />
             {filteredWidgets.map((widget) => {
               const hasData = entityData ? !!widget.definition.hasData(entityData) : true;
               return (
