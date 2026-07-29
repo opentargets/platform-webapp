@@ -104,7 +104,14 @@ function SectionItem({
             <ErrorBoundary>
               <CardHeaderContainer>
                 {/* AVATAR */}
-                <CategoryAvatar definition={definition} hasData={hasData} error={!!error} />
+                <CategoryAvatar
+                  definition={definition}
+                  hasData={hasData}
+                  error={!!error}
+                  size={44}
+                  shape="square"
+                  filled={false}
+                />
                 {/* HEADER, SUB-HEADER & CHIP */}
                 <Box sx={{ flex: 1 }}>
                   <StyledTitle

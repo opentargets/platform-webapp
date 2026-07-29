@@ -5,7 +5,7 @@ export const CardHeaderContainer = styled(Box)({
   alignItems: "center",
   justifyContent: "space-between",
   gap: "1rem",
-  padding: "1rem",
+  padding: "0.75rem 1rem",
 });
 
 export const StyledCardContent = styled(CardContent)(({ theme }) => ({

@@ -37,11 +37,13 @@ function SummaryItem<T>({
       sx={{ opacity: loading ? 0.6 : 1 }}
     >
       <CategoryAvatar
+        className="summaryChipIcon"
         definition={definition}
         hasData={hasData}
         error={!!error}
         size={38}
         shape="square"
+        filled={false}
       />
       <StyledLabel className="summaryChipLabel" hasData={hasData} error={!!error}>
         {definition.name}

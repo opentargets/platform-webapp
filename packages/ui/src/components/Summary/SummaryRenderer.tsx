@@ -1,6 +1,6 @@
 import { Box, GridLegacy } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { Widget } from "sections";
 import { v1 } from "uuid";
 import usePermissions from "../../hooks/usePermissions";
@@ -26,28 +26,21 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
     widget => !widget.definition.isPrivate || isPartnerPreview
   );
 
-  // Stable category order so the flat "All" view still visually clusters by category.
-  const sortedWidgets = useMemo(() => {
-    const rank = (widget: Widget) => {
-      const category = primaryCategory(widget);
-      return category ? CATEGORIES.indexOf(category) : CATEGORIES.length;
-    };
-    return [...visibleWidgets].sort((a, b) => rank(a) - rank(b));
-  }, [visibleWidgets]);
-
   const presentCategories = CATEGORIES.filter(category =>
     visibleWidgets.some(widget => primaryCategory(widget) === category)
   );
 
+  // Keep the same order the widgets are displayed in elsewhere on the page
+  // (nav, body) rather than regrouping by category.
   const filteredWidgets =
     activeCategory === "All"
-      ? sortedWidgets
-      : sortedWidgets.filter(widget => primaryCategory(widget) === activeCategory);
+      ? visibleWidgets
+      : visibleWidgets.filter(widget => primaryCategory(widget) === activeCategory);
 
   return (
     <GridLegacy item xs={12}>
       {presentCategories.length > 1 && (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1.5 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: "18px" }}>
           <Chip
             label="All"
             clickable
@@ -56,9 +49,14 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
             sx={{
               height: 26,
               borderRadius: 2,
+              fontSize: "0.7rem",
               ...(activeCategory === "All" && {
                 bgcolor: "primary.dark",
                 color: "common.white",
+                "&:hover": {
+                  bgcolor: "secondary.main",
+                  color: "common.white",
+                },
               }),
             }}
           />
@@ -77,9 +75,14 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
               sx={{
                 height: 26,
                 borderRadius: 2,
+                fontSize: "0.7rem",
                 ...(activeCategory === category && {
                   bgcolor: "primary.dark",
                   color: "common.white",
+                  "&:hover": {
+                    bgcolor: "secondary.main",
+                    color: "common.white",
+                  },
                 }),
               }}
             />
@@ -89,7 +92,12 @@ function SummaryRenderer({ widgets, useKeys = true, keyPrefix = "summary" }: Sum
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(5, 1fr)",
+          },
           rowGap: 1.5,
           columnGap: 2,
         }}
