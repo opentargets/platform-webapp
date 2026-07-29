@@ -2,10 +2,9 @@
  * Hook: useHoverHighlight
  * Raises a hovered node (and its edges) to full opacity while fading
  * everything else, so the graph stays legible with ~100 nodes/edges on
- * screen. Driven by two sources that must produce the same look: the
- * canvas's own pointer hover (wired up in `useGraphSimulation`, which calls
- * the returned `setHoverState` directly) and `externalHighlightId` (e.g. a
- * card hovered in the list pane), handled by the effect below.
+ * screen. Driven solely by `externalHighlightId` (e.g. a card hovered in the
+ * list pane), handled by the effect below - the canvas's own pointer hover
+ * only drives the tooltip (see `useGraphSimulation`) and does not fade/raise.
  */
 
 import { useCallback, useEffect } from 'react';

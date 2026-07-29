@@ -32,7 +32,6 @@ interface UseGraphSimulationOptions {
   nodes: any[];
   edges: any[];
   layoutConfig?: ForceLayoutConfig;
-  setHoverState: (hoverNode: GraphNodeDatum | null) => void;
 }
 
 export const useGraphSimulation = ({
@@ -46,7 +45,6 @@ export const useGraphSimulation = ({
   nodes,
   edges,
   layoutConfig,
-  setHoverState,
 }: UseGraphSimulationOptions): boolean => {
   const [isReady, setIsReady] = useState(false);
 
@@ -178,9 +176,6 @@ export const useGraphSimulation = ({
         callbacksRef.current?.onNodeSelect?.(d.id, { x: event.pageX, y: event.pageY });
       })
       .on('mouseover', function (d: GraphNodeDatum) {
-        // Raise the node to full opacity, color its edges, and fade everything
-        // else to 8% - with ~100 edges/nodes this is what keeps the graph legible.
-        setHoverState(d);
         const event = (d3 as any).event;
         callbacksRef.current?.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
       })
@@ -189,7 +184,6 @@ export const useGraphSimulation = ({
         callbacksRef.current?.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
       })
       .on('mouseout', function () {
-        setHoverState(null);
         callbacksRef.current?.onNodeHover?.(null);
       });
 

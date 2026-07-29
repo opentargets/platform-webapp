@@ -45,7 +45,21 @@ function DownloadsPage() {
 
   // Cross-pane hover: hovering a card raises its node, hovering a node raises
   // its card's border. One id, since only one pane can be hovered at a time.
+  // `hoveredSource` tracks which pane started the hover so the graph's own
+  // connection-highlight only reacts to a card hover, not to a canvas hover
+  // echoing back through this same state.
   const [hoveredId, setHoveredId] = useState(null);
+  const [hoveredSource, setHoveredSource] = useState(null);
+
+  const handleCardHoverChange = useCallback((hovering, id) => {
+    setHoveredId(hovering ? id : null);
+    setHoveredSource(hovering ? "card" : null);
+  }, []);
+
+  const handleNodeHoverChange = useCallback(id => {
+    setHoveredId(id);
+    setHoveredSource(id ? "node" : null);
+  }, []);
 
   // Size the graph panel to match two rows of the cards grid, rather than
   // pinning it to the viewport - measured off the grid's actual rendered
@@ -191,7 +205,7 @@ function DownloadsPage() {
                     connections={degreeById.get(id)}
                     onViewConnections={handleViewConnections}
                     highlighted={hoveredId === id || connectionFilter?.id === id}
-                    onHoverChange={hovering => setHoveredId(hovering ? id : null)}
+                    onHoverChange={hovering => handleCardHoverChange(hovering, id)}
                   />
                 );
               })
@@ -208,8 +222,8 @@ function DownloadsPage() {
             }}
           >
             <GraphVisualization
-              externalHighlightId={hoveredId}
-              onNodeHoverChange={setHoveredId}
+              externalHighlightId={hoveredSource === "card" ? hoveredId : null}
+              onNodeHoverChange={handleNodeHoverChange}
               selectedNodeId={selectedNodeId}
               onNodeSelect={setSelectedNodeId}
               onNodeDeselect={handleClearConnectionFilter}

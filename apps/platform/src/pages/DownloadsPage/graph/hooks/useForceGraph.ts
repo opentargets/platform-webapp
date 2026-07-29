@@ -63,13 +63,6 @@ export const useForceGraph = ({
     callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover };
   }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover]);
 
-  // useGraphSimulation (builds the canvas, wires node hover) and
-  // useHoverHighlight (owns the hover-fade logic) each need the other's
-  // output - isReady vs. setHoverState - so a stable ref breaks the cycle:
-  // useGraphSimulation calls through the ref, which is pointed at the real
-  // setHoverState once useHoverHighlight runs below.
-  const setHoverStateRef = useRef<(hoverNode: GraphNodeDatum | null) => void>(() => {});
-
   const isReady = useGraphSimulation({
     containerRef,
     svgRef,
@@ -81,16 +74,16 @@ export const useForceGraph = ({
     nodes,
     edges,
     layoutConfig,
-    setHoverState: (hoverNode) => setHoverStateRef.current(hoverNode),
   });
 
-  const { setHoverState } = useHoverHighlight({
+  // Card-hover highlighting only - the canvas's own pointer hover no longer
+  // raises/fades nodes, it just drives the tooltip (see useGraphSimulation).
+  useHoverHighlight({
     svgRef,
     simulationRef,
     externalHighlightId,
     isReady,
   });
-  setHoverStateRef.current = setHoverState;
 
   useSelectionHighlight({ svgRef, selectedNode, isReady });
 
