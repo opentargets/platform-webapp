@@ -10,9 +10,9 @@
  * used where the v7 typings disagree with the actual v5 runtime API.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { getNodeTypes } from '../utils/nodeClassifier';
+import { tintHex } from '../../categoryColors';
 import { getDefaultLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
 
 interface GraphNodeDatum extends d3.SimulationNodeDatum {
@@ -35,7 +35,12 @@ export interface GraphController {
   center: () => void;
   reset: () => void;
   exportPNG: () => void;
-  exportJSON: () => void;
+  exportSVG: () => void;
+}
+
+export interface GraphPointerPosition {
+  x: number;
+  y: number;
 }
 
 interface UseForceGraphOptions {
@@ -43,9 +48,10 @@ interface UseForceGraphOptions {
   edges: any[];
   selectedNode?: string | null;
   layoutConfig?: ForceLayoutConfig;
-  onNodeSelect?: (nodeId: string) => void;
+  onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string) => void;
+  onNodeHover?: (nodeId: string | null, position?: GraphPointerPosition) => void;
 }
 
 interface UseForceGraphResult {
@@ -116,6 +122,25 @@ const exportSvgAsPng = (svgEl: SVGSVGElement, filename = 'graph-visualization.pn
 };
 
 /**
+ * Serialize an SVG element and trigger a direct .svg file download
+ */
+const downloadSvgFile = (svgEl: SVGSVGElement, filename = 'graph-visualization.svg') => {
+  const clone = svgEl.cloneNode(true) as SVGSVGElement;
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  const { width, height } = svgEl.getBoundingClientRect();
+  clone.setAttribute('width', String(width));
+  clone.setAttribute('height', String(height));
+
+  const svgString = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+};
+
+/**
  * Compute the zoom transform that fits a set of node positions inside a viewport
  */
 const computeFitTransform = (
@@ -140,13 +165,55 @@ const computeFitTransform = (
   return { scale, translateX, translateY };
 };
 
-const downloadJSON = (data: unknown, filename: string) => {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
+/**
+ * Custom d3 force that orbits degree-0 (unconnected) nodes just outside the live
+ * bounding radius of the connected cluster - keeps stray nodes on the cluster's
+ * periphery (visible, nearby) instead of drifting far away or sitting on top of
+ * connected nodes. Recomputed every tick since the cluster's shape/position
+ * settles as the simulation runs.
+ */
+const forceIsolatedToClusterPeriphery = (strength: number, padding = 40) => {
+  let nodes: GraphNodeDatum[] = [];
+
+  const force = (alpha: number) => {
+    const connected = nodes.filter((n) => (n.degree ?? 0) > 0);
+    if (!connected.length) return;
+
+    let cx = 0;
+    let cy = 0;
+    connected.forEach((n) => {
+      cx += n.x ?? 0;
+      cy += n.y ?? 0;
+    });
+    cx /= connected.length;
+    cy /= connected.length;
+
+    let clusterRadius = 0;
+    connected.forEach((n) => {
+      const dx = (n.x ?? 0) - cx;
+      const dy = (n.y ?? 0) - cy;
+      clusterRadius = Math.max(clusterRadius, Math.sqrt(dx * dx + dy * dy));
+    });
+    const targetRadius = clusterRadius + padding;
+
+    nodes.forEach((n) => {
+      if ((n.degree ?? 0) === 0) {
+        const dx = (n.x ?? 0) - cx;
+        const dy = (n.y ?? 0) - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+        const targetX = cx + (dx / dist) * targetRadius;
+        const targetY = cy + (dy / dist) * targetRadius;
+        n.vx = (n.vx ?? 0) + (targetX - (n.x ?? 0)) * strength * alpha;
+        n.vy = (n.vy ?? 0) + (targetY - (n.y ?? 0)) * strength * alpha;
+      }
+    });
+  };
+
+  force.initialize = (_nodes: GraphNodeDatum[]) => {
+    nodes = _nodes;
+  };
+
+  return force;
 };
 
 /**
@@ -160,28 +227,26 @@ export const useForceGraph = ({
   onNodeSelect,
   onNodeDeselect,
   onEdgeSelect,
+  onNodeHover,
 }: UseForceGraphOptions): UseForceGraphResult => {
-  console.log('useForceGraph render', { nodes, edges, selectedNode });
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const simulationRef = useRef<d3.Simulation<GraphNodeDatum, GraphLinkDatum> | null>(null);
   const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
-  const edgesRef = useRef<any[]>(edges);
+  const initialFitTransformRef = useRef<d3.ZoomTransform | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   // Keep latest callbacks available to D3 event handlers without rebuilding the graph
-  const callbacksRef = useRef({ onNodeSelect, onNodeDeselect, onEdgeSelect });
+  const callbacksRef = useRef({ onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover });
   useEffect(() => {
-    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect };
-  }, [onNodeSelect, onNodeDeselect, onEdgeSelect]);
+    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover };
+  }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover]);
 
-  useEffect(() => {
-    edgesRef.current = edges;
-  }, [edges]);
-
-  // Build (or rebuild) the simulation and SVG whenever the data or layout changes
-  useEffect(() => {
+  // Build (or rebuild) the simulation and SVG whenever the data or layout changes.
+  // useLayoutEffect so the initial fit transform (below) is applied before the
+  // browser paints, instead of flashing at 1:1 scale and animating to the fit.
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return undefined;
 
@@ -190,10 +255,7 @@ export const useForceGraph = ({
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 600;
-    const nodeTypes = getNodeTypes();
     const config = layoutConfig || getDefaultLayoutConfig();
-    console.log('useForceGraph: building simulation',nodeTypes ? nodeTypes: 'unknown' ,  { width, height, config, nodes, edges });
-    const radiusOf = (d: GraphNodeDatum) => (nodeTypes[d.type]?.size ?? 10) / 2;
 
     const simNodes: GraphNodeDatum[] = nodes.map((n) => {
       const prev = positionsRef.current.get(n.data.id);
@@ -203,6 +265,12 @@ export const useForceGraph = ({
         y: prev?.y ?? height / 2 + (Math.random() - 0.5) * 40,
       };
     });
+
+    // Clamp node radius to a fixed range keyed off degree, so a handful of
+    // highly-connected core entities (Disease, Target) don't dwarf everything.
+    const maxDegree = Math.max(1, ...simNodes.map((d) => d.degree ?? 0));
+    const radiusScale = d3.scaleSqrt().domain([0, maxDegree]).range([9, 26]);
+    const radiusOf = (d: GraphNodeDatum) => radiusScale(d.degree ?? 0);
 
     const nodeIds = new Set(simNodes.map((n) => n.id));
     const simLinks: GraphLinkDatum[] = edges
@@ -224,11 +292,20 @@ export const useForceGraph = ({
     const linkGroup = zoomLayer.append('g').attr('class', 'links');
     const nodeGroup = zoomLayer.append('g').attr('class', 'nodes');
 
+    // Assigned once the labels are built below; referenced by the zoom
+    // handler, which only ever runs after that (on user interaction).
+    let label: any = null;
+
     const zoom = (d3 as any)
       .zoom()
       .scaleExtent([0.1, 3])
       .on('zoom', function () {
-        zoomLayer.attr('transform', (d3 as any).event.transform);
+        const { transform } = (d3 as any).event;
+        zoomLayer.attr('transform', transform);
+        // Reveal the rest of the labels once zoomed in enough to read them
+        label?.attr('display', (d: GraphNodeDatum) =>
+          (d.degree ?? 0) >= 4 || transform.k >= 1.6 ? null : 'none'
+        );
       });
     (svg as any).call(zoom);
     zoomRef.current = zoom;
@@ -240,13 +317,15 @@ export const useForceGraph = ({
       }
     });
 
+    const EDGE_COLOR = '#D8DEE4';
+
     const link: any = linkGroup
       .selectAll('line')
       .data(simLinks, (d: any) => d.id)
       .join('line')
       .attr('class', 'graph-edge')
-      .attr('stroke', '#BDBDBD')
-      .attr('stroke-width', 2)
+      .attr('stroke', EDGE_COLOR)
+      .attr('stroke-width', 1)
       .attr('stroke-opacity', 0.6)
       .on('click', function (d: any) {
         (d3 as any).event.stopPropagation();
@@ -263,34 +342,62 @@ export const useForceGraph = ({
         return g;
       });
 
-    node
-      .select('circle')
-      .attr('r', (d: GraphNodeDatum) => (d.size ? d.size / 2 : (nodeTypes[d.type]?.size ?? 40) / 2))
-      .attr('fill', (d: GraphNodeDatum) => d.color ?? nodeTypes[d.type]?.color ?? '#999')
-      .attr('stroke', (d: GraphNodeDatum) => '#1565C0')
-      .attr('stroke-width', (d: GraphNodeDatum) => d.borderWidth ?? nodeTypes[d.type]?.borderWidth ?? 2);
+    const strokeOf = (d: GraphNodeDatum) => d.color ?? '#999';
+    const fillOf = (d: GraphNodeDatum) => tintHex(strokeOf(d), 0.14);
 
     node
+      .select('circle')
+      .attr('r', radiusOf)
+      .attr('fill', fillOf)
+      .attr('stroke', strokeOf)
+      .attr('stroke-width', 1.5);
+
+    label = node
       .select('text')
-      .text((d: GraphNodeDatum) => d.label)
+      .text((d: GraphNodeDatum) => (d.label.length > 20 ? `${d.label.slice(0, 19)}…` : d.label))
       .attr('text-anchor', 'middle')
-      .attr('dy', '0.32em')
-      .attr('font-size', (d: GraphNodeDatum) => (d.type === 'core' ? 13 : d.type === 'evidence' ? 11 : 10))
-      .attr('font-weight', (d: GraphNodeDatum) => (d.type === 'core' ? 'bold' : 'normal'))
-      .attr('fill', '#fff')
+      .attr('dy', (d: GraphNodeDatum) => radiusOf(d) + 14)
+      .attr('font-size', 11)
+      .attr('font-weight', 500)
+      .attr('fill', 'rgba(0, 0, 0, 0.6)')
+      .attr('paint-order', 'stroke')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 3)
+      .attr('stroke-linejoin', 'round')
+      .attr('display', (d: GraphNodeDatum) => ((d.degree ?? 0) >= 4 ? null : 'none'))
       .style('pointer-events', 'none')
       .style('user-select', 'none');
 
     node
       .on('click', function (d: GraphNodeDatum) {
-        (d3 as any).event.stopPropagation();
-        callbacksRef.current.onNodeSelect?.(d.id);
+        const event = (d3 as any).event;
+        event.stopPropagation();
+        callbacksRef.current.onNodeSelect?.(d.id, { x: event.pageX, y: event.pageY });
       })
-      .on('mouseover', function (this: Element) {
+      .on('mouseover', function (this: Element, d: GraphNodeDatum) {
         d3.select(this).select('circle').attr('opacity', 0.85);
+        // Raise edges touching the hovered node to its category color,
+        // fade the rest - with ~100 edges this is what keeps the graph legible.
+        link
+          .attr('stroke', (l: any) =>
+            getLinkEndpointId(l.source) === d.id || getLinkEndpointId(l.target) === d.id
+              ? strokeOf(d)
+              : EDGE_COLOR
+          )
+          .attr('stroke-opacity', (l: any) =>
+            getLinkEndpointId(l.source) === d.id || getLinkEndpointId(l.target) === d.id ? 0.9 : 0.15
+          );
+        const event = (d3 as any).event;
+        callbacksRef.current.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
+      })
+      .on('mousemove', function (d: GraphNodeDatum) {
+        const event = (d3 as any).event;
+        callbacksRef.current.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
       })
       .on('mouseout', function (this: Element) {
         d3.select(this).select('circle').attr('opacity', 1);
+        link.attr('stroke', EDGE_COLOR).attr('stroke-opacity', 0.6);
+        callbacksRef.current.onNodeHover?.(null);
       });
 
     const simulation = d3
@@ -303,15 +410,27 @@ export const useForceGraph = ({
           .distance(config.linkDistance)
           .strength(config.linkStrength)
       )
-      .force('charge', d3.forceManyBody().strength(config.chargeStrength))
+      .force(
+        'charge',
+        (d3.forceManyBody<GraphNodeDatum>().strength((d) => ((d.degree ?? 0) === 0 ? config.chargeStrength * 0.1 : config.chargeStrength)) as any)
+          .distanceMax(config.linkDistance * 2)
+      )
       .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('isolatedCluster', forceIsolatedToClusterPeriphery(0.25))
       .force(
         'collide',
         d3.forceCollide<GraphNodeDatum>((d) => radiusOf(d) + config.collidePadding)
       )
       .alphaDecay(config.alphaDecay)
-      .velocityDecay(config.velocityDecay);
+      .velocityDecay(config.velocityDecay)
+      .stop();
     simulationRef.current = simulation;
+
+    // Pre-converge synchronously so the graph first paints already settled,
+    // instead of animating through the chaotic/vibrating early iterations
+    // where nodes start randomly placed and forces are strongest.
+    const preTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
+    for (let i = 0; i < preTicks; i += 1) simulation.tick();
 
     const drag = (d3 as any)
       .drag()
@@ -331,7 +450,7 @@ export const useForceGraph = ({
       });
     (node as any).call(drag);
 
-    simulation.on('tick', () => {
+    const updatePositions = () => {
       link
         .attr('x1', (d: any) => (d.source as GraphNodeDatum).x ?? 0)
         .attr('y1', (d: any) => (d.source as GraphNodeDatum).y ?? 0)
@@ -345,28 +464,25 @@ export const useForceGraph = ({
           positionsRef.current.set(n.id, { x: n.x, y: n.y });
         }
       });
-    });
+    };
 
-    // Auto-fit the view to all nodes once the initial layout settles
-    let hasAutoFitted = false;
-    simulation.on('end', () => {
-      if (hasAutoFitted) return;
-      hasAutoFitted = true;
+    // Paint the pre-converged layout immediately, before any live ticking resumes
+    updatePositions();
 
-      const c = containerRef.current;
-      const s = svgRef.current;
-      const z = zoomRef.current;
-      if (!c || !s || !z) return;
+    // Fit the view to the pre-converged layout synchronously, before this
+    // (useLayoutEffect) commit paints - so the graph appears already fitted
+    // instead of starting at 1:1 scale and animating to fit afterward.
+    const initialFit = computeFitTransform(simNodes, width, height);
+    const initialFitTransform = d3.zoomIdentity
+      .translate(initialFit.translateX, initialFit.translateY)
+      .scale(initialFit.scale);
+    initialFitTransformRef.current = initialFitTransform;
+    (svg as any).call(zoom.transform, initialFitTransform);
 
-      const w = c.clientWidth || width;
-      const h = c.clientHeight || height;
-      const { scale, translateX, translateY } = computeFitTransform(simNodes, w, h);
+    simulation.on('tick', updatePositions);
 
-      (s.transition().duration(300) as any).call(
-        z.transform,
-        d3.zoomIdentity.translate(translateX, translateY).scale(scale)
-      );
-    });
+    // Resume the simulation (already settled) so drag/resize can reheat it later
+    simulation.alpha(simulation.alphaMin()).restart();
 
     setIsReady(true);
 
@@ -483,7 +599,10 @@ export const useForceGraph = ({
         const simulation = simulationRef.current;
         if (!svg || !zoom) return;
 
-        (svg.transition().duration(200) as any).call(zoom.transform, d3.zoomIdentity);
+        (svg.transition().duration(200) as any).call(
+          zoom.transform,
+          initialFitTransformRef.current ?? d3.zoomIdentity
+        );
         simulation?.nodes().forEach((n) => {
           n.fx = null;
           n.fy = null;
@@ -494,14 +613,9 @@ export const useForceGraph = ({
         const svgEl = svgRef.current?.node();
         if (svgEl) exportSvgAsPng(svgEl);
       },
-      exportJSON: () => {
-        const simNodes = simulationRef.current?.nodes() ?? [];
-        // Convert nodes and edges to flat Cytoscape-compatible ElementDefinition array
-        const nodes = simNodes.map((n) => ({
-          data: { id: n.id, label: n.label, type: n.type, degree: n.degree, description: n.description },
-        }));
-        const elements = [...nodes, ...edgesRef.current];
-        downloadJSON(elements, 'graph-data.json');
+      exportSVG: () => {
+        const svgEl = svgRef.current?.node();
+        if (svgEl) downloadSvgFile(svgEl);
       },
     }),
     [applyZoomScale]

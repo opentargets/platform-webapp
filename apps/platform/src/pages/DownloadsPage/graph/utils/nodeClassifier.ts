@@ -3,7 +3,7 @@
  * Returns styling information for force-directed graph visualization
  */
 
-import { getCategoryColor } from './colorPool';
+import { getCategoryColor } from '../../categoryColors';
 
 type NodeType = 'core' | 'evidence' | 'attribute';
 
@@ -125,17 +125,6 @@ export const enrichNodesWithClassification = (
   nodes: CytoscapeNode[],
   edges: Array<{ data: { source: string; target: string } }>
 ): CytoscapeNode[] => {
-  // Extract unique categories and sort them (same as legend)
-  const uniqueCategories = Array.from(
-    new Set(nodes.map((node) => node.data.type || 'uncategorized'))
-  ).sort();
-
-  // Create dynamic color mapping using the same getCategoryColor function as the legend
-  const categoryColorMap = new Map<string, string>();
-  uniqueCategories.forEach((category, index) => {
-    categoryColorMap.set(category, getCategoryColor(index));
-  });
-
   // Calculate degree for each node
   const degreeMap = new Map<string, number>();
   nodes.forEach((node) => {
@@ -153,7 +142,7 @@ export const enrichNodesWithClassification = (
   return nodes.map((node) => {
     const degree = degreeMap.get(node.data.id) || 0;
     const originalType = node.data.type || 'uncategorized';
-    const color = categoryColorMap.get(originalType) || '#757575';
+    const color = getCategoryColor(originalType);
     
     // Determine size based on degree
     let size = 40;

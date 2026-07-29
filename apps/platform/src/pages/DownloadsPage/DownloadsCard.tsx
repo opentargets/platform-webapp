@@ -1,14 +1,23 @@
-import { Box, Button, Card, CardActions, CardContent, Chip, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, Chip, Tooltip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCode, faDatabase } from "@fortawesome/free-solid-svg-icons";
+import { faCode, faDatabase, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
 import { OtLongText } from "ui";
 import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext } from "react";
 import { setActiveFilter } from "./context/downloadsActions";
 import { Link } from "react-router-dom";
+import { getCategoryColor, tintHex } from "./categoryColors";
 
-function DownloadsCard({ data }: { data: Record<string, unknown> }) {
+interface DownloadsCardProps {
+  data: Record<string, unknown>;
+  /** Number of schema relationships this dataset has - shown as a link into the graph view */
+  connections?: number;
+  /** Called with the dataset's (RecordSet) id when the connections link is clicked */
+  onViewConnections?: (id: string) => void;
+}
+
+function DownloadsCard({ data, connections, onViewConnections }: DownloadsCardProps) {
   const { state, dispatch } = useContext(DownloadsContext);
   const columnId = data["@id"].replace("-fileset", "");
 
@@ -70,18 +79,57 @@ function DownloadsCard({ data }: { data: Record<string, unknown> }) {
         </Box>
 
         <Box>
-          <Box sx={{ display: "flex", gap: 1, my: 1 }}>
-            {hasCategories() &&
-              data.categories.map(c => (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 1,
+              my: 1,
+            }}
+          >
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {hasCategories() &&
+                data.categories.map(c => (
+                  <Chip
+                    key={v1()}
+                    size="small"
+                    label={c}
+                    clickable
+                    onClick={handleChangeFilter}
+                    sx={{
+                      backgroundColor: tintHex(getCategoryColor(c), 0.12),
+                      color: getCategoryColor(c),
+                      border: `1px solid ${getCategoryColor(c)}`,
+                      fontWeight: 500,
+                    }}
+                  />
+                ))}
+            </Box>
+
+            {typeof connections === "number" && (
+              <Tooltip
+                title="Number of schema relationships to other datasets - click to view in the graph"
+                arrow
+              >
                 <Chip
-                  key={v1()}
                   size="small"
-                  label={c}
-                  clickable
-                  onClick={handleChangeFilter}
-                  sx={{ background: theme => theme.palette.primary.dark, color: "white" }}
+                  variant="outlined"
+                  clickable={Boolean(onViewConnections)}
+                  onClick={() => onViewConnections?.(columnId)}
+                  icon={<FontAwesomeIcon icon={faDiagramProject} size="xs" />}
+                  label={connections}
+                  sx={{
+                    color: "text.secondary",
+                    borderColor: theme => theme.palette.grey[300],
+                    height: 24,
+                    "& .MuiChip-icon": { fontSize: 11, ml: 0.75, mr: -0.25 },
+                    "& .MuiChip-label": { px: 0.75 },
+                  }}
                 />
-              ))}
+              </Tooltip>
+            )}
           </Box>
         </Box>
       </CardContent>

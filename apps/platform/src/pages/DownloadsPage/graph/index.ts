@@ -5,7 +5,6 @@
 // Components
 export { default as GraphVisualization } from './components/GraphVisualization';
 export { default as GraphCanvas } from './components/GraphCanvas';
-export { default as GraphLegend } from './components/GraphLegend';
 export { default as GraphControls } from './components/GraphControls';
 export { default as GraphTooltip } from './components/GraphTooltip';
 

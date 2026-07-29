@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useMemo, useCallback } from "react";
 import { gql, useQuery } from "@apollo/client";
 import { Alert, Box, Grid, Typography, Tabs, Tab } from "@mui/material";
 import { makeStyles } from "@mui/styles";
@@ -12,9 +12,9 @@ import { createInitialState, downloadsReducer, initialState } from "./context/do
 import { setDownloadsData, setError, setLoading } from "./context/downloadsActions";
 import { DownloadsContext } from "./context/DownloadsContext";
 import DownloadsTags from "./DownloadsTags";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useSearchParams } from "react-router-dom";
 import DownloadsDialog from "./DownloadsDialog";
-import { GraphVisualization } from "./graph";
+import { GraphVisualization, transformRecordSetToGraph } from "./graph";
 
 const config = getConfig();
 
@@ -36,8 +36,41 @@ const DOWNLOADS_QUERY = gql`
 function DownloadsPage() {
   const { data, loading, error } = useQuery(DOWNLOADS_QUERY);
   const [state, dispatch] = useReducer(downloadsReducer, initialState, createInitialState);
-  const [viewMode, setViewMode] = useState("cards");
   const classes = useStyles();
+
+  // View mode lives in the URL so it (and the selected graph node, set
+  // below) survive a refresh and can be linked to directly from a card.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewMode = searchParams.get("view") === "graph" ? "graph" : "cards";
+
+  const handleViewModeChange = (e, newValue) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set("view", newValue);
+      next.delete("node");
+      return next;
+    });
+  };
+
+  const handleViewConnections = useCallback(
+    id => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set("view", "graph");
+        next.set("node", id);
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
+
+  // Connection count per dataset (RecordSet id), for the "N connections"
+  // link on each card that jumps to the graph view with that node highlighted.
+  const degreeById = useMemo(() => {
+    const recordSets = (state.schemaRows || []).filter(rs => rs["@type"] === "cr:RecordSet");
+    const { nodes } = transformRecordSetToGraph(recordSets);
+    return new Map(nodes.map(n => [n.data.id, n.data.degree || 0]));
+  }, [state.schemaRows]);
 
   useEffect(() => {
     if (loading) {
@@ -83,7 +116,7 @@ function DownloadsPage() {
 
         {/* View mode tabs */}
         <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-          <Tabs value={viewMode} onChange={(e, newValue) => setViewMode(newValue)}>
+          <Tabs value={viewMode} onChange={handleViewModeChange}>
             <Tab label="Card View" value="cards" />
             <Tab label="Graph View" value="graph" />
           </Tabs>
@@ -116,7 +149,12 @@ function DownloadsPage() {
                 {state.count > 0 ? (
                   <>
                     {state.filteredRows.map(e => (
-                      <DownloadsCard key={v1()} data={e} />
+                      <DownloadsCard
+                        key={v1()}
+                        data={e}
+                        connections={degreeById.get(String(e["@id"]).replace("-fileset", ""))}
+                        onViewConnections={handleViewConnections}
+                      />
                     ))}
                   </>
                 ) : (

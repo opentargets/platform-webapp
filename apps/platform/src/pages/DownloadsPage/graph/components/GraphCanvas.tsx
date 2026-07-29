@@ -5,16 +5,17 @@
 
 import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useForceGraph, GraphController } from '../hooks/useForceGraph';
+import { useForceGraph, GraphController, GraphPointerPosition } from '../hooks/useForceGraph';
 import type { ForceLayoutConfig } from '../utils/layoutConfig';
 
 interface GraphCanvasProps {
   nodes: any[];
   edges: any[];
   selectedNode?: string | null;
-  onNodeSelect?: (nodeId: string) => void;
+  onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string) => void;
+  onNodeHover?: (nodeId: string | null, position?: GraphPointerPosition) => void;
   layoutConfig?: ForceLayoutConfig;
   onGraphReady?: (controller: GraphController | null) => void;
   sx?: any;
@@ -31,11 +32,11 @@ const GraphCanvas = React.memo(
     onNodeSelect,
     onNodeDeselect,
     onEdgeSelect,
+    onNodeHover,
     layoutConfig,
     onGraphReady,
     sx = {},
   }: GraphCanvasProps) => {
-    console.log('GraphCanvas render', { nodes, edges, selectedNode });
     const { containerRef, isReady, controller } = useForceGraph({
       nodes,
       edges,
@@ -44,6 +45,7 @@ const GraphCanvas = React.memo(
       onNodeSelect,
       onNodeDeselect,
       onEdgeSelect,
+      onNodeHover,
     });
 
     // Notify parent once the graph controller is ready
@@ -53,20 +55,24 @@ const GraphCanvas = React.memo(
 
     return (
       <Box
-        ref={containerRef}
         sx={{
           width: '100%',
           height: '100%',
-          backgroundColor: '#fafafa',
-          border: '1px solid #e0e0e0',
+          minHeight: 'min(70vh, 720px)',
+          backgroundColor: '#fff',
+          border: '1px solid',
+          borderColor: 'grey.300',
           borderRadius: 1,
-          overflow: 'hidden',
+          boxSizing: 'border-box',
+          p: 3,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           ...sx,
         }}
-      />
+      >
+        {/* The d3 mount point - kept unpadded so container.clientWidth/clientHeight
+            match the actual rendered SVG size */}
+        <Box ref={containerRef} sx={{ width: '100%', height: '100%', overflow: 'hidden' }} />
+      </Box>
     );
   }
 );
@@ -74,4 +80,3 @@ const GraphCanvas = React.memo(
 GraphCanvas.displayName = 'GraphCanvas';
 
 export default GraphCanvas;
-

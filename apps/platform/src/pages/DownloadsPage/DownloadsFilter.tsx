@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { clearFilterData, setActiveFilter } from "./context/downloadsActions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { getCategoryColor } from "./categoryColors";
 
 function DownloadsFilter() {
   const { state, dispatch } = useContext(DownloadsContext);
@@ -59,7 +60,7 @@ function DownloadsFilter() {
           <DownloadsSearchInput />
         </Box>
 
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: "bold" }}>
+        <Typography variant="subtitle1" component="div" sx={{ fontWeight: "bold", mt: 2 }}>
           Data Categories
         </Typography>
         <FormGroup>
@@ -70,6 +71,10 @@ function DownloadsFilter() {
                 <Checkbox
                   checked={state.selectedFilters.includes(item)}
                   onChange={changeEvent => handleChangeFilter(item, changeEvent)}
+                  sx={{
+                    color: getCategoryColor(item),
+                    "&.Mui-checked": { color: getCategoryColor(item) },
+                  }}
                 />
               }
               label={item}
