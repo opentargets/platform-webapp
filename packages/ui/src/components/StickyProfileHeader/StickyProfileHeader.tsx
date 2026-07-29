@@ -8,8 +8,8 @@ import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
 import CategoryAvatar from "../CategoryAvatar";
-import CategoryFilterChips from "../Summary/CategoryFilterChips";
-import { CATEGORIES, primaryCategory, type Category } from "../Summary/categoryConfig";
+import Chip from "../Chip/Chip";
+import { CATEGORY_ICONS, primaryCategory, type Category } from "../Summary/categoryConfig";
 import { useSummaryCategory } from "../Summary/SummaryCategoryContext";
 import {
   PROFILE_TABS_SENTINEL_ID,
@@ -46,7 +46,7 @@ function StickyProfileHeader({
   const navigate = useNavigate();
   const location = useLocation();
   const { data, entity } = usePlatformApi();
-  const { activeCategory } = useSummaryCategory();
+  const { activeCategory, setActiveCategory } = useSummaryCategory();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [filterText, setFilterText] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -60,13 +60,6 @@ function StickyProfileHeader({
         ? widgets
         : widgets.filter((widget) => primaryCategory(widget.definition) === activeCategory),
     [widgets, activeCategory]
-  );
-
-  // Full (unfiltered) category set so the chip row always shows every
-  // category available on this page, even while one is active.
-  const presentCategories = useMemo(
-    () => CATEGORIES.filter((category) => widgets.some((widget) => primaryCategory(widget.definition) === category)),
-    [widgets]
   );
 
   const ids = useMemo(() => categoryWidgets.map((widget) => widget.definition.id), [categoryWidgets]);
@@ -175,7 +168,28 @@ function StickyProfileHeader({
               onKeyDown={(event) => event.stopPropagation()}
               sx={{ px: 1.5, pb: 1, width: "100%" }}
             />
-            <CategoryFilterChips categories={presentCategories} sx={{ px: 1.5, pb: 1 }} />
+            {activeCategory !== "All" && (
+              <Box sx={{ px: 1.5, pb: 1 }}>
+                <Chip
+                  label={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                      <FontAwesomeIcon icon={CATEGORY_ICONS[activeCategory]} style={{ fontSize: 12 }} />
+                      {activeCategory}
+                    </Box>
+                  }
+                  variant="filled"
+                  onDelete={() => setActiveCategory("All")}
+                  sx={{
+                    height: 26,
+                    borderRadius: 2,
+                    fontSize: "0.7rem",
+                    bgcolor: "primary.dark",
+                    color: "common.white",
+                    "& .MuiChip-deleteIcon": { color: "common.white" },
+                  }}
+                />
+              </Box>
+            )}
             {filteredWidgets.map((widget) => {
               const hasData = entityData ? !!widget.definition.hasData(entityData) : true;
               return (
