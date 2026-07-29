@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import CategoryAvatar from "../CategoryAvatar";
 import PartnerLockIcon from "../PartnerLockIcon";
@@ -17,6 +17,7 @@ function SummaryItem<T>({
   const { loading, error, data } = request;
   const hasData = !loading && !error && data && definition.hasData(data);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClickSection = () => {
     scroller.scrollTo(definition.id, {
@@ -25,7 +26,12 @@ function SummaryItem<T>({
       smooth: true,
       offset: SCROLL_OFFSET,
     });
-    navigate({ hash: `#${definition.id}` }, { replace: true, preventScrollReset: true });
+    // Preserve the existing search params (e.g. ?category=) - navigate()
+    // with only `hash` set would otherwise drop them.
+    navigate(
+      { hash: `#${definition.id}`, search: location.search },
+      { replace: true, preventScrollReset: true }
+    );
   };
 
   return (

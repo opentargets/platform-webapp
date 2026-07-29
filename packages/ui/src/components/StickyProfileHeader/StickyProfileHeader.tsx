@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Menu, MenuItem, TextField, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import usePlatformApi from "../../hooks/usePlatformApi";
 import CategoryAvatar from "../CategoryAvatar";
@@ -43,6 +43,7 @@ function StickyProfileHeader({
 }: StickyProfileHeaderProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data, entity } = usePlatformApi();
   const { activeCategory } = useSummaryCategory();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -99,7 +100,12 @@ function StickyProfileHeader({
 
   const handleSelect = (id: string) => {
     scroller.scrollTo(id, { duration: 500, smooth: true, offset: SCROLL_OFFSET });
-    navigate({ hash: `#${id}` }, { replace: true, preventScrollReset: true });
+    // Preserve the existing search params (e.g. ?category=) - navigate()
+    // with only `hash` set would otherwise drop them.
+    navigate(
+      { hash: `#${id}`, search: location.search },
+      { replace: true, preventScrollReset: true }
+    );
     setAnchorEl(null);
     setFilterText("");
   };
