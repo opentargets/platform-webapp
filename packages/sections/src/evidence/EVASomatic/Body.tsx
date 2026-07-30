@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Box, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import {
   SectionItem,
   ChipList,
@@ -12,6 +10,8 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableSSP,
+  Box,
+  Typography,
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
@@ -250,20 +250,9 @@ const exportColumns = [
   },
 ];
 
-const useStyles = makeStyles({
-  roleInCancerBox: {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: "2rem",
-  },
-  roleInCancerTitle: { marginRight: ".5rem !important" },
-});
-
 type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
-  const classes = useStyles();
-
   const { ensgId: ensemblId, efoId } = id;
   const [request, setRequest] = useState({ loading: true, data: null, error: false });
 
@@ -285,7 +274,7 @@ function Body({ id, label, entity }: Props) {
 
     return (
       <>
-        <Typography className={classes.roleInCancerTitle}>
+        <Typography sx={{ marginRight: ".5rem !important" }}>
           <b>{label.symbol}</b> role in cancer:
         </Typography>
         <ChipList items={roleInCancerItems} />
@@ -302,7 +291,9 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
         <>
-          <Box className={classes.roleInCancerBox}>{getRoleInCancer()}</Box>
+          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}>
+            {getRoleInCancer()}
+          </Box>
 
           <OtTableSSP
             query={EVA_SOMATIC_QUERY}

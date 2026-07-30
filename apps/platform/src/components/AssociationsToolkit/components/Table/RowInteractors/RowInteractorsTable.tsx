@@ -8,15 +8,6 @@ import {
 import useRowInteractors from "./useRowInteractors";
 import { useAotfQueryState } from "../../../context/AssociationsQueryContext";
 import TableBody from "../TableBody";
-import {
-  Box,
-  InputLabel,
-  NativeSelect,
-  Skeleton,
-  Typography,
-  Slider,
-  IconButton,
-} from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -38,7 +29,17 @@ import {
   TABLE_PREFIX,
   InteractorsSource,
 } from "../../../associationsUtils";
-import { Tooltip, useApolloClient } from "ui";
+import {
+  Tooltip,
+  useApolloClient,
+  Box,
+  InputLabel,
+  Skeleton,
+  Typography,
+  Slider,
+  IconButton,
+  NativeSelect,
+} from "ui";
 
 type ThresholdState = number | null | undefined;
 

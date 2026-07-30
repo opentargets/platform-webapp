@@ -1,22 +1,17 @@
-import { useState, useEffect } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
-import { Link, Tooltip } from "ui";
-import { defaultRowsPerPageOptions, clinicalReportsSourcesInfo } from "@ot/constants";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { clinicalReportsSourcesInfo, defaultRowsPerPageOptions } from "@ot/constants";
 import { sentenceCase } from "@ot/utils";
-import StageFilter from "./StageFilter";
-import ClinicalRecordDrawer from "./ClinicalRecordDrawer";
+import { sum } from "d3";
+import { useEffect, useState } from "react";
+import { Link, Tooltip } from "ui";
 import useDelayedFlag from "../../hooks/useDelayedFlag";
 import OtTable from "../OtTable/OtTable";
+import ClinicalRecordDrawer from "./ClinicalRecordDrawer";
 import CLINICAL_RECORDS_QUERY from "./ClinicalRecordsQuery.gql";
 import RECORD_DETAIL_QUERY from "./RecordDetailQuery.gql";
-import { sum } from "d3";
+import StageFilter from "./StageFilter";
 
-function RecordsCards({
-  records: recordsProp,
-  loading,
-  maxClinicalStage,
-  selectedEntity,
-}) {
+function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selectedEntity }) {
   const records = recordsProp || {};
   const [selectedStage, setSelectedStage] = useState(null);
 
@@ -31,20 +26,22 @@ function RecordsCards({
 
   const showLoading = useDelayedFlag(loading);
 
-  const nRecords = sum(Object.keys(records).map(k => (records as any)[k]), (row: any) => row.length);
+  const nRecords = sum(
+    Object.keys(records).map((k) => (records as any)[k]),
+    (row: any) => row.length
+  );
 
   const columns = [
     {
       id: "trial",
-      label:
-        !loading && (
-          <StageFilter
-            records={records}
-            setSelectedStage={setSelectedStage}
-            selectedStage={selectedStage}
-            maxStage={maxClinicalStage}
-          />
-        ),
+      label: !loading && (
+        <StageFilter
+          records={records}
+          setSelectedStage={setSelectedStage}
+          selectedStage={selectedStage}
+          maxStage={maxClinicalStage}
+        />
+      ),
       renderCell: (record) => {
         const { source, trialStartDate, type, trialOverallStatus, title } = record;
         const sourceInfo = clinicalReportsSourcesInfo[source];
@@ -76,10 +73,7 @@ function RecordsCards({
                 verticalAlign: "top",
               }}
             >
-              <ClinicalRecordDrawer
-                recordId={record.id}
-                recordDetailQuery={RECORD_DETAIL_QUERY}
-              >
+              <ClinicalRecordDrawer recordId={record.id} recordDetailQuery={RECORD_DETAIL_QUERY}>
                 {displayTitle}
               </ClinicalRecordDrawer>
             </Box>
@@ -92,29 +86,29 @@ function RecordsCards({
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      minWidth: "170px",
-                      alignItems: "baseline",
-                      gap: 0.5,
-                    }}
-                  >
-                    <Typography variant="caption">Source:</Typography>
-                    <Typography variant="caption" sx={{ fontSize: 13 }}>
-                      {source}
-                      {sourceInfo?.name !== source && (
-                        <Tooltip
-                          showHelpIcon
-                          title={
-                            <Typography variant="caption" sx={{ fontSize: 12 }}>
-                              {sourceInfo.name}
-                            </Typography>
-                          }
-                        />
-                      )}
-                    </Typography>
-                  </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    minWidth: "170px",
+                    alignItems: "baseline",
+                    gap: 0.5,
+                  }}
+                >
+                  <Typography variant="caption">Source:</Typography>
+                  <Typography variant="caption" sx={{ fontSize: 13 }}>
+                    {source}
+                    {sourceInfo?.name !== source && (
+                      <Tooltip
+                        showHelpIcon
+                        title={
+                          <Typography variant="caption" sx={{ fontSize: 12 }}>
+                            {sourceInfo.name}
+                          </Typography>
+                        }
+                      />
+                    )}
+                  </Typography>
+                </Box>
                 {trialOverallStatus && (
                   <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
                     <Typography variant="caption">Status:</Typography>
@@ -177,7 +171,7 @@ function RecordsCards({
     return new Date(b.trialStartDate).getTime() - new Date(a.trialStartDate).getTime();
   });
   if (!rows) return null;
-  const allRows = ([] as any[]).concat(...Object.keys(records).map(k => (records as any)[k]));
+  const allRows = ([] as any[]).concat(...Object.keys(records).map((k) => (records as any)[k]));
 
   return (
     <>
@@ -201,7 +195,6 @@ function RecordsCards({
           },
         }}
       >
-      
         <Typography
           variant="subtitle2"
           sx={{
@@ -217,10 +210,7 @@ function RecordsCards({
           }}
         >
           {nRecords} {nRecords > 1 ? "reports" : "report"} for{" "}
-          <Link
-            asyncTooltip
-            to={`/${selectedEntity.entityType}/${selectedEntity.id}`}
-          >
+          <Link asyncTooltip to={`/${selectedEntity.entityType}/${selectedEntity.id}`}>
             {selectedEntity.name}
           </Link>
         </Typography>

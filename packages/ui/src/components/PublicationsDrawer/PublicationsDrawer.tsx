@@ -1,86 +1,48 @@
-import { useState, useEffect } from "react";
-import {
-  Box,
-  IconButton,
-  Drawer,
-  Typography,
-  Paper,
-  CircularProgress,
-  ButtonBase,
-} from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  Box,
+  ButtonBase,
+  CircularProgress,
+  Drawer,
+  IconButton,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
 import { europePmcSearchPOSTQuery } from "@ot/utils";
-import PublicationWrapper from "./PublicationWrapper";
+import { useEffect, useState } from "react";
 import OtTable from "../OtTable/OtTable";
+import PublicationWrapper from "./PublicationWrapper";
 
-const sourceDrawerStyles = makeStyles(theme => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  },
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
     maxWidth: "100%",
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
-  },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
-  AccordionExpanded: {
-    margin: "1rem !important",
-  },
-  AccordionRoot: {
-    border: "1px solid #ccc",
-    margin: "1rem 1rem 0 1rem",
-    padding: "1rem",
-    "&::before": {
-      backgroundColor: "transparent",
-    },
-  },
-  AccordionSubtitle: {
-    color: theme.palette.grey[400],
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-  },
-  AccordionTitle: {
-    color: theme.palette.grey[700],
-    fontSize: "1rem",
-    fontWeight: "bold",
-  },
-  summaryBoxRoot: {
-    marginRight: "2rem",
-  },
 }));
 
-const listComponentStyles = makeStyles(theme => ({
-  loader: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  AccordionSubtitle: {
-    color: theme.palette.grey[400],
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-  },
-  ListContent: {
-    backgroundColor: "white",
-  },
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
 }));
 
 export function PublicationsList({
@@ -96,7 +58,7 @@ export function PublicationsList({
 
   useEffect(() => {
     // filter out empty ids - these will fetch irrelevant publications
-    const { baseUrl, formBody } = europePmcSearchPOSTQuery(entriesIds.filter(id => id?.trim()));
+    const { baseUrl, formBody } = europePmcSearchPOSTQuery(entriesIds.filter((id) => id?.trim()));
     const requestOptions = {
       method: "POST",
       headers: {
@@ -105,8 +67,8 @@ export function PublicationsList({
       body: formBody,
     };
     fetch(baseUrl, requestOptions)
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         setLoading(false);
         setPublications(data.resultList.result);
       });
@@ -123,14 +85,12 @@ export function PublicationsList({
       >
         <CircularProgress size={60} />
         <Box mt={6}>
-          <Typography className={listComponentStyles.AccordionSubtitle}>
-            Loading Europe PMC search results
-          </Typography>
+          <Typography>Loading Europe PMC search results</Typography>
         </Box>
       </Box>
     );
 
-  const parsedPublications = publications.map(pub => {
+  const parsedPublications = publications.map((pub) => {
     const row = {};
     row.europePmcId = pub.id;
     row.pmcId = pub.pmcid;
@@ -151,7 +111,7 @@ export function PublicationsList({
     {
       id: "publications",
       label: " ",
-      renderCell: publication => {
+      renderCell: (publication) => {
         const {
           europePmcId,
           title,
@@ -185,7 +145,7 @@ export function PublicationsList({
           />
         );
       },
-      filterValue: row =>
+      filterValue: (row) =>
         `${row.journal.journal?.title} ${row?.title} ${row?.year}
         ${row.authors
           .reduce((acc, author) => {
@@ -217,11 +177,10 @@ function PublicationsDrawer({
   name,
 }) {
   const [open, setOpen] = useState(false);
-  const classes = sourceDrawerStyles();
 
-  const entriesIds = entries.map(entry => entry.name);
+  const entriesIds = entries.map((entry) => entry.name);
 
-  const toggleDrawer = event => {
+  const toggleDrawer = (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
       return;
     }
@@ -238,7 +197,7 @@ function PublicationsDrawer({
 
   return (
     <>
-      <ButtonBase disableRipple onClick={toggleDrawer} className={classes.drawerLink}>
+      <StyledButtonBase disableRipple onClick={toggleDrawer}>
         <Typography variant="body2">
           {" "}
           {customLabel ||
@@ -246,32 +205,31 @@ function PublicationsDrawer({
               ? entries[0].name
               : `${entries.length} ${entries.length === 1 ? "publication" : "publications"}`)}{" "}
         </Typography>
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
+      <StyledDrawer
         anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
         open={open}
         onClose={closeDrawer}
         data-testid="publications-drawer"
       >
-        <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+        <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography className={classes.drawerTitleCaption}>{caption}</Typography>
+            <StyledTitleCaption>{caption}</StyledTitleCaption>
             <IconButton onClick={closeDrawer}>
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>
-        </Paper>
+        </StyledPaperTitle>
 
-        <Box width={600} maxWidth="100%" className={classes.drawerBody}>
+        <StyledBody width={600} maxWidth="100%">
           {open && (
             <Box my={3} mx={3} p={3} pb={6} bgcolor="white">
               <PublicationsList entriesIds={entriesIds} symbol={symbol} name={name} />
             </Box>
           )}
-        </Box>
-      </Drawer>
+        </StyledBody>
+      </StyledDrawer>
     </>
   );
 }

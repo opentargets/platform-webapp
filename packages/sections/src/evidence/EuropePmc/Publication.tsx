@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { v1 } from "uuid";
-import { Box, Button, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { PublicationSummaryLabel, SummaryLoader, useConfigContext } from "ui";
+import { styled } from "@mui/material/styles";
+import {
+  PublicationSummaryLabel,
+  SummaryLoader,
+  useConfigContext,
+  Box,
+  Typography,
+  Button,
+} from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleNodes, faCircleMinus, faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 
@@ -12,32 +18,30 @@ import { naLabel } from "@ot/constants";
 import SentenceMatch from "./SentenceMatch";
 import SimplePublication from "../../common/Bibliography/SimplePublication";
 
-const useStyles = makeStyles(theme => ({
-  abstractSpan: {
-    whiteSpace: "normal",
-  },
-  detailsButton: {
-    // margin: "1rem !important",
-    color: "#5a5f5f !important",
-    borderColor: "#c4c4c4 !important",
-  },
-  detailPanel: {
-    background: `${theme.palette.grey[100]}`,
-    marginTop: "10px",
-    marginBottom: "10px",
-    padding: "25px 20px",
-    position: "relative",
-  },
-  matchTable: {
-    width: "100%",
-  },
-  btnsContainer: {
-    marginTop: "1rem",
-    marginBottom: "1rem",
-    display: "flex",
-    gap: "2rem",
-  },
+const StyledAbstractSpan = styled("span")({
+  whiteSpace: "normal",
+});
+
+const StyledDetailsButton = styled(Button)({
+  // margin: "1rem !important",
+  color: "#5a5f5f !important",
+  borderColor: "#c4c4c4 !important",
+});
+
+const StyledDetailPanel = styled(Box)(({ theme }) => ({
+  background: theme.palette.grey[100],
+  marginTop: "10px",
+  marginBottom: "10px",
+  padding: "25px 20px",
+  position: "relative",
 }));
+
+const StyledBtnsContainer = styled("div")({
+  marginTop: "1rem",
+  marginBottom: "1rem",
+  display: "flex",
+  gap: "2rem",
+});
 
 function Publication({
   europePmcId,
@@ -54,7 +58,6 @@ function Publication({
   pmcId,
   fullTextOpen = false,
 }) {
-  const classes = useStyles();
   const [showAbstract, setShowAbstract] = useState(false);
   const [showMatches, setShowMatches] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -165,21 +168,19 @@ function Publication({
           },
         }}
       />
-      <div className={classes.btnsContainer}>
+      <StyledBtnsContainer>
         {fullTextOpen && isOpenAccess && urlAiApi && (
-          <Button
-            className={classes.detailsButton}
+          <StyledDetailsButton
             variant="outlined"
             size="small"
             startIcon={<FontAwesomeIcon icon={faCircleNodes} size="sm" />}
             onClick={handleShowSummaryClick}
           >
             {showSummary ? "Hide summary" : "Show summary"}
-          </Button>
+          </StyledDetailsButton>
         )}
         {abstract && (
-          <Button
-            className={classes.detailsButton}
+          <StyledDetailsButton
             variant="outlined"
             size="small"
             startIcon={
@@ -192,11 +193,10 @@ function Publication({
             onClick={handleShowAbstractClick}
           >
             {showAbstract ? "Hide abstract" : "Show abstract"}
-          </Button>
+          </StyledDetailsButton>
         )}
         {textMiningSentences && (
-          <Button
-            className={classes.detailsButton}
+          <StyledDetailsButton
             variant="outlined"
             size="small"
             startIcon={
@@ -211,19 +211,19 @@ function Publication({
             {showMatches
               ? "Hide match details"
               : `Show ${textMiningSentences.length} match details`}
-          </Button>
+          </StyledDetailsButton>
         )}
-      </div>
+      </StyledBtnsContainer>
       <Box>
         {showSummary && (
-          <Box className={classes.detailPanel}>
+          <StyledDetailPanel>
             {loading && <SummaryLoader />}
             {!loading && error && (
               <>
-                <span className={classes.abstractSpan}>
+                <StyledAbstractSpan>
                   <b>Error: </b>
                   {error}
-                </span>
+                </StyledAbstractSpan>
                 <br />
                 <br />
                 <button type="button" onClick={onClickRetry}>
@@ -234,29 +234,29 @@ function Publication({
             {!loading && !error && (
               <>
                 <Typography variant="subtitle2">Evidence summary</Typography>
-                <span className={classes.abstractSpan}>{summaryText}</span>
+                <StyledAbstractSpan>{summaryText}</StyledAbstractSpan>
               </>
             )}
             <PublicationSummaryLabel />
-          </Box>
+          </StyledDetailPanel>
         )}
         {showAbstract && (
-          <Box className={classes.detailPanel}>
+          <StyledDetailPanel>
             <Typography variant="subtitle2">Abstract</Typography>
-            <span className={classes.abstractSpan}>{abstract}</span>
-          </Box>
+            <StyledAbstractSpan>{abstract}</StyledAbstractSpan>
+          </StyledDetailPanel>
         )}
         {showMatches && (
-          <Box className={classes.detailPanel}>
+          <StyledDetailPanel>
             <Typography variant="subtitle2">Matches</Typography>
-            <table className={classes.matchTable}>
+            <table style={{ width: "100%" }}>
               <tbody>
                 {textMiningSentences.map(match => (
                   <SentenceMatch key={v1()} match={match} />
                 ))}
               </tbody>
             </table>
-          </Box>
+          </StyledDetailPanel>
         )}
       </Box>
     </Box>

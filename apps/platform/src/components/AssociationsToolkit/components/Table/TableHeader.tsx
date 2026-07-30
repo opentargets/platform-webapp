@@ -2,7 +2,7 @@ import { useState } from "react";
 import { flexRender } from "@tanstack/react-table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownWideShort, faBook, faLock } from "@fortawesome/free-solid-svg-icons";
-import { Box, Grid } from "@mui/material";
+import { Box, GridLegacy } from "ui";
 import { styled } from "@mui/material/styles";
 
 import AggregationsRow from "./AggregationsRow";
@@ -135,7 +135,7 @@ function TableHeader({ table, cols }: TableHeaderProps) {
 
   return (
     <TheaderContainer data-testid="associations-table-header">
-      <Grid container direction="row" wrap="nowrap">
+      <GridLegacy container direction="row" wrap="nowrap">
         {highLevelHeaders.map((highLevelHeader: any) => (
           <HeaderZone
             id={highLevelHeader.id}
@@ -152,7 +152,7 @@ function TableHeader({ table, cols }: TableHeaderProps) {
             ))}
           </HeaderZone>
         ))}
-      </Grid>
+      </GridLegacy>
       <AggregationsRow
         handleAggregationClick={handleAggregationClick}
         columnsCount={cols.length}

@@ -1,27 +1,16 @@
-import { CardContent, Typography } from "@mui/material";
-import { ProfileChipList } from "ui";
-import { makeStyles } from "@mui/styles";
+import { ProfileChipList, CardContent, Typography } from "ui";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrescriptionBottleAlt } from "@fortawesome/free-solid-svg-icons";
 import { parseDrugLabels } from "@ot/utils";
 
 import { LongText, Chip, Link, LongList } from "ui";
 
-const useStyles = makeStyles({
-  link: {
-    display: "block",
-  },
-  subtitle: {
-    fontWeight: 500,
-  },
-  warningIcon: {
-    position: "relative",
-    top: "5px",
-  },
+const StyledLink = styled(Link)({
+  display: "block",
 });
 
 function DrugDetail({ data }) {
-  const classes = useStyles();
   return (
     <CardContent>
       <Typography color="primary" variant="h5">
@@ -32,26 +21,26 @@ function DrugDetail({ data }) {
       </Typography>
       <LongText lineLimit={4}>{data.description}</LongText>
 
-      <Typography className={classes.subtitle} variant="subtitle1">
+      <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
         Drug Type
       </Typography>
       <Typography variant="body2">{data.drugType}</Typography>
-      <Typography className={classes.subtitle} variant="subtitle1">
+      <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
         Maximum Clinical Stage
       </Typography>
       <Typography variant="body2">{data.maximumClinicalStage}</Typography>
       {data.indications && data.indications.rows.length > 0 && (
         <>
-          <Typography className={classes.subtitle} variant="subtitle1">
+          <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
             Indications
           </Typography>
           <LongList
             terms={data.indications.rows}
             maxTerms={5}
             render={(indication, index) => (
-              <Link key={index} className={classes.link} to={`/disease/${indication.disease.id}`}>
+              <StyledLink key={index} to={`/disease/${indication.disease.id}`}>
                 {indication.disease.name}
-              </Link>
+              </StyledLink>
             )}
           />
         </>

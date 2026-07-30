@@ -1,13 +1,21 @@
 import { Component } from "react";
 import { v1 } from "uuid";
-import { Autocomplete, Box, Button, Chip, Grid, TextField, Typography } from "@mui/material";
-import { withStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 // TODO: note this component is not actually used.
 // Only SimplePublication is used in evidence bibliography
 
 import Publication from "./Publication";
 import { getAggregationsData, getPublicationsData } from "./Api";
-import { SectionItem } from "ui";
+import {
+  SectionItem,
+  Autocomplete,
+  Box,
+  GridLegacy,
+  TextField,
+  Typography,
+  Button,
+  Chip,
+} from "ui";
 import Description from "./Description";
 
 const aggtype = [
@@ -22,38 +30,23 @@ const aggtype = [
   // {value: 'pub_date_histogram', label: 'publication date'}
 ];
 
-const styles = theme => ({
-  aggtypeAutocomplete: {
-    width: "15rem",
-    "& .MuiFormControl-root": { marginTop: 0 },
-  },
-  icon: {
-    width: "50px",
-    height: "50px",
-    fill: "#5a5f5f",
-  },
-  iconNoData: {
-    fill: "#e2dfdf",
-  },
-  chip: {
-    margin: theme.spacing(0.25),
-  },
-  filterCategoryContainer: {
-    display: "flex",
-    "& p": {
-      margin: ".2rem 1rem 0 0",
-    },
-  },
-  noTagsSelected: {
-    margin: ".375rem 0",
-  },
-  resultCount: {
-    marginBottom: "2rem",
+const StyledAutocomplete = styled(Autocomplete)({
+  width: "15rem",
+  "& .MuiFormControl-root": { marginTop: 0 },
+});
+
+const StyledChip = styled(Chip)(({ theme }) => ({
+  margin: theme.spacing(0.25),
+}));
+
+const StyledFilterCategoryContainer = styled(Box)({
+  display: "flex",
+  "& p": {
+    margin: ".2rem 1rem 0 0",
   },
 });
 
 type Props = {
-  classes: Record<string, string>;
   definition: Record<string, unknown>;
   id: string;
   label: string;
@@ -210,7 +203,7 @@ class Section extends Component<Props> {
       hasError,
       hasData,
     } = this.state;
-    const { classes, definition, label } = this.props;
+    const { definition, label } = this.props;
 
     return (
       <SectionItem
@@ -218,19 +211,18 @@ class Section extends Component<Props> {
         request={{ loading: isLoading, error: hasError, data: hasData }}
         renderDescription={() => <Description label={label} />}
         renderBody={() => (
-          <Grid
+          <GridLegacy
             container
             direction="column"
             justifyContent="flex-start"
             alignItems="stretch"
             spacing={2}
           >
-            <Grid item xs={12}>
-              <Box className={classes.filterCategoryContainer}>
+            <GridLegacy item xs={12}>
+              <StyledFilterCategoryContainer>
                 <Typography>Tag category:</Typography>
                 {/* Dropdown menu */}
-                <Autocomplete
-                  classes={{ root: classes.aggtypeAutocomplete }}
+                <StyledAutocomplete
                   disableClearable
                   getOptionLabel={option => option.label}
                   getOptionSelected={option => option.value}
@@ -242,23 +234,24 @@ class Section extends Component<Props> {
                   )}
                   value={selectedAggregation}
                 />
-              </Box>
+              </StyledFilterCategoryContainer>
               {/* Chips */}
               <Box>
                 {selected.length > 1 ? (
                   selected.map((sel, i) =>
                     i > 0 ? (
-                      <Chip
+                      <StyledChip
                         key={v1()}
+                        variant="filled"
+                        size="medium"
                         color="primary"
                         label={sel.label || sel.key}
                         onDelete={() => this.deselectChip(i)}
-                        className={classes.chip}
                       />
                     ) : null
                   )
                 ) : (
-                  <Typography className={classes.noTagsSelected}>
+                  <Typography sx={{ margin: ".375rem 0" }}>
                     No tags selected, please select from below
                   </Typography>
                 )}
@@ -266,26 +259,26 @@ class Section extends Component<Props> {
               <Box>
                 {aggregations[selectedAggregation.value]
                   ? aggregations[selectedAggregation.value].buckets.map((agg, i) => (
-                      <Chip
+                      <StyledChip
                         key={v1()}
                         variant="outlined"
+                        size="medium"
                         label={agg.label || agg.key}
                         onClick={() => this.selectChip(agg)}
-                        className={classes.chip}
                       />
                     ))
                   : null}
               </Box>
-            </Grid>
+            </GridLegacy>
 
-            <Grid item xs={12}>
+            <GridLegacy item xs={12}>
               {/* Total result */}
-              <Typography variant="body2" className={classes.resultCount}>
+              <Typography variant="body2" sx={{ marginBottom: "2rem" }}>
                 Showing {Math.min(hits.length, bibliographyCount)} of {bibliographyCount} results
               </Typography>
 
               {/* Publications */}
-              <Grid
+              <GridLegacy
                 container
                 direction="column"
                 justifyContent="flex-start"
@@ -293,7 +286,7 @@ class Section extends Component<Props> {
                 spacing={2}
               >
                 {hits.map((hitItem, i) => (
-                  <Grid item xs={12} key={hitItem._source.pub_id}>
+                  <GridLegacy item xs={12} key={hitItem._source.pub_id}>
                     <Publication
                       pmId={hitItem._source.pub_id}
                       title={hitItem._source.title}
@@ -310,14 +303,14 @@ class Section extends Component<Props> {
                       }}
                       hasAbstract={hitItem._source.abstract}
                     />
-                  </Grid>
+                  </GridLegacy>
                 ))}
-              </Grid>
-            </Grid>
+              </GridLegacy>
+            </GridLegacy>
 
             {/* Load more, if any */}
             {hits.length < bibliographyCount ? (
-              <Grid item xs={12}>
+              <GridLegacy item xs={12}>
                 <Button
                   variant="contained"
                   size="medium"
@@ -329,13 +322,13 @@ class Section extends Component<Props> {
                 >
                   Load more papers
                 </Button>
-              </Grid>
+              </GridLegacy>
             ) : null}
-          </Grid>
+          </GridLegacy>
         )}
       />
     );
   }
 }
 
-export default withStyles(styles)(Section);
+export default Section;

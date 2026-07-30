@@ -1,80 +1,85 @@
-import { useState } from "react";
+import { faChevronDown, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  AccordionSummary,
-  AccordionDetails,
   Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
+  Button,
+  ButtonBase,
+  Drawer,
   IconButton,
   List,
   ListItem,
-  Drawer,
-  Typography,
   Paper,
-  Button,
-  ButtonBase,
+  Typography,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { faXmark, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import _ from "lodash";
-import { v1 } from "uuid";
+import { styled } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
+import _ from "lodash";
+import { useState } from "react";
+import { v1 } from "uuid";
 
 import Link from "../Link";
 
-const sourceDrawerStyles = makeStyles(theme => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  },
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
+}));
+
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
+}));
+
+const StyledAccordion = styled(Accordion)({
+  border: "1px solid #ccc",
+  margin: "1rem 1rem 0 1rem",
+  padding: "1rem",
+  "&::before": {
+    backgroundColor: "transparent",
   },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
-  AccordionExpanded: {
+  "&.Mui-expanded": {
     margin: "1rem !important",
   },
-  AccordionRoot: {
-    border: "1px solid #ccc",
-    margin: "1rem 1rem 0 1rem",
-    padding: "1rem",
-    "&::before": {
-      backgroundColor: "transparent",
-    },
-  },
-  AccordionSubtitle: {
-    color: theme.palette.grey[400],
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-  },
-  AccordionTitle: {
-    color: theme.palette.grey[700],
-    fontSize: "1rem",
-    fontWeight: "bold",
-  },
-  summaryBoxRoot: {
-    marginRight: "2rem",
-  },
+});
+
+const StyledSummaryBox = styled(Box)({
+  marginRight: "2rem",
+});
+
+const StyledAccordionTitle = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1rem",
+  fontWeight: "bold",
+}));
+
+const StyledAccordionSubtitle = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[400],
+  fontSize: "0.8rem",
+  fontStyle: "italic",
 }));
 
 function TableDrawer({ entries, message, caption = "Records", showSingle = true }) {
   const [open, setOpen] = useState(false);
-  const classes = sourceDrawerStyles();
 
   if (entries.length === 0 && message) {
     return message;
@@ -90,11 +95,11 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
         {entries[0].name}
       </Link>
     ) : (
-      entries[0].name ?? naLabel
+      (entries[0].name ?? naLabel)
     );
   }
 
-  const toggleDrawer = event => {
+  const toggleDrawer = (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
       return;
     }
@@ -110,39 +115,35 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
 
   const drawerContent = (
     <>
-      <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+      <StyledPaperTitle elevation={0}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography className={classes.drawerTitleCaption}>{caption}</Typography>
+          <StyledTitleCaption>{caption}</StyledTitleCaption>
           <IconButton onClick={closeDrawer}>
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </Box>
-      </Paper>
+      </StyledPaperTitle>
 
-      <Box className={classes.drawerBody}>
-        {Object.keys(groupedEntries).map(group => (
-          <Accordion
+      <StyledBody>
+        {Object.keys(groupedEntries).map((group) => (
+          <StyledAccordion
             elevation={0}
             key={group}
-            classes={{
-              root: classes.AccordionRoot,
-              expanded: classes.AccordionExpanded,
-            }}
             defaultExpanded={
               groupedEntries[group].length < 10 || Object.keys(groupedEntries).length === 1
             }
           >
             <AccordionSummary expandIcon={<FontAwesomeIcon icon={faChevronDown} />}>
-              <Box classes={{ root: classes.summaryBoxRoot }}>
-                <Typography className={classes.AccordionTitle}>{group}</Typography>
-                <Typography className={classes.AccordionSubtitle}>
+              <StyledSummaryBox>
+                <StyledAccordionTitle>{group}</StyledAccordionTitle>
+                <StyledAccordionSubtitle>
                   {groupedEntries[group].length} {caption}
-                </Typography>
-              </Box>
+                </StyledAccordionSubtitle>
+              </StyledSummaryBox>
             </AccordionSummary>
             <AccordionDetails>
               <List>
-                {groupedEntries[group].map(entry => (
+                {groupedEntries[group].map((entry) => (
                   <ListItem key={v1()}>
                     {entry.url ? (
                       <Link external to={entry.url}>
@@ -155,26 +156,21 @@ function TableDrawer({ entries, message, caption = "Records", showSingle = true 
                 ))}
               </List>
             </AccordionDetails>
-          </Accordion>
+          </StyledAccordion>
         ))}
-      </Box>
+      </StyledBody>
     </>
   );
 
   return (
     <>
-      <ButtonBase data-testid="table-drawer" onClick={toggleDrawer} className={classes.drawerLink}>
+      <StyledButtonBase data-testid="table-drawer" onClick={toggleDrawer}>
         <Typography variant="body2"> {message || `${entries.length} entries`}</Typography>
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
-        anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
-        open={open}
-        onClose={closeDrawer}
-      >
+      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
         {drawerContent}
-      </Drawer>
+      </StyledDrawer>
     </>
   );
 }

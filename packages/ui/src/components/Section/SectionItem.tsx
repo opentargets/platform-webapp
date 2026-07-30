@@ -1,16 +1,22 @@
-import classNames from "classnames";
-import { Avatar, Box, Card, CardContent, Divider, Grid, Skeleton, Typography } from "@mui/material";
-import { Element } from "react-scroll";
-
-import ErrorBoundary from "../ErrorBoundary";
-import SectionError from "./SectionError";
-import sectionStyles from "./sectionStyles";
-import { createShortName } from "../Summary/utils";
-import PartnerLockIcon from "../PartnerLockIcon";
-import SectionViewToggle from "./SectionViewToggle";
-import { ReactNode, useEffect, useState } from "react";
+import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
 import { VIEW } from "@ot/constants";
+import { type ReactNode, useEffect, useState } from "react";
+import { Element } from "react-scroll";
+import ErrorBoundary from "../ErrorBoundary";
+import PartnerLockIcon from "../PartnerLockIcon";
 import { SummaryLoader } from "../PublicationsDrawer";
+import { createShortName } from "../Summary/utils";
+import SectionError from "./SectionError";
+import {
+  CardHeaderContainer,
+  NoData,
+  StyledAvatar,
+  StyledCardContent,
+  StyledChip,
+  StyledDescription,
+  StyledTitle,
+} from "./SectionItem.styles";
+import SectionViewToggle from "./SectionViewToggle";
 
 type definitionType = {
   id: string;
@@ -50,7 +56,6 @@ function SectionItem({
   renderChart,
   defaultView = VIEW.table,
 }: SectionItemProps): ReactNode {
-  const classes = sectionStyles();
   const { loading, error, data } = request;
   const shortName = createShortName(definition);
   let hasData = false;
@@ -87,49 +92,31 @@ function SectionItem({
     if (selectedView === VIEW.table) return renderBody();
     if (selectedView === VIEW.chart && renderChart) return renderChart();
     // if (!loading && !hasData && showEmptySection)
-    return <div className={classes.noData}> No data available for this {entity}. </div>;
+    return <NoData> No data available for this {entity}. </NoData>;
   }
 
   return (
-    <Grid item xs={12}>
-      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
+    <GridLegacy item xs={12}>
+      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}>
         <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>
-              <Box className={classes.cardHeaderContainer}>
+              <CardHeaderContainer>
                 {/* AVATAR */}
-                <Avatar
-                  className={classNames(classes.avatar, classes.avatarHasData, {
-                    [classes.avatarError]: error,
-                  })}
-                >
-                  {shortName}
-                </Avatar>
+                <StyledAvatar>{shortName}</StyledAvatar>
                 {/* HEADER, SUB-HEADER & CHIP */}
                 <Box sx={{ flex: 1 }}>
-                  <div
-                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}-header`}
-                    className={classNames(classes.title, classes.titleHasData, {
-                      [classes.titleError]: error,
-                    })}
+                  <StyledTitle
+                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}-header`}
+                    error={!!error}
                   >
                     {definition.name}
                     {definition.isPrivate && <PartnerLockIcon />}
-                    {chipText && (
-                      <Box sx={{ typography: "caption" }} className={classes.chip}>
-                        {chipText}
-                      </Box>
-                    )}
-                  </div>
-                  <Typography
-                    data-testid="section-description"
-                    className={classNames(classes.description, classes.descriptionHasData, {
-                      [classes.descriptionError]: error,
-                    })}
-                    variant="body2"
-                  >
+                    {chipText && <StyledChip sx={{ typography: "caption" }}>{chipText}</StyledChip>}
+                  </StyledTitle>
+                  <StyledDescription data-testid="section-description" variant="body2">
                     {renderDescription()}
-                  </Typography>
+                  </StyledDescription>
                 </Box>
                 {/* CHART VIEW SWITCH */}
                 <Box>
@@ -137,14 +124,14 @@ function SectionItem({
                     <SectionViewToggle defaultValue={defaultView} viewChange={setSelectedView} />
                   )}
                 </Box>
-              </Box>
+              </CardHeaderContainer>
               <Divider />
-              <CardContent className={classes.cardContent}>{getSelectedView()}</CardContent>
+              <StyledCardContent>{getSelectedView()}</StyledCardContent>
             </ErrorBoundary>
           </Card>
         </Element>
       </section>
-    </Grid>
+    </GridLegacy>
   );
 }
 

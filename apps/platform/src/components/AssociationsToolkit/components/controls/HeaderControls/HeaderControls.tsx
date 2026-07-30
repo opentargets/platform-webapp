@@ -1,4 +1,3 @@
-import { Box, Collapse, Grid, Typography } from "@mui/material";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -10,7 +9,7 @@ import { GridContainer, MetricsSpacerCol } from "../../layout";
 
 import { useAotfQueryState, useAotfQueryDispatch } from "../../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../../context/AssociationsURLContext";
-import { Tooltip } from "ui";
+import { Tooltip, Box, Collapse, GridLegacy, Typography } from "ui";
 import { ReactNode } from "react";
 
 const CloseContainer = styled("div")({
@@ -114,7 +113,7 @@ function HeaderControls({ cols = [] }: HeaderControlsProps): ReactNode {
   return (
     <Collapse in={activeHeadersControlls}>
       <WeightsControllsContainer data-testid="weights-controls-container">
-        <Grid container direction="row" wrap="nowrap">
+        <GridLegacy container direction="row" wrap="nowrap">
           <CloseContainer onClick={handleClose} data-testid="close-weights-button">
             <FontAwesomeIcon icon={faXmark} size="lg" />
           </CloseContainer>
@@ -155,7 +154,7 @@ function HeaderControls({ cols = [] }: HeaderControlsProps): ReactNode {
             ))}
           </GridContainer>
           <MetricsSpacerCol />
-        </Grid>
+        </GridLegacy>
       </WeightsControllsContainer>
     </Collapse>
   );

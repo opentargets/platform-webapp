@@ -1,16 +1,5 @@
-import { ReactNode, useState } from "react";
-import { Typography, Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-
-const useStyles = makeStyles((theme: Theme) => ({
-  showMore: {
-    whiteSpace: "nowrap",
-  },
-  showMoreText: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
-}));
+import { Box, Typography } from "@mui/material";
+import { type ReactNode, useState } from "react";
 
 type LongListProps = {
   maxTerms?: number;
@@ -20,7 +9,6 @@ type LongListProps = {
 
 function LongList({ terms, render, maxTerms = 10 }: LongListProps): ReactNode {
   const [showMore, setShowMore] = useState(false);
-  const classes = useStyles();
 
   const handleClick = () => {
     setShowMore(!showMore);
@@ -35,9 +23,12 @@ function LongList({ terms, render, maxTerms = 10 }: LongListProps): ReactNode {
       {shownTerms.map(render)}
       {showMore && hiddenTerms.map(render)}
       {hiddenTerms.length > 0 && (
-        <Typography variant="body2" className={classes.showMore} onClick={handleClick}>
+        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }} onClick={handleClick}>
           {showMore ? "" : "... "}[
-          <span className={classes.showMoreText}>{showMore ? " hide " : " show more "}</span>]
+          <Box component="span" sx={{ color: "primary.main", cursor: "pointer" }}>
+            {showMore ? " hide " : " show more "}
+          </Box>
+          ]
         </Typography>
       )}
     </>

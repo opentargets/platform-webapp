@@ -1,31 +1,25 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 
-const useStyles = makeStyles(theme => ({
-  emailLink: {
-    display: "block",
-    textDecoration: "none",
-    outline: "none",
-    color: "inherit",
-    "&:hover": {
-      color: theme.palette.primary.light,
-    },
-    maxWidth: "100%",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+const StyledA = styled("a")(({ theme }) => ({
+  display: "block",
+  textDecoration: "none",
+  outline: "none",
+  color: "inherit",
+  "&:hover": {
+    color: theme.palette.primary.light,
   },
-  icon: {
-    marginRight: "10px",
-  },
+  maxWidth: "100%",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 }));
 
 export const EmailLink = ({ href, label, icon }) => {
-  const classes = useStyles();
   return (
-    <a className={classes.emailLink} href={href}>
-      {icon && <FontAwesomeIcon className={classes.icon} icon={icon} size="lg" />}
+    <StyledA href={href}>
+      {icon && <FontAwesomeIcon style={{ marginRight: "10px" }} icon={icon} size="lg" />}
       {label}
-    </a>
+    </StyledA>
   );
 };

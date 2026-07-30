@@ -1,32 +1,24 @@
 import {
-  scaleLinear,
-  schemeDark2,
-  schemeSet1,
-  interpolateRdBu,
-} from "d3";
-import { Vector2 } from "3dmol";
-import {
+  aminoAcidHydrophobicity,
   getAlphaFoldConfidence,
   getAlphaFoldPathogenicityColor,
-  aminoAcidHydrophobicity,
 } from "@ot/constants";
+import { interpolateRdBu, scaleLinear, schemeDark2, schemeSet1 } from "d3";
 
 const secondaryStructureColors = {
   h: "#008B8B",
-  s: "#e6ab02", 
+  s: "#e6ab02",
   c: "#c0c0c0",
-}
+};
 
 export const domainColors = [
-  ...[1, 2, 5, 0, 6].map(i => schemeDark2[i]),
-  ...[1, 0, 4, 7, 2].map(i => schemeSet1[i]),
+  ...[1, 2, 5, 0, 6].map((i) => schemeDark2[i]),
+  ...[1, 0, 4, 7, 2].map((i) => schemeSet1[i]),
 ];
 
-export const hydrophobicityColorInterpolator = v => interpolateRdBu(1 - v);
+export const hydrophobicityColorInterpolator = (v) => interpolateRdBu(1 - v);
 
-const hydrophobicityColorScale = scaleLinear()
-  .domain([-55, 100])
-  .range([0, 1]);
+const hydrophobicityColorScale = scaleLinear().domain([-55, 100]).range([0, 1]);
 
 export function getHydrophobicityColor(resn) {
   return hydrophobicityColorInterpolator(
@@ -35,19 +27,6 @@ export function getHydrophobicityColor(resn) {
 }
 
 export const clickColor = "magenta";
-
-export const labelStyle = {
-  alignment: "center",
-  screenOffset: new Vector2(28, -28),
-  backgroundColor: "#fff",
-  backgroundOpacity: 0.9,
-  borderColor: "#999",
-  borderThickness: 1.5,
-  font: "'Inter', sans-serif",
-  fontColor: "#000",
-  fontSize: 12.6,
-  inFront: true,
-};
 
 // hover on a residue
 export function showHoverSpheres(state, resi) {
@@ -78,7 +57,7 @@ export function showHoverSpheres(state, resi) {
   if (resi !== state.viewer._clickedResi) {
     for (const atom of state.atomsByResi.get(resi)) {
       state.viewer.addSphere({
-        center: {x: atom.x, y: atom.y, z: atom.z},
+        center: { x: atom.x, y: atom.y, z: atom.z },
         radius,
         color,
         opacity,
@@ -96,15 +75,13 @@ export function getResiColor(state, resi) {
     case "confidence":
       return getAlphaFoldConfidence(state.atomsByResi.get(resi)[0], "color");
     case "pathogenicity":
-      return state.pathogenicityScores 
+      return state.pathogenicityScores
         ? getAlphaFoldPathogenicityColor(state.pathogenicityScores.get(resi))
         : "#ddd";
     case "domain": {
       if (!state.domains) return "#ddd";
       const domainIndex = state.domains.descriptionToIndex[state.domains.getDescription(resi)];
-      return domainIndex == null
-        ? "#ddd"
-        : domainColors[domainIndex % domainColors.length];
+      return domainIndex == null ? "#ddd" : domainColors[domainIndex % domainColors.length];
     }
     case "hydrophobicity":
       return getHydrophobicityColor(state.atomsByResi.get(resi)[0].resn);
@@ -120,10 +97,10 @@ export const clickSurfaceStyle = {
   opacity: 1,
 };
 
-export const baseCartoonStyle = state => ({
+export const baseCartoonStyle = (state) => ({
   cartoon: {
     hidden: state.representBy === "opaque" || state.representBy === "transparent",
-    colorfunc: atom => getResiColor(state, atom.resi),
+    colorfunc: (atom) => getResiColor(state, atom.resi),
     arrows: true,
   },
 });
@@ -132,7 +109,6 @@ export function trackColor(state, resi) {
   if (!state.viewer) return;
   return getResiColor(state, resi);
 }
-
 
 export function onClickCapture(viewerRef, id) {
   if (!viewerRef.current) return;

@@ -1,6 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem } from "ui";
-import { Box, Grid } from "@mui/material";
+import { SectionItem, Box, GridLegacy } from "ui";
 import Description from "./Description";
 import { definition } from ".";
 import { getUniprotIds } from "@ot/utils";
@@ -113,8 +112,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
         if (rowResults.length === 0) return <NoRows>No structure available for {uniprotId}</NoRows>;
 
         return (
-          <Grid container columnSpacing={2}>
-            <Grid item xs={12} lg={6}>
+          <GridLegacy container columnSpacing={2}>
+            <GridLegacy item xs={12} lg={6}>
               <Table
                 rows={rowResults}
                 segments={segments}
@@ -124,13 +123,13 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
                 query={MOLECULAR_STRUCTURE_QUERY.loc.source.body}
                 variables={variables}
               />
-            </Grid>
-            <Grid item xs={12} lg={6}>
+            </GridLegacy>
+            <GridLegacy item xs={12} lg={6}>
               {rowResults && (
                 <Viewer ensemblId={ensemblId} selectedRow={selectedRow} segments={segments} />
               )}
-            </Grid>
-          </Grid>
+            </GridLegacy>
+          </GridLegacy>
         );
       }}
     />

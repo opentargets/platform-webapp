@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import _ from "lodash";
-import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader } from "ui";
+import {
+  Link,
+  SectionItem,
+  PaginationActionsComplete,
+  Table,
+  useBatchDownloader,
+  Typography,
+} from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -11,20 +17,9 @@ import Description from "./Description";
 import ADVERSE_EVENTS_QUERY from "./AdverseEventsQuery.gql";
 import type { DrugBodyProps, AdverseEvent } from "@ot/constants";
 
-const useStyles = makeStyles(theme => ({
-  levelBarContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  levelBar: {
-    backgroundColor: theme.palette.primary.main,
-    borderRight: `1px solid ${theme.palette.primary.main}`,
-    height: "10px",
-    marginRight: "5px",
-  },
-}));
+const levelBarContainerStyle = { display: "flex", alignItems: "center" };
 
-const getColumns = (critVal: number, maxLlr: number, classes: Record<string, string>) => [
+const getColumns = (critVal: number, maxLlr: number, primaryColor: string) => [
   {
     id: "name",
     label: "Adverse event (MedDRA)",
@@ -52,10 +47,13 @@ const getColumns = (critVal: number, maxLlr: number, classes: Record<string, str
     renderCell: (d: AdverseEvent) => {
       const w = ((d.logLR / maxLlr) * 85).toFixed(2); // scale to max 85% of the width to allows space for label
       return (
-        <div className={classes.levelBarContainer}>
+        <div style={levelBarContainerStyle}>
           <div
-            className={classes.levelBar}
             style={{
+              backgroundColor: primaryColor,
+              borderRight: `1px solid ${primaryColor}`,
+              height: "10px",
+              marginRight: "5px",
               width: `${w}%`,
             }}
           />
@@ -71,7 +69,7 @@ const getColumns = (critVal: number, maxLlr: number, classes: Record<string, str
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const classes = useStyles();
+  const theme = useTheme();
   const variables = { chemblId };
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -128,7 +126,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
             dataDownloaderRows={getAllAdverseEvents}
             dataDownloaderFileStem={`${name}-adverse-events`}
             loading={loading}
-            columns={getColumns(criticalValue, maxLlr, classes)}
+            columns={getColumns(criticalValue, maxLlr, theme.palette.primary.main)}
             rows={rows}
             rowCount={count}
             page={page}

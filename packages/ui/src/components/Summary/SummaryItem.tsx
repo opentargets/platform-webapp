@@ -1,21 +1,24 @@
-import classNames from "classnames";
-import {
-  Avatar,
-  Card,
-  CardHeader,
-  Grid,
-  LinearProgress,
-  Skeleton,
-  Typography,
-} from "@mui/material";
+import { CardHeader, GridLegacy, LinearProgress, Skeleton } from "@mui/material";
 import { scroller } from "react-scroll";
-
-import summaryStyles from "./summaryStyles";
-import { createShortName } from "./utils";
 import PartnerLockIcon from "../PartnerLockIcon";
+import {
+  StyledAvatar,
+  StyledCard,
+  StyledSubheader,
+  StyledSubtitle,
+  StyledTitle,
+} from "./SummaryItem.styles";
+import { createShortName } from "./utils";
 
-function SummaryItem<T>({ definition, request, subText }: { definition: any; request: { loading: boolean; error?: any; data: T }; subText?: React.ReactNode }) {
-  const classes = summaryStyles();
+function SummaryItem<T>({
+  definition,
+  request,
+  subText,
+}: {
+  definition: any;
+  request: { loading: boolean; error?: any; data: T };
+  subText?: React.ReactNode;
+}) {
   const { loading, error, data } = request;
   const shortName = createShortName(definition);
   const hasData = !loading && !error && data && definition.hasData(data);
@@ -29,70 +32,46 @@ function SummaryItem<T>({ definition, request, subText }: { definition: any; req
   };
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card
+    <GridLegacy item xs={12} sm={6} md={4} lg={3} xl={2}>
+      <StyledCard
         data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
-        className={classNames(classes.card, {
-          [classes.cardHasData]: hasData,
-          [classes.cardError]: error,
-        })}
+        hasData={hasData}
         onClick={handleClickSection}
         elevation={0}
         variant="outlined"
       >
         <CardHeader
-          className={classes.cardHeader}
           avatar={
-            <Avatar
-              className={classNames(classes.avatar, {
-                [classes.avatarHasData]: hasData,
-                [classes.avatarError]: error,
-              })}
-            >
+            <StyledAvatar className="summaryItemAvatar" hasData={hasData} error={!!error}>
               {shortName}
-            </Avatar>
+            </StyledAvatar>
           }
           title={
             <>
-              <Typography
-                className={classNames(classes.title, {
-                  [classes.titleHasData]: hasData,
-                  [classes.titleError]: error,
-                })}
+              <StyledTitle
+                className="summaryItemTitle"
+                hasData={hasData}
+                error={!!error}
                 variant="body2"
               >
                 {loading && <Skeleton width={100} />}
                 {!loading && definition.name} {definition.isPrivate ? <PartnerLockIcon /> : null}
-              </Typography>
+              </StyledTitle>
               {subText ? (
-                <Typography
-                  className={classNames(classes.subtitle, {
-                    [classes.subtitleHasData]: hasData,
-                  })}
-                  variant="caption"
-                >
+                <StyledSubtitle className="summaryItemSubtitle" hasData={hasData} variant="caption">
                   {subText}
-                </Typography>
+                </StyledSubtitle>
               ) : null}
 
-              <Typography
-                className={classNames(classes.subheader, {
-                  [classes.subheaderHasData]: hasData,
-                  [classes.subheaderError]: true,
-                })}
-              >
-                {error && (
-                  <Typography variant="body2">
-                    An error occurred while loading this section
-                  </Typography>
-                )}
-              </Typography>
+              <StyledSubheader className="summaryItemSubheader">
+                {error && "An error occurred while loading this section"}
+              </StyledSubheader>
             </>
           }
         />
         {loading && <LinearProgress />}
-      </Card>
-    </Grid>
+      </StyledCard>
+    </GridLegacy>
   );
 }
 

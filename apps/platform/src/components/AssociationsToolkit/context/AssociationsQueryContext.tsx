@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { Dispatch, ReactNode } from "react";
 import type { DocumentNode } from "graphql";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import type { Facet } from "../../Facets/facetsTypes";
 import {
   DEFAULT_TABLE_SORTING_STATE,

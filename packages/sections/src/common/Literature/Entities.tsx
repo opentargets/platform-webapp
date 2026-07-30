@@ -1,20 +1,13 @@
-import { Chip, Grow } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { useApolloClient } from "ui";
+import { useApolloClient, Grow, Chip } from "ui";
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: "flex",
-    flexWrap: "wrap",
-    "& > *": {
-      margin: `${theme.spacing(0.5)} !important`,
-    },
-  },
-  loadingContainer: {
-    display: "flex",
-    margin: "10px",
+const StyledChipRow = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexWrap: "wrap",
+  "& > *": {
+    margin: `${theme.spacing(0.5)} !important`,
   },
 }));
 
@@ -88,6 +81,7 @@ function EntitiesToSelect({ id }) {
             title="Missing object entity"
             color="secondary"
             variant="outlined"
+            size="medium"
           />
         </Grow>
       );
@@ -104,6 +98,7 @@ function EntitiesToSelect({ id }) {
           title={`Score: ${e.score} ID: ${e.object.id}`}
           color="primary"
           variant="outlined"
+          size="medium"
         />
       </Grow>
     ) : null;
@@ -111,7 +106,6 @@ function EntitiesToSelect({ id }) {
 }
 
 export default function Entities({ name, id }) {
-  const classes = useStyles();
   const literature = useLiterature();
   const { selectedEntities: selectedChips, loadingEntities } = literature;
   const literatureDispatch = useLiteratureDispatch();
@@ -157,14 +151,16 @@ export default function Entities({ name, id }) {
 
   return (
     <div>
-      <div className={classes.root}>
-        <Chip label={name} title={`ID: ${id}`} color="primary" />
+      <StyledChipRow>
+        <Chip label={name} title={`ID: ${id}`} color="primary" variant="filled" size="medium" />
         {selectedChips.map((e, i) => (
           <Grow in key={e.object.id}>
             <Chip
               label={e.object.name}
               title={`Score: ${e.score} ID: ${e.object.id}`}
               color="primary"
+              variant="filled"
+              size="medium"
               clickable
               disabled={loadingEntities}
               onClick={() => {
@@ -176,10 +172,10 @@ export default function Entities({ name, id }) {
             />
           </Grow>
         ))}
-      </div>
-      <div className={classes.root}>
+      </StyledChipRow>
+      <StyledChipRow>
         <EntitiesToSelect id={id} />
-      </div>
+      </StyledChipRow>
     </div>
   );
 }

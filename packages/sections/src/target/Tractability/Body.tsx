@@ -1,35 +1,14 @@
 import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { v1 } from "uuid";
-import { SectionItem, EllsWrapper } from "ui";
-import classNames from "classnames";
+import { SectionItem, EllsWrapper, GridLegacy, Typography } from "ui";
 import { useQuery } from "@apollo/client";
-import { Grid, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { definition } from ".";
 import Description from "./Description";
 import TRACTABILITY_QUERY from "./TractabilityQuery.gql";
 import type { TargetBodyProps } from "@ot/constants";
-
-const useStyles = makeStyles(theme => ({
-  modality: {
-    marginBottom: "0.35em",
-  },
-  modalityEnabled: {
-    fontWeight: "bold",
-  },
-  modalityDisabled: {
-    color: theme.palette.grey[300],
-  },
-  modalityIcon: {
-    paddingRight: "0.5em",
-    float: "left",
-  },
-  modalityIconEnabled: {
-    color: theme.palette.primary.main,
-  },
-}));
 
 const modalities = [
   {
@@ -57,7 +36,7 @@ const modalities = [
  * @returns
  */
 function ModalityList({ modality, data }) {
-  const classes = useStyles();
+  const theme = useTheme();
   return (
     <div data-testid={`tractability-modality-list-${modality.toLowerCase()}`}>
       {data
@@ -66,16 +45,19 @@ function ModalityList({ modality, data }) {
           <div
             key={v1()}
             data-testid={`tractability-item-${d.value ? "enabled" : "disabled"}`}
-            className={classNames(
-              classes.modality,
-              d.value ? classes.modalityEnabled : classes.modalityDisabled
-            )}
+            style={{
+              marginBottom: "0.35em",
+              fontWeight: d.value ? "bold" : undefined,
+              color: d.value ? undefined : theme.palette.grey[300],
+            }}
           >
             <EllsWrapper title={d.label}>
               <span
-                className={classNames(classes.modalityIcon, {
-                  [classes.modalityIconEnabled]: d.value,
-                })}
+                style={{
+                  paddingRight: "0.5em",
+                  float: "left",
+                  color: d.value ? theme.palette.primary.main : undefined,
+                }}
               >
                 <FontAwesomeIcon icon={d.value ? faCheckCircle : faTimesCircle} size="lg" />
               </span>
@@ -104,16 +86,16 @@ function Body({ label: symbol, id: ensemblId, entity }: Props) {
       renderDescription={() => <Description symbol={symbol} />}
       showContentLoading={true}
       renderBody={() => (
-        <Grid data-testid="tractability-grid" container spacing={3}>
+        <GridLegacy data-testid="tractability-grid" container spacing={3}>
           {modalities.map(m => (
-            <Grid data-testid={`tractability-modality-${m.modality.toLowerCase()}`} item xs={6} sm={3} key={v1()}>
+            <GridLegacy data-testid={`tractability-modality-${m.modality.toLowerCase()}`} item xs={6} sm={3} key={v1()}>
               <Typography data-testid={`tractability-modality-title-${m.modality.toLowerCase()}`} variant="subtitle1" gutterBottom>
                 {m.label}
               </Typography>
               <ModalityList modality={m.modality} data={request.data?.target.tractability} />
-            </Grid>
+            </GridLegacy>
           ))}
-        </Grid>
+        </GridLegacy>
       )}
     />
   );

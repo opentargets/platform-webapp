@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { Component } from "react";
-import { Button, Grid, Typography } from "@mui/material";
+import { GridLegacy, Typography, Button } from "ui";
 import { v1 } from "uuid";
 
 import Abstract from "./Abstract";
@@ -57,7 +57,7 @@ class Publication extends Component {
         <Typography variant="subtitle2" gutterBottom>
           Similar articles
         </Typography>
-        <Grid
+        <GridLegacy
           container
           direction="column"
           justifyContent="flex-start"
@@ -65,7 +65,7 @@ class Publication extends Component {
           spacing={2}
         >
           {similar.map(hit => (
-            <Grid item xs={12} key={v1()}>
+            <GridLegacy item xs={12} key={v1()}>
               <SimplePublication
                 variant="small"
                 pmId={hit._source.pub_id}
@@ -82,9 +82,9 @@ class Publication extends Component {
                   ref: hit._source.journal_reference,
                 }}
               />
-            </Grid>
+            </GridLegacy>
           ))}
-        </Grid>
+        </GridLegacy>
       </BibliographyDetailPanel>
     );
   };

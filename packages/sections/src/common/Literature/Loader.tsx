@@ -1,14 +1,5 @@
-import { Box, Typography, CircularProgress } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Box, Typography, CircularProgress } from "ui";
 import { useEffect, useState } from "react";
-
-const listComponentStyles = makeStyles(() => ({
-  loader: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-}));
 
 function Loader({ message = "", pageSize = 5 }) {
   const [height, setHeight] = useState("4040px");
@@ -29,7 +20,7 @@ function Loader({ message = "", pageSize = 5 }) {
     >
       <CircularProgress size={60} />
       <Box mt={6}>
-        <Typography className={listComponentStyles.AccordionSubtitle}>{message}</Typography>
+        <Typography>{message}</Typography>
       </Box>
     </Box>
   );

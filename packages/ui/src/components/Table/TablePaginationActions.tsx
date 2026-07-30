@@ -1,39 +1,32 @@
-import { IconButton } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBackwardStep,
-  faForwardStep,
   faChevronLeft,
   faChevronRight,
+  faForwardStep,
 } from "@fortawesome/free-solid-svg-icons";
 
-const useStyles = makeStyles({
-  root: { flexShrink: 0 },
-});
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, IconButton } from "@mui/material";
 
 export function PaginationActionsComplete({ count, page, rowsPerPage, onPageChange }) {
-  const classes = useStyles();
-
-  const handleFirstPageButtonClick = event => {
+  const handleFirstPageButtonClick = (event) => {
     onPageChange(event, 0);
   };
 
-  const handleBackButtonClick = event => {
+  const handleBackButtonClick = (event) => {
     onPageChange(event, page - 1);
   };
 
-  const handleNextButtonClick = event => {
+  const handleNextButtonClick = (event) => {
     onPageChange(event, page + 1);
   };
 
-  const handleLastPageButtonClick = event => {
+  const handleLastPageButtonClick = (event) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
 
   return (
-    <div className={classes.root}>
+    <Box sx={{ flexShrink: 0 }}>
       <IconButton
         data-testid="pagination-first-button"
         aria-label="First result page of table"
@@ -66,6 +59,6 @@ export function PaginationActionsComplete({ count, page, rowsPerPage, onPageChan
       >
         <FontAwesomeIcon size="2xs" icon={faForwardStep} />
       </IconButton>
-    </div>
+    </Box>
   );
 }

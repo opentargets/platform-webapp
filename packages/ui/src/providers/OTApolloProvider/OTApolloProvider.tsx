@@ -1,6 +1,6 @@
-import { ApolloProvider, ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import { type ApolloClient, ApolloProvider, type NormalizedCacheObject } from "@apollo/client";
+import type { Config } from "@ot/config";
 import { createContext, useContext } from "react";
-import { Config } from "@ot/config";
 import { createApolloClient } from "./apollo";
 
 const ApolloClientContext = createContext<ApolloClient<NormalizedCacheObject> | undefined>(
@@ -19,12 +19,14 @@ export const useApolloClient = (): ApolloClient<NormalizedCacheObject> => {
 
 export const OTApolloProvider = ({
   config,
+  client: providedClient,
   children,
 }: {
   config: Config;
+  client?: ApolloClient<NormalizedCacheObject>;
   children: React.ReactNode;
 }) => {
-  const client = createApolloClient(config);
+  const client = providedClient ?? createApolloClient(config);
 
   return (
     <ApolloClientContext.Provider value={client}>

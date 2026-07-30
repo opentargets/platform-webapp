@@ -1,30 +1,21 @@
-import { Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStethoscope } from "@fortawesome/free-solid-svg-icons";
 
-import { LongText, Link, Highlights } from "ui";
+import { LongText, Link, Highlights, Typography } from "ui";
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    marginBottom: "30px",
-  },
-  subtitle: {
-    fontSize: "20px",
-    fontWeight: 500,
-  },
-  icon: {
-    color: theme.palette.primary.main,
-  },
-}));
+const StyledLink = styled(Link)({
+  fontSize: "20px",
+  fontWeight: 500,
+});
 
 function DiseaseResult({ data, highlights }) {
-  const classes = useStyles();
+  const theme = useTheme();
   return (
-    <div className={classes.container}>
-      <Link to={`/disease/${data.id}/associations`} className={classes.subtitle}>
-        <FontAwesomeIcon icon={faStethoscope} className={classes.icon} /> {data.name}
-      </Link>
+    <div style={{ marginBottom: "30px" }}>
+      <StyledLink to={`/disease/${data.id}/associations`}>
+        <FontAwesomeIcon icon={faStethoscope} color={theme.palette.primary.main} /> {data.name}
+      </StyledLink>
       {data.description && (
         <Typography variant="body2" component="div">
           <LongText lineLimit="4">{data.description}</LongText>

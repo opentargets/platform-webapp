@@ -1,5 +1,5 @@
 import { Tab } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import usePermissions from "../../hooks/usePermissions";
 
 function PrivateRoutingTab({ component, ...props }) {

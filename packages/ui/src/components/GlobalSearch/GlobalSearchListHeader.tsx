@@ -1,42 +1,22 @@
-import { makeStyles } from "@mui/styles";
-import { Button, Chip, Typography, styled } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faPrescriptionBottleAlt,
-  faStethoscope,
-  faDna,
   faChartBar,
+  faDna,
   faMapPin,
+  faPrescriptionBottleAlt,
   faStar,
+  faStethoscope,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
-import { clearAllRecent } from "./utils/searchUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Button, Chip, styled, Typography } from "@mui/material";
 import GlobalSearchIcon from "./GlobalSearchIcon";
-
-const useStyles = makeStyles(theme => ({
-  sectionHeader: {
-    textTransform: "capitalize",
-    color: theme.palette.grey[600],
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(1),
-    justifyContent: "space-between",
-  },
-  label: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(1),
-    textTransform: "uppercase",
-  },
-}));
+import { clearAllRecent } from "./utils/searchUtils";
 
 const ClearAllButton = styled(Button)`
   border: none;
 `;
 
 function GlobalSearchListHeader({ listHeader, children }) {
-  const classes = useStyles();
-
   const NewChip = (
     <Chip
       style={{
@@ -72,20 +52,33 @@ function GlobalSearchListHeader({ listHeader, children }) {
   }
 
   return (
-    <div tabIndex="-1" className={classes.sectionHeader}>
-      <div  data-testid={`top-hit-list-item-${listHeader}`} className={classes.label}>
+    <Box
+      tabIndex="-1"
+      sx={{
+        textTransform: "capitalize",
+        color: "grey.600",
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        justifyContent: "space-between",
+      }}
+    >
+      <Box
+        data-testid={`top-hit-list-item-${listHeader}`}
+        sx={{ display: "flex", alignItems: "center", gap: 1, textTransform: "uppercase" }}
+      >
         <GlobalSearchIcon entity={listHeader} />
         <Typography sx={{ fontWeight: "bold" }} variant="caption">
           {getListHeader()}
         </Typography>
         <div>{getIconTag()}</div>
-      </div>
+      </Box>
       {listHeader === "recent" && (
         <ClearAllButton onClick={clearAllRecent}>
           <Typography variant="caption">clear all</Typography>
         </ClearAllButton>
       )}
-    </div>
+    </Box>
   );
 }
 

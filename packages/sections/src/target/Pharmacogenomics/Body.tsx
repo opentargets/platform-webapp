@@ -1,6 +1,5 @@
 import { useQuery } from "@apollo/client";
-import classNames from "classnames";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import {
   SectionItem,
   Link,
@@ -9,6 +8,7 @@ import {
   PublicationsDrawer,
   OtTable,
   DirectionalityDrawer,
+  Box,
 } from "ui";
 
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
@@ -16,34 +16,10 @@ import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type TargetBodyProp
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
-import { Box } from "@mui/material";
 
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./Pharmacogenomics.gql";
-
-const useStyles = makeStyles(theme => ({
-  level: {
-    color: "white",
-    padding: theme.spacing(0.5),
-    borderRadius: theme.spacing(0.5),
-  },
-  green: {
-    background: PHARM_GKB_COLOR.green,
-  },
-  red: {
-    background: PHARM_GKB_COLOR.red,
-  },
-  yellow: {
-    background: PHARM_GKB_COLOR.yellow,
-  },
-  blue: {
-    background: theme.palette.primary.main,
-  },
-  blueIcon: {
-    color: theme.palette.primary.main,
-  },
-}));
 
 const getLevelElementClassName = level => {
   switch (level) {
@@ -68,7 +44,13 @@ const getLevelElementClassName = level => {
   }
 };
 
-function getColumns(classes) {
+function getColumns(theme) {
+  const levelColors = {
+    green: PHARM_GKB_COLOR.green,
+    red: PHARM_GKB_COLOR.red,
+    yellow: PHARM_GKB_COLOR.yellow,
+    blue: theme.palette.primary.main,
+  };
   return [
     {
       id: "variantRsId",
@@ -213,7 +195,7 @@ function getColumns(classes) {
       label: "Direct Drug Target",
       renderCell: ({ isDirectTarget }) => {
         const ICON_NAME = isDirectTarget ? faCircleCheck : faCircleXmark;
-        return <FontAwesomeIcon icon={ICON_NAME} size="lg" className={classes.blueIcon} />;
+        return <FontAwesomeIcon icon={ICON_NAME} size="lg" color={theme.palette.primary.main} />;
       },
     },
     {
@@ -234,7 +216,14 @@ function getColumns(classes) {
         if (evidenceLevel) {
           const levelClass = getLevelElementClassName(evidenceLevel);
           return (
-            <span className={classNames(classes.level, classes[levelClass])}>
+            <span
+              style={{
+                color: "white",
+                padding: theme.spacing(0.5),
+                borderRadius: theme.spacing(0.5),
+                background: levelColors[levelClass],
+              }}
+            >
               Level {evidenceLevel}
             </span>
           );
@@ -282,8 +271,8 @@ function getColumns(classes) {
 type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
-  const classes = useStyles();
-  const columns = getColumns(classes);
+  const theme = useTheme();
+  const columns = getColumns(theme);
   const variables = { ensemblId };
   const request = useQuery(PHARMACOGENOMICS_QUERY, {
     variables,

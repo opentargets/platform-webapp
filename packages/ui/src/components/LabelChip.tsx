@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
+import type { ReactElement } from "react";
 import OTTooltip from "./Tooltip";
-import { ReactElement } from "react";
 
 type LabelChipProps = {
   label?: string;

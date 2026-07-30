@@ -1,14 +1,13 @@
-import { useContext, useState } from "react";
-import { Box, Dialog, DialogContent, DialogTitle, styled } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-
-import GlobalSearchList from "./GlobalSearchList";
-import { defaultEntityFilterState, SearchContext, SearchInputProvider } from "./SearchContext";
-import GlobalSearchInput from "./GlobalSearchInput";
-import GlobalSearchFreeListItem from "./GlobalSearchFreeListItem";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Dialog, DialogContent, DialogTitle, styled } from "@mui/material";
+import { useContext, useState } from "react";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalSearchEntityFilter from "./GlobalSearchEntityFilter";
+import GlobalSearchFreeListItem from "./GlobalSearchFreeListItem";
+import GlobalSearchInput from "./GlobalSearchInput";
+import GlobalSearchList from "./GlobalSearchList";
+import { defaultEntityFilterState, SearchContext, SearchInputProvider } from "./SearchContext";
 
 const EscButton = styled("button")(({ theme }) => ({
   display: "block",
@@ -32,21 +31,27 @@ function GlobalSearchDialog() {
   return (
     <Dialog
       open={open}
-      role="searchbox"
       scroll="paper"
       tabIndex={0}
       onClose={() => {
         setOpen(false);
         setFilterState(defaultEntityFilterState);
       }}
+      // MUI v7 restricts Dialog's own `role` prop to "dialog" | "alertdialog"
+      // (both a TS type and a runtime PropTypes.oneOf check), but this dialog
+      // is intentionally exposed as a searchbox for accessibility. `role`
+      // ends up on the Paper slot internally regardless of which path sets
+      // it, so overriding it via slotProps.paper reaches the same DOM
+      // element without going through Dialog's own restricted prop.
+      slotProps={{ paper: { role: "searchbox" } }}
       sx={{
         "& .MuiDialog-container": {
           alignItems: "start",
           "& .MuiPaper-root": {
             width: "80vw",
             maxWidth: "800px",
-            borderRadius: theme => theme.spacing(0.5),
-            margin: theme => theme.spacing(6),
+            borderRadius: (theme) => theme.spacing(0.5),
+            margin: (theme) => theme.spacing(6),
           },
         },
       }}
@@ -59,8 +64,8 @@ function GlobalSearchDialog() {
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  fontSize: theme => `${theme.spacing(3.5)}`,
-                  color: theme => theme.palette.grey[500],
+                  fontSize: (theme) => `${theme.spacing(3.5)}`,
+                  color: (theme) => theme.palette.grey[500],
                 }}
               >
                 <FontAwesomeIcon icon={faMagnifyingGlass} size="xs" />
