@@ -31,7 +31,9 @@ export {
   DisplayVariantId,
   usePlatformApi,
   useBatchQuery,
-  OtGenomicLocation,
+  GenomicLocation,
+  Box,
+  Typography,
 } from "./ui-index";
 
 // ---- Stubs ----

@@ -61,7 +61,7 @@ components that import platform modules (`Link`, `useConfigContext`, etc.) via a
 rather than the `"ui"` barrel — those bypass the widget stubs in `widget-src/shared/stubs/` and need
 handling at the Vite-plugin level (`createPlatformStubsPlugin` in `vite/widget.config.base.ts`), not
 just a barrel re-export. This bit `PublicationWrapper`/`ConfigurationProvider`/`Link` and
-`OtAsyncTooltip`/`OtGenomicLocation` during the initial migration — grep the section's files for
+`OtAsyncTooltip`/`GenomicLocation` during the initial migration — grep the section's files for
 `^import` and check anything not going through `"ui"`.
 
 ---

@@ -9,10 +9,82 @@
  * Vite plugin in vite.widget.config.ts).
  */
 import type { ReactNode } from "react";
-import { Box } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Autocomplete,
+  Box,
+  ButtonBase,
+  Checkbox,
+  CircularProgress,
+  Collapse,
+  Drawer,
+  Fade,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  GridLegacy,
+  Grow,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  Paper,
+  Skeleton,
+  Slider,
+  Tab,
+  Tabs,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
 import { getConfig } from "@ot/config";
+
+/**
+ * MUI primitives passthrough: refactor/ui-package-mui-facade migrated
+ * sections to import these from the "ui" barrel instead of "@mui/material"
+ * directly. Set here is exactly what's reachable from widget-bundled
+ * sections (grepped `from "ui"` importers) — not the real barrel's full
+ * passthrough list — add more only as new sections actually need them.
+ */
+export {
+  Alert,
+  AlertTitle,
+  Autocomplete,
+  Box,
+  ButtonBase,
+  Checkbox,
+  CircularProgress,
+  Collapse,
+  Drawer,
+  Fade,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  GridLegacy,
+  Grow,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  Paper,
+  Skeleton,
+  Slider,
+  Tab,
+  Tabs,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+};
+
+/** Chip/Button/StyledMUITooltip: real ui-package components (styled MUI wrappers, no heavy deps) */
+export { default as Chip } from "@ot/ui/components/Chip/Chip";
+export { Button } from "@ot/ui/components/Button";
+export { StyledMUITooltip } from "@ot/ui/components/Tooltip";
 
 /**
  * Link: `@ot/ui/components/Link/Link` (the real component's own module path) is
@@ -225,7 +297,7 @@ export { useApolloClient } from "@apollo/client";
 // ── Real components (direct paths, bypass barrel) ────────────────────────────
 export { default as ChipList } from "@ot/ui/components/ChipList";
 export { default as SectionLoader } from "@ot/ui/components/Section/SectionLoader";
-export { default as OtGenomicLocation } from "@ot/ui/components/GenomicLocation";
+export { default as GenomicLocation } from "@ot/ui/components/GenomicLocation";
 export { default as DirectionOfEffectIcon } from "@ot/ui/components/DirectionOfEffectIcon";
 export { default as DirectionOfEffectTooltip } from "@ot/ui/components/DirectionOfEffectTooltip";
 export { default as OtTableSSP } from "@ot/ui/components/OtTable/OtTableSSP";

@@ -162,46 +162,50 @@ export const OTConfigurationContext = undefined;
       if (id === linkComponentPath) {
         return `
 import React from "react";
-import { makeStyles } from "@mui/styles";
-import classNames from "classnames";
+import { styled } from "@mui/material/styles";
 import { getApp } from "@widget-shared/createWidgetEntry";
 import OtAsyncTooltip from "@ot/ui/components/OtAsyncTooltip/OtAsyncTooltip";
 
-const useStyles = makeStyles((theme) => ({
-  base: {
-    fontSize: "inherit",
-    "text-decoration-color": "transparent",
-    "-webkit-text-decoration-color": "transparent",
-  },
-  baseDefault: {
+const shouldForwardProp = (prop) => prop !== "footer" && prop !== "hasTooltip";
+
+const linkVariantStyles = (theme, footer, hasTooltip) => {
+  if (footer)
+    return {
+      color: "white",
+      textDecorationColor: "transparent",
+      WebkitTextDecorationColor: "transparent",
+      "&:hover": {
+        color: theme.palette.primary.light,
+        textDecorationColor: theme.palette.primary.light,
+        WebkitTextDecorationColor: theme.palette.primary.light,
+      },
+      display: "flex",
+      alignItems: "center",
+    };
+  if (hasTooltip)
+    return {
+      color: theme.palette.primary.main,
+      "&:hover": { color: theme.palette.primary.dark },
+      textDecoration: "none",
+    };
+  return {
     color: theme.palette.primary.main,
     "&:hover": {
       color: theme.palette.primary.dark,
-      "text-decoration-color": theme.palette.primary.dark,
-      "-webkit-text-decoration-color": theme.palette.primary.dark,
+      textDecorationColor: theme.palette.primary.dark,
+      WebkitTextDecorationColor: theme.palette.primary.dark,
     },
-  },
-  baseTooltip: {
-    color: theme.palette.primary.main,
-    "&:hover": { color: theme.palette.primary.dark },
-    textDecoration: "none",
-  },
-  baseFooter: {
-    color: "white",
-    "text-decoration-color": "transparent",
-    "-webkit-text-decoration-color": "transparent",
-    "&:hover": {
-      color: theme.palette.primary.light,
-      "text-decoration-color": theme.palette.primary.light,
-      "-webkit-text-decoration-color": theme.palette.primary.light,
-    },
-    display: "flex",
-    alignItems: "center",
-  },
+  };
+};
+
+const StyledA = styled("a", { shouldForwardProp })(({ theme, footer, hasTooltip }) => ({
+  fontSize: "inherit",
+  textDecorationColor: "transparent",
+  WebkitTextDecorationColor: "transparent",
+  ...linkVariantStyles(theme, footer, hasTooltip),
 }));
 
 function Link({ children, to, onClick, footer, tooltip, asyncTooltip, className, ariaLabel }) {
-  const classes = useStyles();
   const ariaLabelProp = ariaLabel ? { "aria-label": ariaLabel } : {};
   const resolvedTo = to && to.startsWith("/") ? "https://platform.opentargets.org" + to : to;
 
@@ -215,17 +219,11 @@ function Link({ children, to, onClick, footer, tooltip, asyncTooltip, className,
   };
 
   const anchor = React.createElement(
-    "a",
+    StyledA,
     {
-      className: classNames(
-        classes.base,
-        {
-          [classes.baseDefault]: !footer && !tooltip,
-          [classes.baseFooter]: footer,
-          [classes.baseTooltip]: tooltip,
-        },
-        className
-      ),
+      footer,
+      hasTooltip: !!tooltip,
+      className,
       href: resolvedTo,
       onClick: handleClick,
       ...ariaLabelProp,
