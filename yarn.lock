@@ -9279,6 +9279,7 @@ __metadata:
     d3: "npm:*"
     express: "npm:^4.21.2"
     graphql: "npm:^15.0.0"
+    polished: "npm:^4.3.1"
     react: "npm:^18.0.0"
     react-dom: "npm:^18.0.0"
     react-router-dom: "npm:6.28.0"
