@@ -7,29 +7,31 @@
  * Usage in the build script (iterates all sections for an entity):
  *   await build(createSectionWidgetConfig(def, { emptyOutDir: i === 0 }))
  */
-import { resolve } from "path";
-import { writeFileSync, mkdirSync } from "node:fs";
+
+import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { resolve } from "node:path";
 import type { UserConfig } from "vite";
-import {
-  ROOT,
-  createWidgetBuildConfig,
-  createUiBarrelStub,
-  createPlatformStubsPlugin,
-} from "./widget.config.base";
 import type { SectionDef } from "../src/sections/registry";
 import { sectionPathToId } from "../src/widgets/index.js";
+import {
+  createPlatformStubsPlugin,
+  createUiBarrelStub,
+  createWidgetBuildConfig,
+} from "./widget.config.base";
 
 /** Generates the IIFE entry code for a section widget. */
 function generateEntryCode(def: SectionDef): string {
-  const paramNames = def.inputParams.map(p => p.name);
+  const paramNames = def.inputParams.map((p) => p.name);
   const isEvidence = def.entity === "evidence";
 
   const extractChecks = paramNames
-    .map(n => `typeof args[${JSON.stringify(n)}] === "string"`)
+    .map((n) => `typeof args[${JSON.stringify(n)}] === "string"`)
     .join(" && ");
   const extractReturn =
-    "{ " + paramNames.map(n => `${JSON.stringify(n)}: args[${JSON.stringify(n)}]`).join(", ") + " }";
+    "{ " +
+    paramNames.map((n) => `${JSON.stringify(n)}: args[${JSON.stringify(n)}]`).join(", ") +
+    " }";
 
   const bodyId = isEvidence
     ? `{ ensgId: props[${JSON.stringify(paramNames[0])}], efoId: props[${JSON.stringify(paramNames[1])}] }`
@@ -44,8 +46,8 @@ import Body from "@ot/sections/${def.sectionPath}/Body";
 import { mountWidget } from "@widget-shared/createWidgetEntry";
 
 mountWidget({
-  appName: ${JSON.stringify("ot-section-" + sectionId)},
-  cacheKey: ${JSON.stringify("ot-" + sectionId)},
+  appName: ${JSON.stringify(`ot-section-${sectionId}`)},
+  cacheKey: ${JSON.stringify(`ot-${sectionId}`)},
   extractArgs: function(args) {
     if (!args) return null;
     if (!(${extractChecks})) return null;
@@ -85,7 +87,7 @@ export function createSectionWidgetConfig(
     "Ot" +
     sectionId
       .split("-")
-      .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
       .join("") +
     "Widget";
 

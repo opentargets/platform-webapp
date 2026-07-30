@@ -60,11 +60,17 @@ const EVIDENCE_INPUT = [
 ] as const;
 
 const CREDIBLE_SET_INPUT = [
-  { name: "studyLocusId", description: "Study locus ID of the credible set (e.g. 28a6eae8368c995192905821ee578ae8)" },
+  {
+    name: "studyLocusId",
+    description: "Study locus ID of the credible set (e.g. 28a6eae8368c995192905821ee578ae8)",
+  },
 ] as const;
 
 const VARIANT_INPUT = [
-  { name: "variantId", description: "Variant ID in chromosome_position_ref_alt format (e.g. 19_44908822_C_T)" },
+  {
+    name: "variantId",
+    description: "Variant ID in chromosome_position_ref_alt format (e.g. 19_44908822_C_T)",
+  },
 ] as const;
 
 const STUDY_INPUT = [

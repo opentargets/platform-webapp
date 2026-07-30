@@ -1,8 +1,8 @@
-import { defineConfig, loadEnv } from "vite";
-import type { UserConfig, Plugin } from "vite";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import { fileURLToPath } from "node:url";
+import type { Plugin, UserConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -91,10 +91,7 @@ export function createUiBarrelStub(stubFile = "widget-src/shared/stubs/ui-index.
 }
 
 export function createPlatformStubsPlugin(): Plugin {
-  const dataDownloaderPath = resolve(
-    MONO_ROOT,
-    "packages/ui/src/components/DataDownloader.tsx"
-  );
+  const dataDownloaderPath = resolve(MONO_ROOT, "packages/ui/src/components/DataDownloader.tsx");
   const otApolloProviderPath = resolve(
     MONO_ROOT,
     "packages/ui/src/providers/OTApolloProvider/OTApolloProvider.tsx"

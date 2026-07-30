@@ -25,9 +25,7 @@ if (!entity || entity === "--help") {
 }
 
 const sections =
-  entity === "all"
-    ? SECTION_REGISTRY
-    : SECTION_REGISTRY.filter(s => s.entity === entity);
+  entity === "all" ? SECTION_REGISTRY : SECTION_REGISTRY.filter((s) => s.entity === entity);
 
 if (sections.length === 0) {
   console.error(`No sections found for entity: ${entity}`);

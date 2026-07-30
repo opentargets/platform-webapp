@@ -10,15 +10,16 @@
  * pixel width on the proxy iframe (which would collapse the layout to the
  * document's current pixel width and trigger a feedback loop).
  */
-import React, { useState } from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "@modelcontextprotocol/ext-apps";
-import { ThemeProvider, CssBaseline } from "@mui/material";
+
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import { MemoryRouter } from "react-router-dom";
+import { App } from "@modelcontextprotocol/ext-apps";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { theme } from "@ot/config";
+import React, { useState } from "react";
+import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 
 // __OT_API_URL__ is injected at build time by Vite's define (from OT_API_URL in .env).
 // window.__OT_API_URL__ can override it at runtime (set by the HTML shell script).
@@ -74,9 +75,7 @@ export function mountWidget<TArgs extends Record<string, unknown>>(
         try {
           // ontoolinput: set BEFORE connect() so we never miss the initial event.
           app.ontoolinput = ({ arguments: rawArgs }) => {
-            const extracted = config.extractArgs(
-              (rawArgs ?? {}) as Record<string, unknown>
-            );
+            const extracted = config.extractArgs((rawArgs ?? {}) as Record<string, unknown>);
             if (extracted) setArgs(extracted);
           };
 

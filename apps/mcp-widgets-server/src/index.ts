@@ -1,7 +1,7 @@
-import express from "express";
-import cors from "cors";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import cors from "cors";
+import express from "express";
 import { createMcpServer } from "./mcp-server.js";
 import { WIDGET_REGISTRY } from "./widgets/index.js";
 
@@ -22,7 +22,7 @@ app.post("/mcp", async (req, res) => {
   if (!transport) {
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: sid => {
+      onsessioninitialized: (sid) => {
         transports.set(sid, transport!);
       },
     });
@@ -38,14 +38,20 @@ app.post("/mcp", async (req, res) => {
 app.get("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   const transport = sessionId ? transports.get(sessionId) : undefined;
-  if (!transport) { res.status(404).json({ error: "Session not found" }); return; }
+  if (!transport) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
   await transport.handleRequest(req, res);
 });
 
 app.delete("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   const transport = sessionId ? transports.get(sessionId) : undefined;
-  if (!transport) { res.status(404).json({ error: "Session not found" }); return; }
+  if (!transport) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
   await transport.handleRequest(req, res);
 });
 
@@ -55,7 +61,7 @@ app.delete("/mcp", async (req, res) => {
 const sandboxProxyRoot = new URL("../../../apps/platform/public", import.meta.url).pathname;
 app.get("/sandbox_proxy.html", (_req, res) => {
   res.setHeader("Content-Type", "text/html");
-  res.sendFile("sandbox_proxy.html", { root: sandboxProxyRoot }, err => {
+  res.sendFile("sandbox_proxy.html", { root: sandboxProxyRoot }, (err) => {
     if (err) res.status(404).send("Not available in this deployment");
   });
 });
@@ -64,7 +70,7 @@ app.get("/sandbox_proxy.html", (_req, res) => {
 app.use(
   "/widgets",
   express.static(new URL("../dist/widgets", import.meta.url).pathname, {
-    setHeaders: res => {
+    setHeaders: (res) => {
       res.setHeader("Access-Control-Allow-Origin", "*");
     },
   })

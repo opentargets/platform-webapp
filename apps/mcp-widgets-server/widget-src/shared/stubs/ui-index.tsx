@@ -8,7 +8,9 @@
  * This stub file replaces those imports at build time (via the stubUiBarrel
  * Vite plugin in vite.widget.config.ts).
  */
-import type { ReactNode } from "react";
+
+import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Alert,
   AlertTitle,
@@ -39,9 +41,8 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
 import { getConfig } from "@ot/config";
+import type { ReactNode } from "react";
 
 /**
  * MUI primitives passthrough: refactor/ui-package-mui-facade migrated
@@ -81,9 +82,9 @@ export {
   Typography,
 };
 
+export { Button } from "@ot/ui/components/Button";
 /** Chip/Button/StyledMUITooltip: real ui-package components (styled MUI wrappers, no heavy deps) */
 export { default as Chip } from "@ot/ui/components/Chip/Chip";
-export { Button } from "@ot/ui/components/Button";
 export { StyledMUITooltip } from "@ot/ui/components/Tooltip";
 
 /**
@@ -119,10 +120,10 @@ export function DataDownloader() {
   return null;
 }
 
+export { default as ObsChart } from "@ot/ui/components/ObsPlot/ObsChart";
 // Real ObsPlot / ObsChart / ObsTooltip — needed for waterfall charts in cell
 // popovers and detail modals. Imported directly (bypass barrel).
 export { default as ObsPlot } from "@ot/ui/components/ObsPlot/ObsPlot";
-export { default as ObsChart } from "@ot/ui/components/ObsPlot/ObsChart";
 export { default as ObsTooltip } from "@ot/ui/components/ObsPlot/ObsTooltip";
 
 /** Tooltip: renders children only (no help icon / tooltip popup) */
@@ -195,7 +196,7 @@ export function ScientificNotation({
   }
   if (number === 0) return <span>0</span>;
   const exp = Math.floor(Math.log10(Math.abs(number)));
-  const mant = (number / Math.pow(10, exp)).toFixed(dp);
+  const mant = (number / 10 ** exp).toFixed(dp);
   return (
     <span>
       {mant} × 10<sup>{exp}</sup>
@@ -244,23 +245,19 @@ export function SummaryItem() {
   return null;
 }
 
-/** SectionItem: real component — shows full section chrome (title, description, body) */
-export { default as SectionItem } from "@ot/ui/components/Section/SectionItem";
-
+export { default as ClinicalRecordDrawer } from "@ot/ui/components/ClinicalReports/ClinicalRecordDrawer";
+export { default as ClinicalReportsMasterDetailFrame } from "@ot/ui/components/ClinicalReports/ClinicalReportsMasterDetailFrame";
+export { default as RecordsCards } from "@ot/ui/components/ClinicalReports/RecordsCards";
 /** HeatmapTable: real component from @ot/ui (direct path, bypassing barrel) */
 export { default as HeatmapTable } from "@ot/ui/components/HeatmapTable/HeatmapTable";
-
 /** OtTable: real component from @ot/ui (direct path, bypassing barrel) */
 export { default as OtTable } from "@ot/ui/components/OtTable/OtTable";
-
+/** SectionItem: real component — shows full section chrome (title, description, body) */
+export { default as SectionItem } from "@ot/ui/components/Section/SectionItem";
 /** useBatchQuery: real hook from @ot/ui (direct path, bypassing barrel) */
 export { default as useBatchQuery } from "@ot/ui/hooks/useBatchQuery";
-
 /** Clinical Indications components — direct paths bypass the ui barrel */
 export { default as useClinicalReportsMasterDetail } from "@ot/ui/hooks/useClinicalReportsMasterDetail";
-export { default as RecordsCards } from "@ot/ui/components/ClinicalReports/RecordsCards";
-export { default as ClinicalReportsMasterDetailFrame } from "@ot/ui/components/ClinicalReports/ClinicalReportsMasterDetailFrame";
-export { default as ClinicalRecordDrawer } from "@ot/ui/components/ClinicalReports/ClinicalRecordDrawer";
 
 /**
  * usePlatformApi: in the real app, calling this with no fragment (as MolecularInteractions
@@ -296,33 +293,33 @@ export { useApolloClient } from "@apollo/client";
 
 // ── Real components (direct paths, bypass barrel) ────────────────────────────
 export { default as ChipList } from "@ot/ui/components/ChipList";
-export { default as SectionLoader } from "@ot/ui/components/Section/SectionLoader";
-export { default as GenomicLocation } from "@ot/ui/components/GenomicLocation";
+export { default as DirectionalityDrawer } from "@ot/ui/components/DirectionalityDrawer";
 export { default as DirectionOfEffectIcon } from "@ot/ui/components/DirectionOfEffectIcon";
 export { default as DirectionOfEffectTooltip } from "@ot/ui/components/DirectionOfEffectTooltip";
+export { default as EllsWrapper } from "@ot/ui/components/EllsWrapper";
+export { default as ErrorBoundary } from "@ot/ui/components/ErrorBoundary";
+export { default as GenomicLocation } from "@ot/ui/components/GenomicLocation";
 export { default as OtTableSSP } from "@ot/ui/components/OtTable/OtTableSSP";
+export { default as SectionLoader } from "@ot/ui/components/Section/SectionLoader";
 export { default as DataTable } from "@ot/ui/components/Table/DataTable";
 export { default as Table } from "@ot/ui/components/Table/Table";
 export { default as TableDrawer } from "@ot/ui/components/Table/TableDrawer";
-export { default as DirectionalityDrawer } from "@ot/ui/components/DirectionalityDrawer";
-export { default as EllsWrapper } from "@ot/ui/components/EllsWrapper";
-export { default as ErrorBoundary } from "@ot/ui/components/ErrorBoundary";
 /** FacetsSelect: no-op stub (only used in excluded sections) */
 export function FacetsSelect() {
   return null;
 }
-export { default as useDebounce } from "@ot/ui/hooks/useDebounce";
 export { default as LabelChip } from "@ot/ui/components/LabelChip";
 export { default as Legend } from "@ot/ui/components/Legend";
 export { default as LongText } from "@ot/ui/components/LongText";
 export { default as MouseModelAllelicComposition } from "@ot/ui/components/MouseModelAllelicComposition";
-export { default as TooltipStyledLabel } from "@ot/ui/components/TooltipStyledLabel";
-export { PaginationActionsComplete } from "@ot/ui/components/Table/TablePaginationActions";
-export { getPage } from "@ot/ui/components/Table/utils";
 export { default as PublicationSummaryLabel } from "@ot/ui/components/PublicationsDrawer/PublicationSummaryLabel";
 export { default as PublicationWrapper } from "@ot/ui/components/PublicationsDrawer/PublicationWrapper";
 export { default as SummaryLoader } from "@ot/ui/components/PublicationsDrawer/SummaryLoader";
+export { PaginationActionsComplete } from "@ot/ui/components/Table/TablePaginationActions";
+export { getPage } from "@ot/ui/components/Table/utils";
+export { default as TooltipStyledLabel } from "@ot/ui/components/TooltipStyledLabel";
 export { default as useBatchDownloader } from "@ot/ui/hooks/useBatchDownloader";
+export { default as useDebounce } from "@ot/ui/hooks/useDebounce";
 /**
  * useConfigContext: the widget has no <OTConfigurationProvider> ancestor (that provider
  * throws without a real Config object, and also wires up a second Apollo client/theme/API
@@ -343,14 +340,30 @@ export function useConfigContext() {
 // provider (e.g. target/MolecularStructure's Viewer.tsx, which manages its own local
 // state and doesn't need shared viewer context) get inert values here — their own
 // code already handles the "no provider" case gracefully (see ViewerLegend.tsx).
-export function ViewerProvider({ children }: { children: React.ReactNode }) { return <>{children}</>; }
-export function ViewerInteractionProvider({ children }: { children: React.ReactNode }) { return <>{children}</>; }
-export function useViewerState() { return {}; }
-export function useViewerDispatch() { return () => {}; }
-export function useViewerInteractionState() { return {}; }
-export function useViewerInteractionDispatch() { return () => {}; }
-export function ViewerLegend() { return null; }
-export function DetailPopover({ children }: { children?: React.ReactNode }) { return <>{children}</>; }
+export function ViewerProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+export function ViewerInteractionProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+export function useViewerState() {
+  return {};
+}
+export function useViewerDispatch() {
+  return () => {};
+}
+export function useViewerInteractionState() {
+  return {};
+}
+export function useViewerInteractionDispatch() {
+  return () => {};
+}
+export function ViewerLegend() {
+  return null;
+}
+export function DetailPopover({ children }: { children?: React.ReactNode }) {
+  return <>{children}</>;
+}
 
 /** DownloadSvgPlot: renders the plot content, omits download controls */
 export function DownloadSvgPlot({

@@ -1,14 +1,14 @@
-import type { WidgetDef } from "./types.js";
 import { SECTION_REGISTRY, type SectionDef } from "../sections/registry.js";
+import type { WidgetDef } from "./types.js";
 
 /** Converts a section path to a kebab-case ID used for bundle filenames and URIs. */
 export function sectionPathToId(sectionPath: string): string {
   return sectionPath.replaceAll("/", "-").toLowerCase();
 }
 
+export { molecularStructureWidget } from "./molecular-structure.js";
 // Re-export for consumers
 export type { WidgetDef } from "./types.js";
-export { molecularStructureWidget } from "./molecular-structure.js";
 
 import { molecularStructureWidget } from "./molecular-structure.js";
 

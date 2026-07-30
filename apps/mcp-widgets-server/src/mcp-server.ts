@@ -1,11 +1,11 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  registerAppTool,
-  registerAppResource,
-  RESOURCE_MIME_TYPE,
-} from "@modelcontextprotocol/ext-apps/server";
-import { z } from "zod";
 import { readFile } from "node:fs/promises";
+import {
+  RESOURCE_MIME_TYPE,
+  registerAppResource,
+  registerAppTool,
+} from "@modelcontextprotocol/ext-apps/server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { WIDGET_REGISTRY } from "./widgets/index.js";
 
 const PUBLIC_API_URL = "https://api.platform.opentargets.org/api/v4/graphql";
@@ -62,7 +62,7 @@ export function createMcpServer(): McpServer {
 
     const params = def.inputParams ?? [def.inputParam];
     const inputSchema = Object.fromEntries(
-      params.map(p => [p.name, z.string().describe(p.description)])
+      params.map((p) => [p.name, z.string().describe(p.description)])
     ) as Parameters<typeof registerAppTool>[2]["inputSchema"];
 
     registerAppTool(
@@ -73,7 +73,7 @@ export function createMcpServer(): McpServer {
         inputSchema,
         _meta: { ui: { resourceUri } },
       },
-      async input => {
+      async (input) => {
         console.error(`[mcp] tool called: ${def.toolName}`, input);
         return {
           content: [{ type: "text" as const, text: def.successMessage }],
@@ -85,25 +85,31 @@ export function createMcpServer(): McpServer {
     // Resource handler — serves the HTML shell. The widget's Apollo client fetches
     // data directly from the iframe once mounted; CSP connectDomains allowlists the
     // GraphQL API plus any extra origins the widget needs (e.g. AlphaFold, UniProt).
-    registerAppResource(server, def.title, resourceUri, { mimeType: RESOURCE_MIME_TYPE }, async () => {
-      console.error(`[mcp] resource READ: ${resourceUri}`);
-      const html = await makeWidgetShell(def.bundleFile, def.title);
-      const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
-      return {
-        contents: [
-          {
-            uri: resourceUri,
-            mimeType: RESOURCE_MIME_TYPE,
-            text: html,
-            _meta: {
-              ui: {
-                csp: { connectDomains: [apiUrl, ...(def.extraConnectDomains ?? [])] },
+    registerAppResource(
+      server,
+      def.title,
+      resourceUri,
+      { mimeType: RESOURCE_MIME_TYPE },
+      async () => {
+        console.error(`[mcp] resource READ: ${resourceUri}`);
+        const html = await makeWidgetShell(def.bundleFile, def.title);
+        const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
+        return {
+          contents: [
+            {
+              uri: resourceUri,
+              mimeType: RESOURCE_MIME_TYPE,
+              text: html,
+              _meta: {
+                ui: {
+                  csp: { connectDomains: [apiUrl, ...(def.extraConnectDomains ?? [])] },
+                },
               },
             },
-          },
-        ],
-      };
-    });
+          ],
+        };
+      }
+    );
   }
 
   return server;
