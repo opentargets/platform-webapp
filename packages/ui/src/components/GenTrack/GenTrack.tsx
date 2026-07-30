@@ -842,10 +842,10 @@ function GenTrackInner({
                 {(InnerTooltip || crosshairs) && canvasWidth > 0 && (
                   <Box sx={{
                     position: "absolute",
-                    top: 0,
+                    bottom: 0,
                     left: px(yInfoWidth + yInfoGap),
                     width: px(canvasWidth),
-                    height: "100%",
+                    height: px(innerScalesRefHolder.current?.canvasHeight ?? canvasHeight),
                     zIndex: 20,
                     pointerEvents: "none",
                   }}>
