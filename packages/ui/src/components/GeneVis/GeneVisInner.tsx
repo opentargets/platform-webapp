@@ -49,10 +49,13 @@ function groupTargetsByBiotype(targets) {
   });
 }
 
-function GeneVisInner({
-  fixedTracks,
-  zoomableTracks,
+function GeneVisInner(props: {
+  initialZoom?: [number, number];
+  fixedTracks?: any;
+  zoomableTracks?: any;
+  [key: string]: any;
 }) {
+  const { initialZoom, fixedTracks, zoomableTracks } = props;
 
   const navigate = useNavigate();
   const genTrackState = useGenTrackState();
@@ -273,6 +276,7 @@ function GeneVisInner({
         panZoomTopGap={0}
         panZoomBottomGap={4}
         paddingBottom={0}
+        initialZoom={initialZoom}
         Tooltip={UnifiedTooltip}
         tooltipProps={{ xAnchor: "adapt", yAnchor: "boxTop", tooltipWidth: TOOLTIP_WIDTH }}
         InnerTooltip={UnifiedTooltip}

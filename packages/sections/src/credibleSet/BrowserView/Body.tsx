@@ -6,7 +6,6 @@ import Description from "./Description";
 import { useEffect, useState } from "react";
 import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
 import {table5HChunkSize } from "@ot/constants";
-import { extent } from "d3";
 
 type BodyProps = {
 	id: string;
@@ -41,7 +40,9 @@ const chromosomeInfo = [
   { chromosome: "Y", length: 57227415 },
 ];
 
-const REGION_WIDTH = 2_000_000;
+const MAX_REGION_WIDTH = 5_000_000;
+const REGION_PADDING = 1_000_000;
+const PAN_ZOOM_PADDING = 250_000;
 
 function Body({ id, entity }: BodyProps) {
   const [combinedData, setCombinedData] = useState<any[] | null>(null);
@@ -62,39 +63,58 @@ function Body({ id, entity }: BodyProps) {
 
   const data = request.data?.credibleSet;
 
-  // get region: chromosome, start, end
-  const xExtremes = [];
-  let chromosome, start, end;
-  
+  // get region: chromosome, start, end, and initial pan-zoom window
+  let chromosome: string | undefined;
+  let start: number | undefined;
+  let end: number | undefined;
+  let initialZoom: [number, number] | undefined;
+
   if (data) {
     chromosome = data.locus.rows[0].variant.chromosome;
-    xExtremes.push(  // variants
-      extent(data.locus.rows.map(({ variant }) => variant.position))
+    const positions = [
+      ...data.locus.rows.map(({ variant }) => variant.position),
+      ...data.l2GPredictions.rows.flatMap(({ target: { genomicLocation }}) => [
+        genomicLocation.start,
+        genomicLocation.end,
+      ]),
+    ];
+    const earliestPosition = Math.min(...positions);
+    const highestPosition = Math.max(...positions);
+
+    const regionWidth = Math.min(
+      highestPosition - earliestPosition + REGION_PADDING,
+      MAX_REGION_WIDTH
     );
-    xExtremes.push(  // genes (L2G)
-      data.l2GPredictions.rows.map(({ target: { genomicLocation }}) => {
-        return [genomicLocation.start, genomicLocation.end];
-      })
-    );
-    [start, end] = extent(xExtremes.flat(Infinity));
-    const center = Math.round((start + end) / 2);
-    start = center - REGION_WIDTH / 2;
-    end = center + REGION_WIDTH / 2;
+    const center = Math.round((earliestPosition + highestPosition) / 2);
+
+    start = center - regionWidth / 2;
+    end = center + regionWidth / 2;
     if (start < 0) {
-      end -= start; 
+      end -= start;
       start = 0;
     } else {
       const chromosomeLength = chromosomeInfo.find(obj => obj.chromosome === chromosome).length;
       if (end > chromosomeLength) {
+        const overflow = end - chromosomeLength;
         end = chromosomeLength;
-        start -= end - chromosomeLength;
+        start -= overflow;
       }
     }
+
+    let zoomStart = start + PAN_ZOOM_PADDING;
+    let zoomEnd = end - PAN_ZOOM_PADDING;
+    if (zoomStart >= zoomEnd) {
+      zoomStart = start;
+      zoomEnd = end;
+    }
+    initialZoom = [zoomStart, zoomEnd];
   }
 
   // !! LOAD LOCAL CHROMOSOME DATA AND MERGE TARGETS DATA INTO THE API DATA !! 
   useEffect(() => {
     if (!chromosome || start === undefined || end === undefined) return;
+    const regionStart = start;
+    const regionEnd = end;
 
     let cancelled = false;
 
@@ -108,7 +128,7 @@ function Body({ id, entity }: BodyProps) {
           ? arr.filter((item: any) => {
               const gs = Number(item.start);
               const ge = Number(item.end);
-              return Number.isFinite(gs) && Number.isFinite(ge) && ge >= start && gs <= end;
+              return Number.isFinite(gs) && Number.isFinite(ge) && ge >= regionStart && gs <= regionEnd;
             })
           : [];
 
@@ -181,6 +201,7 @@ function Body({ id, entity }: BodyProps) {
               chromosome={chromosome}
               xMin={start}
               xMax={end}
+              initialZoom={initialZoom}
               geneLabel={target => `${target.genomicLocation.strand === -1 ? "← " : ""}${
                 target.approvedSymbol ?? target.id}${
                 target.genomicLocation.strand === 1 ? " →" : ""}`
