@@ -68,6 +68,8 @@ function Body({ id, entity }: BodyProps) {
   let start: number | undefined;
   let end: number | undefined;
   let initialZoom: [number, number] | undefined;
+  let earliestPosition: number | undefined;
+  let highestPosition: number | undefined;
 
   if (data) {
     chromosome = data.locus.rows[0].variant.chromosome;
@@ -78,8 +80,8 @@ function Body({ id, entity }: BodyProps) {
         genomicLocation.end,
       ]),
     ];
-    const earliestPosition = Math.min(...positions);
-    const highestPosition = Math.max(...positions);
+    earliestPosition = Math.min(...positions);
+    highestPosition = Math.max(...positions);
 
     const regionWidth = Math.min(
       highestPosition - earliestPosition + REGION_PADDING,
@@ -103,7 +105,13 @@ function Body({ id, entity }: BodyProps) {
 
     let zoomStart = start + PAN_ZOOM_PADDING;
     let zoomEnd = end - PAN_ZOOM_PADDING;
-    if (zoomStart >= zoomEnd) {
+    if (
+      zoomStart >= zoomEnd ||
+      earliestPosition === undefined ||
+      highestPosition === undefined ||
+      zoomStart > earliestPosition ||
+      zoomEnd < highestPosition
+    ) {
       zoomStart = start;
       zoomEnd = end;
     }
