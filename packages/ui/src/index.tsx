@@ -107,5 +107,5 @@ export * from "./providers/ViewerInteractionProvider";
 export * from "./providers/GenTrackProvider";
 export * from "./providers/GenTrackTooltipProvider";
 export { default as GenTrack } from "./components/GenTrack/GenTrack";
-export { DataSprite, DataRect, DataText, DataVLine, type ScalesRef } from "./components/GenTrack";
+export { DataSprite, DataRect, DataText, DataVLine, RegionBoundaryOverlay, type ScalesRef } from "./components/GenTrack";
 export { default as GeneVis } from "./components/GeneVis/GeneVis";

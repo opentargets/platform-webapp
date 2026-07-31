@@ -5,6 +5,7 @@ import {
   GenTrack,
   useGenTrackState,
   useGenTrackTooltipDispatch,
+  RegionBoundaryOverlay,
 } from "ui";
 import { Box, useTheme } from "@mui/material";
 import { useMeasure } from "@uidotdev/usehooks";
@@ -292,7 +293,12 @@ function GeneVisInner(props: {
           },
         }}
         onInnerScalesReady={(ref) => { innerScalesRef.current = ref.current; }}
-        innerOverlayGraphics={data?.variant ? <DataVLineOverlay position={data.variant.position} scalesRef={innerScalesRef} color={primaryColor} /> : null}
+        innerOverlayGraphics={
+          <>
+            <RegionBoundaryOverlay scalesRef={innerScalesRef} />
+            {data?.variant ? <DataVLineOverlay position={data.variant.position} scalesRef={innerScalesRef} color={primaryColor} /> : null}
+          </>
+        }
       />
     </Box>
   );
