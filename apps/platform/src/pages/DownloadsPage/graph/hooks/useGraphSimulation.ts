@@ -279,13 +279,22 @@ export const useGraphSimulation = ({
       if (!c) return;
       const w = c.clientWidth || 800;
       const h = c.clientHeight || 600;
+      svg.attr('viewBox', `0 0 ${w} ${h}`);
       simulation.force('center', d3.forceCenter(w / 2, h / 2));
       simulation.alpha(0.3).restart();
     };
     window.addEventListener('resize', handleResize);
 
+    // The container's own height can change after mount independently of any
+    // window resize - e.g. the two-card-rows height it's sized to (see
+    // useGridRowsHeight) resolves asynchronously from an initial fallback -
+    // so the simulation must re-fit to that too, not just to window resizes.
+    const containerResizeObserver = new ResizeObserver(handleResize);
+    containerResizeObserver.observe(container);
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      containerResizeObserver.disconnect();
       simulation.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

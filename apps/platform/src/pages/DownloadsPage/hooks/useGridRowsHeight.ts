@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Measures the pixel height spanning the first `rows` rows of a CSS grid's
@@ -17,11 +17,11 @@ import { useEffect, useRef, useState } from 'react';
  * Returns null until the container is mounted and has children to measure.
  */
 export const useGridRowsHeight = (rows: number) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const containerRef = useCallback((node: HTMLDivElement | null) => setContainer(node), []);
   const [height, setHeight] = useState<number | null>(null);
 
   useEffect(() => {
-    const container = containerRef.current;
     if (!container) return undefined;
 
     const measure = () => {
@@ -67,7 +67,7 @@ export const useGridRowsHeight = (rows: number) => {
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
-  }, [rows]);
+  }, [rows, container]);
 
   return { containerRef, height };
 };

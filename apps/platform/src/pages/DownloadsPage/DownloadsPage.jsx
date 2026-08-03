@@ -218,7 +218,7 @@ function DownloadsPage() {
             sx={{
               position: { lg: "sticky" },
               top: { lg: 72 },
-              height: { xs: 420, lg: twoRowsHeight ?? 420 },
+              height: { xs: 420, md: twoRowsHeight ?? 420 },
             }}
           >
             <GraphVisualization
