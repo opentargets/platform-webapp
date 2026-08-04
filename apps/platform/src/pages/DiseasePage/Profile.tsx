@@ -5,6 +5,7 @@ import {
   PlatformApiProvider,
   SectionContainer,
   StickyProfileHeader,
+  SummaryCategoryProvider,
   SummaryContainer,
   SectionsRenderer,
   SummaryRenderer,
@@ -67,19 +68,21 @@ function Profile({ efoId, name, Icon, externalLinks }: ProfileProps) {
       }}
     >
       <ProfileHeader />
-      <StickyProfileHeader
-        title={name}
-        Icon={Icon}
-        externalLinks={externalLinks}
-        widgets={DISEASE_WIDGETS}
-      />
-      <SummaryContainer>
-        <SummaryRenderer widgets={DISEASE_WIDGETS} />
-      </SummaryContainer>
+      <SummaryCategoryProvider>
+        <StickyProfileHeader
+          title={name}
+          Icon={Icon}
+          externalLinks={externalLinks}
+          widgets={DISEASE_WIDGETS}
+        />
+        <SummaryContainer>
+          <SummaryRenderer widgets={DISEASE_WIDGETS} />
+        </SummaryContainer>
 
-      <SectionContainer>
-        <SectionsRenderer id={efoId} label={name} entity={DISEASE} widgets={DISEASE_WIDGETS} />
-      </SectionContainer>
+        <SectionContainer>
+          <SectionsRenderer id={efoId} label={name} entity={DISEASE} widgets={DISEASE_WIDGETS} />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Open Targets Validation CRISPR",
   shortName: "VL",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.otValidationSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

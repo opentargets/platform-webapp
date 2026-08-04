@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "IntOGen",
   shortName: "IO",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.intOgen?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

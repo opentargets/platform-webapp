@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "IMPC",
   shortName: "IM",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.impc?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

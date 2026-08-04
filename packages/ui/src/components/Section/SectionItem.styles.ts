@@ -1,25 +1,16 @@
-import { Avatar, Box, CardContent, styled, Typography } from "@mui/material";
+import { Box, CardContent, styled, Typography } from "@mui/material";
 
 export const CardHeaderContainer = styled(Box)({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: "1rem",
-  padding: "1rem",
+  padding: "0.75rem 1rem",
 });
 
 export const StyledCardContent = styled(CardContent)(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.grey[300]}`,
   minHeight: 36,
-}));
-
-// NOTE: under the old JSS makeStyles, `avatarHasData`'s `!important` background
-// always won over `avatarError`'s non-important one (both were applied together
-// whenever hasData was true), so the avatar never actually turned "error" colored.
-// Preserved as-is here rather than fixed, to keep this migration a pure refactor.
-export const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  color: "white",
-  backgroundColor: theme.palette.primary.dark,
 }));
 
 export const StyledTitle = styled("div", {

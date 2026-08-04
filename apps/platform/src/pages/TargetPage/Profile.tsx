@@ -5,6 +5,7 @@ import {
   PlatformApiProvider,
   SectionContainer,
   StickyProfileHeader,
+  SummaryCategoryProvider,
   SummaryContainer,
   summaryUtils,
   SectionsRenderer,
@@ -70,18 +71,20 @@ function Profile({ ensgId, symbol, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider entity={TARGET} query={TARGET_PROFILE_QUERY} variables={{ ensgId }}>
       <ProfileHeader />
-      <StickyProfileHeader
-        title={symbol}
-        Icon={Icon}
-        externalLinks={externalLinks}
-        widgets={TARGET_WIDGETS}
-      />
-      <SummaryContainer>
-        <SummaryRenderer widgets={TARGET_WIDGETS} />
-      </SummaryContainer>
-      <SectionContainer>
-        <SectionsRenderer id={ensgId} label={symbol} entity={TARGET} widgets={TARGET_WIDGETS} />
-      </SectionContainer>
+      <SummaryCategoryProvider>
+        <StickyProfileHeader
+          title={symbol}
+          Icon={Icon}
+          externalLinks={externalLinks}
+          widgets={TARGET_WIDGETS}
+        />
+        <SummaryContainer>
+          <SummaryRenderer widgets={TARGET_WIDGETS} />
+        </SummaryContainer>
+        <SectionContainer>
+          <SectionsRenderer id={ensgId} label={symbol} entity={TARGET} widgets={TARGET_WIDGETS} />
+        </SectionContainer>
+      </SummaryCategoryProvider>
     </PlatformApiProvider>
   );
 }

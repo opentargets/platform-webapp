@@ -5,6 +5,7 @@ import {
   Field,
   Tooltip,
   Box,
+  Chip,
 } from "ui";
 import { useTheme } from "@mui/material/styles";
 import TargetDescription from "./TargetDescription";
@@ -90,28 +91,31 @@ function ProfileHeader() {
           descriptions={targetDescription}
           targetId={data?.target.id}
         />
-        {data?.target.genomicLocation && (
-          <GenomicLocation geneLoc={data?.target.genomicLocation} />
-        )}
-        {geneInfo
-          .filter(gi => gi.isVisible)
-          .map(e => (
-            <Box
-              key={e.label}
-              sx={{
-                whiteSpace: "nowrap",
-                p: "1px 5px",
-                color: theme => theme.palette.grey[600],
-                border: theme => `1px solid ${theme.palette.grey[600]}`,
-                borderRadius: "5px",
-                width: "min-content",
-                mt: 1,
-                typography: "body2",
-              }}
-            >
-              <Tooltip title={e.tooltip}>{e.label}</Tooltip>
-            </Box>
-          ))}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+          {geneInfo
+            .filter(gi => gi.isVisible)
+            .map(e => (
+              <Tooltip key={e.label} title={e.tooltip}>
+                <Chip
+                  label={e.label}
+                  variant="filled"
+                  sx={{
+                    height: "auto",
+                    px: "8px",
+                    py: "2px",
+                    borderRadius: 2,
+                    fontSize: "0.875rem",
+                    bgcolor: "primary.dark",
+                    color: "common.white",
+                    "& .MuiChip-label": { p: 0 },
+                  }}
+                />
+              </Tooltip>
+            ))}
+          {data?.target.genomicLocation && (
+            <GenomicLocation geneLoc={data?.target.genomicLocation} />
+          )}
+        </Box>
       </>
       <ProfileChipList title="Synonyms" loading={loading}>
         {synonyms}

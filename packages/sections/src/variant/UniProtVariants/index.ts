@@ -5,6 +5,7 @@ export const definition = {
   id: "uniprot_variants",
   name: "UniProt variants",
   shortName: "UV",
+  category: "Disease-Variant",
   hasData: (data: Variant) => {
     return (
       // @ts-expect-error TODO: fix this

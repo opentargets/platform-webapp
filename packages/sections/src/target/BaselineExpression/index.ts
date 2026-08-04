@@ -5,6 +5,7 @@ export const definition = {
   id: "baselineExpression",
   name: "Baseline Expression",
   shortName: "BE",
+  category: "Target",
   hasData: (data: TargetData) => {
     return (
       (data.baselineExpression?.count || 0) > 0 || // main widget tab

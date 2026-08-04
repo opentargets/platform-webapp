@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Orphanet",
   shortName: "ON",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.orphanetSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

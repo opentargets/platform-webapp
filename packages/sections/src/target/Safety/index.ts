@@ -5,6 +5,7 @@ export const definition = {
   id: "safety",
   name: "Safety",
   shortName: "S",
+  category: "Target",
   hasData: (data: TargetData) => (data.safetyLiabilities?.length || 0) > 0,
 };
 

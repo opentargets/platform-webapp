@@ -1,16 +1,9 @@
-import { CardHeader, GridLegacy, LinearProgress, Skeleton } from "@mui/material";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
+import CategoryAvatar from "../CategoryAvatar";
 import PartnerLockIcon from "../PartnerLockIcon";
 import { SCROLL_OFFSET } from "../Section/scrollOffset";
-import {
-  StyledAvatar,
-  StyledCard,
-  StyledSubheader,
-  StyledSubtitle,
-  StyledTitle,
-} from "./SummaryItem.styles";
-import { createShortName } from "./utils";
+import { StyledChip, StyledLabel } from "./SummaryItem.styles";
 
 function SummaryItem<T>({
   definition,
@@ -22,9 +15,9 @@ function SummaryItem<T>({
   subText?: React.ReactNode;
 }) {
   const { loading, error, data } = request;
-  const shortName = createShortName(definition);
   const hasData = !loading && !error && data && definition.hasData(data);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClickSection = () => {
     scroller.scrollTo(definition.id, {
@@ -33,50 +26,36 @@ function SummaryItem<T>({
       smooth: true,
       offset: SCROLL_OFFSET,
     });
-    navigate({ hash: `#${definition.id}` }, { replace: true, preventScrollReset: true });
+    // Preserve the existing search params (e.g. ?category=) - navigate()
+    // with only `hash` set would otherwise drop them.
+    navigate(
+      { hash: `#${definition.id}`, search: location.search },
+      { replace: true, preventScrollReset: true }
+    );
   };
 
   return (
-    <GridLegacy item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <StyledCard
-        data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
+    <StyledChip
+      data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
+      hasData={hasData}
+      error={!!error}
+      onClick={handleClickSection}
+      sx={{ opacity: loading ? 0.6 : 1 }}
+    >
+      <CategoryAvatar
+        className="summaryChipIcon"
+        definition={definition}
         hasData={hasData}
-        onClick={handleClickSection}
-        elevation={0}
-        variant="outlined"
-      >
-        <CardHeader
-          avatar={
-            <StyledAvatar className="summaryItemAvatar" hasData={hasData} error={!!error}>
-              {shortName}
-            </StyledAvatar>
-          }
-          title={
-            <>
-              <StyledTitle
-                className="summaryItemTitle"
-                hasData={hasData}
-                error={!!error}
-                variant="body2"
-              >
-                {loading && <Skeleton width={100} />}
-                {!loading && definition.name} {definition.isPrivate ? <PartnerLockIcon /> : null}
-              </StyledTitle>
-              {subText ? (
-                <StyledSubtitle className="summaryItemSubtitle" hasData={hasData} variant="caption">
-                  {subText}
-                </StyledSubtitle>
-              ) : null}
-
-              <StyledSubheader className="summaryItemSubheader">
-                {error && "An error occurred while loading this section"}
-              </StyledSubheader>
-            </>
-          }
-        />
-        {loading && <LinearProgress />}
-      </StyledCard>
-    </GridLegacy>
+        error={!!error}
+        size={38}
+        shape="square"
+        filled={false}
+      />
+      <StyledLabel className="summaryChipLabel" hasData={hasData} error={!!error}>
+        {definition.name}
+      </StyledLabel>
+      {definition.isPrivate && <PartnerLockIcon />}
+    </StyledChip>
   );
 }
 

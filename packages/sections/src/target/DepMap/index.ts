@@ -5,6 +5,7 @@ export const definition = {
   id: "depMapEssentiality",
   name: "Cancer DepMap",
   shortName: "DM",
+  category: "Target-Disease",
   hasData: (data: TargetData) => (data.depMapEssentiality?.length || 0) > 0,
 };
 

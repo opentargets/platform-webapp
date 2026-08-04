@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Open Targets CRISPR",
   shortName: "OT",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.OtCrisprSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

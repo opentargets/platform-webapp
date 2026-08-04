@@ -4,6 +4,7 @@ export const definition = {
   id: "Indications",
   name: "Indications",
   shortName: "I",
+  category: ["Target-Disease", "Drug"],
   hasData: (data) => data?.indications?.count > 0,
 };
 

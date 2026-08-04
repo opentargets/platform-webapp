@@ -2,15 +2,14 @@ import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
 import { VIEW } from "@ot/constants";
 import { type ReactNode, useEffect, useState } from "react";
 import { Element } from "react-scroll";
+import CategoryAvatar from "../CategoryAvatar";
 import ErrorBoundary from "../ErrorBoundary";
 import PartnerLockIcon from "../PartnerLockIcon";
 import { SummaryLoader } from "../PublicationsDrawer";
-import { createShortName } from "../Summary/utils";
 import SectionError from "./SectionError";
 import {
   CardHeaderContainer,
   NoData,
-  StyledAvatar,
   StyledCardContent,
   StyledChip,
   StyledDescription,
@@ -57,7 +56,6 @@ function SectionItem({
   defaultView = VIEW.table,
 }: SectionItemProps): ReactNode {
   const { loading, error, data } = request;
-  const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
   const [showDelayLoadingMessage, setShowDelayLoadingMessage] = useState(false);
@@ -106,7 +104,14 @@ function SectionItem({
             <ErrorBoundary>
               <CardHeaderContainer>
                 {/* AVATAR */}
-                <StyledAvatar>{shortName}</StyledAvatar>
+                <CategoryAvatar
+                  definition={definition}
+                  hasData={hasData}
+                  error={!!error}
+                  size={44}
+                  shape="square"
+                  filled={false}
+                />
                 {/* HEADER, SUB-HEADER & CHIP */}
                 <Box sx={{ flex: 1 }}>
                   <StyledTitle

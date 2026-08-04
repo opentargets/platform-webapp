@@ -5,6 +5,7 @@ export const definition = {
   id: "gwas_credible_sets",
   name: "GWAS Credible Sets",
   shortName: "GW",
+  category: "Disease-Variant",
   hasData: (data: Study) => (data.credibleSets?.count || 0) > 0,
 };
 

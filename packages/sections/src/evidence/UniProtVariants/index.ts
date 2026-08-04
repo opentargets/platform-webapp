@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "UniProt variants",
   shortName: "UV",
+  category: "Disease-Variant",
   hasData: (data: EvidenceData) => (data.uniprotVariantsSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

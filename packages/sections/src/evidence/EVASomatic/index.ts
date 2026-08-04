@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "EVA somatic",
   shortName: "ES",
+  category: ["Target-Disease", "Disease-Variant"],
   hasData: (data: EvidenceData) => (data.eva_somatic?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };
