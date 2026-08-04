@@ -695,7 +695,7 @@ function GenTrackInner({
                       height: "100%",
                       left: `${((scalesRef.current?.viewStart ?? xMin) - xMin) / (xMax - xMin) * canvasWidth}px`,
                       width: `${((scalesRef.current?.viewEnd ?? xMax) - (scalesRef.current?.viewStart ?? xMin)) / (xMax - xMin) * canvasWidth}px`,
-                      backgroundColor: "#e8f0fe",
+                      backgroundColor: "#f0f5fe",
                       pointerEvents: "none",
                       zIndex: 0,
                     }}

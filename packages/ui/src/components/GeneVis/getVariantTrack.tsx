@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 import { scaleLinear, axisLeft, select } from "d3";
 import { Box, Typography, useTheme } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { DataSprite, DataText, DataHLine, DataBackground, DataVLine } from "../GenTrack";
+import { DataSprite, DataText, DataVLine, DataBackground } from "../GenTrack";
 import { Container } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
 import YDetails from "./YDetails";
 import { useGenTrackTooltipDispatch } from "ui";
+import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
 
 const VARIANT_TRACK_HEIGHT = 67;
 const H_LINE_COLOR = 0xdddddd;
@@ -110,41 +111,49 @@ export function getVariantTrack({ data }: { data: any }) {
 
       return (
         <Container>
-          <DataBackground scalesRef={scalesRef} trackId={trackId} color="#e8f0fe" alpha={1} />
+          <DataBackground scalesRef={scalesRef} trackId={trackId} color="#f0f5fe" alpha={1} />
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={1} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0.5} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0} color={H_LINE_COLOR} /> */}
           
           {/* all variants */}
-          {data?.locus.rows.map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => {
-            const isLead = variant.position === data.variant.position;
-            return (
-              <DataSprite
-                key={variant.id}
-                shape={isLead ? "circle" : "ring"}
-                strokePixels={1.5}
-                scalesRef={scalesRef}
-                trackId="variants"
-                x={variant.position}
-                y={dynamicYMax - posteriorProbability}
-                radiusPixels={4}
-                tint={primaryColor}
-                eventMode="static"
-                pointerover={(e: any) => {
-                  const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
-                  const pointerPageY = nativeEvent?.clientY != null
-                    ? nativeEvent.clientY + window.scrollY
-                    : undefined;
-                  genTrackTooltipDispatch({ type: "setDatum", value: variant });
-                  genTrackTooltipDispatch({ type: "setGlobalXY", value: { x: e.global.x, y: e.global.y, pointerPageY } });
-                }}
-                pointerout={() => {
-                  genTrackTooltipDispatch({ type: "setDatum", value: null });
-                  genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
-                }}
-              />
-            );
-          })}
+          {[...data?.locus.rows ?? []]
+            .sort((a: any, b: any) => {
+              const rankA = PREDICTED_CONSEQUENCE_LOOKUP[a.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
+              const rankB = PREDICTED_CONSEQUENCE_LOOKUP[b.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
+              return rankB - rankA;
+            })
+            .map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => {
+              const isLead = variant.position === data.variant.position;
+              const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? primaryColor;
+              return (
+                <DataSprite
+                  key={variant.id}
+                  shape="circle"
+                  strokePixels={1.5}
+                  scalesRef={scalesRef}
+                  trackId="variants"
+                  x={variant.position}
+                  y={dynamicYMax - posteriorProbability}
+                  radiusPixels={4}
+                  tint={consequenceColor}
+                  eventMode="static"
+                  alpha={0.85}
+                  pointerover={(e: any) => {
+                    const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
+                    const pointerPageY = nativeEvent?.clientY != null
+                      ? nativeEvent.clientY + window.scrollY
+                      : undefined;
+                    genTrackTooltipDispatch({ type: "setDatum", value: variant });
+                    genTrackTooltipDispatch({ type: "setGlobalXY", value: { x: e.global.x, y: e.global.y, pointerPageY } });
+                  }}
+                  pointerout={() => {
+                    genTrackTooltipDispatch({ type: "setDatum", value: null });
+                    genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
+                  }}
+                />
+              );
+            })}
 
           {/* lead variant label */}
           {data?.variant && (

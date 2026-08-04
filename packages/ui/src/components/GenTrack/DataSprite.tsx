@@ -187,7 +187,9 @@ export function DataSprite({
       y={initialScreenY}
       visible={isPositioned}
       {...spriteProps}
-      eventMode={isInnerDragging ? "none" : spriteProps.eventMode}
+      {...((isInnerDragging || spriteProps.eventMode !== undefined) && {
+        eventMode: isInnerDragging ? "none" : spriteProps.eventMode,
+      })}
       {...(resolvedAnchor !== undefined && { anchor: resolvedAnchor })}
     />
   );
