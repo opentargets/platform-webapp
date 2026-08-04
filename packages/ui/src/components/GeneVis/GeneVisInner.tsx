@@ -6,15 +6,16 @@ import {
   useGenTrackState,
   useGenTrackTooltipDispatch,
   RegionBoundaryOverlay,
+  DataVLine,
 } from "ui";
-import { Box, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { useMeasure } from "@uidotdev/usehooks";
 import XAxis from "./XAxis";
 import XAxisLabel from "./XAxisLabel";
 import YDetails from "./YDetails";
 import { getGenesTracks } from "./getGenesTracks";
 import { getGeneMinimapTracks } from "./getGeneMinimapTracks";
-import { getVariantTrack, DataVLineOverlay } from "./getVariantTrack";
+import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
 import UnifiedTooltip, { TOOLTIP_WIDTH } from "./UnifiedTooltip";
@@ -258,8 +259,6 @@ function GeneVisInner(props: {
   }
 
   const innerScalesRef = useRef<any>(null);
-  const theme = useTheme();
-  const primaryColor = parseInt(theme.palette.primary.main.replace('#', ''), 16);
 
   return (
     <Box ref={widthRef} sx={{mr: 3}}>
@@ -294,10 +293,12 @@ function GeneVisInner(props: {
         }}
         onInnerScalesReady={(ref) => { innerScalesRef.current = ref.current; }}
         innerOverlayGraphics={
-          <>
-            <RegionBoundaryOverlay scalesRef={innerScalesRef} />
-            {data?.variant ? <DataVLineOverlay position={data.variant.position} scalesRef={innerScalesRef} color={primaryColor} /> : null}
-          </>
+          <RegionBoundaryOverlay scalesRef={innerScalesRef} />
+        }
+        innerUnderlayGraphics={
+          data?.variant ? (
+            <DataVLine scalesRef={innerScalesRef} x={data.variant.position} lineWidth={1} />
+          ) : null
         }
       />
     </Box>

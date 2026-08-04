@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { scaleLinear, axisLeft, select } from "d3";
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { DataSprite, DataText, DataVLine, DataBackground } from "../GenTrack";
 import { Container } from '@pixi/react';
@@ -88,10 +88,6 @@ function VariantsYInfo({ yMax }: { yMax: number }) {
   );
 }
 
-export function DataVLineOverlay({ position, scalesRef, color }: { position: number; scalesRef: any; color: number }) {
-  return <DataVLine scalesRef={scalesRef} x={position} color={color} alpha={0.75} lineWidth={1} />;
-}
-
 export function getVariantTrack({ data }: { data: any }) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
   
@@ -106,8 +102,6 @@ export function getVariantTrack({ data }: { data: any }) {
     yMax: dynamicYMax,
     YInfo: () => <VariantsYInfo yMax={dynamicYMax} />,
     Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {  
-      const theme = useTheme();
-      const primaryColor = theme.palette.primary.main;
 
       return (
         <Container>
@@ -115,7 +109,14 @@ export function getVariantTrack({ data }: { data: any }) {
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={1} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0.5} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0} color={H_LINE_COLOR} /> */}
-          
+
+          {/* lead variant vertical line — confined to this track's own band so it only
+              sits above this track's background and below this track's own sprites;
+              the full-canvas segment is drawn separately via innerUnderlayGraphics */}
+          {data?.variant && (
+            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} confineToTrack />
+          )}
+
           {/* all variants */}
           {[...data?.locus.rows ?? []]
             .sort((a: any, b: any) => {
@@ -128,7 +129,7 @@ export function getVariantTrack({ data }: { data: any }) {
               return rankB - rankA;
             })
             .map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => {
-              const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? primaryColor;
+              const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? 0x888888;
               return (
                 <DataSprite
                   key={variant.id}

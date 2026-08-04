@@ -454,6 +454,8 @@ interface GenTrackInnerProps {
   crosshairs?: boolean;
   overlayGraphics?: React.ReactNode;
   innerOverlayGraphics?: React.ReactNode;
+  underlayGraphics?: React.ReactNode;
+  innerUnderlayGraphics?: React.ReactNode;
   onInnerScalesReady?: (scalesRef: React.RefObject<ScalesRef>) => void;
   _isInner?: boolean;
   _suppressTooltip?: boolean;
@@ -487,6 +489,8 @@ function GenTrackInner({
   crosshairs = true,
   overlayGraphics,
   innerOverlayGraphics,
+  underlayGraphics,
+  innerUnderlayGraphics,
   onInnerScalesReady,
   _isInner = false,
   _suppressTooltip = false,
@@ -708,6 +712,11 @@ function GenTrackInner({
                   options={{ backgroundAlpha: 0, autoStart: false, antialias: true }}
                   onMount={app => { app.stage.eventMode = "static"; }}
                 >
+                  {underlayGraphics && (
+                    <Container>
+                      {underlayGraphics}
+                    </Container>
+                  )}
                   <Container ref={_isInner ? _innerTracksContainerRef : null}>
                     <Tracks
                       tracks={tracks}
@@ -831,6 +840,7 @@ function GenTrackInner({
                   Tooltip={InnerTooltip}
                   tooltipProps={innerTooltipProps}
                   overlayGraphics={innerOverlayGraphics}
+                  underlayGraphics={innerUnderlayGraphics}
                   _isInner={true}
                   _scalesRef={scalesRef}
                   _innerTracksContainerRef={innerTracksContainerRef}

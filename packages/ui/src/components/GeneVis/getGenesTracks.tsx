@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Container } from '@pixi/react';
 import { TextStyle } from "pixi.js";
-import { DataSprite, DataText, DataBackground, DataGeneBox } from "../GenTrack";
+import { DataSprite, DataText, DataBackground, DataGeneBox, DataVLine } from "../GenTrack";
 import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
@@ -89,9 +89,18 @@ export function getGenesTracks({
     rowHeightMap,
     rowYOffsets,
     Track: ({ trackId, scalesRef }: { trackId: string; isInner: boolean; scalesRef: RefObject<ScalesRef> }) => {
+
       return (
         <Container>
           <DataBackground scalesRef={scalesRef} trackId={trackId} color={grey[100]} alpha={1} />
+
+          {/* lead variant vertical line — confined to this track's own band so it only
+              sits above this track's background and below this track's own gene boxes;
+              the full-canvas segment is drawn separately via innerUnderlayGraphics */}
+          {data?.variant && (
+            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} lineWidth={1} confineToTrack />
+          )}
+
           {targets.map(gene => {
             const { target } = gene;
             const rowIndex = geneToRow[target.id];

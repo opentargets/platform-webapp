@@ -156,20 +156,27 @@ interface DataVLineProps {
   color?: number;
   alpha?: number;
   lineWidth?: number;
+  confineToTrack?: boolean;
 }
 
 /**
- * A full-canvas-height vertical line at a given data-space x value.
- * Draws in canvas-absolute y coordinates (spanning all tracks) by compensating
- * for the track Container's y offset. Redraws imperatively on each tick.
+ * A vertical line at a given data-space x value.
+ * By default spans the full canvas height (all tracks), drawing in canvas-absolute
+ * y coordinates by compensating for the track Container's y offset.
+ * When confineToTrack is true (requires trackId), the line is instead confined to
+ * just that track's own y-band — useful for drawing a segment that sits above a
+ * track's own background but below that track's own foreground content, without
+ * painting over/under sibling tracks whose Containers paint before/after this one.
+ * Redraws imperatively on each tick.
  */
 export function DataVLine({
   scalesRef,
   trackId = '',
   x: dataX,
-  color = 0x000000,
-  alpha = 0.4,
+  color = 0xbbbbbb,
+  alpha = 1,
   lineWidth = 1,
+  confineToTrack = false,
 }: DataVLineProps) {
   const gRef = useRef<PixiGraphics | null>(null);
 
@@ -186,16 +193,25 @@ export function DataVLine({
       return;
     }
 
-    // The Container this Graphics lives in is positioned at containerY in canvas space.
-    // To draw from canvas top to bottom we subtract that offset.
     const yScaleInfo = scales.yScales.get(trackId);
-    const containerY = yScaleInfo ? yScaleInfo.containerY : 0;
 
-    const bottomY = (scales.tracksHeight ?? scales.canvasHeight) - containerY;
+    let topY: number;
+    let bottomY: number;
+    if (confineToTrack) {
+      if (!yScaleInfo) return;
+      topY = yScaleInfo.yOffset;
+      bottomY = yScaleInfo.yOffset + yScaleInfo.height;
+    } else {
+      // The Container this Graphics lives in is positioned at containerY in canvas space.
+      // To draw from canvas top to bottom we subtract that offset.
+      const containerY = yScaleInfo ? yScaleInfo.containerY : 0;
+      topY = -containerY;
+      bottomY = (scales.tracksHeight ?? scales.canvasHeight) - containerY;
+    }
 
     g.clear();
     g.lineStyle(lineWidth, color, alpha);
-    g.moveTo(screenX, -containerY);
+    g.moveTo(screenX, topY);
     g.lineTo(screenX, bottomY);
   });
 

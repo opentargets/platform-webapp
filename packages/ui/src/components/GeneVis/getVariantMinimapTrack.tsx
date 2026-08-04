@@ -1,4 +1,3 @@
-import { useTheme } from "@mui/material";
 import { DataSprite, DataVLine } from "../GenTrack";
 import { Container } from '@pixi/react';
 import { useGenTrackTooltipDispatch } from "ui";
@@ -14,15 +13,11 @@ export function getVariantMinimapTrack({ data }: { data: any }) {
     height: VARIANT_MINIMAP_TRACK_HEIGHT,
     // paddingTop: 14,
     Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {
-      const theme = useTheme();
-      const primaryColor = theme.palette.primary.main;
-
-      const primaryHex = parseInt(primaryColor.replace('#', ''), 16);
 
       return (
         <Container>
           {data?.variant && (
-            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} color={primaryHex} alpha={1} lineWidth={2} />
+            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} color={0x444444} lineWidth={2} />
           )}
           {/* all variants at fixed y=50 */}
           {[...data?.locus.rows ?? []]
@@ -36,7 +31,7 @@ export function getVariantMinimapTrack({ data }: { data: any }) {
               return rankB - rankA;
             })
             .map(({ variant }: { variant: any }) => {
-              const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? primaryColor;
+              const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? 0x888888
               return (
                 <DataSprite
                   key={variant.id}
