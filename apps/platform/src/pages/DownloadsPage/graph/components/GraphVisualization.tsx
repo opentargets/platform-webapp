@@ -146,9 +146,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
       </Box>
 
       {/* Compact tooltip that follows the pointer while hovering a node */}
-      {hoveredNode && hoveredNode.id !== selectedNodeId && (
-        <GraphTooltip node={hoveredNode} position={hoveredNode.position} />
-      )}
+      {hoveredNode && <GraphTooltip node={hoveredNode} position={hoveredNode.position} />}
     </Box>
   );
 };

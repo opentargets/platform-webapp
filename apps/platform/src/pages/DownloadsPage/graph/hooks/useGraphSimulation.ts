@@ -14,7 +14,7 @@
 
 import { useLayoutEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { tintHex } from '../../categoryColors';
+import { lightenHex } from '../../categoryColors';
 import { getDefaultLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
 import { forceIsolatedToClusterPeriphery, forceCluster } from '../utils/forces';
 import { computeFitTransform } from '../utils/fitTransform';
@@ -144,7 +144,7 @@ export const useGraphSimulation = ({
         return g;
       });
 
-    const fillOf = (d: GraphNodeDatum) => tintHex(strokeOf(d), 0.14);
+    const fillOf = (d: GraphNodeDatum) => lightenHex(strokeOf(d), 0.25);
 
     node
       .select('circle')

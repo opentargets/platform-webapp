@@ -169,13 +169,11 @@ function DownloadsPage() {
         <Box
           sx={{
             display: "grid",
-            // lg covers smaller laptop screens (e.g. a 14" MacBook, ~1200-1536px)
-            // where the graph gets the larger 60% share; xl+ (larger monitors)
-            // reverts to cards getting the larger 60% share.
+            // Graph gets a 30% share lg and down, then settles to a fixed
+            // 25% share from xl upward; cards take the rest.
             gridTemplateColumns: {
-              xs: "1fr",
-              lg: "minmax(320px, 2fr) minmax(420px, 3fr)",
-              xl: "minmax(420px, 1.5fr) minmax(320px, 1fr)",
+              xs: "minmax(0, 7fr) minmax(0, 3fr)",
+              xl: "minmax(420px, 3fr) minmax(320px, 1fr)",
             },
             gap: 3,
             alignItems: "start",
@@ -188,7 +186,7 @@ function DownloadsPage() {
               // Narrower cards column on lg (smaller laptops) only fits 2 comfortably.
               gridTemplateColumns: {
                 xs: "repeat(auto-fill, minmax(280px, 1fr))",
-                lg: "repeat(2, minmax(0, 1fr))",
+                lg: "repeat(3, minmax(0, 1fr))",
                 xl: "repeat(auto-fill, minmax(280px, 1fr))",
               },
               gap: 2,
@@ -218,6 +216,12 @@ function DownloadsPage() {
             sx={{
               position: { lg: "sticky" },
               top: { lg: 72 },
+              // Sticky positioning always creates a new stacking context, so
+              // without an explicit z-index here this panel's own z-index:auto
+              // context loses to DownloadsFilter's sticky bar (z-index: 100)
+              // above it - trapping the graph's tooltip (z-index: 1300) behind
+              // it no matter how high the tooltip's own z-index is set.
+              zIndex: { lg: 101 },
               height: { xs: 420, md: twoRowsHeight ?? 420 },
             }}
           >

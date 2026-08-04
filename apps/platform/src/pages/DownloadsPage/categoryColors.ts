@@ -12,13 +12,13 @@
  */
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Target-Disease': '#3E5C8A',
-  Target: '#2E7D62',
-  Disease: '#3489CA',
-  Drug: '#B5613C',
-  Genetics: '#4C9E9A',
-  Ontology: '#A0688F',
-  Literature: '#B08A2E',
+  'Target-Disease': '#6929c4',
+  Target: '#005d5d',
+  Disease: '#9f1853',
+  Drug: '#570408',
+  Genetics: '#009d9a',
+  Ontology: '#b28600',
+  Literature: '#002d9c',
 };
 
 const OVERFLOW_COLOR = '#757575';
@@ -33,6 +33,16 @@ export const tintHex = (hex: string, alpha = 0.12): string => {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+/** Lighten a hex color by mixing it toward white, returning an opaque rgb() - unlike
+ * `tintHex`, nothing behind this fill (e.g. graph edges) shows through. */
+export const lightenHex = (hex: string, ratio = 0.14): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = (channel: number) => Math.round(channel + (255 - channel) * (1 - ratio));
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 };
 
 export default CATEGORY_COLORS;

@@ -43,16 +43,31 @@ const GraphTooltip: React.FC<GraphTooltipProps> = ({ node, position, sx = {} }) 
         sx={{
           px: 1.25,
           py: 0.75,
+          maxWidth: 280,
           borderLeft: `3px solid ${color}`,
-          whiteSpace: 'nowrap',
         }}
       >
-        <Typography variant="body2" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+        <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
           {node.label}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {node.type}
         </Typography>
+        {node.description && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: '-webkit-box',
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              color: 'text.secondary',
+              mt: 0.5,
+            }}
+          >
+            {node.description}
+          </Typography>
+        )}
       </Card>
     </Box>
   );

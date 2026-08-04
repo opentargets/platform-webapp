@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { getCategoryColor, tintHex } from "./categoryColors";
 
 /** Shared by both card-action buttons so Schema and Access Data always match in width and height */
-const cardActionButtonSx = { gap: 1, minHeight: 40 };
+const cardActionButtonSx = { gap: 1, minHeight: 40,  "& .MuiButton-startIcon": { margin: 0 } };
 
 interface DownloadsCardProps {
   data: Record<string, unknown>;
@@ -156,7 +156,7 @@ function DownloadsCard({
           </Box>
         </Box>
       </CardContent>
-      <CardActions
+      <Box
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -178,7 +178,7 @@ function DownloadsCard({
             Access Data
           </Button>
         </Link>
-      </CardActions>
+      </Box>
     </Card>
   );
 }

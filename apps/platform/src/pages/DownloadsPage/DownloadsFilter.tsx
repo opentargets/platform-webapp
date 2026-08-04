@@ -73,7 +73,16 @@ function DownloadsFilter({
       }}
     >
       <DownloadsSearchInput sx={{ width: 220, flexShrink: 0 }} />
-
+      <div>
+        <Typography
+          component="span"
+          variant="body1"
+          color="text.secondary"
+          id="category-filter-label"
+          sx={{ whiteSpace: 'nowrap', marginLeft: 1, marginRight: 1 }}
+        >
+          Filter by category:
+        </Typography>
       {state.allUniqueCategories.map(category => {
         const active = state.selectedFilters.includes(category);
         const color = getCategoryColor(category);
@@ -96,6 +105,7 @@ function DownloadsFilter({
           />
         );
       })}
+      </div>
 
       {connectionFilter && (
         <Chip

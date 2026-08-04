@@ -35,8 +35,8 @@ export const useHoverHighlight = ({
       if (!hoverNode) {
         nodeSel.classed('hover-faded', false);
         linkSel
-          .classed('hover-faded', false)
-          .classed('hover-highlighted', false)
+        .classed('hover-faded', false)
+        .classed('hover-highlighted', false)
           .attr('stroke', EDGE_COLOR)
           .attr('stroke-opacity', 0.6);
         return;
