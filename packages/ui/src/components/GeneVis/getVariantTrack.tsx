@@ -119,12 +119,15 @@ export function getVariantTrack({ data }: { data: any }) {
           {/* all variants */}
           {[...data?.locus.rows ?? []]
             .sort((a: any, b: any) => {
+              const aIsLead = a.variant.position === data.variant.position;
+              const bIsLead = b.variant.position === data.variant.position;
+              if (aIsLead) return 1;
+              if (bIsLead) return -1;
               const rankA = PREDICTED_CONSEQUENCE_LOOKUP[a.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
               const rankB = PREDICTED_CONSEQUENCE_LOOKUP[b.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
               return rankB - rankA;
             })
             .map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => {
-              const isLead = variant.position === data.variant.position;
               const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? primaryColor;
               return (
                 <DataSprite
@@ -138,7 +141,7 @@ export function getVariantTrack({ data }: { data: any }) {
                   radiusPixels={4}
                   tint={consequenceColor}
                   eventMode="static"
-                  alpha={0.85}
+                  alpha={0.9}
                   pointerover={(e: any) => {
                     const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
                     const pointerPageY = nativeEvent?.clientY != null
