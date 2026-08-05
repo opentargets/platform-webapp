@@ -4,7 +4,6 @@ import { Sprite, useTick, useApp } from '@pixi/react';
 import { Sprite as PixiSprite, Graphics as PixiGraphics, Texture } from 'pixi.js';
 import type { RefObject } from 'react';
 import type { ScalesRef } from './ScalesContext';
-import { getHoverBoxColor } from '../GeneVis/helpers';
 
 const _rectTextureCache = new Map<any, Texture>();
 
@@ -29,8 +28,7 @@ interface DataGeneBoxProps {
   labelCenter: number;      // label center x in genomic coords
   y: number;                // box top y in data coords
   height: number;           // box height in data coords
-  biotype: string;          // gene biotype for hover color
-  isL2G?: boolean;
+  hoverBoxColor?: number;    // color for the hover highlight box
   pointerover?: (e: any) => void;
   pointerout?: (e: any) => void;
   pointertap?: (e: any) => void;
@@ -47,8 +45,7 @@ export function DataGeneBox({
   labelCenter,
   y,
   height,
-  biotype,
-  isL2G = false,
+  hoverBoxColor,
   pointerover,
   pointerout,
   pointertap,
@@ -57,8 +54,8 @@ export function DataGeneBox({
   const spriteRef = useRef<PixiSprite | null>(null);
   const texture = getOrCreateRectTexture(app);
 
-  // Get pale hover color from centralized palette
-  const hoverTint = getHoverBoxColor(biotype, isL2G);
+  // Color for the hover highlight box
+  const hoverTint = hoverBoxColor ?? 0xcccccc;
 
   const tooltipState = useGenTrackTooltipState() as any;
   const isMyGeneSticky = tooltipState?.stickyLabelCenter !== null &&

@@ -19,16 +19,6 @@ import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
 import UnifiedTooltip, { TOOLTIP_WIDTH } from "./UnifiedTooltip";
-import { GENE_COLORS } from "./helpers";
-
-// Map biotype to color keys
-const getBiotypeKey = (biotype: string): keyof typeof GENE_COLORS => {
-  if (biotype === "protein_coding") return "protein_coding";
-  if (biotype === "processed_transcript") return "processed_transcript";
-  if (biotype === "pseudogene") return "pseudogene";
-  if (biotype === "rna") return "rna";
-  return "other";
-};
 
 const BIOTYPE_DISPLAY_NAMES = {
   protein_coding: "Protein coding",
@@ -122,10 +112,6 @@ function GeneVisInner(props: {
       const targets = groupedTargets[biotype];
       if (!targets || targets.length === 0) continue;
 
-      const biotypeKey = getBiotypeKey(biotype);
-      const color = GENE_COLORS[biotypeKey].main;
-      const nonL2GColor = biotypeKey === 'protein_coding' ? GENE_COLORS.protein_coding.nonL2G : undefined;
-
       // YInfo component for this biotype
       const TrackYInfo = () => (
         <YDetails
@@ -181,7 +167,7 @@ function GeneVisInner(props: {
       // Add minimap track with variable row heights
       fixedTrackList.push(getGeneMinimapTracks({
         geneToRow: minimapGeneToRow,
-        color,
+        color: 0x555555,
         biotype,
         id: `genes-minimap-${biotype}`,
         YInfo: TrackYInfo,
@@ -190,7 +176,7 @@ function GeneVisInner(props: {
         trackHeight: minimapFinalTrackHeight,
         paddingTop: minimapPadding,
         labeledIds: minimapLabeledIds,
-        nonL2GColor,
+        nonL2GColor: 0x555555,
         highlightIds: new Set(l2gGeneIds),
       }));
 
@@ -243,7 +229,6 @@ function GeneVisInner(props: {
       // Add zoomable detail track
       innerTrackList.push(getGenesTracks({
         geneToRow: zoomableGeneToRow,
-        color,
         biotype,
         id: `genes-${biotype}`,
         YInfo: TrackYInfo,
@@ -252,7 +237,6 @@ function GeneVisInner(props: {
         trackHeight: zoomableFinalTrackHeight,
         paddingTop: zoomablePadding,
         labeledIds: zoomableLabeledIds,
-        nonL2GColor,
         highlightIds: new Set(l2gGeneIds),
       }));
     }

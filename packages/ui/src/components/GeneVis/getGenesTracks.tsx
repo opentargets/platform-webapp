@@ -6,14 +6,17 @@ import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
 import { grey } from "@mui/material/colors";
-import { GENE_COLORS } from "./helpers";
+
+const L2G_GENE_COLOR = 0x138160;
+const L2G_HOVER_BOX_COLOR = 0xC8E6C9;
+const NON_L2G_GENE_COLOR = 0x555555;
+const NON_L2G_HOVER_BOX_COLOR = 0xe0e0e0;
 
 const DEFAULT_ROW_HEIGHT = 28;
 const DEFAULT_EXON_HEIGHT = 10;
 
 export function getGenesTracks({
     geneToRow,
-    color,
     biotype,
     id,
     YInfo,
@@ -23,7 +26,6 @@ export function getGenesTracks({
     trackHeight: explicitTrackHeight,
     paddingTop: explicitPaddingTop,
     labeledIds = new Set(),
-    nonL2GColor,
     highlightIds = new Set(),
   }) {
   const genTrackState = useGenTrackState();
@@ -109,7 +111,8 @@ export function getGenesTracks({
             const showGeneLabel = labeledIds.has(target.id);
 
             const isL2G = highlightIds.has(target.id);
-            const geneColor = (nonL2GColor && !isL2G) ? nonL2GColor : color;
+            const geneColor = isL2G ? L2G_GENE_COLOR : NON_L2G_GENE_COLOR;
+            const hoverBoxColor = isL2G ? L2G_HOVER_BOX_COLOR : NON_L2G_HOVER_BOX_COLOR;
 
             // Compute exon span for intron line and label positioning
             const exons = target.canonicalExons ?? [];
@@ -153,8 +156,7 @@ export function getGenesTracks({
                   labelCenter={labelCenter}
                   y={boxY}
                   height={boxHeight}
-                  biotype={target.biotype || 'other'}
-                  isL2G={isL2G}
+                  hoverBoxColor={hoverBoxColor}
                   pointerover={(e: any) => {
                     const scales = scalesRef.current;
                     const ysi = trackId ? scales?.yScales.get(trackId) : undefined;
@@ -219,7 +221,7 @@ export function getGenesTracks({
                       wordWrap: false,
                     })}
                     {...(isL2G ? {
-                      backgroundColor: GENE_COLORS.protein_coding.hoverBox,
+                      backgroundColor: L2G_HOVER_BOX_COLOR,
                       backgroundPaddingX: 3,
                       backgroundPaddingY: 0,
                     } : {})}
