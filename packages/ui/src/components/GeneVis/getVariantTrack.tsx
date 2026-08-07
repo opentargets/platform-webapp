@@ -148,12 +148,15 @@ export function getVariantTrack({ data }: { data: any }) {
                     const pointerPageY = nativeEvent?.clientY != null
                       ? nativeEvent.clientY + window.scrollY
                       : undefined;
+                    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY };
                     genTrackTooltipDispatch({ type: "setDatum", value: variant });
-                    genTrackTooltipDispatch({ type: "setGlobalXY", value: { x: e.global.x, y: e.global.y, pointerPageY } });
+                    genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
+                    genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
                   }}
                   pointerout={() => {
                     genTrackTooltipDispatch({ type: "setDatum", value: null });
                     genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
+                    genTrackTooltipDispatch({ type: "setHover", value: null });
                   }}
                 />
               );
