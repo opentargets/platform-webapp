@@ -2,13 +2,14 @@ import { Box, Skeleton, Divider, Typography, Chip } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLazyQuery } from "@apollo/client";
 import { useEffect } from "react";
-import { DisplayVariantId, OtGenomicLocation } from "../..";
+import { DisplayVariantId, OtGenomicLocation, Link } from "../..";
 import { useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { useGenTrackState } from "../../providers/GenTrackProvider";
 import { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY } from "../OtAsyncTooltip/utils/asyncTooltipUtil";
 import { getEntityIcon, getEntityDescription } from "../OtAsyncTooltip/utils/asyncTooltipUtil";
 import { naLabel } from "@ot/constants";
 import { GenomicLocationPresentationType } from "@ot/constants";
+import { identifiersOrgLink } from "@ot/utils";
 import HeatmapTable from "../HeatmapTable/HeatmapTable";
 import L2G_QUERY from "../../components/HeatmapTable/Locus2GeneQuery.gql";
 import TooltipTable from "../TooltipTable";
@@ -225,6 +226,18 @@ function UnifiedTooltip() {
                   {typeof variantLocus?.logBF === "number"
                     ? variantLocus.logBF.toPrecision(3)
                     : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Predicted consequence">
+                  {data?.mostSevereConsequence ? (
+                    <Link
+                      external
+                      to={identifiersOrgLink("SO", data.mostSevereConsequence.id.slice(3))}
+                    >
+                      {data.mostSevereConsequence.label.replace(/_/g, " ")}
+                    </Link>
+                  ) : (
+                    naLabel
+                  )}
                 </TooltipRow>
               </TooltipTable>
             </Box>
