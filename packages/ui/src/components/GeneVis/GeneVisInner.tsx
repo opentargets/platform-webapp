@@ -19,6 +19,7 @@ import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
 import UnifiedTooltip, { TOOLTIP_WIDTH } from "./UnifiedTooltip";
+import { TextMetrics, TextStyle } from "pixi.js";
 
 const BIOTYPE_DISPLAY_NAMES = {
   protein_coding: "Protein coding",
@@ -29,6 +30,15 @@ const BIOTYPE_DISPLAY_NAMES = {
 };
 
 const BIOTYPE_ORDER = ["protein_coding", "rna", "pseudogene", "processed_transcript", "other"];
+const geneLabelStyle = new TextStyle({ align: "center", fill: "#000", fontSize: 10.5, fontWeight: "100", wordWrap: false });
+const L2G_LABEL_PADDING = 6;
+
+function getGeneLabelText(gene: any, score: number | undefined) {
+  const leftArrow = gene.target.genomicLocation.strand === -1 ? "← " : "";
+  const rightArrow = gene.target.genomicLocation.strand === 1 ? " →" : "";
+  const name = gene.target.approvedSymbol || gene.target.id;
+  return score !== undefined ? `${leftArrow}${name}: ${score.toFixed(3)}${rightArrow}` : `${leftArrow}${name}${rightArrow}`;
+}
 
 function groupTargetsByBiotype(targets) {
   return Object.groupBy(targets, gene => {
@@ -189,14 +199,20 @@ function GeneVisInner(props: {
       const zoomablePriorityIds = Array.from(
         targets.filter((g: { target: { id: string } }) => l2gGeneIds.has(g.target.id)).map((g: { target: { id: string } }) => g.target.id)
       ) as string[];
+      const zoomableLabelWidths = Object.fromEntries((biotype === "protein_coding" ? targets : []).map((gene: any) => {
+        const score = data?.l2GPredictions?.rows.find((row: any) => row.target.id === gene.target.id)?.score;
+        const textWidth = TextMetrics.measureText(getGeneLabelText(gene, score), geneLabelStyle).width;
+        return [gene.target.id, textWidth + (l2gGeneIds.has(gene.target.id) ? L2G_LABEL_PADDING : 0)];
+      }));
 
       // Compute packing for zoomable track
       const zoomableGeneToRow = packIntervals(targets, {
         bpPerPixel,
-        pixelGap: 1,
+        pixelGap: 3,
         pixelGapCenterToCenter: zoomableConfig.pixelGapCenterToCenter,
         priorityIds: zoomablePriorityIds,
         labeledIds: Array.from(zoomableLabeledIds),
+        labelWidthPixelsById: zoomableLabelWidths,
       });
 
       // Build zoomable row heights
@@ -214,13 +230,14 @@ function GeneVisInner(props: {
       let zoomableCurrentYOffset = 0;
       const zoomableTallHeight = zoomableConfig.detailRowHeight;
       const zoomableShortHeight = Math.max(16, zoomableTallHeight / 2 + 2);
+      const zoomableRowGap = 1;
 
       for (let r = 0; r < zoomableNRows; r++) {
         const rowHasLabels = zoomableRowsWithLabels.has(r);
         const rowHeight = rowHasLabels ? zoomableTallHeight : zoomableShortHeight;
         zoomableRowHeightMap[r] = rowHeight;
         zoomableRowYOffsets[r] = zoomableCurrentYOffset;
-        zoomableCurrentYOffset += rowHeight;
+        zoomableCurrentYOffset += rowHeight + (r < zoomableNRows - 1 ? zoomableRowGap : 0);
       }
       const zoomableTrackHeight = zoomableCurrentYOffset;
       const zoomableFinalTrackHeight = Math.max(zoomableTrackHeight, 20);

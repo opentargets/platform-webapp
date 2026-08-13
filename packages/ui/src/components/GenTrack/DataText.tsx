@@ -32,6 +32,11 @@ interface DataTextProps {
   backgroundAlpha?: number;
   backgroundPaddingX?: number;
   backgroundPaddingY?: number;
+  /**
+   * Resolves a label's x position in screen coordinates from the live viewport.
+   * This avoids React updates while the user pans or zooms.
+   */
+  getScreenX?: (args: { scales: ScalesRef; textWidth: number }) => number;
 }
 
 export function DataText({ 
@@ -48,6 +53,7 @@ export function DataText({
   backgroundAlpha = 1,
   backgroundPaddingX = 0,
   backgroundPaddingY = 0,
+  getScreenX,
 }: DataTextProps) {
   const app = useApp();
   const textRef = useRef<PixiText | null>(null);
@@ -60,14 +66,19 @@ export function DataText({
     const scales = scalesRef.current;
     if (!t || !scales) return;
 
-    const screenX = dataX * scales.xScale + scales.xOffset;
+    const screenX = getScreenX
+      ? getScreenX({ scales, textWidth: t.width })
+      : dataX * scales.xScale + scales.xOffset;
     const yScaleInfo = trackId ? scales.yScales.get(trackId) : undefined;
     const screenY = yScaleInfo
       ? dataY * yScaleInfo.yScale + yScaleInfo.yOffset
       : dataY;
 
-    // Cull if outside canvas bounds
-    const isVisible = screenX + t.width > 0 && screenX < scales.canvasWidth;
+    // Cull using the actual text bounds, including a non-default anchor.
+    const anchorX = anchor?.[0] ?? 0;
+    const textLeft = screenX - anchorX * t.width;
+    const textRight = textLeft + t.width;
+    const isVisible = textRight > 0 && textLeft < scales.canvasWidth;
     t.visible = isVisible;
     t.x = screenX;
     t.y = screenY;
@@ -76,7 +87,6 @@ export function DataText({
     const bg = bgRef.current;
     if (bg && hasBg) {
       bg.visible = isVisible;
-      const anchorX = anchor?.[0] ?? 0;
       const anchorY = anchor?.[1] ?? 0;
       bg.x = screenX - anchorX * t.width - backgroundPaddingX;
       bg.y = screenY - anchorY * t.height - backgroundPaddingY;

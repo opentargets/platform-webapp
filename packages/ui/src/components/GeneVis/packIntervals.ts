@@ -28,6 +28,8 @@ export function packIntervals(
     previousLayout?: Record<string, number>; // for stability
     priorityIds?: string[]; // high priority gene IDs to place in earliest rows
     labeledIds?: string[]; // gene IDs that have labels - center gap only applies around these
+    priorityPixelGapCenterToCenter?: number; // larger centre gap whenever either gene is high priority
+    labelWidthPixelsById?: Record<string, number>; // measured label widths for exact footprint packing
   }
 ): PackResult {
   const {
@@ -36,38 +38,58 @@ export function packIntervals(
     bpPerPixel = 1,
     previousLayout = {},
     priorityIds = [],
-    labeledIds = []
+    labeledIds = [],
+    priorityPixelGapCenterToCenter = pixelGapCenterToCenter,
+    labelWidthPixelsById = {},
   } = options;
   const prioritySet = new Set(priorityIds);
   const labeledSet = new Set(labeledIds);
 
   const gapBp = pixelGap * bpPerPixel;
   const centerGapBp = pixelGapCenterToCenter * bpPerPixel;
+  const priorityCenterGapBp = priorityPixelGapCenterToCenter * bpPerPixel;
 
-  const annotated = intervals.map((d, i) => ({
-    ...d,
-    _index: i,
-    _start: d.target.genomicLocation.start,
-    _end: d.target.genomicLocation.end,
-    _center: (d.target.genomicLocation.start + d.target.genomicLocation.end) / 2,
-    _preferredRow: previousLayout[d.target.id],
-    _isPriority: prioritySet.has(d.target.id),
-    _hasLabel: labeledSet.has(d.target.id)
-  }));
+  const annotated = intervals.map((d, i) => {
+    const exons = d.target.canonicalExons ?? [];
+    const intronStart = exons.length > 0
+      ? Math.min(...exons.map((exon: { start: number }) => exon.start))
+      : d.target.genomicLocation.start;
+    const intronEnd = exons.length > 0
+      ? Math.max(...exons.map((exon: { end: number }) => exon.end))
+      : d.target.genomicLocation.end;
+    const center = (intronStart + intronEnd) / 2;
+    const labelWidth = labelWidthPixelsById[d.target.id];
+    const labelHalfWidth = labelWidth === undefined ? 0 : labelWidth * bpPerPixel / 2;
+
+    return {
+      ...d,
+      _index: i,
+      _start: Math.min(intronStart, center - labelHalfWidth),
+      _end: Math.max(intronEnd, center + labelHalfWidth),
+      _center: center,
+      _preferredRow: previousLayout[d.target.id],
+      _isPriority: prioritySet.has(d.target.id),
+      _hasLabel: labeledSet.has(d.target.id),
+      _hasMeasuredLabel: labelWidth !== undefined,
+    };
+  });
 
   const idToRow: PackResult = {};
 
   // Track all intervals placed in each row for gap detection
-  type PlacedInterval = { start: number; end: number; center: number; hasLabel: boolean };
+  type PlacedInterval = { start: number; end: number; center: number; hasLabel: boolean; isPriority: boolean; hasMeasuredLabel: boolean };
   const rowIntervals: PlacedInterval[][] = [];
 
   // Helper to check center gap between two intervals
   const checkCenterGap = (
-    hasLabel1: boolean, center1: number,
-    hasLabel2: boolean, center2: number
+    hasLabel1: boolean, center1: number, isPriority1: boolean,
+    hasLabel2: boolean, center2: number, isPriority2: boolean,
+    hasMeasuredLabel1: boolean, hasMeasuredLabel2: boolean,
   ): boolean => {
+    if (hasMeasuredLabel1 || hasMeasuredLabel2) return true;
     if (!hasLabel1 && !hasLabel2) return true;
-    return Math.abs(center2 - center1) >= centerGapBp;
+    const requiredGap = isPriority1 || isPriority2 ? priorityCenterGapBp : centerGapBp;
+    return Math.abs(center2 - center1) >= requiredGap;
   };
 
   // Helper to check if a gene fits in a row (in any available gap)
@@ -79,7 +101,7 @@ export function packIntervals(
 
     // Check if fits before first interval
     if (end + gapBp <= existing[0].start) {
-      const centerOK = checkCenterGap(hasLabel, center, existing[0].hasLabel, existing[0].center);
+      const centerOK = checkCenterGap(hasLabel, center, interval._isPriority, existing[0].hasLabel, existing[0].center, existing[0].isPriority, interval._hasMeasuredLabel, existing[0].hasMeasuredLabel);
       if (centerOK) return true;
     }
 
@@ -91,8 +113,8 @@ export function packIntervals(
       // Must fit between left.end and right.start
       if (left.end + gapBp <= start && end + gapBp <= right.start) {
         // Must satisfy center gap with both neighbors
-        const centerOK1 = checkCenterGap(left.hasLabel, left.center, hasLabel, center);
-        const centerOK2 = checkCenterGap(hasLabel, center, right.hasLabel, right.center);
+        const centerOK1 = checkCenterGap(left.hasLabel, left.center, left.isPriority, hasLabel, center, interval._isPriority, left.hasMeasuredLabel, interval._hasMeasuredLabel);
+        const centerOK2 = checkCenterGap(hasLabel, center, interval._isPriority, right.hasLabel, right.center, right.isPriority, interval._hasMeasuredLabel, right.hasMeasuredLabel);
         if (centerOK1 && centerOK2) return true;
       }
     }
@@ -100,7 +122,7 @@ export function packIntervals(
     // Check if fits after last interval
     const last = existing[existing.length - 1];
     if (last.end + gapBp <= start) {
-      const centerOK = checkCenterGap(last.hasLabel, last.center, hasLabel, center);
+      const centerOK = checkCenterGap(last.hasLabel, last.center, last.isPriority, hasLabel, center, interval._isPriority, last.hasMeasuredLabel, interval._hasMeasuredLabel);
       if (centerOK) return true;
     }
 
@@ -116,7 +138,9 @@ export function packIntervals(
       start: interval._start,
       end: interval._end,
       center: interval._center,
-      hasLabel: interval._hasLabel
+      hasLabel: interval._hasLabel,
+      isPriority: interval._isPriority,
+      hasMeasuredLabel: interval._hasMeasuredLabel
     };
 
     // Insert in sorted position by start
@@ -128,42 +152,16 @@ export function packIntervals(
     }
   };
 
-  // PHASE 1: Pack only L2G (priority) genes
-  const l2gGenes = annotated
-    .filter(d => d._isPriority)
+  // Place priority genes first so they occupy the earliest viable rows, while
+  // still allowing non-overlapping priority genes to share a row.
+  const priorityGenes = annotated
+    .filter(gene => gene._isPriority)
+    .sort((a, b) => a._start - b._start || a._index - b._index);
+  const otherGenes = annotated
+    .filter(gene => !gene._isPriority)
     .sort((a, b) => a._start - b._start || a._index - b._index);
 
-  // Assign L2G genes to rows 0, 1, 2... in order
-  for (let i = 0; i < l2gGenes.length; i++) {
-    const gene = l2gGenes[i];
-    const targetRow = i; // Row 0 for first L2G, row 1 for second, etc.
-
-    // Try to place in target row
-    if (fitsInRow(gene, targetRow)) {
-      placeInRow(gene, targetRow);
-    } else {
-      // Find any row that fits, preferring earlier rows
-      let placed = false;
-      for (let r = 0; r < rowIntervals.length; r++) {
-        if (fitsInRow(gene, r)) {
-          placeInRow(gene, r);
-          placed = true;
-          break;
-        }
-      }
-      if (!placed) {
-        // Create new row
-        placeInRow(gene, rowIntervals.length);
-      }
-    }
-  }
-
-  // PHASE 2: Pack non-L2G genes into available gaps
-  const nonL2gGenes = annotated
-    .filter(d => !d._isPriority)
-    .sort((a, b) => a._start - b._start || a._index - b._index);
-
-  for (const gene of nonL2gGenes) {
+  for (const gene of [...priorityGenes, ...otherGenes]) {
     // Try each existing row
     let placed = false;
     for (let r = 0; r < rowIntervals.length; r++) {

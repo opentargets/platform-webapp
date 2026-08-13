@@ -15,6 +15,31 @@ const NON_L2G_HOVER_BOX_COLOR = 0xe0e0e0;
 const DEFAULT_ROW_HEIGHT = 28;
 const DEFAULT_EXON_HEIGHT = 10;
 
+function getVisibleGeneLabelScreenX({
+  intronStart,
+  intronEnd,
+  scales,
+}: {
+  intronStart: number;
+  intronEnd: number;
+  scales: ScalesRef;
+}) {
+  const viewStart = scales.viewStart ?? scales.xMin;
+  const viewEnd = scales.viewEnd ?? scales.xMax;
+  const visibleStart = Math.max(intronStart, viewStart);
+  const visibleEnd = Math.min(intronEnd, viewEnd);
+
+  // Keep an out-of-view label safely beyond the canvas; DataText will cull it.
+  if (visibleStart > visibleEnd) {
+    return intronEnd < viewStart ? -scales.canvasWidth * 2 : scales.canvasWidth * 2;
+  }
+
+  const visibleCenter = (visibleStart + visibleEnd) / 2;
+  // Keep the label midpoint over the visible intron. Text may be clipped at the
+  // canvas edge, but using one continuous placement rule avoids edge jumps.
+  return visibleCenter * scales.xScale + scales.xOffset;
+}
+
 export function getGenesTracks({
     geneToRow,
     biotype,
@@ -219,6 +244,11 @@ export function getGenesTracks({
                       fontSize: 10.5,
                       fontWeight: '100',
                       wordWrap: false,
+                    })}
+                    getScreenX={({ scales }) => getVisibleGeneLabelScreenX({
+                      intronStart,
+                      intronEnd,
+                      scales,
                     })}
                     {...(isL2G ? {
                       backgroundColor: L2G_HOVER_BOX_COLOR,
