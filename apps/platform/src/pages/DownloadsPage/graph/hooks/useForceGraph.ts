@@ -17,6 +17,7 @@ import { GraphNodeDatum, GraphLinkDatum, GraphController, GraphPointerPosition, 
 import { useGraphSimulation } from './useGraphSimulation';
 import { useSelectionHighlight } from './useSelectionHighlight';
 import { useHoverHighlight } from './useHoverHighlight';
+import { useFilterHighlight } from './useFilterHighlight';
 import { useGraphController } from './useGraphController';
 
 export type { GraphController, GraphPointerPosition };
@@ -27,6 +28,8 @@ interface UseForceGraphOptions extends GraphCallbacks {
   selectedNode?: string | null;
   /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
   externalHighlightId?: string | null;
+  /** Ids of nodes matching the active filter chips/search; null means no filter active */
+  filterMatchedIds?: Set<string> | null;
   layoutConfig?: ForceLayoutConfig;
 }
 
@@ -44,6 +47,7 @@ export const useForceGraph = ({
   edges,
   selectedNode,
   externalHighlightId,
+  filterMatchedIds,
   layoutConfig,
   onNodeSelect,
   onNodeDeselect,
@@ -86,6 +90,8 @@ export const useForceGraph = ({
   });
 
   useSelectionHighlight({ svgRef, selectedNode, isReady });
+
+  useFilterHighlight({ svgRef, matchedIds: filterMatchedIds ?? null, isReady });
 
   const controller = useGraphController({
     containerRef,

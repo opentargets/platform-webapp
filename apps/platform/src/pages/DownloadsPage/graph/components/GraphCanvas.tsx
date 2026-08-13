@@ -14,6 +14,8 @@ interface GraphCanvasProps {
   selectedNode?: string | null;
   /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
   externalHighlightId?: string | null;
+  /** Ids of nodes matching the active filter chips/search; null means no filter active */
+  filterMatchedIds?: Set<string> | null;
   onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string) => void;
@@ -32,6 +34,7 @@ const GraphCanvas = React.memo(
     edges,
     selectedNode,
     externalHighlightId,
+    filterMatchedIds,
     onNodeSelect,
     onNodeDeselect,
     onEdgeSelect,
@@ -45,6 +48,7 @@ const GraphCanvas = React.memo(
       edges,
       selectedNode,
       externalHighlightId,
+      filterMatchedIds,
       layoutConfig,
       onNodeSelect,
       onNodeDeselect,

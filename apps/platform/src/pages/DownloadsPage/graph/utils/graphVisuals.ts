@@ -9,6 +9,7 @@ export const GRAPH_STYLES = `
   .graph-node { cursor: pointer; transition: all 0.2s ease; }
   .graph-node.faded { opacity: 0.6; }
   .graph-node.hover-faded { opacity: 0.3; }
+  .graph-node.filter-faded { opacity: 0.12; }
   .graph-node.selected circle {
     stroke: #FFD700 !important;
     stroke-width: 4px !important;
@@ -16,6 +17,7 @@ export const GRAPH_STYLES = `
   .graph-edge { cursor: pointer; transition: all 0.2s ease; }
   .graph-edge.faded { opacity: 0.3; }
   .graph-edge.hover-faded { opacity: 0.08 !important; }
+  .graph-edge.filter-faded { opacity: 0.06 !important; }
   .graph-edge.hover-highlighted { stroke-width: 2.5px; }
   .graph-edge.highlighted {
     stroke: #2196F3 !important;

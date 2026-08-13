@@ -34,12 +34,12 @@ function DownloadsCard({
   const { state, dispatch } = useContext(DownloadsContext);
   const columnId = data["@id"].replace("-fileset", "");
 
-  function handleChangeFilter(e) {
+  function handleChangeFilter(category: string) {
     const currentFilters = [...state.selectedFilters];
-    if (currentFilters.includes(e.target.innerText)) {
+    if (currentFilters.includes(category)) {
       return;
     } else {
-      currentFilters.push(e.target.innerText);
+      currentFilters.push(category);
       dispatch(setActiveFilter(currentFilters));
     }
   }
@@ -53,12 +53,16 @@ function DownloadsCard({
 
   return (
     <Card
+      onMouseEnter={() => onHoverChange?.(true)}
+      onMouseLeave={() => onHoverChange?.(false)}
+      onClick={() => onViewConnections?.(columnId)}
       sx={{
         width: "100%",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         boxShadow: "none",
+        cursor: onViewConnections ? "pointer" : undefined,
         border: theme =>
           `1px solid ${highlighted ? highlightColor || theme.palette.primary.main : theme.palette.grey[300]}`,
         transition: "border-color 120ms ease",
@@ -110,22 +114,35 @@ function DownloadsCard({
               my: 1,
             }}
           >
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
               {hasCategories() &&
                 data.categories.map(c => (
-                  <Chip
+                  <Box
                     key={v1()}
-                    size="small"
-                    label={c}
-                    clickable
-                    onClick={handleChangeFilter}
-                    sx={{
-                      backgroundColor: tintHex(getCategoryColor(c), 0.12),
-                      color: getCategoryColor(c),
-                      border: `1px solid ${getCategoryColor(c)}`,
-                      fontWeight: 500,
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleChangeFilter(c);
                     }}
-                  />
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.75,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        backgroundColor: getCategoryColor(c),
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      {c}
+                    </Typography>
+                  </Box>
                 ))}
             </Box>
 
@@ -138,9 +155,6 @@ function DownloadsCard({
                   size="small"
                   variant="outlined"
                   clickable={Boolean(onViewConnections)}
-                  onClick={() => onViewConnections?.(columnId)}
-                  onMouseEnter={() => onHoverChange?.(true)}
-                  onMouseLeave={() => onHoverChange?.(false)}
                   icon={<FontAwesomeIcon icon={faDiagramProject} size="xs" />}
                   label={connections}
                   sx={{
@@ -166,13 +180,21 @@ function DownloadsCard({
           gap: 1,
         }}
       >
-        <Link to={`/downloads/${columnId}/schema`} style={{ display: "block", width: "100%" }}>
+        <Link
+          to={`/downloads/${columnId}/schema`}
+          style={{ display: "block", width: "100%" }}
+          onClick={e => e.stopPropagation()}
+        >
           <Button variant="outlined" color="primary" fullWidth sx={cardActionButtonSx}>
             <FontAwesomeIcon icon={faCode} />
             Schema
           </Button>
         </Link>
-        <Link to={`/downloads/${columnId}/access`} style={{ display: "block", width: "100%" }}>
+        <Link
+          to={`/downloads/${columnId}/access`}
+          style={{ display: "block", width: "100%" }}
+          onClick={e => e.stopPropagation()}
+        >
           <Button variant="outlined" color="primary" fullWidth sx={cardActionButtonSx}>
             <FontAwesomeIcon icon={faDatabase} />
             Access Data

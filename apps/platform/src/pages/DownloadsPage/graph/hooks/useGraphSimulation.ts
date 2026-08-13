@@ -57,8 +57,10 @@ export const useGraphSimulation = ({
     setIsReady(false);
     d3.select(container).selectAll('*').remove();
 
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 600;
+    // Mutable so `handleResize` (below) can re-center the already-settled
+    // layout by translation, without reheating the simulation.
+    let width = container.clientWidth || 800;
+    let height = container.clientHeight || 600;
     const config = layoutConfig || getDefaultLayoutConfig();
 
     const simNodes: GraphNodeDatum[] = nodes.map((n) => {
@@ -70,11 +72,7 @@ export const useGraphSimulation = ({
       };
     });
 
-    // Clamp node radius to a fixed range keyed off degree, so a handful of
-    // highly-connected core entities (Disease, Target) don't dwarf everything.
-    const maxDegree = Math.max(1, ...simNodes.map((d) => d.degree ?? 0));
-    const radiusScale = d3.scaleSqrt().domain([0, maxDegree]).range([9, 26]);
-    const radiusOf = (d: GraphNodeDatum) => radiusScale(d.degree ?? 0);
+    const NODE_RADIUS = 14;
 
     const nodeIds = new Set(simNodes.map((n) => n.id));
     const simLinks: GraphLinkDatum[] = edges
@@ -127,7 +125,7 @@ export const useGraphSimulation = ({
       .join('line')
       .attr('class', 'graph-edge')
       .attr('stroke', EDGE_COLOR)
-      .attr('stroke-width', 1)
+      .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.6)
       .on('click', function (d: any) {
         (d3 as any).event.stopPropagation();
@@ -148,7 +146,7 @@ export const useGraphSimulation = ({
 
     node
       .select('circle')
-      .attr('r', radiusOf)
+      .attr('r', NODE_RADIUS)
       .attr('fill', fillOf)
       .attr('stroke', strokeOf)
       .attr('stroke-width', 1.5);
@@ -157,7 +155,7 @@ export const useGraphSimulation = ({
       .select('text')
       .text((d: GraphNodeDatum) => (d.label.length > 20 ? `${d.label.slice(0, 19)}…` : d.label))
       .attr('text-anchor', 'middle')
-      .attr('dy', (d: GraphNodeDatum) => radiusOf(d) + 14)
+      .attr('dy', NODE_RADIUS + 14)
       .attr('font-size', 11)
       .attr('font-weight', 500)
       .attr('fill', 'rgba(0, 0, 0, 0.6)')
@@ -173,15 +171,15 @@ export const useGraphSimulation = ({
       .on('click', function (d: GraphNodeDatum) {
         const event = (d3 as any).event;
         event.stopPropagation();
-        callbacksRef.current?.onNodeSelect?.(d.id, { x: event.pageX, y: event.pageY });
+        callbacksRef.current?.onNodeSelect?.(d.id, { x: event.clientX, y: event.clientY });
       })
       .on('mouseover', function (d: GraphNodeDatum) {
         const event = (d3 as any).event;
-        callbacksRef.current?.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
+        callbacksRef.current?.onNodeHover?.(d.id, { x: event.clientX, y: event.clientY });
       })
       .on('mousemove', function (d: GraphNodeDatum) {
         const event = (d3 as any).event;
-        callbacksRef.current?.onNodeHover?.(d.id, { x: event.pageX, y: event.pageY });
+        callbacksRef.current?.onNodeHover?.(d.id, { x: event.clientX, y: event.clientY });
       })
       .on('mouseout', function () {
         callbacksRef.current?.onNodeHover?.(null);
@@ -207,7 +205,7 @@ export const useGraphSimulation = ({
       .force('cluster', forceCluster(config.clusterStrength))
       .force(
         'collide',
-        d3.forceCollide<GraphNodeDatum>((d) => radiusOf(d) + config.collidePadding)
+        d3.forceCollide<GraphNodeDatum>(NODE_RADIUS + config.collidePadding)
       )
       .alphaDecay(config.alphaDecay)
       .velocityDecay(config.velocityDecay)
@@ -220,22 +218,54 @@ export const useGraphSimulation = ({
     const preTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
     for (let i = 0; i < preTicks; i += 1) simulation.tick();
 
-    const drag = (d3 as any)
-      .drag()
-      .on('start', (d: GraphNodeDatum) => {
-        if (!(d3 as any).event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-      })
-      .on('drag', (d: GraphNodeDatum) => {
-        d.fx = (d3 as any).event.x;
-        d.fy = (d3 as any).event.y;
-      })
-      .on('end', (d: GraphNodeDatum) => {
-        if (!(d3 as any).event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+    // The radial forces above (charge/link/center) have no directional bias,
+    // so the settled layout comes out roughly circular regardless of the
+    // container's shape. Fitting a circular blob into a wide-but-short (or
+    // tall-but-narrow) panel then bottlenecks on the tighter axis, leaving
+    // the other mostly empty. `applyAspectStretch` stretches node positions
+    // (never compresses) so the layout's bounding box matches whatever the
+    // panel's current aspect ratio is - recomputed on every resize (see
+    // `handleResize` below) so dragging the split divider or resizing the
+    // window keeps re-optimizing for the space actually available, in
+    // whichever dimension grew. It's driven off `basePositions` (the
+    // unstretched, pre-convergence layout) rather than the current node
+    // positions, so repeated resizes re-derive the stretch from scratch
+    // instead of compounding on top of a previous stretch.
+    const basePositions = new Map(simNodes.map((n) => [n.id, { x: n.x ?? 0, y: n.y ?? 0 }]));
+    const MAX_STRETCH = 3;
+    const applyAspectStretch = (w: number, h: number) => {
+      const xs = Array.from(basePositions.values(), (p) => p.x);
+      const ys = Array.from(basePositions.values(), (p) => p.y);
+      const graphWidth = Math.max(Math.max(...xs) - Math.min(...xs), 1);
+      const graphHeight = Math.max(Math.max(...ys) - Math.min(...ys), 1);
+      const containerAspect = w / h;
+      const graphAspect = graphWidth / graphHeight;
+      const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+      const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+      const stretchX = graphAspect < containerAspect ? Math.min(containerAspect / graphAspect, MAX_STRETCH) : 1;
+      const stretchY = graphAspect > containerAspect ? Math.min(graphAspect / containerAspect, MAX_STRETCH) : 1;
+
+      simNodes.forEach((n) => {
+        const base = basePositions.get(n.id);
+        if (!base) return;
+        n.x = cx + (base.x - cx) * stretchX;
+        n.y = cy + (base.y - cy) * stretchY;
       });
+    };
+    applyAspectStretch(width, height);
+
+    // The simulation is frozen after its initial layout (see below) - dragging
+    // just repositions the one node directly, with no physics pushback on its
+    // neighbours and no reheating of the simulation. Tracked so a later
+    // resize's auto-refit (see `handleResize`) doesn't clobber a manually
+    // dragged node back to its pre-drag, aspect-stretched position.
+    let userDraggedNode = false;
+    const drag = (d3 as any).drag().on('drag', (d: GraphNodeDatum) => {
+      userDraggedNode = true;
+      d.x = (d3 as any).event.x;
+      d.y = (d3 as any).event.y;
+      updatePositions();
+    });
     (node as any).call(drag);
 
     const updatePositions = () => {
@@ -254,7 +284,10 @@ export const useGraphSimulation = ({
       });
     };
 
-    // Paint the pre-converged layout immediately, before any live ticking resumes
+    // Paint the pre-converged layout. The simulation is never resumed after
+    // this - it stays frozen (see `.stop()` above) so nothing but an explicit
+    // drag ever moves a node again, and selecting/hovering/resizing never
+    // triggers force-driven motion.
     updatePositions();
 
     // Fit the view to the pre-converged layout synchronously, before this
@@ -267,21 +300,55 @@ export const useGraphSimulation = ({
     initialFitTransformRef.current = initialFitTransform;
     (svg as any).call(zoom.transform, initialFitTransform);
 
-    simulation.on('tick', updatePositions);
-
-    // Resume the simulation (already settled) so drag/resize can reheat it later
-    simulation.alpha(simulation.alphaMin()).restart();
-
     setIsReady(true);
 
+    // On resize (e.g. the card grid narrowing when a node is selected, or the
+    // split divider being dragged), re-derive the aspect stretch for the new
+    // panel shape and re-fit to it - so growing the panel in either
+    // dimension keeps spreading nodes to use the extra space, not just
+    // recentering the old layout. That re-fit is only applied if the view is
+    // still exactly where the last auto-fit left it: if the user has since
+    // zoomed or panned by hand, their view is preserved as before, just
+    // recentered by panning (the pan, not the raw node coordinates, has to
+    // move: node screen position is `k * x + translate`, so nudging `x` only
+    // shifts the screen by `k * dx` at the current zoom scale - panning by
+    // `dx` directly is what keeps the layout centered at any zoom level).
     const handleResize = () => {
       const c = containerRef.current;
       if (!c) return;
       const w = c.clientWidth || 800;
       const h = c.clientHeight || 600;
+      if (w === width && h === height) return;
+
+      const current = (d3 as any).zoomTransform(svg.node());
+      const lastAutoFit = initialFitTransformRef.current;
+      const hasCustomView =
+        userDraggedNode ||
+        !lastAutoFit ||
+        Math.abs(current.k - lastAutoFit.k) > 1e-6 ||
+        Math.abs(current.x - lastAutoFit.x) > 0.5 ||
+        Math.abs(current.y - lastAutoFit.y) > 0.5;
+
+      const dx = w / 2 - width / 2;
+      const dy = h / 2 - height / 2;
+      width = w;
+      height = h;
       svg.attr('viewBox', `0 0 ${w} ${h}`);
-      simulation.force('center', d3.forceCenter(w / 2, h / 2));
-      simulation.alpha(0.3).restart();
+
+      if (hasCustomView) {
+        if (dx !== 0 || dy !== 0) {
+          const next = d3.zoomIdentity.translate(current.x + dx, current.y + dy).scale(current.k);
+          (svg as any).call(zoom.transform, next);
+        }
+        return;
+      }
+
+      applyAspectStretch(w, h);
+      updatePositions();
+      const fit = computeFitTransform(simNodes, w, h);
+      const nextTransform = d3.zoomIdentity.translate(fit.translateX, fit.translateY).scale(fit.scale);
+      initialFitTransformRef.current = nextTransform;
+      (svg as any).call(zoom.transform, nextTransform);
     };
     window.addEventListener('resize', handleResize);
 

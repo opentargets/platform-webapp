@@ -60,27 +60,28 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Get graph data from schema context
   const { nodes: allNodes, edges: allEdges } = useGraphData();
 
-  // Filter nodes by the same search text + category filters the card view
-  // uses (DownloadsContext), so the two panes always show the same subset.
-  const { nodes, edges } = useMemo(() => {
+  // The canvas always renders the full node/edge set - the simulation is
+  // keyed off `nodes`/`edges` identity (see useGraphSimulation), so swapping
+  // in a smaller filtered array on every chip toggle would tear down and
+  // rebuild the whole layout, making it jump. Instead we compute which nodes
+  // match the same search text + category filters the card view uses
+  // (DownloadsContext) and dim the rest in place (see useFilterHighlight).
+  const nodes = allNodes;
+  const edges = allEdges;
+
+  const filterMatchedIds = useMemo(() => {
     const query = state.freeTextQuery?.toLowerCase() ?? '';
+    const hasCategoryFilter = state.selectedFilters.length > 0;
+    if (!query && !hasCategoryFilter) return null;
+
     const matchesQuery = (n: any) =>
       !query ||
       n.data.label?.toLowerCase().includes(query) ||
       n.data.description?.toLowerCase().includes(query);
-    const matchesCategory = (n: any) =>
-      !state.selectedFilters.length || state.selectedFilters.includes(n.data.type);
+    const matchesCategory = (n: any) => !hasCategoryFilter || state.selectedFilters.includes(n.data.type);
 
-    const visibleIds = new Set(
-      allNodes.filter((n) => matchesQuery(n) && matchesCategory(n)).map((n) => n.data.id)
-    );
-    const filteredNodes = allNodes.filter((n) => visibleIds.has(n.data.id));
-    const filteredEdges = allEdges.filter(
-      (e) => visibleIds.has(e.data.source) && visibleIds.has(e.data.target)
-    );
-
-    return { nodes: filteredNodes, edges: filteredEdges };
-  }, [allNodes, allEdges, state.freeTextQuery, state.selectedFilters]);
+    return new Set(allNodes.filter((n) => matchesQuery(n) && matchesCategory(n)).map((n) => n.data.id));
+  }, [allNodes, state.freeTextQuery, state.selectedFilters]);
 
   // Get layout configuration
   const { layoutConfig } = useGraphLayout({
@@ -89,8 +90,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     responsive: true,
   });
 
-  // Only pass the selected id through if it's actually visible under the
-  // current filters - otherwise every node would read as "unrelated" and fade.
+  // Only pass the selected id through if it still exists in the data - guards
+  // against a stale id after the underlying schema changes.
   const hasSelectedNode = Boolean(
     selectedNodeId && nodes.some((n) => n.data.id === selectedNodeId)
   );
@@ -129,6 +130,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         edges={edges}
         selectedNode={hasSelectedNode ? selectedNodeId : null}
         externalHighlightId={externalHighlightId}
+        filterMatchedIds={filterMatchedIds}
         onNodeSelect={onNodeSelect}
         onNodeDeselect={onNodeDeselect}
         onNodeHover={handleNodeHover}

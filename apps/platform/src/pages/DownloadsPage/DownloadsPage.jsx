@@ -15,6 +15,8 @@ import { Route, Routes } from "react-router-dom";
 import DownloadsDialog from "./DownloadsDialog";
 import { GraphVisualization, transformRecordSetToGraph } from "./graph";
 import { useGridRowsHeight } from "./hooks/useGridRowsHeight";
+import { useResizableSplit } from "./hooks/useResizableSplit";
+import DownloadsSplitDivider from "./DownloadsSplitDivider";
 
 const config = getConfig();
 
@@ -65,6 +67,19 @@ function DownloadsPage() {
   // pinning it to the viewport - measured off the grid's actual rendered
   // children since card height isn't fixed (it grows with description length).
   const { containerRef: cardsGridRef, height: twoRowsHeight } = useGridRowsHeight(2);
+
+  // Draggable split between the cards grid and the graph panel - dragging
+  // (or the divider's own expand buttons) all the way to either edge
+  // collapses that pane so the other fills the whole row.
+  const {
+    containerRef: splitContainerRef,
+    ratio: splitRatio,
+    isDragging: isSplitDragging,
+    cardsVisible,
+    graphVisible,
+    handlePointerDown: handleSplitPointerDown,
+    handleKeyDown: handleSplitKeyDown,
+  } = useResizableSplit();
 
   const handleViewConnections = useCallback(id => {
     setSelectedNodeId(id);
@@ -167,30 +182,37 @@ function DownloadsPage() {
         />
 
         <Box
+          ref={splitContainerRef}
           sx={{
             display: "grid",
-            // Graph gets a 30% share lg and down, then settles to a fixed
-            // 25% share from xl upward; cards take the rest.
+            // Below md there's no divider to drag, so fall back to a fixed
+            // split; from md up, the divider drives the column widths
+            // (including collapsing either pane to fill the whole row).
             gridTemplateColumns: {
               xs: "minmax(0, 7fr) minmax(0, 3fr)",
-              xl: "minmax(420px, 3fr) minmax(320px, 1fr)",
+              md: !graphVisible
+                ? "1fr 0px 0px"
+                : !cardsVisible
+                  ? "0px 0px 1fr"
+                  : `${splitRatio}fr 28px ${1 - splitRatio}fr`,
             },
-            gap: 3,
+            gap: { xs: 3, md: 0 },
             alignItems: "start",
           }}
         >
           <Box
-            ref={cardsGridRef}
+            ref={cardsVisible ? cardsGridRef : undefined}
             sx={{
               display: "grid",
-              // Narrower cards column on lg (smaller laptops) only fits 2 comfortably.
-              gridTemplateColumns: {
-                xs: "repeat(auto-fill, minmax(280px, 1fr))",
-                lg: "repeat(3, minmax(0, 1fr))",
-                xl: "repeat(auto-fill, minmax(280px, 1fr))",
-              },
+              // Column count tracks the pane's actual pixel width (which the
+              // split divider controls directly), not the viewport breakpoint -
+              // a fixed column count per breakpoint would ignore how wide the
+              // user has actually dragged this pane to be.
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
               gap: 2,
               alignContent: "start",
+              minWidth: 0,
+              overflow: "hidden",
             }}
           >
             {cardsToShow.length > 0 ? (
@@ -212,6 +234,12 @@ function DownloadsPage() {
             )}
           </Box>
 
+          <DownloadsSplitDivider
+            isDragging={isSplitDragging}
+            onPointerDown={handleSplitPointerDown}
+            onKeyDown={handleSplitKeyDown}
+          />
+
           <Box
             sx={{
               position: { lg: "sticky" },
@@ -222,7 +250,12 @@ function DownloadsPage() {
               // above it - trapping the graph's tooltip (z-index: 1300) behind
               // it no matter how high the tooltip's own z-index is set.
               zIndex: { lg: 101 },
-              height: { xs: 420, md: twoRowsHeight ?? 420 },
+              minWidth: 0,
+              overflow: "hidden",
+              height: {
+                xs: 420,
+                md: !cardsVisible ? "calc(100vh - 220px)" : twoRowsHeight ?? 420,
+              },
             }}
           >
             <GraphVisualization
