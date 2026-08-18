@@ -1,9 +1,8 @@
 import FileSaver from "file-saver";
-import { Box, Chip, Divider, Popover } from "@mui/material";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext, useState } from "react";
-import { Link, PublicationsDrawer } from "ui";
-import { styled } from "@mui/styles";
+import { Link, PublicationsDrawer, Box, Popover, Chip, Divider } from "ui";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignLeft, faFileLines, faTableList } from "@fortawesome/free-solid-svg-icons";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -12,13 +11,13 @@ import { epmcUrl } from "@ot/utils";
 const DownloadsLink = styled("a")(({ theme }) => ({
   color: theme.palette.primary.main,
   fontSize: "inherit",
-  "text-decoration-color": "transparent",
-  "-webkit-text-decoration-color": "transparent",
+  "textDecorationColor": "transparent",
+  "WebkitTextDecorationColor": "transparent",
   marginTop: `10px !important`,
   "&:hover": {
     color: theme.palette.primary.dark,
-    "text-decoration-color": theme.palette.primary.dark,
-    "-webkit-text-decoration-color": theme.palette.primary.dark,
+    "textDecorationColor": theme.palette.primary.dark,
+    "WebkitTextDecorationColor": theme.palette.primary.dark,
   },
 }));
 
@@ -68,6 +67,7 @@ function LibrariesTag() {
               <FontAwesomeIcon icon={faAlignLeft} /> Croissant
             </Box>
           }
+          variant="filled"
           size="small"
         />
       </TagsDialog>
@@ -101,6 +101,7 @@ function VersionTag() {
               </Box>
             </>
           }
+          variant="filled"
           size="small"
         />
       </TagsDialog>
@@ -130,6 +131,7 @@ function DOITag() {
                 <FontAwesomeIcon icon={faFileLines} /> Cite Us
               </Box>
             }
+            variant="filled"
             size="small"
             clickable
           />
@@ -160,6 +162,7 @@ function FormatsTag() {
               <FontAwesomeIcon icon={faTableList} /> Parquet
             </Box>
           }
+          variant="filled"
           size="small"
           clickable
         />

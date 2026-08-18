@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Cancer Gene Census",
   shortName: "CC",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.cancerGeneCensusSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

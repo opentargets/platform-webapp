@@ -1,6 +1,6 @@
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
 import FACETS_SEARCH_QUERY from "../FacetsQuery.gql";
-import { Facet } from "../facetsTypes";
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import type { Facet } from "../facetsTypes";
 
 export async function getFacetsData(
   inputValue: string,

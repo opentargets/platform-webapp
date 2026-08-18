@@ -1,18 +1,17 @@
 import { useState, useRef, MouseEvent } from "react";
+import { styled, useMediaQuery } from "@mui/material";
 import {
-  styled,
   Typography,
   MenuList,
   MenuItem,
   ListItemText,
   ListItemIcon,
-  Divider,
   Popover,
   Box,
   Fade,
   Skeleton,
-  useMediaQuery,
-} from "@mui/material";
+  Divider,
+} from "ui";
 import {
   faThumbTack,
   faEllipsisVertical,
@@ -21,7 +20,7 @@ import {
   faBezierCurve,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";
 import { ENTITIES, isPartnerPreview, TABLE_PREFIX } from "../../associationsUtils";

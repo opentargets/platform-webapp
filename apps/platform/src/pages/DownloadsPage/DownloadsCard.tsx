@@ -1,12 +1,20 @@
-import { Box, Button, Card, CardActions, CardContent, Chip, Tooltip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faDatabase, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
-import { OtLongText } from "ui";
+import {
+  LongText as OtLongText,
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Chip,
+  Link,
+  Tooltip,
+} from "ui";
 import { v1 } from "uuid";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext } from "react";
 import { setActiveFilter } from "./context/downloadsActions";
-import { Link } from "react-router-dom";
 import { getCategoryColor, tintHex } from "./categoryColors";
 
 /** Shared by both card-action buttons so Schema and Access Data always match in width and height */
@@ -152,6 +160,8 @@ function DownloadsCard({
                 arrow
               >
                 <Chip
+                  key={v1()}
+                  variant="filled"
                   size="small"
                   variant="outlined"
                   clickable={Boolean(onViewConnections)}

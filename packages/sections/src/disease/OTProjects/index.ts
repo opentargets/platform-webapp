@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Open Targets Projects",
   shortName: "OP",
+  category: "Disease",
   hasData: (data: any) => data.otarProjects?.length > 0,
   isPrivate: isPrivateDiseaseSection(id),
 };

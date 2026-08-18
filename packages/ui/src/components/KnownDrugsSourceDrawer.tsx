@@ -1,85 +1,90 @@
-import { ReactNode, useState } from "react";
-import {
-  List,
-  ListItem,
-  Drawer,
-  AccordionSummary,
-  AccordionDetails,
-  Accordion,
-  Box,
-  Paper,
-  IconButton,
-  Typography,
-  ButtonBase,
-  Theme,
-} from "@mui/material";
-import { CSSProperties, makeStyles } from "@mui/styles";
 import { faChevronDown, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  ButtonBase,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import _ from "lodash";
+import { type ReactNode, useState } from "react";
 
 import { Link } from "ui";
 
-const sourceDrawerStyles = makeStyles((theme: Theme) => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  } as unknown as CSSProperties,
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
+}));
+
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
+}));
+
+const StyledAccordion = styled(Accordion)({
+  border: "1px solid #ccc",
+  margin: "1rem 1rem 0 1rem",
+  padding: "1rem",
+  "&::before": {
+    backgroundColor: "transparent",
   },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
-  AccordionExpanded: {
+  "&.Mui-expanded": {
     margin: "1rem !important",
   },
-  AccordionRoot: {
-    border: "1px solid #ccc",
-    margin: "1rem 1rem 0 1rem",
-    padding: "1rem",
-    "&::before": {
-      backgroundColor: "transparent",
-    },
-  },
-  AccordionSubtitle: {
-    color: theme.palette.grey[400],
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-  },
-  AccordionTitle: {
-    color: theme.palette.grey[700],
-    fontSize: "1rem",
-    fontWeight: "bold",
-  },
-  summaryBoxRoot: {
-    marginRight: "2rem",
-  },
+});
+
+const StyledSummaryBox = styled(Box)({
+  marginRight: "2rem",
+});
+
+const StyledAccordionTitle = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1rem",
+  fontWeight: "bold",
+}));
+
+const StyledAccordionSubtitle = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[400],
+  fontSize: "0.8rem",
+  fontStyle: "italic",
 }));
 
 const tableSourceLabel = (name: string) =>
   ({
-  ATC: "ATC",
-  ClinicalTrials: "ClinicalTrials.gov",
-  DailyMed: "DailyMed",
-  FDA: "FDA",
-  EMA: "European Medicines Agency",
-  INN: "International Nonproprietary Names",
-  USAN: "United States Adopted Name",
-}[name]);
+    ATC: "ATC",
+    ClinicalTrials: "ClinicalTrials.gov",
+    DailyMed: "DailyMed",
+    FDA: "FDA",
+    EMA: "European Medicines Agency",
+    INN: "International Nonproprietary Names",
+    USAN: "United States Adopted Name",
+  })[name];
 
 const drawerSourceLabel = (name: string, url: string) => {
   if (name === "ClinicalTrials") {
@@ -101,15 +106,14 @@ type Reference = {
   __typename: string;
   name: string;
   url: string;
-}
+};
 
 type KnownDrugsSourceDrawerProps = {
   references: Reference[];
-}
+};
 
 function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): ReactNode {
   const [open, setOpen] = useState(false);
-  const classes = sourceDrawerStyles();
 
   if (references.length === 0) {
     return "N/A";
@@ -125,8 +129,12 @@ function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): Re
 
   const groupedReferences: Record<string, Reference[]> = _.groupBy(references, "name");
 
-  const toggleDrawer: React.MouseEventHandler = event => {
-    if (event.type === "keydown" && ((event as unknown as KeyboardEvent).key === "Tab" || (event as unknown as KeyboardEvent).key === "Shift")) {
+  const toggleDrawer: React.MouseEventHandler = (event) => {
+    if (
+      event.type === "keydown" &&
+      ((event as unknown as KeyboardEvent).key === "Tab" ||
+        (event as unknown as KeyboardEvent).key === "Shift")
+    ) {
       return;
     }
 
@@ -139,37 +147,31 @@ function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): Re
 
   const drawerContent = (
     <>
-      <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+      <StyledPaperTitle elevation={0}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography className={classes.drawerTitleCaption}>Records</Typography>
+          <StyledTitleCaption>Records</StyledTitleCaption>
           <IconButton onClick={closeDrawer}>
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </Box>
-      </Paper>
+      </StyledPaperTitle>
 
-      <Box className={classes.drawerBody}>
-        {Object.keys(groupedReferences).map(group => (
-          <Accordion
+      <StyledBody>
+        {Object.keys(groupedReferences).map((group) => (
+          <StyledAccordion
             elevation={0}
             key={group}
-            classes={{
-              root: classes.AccordionRoot,
-              expanded: classes.AccordionExpanded,
-            }}
             defaultExpanded={
               groupedReferences[group].length < 10 || Object.keys(groupedReferences).length === 1
             }
           >
             <AccordionSummary expandIcon={<FontAwesomeIcon icon={faChevronDown} />}>
-              <Box classes={{ root: classes.summaryBoxRoot }}>
-                <Typography className={classes.AccordionTitle}>
-                  {tableSourceLabel(group)}
-                </Typography>
-                <Typography className={classes.AccordionSubtitle}>
+              <StyledSummaryBox>
+                <StyledAccordionTitle>{tableSourceLabel(group)}</StyledAccordionTitle>
+                <StyledAccordionSubtitle>
                   {groupedReferences[group].length} references
-                </Typography>
-              </Box>
+                </StyledAccordionSubtitle>
+              </StyledSummaryBox>
             </AccordionSummary>
             <AccordionDetails>
               <List>
@@ -182,26 +184,21 @@ function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): Re
                 ))}
               </List>
             </AccordionDetails>
-          </Accordion>
+          </StyledAccordion>
         ))}
-      </Box>
+      </StyledBody>
     </>
   );
 
   return (
     <>
-      <ButtonBase onClick={toggleDrawer} className={classes.drawerLink}>
+      <StyledButtonBase onClick={toggleDrawer}>
         <Typography variant="body2">{references.length} references </Typography>
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
-        anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
-        open={open}
-        onClose={closeDrawer}
-      >
+      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
         {drawerContent}
-      </Drawer>
+      </StyledDrawer>
     </>
   );
 }

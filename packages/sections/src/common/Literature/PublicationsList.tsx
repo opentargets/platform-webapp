@@ -1,7 +1,14 @@
 import { useEffect } from "react";
-import { Box, Grid, Fade, Skeleton, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { PublicationWrapper, Table, useApolloClient } from "ui";
+import {
+  PublicationWrapper,
+  Table,
+  useApolloClient,
+  Box,
+  GridLegacy,
+  Fade,
+  Skeleton,
+  Typography,
+} from "ui";
 import Loader from "./Loader";
 import { PublicationType, DetailsStateType } from "./types";
 import {
@@ -15,12 +22,6 @@ import { fetchSimilarEntities, literaturesEuropePMCQuery } from "./requests";
 import { grey } from "@mui/material/colors";
 import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-const useStyles = makeStyles(() => ({
-  root: {
-    marginTop: 0,
-  },
-}));
 
 function parsePublications(publications: PublicationType[]): DetailsStateType {
   const obj: DetailsStateType = {};
@@ -50,14 +51,14 @@ function SkeletonRow() {
       <Box mb={2}>
         <Skeleton height={44} />
         <Skeleton width="60%" height={44} />
-        <Grid container wrap="nowrap">
+        <GridLegacy container wrap="nowrap">
           <Box width={130} mr={1}>
             <Skeleton height={44} />
           </Box>
           <Box width={130}>
             <Skeleton height={44} />
           </Box>
-        </Grid>
+        </GridLegacy>
       </Box>
     </Fade>
   );
@@ -96,7 +97,6 @@ function TimedOutRow({ id }) {
 }
 
 function PublicationsList({ hideSearch = false }) {
-  const classes = useStyles();
   const literature = useLiterature();
   const { loadingEntities, litsCount: count, cursor, page, pageSize, litsIds } = literature;
   const details = useDetails();
@@ -274,7 +274,7 @@ function PublicationsList({ hideSearch = false }) {
 
   return (
     <Table
-      classes={classes}
+      containerSx={{ marginTop: 0 }}
       showGlobalFilter={!hideSearch}
       columns={columns}
       rows={displayedPubs}

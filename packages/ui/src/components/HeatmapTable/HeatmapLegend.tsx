@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import * as PlotLib from "@observablehq/plot";
 import { Box, Typography } from "@mui/material";
-import { Tooltip, Link } from "ui";
+import * as PlotLib from "@observablehq/plot";
+import { useEffect, useRef } from "react";
+import { Link, Tooltip } from "ui";
 
 function HeatmapLegend({ legendOptions }) {
   const containerRef = useRef(null);

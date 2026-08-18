@@ -1,7 +1,16 @@
-import { Grid, Typography, Box, Theme } from "@mui/material";
-import { makeStyles, useTheme } from "@mui/styles";
+import { Theme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
-import { Footer, GlobalSearch, Link, NavBar, usePermissions } from "ui";
+import {
+  Footer,
+  GlobalSearch,
+  Link,
+  NavBar,
+  usePermissions,
+  GridLegacy,
+  Typography,
+  Box,
+} from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,7 +24,6 @@ import {
   faSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { getConfig } from "@ot/config";
 import {
   appTitle,
   appDescription,
@@ -28,23 +36,6 @@ import Splash from "./Splash";
 import Version from "./Version";
 import HomePageSuggestions from "./HomePageSuggestions";
 import ShouldAccessPPP from "../../components/ShouldAccessPPP";
-
-const config = getConfig();
-
-const useStyles = makeStyles<Theme>(() => ({
-  links: {
-    marginTop: "12px",
-  },
-  api: {
-    marginTop: "38px",
-  },
-  dataPolicy: {
-    padding: "10px",
-    marginTop: "30px",
-    border: "2px solid",
-    borderColor: config.profile.primaryColor as string,
-  },
-}));
 
 function AboutPPP(): JSX.Element {
   return (
@@ -137,7 +128,6 @@ function HomePage(): JSX.Element {
   const releaseNotesURL = isPartnerPreview
     ? "http://home.opentargets.org/ppp-release-notes"
     : "https://platform-docs.opentargets.org/release-notes";
-  const classes = useStyles();
 
   const handleScrollDown = (): void => {
     window.scrollTo({ top: window.innerHeight, left: 0, behavior: "smooth" });
@@ -151,7 +141,7 @@ function HomePage(): JSX.Element {
         <meta name="description" content={appDescription} />
         <link rel="canonical" href={appCanonicalUrl} />
       </Helmet>
-      <Grid container justifyContent="center" alignItems="center" className={classes.hpSection}>
+      <GridLegacy container justifyContent="center" alignItems="center">
         <Splash />
         <NavBar name="platform" homepage items={mainMenuItems} placement="bottom-end" />
         <HomeBox>
@@ -162,7 +152,7 @@ function HomePage(): JSX.Element {
         </HomeBox>
 
         {/* scroll down button */}
-        <Grid container justifyContent="center">
+        <GridLegacy container justifyContent="center">
           <div
             className="fa-layers fa-fw fa-3x"
             style={{
@@ -176,23 +166,23 @@ function HomePage(): JSX.Element {
             <FontAwesomeIcon icon={faCircle} inverse />
             <FontAwesomeIcon icon={faChevronDown} transform="shrink-4" />
           </div>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
 
       {/* About */}
 
-      <Grid container justifyContent="center" sx={{ my: 10 }}>
-        <Grid item xs={10} md={8} sx={{ my: 2 }}>
+      <GridLegacy container justifyContent="center" sx={{ my: 10 }}>
+        <GridLegacy item xs={10} md={8} sx={{ my: 2 }}>
           <Typography variant="h4" component="h1" align="center" paragraph mb={5}>
             About the Open Targets Platform
           </Typography>
           {isPartnerPreview ? <AboutPPP /> : <AboutPublic />}
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
 
       {/* Get started */}
-      <Grid container justifyContent="center" sx={{ mb: 18 }}>
-        <Grid item xs={10} md={8}>
+      <GridLegacy container justifyContent="center" sx={{ mb: 18 }}>
+        <GridLegacy item xs={10} md={8}>
           <Typography variant="h4" component="h1" align="center" paragraph mb={5}>
             Get started with the Platform
           </Typography>
@@ -243,8 +233,8 @@ function HomePage(): JSX.Element {
               external
             />
           </Box>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
 
       <Footer externalLinks={externalLinks} />
     </>

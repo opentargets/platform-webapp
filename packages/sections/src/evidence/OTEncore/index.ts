@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Open Targets ENCORE",
   shortName: "OT",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.otEncoreSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

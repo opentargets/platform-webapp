@@ -5,6 +5,7 @@ export const definition = {
   id: "mousePhenotypes",
   name: "Mouse Phenotypes",
   shortName: "MP",
+  category: "Target-Disease",
   hasData: (data: TargetData) => (data.mousePhenotypes?.length || 0) > 0,
 };
 

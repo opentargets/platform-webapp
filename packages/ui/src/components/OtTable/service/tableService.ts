@@ -1,4 +1,4 @@
-import { getTableRowsProps } from "../types/tableTypes";
+import type { getTableRowsProps } from "../types/tableTypes";
 
 export async function getTableRows({
   query,

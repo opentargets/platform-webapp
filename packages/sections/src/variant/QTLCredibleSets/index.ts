@@ -5,6 +5,7 @@ export const definition = {
   id: "qtl_credible_sets",
   name: "molQTL Credible Sets",
   shortName: "QT",
+  category: "Target-Variant",
   // @ts-expect-error TODO: fix this
   hasData: (data: Variant) => (data.qtlCredibleSets?.count || 0) > 0,
 };

@@ -1,0 +1,159 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import ViewerDemo from "../../components/ViewerDemo";
+
+<Meta title="Components/Viewer" />
+
+# Viewer
+
+A 3D molecular structure viewer built on [3Dmol.js](https://3dmol.csb.pitt.edu/). Used on target profile pages to show AlphaFold structures and small-molecule binding poses.
+
+<ViewerDemo />
+
+> TP53 (UniProt P04637) AlphaFold structure coloured by pLDDT confidence — blue = very high (> 90), cyan = confident (70–90), yellow = low (50–70), orange = very low (< 50).
+
+**Exports:** `Viewer`, `ViewerProvider`, `ViewerInteractionProvider`  
+**Location:** `packages/ui/src/components/Viewer/`
+
+---
+
+## Data format
+
+```ts
+[
+  { structureData: cifData, info: any },
+  { structureData: cifData, info: any },
+  // ...
+]
+```
+
+Pass a single element unless showing multiple structures together (e.g. target + ligand). The `info` field carries any auxiliary data your `drawAppearance` function needs.
+
+---
+
+## Composition
+
+```tsx
+<ViewerProvider initialState={state} reducer={reducer}>
+  <ViewerInteractionProvider initialState={interactionState} reducer={interactionReducer}>
+    <Viewer data={structures} drawAppearance={appearance} />
+    <YourControls />   {/* any other components that dispatch viewer state */}
+  </ViewerInteractionProvider>
+</ViewerProvider>
+```
+
+---
+
+## `ViewerProvider`
+
+Owns all state that triggers a **full redraw** of the structure (color mode, visible chains, etc.).
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `initialState` | `object` | `{}` | Initial state passed to your reducer. |
+| `reducer` | `function` | — | `(state, action) => newState`. Must shallow-copy state to preserve internal properties. |
+
+**Hooks available inside `ViewerProvider`:**
+
+- `useViewerState()` — current state object
+- `useViewerDispatch()` — dispatch function
+
+The provider adds two internal properties to state (do not overwrite):
+
+| Property | Type | Description |
+|---|---|---|
+| `viewer` | 3dMol viewer | The 3Dmol viewer instance. |
+| `atomsByResi` | `Map` | Residue index → atom objects. |
+
+The `_setViewer` action type is used internally — do not dispatch it manually.
+
+---
+
+## `ViewerInteractionProvider`
+
+Owns hover and click state. Include this when you need hover/click highlighting or custom shapes that don't require a full redraw.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `initialState` | `object` | `{}` | Initial interaction state. |
+| `reducer` | `function` | — | `(state, action) => newState`. Must shallow-copy state. |
+
+**Hooks available inside `ViewerInteractionProvider`:**
+
+- `useViewerInteractionState()` — current interaction state
+- `useViewerInteractionDispatch()` — dispatch function
+
+The provider adds two internal properties:
+
+| Property | Type | Description |
+|---|---|---|
+| `hoveredResi` | `number` | Residue index currently hovered. |
+| `clickedResi` | `number` | Last clicked residue index. `null` when nothing is selected. |
+
+Built-in action types: `setHoveredResi`, `setClickedResi`. You can dispatch these manually:
+
+```ts
+viewerInteractionDispatch({ type: "setHoveredResi", value: 174 });
+```
+
+---
+
+## `Viewer` props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `data` | `array` | — | Structure data array (see [Data format](#data-format)). |
+| `height` | `string` | `"400px"` | Viewer height. Width fills the parent container. |
+| `drawAppearance` | `appearance[]` | `[]` | How to draw the structure on each redraw. See [Appearance](#appearance). |
+| `hoverSelection` | `AtomSelectionSpec \| function` | `{}` | Atoms that are hoverable. Function form receives viewer state. |
+| `hoverAppearance` | `eventAppearance[]` | `[]` | Appearance changes on hover. |
+| `clickSelection` | `AtomSelectionSpec \| function` | `{}` | Atoms that are clickable. |
+| `clickAppearance` | `eventAppearance[]` | `[]` | Appearance changes on click. |
+| `trackColor` | `function` | — | `(state, residue) => color` — colors the 1D residue track. Omit to hide the track. |
+| `trackTicks` | `function` | — | `(state) => { resi, label }[]` — highlighted positions on the track. |
+| `onData` | `function` | — | Called after all data is loaded. Receives `(viewer, dispatch)`. |
+| `onFirstDraw` | `function` | — | Called after the first draw (before `onDraw`). Receives viewer state. |
+| `onDraw` | `function` | — | Called after every redraw. Receives viewer state. |
+| `onDblClick` | `function` | — | Called on double-click of the canvas. Receives viewer state. |
+| `usage` | `object` | `{}` | Label–value pairs appended to the usage instructions popup. |
+| `topLeft` | `string \| component` | — | Component shown in the top-left corner. |
+| `bottomRight` | `string \| component` | — | Component shown in the bottom-right corner. |
+| `zoomLimit` | `[number, number]` | `[20, 500]` | Lower and upper zoom limits. |
+| `screenshotId` | `string` | `""` | ID included in the screenshot file name. |
+
+---
+
+## Appearance
+
+An `appearance` object describes what to show in the viewer and how:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `selection` | `AtomSelectionSpec \| function` | `{}` | Atoms to style. Function form receives state. |
+| `style` | `AtomStyleSpec \| function` | — | 3Dmol style spec. Function form receives state. |
+| `addStyle` | `boolean` | `false` | Use `addStyle` instead of `setStyle` (layering rather than replacing). |
+| `use` | `function` | — | `(state) => boolean` — if provided, appearance is only applied when this returns `true`. |
+
+### Hover and click appearances
+
+`hoverAppearance` and `clickAppearance` accept `eventAppearance[]`, which extends `appearance` with:
+
+| Field | Type | Description |
+|---|---|---|
+| `onApply` | `function` | Called after the appearance is applied. Receives `(viewerState, resi, interactionState, interactionDispatch)`. |
+| `leave` | `eventAppearance[]` | Appearance to apply when the residue stops being hovered/clicked. |
+
+For event appearances, `selection` defaults to `{ resi: theEventResi }`. Callback functions receive a second argument: the residue index that triggered the event. `leave` callbacks receive the outgoing residue index.
+
+---
+
+## Derived state
+
+There is no built-in derived state mechanism. To compute derived values (e.g. filtered atoms from filter settings), store the derived value as a state property and update it when its dependencies change in your reducer.
+
+---
+
+## Notes
+
+- The 1D residue track assumes structures are indexed from 1 with contiguous residues (as with AlphaFold structures).
+- A click on the canvas that does not land on a residue sets `clickedResi` to `null`.
+- To trigger an arbitrary callback on hover/click without a style change, use `onApply` with no `style` property.

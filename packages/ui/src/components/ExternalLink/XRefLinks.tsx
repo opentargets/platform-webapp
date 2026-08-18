@@ -1,14 +1,7 @@
+import { Box } from "@mui/material";
 import { useState } from "react";
-import { makeStyles } from "@mui/styles";
 
 import Link from "../Link";
-
-const useStyles = makeStyles(theme => ({
-  showMore: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
-}));
 
 type XRefLinksProps = {
   label: string;
@@ -21,13 +14,12 @@ type XRefLinksProps = {
 
 function XRefLinks({ label, urlBuilder, urlStem, ids, names, limit }: XRefLinksProps) {
   const [showMore, setShowMore] = useState(false);
-  const classes = useStyles();
   const displayNone = {
     display: "none",
   };
 
   return (
-    <span data-testid={`header-external-links-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+    <span data-testid={`header-external-links-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       {label}:{" "}
       {ids.map((id, i) => (
         <span key={id} style={i > limit - 1 && !showMore ? displayNone : {}}>
@@ -40,9 +32,13 @@ function XRefLinks({ label, urlBuilder, urlStem, ids, names, limit }: XRefLinksP
       {ids.length > limit ? (
         <span>
           {showMore ? "" : "... "}[{" "}
-          <span className={classes.showMore} onClick={() => setShowMore(!showMore)}>
+          <Box
+            component="span"
+            sx={{ color: "primary.main", cursor: "pointer" }}
+            onClick={() => setShowMore(!showMore)}
+          >
             {showMore ? " hide" : " show more"}
-          </span>{" "}
+          </Box>{" "}
           ]
         </span>
       ) : null}

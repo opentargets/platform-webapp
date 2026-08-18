@@ -1,4 +1,4 @@
-fragment MolecularStructureSummaryFragment on Target {
+fragment TargetMolecularStructureSummaryFragment on Target {
   proteinIds {
     id
     source

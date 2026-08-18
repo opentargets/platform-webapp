@@ -1,98 +1,61 @@
-import classNames from "classnames";
-import {
-  Avatar,
-  Card,
-  CardHeader,
-  Grid,
-  LinearProgress,
-  Skeleton,
-  Typography,
-} from "@mui/material";
+import { useLocation, useNavigate } from "react-router";
 import { scroller } from "react-scroll";
-
-import summaryStyles from "./summaryStyles";
-import { createShortName } from "./utils";
+import CategoryAvatar from "../CategoryAvatar";
 import PartnerLockIcon from "../PartnerLockIcon";
+import { SCROLL_OFFSET } from "../Section/scrollOffset";
+import { StyledChip, StyledLabel } from "./SummaryItem.styles";
 
-function SummaryItem<T>({ definition, request, subText }: { definition: any; request: { loading: boolean; error?: any; data: T }; subText?: React.ReactNode }) {
-  const classes = summaryStyles();
+function SummaryItem<T>({
+  definition,
+  request,
+  subText,
+}: {
+  definition: any;
+  request: { loading: boolean; error?: any; data: T };
+  subText?: React.ReactNode;
+}) {
   const { loading, error, data } = request;
-  const shortName = createShortName(definition);
   const hasData = !loading && !error && data && definition.hasData(data);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClickSection = () => {
     scroller.scrollTo(definition.id, {
       duration: 500,
       delay: 100,
       smooth: true,
+      offset: SCROLL_OFFSET,
     });
+    // Preserve the existing search params (e.g. ?category=) - navigate()
+    // with only `hash` set would otherwise drop them.
+    navigate(
+      { hash: `#${definition.id}`, search: location.search },
+      { replace: true, preventScrollReset: true }
+    );
   };
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card
-        data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
-        className={classNames(classes.card, {
-          [classes.cardHasData]: hasData,
-          [classes.cardError]: error,
-        })}
-        onClick={handleClickSection}
-        elevation={0}
-        variant="outlined"
-      >
-        <CardHeader
-          className={classes.cardHeader}
-          avatar={
-            <Avatar
-              className={classNames(classes.avatar, {
-                [classes.avatarHasData]: hasData,
-                [classes.avatarError]: error,
-              })}
-            >
-              {shortName}
-            </Avatar>
-          }
-          title={
-            <>
-              <Typography
-                className={classNames(classes.title, {
-                  [classes.titleHasData]: hasData,
-                  [classes.titleError]: error,
-                })}
-                variant="body2"
-              >
-                {loading && <Skeleton width={100} />}
-                {!loading && definition.name} {definition.isPrivate ? <PartnerLockIcon /> : null}
-              </Typography>
-              {subText ? (
-                <Typography
-                  className={classNames(classes.subtitle, {
-                    [classes.subtitleHasData]: hasData,
-                  })}
-                  variant="caption"
-                >
-                  {subText}
-                </Typography>
-              ) : null}
-
-              <Typography
-                className={classNames(classes.subheader, {
-                  [classes.subheaderHasData]: hasData,
-                  [classes.subheaderError]: true,
-                })}
-              >
-                {error && (
-                  <Typography variant="body2">
-                    An error occurred while loading this section
-                  </Typography>
-                )}
-              </Typography>
-            </>
-          }
-        />
-        {loading && <LinearProgress />}
-      </Card>
-    </Grid>
+    <StyledChip
+      data-testid={`summary-${definition.id.toLowerCase().replace(/_/g, "")}`}
+      hasData={hasData}
+      error={!!error}
+      onClick={handleClickSection}
+      sx={{ opacity: loading ? 0.6 : 1 }}
+    >
+      <CategoryAvatar
+        className="summaryChipIcon"
+        definition={definition}
+        hasData={hasData}
+        error={!!error}
+        size={38}
+        shape="square"
+        filled={false}
+      />
+      <StyledLabel className="summaryChipLabel" hasData={hasData} error={!!error}>
+        {definition.name}
+      </StyledLabel>
+      {definition.isPrivate && <PartnerLockIcon />}
+    </StyledChip>
   );
 }
 

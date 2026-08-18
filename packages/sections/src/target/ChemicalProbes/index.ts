@@ -5,6 +5,7 @@ export const definition = {
   id: "chemicalProbes",
   name: "Chemical Probes",
   shortName: "CP",
+  category: "Target",
   hasData: (data: TargetData) => (data.chemicalProbes?.length || 0) > 0,
 };
 

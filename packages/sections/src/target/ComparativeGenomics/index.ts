@@ -6,6 +6,7 @@ export const definition = {
   id: "compGenomics",
   name: "Comparative Genomics",
   shortName: "CG",
+  category: "Target",
   hasData: (data: TargetData) => {
     const { paralogueCount, orthologueCount } = countHomologues(data.homologues || []);
     return paralogueCount > 0 || orthologueCount > 0;

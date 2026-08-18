@@ -1,26 +1,18 @@
-import { useState, useLayoutEffect, useRef, PropsWithChildren } from "react";
-import { makeStyles } from "@mui/styles";
-import { Typography } from "@mui/material";
-
-const useStyles = makeStyles(theme => ({
-  textContainer: {
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-  showMore: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
-}));
+import { Box, Typography } from "@mui/material";
+import { type PropsWithChildren, useLayoutEffect, useRef, useState } from "react";
 
 type LongTextProps = {
   lineLimit: number;
-  variant: string;
+  variant?: string;
+  displayText?: string;
 };
 
-const LongText = ({ lineLimit, variant = "body2", children }: PropsWithChildren<LongTextProps>) => {
-  const classes = useStyles();
+const LongText = ({
+  lineLimit,
+  variant = "body2",
+  children,
+  displayText,
+}: PropsWithChildren<LongTextProps>) => {
   const containerRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLInputElement>(null);
   const [showMore, setShowMore] = useState(false);
@@ -44,15 +36,23 @@ const LongText = ({ lineLimit, variant = "body2", children }: PropsWithChildren<
 
   return (
     <Typography variant={variant}>
-      <span ref={containerRef} className={classes.textContainer}>
+      <Box
+        component="span"
+        ref={containerRef}
+        sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+      >
         <span ref={textRef}>{children}</span>
-      </span>
+      </Box>
       {numberOfLines > lineLimit && (
         <span>
-          {showMore ? "" : "... "}[{" "}
-          <span className={classes.showMore} onClick={() => setShowMore(!showMore)}>
-            {showMore ? " hide" : " show more"}
-          </span>{" "}
+          {!showMore && displayText === undefined && "... "}[{" "}
+          <Box
+            component="span"
+            sx={{ color: "primary.main", cursor: "pointer" }}
+            onClick={() => setShowMore(!showMore)}
+          >
+            {showMore ? " hide" : (displayText ?? " show more")}
+          </Box>{" "}
           ]
         </span>
       )}

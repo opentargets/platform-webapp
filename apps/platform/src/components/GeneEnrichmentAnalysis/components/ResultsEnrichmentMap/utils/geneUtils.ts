@@ -132,17 +132,6 @@ export function filterNodesWithoutEdges(
   const droppedNodes = Array.from(existingNodeIds).filter((nodeId) => !nodesWithValidEdges.has(nodeId));
   const droppedNodesCount = droppedNodes.length;
 
-  console.log("[FILTER_NODES_WITHOUT_EDGES] Details:", {
-    totalNodes,
-    nodesWithValidEdges: nodesWithValidEdges.size,
-    droppedNodesCount,
-    droppedNodeIds: droppedNodes,
-    invalidEdgesCount: invalidEdges.length,
-    invalidEdges: invalidEdges.slice(0, 50), // Log first 50 invalid edges
-    missingSourceNodes: [...new Set(invalidEdges.filter(e => !existingNodeIds.has(e.source)).map(e => e.source))],
-    missingTargetNodes: [...new Set(invalidEdges.filter(e => !existingNodeIds.has(e.target)).map(e => e.target))],
-  });
-
   return {
     elements: filteredElements,
     droppedNodesCount,

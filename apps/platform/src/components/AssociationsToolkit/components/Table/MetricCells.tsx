@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Box, Skeleton, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
+import { Box, Skeleton } from "ui";
 import * as Plot from "@observablehq/plot";
 import AssocTooltip from "./AssocTooltip";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";

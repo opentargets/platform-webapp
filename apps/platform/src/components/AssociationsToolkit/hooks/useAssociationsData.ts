@@ -64,6 +64,10 @@ function useAssociationsData({
   const [state, setState] = useState<AssociationsDataState>(getInitialState(laodingCount));
 
   useEffect(() => {
+    if (size === 0) {
+      setState({ loading: false, error: false, data: [], initialLoading: false, count: 0 });
+      return;
+    }
     let isCurrent = true;
     const fetchData = async () => {
       setState(prev => ({ ...prev, loading: true }));

@@ -5,6 +5,7 @@ export const definition = {
   id: "pathways",
   name: "Pathways",
   shortName: "PW",
+  category: "Target",
   hasData: (data: TargetData) => (data.pathways?.length || 0) > 0,
 };
 

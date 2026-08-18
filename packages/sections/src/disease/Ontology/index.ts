@@ -4,6 +4,7 @@ export const definition = {
   id: "ontology",
   name: "Ontology",
   shortName: "O",
+  category: "Disease",
   hasData: (data: any) => data.id,
 };
 

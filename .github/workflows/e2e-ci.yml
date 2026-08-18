@@ -102,7 +102,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Enable Corepack
         run: corepack enable
@@ -161,7 +161,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Enable Corepack
         run: corepack enable

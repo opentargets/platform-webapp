@@ -103,17 +103,16 @@ async function computePathwayEdgesWithWorker(
 }> {
   return new Promise((resolve, reject) => {
     try {
-      console.log(`[ENRICHMENT_MAP] Creating web worker...`);
+
       const workerStartTime = performance.now();
       
       // Create a new worker instance
       const worker = new Worker(new URL('./pathwayEdgesWorker.ts', import.meta.url), { type: 'module' });
-      console.log(`[ENRICHMENT_MAP] Worker created successfully`);
+      
 
       // Set up message handler
       worker.onmessage = (event) => {
         const duration = performance.now() - workerStartTime;
-        console.log(`[ENRICHMENT_MAP] ✅ Worker completed in ${duration.toFixed(0)}ms: ${event.data.stats.edges} edges, ${event.data.stats.displayedPathways} pathways`);
         resolve(event.data);
         worker.terminate();
       };
@@ -140,7 +139,6 @@ async function computePathwayEdgesWithWorker(
         pathwayLinkMapObj[key] = value;
       });
 
-      console.log(`[ENRICHMENT_MAP] 📤 Sending ${pathwayIds.length} pathways to worker (${nodes.length} nodes)...`);
 
       // Send data to worker
       worker.postMessage({

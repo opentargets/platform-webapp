@@ -1,4 +1,4 @@
-import { SectionItem, useBatchQuery } from "ui";
+import { SectionItem, useBatchQuery, Box } from "ui";
 import Description from "./Description";
 import { definition } from ".";
 import OVERLAPPING_VARIANTS_QUERY from "./OverlappingVariantsQuery.gql";
@@ -6,7 +6,6 @@ import { StateProvider } from "./Context";
 import Viewer from "./Viewer";
 import Filters from "./Filters";
 import Table from "./Table";
-import { Box } from "@mui/material";
 import { table5HChunkSize } from "@ot/constants";
 
 export interface OverlappingVariantsWidgetProps {

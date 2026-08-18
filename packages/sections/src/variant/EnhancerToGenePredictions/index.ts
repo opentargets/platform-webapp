@@ -5,6 +5,7 @@ export const definition = {
   id: "Enhancer_to_gene_predictions",
   name: "Enhancer-to-gene predictions",
   shortName: "EG",
+  category: "Target-Variant",
   hasData: (data: Variant) => {
     return (data.enhancerToGenes?.count || 0) > 0;
   },

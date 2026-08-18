@@ -1,7 +1,7 @@
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, InputAdornment, TextField } from "@mui/material";
-import { styled } from "@mui/styles";
+import { Box, InputAdornment, TextField } from "ui";
+import { styled } from "@mui/material/styles";
 import { useContext } from "react";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { textSearch } from "./context/downloadsActions";

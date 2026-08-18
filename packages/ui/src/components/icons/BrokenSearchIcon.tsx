@@ -1,16 +1,6 @@
-import { makeStyles } from "@mui/styles";
-import { ReactNode } from "react";
-
-const useStyles = makeStyles(theme => ({
-  mainIcon: {
-    width: "1em",
-    display: "flex",
-  },
-}));
+import type { ReactNode } from "react";
 
 function BrokenSearchIcon({ color = "#3489ca" }): ReactNode {
-  const classes = useStyles();
-
   const styles = {
     fill: "none",
     stroke: color,
@@ -24,7 +14,7 @@ function BrokenSearchIcon({ color = "#3489ca" }): ReactNode {
       xmlns="http://www.w3.org/2000/svg"
       id="Layer_2"
       viewBox="0 0 423.4 832"
-      className={classes.mainIcon}
+      style={{ width: "1em", display: "flex" }}
     >
       <defs>
         <style>

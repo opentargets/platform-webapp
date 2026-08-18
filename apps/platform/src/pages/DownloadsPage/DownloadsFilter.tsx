@@ -1,8 +1,8 @@
-import { Box, Chip, Paper, Typography } from "@mui/material";
 import { useContext, useMemo } from "react";
+import { Box, Paper, Typography, Chip } from "ui";
+import DownloadsSearchInput from "./DownloadsSearchInput";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiagramProject, faTrash } from "@fortawesome/free-solid-svg-icons";
-import DownloadsSearchInput from "./DownloadsSearchInput";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { clearFilterData, setActiveFilter } from "./context/downloadsActions";
 import { getCategoryColor, tintHex } from "./categoryColors";

@@ -6,15 +6,16 @@ import {
   DirectionOfEffectTooltip,
   OtTable,
   ClinicalRecordDrawer,
+  Box,
+  Typography,
 } from "ui";
 import { useQuery } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
-import { clinicalStageCategories, naLabel, dataTypesMap, sectionsBaseSizeQuery } from "@ot/constants";
+import { clinicalStageCategories, naLabel, dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps } from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 import CLINICAL_PRECEDENCE_QUERY from "./ClinicalPrecedence.gql";
-import { Box, Typography } from "@mui/material";
 
 const exportColumns = [
   {
@@ -199,7 +200,9 @@ const columns = [
   },
 ];
 
-function Body({ id, label, entity }) {
+type Props = EvidenceBodyProps;
+
+function Body({ id, label, entity }: Props) {
 
   const variables = {
     ensemblId: id.ensgId,

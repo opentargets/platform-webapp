@@ -1,16 +1,16 @@
-import { Chip } from "@mui/material";
 import { credsetConfidenceMap, naLabel, table5HChunkSize } from "@ot/constants";
 import { mantissaExponentComparator, variantComparator } from "@ot/utils";
 import {
-	ClinvarStars,
-	DisplayVariantId,
-	Link,
-	Navigate,
-	OtTable,
-	ScientificNotation,
-	SectionItem,
-	Tooltip,
-	useBatchQuery,
+  ClinvarStars,
+  DisplayVariantId,
+  Link,
+  Navigate,
+  OtTable,
+  ScientificNotation,
+  SectionItem,
+  Tooltip,
+  useBatchQuery,
+  Chip,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
@@ -72,7 +72,7 @@ const columns = [
         <>
           {`${type.slice(0, -3)}${type.slice(-3).toUpperCase()}`}{" "}
           {isTransQtl && (
-            <Chip label="trans" variant="outlined" size="small" />
+            <Chip label="trans" />
           )}
         </>
       );

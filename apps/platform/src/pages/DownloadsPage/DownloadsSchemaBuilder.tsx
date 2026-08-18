@@ -1,9 +1,8 @@
 import { faKey, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
-import { Box } from "@mui/material";
-import { Tooltip } from "ui";
+import { Tooltip, Box } from "ui";
 import { FontAwesomeIconPadded } from "ui/src/components/OtTable/otTableLayout";
 import { getDataType, getFieldProperty, isForeignColumn, isPrimaryColumn } from "./utils";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const StickyLeftTh = styled("th")(({ theme }) => ({

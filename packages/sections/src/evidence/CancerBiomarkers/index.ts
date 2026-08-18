@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Cancer Biomarkers",
   shortName: "CB",
+  category: ["Target-Disease", "Drug"],
   hasData: (data: EvidenceData) => (data.cancerBiomarkersSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
   dataType: dataTypesMap.affected_pathway,

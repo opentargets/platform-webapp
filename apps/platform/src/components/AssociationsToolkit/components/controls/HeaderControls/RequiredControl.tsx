@@ -1,5 +1,5 @@
 import { ChangeEvent, ReactElement, useEffect, useState } from "react";
-import { Checkbox } from "@mui/material";
+import { Checkbox } from "ui";
 import { styled } from "@mui/material/styles";
 
 const OTCheckbox = styled(Checkbox)`

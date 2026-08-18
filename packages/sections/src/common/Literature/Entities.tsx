@@ -1,0 +1,181 @@
+import { styled } from "@mui/material/styles";
+import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
+import { fetchSimilarEntities } from "./requests";
+import { useApolloClient, Grow, Chip } from "ui";
+
+const StyledChipRow = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexWrap: "wrap",
+  "& > *": {
+    margin: `${theme.spacing(0.5)} !important`,
+  },
+}));
+
+function EntitiesToSelect({ id }) {
+  const literature = useLiterature();
+  const { entities, selectedEntities: selectedChips, loadingEntities } = literature;
+  const literatureDispatch = useLiteratureDispatch();
+  const client = useApolloClient();
+
+  const handleSelectChip = async e => {
+    const {
+      query,
+      id: bibliographyId,
+      category,
+      globalEntity,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    } = literature;
+    const newChips = [
+      ...selectedChips,
+      {
+        score: e.score,
+        object: {
+          name: e.object.name || e.object.approvedSymbol,
+          id: e.object.id,
+        },
+      },
+    ];
+    literatureDispatch({ type: "selectedEntities", value: newChips });
+    literatureDispatch({ type: "loadingEntities", value: true });
+    const request = await fetchSimilarEntities({
+      client,
+      query,
+      id: bibliographyId,
+      category,
+      entities: newChips,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    });
+    const data = request.data[globalEntity];
+    const update = {
+      entities: data.similarEntities,
+      litsIds: data.literatureOcurrences?.rows?.map(({ pmid }) => pmid),
+      litsCount: data.literatureOcurrences?.filteredCount,
+      earliestPubYear: data.literatureOcurrences?.earliestPubYear,
+      cursor: data.literatureOcurrences?.cursor,
+      loadingEntities: false,
+      page: 0,
+    };
+    literatureDispatch({ type: "stateUpdate", value: update });
+  };
+
+  const validateEntity = entity => {
+    if (id === entity.object?.id) return null;
+    if (selectedChips.find(s => s.object.id === entity.object.id)) return null;
+    return entity;
+  };
+
+  return entities.map(e => {
+    if (!e.object)
+      return (
+        <Grow in key={`empty-entity-${e.id}`}>
+          <Chip
+            style={{ opacity: loadingEntities ? 0.5 : 1 }}
+            label={e.id}
+            disabled
+            title="Missing object entity"
+            color="secondary"
+            variant="outlined"
+            size="medium"
+          />
+        </Grow>
+      );
+    return validateEntity(e) ? (
+      <Grow in key={e.object.id}>
+        <Chip
+          style={{ opacity: loadingEntities ? 0.5 : 1 }}
+          label={e.object.name || e.object.approvedSymbol}
+          disabled={loadingEntities}
+          clickable
+          onClick={() => {
+            handleSelectChip(e);
+          }}
+          title={`Score: ${e.score} ID: ${e.object.id}`}
+          color="primary"
+          variant="outlined"
+          size="medium"
+        />
+      </Grow>
+    ) : null;
+  });
+}
+
+export default function Entities({ name, id }) {
+  const literature = useLiterature();
+  const { selectedEntities: selectedChips, loadingEntities } = literature;
+  const literatureDispatch = useLiteratureDispatch();
+  const client = useApolloClient();
+
+  const handleDeleteChip = async index => {
+    const {
+      query,
+      id: bibliographyId,
+      category,
+      globalEntity,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    } = literature;
+    const newChips = [...selectedChips.slice(0, index), ...selectedChips.slice(index + 1)];
+    literatureDispatch({ type: "selectedEntities", value: newChips });
+    literatureDispatch({ type: "loadingEntities", value: true });
+    const request = await fetchSimilarEntities({
+      client,
+      query,
+      id: bibliographyId,
+      category,
+      entities: newChips,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    });
+    const data = request.data[globalEntity];
+    const update = {
+      entities: data.similarEntities,
+      litsIds: data.literatureOcurrences?.rows?.map(({ pmid }) => pmid),
+      litsCount: data.literatureOcurrences?.filteredCount,
+      earliestPubYear: data.literatureOcurrences?.earliestPubYear,
+      cursor: data.literatureOcurrences?.cursor,
+      loadingEntities: false,
+      page: 0,
+    };
+    literatureDispatch({ type: "stateUpdate", value: update });
+  };
+
+  return (
+    <div>
+      <StyledChipRow>
+        <Chip label={name} title={`ID: ${id}`} color="primary" variant="filled" size="medium" />
+        {selectedChips.map((e, i) => (
+          <Grow in key={e.object.id}>
+            <Chip
+              label={e.object.name}
+              title={`Score: ${e.score} ID: ${e.object.id}`}
+              color="primary"
+              variant="filled"
+              size="medium"
+              clickable
+              disabled={loadingEntities}
+              onClick={() => {
+                handleDeleteChip(i);
+              }}
+              onDelete={() => {
+                handleDeleteChip(i);
+              }}
+            />
+          </Grow>
+        ))}
+      </StyledChipRow>
+      <StyledChipRow>
+        <EntitiesToSelect id={id} />
+      </StyledChipRow>
+    </div>
+  );
+}

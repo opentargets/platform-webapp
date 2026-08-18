@@ -1,11 +1,15 @@
 import FileSaver from "file-saver";
 import { useState, useMemo, useEffect, useReducer } from "react";
+import { styled } from "@mui/material/styles";
+import { faCaretDown, faFileDownload } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Button,
-  Grid,
+  CopyUrlButton,
+  useAPIMetadata,
+  useApolloClient,
+  useBatchDownloader,
+  GridLegacy,
   Typography,
-  Snackbar,
-  Slide,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -13,24 +17,22 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   ListItemText,
   Box,
-  FormHelperText,
   ListItemIcon,
-} from "@mui/material";
-import { styled } from "@mui/material/styles";
-import { makeStyles } from "@mui/styles";
-import { faCaretDown, faFileDownload } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CopyUrlButton, useAPIMetadata, useApolloClient, useBatchDownloader } from "ui";
+  Button,
+  Snackbar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider,
+  FormHelperText,
+  Slide,
+} from "ui";
 import { getConfig } from "@ot/config";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";
@@ -67,22 +69,18 @@ const BorderAccordion = styled(Accordion)(({ theme }) => ({
   borderRadius: `${theme.spacing(1)} !important`,
 }));
 
-const styles = makeStyles(theme => ({
-  messageProgress: {
-    marginRight: "1rem",
-    color: "white !important",
+const StyledSnackbar = styled(Snackbar)({
+  "& .MuiSnackbarContent-root": {
+    padding: 0,
   },
-  snackbarContentMessage: {
+  "& .MuiSnackbarContent-message": {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
     padding: ".75rem 1rem",
     width: "100%",
   },
-  snackbarContentRoot: {
-    padding: 0,
-  },
-}));
+});
 
 const allAssociationsAggregation = [...new Set(dataSources.map(e => e.aggregation))];
 const allPrioritizationAggregation = [...new Set(prioritizationCols.map(e => e.aggregation))];
@@ -146,7 +144,6 @@ const DOWNLOAD_CHUNCK_SIZE = 300;
 function DataDownloader() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { version } = useAPIMetadata();
-  const classes = styles();
   const {
     id,
     query,
@@ -202,6 +199,7 @@ function DataDownloader() {
     sortBy: sorting[0].id,
     enableIndirect,
     entitySearch,
+    isDirect: !enableIndirect,
     datasources: dataSourcesWeights.map(el => ({
       id: el.id,
       weight: el.weight,
@@ -445,35 +443,29 @@ function DataDownloader() {
               <Typography>Download data as:</Typography>
             </Box>
             <Box>
-              <Grid container alignItems="center" spacing={3}>
-                <Grid item>
+              <GridLegacy container alignItems="center" spacing={3}>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadJSON} size="small">
                     JSON
                   </Button>
-                </Grid>
-                <Grid item>
+                </GridLegacy>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadTSV} size="small">
                     TSV
                   </Button>
-                </Grid>
-              </Grid>
+                </GridLegacy>
+              </GridLegacy>
             </Box>
           </Box>
         </DialogContent>
       </Dialog>
-      <Snackbar
+      <StyledSnackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         open={downloading}
         TransitionComponent={Slide}
-        ContentProps={{
-          classes: {
-            root: classes.snackbarContentRoot,
-            message: classes.snackbarContentMessage,
-          },
-        }}
         message={
           <>
-            <CircularProgress className={classes.messageProgress} />
+            <CircularProgress sx={{ marginRight: "1rem", color: "white !important" }} />
             Preparing the data. This may take several minutes...
           </>
         }

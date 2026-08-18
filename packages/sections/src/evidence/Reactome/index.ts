@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Reactome",
   shortName: "RE",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.reactomeSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };

@@ -5,6 +5,7 @@ export const definition = {
   id: "in_silico_predictors",
   name: "Variant effect",
   shortName: "VP",
+  category: "Target-Variant",
   hasData: (data: Variant) => (data.variantEffect?.length || 0) > 0,
 };
 

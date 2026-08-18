@@ -7,6 +7,7 @@ export const definition = {
   id,
   name: "Expression Atlas",
   shortName: "EA",
+  category: "Target-Disease",
   hasData: (data: EvidenceData) => (data.expressionAtlasSummary?.count || 0) > 0,
   isPrivate: isPrivateEvidenceSection(id),
 };
