@@ -16,6 +16,7 @@ import VariantPage from "./pages/VariantPage";
 import StudyPage from "./pages/StudyPage";
 import CredibleSetPage from "./pages/CredibleSetPage";
 import APIPage from "./pages/APIPage";
+import MetricsPage from "./pages/MetricsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import AnalysisPage from "./pages/AnalysisPage";
@@ -34,6 +35,7 @@ function App(): ReactElement {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/api" element={<APIPage />} />
+            <Route path="/metrics" element={<MetricsPage />} />
             <Route
               path="/analysis"
               element={
