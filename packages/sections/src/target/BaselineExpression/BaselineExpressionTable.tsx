@@ -3,7 +3,7 @@ import { faCaretDown, faCaretUp, faCircle, faSquare } from "@fortawesome/free-so
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
-  Grid,
+  GridLegacy,
   IconButton,
   Paper,
   Table,
@@ -18,8 +18,6 @@ import {
   Typography,
 } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
-import type { Theme } from "@mui/material/styles";
-import { makeStyles } from "@mui/styles";
 import { theme } from "@ot/config";
 import { naLabel, baselineUnits } from "@ot/constants";
 import { sentenceCase, formatSignificantDigits } from "@ot/utils";
@@ -154,68 +152,34 @@ interface BaselineExpressionTableProps {
   expandSpecificity: boolean;
 }
 
-const useStyles = makeStyles((theme: Theme) => ({
-  tableContainer: {
-    marginTop: theme.spacing(1),
-  },
-  mainTable: {
-    tableLayout: "fixed",
-    width: "100%",
-    maxWidth: "1420px",
-  },
-  headerCell: {
-    fontWeight: "bold",
-    fontSize: "0.75rem",
-  },
-  tissueCell: {
-    fontWeight: "bold",
-    fontSize: "0.75rem",
-  },
-  medianCell: {
-    textAlign: "center",
-    fontSize: "0.75rem",
-  },
-  barContainer: {
-    height: "12px",
-    backgroundColor: emptyColor,
-    position: "relative",
-    width: "100%",
-    margin: "2px 0",
-  },
-  failed: {
-    backgroundColor: theme.palette.grey[300],
-    fontSize: "8.5px",
-  },
-  bar: {
-    height: "100%",
-    backgroundColor: theme.palette.primary.dark,
-    transition: "width 0.3s ease",
-    pointerEvents: "none",
-  },
-  childBar: {
-    height: "100%",
-    backgroundColor: theme.palette.primary.main,
-    transition: "width 0.3s ease",
-    pointerEvents: "none",
-  },
-  groupRow: {
-    cursor: "pointer",
-  },
-  nestedRow: {
-    cursor: "pointer",
-  },
-  cursorAuto: {
-    cursor: "auto !important",
-  },
-  expandButton: {
-    padding: "2px",
-    minWidth: "24px",
-    height: "24px",
-  },
-  expandColumn: {
-    width: "24px",
-  },
-}));
+const tableContainerSx = { marginTop: theme.spacing(1) };
+const mainTableSx = { tableLayout: "fixed", width: "100%", maxWidth: "1420px" };
+const headerCellSx = { fontWeight: "bold", fontSize: "0.75rem" };
+const medianCellSx = { textAlign: "center", fontSize: "0.75rem" };
+const barContainerSx = {
+  height: "12px",
+  backgroundColor: emptyColor,
+  position: "relative",
+  width: "100%",
+  margin: "2px 0",
+};
+const failedSx = { backgroundColor: theme.palette.grey[300], fontSize: "8.5px" };
+const barSx = {
+  height: "100%",
+  backgroundColor: theme.palette.primary.dark,
+  transition: "width 0.3s ease",
+  pointerEvents: "none",
+};
+const childBarSx = {
+  height: "100%",
+  backgroundColor: theme.palette.primary.main,
+  transition: "width 0.3s ease",
+  pointerEvents: "none",
+};
+const rowCursorPointerSx = { cursor: "pointer" };
+const cursorAutoSx = { cursor: "auto !important" };
+const expandButtonSx = { padding: "2px", minWidth: "24px", height: "24px" };
+const expandColumnSx = { width: "24px" };
 
 const Legend = ({
   specificityThreshold,
@@ -413,7 +377,6 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
   expandSpecificity = false
 }) => {
 
-  const classes = useStyles();
   const [sorting, setSorting] = useState<SortingState>([{ id: datatypes[0], desc: true }]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -537,8 +500,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
             {isFirstLevel && (
               <IconButton
                 disableRipple
-                className={classes.expandButton}
                 sx={{
+                  ...expandButtonSx,
                   visibility: cellContext.row.getCanExpand() ? "visible" : "hidden", // keeps all rows same height
                 }}
               >
@@ -649,18 +612,18 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                           : null
                       }
                     >
-                      <Box className={classes.medianCell}>
-                        <Box className={`${classes.barContainer} ${classes.failed}`}>{naLabel}</Box>
+                      <Box sx={medianCellSx}>
+                        <Box sx={{ ...barContainerSx, ...failedSx }}>{naLabel}</Box>
                       </Box>
                     </Tooltip>
                   </>
                 );
               }
 
-              if (value === -2) return (                
+              if (value === -2) return (
                 <>
                   {DisplayXAxis}
-                  <Box className={classes.medianCell}></Box>
+                  <Box sx={medianCellSx} />
                 </>
               );
 
@@ -670,8 +633,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
               return (
                 <>
                   {DisplayXAxis}
-                  <Box className={classes.medianCell}>
-                    <Box className={classes.barContainer}>
+                  <Box sx={medianCellSx}>
+                    <Box sx={barContainerSx}>
                     <Tooltip
                       placement="top-start"
                       slotProps={slotProps}
@@ -687,8 +650,10 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       }
                     >
                       <Box
-                        className={isFirstLevel ? classes.bar : classes.childBar}
-                        style={{ width: `${percent}%` }}
+                        sx={{
+                          ...(isFirstLevel ? barSx : childBarSx),
+                          width: `${percent}%`,
+                        }}
                       />
                     </Tooltip>
 
@@ -741,8 +706,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                           <IconButton
                             size="small"
                             disableRipple
-                            className={classes.expandColumn}
                             sx={{
+                              ...expandColumnSx,
                               visibility: cellContext.row.getCanExpand() ? "visible" : "hidden",
                               "&:hover": {
                                 bgcolor: "transparent",
@@ -828,7 +793,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
   }, []); // only auto expand when first loads
 
   return (
-    <Box className={classes.tableContainer}>
+    <Box sx={tableContainerSx}>
       <Box
         sx={{
           display: "flex",
@@ -883,10 +848,10 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>{DownloaderComponent}</Box>
         </Box>
       </Box>
-      <Grid justifyContent="center" container>
-        <Grid item xs={12} md={10}>
+      <GridLegacy justifyContent="center" container>
+        <GridLegacy item xs={12} md={10}>
           <TableContainer component={Paper} elevation={0}>
-            <Table size="small" className={classes.mainTable} style={{ fontSize: "0.75rem" }}>
+            <Table size="small" sx={{ ...mainTableSx, fontSize: "0.75rem" }}>
               <TableHead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
@@ -894,8 +859,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       return (
                         <TableCell
                           key={header.id}
-                          className={classes.headerCell}
                           sx={{
+                            ...headerCellSx,
                             width: getColumnWidth(index),
                             border: "none",
                             verticalAlign: index === 0 ? "bottom" : "top",
@@ -1009,11 +974,12 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                     <Fragment key={row.id}>
                       {/* 1st and 2nd level rows */}
                       <TableRow
-                        className={`${isFirstLevel ? classes.groupRow : classes.nestedRow} ${row.getCanExpand() ? "" : classes.cursorAuto}`}
                         onClick={() => {
                           if (row.getCanExpand()) row.toggleExpanded();
                         }}
-                        sx={
+                        sx={[
+                          rowCursorPointerSx,
+                          !row.getCanExpand() && cursorAutoSx,
                           isFirstLevel && !isExpanded
                             ? {
                                 "&:hover:not(:has(.xaxis-component:hover))": {
@@ -1046,8 +1012,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                                     cursor: "pointer",
                                   },
                                 }),
-                              }
-                        }
+                              },
+                        ]}
                       >
                         {row.getVisibleCells().map((cell, index) => {
                           const isSingleCellColumn =
@@ -1128,8 +1094,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
               </TableBody>
             </Table>
           </TableContainer>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
     </Box>
   );
 };

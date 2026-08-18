@@ -1,5 +1,4 @@
 import { useQuery } from "@apollo/client";
-import { makeStyles } from "@mui/styles";
 import { SectionItem, Link, Tooltip, OtTable, TooltipStyledLabel } from "ui";
 
 import { definition } from ".";
@@ -7,12 +6,6 @@ import Description from "./Description";
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 
 import CRISPR_QUERY from "./OTCrisprQuery.gql";
-
-const useStyles = makeStyles(theme => ({
-  significanceIcon: {
-    color: theme.palette.primary.main,
-  },
-}));
 
 const getColumns = () => [
   {
@@ -150,7 +143,6 @@ function Body({ id, label, entity }: Props) {
   const request = useQuery(CRISPR_QUERY, {
     variables,
   });
-  const classes = useStyles();
 
   return (
     <SectionItem
@@ -164,7 +156,7 @@ function Body({ id, label, entity }: Props) {
       renderBody={() => {
         return (
           <OtTable
-            columns={getColumns(classes)}
+            columns={getColumns()}
             rows={request.data?.disease.OtCrisprSummary.rows}
             dataDownloader
             dataDownloaderColumns={exportColumns}

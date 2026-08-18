@@ -8,7 +8,7 @@
     "build": "storybook build"
   },
   "dependencies": {
-    "@mui/material": "^5.14.1",
+    "@mui/material": "^7.3.9",
     "@ot/config": "*",
     "mermaid": "^11.16.0",
     "polished": "^2.3.0",

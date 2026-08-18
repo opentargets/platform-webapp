@@ -1,20 +1,14 @@
 import { Chip, Grow } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
 import { useApolloClient } from "ui";
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: "flex",
-    flexWrap: "wrap",
-    "& > *": {
-      margin: `${theme.spacing(0.5)} !important`,
-    },
-  },
-  loadingContainer: {
-    display: "flex",
-    margin: "10px",
+const StyledChipRow = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexWrap: "wrap",
+  "& > *": {
+    margin: `${theme.spacing(0.5)} !important`,
   },
 }));
 
@@ -111,7 +105,6 @@ function EntitiesToSelect({ id }) {
 }
 
 export default function Entities({ name, id }) {
-  const classes = useStyles();
   const literature = useLiterature();
   const { selectedEntities: selectedChips, loadingEntities } = literature;
   const literatureDispatch = useLiteratureDispatch();
@@ -157,7 +150,7 @@ export default function Entities({ name, id }) {
 
   return (
     <div>
-      <div className={classes.root}>
+      <StyledChipRow>
         <Chip label={name} title={`ID: ${id}`} color="primary" />
         {selectedChips.map((e, i) => (
           <Grow in key={e.object.id}>
@@ -176,10 +169,10 @@ export default function Entities({ name, id }) {
             />
           </Grow>
         ))}
-      </div>
-      <div className={classes.root}>
+      </StyledChipRow>
+      <StyledChipRow>
         <EntitiesToSelect id={id} />
-      </div>
+      </StyledChipRow>
     </div>
   );
 }

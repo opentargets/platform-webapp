@@ -9,7 +9,7 @@ import {
   axisTop,
   axisLeft,
 } from "d3";
-import { useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 
 const width = 900;
 const boxHeight = 20;

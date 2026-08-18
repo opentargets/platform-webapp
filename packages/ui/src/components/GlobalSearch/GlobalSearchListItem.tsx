@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { Typography, Chip, Box } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faClockRotateLeft, faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";

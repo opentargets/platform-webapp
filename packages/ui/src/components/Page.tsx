@@ -1,23 +1,5 @@
-import { Theme, Grid } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Box, GridLegacy } from "@mui/material";
 import { ReactElement } from "react";
-
-const useStyles = makeStyles((theme: Theme) => ({
-  page: {
-    background: theme.palette.grey["50"],
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    margin: 0,
-    width: "100%",
-  },
-  gridContainer: {
-    margin: 0,
-    padding: "24px",
-    width: "100%",
-    flex: "1 0 auto",
-  },
-}));
 
 type PageProps = {
   children: ReactElement;
@@ -26,17 +8,33 @@ type PageProps = {
 };
 
 function Page({ header, footer, children }: PageProps) {
-  const classes = useStyles();
   return (
-    <div className={classes.page}>
+    <Box
+      sx={{
+        backgroundColor: "grey.50",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        margin: 0,
+        width: "100%",
+      }}
+    >
       {header}
-      <Grid container justifyContent="center" spacing={3} className={classes.gridContainer}>
-        <Grid item xs={12} md={11} sx={{ pb: 3 }}>
+      {/* NOTE: see packages/ui/src/pages/Page.tsx - the old JSS `margin: 0` rule here
+          never actually beat MuiGrid-spacing-xs-3's own default negative margin.
+          Omitted so the real historical margin applies. */}
+      <GridLegacy
+        container
+        justifyContent="center"
+        spacing={3}
+        sx={{ padding: "24px", width: "100%", flex: "1 0 auto" }}
+      >
+        <GridLegacy item xs={12} md={11} sx={{ pb: 3 }}>
           {children}
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
       {footer}
-    </div>
+    </Box>
   );
 }
 

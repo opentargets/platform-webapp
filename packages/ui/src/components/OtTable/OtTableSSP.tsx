@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode, useEffect, useMemo, useReducer, useState } from "react";
-import { Box, CircularProgress, Grid, IconButton, NativeSelect, Skeleton } from "@mui/material";
+import { Box, CircularProgress, GridLegacy, IconButton, NativeSelect, Skeleton } from "@mui/material";
 import {
   useReactTable,
   getCoreRowModel,
@@ -247,11 +247,11 @@ function OtTableSSP({
   return (
     <div>
       {/* Global Search */}
-      <Grid
+      <GridLegacy
         container
         sx={{ display: "flex", justifyContent: "space-between", gap: { xs: 2, md: 0 } }}
       >
-        <Grid item sm={12} md={4}>
+        <GridLegacy item sm={12} md={4}>
           {showGlobalFilter && (
             <OtTableSearch
               setGlobalSearchTerm={freeTextQuery => {
@@ -259,9 +259,9 @@ function OtTableSSP({
               }}
             />
           )}
-        </Grid>
+        </GridLegacy>
 
-        <Grid item sm={12} md={8} sx={{ display: "flex", justifyContent: "end", gap: 1 }}>
+        <GridLegacy item sm={12} md={8} sx={{ display: "flex", justifyContent: "end", gap: 1 }}>
           {showColumnVisibilityControl && <OtTableColumnVisibility table={table} />}
 
           {dataDownloader && (
@@ -273,8 +273,8 @@ function OtTableSSP({
               variables={playgroundVariables}
             />
           )}
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
       {/* Table component container */}
       <Box sx={{ w: 1, overflowX: "auto", marginTop: theme => theme.spacing(3) }}>
         {/* Table component */}

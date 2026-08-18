@@ -12,26 +12,17 @@ import {
 } from "@mui/material";
 import { faXmark, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import Link from "./Link";
 import PrivateWrapper from "./PrivateWrapper";
 
-const useStyles = makeStyles(() => ({
-  icon: {
-    marginLeft: "20px",
-  },
-  menuLink: {
-    width: "100%",
-    paddingTop: "8px",
-    paddingBottom: "8px",
-    paddingLeft: "16px",
-    paddingRight: "16px",
-  },
-  menuItem: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-  },
-}));
+const StyledMenuLink = styled(Link)({
+  width: "100%",
+  paddingTop: "8px",
+  paddingBottom: "8px",
+  paddingLeft: "16px",
+  paddingRight: "16px",
+});
 
 type HeaderMenuItem = {
   external: boolean;
@@ -46,7 +37,6 @@ type HeaderMenuProps = {
 };
 
 function HeaderMenu({ items, placement }: HeaderMenuProps): ReactElement {
-  const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<null | HTMLButtonElement>(null);
   const isMenuOpen = Boolean(anchorEl);
 
@@ -68,7 +58,7 @@ function HeaderMenu({ items, placement }: HeaderMenuProps): ReactElement {
   return (
     <>
       <IconButton
-        className={classes.icon}
+        sx={{ marginLeft: "20px" }}
         size="medium"
         color="inherit"
         aria-label="open header menu"
@@ -97,15 +87,14 @@ function HeaderMenu({ items, placement }: HeaderMenuProps): ReactElement {
                     if (item.showOnlyPartner) {
                       return (
                         <PrivateWrapper key={v1()}>
-                          <MenuItem onClick={handleMenuClose} dense className={classes.menuItem}>
-                            <Link
-                              external={item.external}
-                              to={item.url}
-                              className={classes.menuLink}
-                              footer={false}
-                            >
+                          <MenuItem
+                            onClick={handleMenuClose}
+                            dense
+                            sx={{ paddingLeft: "0px", paddingRight: "0px" }}
+                          >
+                            <StyledMenuLink external={item.external} to={item.url} footer={false}>
                               {item.name}
-                            </Link>
+                            </StyledMenuLink>
                           </MenuItem>
                         </PrivateWrapper>
                       );
@@ -115,16 +104,11 @@ function HeaderMenu({ items, placement }: HeaderMenuProps): ReactElement {
                         onClick={handleMenuClose}
                         key={v1()}
                         dense
-                        className={classes.menuItem}
+                        sx={{ paddingLeft: "0px", paddingRight: "0px" }}
                       >
-                        <Link
-                          external={item.external}
-                          to={item.url}
-                          className={classes.menuLink}
-                          footer={false}
-                        >
+                        <StyledMenuLink external={item.external} to={item.url} footer={false}>
                           {item.name}
-                        </Link>
+                        </StyledMenuLink>
                       </MenuItem>
                     );
                   })}

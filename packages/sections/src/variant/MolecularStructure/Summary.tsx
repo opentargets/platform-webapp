@@ -10,7 +10,7 @@ function Summary() {
 }
 
 Summary.fragments = {
-  MolecularStructureSummaryFragment: MOLECULAR_STRUCTURE_SUMMARY,
+  VariantMolecularStructureSummaryFragment: MOLECULAR_STRUCTURE_SUMMARY,
 };
 
 export default Summary;

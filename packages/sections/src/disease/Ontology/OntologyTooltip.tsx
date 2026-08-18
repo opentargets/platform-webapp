@@ -1,33 +1,19 @@
-import { makeStyles } from "@mui/styles";
 import { Tooltip as MUITooltip } from "@mui/material";
-import { merge } from "lodash";
+import { styled } from "@mui/material/styles";
 
-function OntologyTooltip({ style, children, title, showHelpIcon = false, placement = "top" }) {
-  const classes = makeStyles(theme => {
-    return merge(style, {
-      tooltip: {
-        backgroundColor: `${theme.palette.background.paper} !important`,
-        border: `1px solid ${theme.palette.grey[300]}`,
-        color: `${theme.palette.text.primary} !important`,
-      },
-      tooltipBadge: {
-        paddingLeft: "1rem",
-        top: ".4rem",
-      },
-      tooltipIcon: {
-        fontWeight: "500",
-        cursor: "default",
-      },
-      tooltipArrow: {
-        backgroundColor: `${theme.palette.background.paper} !important`,
-      },
-    });
-  })();
+const StyledTooltip = styled(MUITooltip)(({ theme }) => ({
+  "& .MuiTooltip-tooltip": {
+    backgroundColor: `${theme.palette.background.paper} !important`,
+    border: `1px solid ${theme.palette.grey[300]}`,
+    color: `${theme.palette.text.primary} !important`,
+  },
+}));
 
+function OntologyTooltip({ children, title, placement = "top" }) {
   return (
-    <MUITooltip placement={placement} classes={{ tooltip: classes.tooltip }} title={title}>
+    <StyledTooltip placement={placement} title={title}>
       {children}
-    </MUITooltip>
+    </StyledTooltip>
   );
 }
 

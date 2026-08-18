@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Grid, Typography } from "@mui/material";
+import { GridLegacy, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { Link, Tooltip, DataTable, EllsWrapper, useApolloClient } from "ui";
@@ -222,8 +222,8 @@ function SignorTab({ ensgId, symbol }) {
   }, [ensgId]);
 
   return (
-    <Grid container spacing={10}>
-      <Grid item xs={12} md={5}>
+    <GridLegacy container spacing={10}>
+      <GridLegacy item xs={12} md={5}>
         {/* table 1: interactions */}
         <Typography variant="h6" gutterBottom>
           Interactors of
@@ -259,10 +259,10 @@ function SignorTab({ ensgId, symbol }) {
           query={INTERACTIONS_QUERY.loc.source.body}
           variables={variables}
         />
-      </Grid>
+      </GridLegacy>
 
       {/* table 2: evidence */}
-      <Grid item xs={12} md={7}>
+      <GridLegacy item xs={12} md={7}>
         <Typography variant="h6" gutterBottom>
           Interaction evidence of
           <br />
@@ -287,8 +287,8 @@ function SignorTab({ ensgId, symbol }) {
           rowsPerPageOptions={defaultRowsPerPageOptions}
           loading={loading}
         />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 }
 

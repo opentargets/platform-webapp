@@ -2,7 +2,7 @@ import { Link, SectionItem, OtTable } from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { useQuery } from "@apollo/client";
 
 import Description from "./Description";
@@ -10,13 +10,7 @@ import { defaultRowsPerPageOptions, type DiseaseBodyProps} from "@ot/constants";
 import { definition } from ".";
 import OT_PROJECTS_QUERY from "./OTProjectsQuery.gql";
 
-const useStyles = makeStyles(theme => ({
-  primaryColor: {
-    color: theme.palette.primary.main,
-  },
-}));
-
-const getColumns = classes => [
+const getColumns = primaryColor => [
   {
     id: "projectName",
     label: "Project name",
@@ -36,7 +30,7 @@ const getColumns = classes => [
     label: "Integrates in PPP",
     renderCell: ({ integratesInPPP }) =>
       integratesInPPP ? (
-        <FontAwesomeIcon icon={faCheckCircle} className={classes.primaryColor} size="lg" />
+        <FontAwesomeIcon icon={faCheckCircle} color={primaryColor} size="lg" />
       ) : null,
     exportValue: ({ integratesInPPP }) => (integratesInPPP ? "Yes" : "No"),
     filterValue: ({ integratesInPPP }) => (integratesInPPP ? "Yes" : "No"),
@@ -46,7 +40,7 @@ const getColumns = classes => [
 type Props = DiseaseBodyProps;
 
 function Body({ label, id: efoId, entity }: Props) {
-  const classes = useStyles();
+  const theme = useTheme();
   const request = useQuery(OT_PROJECTS_QUERY, {
     variables: { efoId },
   });
@@ -62,7 +56,7 @@ function Body({ label, id: efoId, entity }: Props) {
           showGlobalFilter
           dataDownloader
           dataDownloaderFileStem={`${efoId}-otprojects`}
-          columns={getColumns(classes)}
+          columns={getColumns(theme.palette.primary.main)}
           rows={request.data?.disease.otarProjects}
           rowsPerPageOptions={defaultRowsPerPageOptions}
           loading={request.loading}

@@ -19,7 +19,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@mui/material": "^5.14.1",
+    "@mui/material": "^7.3.9",
     "@ot/config": "*",
     "@ot/constants": "*",
     "d3-format": "^3.0.1",
