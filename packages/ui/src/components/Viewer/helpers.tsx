@@ -4,7 +4,6 @@ import {
   schemeSet1,
   interpolateRdBu,
 } from "d3";
-import { Vector2 } from "3dmol";
 import {
   getAlphaFoldConfidence,
   getAlphaFoldPathogenicityColor,
@@ -35,19 +34,6 @@ export function getHydrophobicityColor(resn) {
 }
 
 export const clickColor = "magenta";
-
-export const labelStyle = {
-  alignment: "center",
-  screenOffset: new Vector2(28, -28),
-  backgroundColor: "#fff",
-  backgroundOpacity: 0.9,
-  borderColor: "#999",
-  borderThickness: 1.5,
-  font: "'Inter', sans-serif",
-  fontColor: "#000",
-  fontSize: 12.6,
-  inFront: true,
-};
 
 // hover on a residue
 export function showHoverSpheres(state, resi) {

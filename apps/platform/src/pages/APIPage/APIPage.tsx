@@ -1,5 +1,5 @@
 import { Suspense, useState, lazy } from "react";
-import { LoadingBackdrop, Link, PrivateWrapper } from "ui";
+import { LoadingBackdrop, Link, PageMeta, PrivateWrapper } from "ui";
 import {
   Accordion,
   AccordionSummary,
@@ -67,6 +67,7 @@ function APIPage() {
 
   return (
     <>
+      <PageMeta title="API" description="API" />
       <Typography variant="h4" paragraph>
         API
       </Typography>

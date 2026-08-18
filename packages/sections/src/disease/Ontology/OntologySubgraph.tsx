@@ -2,7 +2,7 @@ import { makeStyles } from "@mui/styles";
 import { curveMonotoneX, line as d3Line, max } from "d3";
 import { coordCenter, dagStratify, decrossTwoLayer, layeringLongestPath, sugiyama } from "d3-dag";
 import { withContentRect } from "react-measure";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import OntologyTooltip from "./OntologyTooltip";
 
 const useStyles = makeStyles({

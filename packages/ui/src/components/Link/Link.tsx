@@ -1,6 +1,6 @@
 import { ReactElement, ReactNode } from "react";
 import classNames from "classnames";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router";
 import { makeStyles } from "@mui/styles";
 import Tooltip from "../Tooltip";
 import OtAsyncTooltip from "../OtAsyncTooltip/OtAsyncTooltip";

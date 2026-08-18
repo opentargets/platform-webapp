@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode } from "react";
-import { Link as ReactRouterLink } from "react-router-dom";
+import { Link as ReactRouterLink } from "react-router";
 import { AppBar, Toolbar, Button, Typography, useMediaQuery, Box, Theme } from "@mui/material";
 import { CSSProperties, makeStyles, useTheme } from "@mui/styles";
 import { styled } from "@mui/material/styles";
