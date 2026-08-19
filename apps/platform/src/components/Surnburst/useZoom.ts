@@ -9,6 +9,7 @@ export interface UseZoomReturn {
   gRef: React.MutableRefObject<HTMLElement | null>;
   svgRef: React.MutableRefObject<SVGSVGElement | null>;
   panState: React.MutableRefObject<{ x: number; y: number }>;
+  zoomState: React.MutableRefObject<{ current: number; target: number }>;
   isPanning: React.MutableRefObject<boolean>;
   handleMouseDown: (e: React.MouseEvent) => void;
   handleMouseMove: (e: React.MouseEvent) => void;
@@ -127,6 +128,7 @@ export function useZoom(): UseZoomReturn {
     gRef,
     svgRef,
     panState,
+    zoomState,
     isPanning,
     handleMouseDown,
     handleMouseMove,

@@ -42,6 +42,7 @@ export default function ZoomableSunburst({
     gRef,
     svgRef,
     panState,
+    zoomState,
     isPanning,
     handleMouseDown,
     handleMouseMove,
@@ -79,7 +80,9 @@ export default function ZoomableSunburst({
     // Get the bounding box of the g element
     const bbox = (gElement as any).getBBox();
     const padding = 20;
-    const scale = 2;
+    // Render at a higher resolution when the user is zoomed in so text that
+    // relies on the zoom to be legible on screen stays legible in the export.
+    const scale = 2 * Math.max(1, zoomState.current.current);
 
     // Create canvas
     const canvas = document.createElement("canvas");
@@ -97,6 +100,16 @@ export default function ZoomableSunburst({
     clonedSvg.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
     clonedSvg.setAttribute("width", String(bbox.width));
     clonedSvg.setAttribute("height", String(bbox.height));
+    // The SVG normally inherits its font from the surrounding page via CSS,
+    // which is lost once it's serialized on its own — set it explicitly.
+    clonedSvg.setAttribute("font-family", fontFamily);
+
+    // Undo the current pan/zoom on the cloned content so the full plot is
+    // exported, not just whatever portion is currently visible on screen.
+    const clonedG = clonedSvg.querySelector("g");
+    if (clonedG) {
+      (clonedG as SVGGElement).style.transform = "translate(0px, 0px) scale(1)";
+    }
 
     // Serialize and create image
     const serializer = new XMLSerializer();
@@ -120,7 +133,7 @@ export default function ZoomableSunburst({
       }, "image/png");
     };
     img.src = url;
-  }, [svgRef, gRef]);
+  }, [svgRef, gRef, zoomState, fontFamily]);
 
   const active = focus ?? root;
 
@@ -211,12 +224,21 @@ export default function ZoomableSunburst({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <SunburstBreadcrumb
-        trail={displayChain}
-        onNavigate={handleClick}
-        onHover={(node, e) => { setHovered(node); setMousePos({ x: e.clientX, y: e.clientY }); }}
-        onHoverEnd={() => setHovered(null)}
-      />
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 10,
+          backgroundColor: "background.paper",
+          flexShrink: 0,
+        }}
+      >
+        <SunburstBreadcrumb
+          trail={displayChain}
+          onNavigate={handleClick}
+          onHover={(node, e) => { setHovered(node); setMousePos({ x: e.clientX, y: e.clientY }); }}
+          onHoverEnd={() => setHovered(null)}
+        />
+      </Box>
 
       {/* Zoom controls */}
       <Box

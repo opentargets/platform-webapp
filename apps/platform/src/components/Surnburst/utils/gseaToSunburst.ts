@@ -34,14 +34,16 @@ export interface DataNode {
  *
  * @param results - Array of GSEA analysis results
  * @param valueField - Which field to use for arc sizing (default: 'NES' for Normalized Enrichment Score)
+ * @param rootName - Name for the root node (e.g. the gene set library used for the analysis)
  * @returns Hierarchical DataNode structure compatible with ZoomableSunburst
  */
 export function gseaToSunburst(
   results: GseaResult[],
-  valueField: keyof GseaResult = "NES"
+  valueField: keyof GseaResult = "NES",
+  rootName: string = "GSEA Pathways"
 ): DataNode {
   if (!results || results.length === 0) {
-    return { name: "GSEA Pathways", children: [] };
+    return { name: rootName, children: [] };
   }
 
   // Build maps for hierarchy detection
@@ -156,7 +158,7 @@ export function gseaToSunburst(
   });
 
   return {
-    name: "GSEA Pathways",
+    name: rootName,
     value: 0,
     children: rootChildren,
   };
