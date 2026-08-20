@@ -1,15 +1,23 @@
 import { Suspense, lazy } from "react";
-import { BasePage, LoadingBackdrop } from "ui";
+import { useLocation } from "react-router";
+import { LoadingBackdrop, PageMeta } from "ui";
 
 const MetricsPage = lazy(() => import("./MetricsPage"));
 
 function MetricsPageWrapper() {
+  const location = useLocation();
+
   return (
-    <BasePage title="Data Metrics" description="Platform Metrics">
+    <>
+      <PageMeta
+        title="Data Metrics"
+        description="Platform metrics | Open Targets Platform"
+        location={location}
+      />
       <Suspense fallback={<LoadingBackdrop />}>
         <MetricsPage />
       </Suspense>
-    </BasePage>
+    </>
   );
 }
 
