@@ -6,8 +6,8 @@ import {
   faStethoscope,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Chip, Grid } from "@mui/material";
-import { styled } from "@mui/styles";
+import { Chip, GridLegacy } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { Link, useSearchState } from "ui";
 
 const StyledChip = styled(Chip)(({ theme }) => ({
@@ -32,7 +32,7 @@ interface SearchSuggestion {
 function HomePageSuggestions() {
   const { searchSuggestions } = useSearchState() as { searchSuggestions: SearchSuggestion[] };
   return (
-    <Grid container justifyContent="center" gap={1.5} sx={{ mt: 4 }}>
+    <GridLegacy container justifyContent="center" gap={1.5} sx={{ mt: 4 }}>
       <Link asyncTooltip to={`/target/${searchSuggestions[0].id}/associations`}>
         <StyledChip
           sx={{ pl: 1, borderRadius: 2 }}
@@ -103,7 +103,7 @@ function HomePageSuggestions() {
           label={searchSuggestions[9].name}
         />
       </Link>
-    </Grid>
+    </GridLegacy>
   );
 }
 export default HomePageSuggestions;

@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
 import { GWASStudiesSection } from "../../objects/widgets/GWAS/gwasStudiesSection";
 
 export class StudyPage {
@@ -80,7 +81,7 @@ export class StudyPage {
     await this.page
       .waitForSelector("[data-testid='profile-page-header']", {
         state: "visible",
-        timeout: 10000,
+        timeout: WIDGET_LOAD_TIMEOUT,
       })
       .catch(() => {
         // Header might not be immediately available
@@ -106,7 +107,7 @@ export class StudyPage {
           const spinners = document.querySelectorAll(".MuiCircularProgress-root");
           return spinners.length === 0;
         },
-        { timeout: 10000 }
+        { timeout: WIDGET_LOAD_TIMEOUT }
       )
       .catch(() => {
         // No spinners found

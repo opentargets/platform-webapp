@@ -1,18 +1,5 @@
 import { useState, useLayoutEffect, useRef, PropsWithChildren } from "react";
-import { makeStyles } from "@mui/styles";
-import { Typography } from "@mui/material";
-
-const useStyles = makeStyles(theme => ({
-  textContainer: {
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-  showMore: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
-}));
+import { Box, Typography } from "@mui/material";
 
 type LongTextProps = {
   lineLimit: number;
@@ -26,7 +13,6 @@ const OtLongText = ({
   children,
   displayText = "...show more",
 }: PropsWithChildren<LongTextProps>) => {
-  const classes = useStyles();
   const containerRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLInputElement>(null);
   const [showMore, setShowMore] = useState(false);
@@ -50,15 +36,23 @@ const OtLongText = ({
 
   return (
     <Typography variant={variant}>
-      <span ref={containerRef} className={classes.textContainer}>
+      <Box
+        component="span"
+        ref={containerRef}
+        sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+      >
         <span ref={textRef}>{children}</span>
-      </span>
+      </Box>
       {numberOfLines > lineLimit && (
         <span>
           [{" "}
-          <span className={classes.showMore} onClick={() => setShowMore(!showMore)}>
+          <Box
+            component="span"
+            sx={{ color: "primary.main", cursor: "pointer" }}
+            onClick={() => setShowMore(!showMore)}
+          >
             {showMore ? " hide" : displayText}
-          </span>{" "}
+          </Box>{" "}
           ]
         </span>
       )}

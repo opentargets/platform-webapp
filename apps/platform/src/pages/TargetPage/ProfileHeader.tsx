@@ -5,7 +5,7 @@ import {
   Field,
   Tooltip,
 } from "ui";
-import { useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import TargetDescription from "./TargetDescription";
 
 import { clearDescriptionCodes } from "@ot/utils";

@@ -4,7 +4,7 @@ import {
   Box,
   Button,
   Drawer,
-  Grid,
+  GridLegacy,
   IconButton,
   ListItemIcon,
   ListItemText,
@@ -73,7 +73,7 @@ function ApiPlaygroundDrawer({
         </StyledMenuItem>
       )}
       {query && !inMenu ? (
-        <Grid item>
+        <GridLegacy item>
           <Button
             sx={{ display: "flex", gap: 1, ...(fullHeight && { height: 1, maxHeight: "45px" }) }}
             variant="outlined"
@@ -83,7 +83,7 @@ function ApiPlaygroundDrawer({
             <FontAwesomeIcon icon={faPlay} />
             API query
           </Button>
-        </Grid>
+        </GridLegacy>
       ) : null}
       <Drawer
         sx={{ width: "80%", overflowY: "hidden", zIndex: "10000" }}

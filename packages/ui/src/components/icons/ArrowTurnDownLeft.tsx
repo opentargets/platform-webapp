@@ -1,22 +1,12 @@
-import { makeStyles } from "@mui/styles";
 import { ReactNode } from "react";
 
-const useStyles = makeStyles(theme => ({
-  mainIcon: {
-    width: "1em",
-    display: "flex",
-  },
-}));
-
 function ArrowTurnDownLeft(): ReactNode {
-  const classes = useStyles();
-
   return (
     <svg
       id="Layer_2"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 443.18 334.88"
-      className={classes.mainIcon}
+      style={{ width: "1em", display: "flex" }}
     >
       <defs>
         <style>

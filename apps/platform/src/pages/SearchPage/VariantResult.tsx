@@ -1,37 +1,28 @@
-import { makeStyles, useTheme } from "@mui/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 import { Highlights, Link, DisplayVariantId, LongText } from "ui";
 import { Box, Typography } from "@mui/material";
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    marginBottom: "30px",
-  },
-  subtitle: {
-    fontSize: "20px",
-    fontWeight: 500,
-  },
-  icon: {
-    color: theme.palette.primary.main,
-  },
-}));
+const StyledLink = styled(Link)({
+  fontSize: "20px",
+  fontWeight: 500,
+});
 
 function VariantResult({ data, highlights }) {
-  const classes = useStyles();
   const theme = useTheme();
 
   return (
-    <div className={classes.container}>
-      <Link to={`/variant/${data.id}`} className={classes.subtitle}>
-        <FontAwesomeIcon icon={faMapPin} className={classes.icon} />{" "}
+    <div style={{ marginBottom: "30px" }}>
+      <StyledLink to={`/variant/${data.id}`}>
+        <FontAwesomeIcon icon={faMapPin} color={theme.palette.primary.main} />{" "}
         <DisplayVariantId
           variantId={data.id}
           referenceAllele={data.referenceAllele}
           alternateAllele={data.alternateAllele}
           expand={false}
         />
-      </Link>
+      </StyledLink>
 
       <Typography variant="body2" component="div">
         <LongText lineLimit={4}>{data.variantDescription}</LongText>

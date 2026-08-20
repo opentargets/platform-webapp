@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { styled, Grid } from "@mui/material";
+import { styled, GridLegacy } from "@mui/material";
 
 import AggregationsTooltip from "./AssocTooltip";
 import associationsColumns from "../../static_datasets/dataSourcesAssoc";
@@ -105,7 +105,7 @@ function AggregationsRow({
   const aggregations = Object.keys(dataset);
 
   return (
-    <Grid container direction="row" wrap="nowrap">
+    <GridLegacy container direction="row" wrap="nowrap">
       <HiddenCol />
       <AggregationsContainer columnsCount={columnsCount}>
         {aggregations.map(aggregation => (
@@ -120,7 +120,7 @@ function AggregationsRow({
         ))}
       </AggregationsContainer>
       {table === DISPLAY_MODE.ASSOCIATIONS && <MetricsSpacerCol />}
-    </Grid>
+    </GridLegacy>
   );
 }
 

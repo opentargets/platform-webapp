@@ -4,13 +4,13 @@ import { getAlphaFoldPathogenicityColor } from "@ot/constants";
 import {
   clickColor,
   getHydrophobicityColor,
-  labelStyle,
   showHoverSpheres,
   removeHoverSpheres,
   getResiColor,
   clickSurfaceStyle,
   baseCartoonStyle,
 } from "ui/src/components/Viewer/helpers";
+import { labelStyle } from "ui/src/components/Viewer/labelStyle";
 
 const variantColor = "lime";
 

@@ -1,20 +1,19 @@
 import { useState, useLayoutEffect, useRef } from "react";
 import { v1 } from "uuid";
 import { Typography, Skeleton } from "@mui/material";
-import { withStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 
-const styles = theme => ({
-  textContainer: {
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-    "& span:not(:last-child)": { marginBottom: "12px" },
-  },
-  showMore: {
-    color: theme.palette.primary.main,
-    cursor: "pointer",
-  },
+const StyledTextContainer = styled("span")({
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+  "& span:not(:last-child)": { marginBottom: "12px" },
 });
+
+const StyledShowMore = styled("span")(({ theme }) => ({
+  color: theme.palette.primary.main,
+  cursor: "pointer",
+}));
 
 const getStyleHeight = ({ newNumberOfLines, lineLimit, showMore, lineHeight }) => {
   if (newNumberOfLines <= lineLimit) return "auto";
@@ -23,9 +22,8 @@ const getStyleHeight = ({ newNumberOfLines, lineLimit, showMore, lineHeight }) =
 };
 
 function LongText({
-  classes,
   lineLimit,
-  children,
+  children = null,
   variant = "body2",
   descriptions,
   targetId,
@@ -61,28 +59,26 @@ function LongText({
 
   return (
     <Typography variant={variant} gutterBottom={hasGutterBottom}>
-      <span ref={containerRef} className={classes.textContainer}>
+      <StyledTextContainer ref={containerRef}>
         {descriptions.map((desc, i) => (
           <span
             key={`${targetId}-${v1()}`}
             dangerouslySetInnerHTML={createDescriptionMarkup(desc)}
           />
         ))}
-      </span>
+      </StyledTextContainer>
       {numberOfLines >= lineLimit && (
         <span>
           {showMore ? "" : "... "}[{" "}
-          <span className={classes.showMore} onClick={() => setShowMore(!showMore)}>
+          <StyledShowMore onClick={() => setShowMore(!showMore)}>
             {showMore ? " hide" : " show more"}
-          </span>{" "}
+          </StyledShowMore>{" "}
           ]
         </span>
       )}
     </Typography>
   );
 }
-
-const StyledLongText = withStyles(styles)(LongText);
 
 function TargetDescription({
   descriptions,
@@ -101,7 +97,7 @@ function TargetDescription({
     );
   } else {
     content = (
-      <StyledLongText
+      <LongText
         lineLimit={lineLimit}
         descriptions={descriptions}
         targetId={targetId}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { faPlusCircle, faMinusCircle, faFileAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 
 import LongText from "../LongText";
 import Link from "../Link";
@@ -14,31 +14,19 @@ const pmUrl = "https://europepmc.org/";
 const pmTitleUrlMED = "abstract/med/";
 const pmTitleUrlPAT = "abstract/pat/";
 
-const useStyles = makeStyles(theme => ({
-  abstractSpan: {
-    whiteSpace: "normal",
-  },
-  detailsButton: {
-    margin: "1rem !important",
-    marginLeft: "0 !important",
-    color: "#5a5f5f !important",
-    borderColor: "#c4c4c4 !important",
-  },
-  detailPanel: {
-    background: `${theme.palette.grey[100]}`,
-    marginTop: "10px",
-    padding: "20px",
-  },
-  matchTable: {
-    width: "100%",
-  },
-  fileLabel: {
-    color: "#5a5f5f",
-    fontSize: "0.875rem",
-    fontFamily: '"Inter", "sans-serif"',
-    fontWeight: "500",
-  },
-}));
+const StyledDetailsButton = styled(Button)({
+  margin: "1rem !important",
+  marginLeft: "0 !important",
+  color: "#5a5f5f !important",
+  borderColor: "#c4c4c4 !important",
+});
+
+const fileLabelStyle = {
+  color: "#5a5f5f",
+  fontSize: "0.875rem",
+  fontFamily: '"Inter", "sans-serif"',
+  fontWeight: 500,
+};
 
 function PublicationWrapper({
   europePmcId,
@@ -70,8 +58,6 @@ function PublicationWrapper({
   useEffect(() => {
     setShowAbstract(false);
   }, [europePmcId]);
-
-  const classes = useStyles();
 
   const isSourcePAT = source === "PAT";
   const sourceScope = isSourcePAT ? pmTitleUrlPAT : pmTitleUrlMED;
@@ -133,8 +119,7 @@ function PublicationWrapper({
       )}
 
       <Box style={{ display: "flex", alignItems: "center" }}>
-        <Button
-          className={classes.detailsButton}
+        <StyledDetailsButton
           variant="outlined"
           size="small"
           disabled={!abstract}
@@ -148,9 +133,9 @@ function PublicationWrapper({
           }
         >
           {showAbstract ? "Hide abstract" : "Show abstract"}
-        </Button>
+        </StyledDetailsButton>
         {fullTextOpen && (
-          <span className={classes.fileLabel}>
+          <span style={fileLabelStyle}>
             <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: "8px" }} size="lg" />
             {isOpenAccess ? "Full text free to use/read" : "Full text free to read"}
           </span>
@@ -158,9 +143,9 @@ function PublicationWrapper({
       </Box>
 
       {showAbstract && (
-        <Box className={classes.detailPanel}>
+        <Box sx={theme => ({ background: theme.palette.grey[100], marginTop: "10px", padding: "20px" })}>
           <Typography variant="subtitle2">Abstract</Typography>
-          <span className={classes.abstractSpan} dangerouslySetInnerHTML={{ __html: abstract }} />
+          <span style={{ whiteSpace: "normal" }} dangerouslySetInnerHTML={{ __html: abstract }} />
         </Box>
       )}
 

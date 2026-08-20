@@ -1,6 +1,5 @@
-import classNames from "classnames";
 import { useQuery } from "@apollo/client";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import {
   Link,
   SectionItem,
@@ -19,29 +18,6 @@ import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type DrugBodyProps,
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
-
-const useStyles = makeStyles(theme => ({
-  level: {
-    color: "white",
-    padding: theme.spacing(0.5),
-    borderRadius: theme.spacing(0.5),
-  },
-  green: {
-    background: PHARM_GKB_COLOR.green,
-  },
-  red: {
-    background: PHARM_GKB_COLOR.red,
-  },
-  yellow: {
-    background: PHARM_GKB_COLOR.yellow,
-  },
-  blue: {
-    background: theme.palette.primary.main,
-  },
-  blueIcon: {
-    color: theme.palette.primary.main,
-  },
-}));
 
 const getLevelElementClassName = (level: string) => {
   switch (level) {
@@ -70,7 +46,13 @@ type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
   const variables = { chemblId };
-  const classes = useStyles();
+  const theme = useTheme();
+  const levelColors: Record<string, string> = {
+    green: PHARM_GKB_COLOR.green,
+    red: PHARM_GKB_COLOR.red,
+    yellow: PHARM_GKB_COLOR.yellow,
+    blue: theme.palette.primary.main,
+  };
 
   const columns = [
     {
@@ -212,7 +194,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       label: "Direct Drug Target",
       renderCell: ({ isDirectTarget }: Pharmacogenomics) => {
         const ICON_NAME = isDirectTarget ? faCircleCheck : faCircleXmark;
-        return <FontAwesomeIcon icon={ICON_NAME} size="lg" className={classes.blueIcon} />;
+        return <FontAwesomeIcon icon={ICON_NAME} size="lg" color={theme.palette.primary.main} />;
       },
     },
     {
@@ -232,7 +214,14 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         if (evidenceLevel) {
           const levelClass = getLevelElementClassName(evidenceLevel);
           return (
-            <span className={classNames(classes.level, classes[levelClass])}>
+            <span
+              style={{
+                color: "white",
+                padding: theme.spacing(0.5),
+                borderRadius: theme.spacing(0.5),
+                background: levelColors[levelClass],
+              }}
+            >
               Level {evidenceLevel}
             </span>
           );

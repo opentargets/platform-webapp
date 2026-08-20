@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import { Box, Chip } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { Link, SectionItem, ChipList, OtTable, Tooltip } from "ui";
 import { v1 } from "uuid";
 
@@ -12,34 +12,13 @@ import Description from "./Description";
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 import VALIDATION_QUERY from "./OTValidationQuery.gql";
 
-const useStyles = makeStyles(theme => ({
-  primaryColor: {
-    color: theme.palette.primary.main,
-  },
-  grey: {
-    color: theme.palette.grey[300],
-  },
-  bold: {
-    fontWeight: 700,
-  },
-  hsWhite: {
-    backgroundColor: "#ffffff !important",
-    color: `${theme.palette.grey[600]} !important`,
-    border: `1px solid ${theme.palette.grey[600]} !important`,
-  },
-  hsDefault: {
-    backgroundColor: `${theme.palette.grey[300]} !important`,
-    color: `${theme.palette.grey[600]} !important`,
-  },
-}));
-
 const ASSAYS_DISPLAY_NAME_MAPPING = {
   "CellTiter-Glo": "CellTiterGlo",
   Toxicity: "CellTox",
   Confluence: "Cell Confluence",
 };
 
-const getColumns = classes => [
+const getColumns = theme => [
   {
     id: "disease",
     label: "Reported disease",
@@ -80,7 +59,11 @@ const getColumns = classes => [
         items={row.biomarkerList.map(bm => ({
           label: bm.name,
           tooltip: bm.description,
-          customClass: classes.hsWhite,
+          sx: {
+            backgroundColor: "#ffffff !important",
+            color: `${theme.palette.grey[600]} !important`,
+            border: `1px solid ${theme.palette.grey[600]} !important`,
+          },
         }))}
       />
     ),
@@ -105,7 +88,7 @@ const getColumns = classes => [
       <FontAwesomeIcon
         icon={primaryProjectHit ? faCheckCircle : faTimesCircle}
         size="2x"
-        className={primaryProjectHit ? classes.primaryColor : classes.grey}
+        color={primaryProjectHit ? theme.palette.primary.main : theme.palette.grey[300]}
       />
     ),
     sortable: true,
@@ -211,7 +194,7 @@ function Body({ id, label, entity }: Props) {
   const request = useQuery(VALIDATION_QUERY, {
     variables,
   });
-  const classes = useStyles();
+  const theme = useTheme();
 
   return (
     <SectionItem
@@ -224,7 +207,7 @@ function Body({ id, label, entity }: Props) {
         return (
           <>
             <OtTable
-              columns={getColumns(classes)}
+              columns={getColumns(theme)}
               rows={request.data?.disease.otValidationSummary.rows}
               dataDownloader
               dataDownloaderColumns={exportColumns}

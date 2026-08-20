@@ -1,16 +1,11 @@
-import { makeStyles } from "@mui/styles";
-
-const useStyles = makeStyles(theme => ({
-  detailPanel: {
-    background: `${theme.palette.grey[100]}`,
-    marginTop: "10px",
-    padding: "20px",
-  },
-}));
+import { Box } from "@mui/material";
 
 function BibliographyDetailPanel({ children }) {
-  const classes = useStyles();
-  return <div className={classes.detailPanel}>{children}</div>;
+  return (
+    <Box sx={theme => ({ background: theme.palette.grey[100], marginTop: "10px", padding: "20px" })}>
+      {children}
+    </Box>
+  );
 }
 
 export default BibliographyDetailPanel;

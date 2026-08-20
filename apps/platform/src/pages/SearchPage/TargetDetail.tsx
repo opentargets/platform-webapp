@@ -1,5 +1,5 @@
 import { CardContent, Typography } from "@mui/material";
-import { makeStyles, useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDna } from "@fortawesome/free-solid-svg-icons";
 
@@ -7,16 +7,9 @@ import { Link } from "ui";
 import TargetDescription from "../TargetPage/TargetDescription";
 import { getUniprotIds, clearDescriptionCodes } from "@ot/utils";
 
-const useStyles = makeStyles(() => ({
-  subtitle: {
-    fontWeight: 500,
-  },
-}));
-
 function TargetDetail({ data }) {
   const { id, approvedSymbol, approvedName, functionDescriptions, biotype, proteinIds } = data;
 
-  const classes = useStyles();
   const theme = useTheme();
 
   const uniprotIds = getUniprotIds(proteinIds);
@@ -40,11 +33,11 @@ function TargetDetail({ data }) {
           lineLimit={4}
         />
       ) : null}
-      <Typography className={classes.subtitle} variant="subtitle1">
+      <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
         Biotype
       </Typography>
       <Typography variant="body2">{biotype}</Typography>
-      <Typography className={classes.subtitle} variant="subtitle1">
+      <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
         UniProt accession{uniprotIds.length > 1 ? "s" : ""}
       </Typography>
       <Typography component="div" variant="body2">

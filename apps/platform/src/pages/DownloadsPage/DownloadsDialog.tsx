@@ -7,7 +7,7 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
-import { Params, useNavigate, useParams } from "react-router-dom";
+import { Params, useNavigate, useParams } from "react-router";
 
 import DownloadsSchema from "./DownloadsSchema";
 import DownloadsAccessOptions from "./DownloadsAccessOptions";

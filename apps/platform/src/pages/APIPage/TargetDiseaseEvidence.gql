@@ -1,5 +1,5 @@
 query targetDiseaseEvidence {
-  disease(efoId: "MONDO_0005952") {
+  disease(efoId: "MONDO_0018908") {
     id
     name
     evidences(datasourceIds: ["intogen"], ensemblIds: ["ENSG00000172936"]) {

@@ -1,4 +1,4 @@
-import { Button, Grid } from "@mui/material";
+import { Button, GridLegacy } from "@mui/material";
 
 import downloadSvg from "./DownloadSvg";
 import PlotContainer from "../PlotContainer";
@@ -26,8 +26,8 @@ function DownloadSvgPlot({
       left={left}
       center={center}
       right={
-        <Grid container justifyContent="flex-end" spacing={1}>
-          <Grid item>
+        <GridLegacy container justifyContent="flex-end" spacing={1}>
+          <GridLegacy item>
             <Button
               variant="outlined"
               onClick={() => {
@@ -39,8 +39,8 @@ function DownloadSvgPlot({
             >
               SVG
             </Button>
-          </Grid>
-        </Grid>
+          </GridLegacy>
+        </GridLegacy>
       }
     >
       {children}

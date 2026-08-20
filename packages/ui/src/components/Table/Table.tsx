@@ -1,26 +1,24 @@
 /* eslint-disable */
 import { useState } from "react";
-import classNames from "classnames";
-import {
-  CircularProgress,
-  Grid,
-  TableContainer,
-  Table as MuiTable,
-  TableBody,
-  TableCell,
-  TablePagination,
-  TableRow as MUITableRow,
-  Box,
-} from "@mui/material";
+import { TableBody, TablePagination, TableRow as MUITableRow, GridLegacy } from "@mui/material";
 
 import DataDownloader from "../DataDownloader";
 import GlobalFilter from "./GlobalFilter";
 import TableHeader from "./TableHeader";
 import TableRow from "./TableRow";
-import { tableStyles } from "./tableStyles";
+import {
+  StyledDownloaderGrid,
+  StyledEmptyRowCell,
+  StyledFilterGrid,
+  StyledMuiTable,
+  StyledPaginationPlaceholder,
+  StyledProgress,
+  StyledTableContainer,
+} from "./tableStyles";
 
 const Table = ({
-  classes = {},
+  containerSx,
+  tableSx,
   sortBy,
   order,
   page,
@@ -54,7 +52,6 @@ const Table = ({
 }) => {
   const emptyRows = pageSize - rows.length;
   const [selectedRow, setSelectedRow] = useState(0);
-  const defaultClasses = tableStyles();
 
   const handleGlobalFilterChange = newGlobalFilter => {
     if (newGlobalFilter !== globalFilter) {
@@ -81,13 +78,12 @@ const Table = ({
   };
 
   return (
-    <Grid container direction="column">
-      <Grid item container>
-        <Grid className={defaultClasses.filter} item xs={12} md={4} lg={4}>
+    <GridLegacy container direction="column">
+      <GridLegacy item container>
+        <StyledFilterGrid item xs={12} md={4} lg={4}>
           {showGlobalFilter && <GlobalFilter onGlobalFilterChange={handleGlobalFilterChange} />}
-        </Grid>
-        <Grid
-          className={defaultClasses.downloader}
+        </StyledFilterGrid>
+        <StyledDownloaderGrid
           item
           xs={12}
           md={8}
@@ -103,14 +99,10 @@ const Table = ({
               variables={variables}
             />
           )}
-        </Grid>
-      </Grid>
-      <TableContainer className={classNames(defaultClasses.container, classes.root)}>
-        <MuiTable
-          className={classNames(defaultClasses.table, classes.table, {
-            [defaultClasses.tableFixed]: fixed,
-          })}
-        >
+        </StyledDownloaderGrid>
+      </GridLegacy>
+      <StyledTableContainer sx={containerSx}>
+        <StyledMuiTable fixed={fixed} sx={tableSx}>
           <TableHeader
             columns={columns}
             headerGroups={headerGroups}
@@ -134,23 +126,18 @@ const Table = ({
             ))}
             {page > 0 && noWrap && emptyRows > 0 && (
               <MUITableRow style={{ height: `${1.6875 * emptyRows}rem` }}>
-                <TableCell
-                  colSpan={columns.length}
-                  classes={{
-                    root: `${defaultClasses.cellBody} ${defaultClasses.noData}`,
-                  }}
-                >
+                <StyledEmptyRowCell colSpan={columns.length}>
                   {!rows.length && "No data"}
-                </TableCell>
+                </StyledEmptyRowCell>
               </MUITableRow>
             )}
           </TableBody>
-        </MuiTable>
-      </TableContainer>
-      <Grid item container justifyContent="center">
-        {loading && <CircularProgress className={defaultClasses.progress} size={22} />}
-      </Grid>
-      <Grid item container justifyContent="flex-end">
+        </StyledMuiTable>
+      </StyledTableContainer>
+      <GridLegacy item container justifyContent="center">
+        {loading && <StyledProgress size={22} />}
+      </GridLegacy>
+      <GridLegacy item container justifyContent="flex-end">
         {showPagination ? (
           <TablePagination
             ActionsComponent={ActionsComponent}
@@ -173,10 +160,10 @@ const Table = ({
             }}
           />
         ) : (
-          <Box className={defaultClasses.paginationPlaceholder} />
+          <StyledPaginationPlaceholder />
         )}
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 };
 

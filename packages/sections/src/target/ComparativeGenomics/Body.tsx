@@ -1,5 +1,6 @@
+import type { CSSProperties } from "react";
 import { useQuery } from "@apollo/client";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faStarSolid } from "@fortawesome/free-solid-svg-icons";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
@@ -49,23 +50,15 @@ const speciesIcons = {
   10090: MouseIcon,
 };
 
-const useStyles = makeStyles(theme => ({
-  star: {
-    color: theme.palette.primary.main,
-  },
-  iconContainer: {
-    display: "inline-block",
-    textAlign: "right",
-    width: "43px",
-    marginRight: "5px",
-  },
-  container: {
-    display: "inline-block",
-    width: "16px",
-  },
-}));
+const iconContainerStyle: CSSProperties = {
+  display: "inline-block",
+  textAlign: "right",
+  width: "43px",
+  marginRight: "5px",
+};
+const containerStyle: CSSProperties = { display: "inline-block", width: "16px" };
 
-function getColumns(classes) {
+function getColumns(primaryColor: string) {
   return [
     {
       id: "speciesName",
@@ -75,7 +68,7 @@ function getColumns(classes) {
         const SpeciesIcon = speciesIcons[speciesId];
         return (
           <>
-            <span className={classes.iconContainer}>
+            <span style={iconContainerStyle}>
               <SpeciesIcon />
             </span>{" "}
             {speciesName}
@@ -88,7 +81,7 @@ function getColumns(classes) {
       label: "Homology type",
       renderCell: ({ isHighConfidence, homologyType }) => (
         <>
-          <span className={classes.container}>
+          <span style={containerStyle}>
             {isHighConfidence === "NULL" ? null : (
               <Tooltip
                 title={
@@ -99,7 +92,7 @@ function getColumns(classes) {
               >
                 <span>
                   <FontAwesomeIcon
-                    className={isHighConfidence === "1" ? classes.star : ""}
+                    color={isHighConfidence === "1" ? primaryColor : undefined}
                     icon={isHighConfidence === "1" ? faStarSolid : faStar}
                   />
                 </span>
@@ -140,10 +133,10 @@ type Props = TargetBodyProps & {
 };
 
 function Body({ id: ensemblId, label: symbol, entity, viewMode = VIEW_MODES.default }: Props) {
-  const classes = useStyles();
+  const theme = useTheme();
   const variables = { ensemblId };
   const request = useQuery(COMP_GENOMICS_QUERY, { variables });
-  const columns = getColumns(classes);
+  const columns = getColumns(theme.palette.primary.main);
   return (
     <SectionItem
       entity={entity}
