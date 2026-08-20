@@ -1,5 +1,4 @@
 import { Box, List, ListItem, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { useQuery } from "@apollo/client";
 import { v1 } from "uuid";
 import { ChipList, Link, SectionItem, Tooltip, ScientificNotation, OtTable } from "ui";
@@ -133,20 +132,9 @@ const columns = [
   },
 ];
 
-const useStyles = makeStyles({
-  roleInCancerBox: {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: "2rem",
-  },
-  roleInCancerTitle: { marginRight: ".5rem !important" },
-});
-
 type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
-  const classes = useStyles();
-
   const { ensgId, efoId } = id;
   const variables = {
     ensemblId: ensgId,
@@ -178,8 +166,8 @@ function Body({ id, label, entity }: Props) {
 
         return (
           <>
-            <Box className={classes.roleInCancerBox}>
-              <Typography className={classes.roleInCancerTitle}>
+            <Box sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}>
+              <Typography sx={{ marginRight: ".5rem !important" }}>
                 <b>{label.symbol}</b> role in cancer:
               </Typography>
               <ChipList items={roleInCancerItems} />

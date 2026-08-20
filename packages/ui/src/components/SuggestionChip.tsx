@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 
 export const StyledChip = styled(Chip)(({ theme }) => ({
   border: 1,

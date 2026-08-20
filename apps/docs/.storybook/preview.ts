@@ -3,7 +3,7 @@ import { getConfig } from "@ot/config";
 import type { Preview } from "@storybook/react-vite";
 import { darken, lighten } from "polished";
 import React from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { OTApolloProvider, ThemeProvider } from "ui";
 import "./preview.css";
 

@@ -1,24 +1,23 @@
-import { makeStyles } from "@mui/styles";
-import { Box, Chip, Theme, Tooltip } from "@mui/material";
-import classNames from "classnames";
+import { Box, Chip, SxProps, Theme, Tooltip, styled } from "@mui/material";
 import { v1 } from "uuid";
 import { naLabel } from "@ot/constants";
 import { ElementType, ReactElement } from "react";
 
-const useContainerStyles = makeStyles((theme: Theme) => ({
-  tooltip: {
+const StyledTooltip = styled(Tooltip)(({ theme }) => ({
+  "& .MuiTooltip-tooltip": {
     backgroundColor: theme.palette.background.paper,
     border: `1px solid ${theme.palette.grey[300]}`,
     color: theme.palette.text.primary,
   },
 }));
 
-const useChipStyles = makeStyles({
-  chip: { margin: "3px 5px 3px 0 !important" },
-});
+const StyledChip = styled(Chip)({
+  margin: "3px 5px 3px 0 !important",
+}) as typeof Chip;
 
 type ChipListItem = {
   customClass?: string;
+  sx?: SxProps<Theme>;
   label: string;
   tooltip?: string;
   url?: string;
@@ -35,12 +34,10 @@ type ChipListProps = {
 };
 
 function ChipContainer({ item, children }: ChipContainerProps): ReactElement {
-  const classes = useContainerStyles();
-
   return item.tooltip ? (
-    <Tooltip placement="top" classes={{ tooltip: classes.tooltip }} title={item.tooltip}>
+    <StyledTooltip placement="top" title={item.tooltip}>
       {children}
-    </Tooltip>
+    </StyledTooltip>
   ) : (
     children
   );
@@ -53,19 +50,18 @@ function ChipContainer({ item, children }: ChipContainerProps): ReactElement {
  * @param small Display each chip as size="small"
  */
 function ChipList({ items, small }: ChipListProps): ReactElement[] | string {
-  const classes = useChipStyles();
-
   if (!items || items.length === 0) return naLabel;
 
   return items.map((item, index) => {
     const component: ElementType = item.url ? "a" : Box;
     return (
       <ChipContainer key={v1()} item={item}>
-        <Chip
+        <StyledChip
           data-testid={`chip-item-${index}`}
           component={component}
           href={item.url}
-          className={classNames(classes.chip, item.customClass)}
+          className={item.customClass}
+          sx={item.sx}
           clickable={!!item.url}
           target="_blank"
           noopener="true"

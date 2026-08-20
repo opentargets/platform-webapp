@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Divider, Grid, Skeleton } from "@mui/material";
+import { Box, Card, CardContent, Divider, GridLegacy, Skeleton } from "@mui/material";
 import { v1 } from "uuid";
 
 type SectionContainerLoaderProps = {
@@ -9,7 +9,7 @@ function SectionLoader({ sectionsCount = 1 }: SectionContainerLoaderProps) {
   const loadingSections = Array.from(Array(sectionsCount));
 
   return loadingSections.map((_, i) => (
-    <Grid key={v1()} item xs={12}>
+    <GridLegacy key={v1()} item xs={12}>
       <section data-testid="section-loader">
         <Card elevation={0} variant="outlined">
           <Box sx={{ p: 2, display: "flex", gap: 1, alignItems: "center" }}>
@@ -25,7 +25,7 @@ function SectionLoader({ sectionsCount = 1 }: SectionContainerLoaderProps) {
           </CardContent>
         </Card>
       </section>
-    </Grid>
+    </GridLegacy>
   ));
 }
 export default SectionLoader;

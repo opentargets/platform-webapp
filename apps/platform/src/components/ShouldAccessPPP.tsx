@@ -9,33 +9,34 @@ import {
   Snackbar,
   styled,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { isOnPublic, testPPPaccess } from "@ot/utils";
 import { PPP_WEB_URL } from "@ot/constants";
 
 const FOURTEEN = 14;
 
-const useStyles = makeStyles(theme => ({
-  paper: {
+const StyledDialog = styled(Dialog)({
+  "& .MuiDialog-paper": {
     padding: "1em 1em 2em",
     borderRadius: "12px",
   },
-  actions: {
-    "@media (max-width: 767px)": {
-      flexDirection: "column",
-    },
+});
+
+const StyledDialogActions = styled(DialogActions)({
+  "@media (max-width: 767px)": {
+    flexDirection: "column",
   },
-  button: {
-    "@media (max-width: 767px)": {
-      minHeight: "auto",
-      height: "100%",
-      width: "100%",
-      margin: "0 !important",
-      marginTop: "0.3em !important",
-    },
+});
+
+const buttonResponsiveStyle = {
+  "@media (max-width: 767px)": {
+    minHeight: "auto",
+    height: "100%",
+    width: "100%",
+    margin: "0 !important",
+    marginTop: "0.3em !important",
   },
-}));
+};
 
 const PrimaryButton = styled(Button)`
   border: none;
@@ -46,7 +47,6 @@ function ShouldAccessPPP() {
   const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const classes = useStyles();
 
   const shouldShowPopupAfterFixedDays = (DAYS: number) => {
     const currentDate = new Date();
@@ -97,14 +97,7 @@ function ShouldAccessPPP() {
   
   return (
     <>
-      <Dialog
-        onClose={handleCloseDialog}
-        aria-labelledby="ppp-reminder"
-        open={dialogOpen}
-        classes={{
-          paper: classes.paper,
-        }}
-      >
+      <StyledDialog onClose={handleCloseDialog} aria-labelledby="ppp-reminder" open={dialogOpen}>
         <DialogTitle>Looks like you are part of the Open Targets Consortium!</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
@@ -114,20 +107,20 @@ function ShouldAccessPPP() {
             features, updates, and innovations before they are made available to the public.
           </DialogContentText>
         </DialogContent>
-        <DialogActions className={classes.actions}>
-          <Button className={classes.button} onClick={remindMeLater} variant="outlined">
+        <StyledDialogActions>
+          <Button sx={buttonResponsiveStyle} onClick={remindMeLater} variant="outlined">
             Remind me later
           </Button>
           <PrimaryButton
-            className={classes.button}
+            sx={buttonResponsiveStyle}
             onClick={goToPPP}
             variant="contained"
             color="primary"
           >
             Continue on Partner Preview Platform
           </PrimaryButton>
-        </DialogActions>
-      </Dialog>
+        </StyledDialogActions>
+      </StyledDialog>
 
       <Snackbar
         open={snackbarOpen}

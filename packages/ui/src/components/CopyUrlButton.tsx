@@ -1,29 +1,28 @@
 import { faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconButton, Slide, Snackbar } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { useState } from "react";
 import { Tooltip } from "ui";
 
-const styles = makeStyles(theme => ({
-  snackbarContentMessage: {
+const StyledSnackbar = styled(Snackbar)({
+  "& .MuiSnackbarContent-root": {
+    padding: 0,
+  },
+  "& .MuiSnackbarContent-message": {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     padding: ".75rem 1rem",
     width: "100%",
   },
-  snackbarContentRoot: {
-    padding: 0,
-  },
-}));
+});
 
 type CopyUrlButtonProps = {
   tooltipTitle?: string;
 };
 
 function CopyUrlButton({ tooltipTitle = "Copy URL" }: CopyUrlButtonProps) {
-  const classes = styles();
   const [urlSnackbar, setUrlSnackbar] = useState(false);
 
   return (
@@ -39,7 +38,7 @@ function CopyUrlButton({ tooltipTitle = "Copy URL" }: CopyUrlButtonProps) {
         </IconButton>
       </Tooltip>
 
-      <Snackbar
+      <StyledSnackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         open={urlSnackbar}
         onClose={() => {
@@ -47,12 +46,6 @@ function CopyUrlButton({ tooltipTitle = "Copy URL" }: CopyUrlButtonProps) {
         }}
         autoHideDuration={2000}
         TransitionComponent={Slide}
-        ContentProps={{
-          classes: {
-            root: classes.snackbarContentRoot,
-            message: classes.snackbarContentMessage,
-          },
-        }}
         message="URL copied"
       />
     </>

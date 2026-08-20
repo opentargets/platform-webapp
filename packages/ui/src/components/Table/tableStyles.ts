@@ -1,87 +1,113 @@
-import { makeStyles } from "@mui/styles";
+import { Box, CircularProgress, GridLegacy, Input, TableCell, TableContainer, TableRow, Table as MuiTable, styled } from "@mui/material";
 
-export const tableStyles = makeStyles(theme => ({
-  cell: {
-    "&:first-child": {
+export const StyledFilterGrid = styled(GridLegacy)(({ theme }) => ({
+  order: 0,
+  [theme.breakpoints.down("sm")]: {
+    order: 1,
+  },
+}));
+
+export const StyledDownloaderGrid = styled(GridLegacy)(({ theme }) => ({
+  order: 1,
+  marginLeft: "auto",
+  [theme.breakpoints.down("sm")]: {
+    order: 0,
+  },
+}));
+
+export const StyledTableContainer = styled(TableContainer)({
+  marginTop: "2rem",
+  overflowX: "auto",
+  paddingRight: ".1rem", // fixes horizontal scrollbar
+});
+
+export const StyledMuiTable = styled(MuiTable, {
+  shouldForwardProp: prop => prop !== "fixed",
+})<{ fixed?: boolean }>(({ fixed }) => ({
+  tableLayout: fixed ? "fixed" : "auto",
+}));
+
+export const StyledEmptyRowCell = styled(TableCell)({
+  padding: ".25rem .5rem !important",
+  fontSize: "0.8125rem",
+  textAlign: "center",
+});
+
+export const StyledProgress = styled(CircularProgress)({
+  position: "relative",
+  top: "6px",
+});
+
+export const StyledPaginationPlaceholder = styled(Box)({
+  height: "36px",
+});
+
+export const StyledHeaderLabelSpan = styled("span")({
+  lineHeight: "1.625rem",
+});
+
+export const StyledHeaderCell = styled(TableCell, {
+  shouldForwardProp: prop => prop !== "isHeaderGroup" && prop !== "sticky" && prop !== "noWrapHeader",
+})<{ isHeaderGroup?: boolean; sticky?: boolean; noWrapHeader?: boolean }>(
+  ({ theme, isHeaderGroup, sticky, noWrapHeader }) => ({
+    "&:first-of-type": {
       paddingLeft: "1rem",
     },
     "&:last-child": {
       paddingRight: "1rem",
     },
-  },
-  cellBody: {
-    padding: ".25rem .5rem !important",
-    fontSize: "0.8125rem",
-  },
-  cellHeader: {
     padding: "1rem .5rem !important",
-  },
-  cellGroup: {
-    borderLeft: "1px solid #E0E0E0",
-    "&:first-child": {
-      borderLeft: "none",
-    },
-  },
-  cellSticky: {
-    position: "sticky",
-    left: 0,
-    backgroundColor: theme.palette.grey[100],
-  },
-  container: {
-    marginTop: "2rem",
-    overflowX: "auto",
-    paddingRight: ".1rem", // fixes horizontal scrollbar
-  },
-  headerLabelWithTooltip: {
-    lineHeight: "1.625rem",
-  },
-  rowFixed: {
+    ...(isHeaderGroup && {
+      borderLeft: "1px solid #E0E0E0",
+      "&:first-of-type": {
+        borderLeft: "none",
+      },
+    }),
+    ...(sticky && {
+      position: "sticky",
+      left: 0,
+      backgroundColor: theme.palette.grey[100],
+    }),
+    ...(noWrapHeader && {
+      whiteSpace: "nowrap",
+    }),
+  })
+);
+
+export const StyledTableRow = styled(TableRow, {
+  shouldForwardProp: prop => prop !== "isFixedRow",
+})<{ isFixedRow?: boolean }>(({ theme, isFixedRow }) => ({
+  ...(isFixedRow && {
     backgroundColor: theme.palette.grey[300],
-  },
-  noData: {
-    textAlign: "center",
-  },
-  noWrap: {
-    whiteSpace: "nowrap",
-  },
-  table: {
-    tableLayout: "auto",
-  },
-  tableFixed: {
-    tableLayout: "fixed",
-  },
-  filter: {
-    order: 0,
-    [theme.breakpoints.down("sm")]: {
-      order: 1,
-    },
-  },
-  downloader: {
-    order: 1,
-    marginLeft: "auto",
-    [theme.breakpoints.down("sm")]: {
-      order: 0,
-    },
-  },
-  tabularNums: {
-    fontVariant: "tabular-nums",
-  },
-  tooltipCardContent: {
-    "&:last-child": {
-      padding: ".5rem",
-    },
-  },
-  paginationPlaceholder: {
-    height: "36px",
-  },
-  progress: {
-    position: "relative",
-    top: "6px",
-  },
+  }),
 }));
 
-export const globalSearchStyles = makeStyles(() => ({
-  root: {
-    width: "100%",
-  },
-}));
+export const StyledBodyCell = styled(TableCell, {
+  shouldForwardProp: prop => prop !== "numeric" && prop !== "sticky" && prop !== "noWrap",
+})<{ numeric?: boolean; sticky?: boolean; noWrap?: boolean }>(
+  ({ theme, numeric, sticky, noWrap }) => ({
+    "&:first-of-type": {
+      paddingLeft: "1rem",
+    },
+    "&:last-child": {
+      paddingRight: "1rem",
+    },
+    padding: ".25rem .5rem !important",
+    fontSize: "0.8125rem",
+    ...(numeric && {
+      fontVariant: "tabular-nums",
+    }),
+    ...(sticky && {
+      position: "sticky",
+      left: 0,
+      backgroundColor: theme.palette.grey[100],
+    }),
+    ...(noWrap && {
+      whiteSpace: "nowrap",
+    }),
+  })
+);
+
+export const StyledGlobalFilterInput = styled(Input)({
+  width: "100%",
+});
