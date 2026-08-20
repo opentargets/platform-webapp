@@ -5,7 +5,7 @@ const MetricsPage = lazy(() => import("./MetricsPage"));
 
 function MetricsPageWrapper() {
   return (
-    <BasePage title="Platform Metrics" description="Platform Metrics">
+    <BasePage title="Data Metrics" description="Platform Metrics">
       <Suspense fallback={<LoadingBackdrop />}>
         <MetricsPage />
       </Suspense>

@@ -1,6 +1,6 @@
 import { Box, Chip, Skeleton, Typography, useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
-import { credsetConfidenceMap, naLabel } from "@ot/constants";
+import { credsetConfidenceMap, naLabel, therapeuticPriorities } from "@ot/constants";
 import { Fragment } from "react";
 import {
   ClinvarStars,
@@ -54,36 +54,6 @@ function PheWasPlot({
     })
   );
   if (data.length === 0) return null;
-
-  const therapeuticPriorities = {
-    EFO_0001444: { name: "measurement", rank: 1 },
-    MONDO_0045024: { name: "cancer or benign tumor", rank: 2 },
-    OTAR_0000018: { name: "genetic, familial or congenital", rank: 3 },
-    MONDO_0005550: { name: "infectious disease", rank: 4 },
-    OTAR_0000009: { name: "injury, poisoning or complication", rank: 5 },
-    OTAR_0000014: { name: "pregnancy or perinatal", rank: 6 },
-    MONDO_0024458: { name: "visual system", rank: 7 },
-    MONDO_0004995: { name: "cardiovascular", rank: 8 },
-    MONDO_0002356: { name: "pancreas", rank: 9 },
-    MONDO_0002515: { name: "liver", rank: 10 },
-    EFO_0010282: { name: "gastrointestinal", rank: 11 },
-    OTAR_0000017: { name: "reproductive system or breast", rank: 12 },
-    MONDO_0002051: { name: "integumentary system", rank: 13 },
-    MONDO_0005151: { name: "endocrine system", rank: 14 },
-    OTAR_0000010: { name: "respiratory or thoracic", rank: 15 },
-    MONDO_0002118: { name: "urinary system", rank: 16 },
-    OTAR_0000006: { name: "musculoskeletal or connective ...", rank: 17 },
-    MONDO_0021205: { name: "disorder of ear", rank: 18 },
-    MONDO_0005046: { name: "immune system", rank: 19 },
-    MONDO_0005570: { name: "hematologic", rank: 20 },
-    MONDO_0005071: { name: "nervous system", rank: 21 },
-    MONDO_0002025: { name: "psychiatric", rank: 22 },
-    OTAR_0000020: { name: "nutritional or metabolic", rank: 23 },
-    GO_0008150: { name: "biological process", rank: 24 },
-    EFO_0000651: { name: "phenotype", rank: 25 },
-    EFO_0002571: { name: "medical procedure", rank: 26 },
-    MONDO_0005583: { name: "animal disease", rank: 27 },
-  };
 
   function getTherapeuticArea(row) {
     let bestId = null;
