@@ -71,6 +71,9 @@ function DiseasesByTherapeuticArea({ data }: { data: MetricRow[] }) {
           renderInfo={() => null}
         />
       </Box>
+      <Typography variant="caption" component="p" sx={{ textAlign: "right", fontStyle: "italic" }}>
+        A disease can belong to more than one therapeutic area
+      </Typography>
     </Paper>
   );
 
@@ -129,6 +132,7 @@ function DiseasesByTherapeuticArea({ data }: { data: MetricRow[] }) {
           fill: "white",
           lineAnchor: "middle",
           fontSize: 12.5,
+          pointerEvents: "none",
           className: "obs-tooltip",
         }),
         Plot.text(outsideData, {
@@ -140,6 +144,7 @@ function DiseasesByTherapeuticArea({ data }: { data: MetricRow[] }) {
           fill: otherData?.textColor ?? "currentColor",
           lineAnchor: "middle",
           fontSize: 12.5,
+          pointerEvents: "none",
           className: "obs-tooltip",
         }),
       ],
