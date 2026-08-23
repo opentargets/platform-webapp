@@ -240,6 +240,13 @@ interface TrackProps {
   scalesRef: React.RefObject<ScalesRef>;
 }
 
+export interface TrackLegendProps {
+  data: any;
+  isInner: boolean;
+}
+
+export type TrackLegendPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
 interface Track {
   id: string;
   height?: number;
@@ -249,6 +256,34 @@ interface Track {
   YInfo?: React.ComponentType<{ data: any; start: number; end: number; isInner: boolean }>;
   onTick?: (container: any) => void;
   paddingTop?: number;
+  Legend?: React.ComponentType<TrackLegendProps>;
+  legendPosition?: TrackLegendPosition;
+}
+
+const legendPositionStyles: Record<TrackLegendPosition, Record<string, string>> = {
+  "top-left": { top: "4px", left: "4px" },
+  "top-right": { top: "4px", right: "4px" },
+  "bottom-left": { bottom: "4px", left: "4px" },
+  "bottom-right": { bottom: "4px", right: "4px" },
+};
+
+function TrackLegendsLayer({ tracks, yTrackStarts, data, isInner }: {
+  tracks: Track[];
+  yTrackStarts: number[];
+  data: any;
+  isInner: boolean;
+}) {
+  return (
+    <Box sx={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none" }}>
+      {tracks.map(({ id, height = 50, Legend, legendPosition = "top-right" }, index) => Legend ? (
+        <Box key={id} sx={{ position: "absolute", top: yTrackStarts[index], height, left: 0, right: 0, pointerEvents: "none" }}>
+          <Box sx={{ position: "absolute", ...legendPositionStyles[legendPosition] }}>
+            <Legend data={data} isInner={isInner} />
+          </Box>
+        </Box>
+      ) : null)}
+    </Box>
+  );
 }
 
 interface TracksProps {
@@ -737,6 +772,7 @@ function GenTrackInner({
                     </Container>
                   )}
                 </Stage>
+                <TrackLegendsLayer tracks={tracks} yTrackStarts={yTrackStarts} data={data} isInner={_isInner} />
                 {Tooltip && !_suppressTooltip && (
                   <TooltipLayer
                     width={canvasWidth}

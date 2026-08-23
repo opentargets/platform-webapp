@@ -114,6 +114,8 @@ The `tracks` prop of a `GenTrack` should be passed an array of objects, where ea
 | `onTick`     | `function`  |         | Called every tick. Passed the Pixi container that wraps the tracks content.                                                                                                                                                                                                                                                      |
 | `height`     | `number`    | `50`    |
 | `paddingTop` | `number`    | `0`     | Padding above track.                                                                                                                                                                                                                                                                                                             | Height of `YInfo` container and `Track` container. |
+| `Legend` | `component` | | Optional HTML legend. Receives `data` and `isInner`. | |
+| `legendPosition` | `string` | `top-right` | Legend corner: `top-left`, `top-right`, `bottom-left`, or `bottom-right`. | |
 
 Inside either the `Track` itself or one of its ancestors, it is standard use `useGenTrackState` to access the data and x-limits.
 

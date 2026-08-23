@@ -3,6 +3,7 @@ import { scaleLinear, axisLeft, select } from "d3";
 import { Box, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { DataSprite, DataText, DataVLine, DataBackground } from "../GenTrack";
+import type { TrackLegendProps } from "../GenTrack";
 import { Container } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
 import YDetails from "./YDetails";
@@ -88,6 +89,15 @@ function VariantsYInfo({ yMax }: { yMax: number }) {
   );
 }
 
+function VariantLegend({ isInner }: TrackLegendProps) {
+  if (!isInner) return null;
+  return ( 
+    <Box sx={{ width: "150px", height: "30px", bgcolor: "red" }}>
+      <Typography variant="caption">Legend placeholder</Typography>
+    </Box>
+  );
+}
+
 export function getVariantTrack({ data }: { data: any }) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
   
@@ -101,6 +111,8 @@ export function getVariantTrack({ data }: { data: any }) {
     yMin: 0,
     yMax: dynamicYMax,
     YInfo: () => <VariantsYInfo yMax={dynamicYMax} />,
+    Legend: VariantLegend,
+    legendPosition: "top-right",
     Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {  
 
       return (
