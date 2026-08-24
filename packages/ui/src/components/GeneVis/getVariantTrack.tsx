@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { scaleLinear, axisLeft, select } from "d3";
-import { Box, Typography } from "@mui/material";
+import { Box, Collapse, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { DataSprite, DataText, DataVLine, DataBackground } from "../GenTrack";
 import type { TrackLegendProps } from "../GenTrack";
@@ -89,11 +89,59 @@ function VariantsYInfo({ yMax }: { yMax: number }) {
   );
 }
 
-function VariantLegend({ isInner }: TrackLegendProps) {
+function VariantLegend({ data, isInner }: TrackLegendProps) {
+  const [showAll, setShowAll] = useState(false);
   if (!isInner) return null;
-  return ( 
-    <Box sx={{ width: "150px", height: "30px", bgcolor: "red" }}>
-      <Typography variant="caption">Legend placeholder</Typography>
+  const consequenceIds: string[] = [...new Set(
+    (data?.locus?.rows ?? [])
+      ?.map((row: any) => row.variant?.mostSevereConsequence?.id)
+      .filter((id: string) => id && PREDICTED_CONSEQUENCE_LOOKUP[id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP])
+  )];
+  const consequences = consequenceIds
+    .map(id => PREDICTED_CONSEQUENCE_LOOKUP[id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP])
+    .sort((a, b) => a.rank - b.rank);
+
+  return (
+    <Box sx={{
+      pointerEvents: "none",
+      p: 0.75,
+      bgcolor: "rgba(255, 255, 255, 0.92)",
+      border: "1px solid",
+      borderColor: "grey.300",
+      borderRadius: 1,
+    }}>
+      <Box sx={{ visibility: "hidden", height: 0, width: "max-content", overflow: "hidden", whiteSpace: "nowrap" }}>
+        {consequences.map(({ color, displayTerm }) => (
+          <Box key={displayTerm} sx={{ display: "flex", alignItems: "center", gap: 0.75, lineHeight: 1.2 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flex: "0 0 auto" }} />
+            <Typography variant="caption">{displayTerm}</Typography>
+          </Box>
+        ))}
+      </Box>
+      {consequences.slice(0, 2).map(({ color, displayTerm }) => (
+        <Box key={displayTerm} sx={{ display: "flex", alignItems: "center", gap: 0.75, lineHeight: 1.2, whiteSpace: "nowrap" }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flex: "0 0 auto" }} />
+          <Typography variant="caption">{displayTerm}</Typography>
+        </Box>
+      ))}
+      <Collapse in={showAll} timeout="auto" unmountOnExit>
+        {consequences.slice(2).map(({ color, displayTerm }) => (
+          <Box key={displayTerm} sx={{ display: "flex", alignItems: "center", gap: 0.75, lineHeight: 1.2, whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flex: "0 0 auto" }} />
+            <Typography variant="caption">{displayTerm}</Typography>
+          </Box>
+        ))}
+      </Collapse>
+      {consequences.length > 2 && (
+        <Typography
+          component="button"
+          variant="caption"
+          onClick={() => setShowAll(value => !value)}
+          sx={{ display: "block", mt: 0.25, p: 0, border: 0, background: "none", cursor: "pointer", color: "primary.main", pointerEvents: "auto" }}
+        >
+          {showAll ? "Show less" : "Show more"}
+        </Typography>
+      )}
     </Box>
   );
 }

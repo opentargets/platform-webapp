@@ -724,7 +724,7 @@ function GenTrackInner({
               </Box>
 
               {/* Pixi canvas — hidden until first tick positions all sprites */}
-              <Box ref={canvasBoxRef} sx={{ width: canvasWidth, height: canvasHeight, position: "relative", visibility: "hidden" }}>
+              <Box ref={canvasBoxRef} sx={{ width: canvasWidth, height: canvasHeight, position: "relative", zIndex: _isInner ? 21 : undefined, visibility: "hidden" }}>
                 {overlayZoombar && innerTracks && innerTracks.length > 0 && (
                   <Box
                     ref={windowUnderlayRef}
@@ -772,7 +772,6 @@ function GenTrackInner({
                     </Container>
                   )}
                 </Stage>
-                <TrackLegendsLayer tracks={tracks} yTrackStarts={yTrackStarts} data={data} isInner={_isInner} />
                 {Tooltip && !_suppressTooltip && (
                   <TooltipLayer
                     width={canvasWidth}
@@ -783,6 +782,7 @@ function GenTrackInner({
                     <Tooltip />   
                   </TooltipLayer>
                 )}
+                <TrackLegendsLayer tracks={tracks} yTrackStarts={yTrackStarts} data={data} isInner={_isInner} />
                 </Box>
                 
                 {/* zoom lines overlay */}
