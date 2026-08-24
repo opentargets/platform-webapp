@@ -22,24 +22,27 @@ function MetricsPage() {
     <>
       <Typography variant="h4" sx={{ mb: 2 }}>Data Metrics</Typography>
       <MetricsCards data={data} />
-      <Typography sx={{ pt: 3 }}><b>Polish:</b> do these look like buttons? </Typography>
+      {/* <Typography sx={{ pt: 3 }}><b>Polish:</b> do these look like buttons? </Typography>
       <Typography><b>Todo:</b> finalise card order and icons - what for coloc? evidence and cred sets ok to be same? more info in tooltip where approp? - e.g. explain a prioritised gene</Typography>
-      <Typography sx={{ pb: 3 }}><b>Alternative:</b> more hierarchical, e.g. split into top-level entity counts then evidence linking targets and diseases, credible sets and colocs in variants section.</Typography>
+      <Typography sx={{ pb: 3 }}><b>Alternative:</b> more hierarchical, e.g. split into top-level entity counts then evidence linking targets and diseases, credible sets and colocs in variants section.</Typography> */}
       
-      <Typography variant="h5" sx={{ mb: 2 }}>Coverage</Typography>
+      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography>
       <DiseasesByTherapeuticArea data={data} />
-      <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography>
+      <br />
+      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
       <EvidenceByDataType data={data} />
-      <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>      
+      <br />
+      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
       <DrugsByClinicalStage data={data} />
-      <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>
+      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
 
-      <Typography variant="h5" sx={{ mb: 2 }}>Genetics</Typography>
+      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
       <CredibleSetsByStudyType data={data} />
-      <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>
+      <br />
+      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
       <VariantsByConsequence data={data} />
-      <Typography sx={{ pt: 3 }}><b>Polish:</b>Can we remove "variant" from every bar label?</Typography>
-      <Typography ><b>Alternative:</b>Replace Other+tooltip with 'show more'?</Typography>
+      {/* <Typography sx={{ pt: 3 }}><b>Polish:</b>Can we remove "variant" from every bar label?</Typography> */}
+      {/* <Typography ><b>Alternative:</b>Replace Other+tooltip with 'show more'?</Typography> */}
     </>
   );
 }
