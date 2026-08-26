@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { Stage, Container, useApp } from '@pixi/react';
 import { useMeasure } from "@uidotdev/usehooks";
-import { useRef, useEffect, memo, useCallback, useState } from "react";
+import { useRef, useEffect, memo, useCallback, useState, forwardRef } from "react";
 import PanZoomPanel, { type PanZoomPanelHandle } from "./PanZoomPanel";
 import NestedXInfo from "./NestedXInfo";
 import type { XAxisHandle } from "../GeneVis/XAxis";
@@ -32,12 +32,11 @@ interface TooltipLayerProps {
   crosshairs?: boolean;
 }
 
-const TooltipLayer = memo(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = false }: TooltipLayerProps) {
+const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = false }: TooltipLayerProps, ref) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
   const { onDatumClick } = (tooltipProps as Record<string, any>);
-  const tooltipLayerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = () => {
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: canvasType });
@@ -63,7 +62,7 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
   
   return (
     <Box 
-      ref={tooltipLayerRef}
+      ref={ref}
       sx={{ 
         position: "absolute", 
         inset: 0, 
@@ -75,15 +74,12 @@ const TooltipLayer = memo(function TooltipLayer({ children, width, height, canva
       onClick={handleClick}
       onMouseDown={onMouseDown}
     >
-      {crosshairs && (
-        <CrosshairOverlay width={width} height={height} containerRef={tooltipLayerRef} />
-      )}
       <GenTrackTooltip width={width} height={height} canvasType={canvasType} {...tooltipProps}>
         {children}
       </GenTrackTooltip>
     </Box>
   );
-});
+}));
 
 function useInnerPanDrag(
   canvasWidth: number,
@@ -197,7 +193,7 @@ interface InnerPanDragTooltipLayerProps {
   crosshairs?: boolean;
 }
 
-function InnerPanDragTooltipLayer({
+const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipLayerProps>(function InnerPanDragTooltipLayer({
   width,
   height,
   canvasType,
@@ -209,7 +205,7 @@ function InnerPanDragTooltipLayer({
   updateViewWindow,
   children,
   crosshairs = false,
-}: InnerPanDragTooltipLayerProps) {
+}, ref) {
   const innerPanDrag = useInnerPanDrag(
     canvasWidth,
     xMin,
@@ -221,6 +217,7 @@ function InnerPanDragTooltipLayer({
 
   return (
     <TooltipLayer
+      ref={ref}
       width={width}
       height={height}
       canvasType={canvasType}
@@ -232,7 +229,7 @@ function InnerPanDragTooltipLayer({
       {children}
     </TooltipLayer>
   );
-}
+});
 
 interface TrackProps {
   isInner: boolean;
@@ -267,23 +264,39 @@ const legendPositionStyles: Record<TrackLegendPosition, Record<string, string>> 
   "bottom-right": { bottom: "4px", right: "4px" },
 };
 
-function TrackLegendsLayer({ tracks, yTrackStarts, data, isInner }: {
+function TrackLegendsLayer({ tracks, yTrackStarts, data, isInner, zIndex = 3 }: {
   tracks: Track[];
   yTrackStarts: number[];
   data: any;
   isInner: boolean;
+  zIndex?: number;
 }) {
   return (
-    <Box sx={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none" }}>
+    <Box sx={{ position: "absolute", inset: 0, zIndex, pointerEvents: "none" }}>
       {tracks.map(({ id, height = 50, Legend, legendPosition = "top-right" }, index) => Legend ? (
         <Box key={id} sx={{ position: "absolute", top: yTrackStarts[index], height, left: 0, right: 0, pointerEvents: "none" }}>
-          <Box sx={{ position: "absolute", ...legendPositionStyles[legendPosition] }}>
+          <Box data-gentrack-overlay-blocker sx={{ position: "absolute", ...legendPositionStyles[legendPosition], pointerEvents: "auto", cursor: "default" }}>
             <Legend data={data} isInner={isInner} />
           </Box>
         </Box>
       ) : null)}
     </Box>
   );
+}
+
+function computeTracksLayout(tracks: Track[], paddingBottom: number): { yTrackStarts: number[]; canvasHeight: number } {
+  const yTrackStarts: number[] = [];
+  let canvasHeight = 0;
+  if (tracks?.length > 0) {
+    for (const [index, track] of tracks.entries()) {
+      yTrackStarts.push(index === 0
+        ? (track.paddingTop ?? 0)
+        : yTrackStarts[yTrackStarts.length - 1] + tracks[index - 1].height + (track.paddingTop ?? 0)
+      );
+    }
+    canvasHeight = yTrackStarts[yTrackStarts.length - 1] + tracks[tracks.length - 1].height + paddingBottom;
+  }
+  return { yTrackStarts, canvasHeight };
 }
 
 interface TracksProps {
@@ -574,17 +587,7 @@ function GenTrackInner({
   }, []);
 
   // heights
-  const yTrackStarts = [];
-  let canvasHeight = 0;
-  if (tracks?.length > 0) {
-    for (const [index, track] of tracks.entries()) {
-      yTrackStarts.push(index === 0
-        ? (track.paddingTop ?? 0)
-        : yTrackStarts[yTrackStarts.length - 1] + tracks[index - 1].height + (track.paddingTop ?? 0)
-      );
-    }
-    canvasHeight = yTrackStarts[yTrackStarts.length - 1] + tracks[tracks.length - 1].height + paddingBottom;
-  }
+  const { yTrackStarts, canvasHeight } = computeTracksLayout(tracks, paddingBottom);
 
   // widths — debounced so rapid resize doesn't thrash Pixi Stage recreation
   const [widthRef, { width: totalWidth }] = useMeasure();
@@ -647,6 +650,10 @@ function GenTrackInner({
   }, [canvasWidth, xMin, xMax, updateZoomLines, updateWindowUnderlay]);
 
   const panZoomPanelRef = useRef<PanZoomPanelHandle | null>(null);
+  // DOM node of the inner tooltip/pan-drag layer — reused as the crosshair's mousemove
+  // listener target, so the crosshair can be rendered as a separate, higher z-index sibling
+  // (above the legend) while still tracking the same pointer movement.
+  const crosshairContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Callback to update view window (used by PanZoomPanel) — no React state, purely imperative
   const updateViewWindow = useCallback((start: number, end: number) => {
@@ -724,7 +731,7 @@ function GenTrackInner({
               </Box>
 
               {/* Pixi canvas — hidden until first tick positions all sprites */}
-              <Box ref={canvasBoxRef} sx={{ width: canvasWidth, height: canvasHeight, position: "relative", zIndex: _isInner ? 21 : undefined, visibility: "hidden" }}>
+              <Box ref={canvasBoxRef} sx={{ width: canvasWidth, height: canvasHeight, position: "relative", zIndex: _isInner ? 1 : undefined, visibility: "hidden" }}>
                 {overlayZoombar && innerTracks && innerTracks.length > 0 && (
                   <Box
                     ref={windowUnderlayRef}
@@ -782,7 +789,10 @@ function GenTrackInner({
                     <Tooltip />   
                   </TooltipLayer>
                 )}
-                <TrackLegendsLayer tracks={tracks} yTrackStarts={yTrackStarts} data={data} isInner={_isInner} />
+                {/* When _isInner, legends are rendered by the parent instead, above the crosshair overlay */}
+                {!_isInner && (
+                  <TrackLegendsLayer tracks={tracks} yTrackStarts={yTrackStarts} data={data} isInner={_isInner} />
+                )}
                 </Box>
                 
                 {/* zoom lines overlay */}
@@ -896,6 +906,7 @@ function GenTrackInner({
                     pointerEvents: "none",
                   }}>
                     <InnerPanDragTooltipLayer
+                      ref={crosshairContainerRef}
                       width={canvasWidth}
                       height={innerScalesRefHolder.current?.canvasHeight ?? canvasHeight}
                       canvasType="inner"
@@ -909,6 +920,48 @@ function GenTrackInner({
                     >
                       {InnerTooltip ? <InnerTooltip /> : null}
                     </InnerPanDragTooltipLayer>
+                  </Box>
+                )}
+                {/* Inner legends rendered here — above the crosshair/tooltip layer (zIndex 20) so they're never hidden behind it.
+                    Anchored via bottom (like the inner tooltip box above) so its top lands at the true canvas top,
+                    regardless of the recursed GenTrackInner's own InnerXInfo row height. */}
+                {innerTracks.some(track => track.Legend) && canvasWidth > 0 && (
+                  <Box sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: px(yInfoWidth + yInfoGap),
+                    width: px(canvasWidth),
+                    height: px(innerScalesRefHolder.current?.canvasHeight ?? canvasHeight),
+                    zIndex: 22,
+                    pointerEvents: "none",
+                  }}>
+                    <TrackLegendsLayer
+                      tracks={innerTracks}
+                      yTrackStarts={computeTracksLayout(innerTracks, 16).yTrackStarts}
+                      data={data}
+                      isInner={true}
+                      zIndex={0}
+                    />
+                  </Box>
+                )}
+                {/* Crosshair rendered above the legend (zIndex 24) — listens for pointer movement on the
+                    same DOM node as the tooltip/pan-drag layer (crosshairContainerRef) but paints on top
+                    of the legend so it's visible even while the cursor is over it. */}
+                {crosshairs && canvasWidth > 0 && (
+                  <Box sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: px(yInfoWidth + yInfoGap),
+                    width: px(canvasWidth),
+                    height: px(innerScalesRefHolder.current?.canvasHeight ?? canvasHeight),
+                    zIndex: 24,
+                    pointerEvents: "none",
+                  }}>
+                    <CrosshairOverlay
+                      width={canvasWidth}
+                      height={innerScalesRefHolder.current?.canvasHeight ?? canvasHeight}
+                      containerRef={crosshairContainerRef}
+                    />
                   </Box>
                 )}
               </Box>

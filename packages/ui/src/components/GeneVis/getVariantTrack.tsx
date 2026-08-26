@@ -103,7 +103,6 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
 
   return (
     <Box sx={{
-      pointerEvents: "none",
       p: 0.75,
       bgcolor: "rgba(255, 255, 255, 0.92)",
       border: "1px solid",
@@ -137,7 +136,7 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
           component="button"
           variant="caption"
           onClick={() => setShowAll(value => !value)}
-          sx={{ display: "block", mt: 0.25, p: 0, border: 0, background: "none", cursor: "pointer", color: "primary.main", pointerEvents: "auto" }}
+          sx={{ display: "block", mt: 0.25, p: 0, border: 0, background: "none", cursor: "pointer", color: "primary.main" }}
         >
           {showAll ? "Show less" : "Show more"}
         </Typography>

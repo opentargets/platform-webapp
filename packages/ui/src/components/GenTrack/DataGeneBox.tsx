@@ -4,6 +4,7 @@ import { Sprite, useTick, useApp } from '@pixi/react';
 import { Sprite as PixiSprite, Graphics as PixiGraphics, Texture } from 'pixi.js';
 import type { RefObject } from 'react';
 import type { ScalesRef } from './ScalesContext';
+import { isPointerOverCanvas } from './pointerOcclusion';
 
 const _rectTextureCache = new Map<any, Texture>();
 
@@ -67,6 +68,7 @@ export function DataGeneBox({
   isMyGeneStickyRef.current = isMyGeneSticky;
 
   const handlePointerOver = useCallback((e: any) => {
+    if (!isPointerOverCanvas(e)) return;
     const sprite = spriteRef.current;
     if (sprite) {
       sprite.tint = hoverTint;
@@ -75,6 +77,11 @@ export function DataGeneBox({
     }
     pointerover?.(e);
   }, [pointerover, app, hoverTint]);
+
+  const handlePointerTap = useCallback((e: any) => {
+    if (!isPointerOverCanvas(e)) return;
+    pointertap?.(e);
+  }, [pointertap, app]);
 
   const handlePointerOut = useCallback((e: any) => {
     const sprite = spriteRef.current;
@@ -150,7 +157,7 @@ export function DataGeneBox({
       eventMode="static"
       pointerover={handlePointerOver}
       pointerout={handlePointerOut}
-      pointertap={pointertap}
+      pointertap={handlePointerTap}
     />
   );
 }

@@ -4,6 +4,7 @@ import { Sprite as PixiSprite, Graphics as PixiGraphics, Application as PixiAppl
 import type { RefObject } from 'react';
 import type { ScalesRef } from './ScalesContext';
 import { useGenTrackDragState } from '../../providers/GenTrackDragProvider';
+import { isPointerOverCanvas } from './pointerOcclusion';
 
 const _rectTextureCache = new WeakMap<PixiApplication, Texture>();
 
@@ -187,6 +188,12 @@ export function DataSprite({
       y={initialScreenY}
       visible={isPositioned}
       {...spriteProps}
+      {...(spriteProps.pointerover && {
+        pointerover: (e: any) => { if (isPointerOverCanvas(e)) spriteProps.pointerover!(e); },
+      })}
+      {...(spriteProps.pointerdown && {
+        pointerdown: (e: any) => { if (isPointerOverCanvas(e)) spriteProps.pointerdown!(e); },
+      })}
       {...((isInnerDragging || spriteProps.eventMode !== undefined) && {
         eventMode: isInnerDragging ? "none" : spriteProps.eventMode,
       })}
