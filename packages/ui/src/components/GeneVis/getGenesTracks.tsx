@@ -1,19 +1,42 @@
 import { Fragment } from "react";
 import { Container } from '@pixi/react';
 import { TextStyle } from "pixi.js";
+import { Box, Typography } from "@mui/material";
 import { DataSprite, DataText, DataBackground, DataGeneBox, DataVLine } from "../GenTrack";
+import type { TrackLegendProps } from "../GenTrack";
 import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
-import { grey } from "@mui/material/colors";
+import { grey, green } from "@mui/material/colors";
 
 const L2G_GENE_COLOR = 0x138160;
-const L2G_HOVER_BOX_COLOR = 0xC8E6C9;
+const L2G_HOVER_BOX_COLOR = Number.parseInt(green[100].slice(1), 16);
 const NON_L2G_GENE_COLOR = 0x555555;
 const NON_L2G_HOVER_BOX_COLOR = 0xe0e0e0;
 
 const DEFAULT_ROW_HEIGHT = 28;
 const DEFAULT_EXON_HEIGHT = 10;
+
+function GenesLegend({ data, isInner }: TrackLegendProps) {
+  if (!isInner) return null;
+  const hasL2G = (data?.l2GPredictions?.rows?.length ?? 0) > 0;
+  if (!hasL2G) return null;
+  return (
+    <Box sx={{
+      p: 0.75,
+      display: "flex",
+      alignItems: "center",
+      gap: 0.75,
+      bgcolor: "rgba(255, 255, 255, 0.92)",
+      border: "1px solid",
+      borderColor: "grey.300",
+      borderRadius: 1,
+    }}>
+      <Box sx={{ width: 12, height: 12, bgcolor: green[200], flex: "0 0 auto" }} />
+      <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>L2G score &gt; 0.05</Typography>
+    </Box>
+  );
+}
 
 function getVisibleGeneLabelScreenX({
   intronStart,
@@ -112,6 +135,8 @@ export function getGenesTracks({
     yMin: 0,
     yMax: trackHeight,
     YInfo,
+    // L2G scores are only meaningful for protein-coding genes
+    ...(biotype === "protein_coding" ? { Legend: GenesLegend, legendPosition: "bottom-right" as const } : {}),
     // Pass row metadata for potential use by the container
     rowHeightMap,
     rowYOffsets,
