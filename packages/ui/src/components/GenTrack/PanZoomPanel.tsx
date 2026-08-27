@@ -238,7 +238,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
           borderLeft: 'none',
           borderRight: 'none',
           boxSizing: 'border-box',
-          cursor: 'move',
+          cursor: 'default',
           zIndex: 2,
         }}
         onMouseDown={(e) => handleMouseDown('move', e)}

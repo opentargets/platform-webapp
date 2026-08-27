@@ -11,7 +11,7 @@ import GenTrackTooltip from "./GenTrackTooltip";
 import { useGenTrackTooltipDispatch, useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { ScalesProvider, type ScalesRef } from "./ScalesContext";
 import { TrackRegistryProvider, type TrackTransform } from "./TrackRegistry";
-import { CrosshairOverlay } from "./CrosshairOverlay";
+import { CrosshairOverlay, type CrosshairMode } from "./CrosshairOverlay";
 
 function px(num) {
   return `${num}px`;
@@ -29,10 +29,10 @@ interface TooltipLayerProps {
   tooltipProps: object;
   cursor?: string;
   onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
-  crosshairs?: boolean;
+  crosshairs?: CrosshairMode;
 }
 
-const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = false }: TooltipLayerProps, ref) {
+const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = "none" }: TooltipLayerProps, ref) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
@@ -58,7 +58,7 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
     canvasType === "inner" && genTrackTooltipState?.hover?.datum && onDatumClick ? "pointer" : "default"
   );
 
-  if (!children && !crosshairs) return null;
+  if (!children && crosshairs === "none") return null;
   
   return (
     <Box 
@@ -171,7 +171,7 @@ function useInnerPanDrag(
   }, [handleMouseMove, handleMouseUp, setIsInnerDragging]);
 
   const cursor = isDragging
-    ? "move"
+    ? "grabbing"
     : genTrackTooltipState?.hover?.datum
       ? (onDatumClick ? "pointer" : "default")
       : "crosshair";
@@ -190,7 +190,7 @@ interface InnerPanDragTooltipLayerProps {
   scalesRefHolder: React.MutableRefObject<ScalesRef | null>;
   updateViewWindow: (start: number, end: number) => void;
   children: React.ReactNode;
-  crosshairs?: boolean;
+  crosshairs?: CrosshairMode;
 }
 
 const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipLayerProps>(function InnerPanDragTooltipLayer({
@@ -204,7 +204,7 @@ const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipL
   scalesRefHolder,
   updateViewWindow,
   children,
-  crosshairs = false,
+  crosshairs = "none",
 }, ref) {
   const innerPanDrag = useInnerPanDrag(
     canvasWidth,
@@ -499,7 +499,7 @@ interface GenTrackInnerProps {
   overlayZoombar?: boolean;
   initialZoom?: [number | null, number | null];
   zoomLines?: boolean;
-  crosshairs?: boolean;
+  crosshairs?: CrosshairMode;
   overlayGraphics?: React.ReactNode;
   innerOverlayGraphics?: React.ReactNode;
   underlayGraphics?: React.ReactNode;
@@ -534,7 +534,7 @@ function GenTrackInner({
   overlayZoombar = false,
   initialZoom = [null, null],
   zoomLines,
-  crosshairs = true,
+  crosshairs = "both",
   overlayGraphics,
   innerOverlayGraphics,
   underlayGraphics,
@@ -895,7 +895,7 @@ function GenTrackInner({
                   _suppressTooltip={!!InnerTooltip}
                 />
                 {/* Inner tooltip rendered here — outside the outer canvas stacking context — so it paints above the zoombar */}
-                {(InnerTooltip || crosshairs) && canvasWidth > 0 && (
+                {(InnerTooltip || crosshairs !== "none") && canvasWidth > 0 && (
                   <Box sx={{
                     position: "absolute",
                     bottom: 0,
@@ -947,7 +947,7 @@ function GenTrackInner({
                 {/* Crosshair rendered above the legend (zIndex 24) — listens for pointer movement on the
                     same DOM node as the tooltip/pan-drag layer (crosshairContainerRef) but paints on top
                     of the legend so it's visible even while the cursor is over it. */}
-                {crosshairs && canvasWidth > 0 && (
+                {crosshairs !== "none" && canvasWidth > 0 && (
                   <Box sx={{
                     position: "absolute",
                     bottom: 0,
@@ -961,6 +961,7 @@ function GenTrackInner({
                       width={canvasWidth}
                       height={innerScalesRefHolder.current?.canvasHeight ?? canvasHeight}
                       containerRef={crosshairContainerRef}
+                      mode={crosshairs}
                     />
                   </Box>
                 )}

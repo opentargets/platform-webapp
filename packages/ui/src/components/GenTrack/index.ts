@@ -6,6 +6,7 @@ export { DataRect, DataHLine, DataBackground, DataVLine, DataWindowFill } from '
 export { RegionBoundaryOverlay } from './RegionBoundaryOverlay';
 export { DataText } from './DataText';
 export { CrosshairOverlay } from './CrosshairOverlay';
+export type { CrosshairMode } from './CrosshairOverlay';
 export { 
   useScalesRef,
   type ScalesRef,

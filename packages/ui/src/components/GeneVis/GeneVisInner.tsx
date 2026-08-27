@@ -277,6 +277,7 @@ function GeneVisInner(props: {
         panZoomTopGap={0}
         panZoomBottomGap={4}
         paddingBottom={0}
+        crosshairs="vertical"
         initialZoom={initialZoom}
         Tooltip={UnifiedTooltip}
         tooltipProps={{ xAnchor: "adapt", yAnchor: "boxTop", tooltipWidth: TOOLTIP_WIDTH }}
