@@ -26,11 +26,19 @@ export function CrosshairOverlay({ width, height, containerRef, mode }: Crosshai
     const showVertical = mode === "both" || mode === "vertical";
     const showHorizontal = mode === "both" || mode === "horizontal";
 
-    const handleMouseMove = (e: MouseEvent) => {
+    // Coalesce rapid mousemove events into a single DOM update per animation
+    // frame, so the crosshair doesn't fall behind when many move events fire
+    // before the browser has a chance to paint.
+    let rafId: number | null = null;
+    let pendingClientX = 0;
+    let pendingClientY = 0;
+
+    const applyPosition = () => {
+      rafId = null;
       const rect = clipRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const x = pendingClientX - rect.left;
+      const y = pendingClientY - rect.top;
       if (showVertical && vLineRef.current) {
         vLineRef.current.style.transform = `translateX(${x}px)`;
         vLineRef.current.style.opacity = "1";
@@ -41,7 +49,19 @@ export function CrosshairOverlay({ width, height, containerRef, mode }: Crosshai
       }
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      pendingClientX = e.clientX;
+      pendingClientY = e.clientY;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(applyPosition);
+      }
+    };
+
     const handleMouseLeave = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
       if (showVertical && vLineRef.current) vLineRef.current.style.opacity = "0";
       if (showHorizontal && hLineRef.current) hLineRef.current.style.opacity = "0";
     };
@@ -49,6 +69,7 @@ export function CrosshairOverlay({ width, height, containerRef, mode }: Crosshai
     container.addEventListener("mousemove", handleMouseMove);
     container.addEventListener("mouseleave", handleMouseLeave);
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
     };
