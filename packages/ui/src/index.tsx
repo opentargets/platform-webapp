@@ -178,7 +178,6 @@ export * from "./providers/APIMetadataProvider";
 export * from "./providers/ConfigurationProvider";
 export { createApolloClient } from "./providers/OTApolloProvider/apollo";
 export * from "./providers/OTApolloProvider/OTApolloProvider";
-export { createApolloClient } from "./providers/OTApolloProvider/apollo";
 export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerInteractionProvider";
