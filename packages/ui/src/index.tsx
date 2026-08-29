@@ -150,6 +150,8 @@ export { default as SummaryItem } from "./components/Summary/SummaryItem";
 export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer";
 export * as summaryUtils from "./components/Summary/utils";
 export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
+export { default as StickyProfileHeader } from "./components/StickyProfileHeader";
+export { PROFILE_TABS_SENTINEL_ID } from "./components/Section/scrollOffset";
 export * from "./components/Table";
 export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
 export { default as TooltipRow } from "./components/TooltipRow";
@@ -160,6 +162,7 @@ export { default as ViewerDropdown } from "./components/Viewer/ViewerDropdown";
 export { default as ViewerLegend } from "./components/Viewer/ViewerLegend";
 export { default as ViewerRadios } from "./components/Viewer/ViewerRadios";
 export { default as ViewerTrack } from "./components/Viewer/ViewerTrack";
+export { default as useActiveSection } from "./hooks/useActiveSection";
 export { default as useBatchDownloader } from "./hooks/useBatchDownloader";
 export { default as useBatchQuery } from "./hooks/useBatchQuery";
 export { default as useClinicalReportsMasterDetail } from "./hooks/useClinicalReportsMasterDetail";
@@ -169,6 +172,7 @@ export { default as useDelayedFlag } from "./hooks/useDelayedFlag";
 export { default as usePermissions } from "./hooks/usePermissions";
 /* HOOKS */
 export { default as usePlatformApi } from "./hooks/usePlatformApi";
+export { default as useScrollToHashOnMount } from "./hooks/useScrollToHashOnMount";
 export { default as useStateParams } from "./hooks/useStateParams";
 /* SHARED PAGES  */
 export { default as EmptyPage } from "./pages/EmptyPage";
