@@ -6,6 +6,7 @@ import MetricsCards from "./MetricsCards";
 import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
 import EvidenceByDataType from "./EvidenceByDataType";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
+import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import VariantsByConsequence from "./VariantsByConsequence";
 
@@ -33,6 +34,8 @@ function MetricsPage() {
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
       <DrugsByClinicalStage data={data} />
+      <br />
+      <ClinicalReportsByStage data={data} />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
