@@ -20,10 +20,7 @@ const count = (rows: MetricRow[], dataset: string) =>
 const formatRoundedCount = (value: number) => {
   if (value === 0) return "0";
 
-  const unitExponent = Math.max(0, Math.floor(Math.log10(Math.abs(value)) / 3));
-  const unit = 10 ** (unitExponent * 3);
-  const roundedValue = Math.round((value / unit) * 10) / 10;
-  return format("~s")(roundedValue * unit);
+  return format(".2~s")(value);
 };
 
 function MetricsCards({ data }: { data: MetricRow[] }) {
@@ -31,13 +28,13 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
     ["Targets", faDna, count(data, "target")],
     ["Diseases", faStethoscope, count(data, "disease")],
     ["Drugs", faPrescriptionBottleMedical, count(data, "drug_molecule")],
-    ["Studies", faChartBar, count(data, "study")],
+    ["Clinical reports", faChartBar, count(data, "clinical_report")],
+    ["GWAS", faChartBar, count(data, "study")],
     ["Credible sets", faProjectDiagram, count(data, "credible_set")],
-    ["Evidence", faProjectDiagram, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
+    ["Direct target-disease association", faProjectDiagram, count(data, "association_overall_direct")],
+    ["Indirect target-disease association", faProjectDiagram, count(data, "association_overall_indirect")],
+    ["Target-disease Evidence", faProjectDiagram, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
     ["Variants", faMapPin, count(data, "variant")],
-    ["Prioritised genes", faDna, data.find((row) => row.dataset === "l2g_prediction" && row.kind === "filter" && row.metric === "prioritised_genes")?.value ?? 0],
-    ["GWAS/GWAS colocs", faCircleNodes, data.find((row) => row.dataset === "colocalisation" && row.group_value === "gwas-gwas")?.value ?? 0],
-    ["GWAS/QTL colocs", faCircleNodes, data.find((row) => row.dataset === "colocalisation" && row.group_value === "gwas-eqtl")?.value ?? 0],
   ] as const;
 
   return (

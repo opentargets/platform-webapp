@@ -27,8 +27,7 @@ function MetricsPage() {
       <Typography sx={{ pb: 3 }}><b>Alternative:</b> more hierarchical, e.g. split into top-level entity counts then evidence linking targets and diseases, credible sets and colocs in variants section.</Typography> */}
       
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography>
-      <DiseasesByTherapeuticArea data={data} />
-      <br />
+
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
       <EvidenceByDataType data={data} />
       <br />
