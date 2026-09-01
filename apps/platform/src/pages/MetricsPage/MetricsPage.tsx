@@ -4,7 +4,8 @@ import { Typography } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
 import MetricsCards from "./MetricsCards";
 import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
-import EvidenceByDataType from "./EvidenceByDataType";
+import EvidenceChart from "./EvidenceChart";
+import AssociationPlot from "./AssociationPlot";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
@@ -30,7 +31,11 @@ function MetricsPage() {
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography>
 
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
-      <EvidenceByDataType data={data} />
+      <EvidenceChart data={data} />
+      <br />
+      <AssociationPlot data={data} datasetPrefix="association_by_datasource_direct" title="Direct associations" />
+      <br />
+      <AssociationPlot data={data} datasetPrefix="association_by_datasource_indirect" title="Indirect associations" />
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
       <DrugsByClinicalStage data={data} />
