@@ -1,7 +1,7 @@
-import LinearProgress, { linearProgressClasses } from "@mui/material/LinearProgress";
 import { styled } from "@mui/material";
+import LinearProgress, { linearProgressClasses } from "@mui/material/LinearProgress";
 
-const OtScoreLinearBar = styled(LinearProgress)(({ theme }) => ({
+const ScoreLinearBar = styled(LinearProgress)(({ theme }) => ({
   height: 8,
   borderRadius: 5,
   width: 70,
@@ -13,4 +13,4 @@ const OtScoreLinearBar = styled(LinearProgress)(({ theme }) => ({
     backgroundColor: theme.palette.primary.main,
   },
 }));
-export default OtScoreLinearBar;
+export default ScoreLinearBar;

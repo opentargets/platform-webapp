@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Popover, Typography, Box } from "@mui/material";
+import { useLazyQuery } from "@apollo/client";
 import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Popover, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useLazyQuery } from "@apollo/client";
-import L2G_QUERY from "./Locus2GeneQuery.gql";
+import { useState } from "react";
 import { v1 } from "uuid";
 import HeatmapTable from "./HeatmapTable";
+import L2G_QUERY from "./Locus2GeneQuery.gql";
 
 const PopoverContent = styled("div")({
   minWidth: "750px",
@@ -25,7 +25,7 @@ function L2GScoreIndicator({ score, targetId, studyLocusId }) {
     },
   });
 
-  const handleClick = event => {
+  const handleClick = (event) => {
     loadIndicatorData();
     setAnchorEl(event.currentTarget);
   };

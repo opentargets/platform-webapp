@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation } from "react-router";
-import { Box, GridLegacy, Typography } from "@mui/material";
-import { Link, PageMeta } from "ui";
+import { Link, PageMeta, Box, GridLegacy, Typography } from "ui";
 import ProjectCard from "./ProjectCard";
 import ProjectsFilter, { EMPTY_FILTERS } from "./ProjectsFilter";
 import projectsData from "./projects-data.json";

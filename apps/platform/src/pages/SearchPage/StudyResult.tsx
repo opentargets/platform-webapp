@@ -1,8 +1,7 @@
 import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartBar } from "@fortawesome/free-solid-svg-icons";
-import { Highlights, Link, StudyPublication } from "ui";
-import { Box, Typography } from "@mui/material";
+import { Highlights, Link, StudyPublication, Box, Typography } from "ui";
 import { getStudyItemMetaData } from "@ot/utils";
 
 const subtitleSx = { fontSize: "20px", fontWeight: 500 };

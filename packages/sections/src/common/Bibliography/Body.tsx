@@ -1,13 +1,21 @@
 import { Component } from "react";
 import { v1 } from "uuid";
-import { Autocomplete, Box, Button, Chip, GridLegacy, TextField, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 // TODO: note this component is not actually used.
 // Only SimplePublication is used in evidence bibliography
 
 import Publication from "./Publication";
 import { getAggregationsData, getPublicationsData } from "./Api";
-import { SectionItem } from "ui";
+import {
+  SectionItem,
+  Autocomplete,
+  Box,
+  GridLegacy,
+  TextField,
+  Typography,
+  Button,
+  Chip,
+} from "ui";
 import Description from "./Description";
 
 const aggtype = [
@@ -234,6 +242,8 @@ class Section extends Component<Props> {
                     i > 0 ? (
                       <StyledChip
                         key={v1()}
+                        variant="filled"
+                        size="medium"
                         color="primary"
                         label={sel.label || sel.key}
                         onDelete={() => this.deselectChip(i)}
@@ -252,6 +262,7 @@ class Section extends Component<Props> {
                       <StyledChip
                         key={v1()}
                         variant="outlined"
+                        size="medium"
                         label={agg.label || agg.key}
                         onClick={() => this.selectChip(agg)}
                       />

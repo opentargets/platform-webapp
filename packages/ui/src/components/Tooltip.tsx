@@ -46,3 +46,4 @@ function Tooltip({
 }
 
 export default Tooltip;
+export { StyledMUITooltip };

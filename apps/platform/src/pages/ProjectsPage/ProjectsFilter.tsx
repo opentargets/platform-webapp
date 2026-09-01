@@ -1,17 +1,17 @@
 import {
   Box,
   Checkbox,
-  Chip,
-  Divider,
   FormControlLabel,
   FormGroup,
   InputAdornment,
   Paper,
-  Radio,
-  RadioGroup,
   TextField,
   Typography,
-} from "@mui/material";
+  Chip,
+  Divider,
+  Radio,
+  RadioGroup,
+} from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faTrash } from "@fortawesome/free-solid-svg-icons";
 
@@ -104,6 +104,7 @@ function ProjectsFilter({ filters, filterGroups, onChange }: Props) {
                   clear
                 </Box>
               }
+              variant="filled"
               size="small"
               clickable
               sx={{ fontWeight: "normal", typography: "caption" }}

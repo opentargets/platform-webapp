@@ -1,12 +1,18 @@
-import { useState, useLayoutEffect, useRef, PropsWithChildren } from "react";
 import { Box, Typography } from "@mui/material";
+import { type PropsWithChildren, useLayoutEffect, useRef, useState } from "react";
 
 type LongTextProps = {
   lineLimit: number;
-  variant: string;
+  variant?: string;
+  displayText?: string;
 };
 
-const LongText = ({ lineLimit, variant = "body2", children }: PropsWithChildren<LongTextProps>) => {
+const LongText = ({
+  lineLimit,
+  variant = "body2",
+  children,
+  displayText,
+}: PropsWithChildren<LongTextProps>) => {
   const containerRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLInputElement>(null);
   const [showMore, setShowMore] = useState(false);
@@ -39,13 +45,13 @@ const LongText = ({ lineLimit, variant = "body2", children }: PropsWithChildren<
       </Box>
       {numberOfLines > lineLimit && (
         <span>
-          {showMore ? "" : "... "}[{" "}
+          {!showMore && displayText === undefined && "... "}[{" "}
           <Box
             component="span"
             sx={{ color: "primary.main", cursor: "pointer" }}
             onClick={() => setShowMore(!showMore)}
           >
-            {showMore ? " hide" : " show more"}
+            {showMore ? " hide" : (displayText ?? " show more")}
           </Box>{" "}
           ]
         </span>

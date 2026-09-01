@@ -1,6 +1,6 @@
 import { faChartPie, faCircle, faSitemap, faTableColumns, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Alert, Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Alert, Box, ToggleButton, ToggleButtonGroup, Typography } from "ui";
 import { useState } from "react";
 import type { GseaResult, InputOverlap } from "../api/gseaApi";
 import ResultsPlotlySunburst from "./ResultsPlotlySunburst";

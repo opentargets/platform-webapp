@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
-import { GridLegacy, Paper, Box, Typography } from "@mui/material";
 import { SxProps } from "@mui/system";
-import { usePermissions, Link } from "ui";
+import { usePermissions, Link, GridLegacy, Paper, Box, Typography } from "ui";
 
 import OTLogo from "../../assets/OTLogo";
 import PPOTLogo from "../../assets/PPPOTLogo";

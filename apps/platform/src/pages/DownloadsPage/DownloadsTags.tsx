@@ -1,8 +1,7 @@
 import FileSaver from "file-saver";
-import { Box, Chip, Divider, Popover } from "@mui/material";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext, useState } from "react";
-import { Link, PublicationsDrawer } from "ui";
+import { Link, PublicationsDrawer, Box, Popover, Chip, Divider } from "ui";
 import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignLeft, faFileLines, faTableList } from "@fortawesome/free-solid-svg-icons";
@@ -68,6 +67,7 @@ function LibrariesTag() {
               <FontAwesomeIcon icon={faAlignLeft} /> Croissant
             </Box>
           }
+          variant="filled"
           size="small"
         />
       </TagsDialog>
@@ -101,6 +101,7 @@ function VersionTag() {
               </Box>
             </>
           }
+          variant="filled"
           size="small"
         />
       </TagsDialog>
@@ -125,6 +126,7 @@ function DOITag() {
                 <FontAwesomeIcon icon={faFileLines} /> Cite Us
               </Box>
             }
+            variant="filled"
             size="small"
             clickable
           />
@@ -155,6 +157,7 @@ function FormatsTag() {
               <FontAwesomeIcon icon={faTableList} /> Parquet
             </Box>
           }
+          variant="filled"
           size="small"
           clickable
         />

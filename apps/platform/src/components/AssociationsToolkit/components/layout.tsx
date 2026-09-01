@@ -1,6 +1,6 @@
-import { Box, styled } from "@mui/material";
+import { styled } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { LoadingBackdrop } from "ui";
+import { LoadingBackdrop, Box } from "ui";
 import { TABLE_PREFIX } from "../associationsUtils";
 
 const LoadingContainer = styled("div")({
