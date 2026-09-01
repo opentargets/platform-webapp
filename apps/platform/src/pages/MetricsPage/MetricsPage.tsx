@@ -9,6 +9,7 @@ import AssociationPlot from "./AssociationPlot";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
+import StudiesByStudyType from "./StudiesByStudyType";
 import VariantsByConsequence from "./VariantsByConsequence";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
@@ -44,6 +45,8 @@ function MetricsPage() {
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
+      <StudiesByStudyType data={data} />
+      <br />
       <CredibleSetsByStudyType data={data} />
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
