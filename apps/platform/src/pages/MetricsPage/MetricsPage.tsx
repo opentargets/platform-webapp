@@ -9,6 +9,7 @@ import AssociationPlot from "./AssociationPlot";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
+import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
 import VariantsByConsequence from "./VariantsByConsequence";
 
@@ -50,6 +51,8 @@ function MetricsPage() {
       <CredibleSetsByStudyType data={data} />
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
+      <ColocalisationByType data={data} />
+      <br />
       <VariantsByConsequence data={data} />
       {/* <Typography sx={{ pt: 3 }}><b>Polish:</b>Can we remove "variant" from every bar label?</Typography> */}
       {/* <Typography ><b>Alternative:</b>Replace Other+tooltip with 'show more'?</Typography> */}

@@ -23,7 +23,7 @@ function ByStudyType({ data, dataset, title }: { data: MetricRow[]; dataset: str
     const maxCount = Math.max(...data.map((item) => item.count));
     const insideData = data.filter((item) => (item.count / maxCount) * plotWidth >= `${item.count.toLocaleString()}`.length * 7 + 12);
     const outsideData = data.filter((item) => !insideData.includes(item));
-    return Plot.plot({ width: width ?? 0, height, style: { fontSize: "13.5px" }, marginTop: 4, marginBottom: 4, marginLeft: 240, marginRight: 0, x: { axis: null }, y: { domain: data.map((item) => item.name), label: null, tickSize: 0, tickPadding: 8, tickFormat: (label) => label.endsWith("qtl") ? `${label.slice(0, -3)}QTL` : label.toUpperCase() }, marks: [
+    return Plot.plot({ width: width ?? 0, height, style: { fontSize: "13.5px" }, marginTop: 4, marginBottom: 4, marginLeft: 240, marginRight: 0, x: { axis: null }, y: { domain: data.map((item) => item.name), label: null, tickSize: 0, tickPadding: 8, tickFormat: (label) => label.replaceAll(/(gwas|qtl)/ig, m => m.toUpperCase()) }, marks: [
       Plot.barX(data, { x: "count", y: "name", fill: theme.palette.primary.main, insetTop: 2, insetBottom: 2, className: "obs-tooltip" }),
       Plot.text(insideData, { x: "count", y: "name", text: (item) => item.count.toLocaleString(), textAnchor: "end", dx: -6, fill: "white", lineAnchor: "middle", fontSize: 12.5, className: "obs-tooltip" }),
       Plot.text(outsideData, { x: "count", y: "name", text: (item) => item.count.toLocaleString(), textAnchor: "start", dx: 6, fill: theme.palette.text.primary, lineAnchor: "middle", fontSize: 12.5, className: "obs-tooltip" }),
