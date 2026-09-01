@@ -1,8 +1,8 @@
 import { Typography } from "@mui/material";
-import { ReactElement } from "react";
+import { ReactNode } from "react";
 
 type TooltipRowProps = {
-  children: ReactElement;
+  children: ReactNode;
   label?: string;
   valueWidth?: string;
   truncateValue?: boolean;

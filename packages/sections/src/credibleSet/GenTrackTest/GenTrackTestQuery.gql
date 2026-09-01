@@ -1,0 +1,7 @@
+query GenTrackTestQuery($studyLocusId: String!) {
+  credibleSet(studyLocusId: $studyLocusId) {
+    l2GPredictions {
+      count
+    }
+  }
+}

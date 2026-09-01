@@ -1,0 +1,84 @@
+[
+  {
+    "id": "ENSG00000303867",
+    "name": null,
+    "start": 2579,
+    "end": 73732,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 73510,
+        "end": 73713
+      },
+      {
+        "start": 71440,
+        "end": 71608
+      },
+      {
+        "start": 36586,
+        "end": 36719
+      },
+      {
+        "start": 4368,
+        "end": 4490
+      },
+      {
+        "start": 3479,
+        "end": 3883
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000303902",
+    "name": null,
+    "start": 34096,
+    "end": 71851,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 44911,
+        "end": 45034
+      },
+      {
+        "start": 51268,
+        "end": 51481
+      },
+      {
+        "start": 52822,
+        "end": 53041
+      },
+      {
+        "start": 69389,
+        "end": 69481
+      },
+      {
+        "start": 71380,
+        "end": 71850
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000306528",
+    "name": null,
+    "start": 133801,
+    "end": 139253,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 139047,
+        "end": 139253
+      },
+      {
+        "start": 135199,
+        "end": 135236
+      },
+      {
+        "start": 133801,
+        "end": 134122
+      }
+    ]
+  }
+]

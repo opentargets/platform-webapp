@@ -1,0 +1,42 @@
+[
+  {
+    "id": "ENSG00000302961",
+    "name": null,
+    "start": 170773,
+    "end": 206442,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 170778,
+        "end": 170906
+      },
+      {
+        "start": 188069,
+        "end": 188197
+      },
+      {
+        "start": 203025,
+        "end": 203148
+      },
+      {
+        "start": 204940,
+        "end": 206442
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276711",
+    "name": "U2",
+    "start": 183252,
+    "end": 183364,
+    "strand": 1,
+    "biotype": "snRNA",
+    "exons": [
+      {
+        "start": 183252,
+        "end": 183364
+      }
+    ]
+  }
+]

@@ -16,12 +16,20 @@ import {
 } from "./constants";
 import { getGroupResults, computeWaterfall, getColorInterpolator } from "./helpers";
 
-function THead({ children }) {
+const FONT_SIZE = 13.5;
+const COMPACT_FONT_SIZE = 12.6;
+const CELL_Y_PADDING = 1.4;
+const COMPACT_CELL_Y_PADDING = 1.1;
+
+function THead({ children, singleRowMode }: { children: React.ReactNode; singleRowMode: boolean }) {
+  const compact = singleRowMode;
+  const disabledGeneColumn = singleRowMode;
+  const disabledScoreColumn = singleRowMode;
   return (
     <thead>
       <Box component="tr">
-        <th></th>
-        <th></th>
+        {!disabledGeneColumn && <th></th>}
+        {!disabledScoreColumn && <th></th>}
         <th></th>
         <th></th>
         <Box
@@ -29,7 +37,12 @@ function THead({ children }) {
           colSpan="3"
           sx={{ borderBottom: `1px solid ${grey[600]}`, paddingBottom: 1 }}
         >
-          <Typography variant="subtitle2">Colocalisation</Typography>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontSize: (compact ? COMPACT_FONT_SIZE : FONT_SIZE) + 0.5 }}
+          >
+            Colocalisation
+          </Typography>
         </Box>
         <th></th>
         <th></th>
@@ -44,7 +57,10 @@ function TBody({ children }) {
   return <tbody>{children}</tbody>;
 }
 
-function BodyRow({ row, colorInterpolator, data }) {
+function BodyRow({ row, colorInterpolator, data, singleRowMode }: { row: any; colorInterpolator: any; data: any; singleRowMode: boolean }) {
+  const compact = singleRowMode;
+  const disabledGeneColumn = singleRowMode;
+  const disabledScoreColumn = singleRowMode;
   const [over, setOver] = useState(false);
 
   const { row: waterfallRow, xDomain: waterfallXDomain } = computeWaterfall(
@@ -69,16 +85,20 @@ function BodyRow({ row, colorInterpolator, data }) {
       component="tr"
       sx={{
         "& td": {
-          bgcolor: over ? grey[100] : "transparent",
+          bgcolor: !singleRowMode && over ? grey[100] : "transparent",
         },
       }}
     >
-      <CellWrapper {...cellWrapperProps}>
-        <GeneCell value={row.targetSymbol} targetId={row.targetId} />
-      </CellWrapper>
-      <CellWrapper {...cellWrapperProps}>
-        <ScoreCell value={row.score.toFixed(3)} />
-      </CellWrapper>
+      {!disabledGeneColumn &&
+        <CellWrapper {...cellWrapperProps}>
+          <GeneCell value={row.targetSymbol} targetId={row.targetId} />
+        </CellWrapper>
+      }
+      {!disabledScoreColumn &&
+        <CellWrapper {...cellWrapperProps}>
+          <ScoreCell value={row.score.toFixed(3)} />
+        </CellWrapper>
+      }
       {groupNames.map(groupName => (
         <CellWrapper key={groupName} {...cellWrapperProps}>
           <HeatCell
@@ -88,22 +108,25 @@ function BodyRow({ row, colorInterpolator, data }) {
             mouseLeaveRow={handleMouseLeave}
             waterfallRow={waterfallRow}
             waterfallXDomain={waterfallXDomain}
+            compact={compact}
           />
         </CellWrapper>
       ))}
       <CellWrapper {...cellWrapperProps}>
-        <BaseCell value={row.shapBaseValue.toFixed(3)} />
+        <BaseCell value={row.shapBaseValue.toFixed(3)} compact={compact} />
       </CellWrapper>
-      <CellWrapper {...cellWrapperProps}>
-        <DetailCell
-          geneSymbol={row.targetSymbol}
-          score={row.score.toFixed(3)}
-          mouseLeaveRow={handleMouseLeave}
-          waterfallRow={waterfallRow}
-          waterfallXDomain={waterfallXDomain}
-          over={over}
-        />
-      </CellWrapper>
+      {!singleRowMode && (
+        <CellWrapper {...cellWrapperProps}>
+          <DetailCell
+            geneSymbol={row.targetSymbol}
+            score={row.score.toFixed(3)}
+            mouseLeaveRow={handleMouseLeave}
+            waterfallRow={waterfallRow}
+            waterfallXDomain={waterfallXDomain}
+            over={over}
+          />
+        </CellWrapper>
+      )}
     </Box>
   );
 }
@@ -116,10 +139,15 @@ function CellWrapper({ handleMouseEnter, handleMouseLeave, children }) {
   );
 }
 
-function HeaderCell({ value, textAlign }) {
+function HeaderCell({ value, textAlign, singleRowMode }: { value: string; textAlign: string; singleRowMode: boolean }) {
+  const compact = singleRowMode;
   return (
     <Box component="th" pt={1}>
-      <Typography variant="subtitle2" textAlign={textAlign}>
+      <Typography
+        variant="subtitle2"
+        sx={{ fontSize: (compact ? COMPACT_FONT_SIZE : FONT_SIZE) + 0.5 }}
+        textAlign={textAlign}
+      >
         {value}{" "}
         {value == "Score" && (
           <span style={{ color: grey[500] }}>
@@ -151,7 +179,7 @@ function ScoreCell({ value }) {
   );
 }
 
-function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfallXDomain }) {
+function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfallXDomain, compact }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [plotProps, setPlotProps] = useState(null);
 
@@ -208,7 +236,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
         justifyContent="center"
         alignItems="center"
         borderRadius={1.5}
-        py={1.4}
+        py={compact ? COMPACT_CELL_Y_PADDING : CELL_Y_PADDING}
         onClick={handleClick}
         sx={{
           outline: anchorEl ? "2px solid #000" : "none",
@@ -219,7 +247,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
         }}
       >
         <Typography
-          fontSize={13.5}
+          fontSize={compact ? COMPACT_FONT_SIZE : FONT_SIZE}
           sx={{
             color: hsl(bgrd).l < 0.6 ? "#fff" : "#000",
             pointerEvents: "none",
@@ -257,17 +285,17 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
   );
 }
 
-function BaseCell({ value }) {
+function BaseCell({ value, compact }) {
   return (
     <Box
       display="flex"
       justifyContent="center"
       alignItems="center"
       borderRadius={1.5}
-      py={1.4}
+      py={compact ? COMPACT_CELL_Y_PADDING : CELL_Y_PADDING }
       outline={`1px solid ${grey[400]}`}
     >
-      <Typography fontSize={13.5} color={grey[500]}>
+      <Typography fontSize={compact ? COMPACT_FONT_SIZE : FONT_SIZE} color={grey[500]}>
         {value}
       </Typography>
     </Box>
@@ -301,7 +329,7 @@ function DetailCell({ geneSymbol, score, mouseLeaveRow, waterfallRow, waterfallX
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            gap: 1,
+            gap: 0.5,
             padding: 1,
             borderRadius: "0.4em",
             "&:hover": {
@@ -388,17 +416,19 @@ function HeatmapTable({
   variables,
   loading,
   fixedGene,
+  disabledFilter = false,  // only relevant if fixedGene is provided
   disabledExport = false,
   disabledLegend = false,
+  singleRowMode = false,
 }) {
-  const filterProvied = !!fixedGene;
-  const [showAll, setShowAll] = useState(!filterProvied);
+  const disabledGeneColumn = singleRowMode;
+  const disabledScoreColumn = singleRowMode;
+  const [showAll, setShowAll] = useState(!fixedGene);
   const [defaultChecked] = useState(true);
 
   const getVisData = useCallback(
     ({ all }) => {
-      if (!filterProvied) return all;
-      if (filterProvied && showAll) return all;
+      if (showAll) return all;
       return all.filter(row => row.targetId === fixedGene);
     },
     [showAll]
@@ -427,7 +457,7 @@ function HeatmapTable({
 
   return (
     <>
-      {filterProvied && (
+      {fixedGene && !disabledFilter && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1, mr: 1 }}>
           <FormControlLabel
             control={
@@ -457,10 +487,12 @@ function HeatmapTable({
           component="table"
           sx={{
             tableLayout: "fixed",
-            width: "90%",
-            maxWidth: "1000px",
+            width: singleRowMode ? "100%" : "90%",
             borderCollapse: "collapse",
-            my: 4,
+            sx: {
+              maxWidth: "1000px",
+              my: singleRowMode ? 0 : 4,
+            },
           }}
         >
           {!disabledLegend && (
@@ -477,12 +509,18 @@ function HeatmapTable({
               />
             </Box>
           )}
-          <THead>
-            {["Gene", "Score", ...groupNames, "Base", ""].map((value, index) => (
+          <THead singleRowMode={singleRowMode}>
+            {[
+                ...(disabledGeneColumn ? [] : ["Gene"]),
+                ...(disabledScoreColumn ? [] : ["Score"]),
+                ...groupNames, "Base",
+                ...(singleRowMode ? [] : [""]),
+              ].map((value, index) => (
               <HeaderCell
                 key={index}
                 value={value}
                 textAlign={value === "Gene" ? "right" : "center"}
+                singleRowMode={singleRowMode}
               />
             ))}
           </THead>
@@ -493,6 +531,7 @@ function HeatmapTable({
                 key={row.targetId}
                 row={row}
                 colorInterpolator={colorInterpolator}
+                singleRowMode={singleRowMode}
               />
             ))}
           </TBody>
