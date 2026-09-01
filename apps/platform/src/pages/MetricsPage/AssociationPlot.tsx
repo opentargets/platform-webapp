@@ -1,0 +1,33 @@
+import { Box, Paper, Typography, useTheme } from "@mui/material";
+import * as Plot from "@observablehq/plot";
+import { ObsPlot } from "ui";
+import dataSourcesAssoc from "../../components/AssociationsToolkit/static_datasets/dataSourcesAssoc";
+import { CATEGORICAL_COLORS } from "../../components/AssociationsToolkit/components/Table/NoveltyCharts";
+import type { MetricRow } from "./MetricsPage";
+
+type AssociationCount = { name: string; group: string; count: number };
+const dataSourceTypes = new Map(dataSourcesAssoc.map((source) => [source.id, source.aggregation]));
+
+function AssociationPlot({ data, datasetPrefix, title, labelFromDataset = false }: { data: MetricRow[]; datasetPrefix: string; title: string; labelFromDataset?: boolean }) {
+  const theme = useTheme();
+  const chartData: AssociationCount[] = data.filter((row) => row.dataset.startsWith(datasetPrefix) && row.kind === "grouping" && row.group_value)
+    .map((row) => {
+      const sourceId = labelFromDataset ? row.dataset.replace(datasetPrefix, "") : row.group_value;
+      return { name: labelFromDataset ? sourceId : row.group_value, group: dataSourceTypes.get(sourceId) ?? "Other", count: row.value };
+    });
+  const groupMaxCounts = new Map<string, number>();
+  chartData.forEach((item) => groupMaxCounts.set(item.group, Math.max(groupMaxCounts.get(item.group) ?? 0, item.count)));
+  chartData.sort((a, b) => (groupMaxCounts.get(b.group) ?? 0) - (groupMaxCounts.get(a.group) ?? 0) || a.group.localeCompare(b.group) || b.count - a.count);
+  if (chartData.length === 0) return null;
+  return <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined"><Box sx={{ minWidth: 0 }}>
+    <Typography variant="subtitle2" sx={{ m: 0 }}>{title}</Typography>
+    <ObsPlot data={chartData} otherData={{ textColor: theme.palette.text.primary }} minWidth={320} height={chartData.length * 23 + 8} renderChart={renderChart} xTooltip={(item) => item.count} yTooltip={(item) => item.name} xAnchorTooltip="adapt" yAnchorTooltip="adapt" gapInfo={0} renderInfo={() => null} />
+  </Box></Paper>;
+  function renderChart({ data, width, height }: { data: AssociationCount[]; width?: number; height: number }) {
+    const plotWidth = Math.max((width ?? 0) - 210 - 24, 0), maxCount = Math.max(...data.map((item) => item.count));
+    const insideData = data.filter((item) => (item.count / maxCount) * plotWidth >= `${item.count.toLocaleString()}`.length * 7 + 12);
+    const outsideData = data.filter((item) => !insideData.includes(item));
+    return Plot.plot({ width: width ?? 0, height, style: { fontSize: "13.5px" }, marginTop: 4, marginBottom: 4, marginLeft: 240, marginRight: 0, x: { axis: null }, color: { domain: [...new Set(data.map((item) => item.group))], range: CATEGORICAL_COLORS, legend: true }, y: { domain: data.map((item) => item.name), label: null, tickSize: 0, tickPadding: 8, tickFormat: (name) => name.replaceAll("_", " ") }, marks: [Plot.barX(data, { x: "count", y: "name", fill: "group", insetTop: 2, insetBottom: 2, className: "obs-tooltip" }), Plot.text(insideData, { x: "count", y: "name", text: (item) => item.count.toLocaleString(), textAnchor: "end", dx: -6, fill: "white", lineAnchor: "middle", fontSize: 12.5, className: "obs-tooltip" }), Plot.text(outsideData, { x: "count", y: "name", text: (item) => item.count.toLocaleString(), textAnchor: "start", dx: 6, fill: theme.palette.text.primary, lineAnchor: "middle", fontSize: 12.5, className: "obs-tooltip" })] });
+  }
+}
+export default AssociationPlot;
