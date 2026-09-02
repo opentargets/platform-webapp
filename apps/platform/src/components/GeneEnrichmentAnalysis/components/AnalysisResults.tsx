@@ -1,9 +1,9 @@
-import { faChartPie, faCircle, faSitemap, faTableColumns, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
+import { faChartPie, faSitemap, faTableColumns, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Alert, Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { useState } from "react";
 import type { GseaResult, InputOverlap } from "../api/gseaApi";
-import ResultsPlotlySunburst from "./ResultsPlotlySunburst";
+import ResultsCustomSunburst from "./ResultsCustomSunburst";
 import { ResultsEnrichmentMap } from "./ResultsEnrichmentMap/";
 import { EnrichmentMapControlsProvider } from "./ResultsEnrichmentMap/utils/EnrichmentMapControlsContext";
 import ResultsTable from "./ResultsTable";
@@ -91,8 +91,13 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
       <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'plotly'].includes(viewMode) ? 0 : 2 }}>
         {viewMode === "table" && <ResultsTable results={results} />}
         {viewMode === "tree" && <ResultsTreeView results={results} />}
-        {/* {viewMode === "sunburst" && <ResultsSunburst results={results} />} */}
-        {viewMode === "plotly" && <ResultsPlotlySunburst key={activeRunId} results={results} />}
+        {viewMode === "plotly" && (
+          <ResultsCustomSunburst
+            key={activeRunId}
+            results={results}
+            library={inputOverlap?.library}
+          />
+        )}
          {viewMode === "network" && <ResultsEnrichmentMap results={results} diseaseId={diseaseId} />}
       </Box>
     </Box>

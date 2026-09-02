@@ -11,14 +11,20 @@ import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
 import PlotlySunburstChart from "./PlotlySunburstChart";
 import SunburstFilters, { type PathwayFilters } from "./SunburstFilters";
+import ZoomableSunburst from "../../Surnburst/ZoomableSunburst";
+import {gseaToSunburst} from "../../Surnburst/utils/gseaToSunburst";
+import { GseaLibrariesMap } from "../constants";
 
 interface ResultsPlotlySunburstProps {
   results: GseaResult[];
+  library?: string;
 }
 
-function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
+function ResultsPlotlySunburst({ results, library }: ResultsPlotlySunburstProps) {
+  const rootName = library
+    ? ((GseaLibrariesMap as Record<string, string>)[library] ?? library)
+    : "GSEA Pathways";
+    
   // Get initial NES range from data
   const nesDataRange = useMemo(() => {
     const nesValues = results.map((r) => r.NES || 0);
@@ -28,8 +34,11 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
     };
   }, [results]);
 
-  // Determine if dataset is large (> 500 pathways)
-  const isLargeDataset = results.length > 500;
+   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  // Large pathway sets are slow to render, so default to a stricter FDR
+  // cutoff to keep the initial sunburst usable.
+  const isLargeDataset = results.length > 3000;
 
   const [filters, setFilters] = useState<PathwayFilters>({
     searchText: "",
@@ -218,7 +227,13 @@ function ResultsPlotlySunburst({ results }: ResultsPlotlySunburstProps) {
         </Box>
       </Popover>
       <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
-        <PlotlySunburstChart results={filteredResults} />
+        {/* <PlotlySunburstChart results={filteredResults} /> */}
+        {(() => {
+          const sunburstData = gseaToSunburst(filteredResults, "NES", rootName);
+          console.log("Sunburst data structure:", sunburstData);
+          console.log("Filtered results:", filteredResults.length, "pathways");
+          return <ZoomableSunburst data={sunburstData} />;
+        })()}
       </Box>
     </Box>
   );
