@@ -35,8 +35,8 @@ export const SunburstArcs: React.FC<SunburstArcsProps> = ({
             d={arcPath ?? undefined}
             fill={colorMap.get(d) ?? "#ccc"}
             fillOpacity={visible ? 1 : 0}
-            stroke="#fff"
-            strokeWidth={1}
+            stroke="none"
+            strokeWidth={0}
             style={{ cursor: "pointer" }}
             onClick={() => onArcClick(d)}
             onMouseEnter={() => onMouseEnter(d)}
