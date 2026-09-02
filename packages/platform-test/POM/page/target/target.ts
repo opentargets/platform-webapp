@@ -19,7 +19,9 @@ export class TargetPage {
    */
   async goToTargetPage(ensgId: string): Promise<void> {
     await this.page.goto(`/target/${ensgId}`);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   /**
@@ -34,7 +36,9 @@ export class TargetPage {
    */
   async goToProfilePage(): Promise<void> {
     await this.page.goto(this.getProfilePageUrl());
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   /**
@@ -43,7 +47,9 @@ export class TargetPage {
   async goToAssociationsPage(): Promise<void> {
     const baseUrl = this.getProfilePageUrl();
     await this.page.goto(`${baseUrl}/associations`);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   // Tab navigation
@@ -160,24 +166,6 @@ export class TargetPage {
   }
 
   /**
-   * Get the TEP (Target Enabling Package) link
-   */
-  getTEPLink(): Locator {
-    return this.page.locator('a[href*="thesgc.org/tep"]');
-  }
-
-  /**
-   * Get the TEP link href attribute (if available)
-   */
-  async getTEPLinkHref(): Promise<string | null> {
-    const isVisible = await this.getTEPLink()
-      .isVisible()
-      .catch(() => false);
-    if (!isVisible) return null;
-    return await this.getTEPLink().getAttribute("href");
-  }
-
-  /**
    * Get all external links in the header
    */
   getExternalLinks(): Locator {
@@ -227,7 +215,6 @@ export class TargetPage {
     await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
       state: "visible",
     });
-    await this.page.waitForLoadState("networkidle");
   }
 
   /**

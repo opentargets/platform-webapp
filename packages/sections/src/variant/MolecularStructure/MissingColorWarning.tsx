@@ -1,8 +1,7 @@
 
-import { Box, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
-import { useViewerState } from "ui";
+import { useViewerState, Box, Typography } from "ui";
 
 function MissingColorWarning() {
   const viewerState = useViewerState();

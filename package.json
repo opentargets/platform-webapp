@@ -1,5 +1,5 @@
 {
-  "name": "ot-ui-apps",
+  "name": "platform-webapp",
   "version": "0.0.1",
   "private": true,
   "license": "Apache-2.0",
@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "bugs": {
-    "url": "https://github.com/opentargets/ot-ui-apps/issues",
+    "url": "https://github.com/opentargets/platform-webapp/issues",
     "email": "support@targetvalidation.org"
   },
   "scripts": {
@@ -18,6 +18,8 @@
     "dev": "turbo run dev --parallel",
     "dev:platform": "turbo run dev --filter=platform",
     "build:platform": "turbo run build --filter=platform",
+    "dev:docs": "turbo run dev --filter=docs",
+    "build:docs": "turbo run build --filter=docs",
     "dev:platform:ppp": "turbo run dev-ppp --filter=platform",
     "build:platform:ppp": "turbo run build-ppp --filter=platform",
     "lint": "npx biome check .",
@@ -40,5 +42,12 @@
     "lint-staged": "^14.0.1",
     "turbo": "^2.4.2"
   },
-  "packageManager": "yarn@1.22.18"
+  "resolutions": {
+    "lodash": "^4.18.1",
+    "markdown-it": "^14.2.0",
+    "immutable@npm:~3.7.6": "^3.8.3",
+    "@types/react": "^18.0.28",
+    "react-is": "^18.3.1"
+  },
+  "packageManager": "yarn@4.17.1"
 }

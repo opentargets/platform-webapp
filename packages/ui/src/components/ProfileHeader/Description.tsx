@@ -1,7 +1,6 @@
 import { Box, Skeleton, Typography } from "@mui/material";
-
+import type { ReactNode } from "react";
 import LongText from "../LongText";
-import { ReactNode } from "react";
 
 type DescriptionProps = {
   children?: ReactNode;

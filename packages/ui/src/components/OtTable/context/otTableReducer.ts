@@ -1,4 +1,4 @@
-import { Action, ActionType, OtTableSSPState } from "../types/tableTypes";
+import { type Action, ActionType, type OtTableSSPState } from "../types/tableTypes";
 import { getLoadingRows } from "../utils/tableUtils";
 
 export const initialState: OtTableSSPState = {

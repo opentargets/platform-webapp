@@ -1,6 +1,5 @@
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useApolloClient } from "ui";
+import { useApolloClient, Box, CircularProgress, Typography, Button } from "ui";
 import { deleteRun, setActiveRun, setAnalysisInputs } from "../actions";
 import { useGseaAnalysis } from "../hooks/useGseaAnalysis";
 import { useGeneEnrichment } from "../Provider";

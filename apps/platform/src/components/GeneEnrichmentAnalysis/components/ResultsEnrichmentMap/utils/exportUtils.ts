@@ -156,7 +156,6 @@ export function copyNetworkToClipboard(cy: CytoscapeCore): void {
     const jsonString = JSON.stringify(cytoscapeJSON, null, 2);
 
     navigator.clipboard.writeText(jsonString).then(() => {
-      console.log("Network JSON copied to clipboard");
     }).catch((err) => {
       console.error("Failed to copy to clipboard:", err);
       throw new Error("Failed to copy network to clipboard");

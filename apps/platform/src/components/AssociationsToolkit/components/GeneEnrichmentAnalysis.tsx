@@ -1,6 +1,7 @@
 import { faChartPie } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ListItemIcon, ListItemText, MenuItem, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import { ListItemIcon, ListItemText, MenuItem } from "ui";
 import {
   setAssociationsState,
   setModalOpen,
@@ -51,7 +52,6 @@ function buildAssociationsState(params: {
 
 /** Extract entity name from the query results to avoid refetching */
 function getEntityName(entity: ENTITY, data: any[]): string {
-  console.log(data)
   if (!data || data.length === 0) return "";
   
   if (entity === ENTITY.DISEASE) {

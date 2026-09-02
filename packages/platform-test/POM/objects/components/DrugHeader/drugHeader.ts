@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Interactor for Drug Header component
@@ -128,6 +129,6 @@ export class DrugHeader {
 
   // Wait for header to load
   async waitForHeaderLoad(): Promise<void> {
-    await this.getHeader().waitFor({ state: "visible", timeout: 10000 });
+    await this.getHeader().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
   }
 }

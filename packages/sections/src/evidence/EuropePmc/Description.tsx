@@ -1,0 +1,17 @@
+import { Link } from "ui";
+
+type Props = { symbol: string; name: string };
+function Description({ symbol, name }: Props) {
+  return (
+    <>
+      Text-mining method evaluating the strength of the association between{" "}
+      <strong>{symbol}</strong> and <strong>{name}</strong> when they co-occur in the literature.
+      Source:{" "}
+      <Link to="http://europepmc.org" external>
+        Europe PMC
+      </Link>
+    </>
+  );
+}
+
+export default Description;

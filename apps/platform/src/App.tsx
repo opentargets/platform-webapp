@@ -1,67 +1,144 @@
 import { ReactElement } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { SearchProvider, PrivateRoute, OTConfigurationProvider, FromGeneticsModal } from "ui";
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { SearchProvider, PrivateRoute, OTConfigurationProvider, LoadingBackdrop } from "ui";
 import { getConfig } from "@ot/config";
 
 import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
-import HomePage from "./pages/HomePage/HomePage";
-import SearchPage from "./pages/SearchPage";
-import DiseasePage from "./pages/DiseasePage/DiseasePage";
-import DownloadsPage from "./pages/DownloadsPage";
-import DrugPage from "./pages/DrugPage";
-import TargetPage from "./pages/TargetPage";
-import EvidencePage from "./pages/EvidencePage";
-import VariantPage from "./pages/VariantPage";
-import StudyPage from "./pages/StudyPage";
-import CredibleSetPage from "./pages/CredibleSetPage";
-import APIPage from "./pages/APIPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import ProjectsPage from "./pages/ProjectsPage";
-import AnalysisPage from "./pages/AnalysisPage";
+import RootLayout from "./layouts/RootLayout";
+import StandardLayout from "./layouts/StandardLayout";
+import NotFoundPage from "./pages/NotFoundPage/NotFoundPage";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
+import { apolloClient } from "./apolloClient";
 
 const config = getConfig();
 
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    hydrateFallbackElement: <LoadingBackdrop height={400} />,
+    children: [
+      {
+        index: true,
+        lazy: () =>
+          import("./pages/HomePage/HomePage").then(m => ({ Component: m.default })),
+      },
+      {
+        element: <StandardLayout />,
+        children: [
+          {
+            path: "/api",
+            lazy: () => import("./pages/APIPage/APIPage").then(m => ({ Component: m.default })),
+          },
+          {
+            path: "/search",
+            lazy: () =>
+              import("./pages/SearchPage/SearchPage").then(m => ({ Component: m.default })),
+          },
+          {
+            path: "/downloads/*",
+            lazy: () =>
+              import("./pages/DownloadsPage/DownloadsWrapper").then(m => ({
+                Component: m.default,
+              })),
+          },
+          {
+            path: "/target/:ensgId/*",
+            lazy: () =>
+              import("./pages/TargetPage/TargetPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/disease/:efoId/*",
+            lazy: () =>
+              import("./pages/DiseasePage/DiseasePage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/evidence/:ensgId/:efoId/*",
+            lazy: () =>
+              import("./pages/EvidencePage/EvidencePage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/drug/:chemblId/*",
+            lazy: () =>
+              import("./pages/DrugPage/DrugPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/variant/:varId/*",
+            lazy: () =>
+              import("./pages/VariantPage/VariantPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/study/:studyId/*",
+            lazy: () =>
+              import("./pages/StudyPage/StudyPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "/credible-set/:studyLocusId/*",
+            lazy: () =>
+              import("./pages/CredibleSetPage/CredibleSetPage").then(m => ({
+                Component: m.default,
+                loader: m.loader,
+              })),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            element: <PrivateRoute />,
+            children: [
+              {
+                path: "/analysis",
+                lazy: () =>
+                  import("./pages/AnalysisPage/AnalysisPage").then(m => ({
+                    Component: m.default,
+                  })),
+              },
+              {
+                path: "/projects",
+                lazy: () =>
+                  import("./pages/ProjectsPage/ProjectsPage").then(m => ({
+                    Component: m.default,
+                  })),
+              },
+            ],
+          },
+          { path: "*", element: <NotFoundPage /> },
+        ],
+      },
+    ],
+  },
+]);
+
 function App(): ReactElement {
   return (
-    <OTConfigurationProvider config={config}>
+    <OTConfigurationProvider config={config} client={apolloClient}>
       <SearchProvider
         searchQuery={SEARCH_QUERY}
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."
       >
-        <Router>
-          <FromGeneticsModal />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/api" element={<APIPage />} />
-            <Route
-              path="/analysis"
-              element={
-                <PrivateRoute>
-                  <AnalysisPage />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/downloads/*" element={<DownloadsPage />} />
-            <Route path="/target/:ensgId/*" element={<TargetPage />} />
-            <Route path="/disease/:efoId/*" element={<DiseasePage />} />
-            <Route path="/evidence/:ensgId/:efoId/*" element={<EvidencePage />} />
-            <Route path="/drug/:chemblId/*" element={<DrugPage />} />
-            <Route path="/variant/:varId/*" element={<VariantPage />} />
-            <Route path="/study/:studyId/*" element={<StudyPage />} />
-            <Route path="/credible-set/:studyLocusId/*" element={<CredibleSetPage />} />
-            <Route
-              path="/projects"
-              element={
-                <PrivateRoute>
-                  <ProjectsPage />
-                </PrivateRoute>
-              }
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
+        <RouterProvider router={router} />
       </SearchProvider>
     </OTConfigurationProvider>
   );

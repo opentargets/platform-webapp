@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from "react";
-import { createViewer } from "3dmol";
-import { Box, Button } from "@mui/material";
-import { useViewerState, useViewerDispatch } from "../../providers/ViewerProvider";
-import { useViewerInteractionState, useViewerInteractionDispatch } from "ui";
-import Usage from "./Usage";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip, ViewerTrack } from "ui";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Button } from "@mui/material";
+import { createViewer } from "3dmol";
+import { useEffect, useRef, useState } from "react";
+import { Tooltip, useViewerInteractionDispatch, useViewerInteractionState, ViewerTrack } from "ui";
+import { useViewerDispatch, useViewerState } from "../../providers/ViewerProvider";
 import { onClickCapture } from "./helpers";
+import Usage from "./Usage";
 
 const hoverDuration = 0;
 
@@ -55,22 +54,17 @@ export default function Viewer({
 
   function applyAppearance(
     appearance,
-    resi = null, // only non-null for click/hover on structure (not track) appearance changes
+    resi = null // only non-null for click/hover on structure (not track) appearance changes
   ) {
     const resolvedSelection = resolveProperty(appearance, "selection", viewerState, resi);
     const resolvedStyle = resolveProperty(appearance, "style", viewerState, resi);
     if (resolvedSelection && resolvedStyle) {
-      viewer[appearance.addStyle ? "addStyle" : "setStyle"](
-        resolvedSelection,
-        resolvedStyle
-      );
+      viewer[appearance.addStyle ? "addStyle" : "setStyle"](resolvedSelection, resolvedStyle);
     }
   }
 
   function getEventSelection(selection) {
-    return typeof selection === "function"
-      ? selection(viewerState)
-      : selection;
+    return typeof selection === "function" ? selection(viewerState) : selection;
   }
 
   // keep ref in sync
@@ -83,7 +77,6 @@ export default function Viewer({
     let _viewer;
 
     if (data && viewerRef.current) {
-
       // create viewer
       _viewer = createViewer(viewerRef.current, {
         backgroundColor: "#f8f8f8",
@@ -99,7 +92,7 @@ export default function Viewer({
       setViewer(_viewer);
       _viewer.getCanvas().addEventListener(
         "wheel",
-        event => {
+        (event) => {
           if (!event.ctrlKey) event.stopImmediatePropagation();
         },
         true // use capture phase so fires before library handler
@@ -110,34 +103,27 @@ export default function Viewer({
       onData?.(_viewer, viewerDispatch);
 
       // set state viewer after load data - since state groups atoms by resi
-      viewerDispatch({ type: '_setViewer', value: _viewer });
+      viewerDispatch({ type: "_setViewer", value: _viewer });
     }
 
     // interaction
     if (viewerInteractionState) {
-
       // disable hover when mousedown
-      _viewer.getCanvas().addEventListener(
-        "mousedown",
-        event => {
-          manipulating.current = true;
-          startedManipulating.current = Date.now();
-        }
-      );
-      _viewer.getCanvas().addEventListener(
-        "mouseup",
-        event => {
-          viewerInteractionDispatch({ type: "setHoveredResi", value: null });
-          manipulating.current = false;
-        }
-      );
-      
+      _viewer.getCanvas().addEventListener("mousedown", (event) => {
+        manipulating.current = true;
+        startedManipulating.current = Date.now();
+      });
+      _viewer.getCanvas().addEventListener("mouseup", (event) => {
+        viewerInteractionDispatch({ type: "setHoveredResi", value: null });
+        manipulating.current = false;
+      });
+
       // click event on canvas for 'click off' events
-      _viewer.getCanvas().addEventListener("click", event => {
+      _viewer.getCanvas().addEventListener("click", (event) => {
         setTimeout(() => {
-          if(
+          if (
             !clickHandled.current &&
-            Date.now() - startedManipulating.current < 250  // click rather than manipulate structure
+            Date.now() - startedManipulating.current < 250 // click rather than manipulate structure
           ) {
             viewerInteractionDispatch({ type: "setClickedResi", value: null });
           }
@@ -149,7 +135,7 @@ export default function Viewer({
       if (clickSelection) {
         const sel = getEventSelection(clickSelection);
         if (sel && clickAppearance?.length > 0) {
-          _viewer.setClickable(sel, true, atom => {
+          _viewer.setClickable(sel, true, (atom) => {
             viewerInteractionDispatch({ type: "setClickedResi", value: +atom.resi });
             clickHandled.current = true;
           });
@@ -165,7 +151,7 @@ export default function Viewer({
             true,
             // use tempHoveredResi and setTimeout to prevent flicker when hover aross
             // different atoms on same residue
-            atom => {
+            (atom) => {
               if (hoverTimeout.current) {
                 clearTimeout(hoverTimeout.current);
                 hoverTimeout.current = null;
@@ -175,11 +161,12 @@ export default function Viewer({
                 // tempHoveredResi.current = +atom.resi;
               }
             },
-            atom => {
+            (atom) => {
               hoverTimeout.current = setTimeout(() => {
-                if (!manipulating.current &&
-                    // viewerInteractionState.hoveredResi === +atom.resi //&&
-                    tempHoveredResi.current === +atom.resi
+                if (
+                  !manipulating.current &&
+                  // viewerInteractionState.hoveredResi === +atom.resi //&&
+                  tempHoveredResi.current === +atom.resi
                 ) {
                   viewerInteractionDispatch({ type: "setHoveredResi", value: null });
                   tempHoveredResi.current = null;
@@ -188,7 +175,7 @@ export default function Viewer({
               }, 50);
             }
           );
-          _viewer.render();  // required to reactivate hover
+          _viewer.render(); // required to reactivate hover
         }
       }
 
@@ -206,7 +193,7 @@ export default function Viewer({
   // double click callback
   useEffect(() => {
     if (!viewer || !onDblClick) return;
-    viewer.getCanvas().addEventListener("dblclick", event => {
+    viewer.getCanvas().addEventListener("dblclick", (event) => {
       onDblClick(viewerState);
     });
   }, [viewer]);
@@ -220,7 +207,7 @@ export default function Viewer({
       let anyUsed = false;
       for (const appearance of clickAppearance) {
         for (const leaveAppearance of appearance.leave || []) {
-          const a = {...leaveAppearance };
+          const a = { ...leaveAppearance };
           const resi = Number(oldClickedResi.current);
           if (!a.use || a.use(viewerState, resi)) {
             if (!a.selection) a.selection = { resi };
@@ -255,13 +242,13 @@ export default function Viewer({
   // update for change in hovered resi
   useEffect(() => {
     if (!viewer || !viewerInteractionState) return;
-    
+
     // unhover
     if (oldHoveredResi.current) {
       let anyUsed = false;
       for (const appearance of hoverAppearance) {
-         for (const leaveAppearance of appearance.leave || []) {
-          const a = {...leaveAppearance };
+        for (const leaveAppearance of appearance.leave || []) {
+          const a = { ...leaveAppearance };
           const resi = Number(oldHoveredResi.current);
           if (!a.use || a.use(viewerState, resi)) {
             if (!a.selection) a.selection = { resi };
@@ -273,12 +260,12 @@ export default function Viewer({
       }
       if (anyUsed) viewer.render();
     }
-      
+
     // hover
     if (viewerInteractionState.hoveredResi) {
       let anyUsed = false;
       for (const appearance of hoverAppearance) {
-        const a = {...appearance };
+        const a = { ...appearance };
         const resi = Number(viewerInteractionState.hoveredResi);
         if (!a.use || a.use(viewerState, resi)) {
           if (!a.selection) a.selection = { resi };
@@ -289,7 +276,7 @@ export default function Viewer({
       }
       if (anyUsed) viewer.render();
     }
-    
+
     oldHoveredResi.current = viewerInteractionState.hoveredResi;
   }, [viewer, viewerInteractionState?.hoveredResi]);
 
@@ -311,19 +298,18 @@ export default function Viewer({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
-     
       {/* track */}
       {trackColor && <ViewerTrack trackColor={trackColor} trackTicks={trackTicks} />}
-     
+
       {/* viewer */}
       <Box
         ref={viewerRef}
         sx={{
           position: "relative",
           width: "100%",
-          height, 
+          height,
           resize: "vertical",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
         {/* // position="relative" width="100%" height={height} sx={{resize: "vertical", overflow: "hidden"}}> */}
@@ -368,7 +354,7 @@ export default function Viewer({
             position="absolute"
             top={0}
             left={0}
-            height="50%"  // stops jumping when canvas overlaps top/bottom of window
+            height="50%" // stops jumping when canvas overlaps top/bottom of window
             display="flex"
             alignItems="start"
             zIndex={100}
@@ -384,7 +370,7 @@ export default function Viewer({
             position="absolute"
             bottom={0}
             right={0}
-            height="50%"  // stops jumping when canvas overlaps top/bottom of window
+            height="50%" // stops jumping when canvas overlaps top/bottom of window
             display="flex"
             alignItems="end"
             zIndex={100}

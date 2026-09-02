@@ -1,15 +1,15 @@
-import { withStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 
-const HtmlTooltip = withStyles(theme => ({
-  tooltip: {
+const HtmlTooltip = styled(Tooltip)(({ theme }) => ({
+  "& .MuiTooltip-tooltip": {
     backgroundColor: `${theme.palette.background.paper} !important`,
     border: `1px solid ${theme.palette.grey[300]}`,
     color: `${theme.palette.text.primary} !important`,
   },
-  arrow: {
+  "& .MuiTooltip-arrow": {
     color: `${theme.palette.background.paper} !important`,
   },
-}))(Tooltip);
+}));
 
 export default HtmlTooltip;

@@ -10,8 +10,8 @@ import {
   DisplaySampleSize,
   PublicationsDrawer,
   StudyPublication,
+  Box,
 } from "ui";
-import { Box } from "@mui/material";
 import { populationMap } from "@ot/constants";
 import { getSortedAncestries, getStudyTypeDisplay, formatPercentage } from "@ot/utils";
 

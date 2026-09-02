@@ -1,52 +1,54 @@
-import { useState, useEffect } from "react";
+import { useApolloClient } from "@apollo/client";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
-  IconButton,
-  Drawer,
-  Typography,
-  Paper,
   ButtonBase,
   Chip,
   CircularProgress,
+  Drawer,
+  IconButton,
+  Paper,
+  Typography,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { clinicalStageCategories, clinicalReportsSourcesInfo, stopReasonMap } from "@ot/constants";
-import { useApolloClient } from "@apollo/client";
-import Link from "../Link";
-import { PublicationsList } from "../PublicationsDrawer";
-import OtLongText from "../OtLongText";
-import Tooltip from "../Tooltip";
-import useDelayedFlag from "../../hooks/useDelayedFlag";
+import { styled } from "@mui/material/styles";
+import { clinicalReportsSourcesInfo, clinicalStageCategories, stopReasonMap } from "@ot/constants";
 import { sentenceCase } from "@ot/utils";
+import { useEffect, useState } from "react";
+import useDelayedFlag from "../../hooks/useDelayedFlag";
+import Link from "../Link";
+import LongText from "../LongText";
+import { PublicationsList } from "../PublicationsDrawer";
+import Tooltip from "../Tooltip";
 import RECORD_DETAIL_QUERY from "./RecordDetailQuery.gql";
 
-const useDrawerStyles = makeStyles((theme: any) => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  },
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
     maxWidth: "100%",
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
-  },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
+}));
+
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
 }));
 
 const getDetails = (client, query, clinicalReportId) =>
@@ -84,9 +86,7 @@ function FieldRow({ label, children }: any) {
 function dedupOnId(rows: any, propertyName: any) {
   return [
     ...new Map(
-      (rows || [])
-        .filter((d: any) => d[propertyName]?.id)
-        .map((d: any) => [d[propertyName].id, d])
+      (rows || []).filter((d: any) => d[propertyName]?.id).map((d: any) => [d[propertyName].id, d])
     ).values(),
   ];
 }
@@ -136,13 +136,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
   if (showLoading) {
     return (
-      <Box
-        my={8}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        flexDirection="column"
-      >
+      <Box my={8} display="flex" justifyContent="center" alignItems="center" flexDirection="column">
         <CircularProgress size={60} />
         <Typography mt={6}>Loading clinical report details</Typography>
       </Box>
@@ -167,9 +161,9 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
     url,
     trialDescription,
     trialLiterature,
+    trialSponsor,
     diseases,
     drugs,
-    hasExpertReview,
   } = details;
 
   const sourceInfo = clinicalReportsSourcesInfo[source];
@@ -183,29 +177,31 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       </Typography>
 
       <Link to={url}>
-        <Typography variant="caption" component="div" sx={{ mb: 2 }}>{url}</Typography>
+        <Typography variant="caption" component="div" sx={{ mb: 2 }}>
+          {url}
+        </Typography>
       </Link>
 
       <FieldRow label="Source">
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
-          {sourceInfo ? (
-            <Link to={sourceInfo.url}>
-              <Typography variant="body2">
-                {sourceInfo.name} {sourceInfo.name !== source && `(${source})`}
-              </Typography>
-            </Link>
-          ) : (
-            <Typography variant="body2">{source}</Typography>
-          )}
-          {hasExpertReview && (
-            <Chip
-              label={<Typography variant="caption">Expert review</Typography>}
-              variant="outlined"
-              size="small"
-            />
-          )}
-        </Box>
+        {sourceInfo ? (
+          <Link to={sourceInfo.url}>
+            <Typography variant="body2">
+              {sourceInfo.name} {sourceInfo.name !== source && `(${source})`}
+            </Typography>
+          </Link>
+        ) : (
+          <Typography variant="body2">{source}</Typography>
+        )}
       </FieldRow>
+
+      {trialSponsor?.name && (
+        <FieldRow label="Sponsor">
+          <Typography variant="body2">
+            {trialSponsor.name}
+            {trialSponsor.agencyClass && ` (${trialSponsor.agencyClass})`}
+          </Typography>
+        </FieldRow>
+      )}
 
       {countries?.length > 0 && (
         <FieldRow label="Status">
@@ -241,11 +237,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
             showHelpIcon
             style={tooltipStyle}
             slotProps={tooltipSlotProps}
-            title={
-              <Typography variant="caption">
-                Phase from source: {phaseFromSource}
-              </Typography>
-            }
+            title={<Typography variant="caption">Phase from source: {phaseFromSource}</Typography>}
           >
             <Typography component="span" variant="body2">
               {(clinicalStageCategories as any)[clinicalStage].label}
@@ -261,16 +253,14 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       {trialOverallStatus && (
         <FieldRow label="Status">
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5}}>
-              <Typography variant="body2">
-                {formatType(trialOverallStatus)}
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5 }}>
+              <Typography variant="body2">{formatType(trialOverallStatus)}</Typography>
               {trialStopReasonCategories?.length > 0 && (
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {trialStopReasonCategories.map(category => (
+                  {trialStopReasonCategories.map((category) => (
                     <Chip
                       key={category}
-                      sx={{  }}
+                      sx={{}}
                       label={stopReasonMap(category)}
                       variant="outlined"
                       size="small"
@@ -280,11 +270,11 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
               )}
             </Box>
             {trialWhyStopped && (
-              <OtLongText variant="body2" lineLimit={2}>
+              <LongText variant="body2" lineLimit={2} displayText="...show more">
                 <Box sx={{ whiteSpace: "pre-wrap", tabSize: 4, fontSize: "13px" }}>
                   {trialWhyStopped}
                 </Box>
-              </OtLongText>
+              </LongText>
             )}
           </Box>
         </FieldRow>
@@ -292,7 +282,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
       {dedupedDiseases.length > 0 && (
         <FieldRow label="Diseases">
-          <OtLongText variant="body2" lineLimit={3}>
+          <LongText variant="body2" lineLimit={3} displayText="...show more">
             <Box component="span" sx={{ fontSize: 14 }}>
               {dedupedDiseases.map((d: any, index: any) => (
                 <span key={index}>
@@ -318,13 +308,13 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
                 </span>
               ))}
             </Box>
-          </OtLongText>
+          </LongText>
         </FieldRow>
       )}
 
       {dedupedDrugs.length > 0 && (
         <FieldRow label="Drugs">
-          <OtLongText variant="body2" lineLimit={3}>
+          <LongText variant="body2" lineLimit={3} displayText="...show more">
             <Box component="span" sx={{ fontSize: 14 }}>
               {dedupedDrugs.map((d, index) => (
                 <span key={index}>
@@ -350,15 +340,12 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
                 </span>
               ))}
             </Box>
-          </OtLongText>
+          </LongText>
         </FieldRow>
       )}
 
       {trialDescription && (
-        <Typography
-          variant="body2"
-          sx={{ whiteSpace: "pre-wrap", tabSize: 4, mt: 2.5, mb: 3.5 }}
-        >
+        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", tabSize: 4, mt: 2.5, mb: 3.5 }}>
           {trialDescription}
         </Typography>
       )}
@@ -368,7 +355,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
           <Typography variant="subtitle2">Literature</Typography>
           <Box sx={{ mt: -5 }}>
             <PublicationsList
-              entriesIds={trialLiterature}
+              entriesIds={trialLiterature.map((lit: any) => lit.id)}
               hideSearch
               name={undefined}
               symbol={undefined}
@@ -384,7 +371,6 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
 function ClinicalRecordDrawer({ recordId, recordDetailQuery, children }: any) {
   const [open, setOpen] = useState(false);
-  const classes = useDrawerStyles();
 
   const toggleDrawer = (event: any) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
@@ -399,38 +385,32 @@ function ClinicalRecordDrawer({ recordId, recordDetailQuery, children }: any) {
 
   return (
     <>
-      <ButtonBase
+      <StyledButtonBase
         disableRipple
         onClick={toggleDrawer}
-        className={classes.drawerLink}
         sx={{ maxWidth: "100%", overflow: "hidden", display: "block" }}
       >
         {children}
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
-        anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
-        open={open}
-        onClose={closeDrawer}
-      >
-        <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+        <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography className={classes.drawerTitleCaption}>Report</Typography>
+            <StyledTitleCaption>Report</StyledTitleCaption>
             <IconButton onClick={closeDrawer}>
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>
-        </Paper>
+        </StyledPaperTitle>
 
-        <Box width={700} maxWidth="100%" className={classes.drawerBody}>
+        <StyledBody width={700} maxWidth="100%">
           {open && (
             <Box mt={2} mb={3} mx={3} p={3} pb={6} bgcolor="white">
               <RecordDetails recordId={recordId} recordDetailQuery={recordDetailQuery} />
             </Box>
           )}
-        </Box>
-      </Drawer>
+        </StyledBody>
+      </StyledDrawer>
     </>
   );
 }

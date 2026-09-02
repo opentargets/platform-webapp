@@ -1,41 +1,8 @@
-import { Box, Grid, Skeleton, SxProps, Theme, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ReactElement, ReactNode } from "react";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
-const useStyles = makeStyles((theme: Theme) => ({
-  externalLinks: {
-    "& > :not(:first-child):before": {
-      content: '" | "',
-    },
-  },
-  mainIconContainer: {
-    width: "56px",
-    marginRight: "4px !important",
-    justifyContent: "center",
-    display: "flex",
-    alignItems: "center",
-  },
-  mainIcon: {
-    color: theme.palette.primary.dark,
-  },
-  subtitle: {
-    display: "flex",
-    paddingLeft: "5px",
-    alignItems: "center",
-  },
-  title: {
-    color: theme.palette.primary.dark,
-    fontWeight: "500 !important",
-  },
-  titleContainer: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "10px",
-  },
-}));
+import { Box, GridLegacy, Skeleton, type SxProps, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import type { ReactElement, ReactNode } from "react";
 
 type HeaderProps = {
   externalLinks?: ReactNode;
@@ -73,37 +40,55 @@ function Header({
   externalLinks,
   rightContent = null,
 }: HeaderProps): ReactElement {
-  const classes = useStyles();
+  const theme = useTheme();
 
   return (
-    <Grid className={classes.titleContainer} data-testid="profile-page-header-block" container id="profile-page-header-block">
-      <Grid item zeroMinWidth>
-        <Grid container wrap="nowrap">
+    <GridLegacy
+      sx={{ justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}
+      data-testid="profile-page-header-block"
+      container
+      id="profile-page-header-block"
+    >
+      <GridLegacy item zeroMinWidth>
+        <GridLegacy container wrap="nowrap">
           <Box sx={iconHeaderStyles}>
-            <FontAwesomeIcon icon={Icon} size="3x" className={classes.mainIcon} />
+            <FontAwesomeIcon icon={Icon} size="3x" color={theme.palette.primary.dark} />
           </Box>
-          <Grid item zeroMinWidth>
-            <Grid container sx={{ mb: { xs: 2, md: 0 } }}>
-              <Typography  data-testid="profile-page-header-text" className={classes.title} variant="h4" noWrap title={title}>
+          <GridLegacy item zeroMinWidth>
+            <GridLegacy container sx={{ mb: { xs: 2, md: 0 } }}>
+              <Typography
+                data-testid="profile-page-header-text"
+                sx={{ color: "primary.dark", fontWeight: "500 !important" }}
+                variant="h4"
+                noWrap
+                title={title}
+              >
                 <Box component="span" sx={iconTextStyles}>
-                  <FontAwesomeIcon icon={Icon} size="sm" className={classes.mainIcon} />
+                  <FontAwesomeIcon icon={Icon} size="sm" color={theme.palette.primary.dark} />
                 </Box>
                 {loading ? <Skeleton width="10vw" /> : title}
               </Typography>
-              <Typography className={classes.subtitle} variant="h5">
+              <Typography
+                sx={{ display: "flex", paddingLeft: "5px", alignItems: "center" }}
+                variant="h5"
+              >
                 {loading ? <Skeleton width="50vw" /> : subtitle}
               </Typography>
-            </Grid>
-            <Grid container sx={{ mb: { xs: 2, md: 0 } }}>
-              <Typography variant="body2" className={classes.externalLinks} data-testid="external-links">
+            </GridLegacy>
+            <GridLegacy container sx={{ mb: { xs: 2, md: 0 } }}>
+              <Typography
+                variant="body2"
+                sx={{ "& > :not(:first-of-type):before": { content: '" | "' } }}
+                data-testid="external-links"
+              >
                 {loading ? <Skeleton width="50vw" /> : externalLinks}
               </Typography>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item>{rightContent}</Grid>
-    </Grid>
+            </GridLegacy>
+          </GridLegacy>
+        </GridLegacy>
+      </GridLegacy>
+      <GridLegacy item>{rightContent}</GridLegacy>
+    </GridLegacy>
   );
 }
 

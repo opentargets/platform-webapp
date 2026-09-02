@@ -1,13 +1,12 @@
-import { Box, Skeleton, Typography, Tooltip, Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { ReactNode } from "react";
-
+import { Box, Skeleton, Tooltip, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import _ from "lodash";
+import type { ReactNode } from "react";
 import Chip from "../Chip";
 import LongList from "../LongList";
 
-const useContainerStyles = makeStyles((theme: Theme) => ({
-  tooltip: {
+const StyledTooltip = styled(Tooltip)(({ theme }) => ({
+  "& .MuiTooltip-tooltip": {
     backgroundColor: theme.palette.background.paper,
     border: `1px solid ${theme.palette.grey[300]}`,
     color: theme.palette.text.primary,
@@ -36,13 +35,12 @@ function ChipList({
   maxTerms = 10,
   titleVariant = "subtitle2",
 }: ChipListProps): ReactNode {
-  const classes = useContainerStyles();
   if (inline && loading) return <Skeleton />;
 
   if (!children || children.length === 0) return null;
 
   return (
-    <Box data-testid={`profile-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Box data-testid={`profile-${title.toLowerCase().replace(/\s+/g, "-")}`}>
       <Typography variant={titleVariant} display={inline ? "inline" : ""}>
         {title}
         {inline ? ": " : ""}
@@ -58,16 +56,11 @@ function ChipList({
               return <Chip key={item} data-testid={`chip-${item}`} label={item} title={item} />;
             }
             return (
-              <Tooltip
-                placement="top"
-                classes={{ tooltip: classes.tooltip }}
-                title={item.tooltip}
-                key={item.label}
-              >
+              <StyledTooltip placement="top" title={item.tooltip} key={item.label}>
                 <span>
                   <Chip data-testid={`chip-${item.label}`} label={item.label} />
                 </span>
-              </Tooltip>
+              </StyledTooltip>
             );
           }}
         />

@@ -1,12 +1,15 @@
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   SectionsRenderer,
   SummaryRenderer,
   summaryUtils,
 } from "ui";
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
 import ProfileHeader from "./ProfileHeader";
 import { Drug, Widget } from "sections";
 
@@ -43,10 +46,23 @@ export const DRUG_PROFILE_QUERY = gql`
 
 const DRUG_WIDGETS = Array.from(drugProfileWidgets.values());
 
-function Profile({ chemblId, name }: { chemblId: string; name: string }) {
+type ProfileProps = {
+  chemblId: string;
+  name: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
+};
+
+function Profile({ chemblId, name, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider entity={DRUG} query={DRUG_PROFILE_QUERY} variables={{ chemblId }}>
       <ProfileHeader chemblId={chemblId} />
+      <StickyProfileHeader
+        title={name}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={DRUG_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={DRUG_WIDGETS} />
       </SummaryContainer>

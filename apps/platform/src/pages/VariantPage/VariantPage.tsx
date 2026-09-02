@@ -1,48 +1,57 @@
-import { useQuery } from "@apollo/client";
 import { ReactElement } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
-import { Box, Tabs, Tab } from "@mui/material";
-import { BasePage, ScrollToTop } from "ui";
-import Header from "./Header";
+import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab, PROFILE_TABS_SENTINEL_ID } from "ui";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import VARIANT_PAGE_QUERY from "./VariantPage.gql";
 import Profile from "./Profile";
+import { apolloClient } from "../../apolloClient";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const { data } = await apolloClient.query({
+    query: VARIANT_PAGE_QUERY,
+    variables: { variantId: params.varId },
+  });
+  return data;
+}
 
 function VariantPage(): ReactElement {
   const location = useLocation();
   const { varId } = useParams() as { varId: string };
-
-  const { loading, data } = useQuery(VARIANT_PAGE_QUERY, {
-    variables: { variantId: varId },
-  });
+  const data = useLoaderData<typeof loader>();
 
   if (data && !data.variant) {
     return <NotFoundPage />;
   }
 
-  return (
-    <BasePage
-      title={`${varId} profile page`}
-      description={`Annotation information for ${varId}`}
-      location={location}
-    >
-      <>
-        <Header loading={loading} variantId={varId} variantPageData={data?.variant} />
-        <ScrollToTop />
+  const headerMeta = buildHeaderMeta({ variantId: varId, variantPageData: data?.variant });
 
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={location.pathname}>
-            <Tab
-              label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
-              value={`/variant/${varId}`}
-              component={Link}
-              to={`/variant/${varId}`}
-            />
-          </Tabs>
-        </Box>
-        <Profile varId={varId} />
-      </>
-    </BasePage>
+  return (
+    <>
+      <PageMeta
+        title={`${varId} profile page`}
+        description={`Annotation information for ${varId}`}
+        location={location}
+      />
+      <Header loading={false} variantId={varId} variantPageData={data?.variant} />
+      <ScrollToTop />
+
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={location.pathname}>
+          <Tab
+            label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
+            value={`/variant/${varId}`}
+            component={Link}
+            to={`/variant/${varId}`}
+          />
+        </Tabs>
+      </Box>
+      <Profile
+        varId={varId}
+        Icon={headerMeta.Icon}
+        externalLinks={headerMeta.externalLinks}
+      />
+    </>
   );
 }
 

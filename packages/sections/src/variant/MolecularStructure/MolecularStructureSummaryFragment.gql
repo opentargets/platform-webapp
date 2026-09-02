@@ -1,4 +1,4 @@
-fragment MolecularStructureSummaryFragment on Variant {
+fragment VariantMolecularStructureSummaryFragment on Variant {
   id
   proteinCodingCoordinates {
     count

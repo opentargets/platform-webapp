@@ -1,0 +1,62 @@
+name: Deploy docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/docs/**"
+      - "packages/ui/src/**"
+      - "packages/sections/src/**"
+      - ".github/workflows/docs.yaml"
+
+# Only one deploy runs at a time; a newer push cancels a queued one
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build docs 📖
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: mskelton/setup-yarn@v3
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build docs
+        run: yarn build:docs
+        env:
+          STORYBOOK_BASE_PATH: /platform-webapp/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/docs/storybook-static
+
+  deploy:
+    name: Deploy 🚀
+    runs-on: ubuntu-22.04
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

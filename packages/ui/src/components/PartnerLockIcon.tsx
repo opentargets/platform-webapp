@@ -1,7 +1,7 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "./Tooltip";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useConfigContext } from "../providers/ConfigurationProvider";
+import Tooltip from "./Tooltip";
 
 function PartnerLockIcon() {
   const { config } = useConfigContext();

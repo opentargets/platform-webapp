@@ -1,5 +1,5 @@
 import { colors } from "@mui/material";
-import { lighten, darken } from "polished";
+import { darken, lighten } from "polished";
 
 const { grey } = colors;
 

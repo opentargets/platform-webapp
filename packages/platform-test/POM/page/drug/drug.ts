@@ -12,7 +12,9 @@ export class DrugPage {
    */
   async goToDrugPage(chemblId: string): Promise<void> {
     await this.page.goto(`/drug/${chemblId}`);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   /**

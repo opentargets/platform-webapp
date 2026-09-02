@@ -3,16 +3,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Box,
   Typography,
-  Divider,
-  Chip,
-  Stack,
-  Link as MuiLink,
   IconButton,
-  Tooltip,
-} from "@mui/material";
+  Button,
+  Chip,
+  MuiLink,
+  MuiTooltip as Tooltip,
+  Divider,
+  Stack,
+} from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faCheck} from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useMemo } from "react";
@@ -142,7 +142,6 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
   };
 
     const handleViewInAOTF = () => {
-      console.log("Viewing genes in AOTF with diseaseId:", diseaseId, "and genes:", filteredGenes, geneToTargetIdMapping);
         const targetIds = getTargetIdsFromMapping(filteredGenes || [], geneToTargetIdMapping || new Map());
         const aotfLink = buildAOTFLink(diseaseId || "", targetIds);
         window.open(aotfLink, "_blank");
@@ -222,6 +221,7 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
               >
                 <Chip
                   label={gene}
+                  variant="filled"
                   size="small"
                   component="span"
                   sx={{

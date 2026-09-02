@@ -1,16 +1,5 @@
-import { ReactNode, useState } from "react";
-import { Theme, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-
-const useStyles = makeStyles((theme: Theme) => ({
-  showMore: {
-    cursor: "pointer",
-    color: theme.palette.primary.main,
-  },
-  matches: {
-    marginTop: "4px",
-  },
-}));
+import { Box, Typography } from "@mui/material";
+import { type ReactNode, useState } from "react";
 
 type HighlightItem = string | TrustedHTML;
 
@@ -19,13 +8,12 @@ type HighlightsProps = {
 };
 
 function Highlights({ highlights }: HighlightsProps): ReactNode {
-  const classes = useStyles();
   const [showMore, setShowMore] = useState(false);
 
   if (highlights.length === 0) return null;
 
   return (
-    <div className={classes.matches}>
+    <Box sx={{ marginTop: "4px" }}>
       <Typography component="span" display="inline" variant="subtitle2">
         Matches:
       </Typography>{" "}
@@ -42,14 +30,18 @@ function Highlights({ highlights }: HighlightsProps): ReactNode {
           {" "}
           <Typography variant="body2" display="inline">
             [{" "}
-            <span className={classes.showMore} onClick={() => setShowMore(!showMore)}>
+            <Box
+              component="span"
+              sx={{ cursor: "pointer", color: "primary.main" }}
+              onClick={() => setShowMore(!showMore)}
+            >
               {showMore ? "hide" : "more"}
-            </span>{" "}
+            </Box>{" "}
             ]
           </Typography>
         </>
       )}
-    </div>
+    </Box>
   );
 }
 

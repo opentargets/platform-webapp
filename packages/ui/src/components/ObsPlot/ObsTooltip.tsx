@@ -1,5 +1,5 @@
-import { ReactElement } from "react";
 import { Box } from "@mui/material";
+import type { ReactElement } from "react";
 
 type TooltipProps = {
   width: number;

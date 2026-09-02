@@ -1,5 +1,6 @@
 query GWASColocQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
   credibleSet(studyLocusId: $studyLocusId) {
+    studyLocusId
     colocalisation(studyTypes: [gwas], page: { size: $size, index: $index }) {
       count
       rows {

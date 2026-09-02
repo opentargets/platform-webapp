@@ -1,9 +1,9 @@
 import {
-  Action,
+  type Action,
   ActionType,
   DISEASE_CATEGORIES,
   ENTITY,
-  Facet,
+  type Facet,
   TARGET_CATEGORIES,
 } from "./facetsTypes";
 

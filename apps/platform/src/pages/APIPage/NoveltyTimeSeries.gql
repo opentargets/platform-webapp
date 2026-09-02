@@ -1,0 +1,17 @@
+query NoveltyTimeSeries {
+  target(ensemblId: "ENSG00000169174") {
+    approvedSymbol
+  }
+  disease(efoId: "HP_0003124") {
+    name
+    associationTimeSeries(ensemblId: "ENSG00000169174", isDirect: true, page: { index: 0, size: 2000 }) {
+      rows {
+        novelty
+        year
+        aggregationType
+        aggregationValue
+        associationScore
+      }
+    }
+  }
+}

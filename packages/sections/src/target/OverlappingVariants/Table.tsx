@@ -1,5 +1,4 @@
-import { OtTable, Link, Tooltip, DisplayVariantId, LabelChip } from "ui";
-import { Typography, Box } from "@mui/material";
+import { OtTable, Link, Tooltip, DisplayVariantId, LabelChip, Typography, Box } from "ui";
 import { useStateValue, useActions } from "./Context";
 import { naLabel } from "@ot/constants";
 import { variantComparator } from "@ot/utils";

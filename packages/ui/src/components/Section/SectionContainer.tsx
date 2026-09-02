@@ -1,5 +1,5 @@
-import { Grid } from "@mui/material";
-import { ReactNode } from "react";
+import { GridLegacy } from "@mui/material";
+import type { ReactNode } from "react";
 
 type SectionContainerProps = {
   children: ReactNode;
@@ -7,9 +7,9 @@ type SectionContainerProps = {
 
 function SectionContainer({ children }: SectionContainerProps): ReactNode {
   return (
-    <Grid id="summary-section" container spacing={2} style={{ marginTop: "20px" }}>
+    <GridLegacy id="summary-section" container spacing={2} style={{ marginTop: "20px" }}>
       {children}
-    </Grid>
+    </GridLegacy>
   );
 }
 
