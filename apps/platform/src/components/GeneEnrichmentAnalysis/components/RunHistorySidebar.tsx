@@ -185,7 +185,7 @@ function RunHistorySidebar({
         ) : (
           <List dense disablePadding>
             {sortedRuns.map((run) => {
-              console.log("Run:", run); // Debugging log to inspect run data
+            
               const isActive = run.id === activeRunId;
               const isStale = isRunStale(run, currentAssociationsState);
               const isRunning = run.status === "pending" || run.status === "fetching_associations" || run.status === "running_gsea";

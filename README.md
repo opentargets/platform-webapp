@@ -1,26 +1,77 @@
-[![CI](https://github.com/opentargets/ot-ui-apps/actions/workflows/ci.yaml/badge.svg)](https://github.com/opentargets/ot-ui-apps/actions/workflows/ci.yaml)
-[![Development build](https://github.com/opentargets/ot-ui-apps/actions/workflows/publish.yaml/badge.svg)](https://github.com/opentargets/ot-ui-apps/actions/workflows/publish.yaml)
+<div align="center">
+  <img src="apps/docs/public/OT_logo_colour.svg" alt="Open Targets" width="340" />
+  <br /><br />
+  <a href="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml/badge.svg" alt="Development build" /></a>
+</div>
 
-# Open Targets Apps
+# Open Targets Platform Web App
 
-This repository holds the Open Targets web applications.
+Monorepo for the [Open Targets Platform](https://platform.opentargets.org) — a data integration tool for systematic drug target identification and prioritisation.
 
-## Required stack
+## Stack
 
-- [NodeJS >= v18](https://nodejs.org/en/)
-- [Yarn package manager](https://yarnpkg.com/)
+- **React 18** + TypeScript (strict)
+- **MUI v5** with a custom Open Targets theme
+- **Apollo Client** + GraphQL (generated types via `graphql-codegen`)
+- **Vite 6** build tooling, **Turbo** monorepo task runner
+- **Biome** linting and formatting, **Yarn 1** workspaces
 
-## Running development
+## Repository layout
 
-This project contains the [Platform](https://platform.opentargets.org/) web application. To run in development mode, you can run: `yarn dev` in the root directory.
+```
+platform-webapp/
+├── apps/
+│   ├── platform/      # The Open Targets Platform SPA
+│   └── docs/          # Storybook component documentation site
+└── packages/
+    ├── ui/            # Shared React component primitives
+    ├── sections/      # Composed data widgets (evidence sections, etc.)
+    ├── ot-config/     # Runtime configuration and MUI theme factory
+    ├── ot-constants/  # App-wide constants + generated GraphQL types
+    └── ot-utils/      # Pure utility functions
+```
 
-To run only Platform `yarn dev:platform`
+## Requirements
 
-## Building production-ready bundle
+- Node.js 20+
+- Yarn 1.22.x (`packageManager` is locked in `package.json`)
 
-From the root directory run: `yarn build`. This will generate a production-ready bundle.
+## Development
 
-As same as development, you can run `yarn build:platform` to scope the build only for specific applications.
+```bash
+# Install all workspace dependencies
+yarn install
+
+# Run the Platform app (http://localhost:3000)
+yarn dev:platform
+
+# Run the Storybook docs site (http://localhost:6006)
+yarn dev:docs
+```
+
+## Building
+
+```bash
+# Production build for the Platform app
+yarn build:platform
+
+# Static Storybook build
+yarn build:docs
+```
+
+## Other useful scripts
+
+| Script | Description |
+|---|---|
+| `yarn lint` | Biome check across all workspaces |
+| `yarn check:fix` | Biome format + lint autofix |
+| `yarn generateAPITypes` | Regenerate GraphQL types from the production API schema |
+| `yarn test:platform:e2e` | Run Playwright end-to-end tests |
+
+## Documentation
+
+Component and package documentation is published to GitHub Pages via the `docs.yaml` workflow. It covers UI component stories, package APIs, architecture, AOTF integration, and more.
 
 ## Copyright
 

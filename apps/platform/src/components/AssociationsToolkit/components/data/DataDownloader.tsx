@@ -202,6 +202,7 @@ function DataDownloader() {
     sortBy: sorting[0].id,
     enableIndirect,
     entitySearch,
+    isDirect: !enableIndirect,
     datasources: dataSourcesWeights.map(el => ({
       id: el.id,
       weight: el.weight,

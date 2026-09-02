@@ -1,0 +1,233 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Packages/sections" />
+
+# `sections`
+
+The `sections` package provides standardised profile widgets for each entity type (Target, Disease, Drug, Variant, etc.). Every widget follows an identical file pattern so the platform can register, load, and display them uniformly.
+
+**Package name:** `sections`  
+**Location:** `packages/sections/`
+
+---
+
+## Widget structure
+
+Every section lives in its own directory under `packages/sections/src/<entity>/`:
+
+```
+SectionName/
+├── index.ts                    # Definition + exports
+├── Summary.tsx                 # Compact header component
+├── Body.tsx                    # Full content component (lazy-loaded)
+├── Description.tsx             # Description shown in the section titlebar
+├── SectionQuery.gql            # Main data query
+└── SectionSummaryFragment.gql  # Summary query fragment
+```
+
+---
+
+## Widget interface
+
+```typescript
+interface Widget {
+  definition: {
+    id: string;
+    name: string;
+    shortName: string;
+    hasData: (data: any) => boolean | undefined;
+    isPrivate?: boolean;
+  };
+  Summary: ComponentType<any>;
+  getBodyComponent: () => ComponentType<any>;
+}
+```
+
+---
+
+## File patterns
+
+### `index.ts`
+
+The entry point defines the section's metadata and exports its components:
+
+```typescript
+import { lazy } from "react";
+import { EntityType } from "@ot/constants";
+
+export const definition = {
+  id: "section_id",
+  name: "Section Display Name",
+  shortName: "SDN",
+  hasData: (data: EntityType) => (data.someField?.count || 0) > 0,
+};
+
+export { default as Summary } from "./Summary";
+export const getBodyComponent = () => lazy(() => import("./Body"));
+```
+
+### `Summary.tsx`
+
+Renders in the profile page header. Uses `usePlatformApi` to read fragment data already fetched by the page-level query — no separate network request.
+
+```typescript
+import { SummaryItem, usePlatformApi } from "ui";
+import { definition } from ".";
+import SECTION_SUMMARY from "./SectionSummaryFragment.gql";
+
+function Summary() {
+  const request = usePlatformApi(SECTION_SUMMARY);
+  return <SummaryItem definition={definition} request={request} />;
+}
+
+Summary.fragments = { SectionSummaryFragment: SECTION_SUMMARY };
+export default Summary;
+```
+
+### `Body.tsx`
+
+The main content component. Use the modern `SectionItem` + `request` + `renderBody` pattern:
+
+```typescript
+import { useQuery } from "@apollo/client";
+import { SectionItem, OtTable } from "ui";
+import { definition } from ".";
+import Description from "./Description";
+import SECTION_QUERY from "./SectionQuery.gql";
+
+function Body({ id, entity }: { id: string; entity: string }) {
+  const variables = { entityId: id };
+  const request = useQuery(SECTION_QUERY, { variables });
+
+  return (
+    <SectionItem
+      definition={definition}
+      entity={entity}
+      request={request}
+      renderDescription={() => <Description id={id} />}
+      renderBody={() => (
+        <OtTable
+          dataDownloader
+          showGlobalFilter
+          columns={columns}
+          loading={request.loading}
+          rows={request.data?.entity?.sectionField?.rows || []}
+          query={SECTION_QUERY.loc?.source?.body}
+          variables={variables}
+        />
+      )}
+    />
+  );
+}
+
+export default Body;
+```
+
+### `Description.tsx`
+
+Short inline text shown in the section titlebar:
+
+```typescript
+import { Link } from "ui";
+
+function Description({ id }: { id: string }) {
+  return (
+    <>
+      Evidence for <strong>{id}</strong> from{" "}
+      <Link external to="https://example.org">
+        Source
+      </Link>
+      .
+    </>
+  );
+}
+
+export default Description;
+```
+
+### GraphQL files
+
+```graphql
+# SectionSummaryFragment.gql — fragment bundled into the page-level query
+fragment SectionSummaryFragment on Variant {
+  sectionField {
+    count
+  }
+}
+```
+
+```graphql
+# SectionQuery.gql — fetched independently by Body on expand
+query SectionQuery($variantId: String!) {
+  variant(variantId: $variantId) {
+    id
+    sectionField {
+      count
+      rows {
+        # entity-specific fields
+      }
+    }
+  }
+}
+```
+
+---
+
+## Entity-specific patterns
+
+| Entity | Typical data | Notes |
+|---|---|---|
+| **Variant** | `referenceAllele`, `alternateAllele` | Use `DisplayVariantId` for display |
+| **Target** | Gene/protein info, expression, pathways | May include `usePlatformApi` for shared fragments |
+| **Disease** | Phenotype info, associated targets, literature | Often uses `PublicationsDrawer` |
+| **Drug** | Indication, mechanism of action | `chemblId` as primary variable |
+
+---
+
+## Registering a new section
+
+**1. Export from the entity index** (`packages/sections/src/<entity>/index.ts`):
+
+```typescript
+export * as NewSection from "./NewSection";
+```
+
+**2. Add to the widget map** in the profile page's `Profile.tsx`:
+
+```typescript
+const widgetMap = new Map<string, Widget>([
+  // ...existing entries
+  [Entity.NewSection.definition.id, Entity.NewSection],
+]);
+```
+
+**3. Update the sections root index** if the entity namespace is new:
+
+```typescript
+// packages/sections/src/index.tsx
+export * as Entity from "./entity";
+```
+
+---
+
+## Common UI components
+
+| Component | Purpose |
+|---|---|
+| `SectionItem` | Section container — handles loading, error, and empty states |
+| `SummaryItem` | Summary header container |
+| `OtTable` | Data table with built-in download, global filter, and pagination |
+| `Link` | Internal (`to="/target/..."`) and external (`external`) links |
+| `PublicationsDrawer` | Literature references drawer — takes `entries: { name, url, group }[]` |
+| `Tooltip` | Information tooltips on table headers and cells |
+
+---
+
+## Best practices
+
+- Always implement `hasData` — the platform uses it to hide sections with no data
+- Lazy-load `Body` via `getBodyComponent` — keeps the initial bundle small
+- Use `SectionItem` with the `request` prop (not the legacy callback form)
+- Define TypeScript interfaces for `renderCell` arguments in column definitions
+- Match the column `id` to the data field name to avoid needing `propertyPath`
+- Use `naLabel` from `@ot/constants` for empty cell fallbacks

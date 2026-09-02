@@ -1,6 +1,6 @@
 export { default as ApiPlaygroundDrawer } from "./components/ApiPlaygroundDrawer";
 export { default as BasePage } from "./components/BasePage";
-export { default as Chip } from "./components/Chip";
+export { default as Chip } from "./components/Chip/Chip";
 export { default as ChipList } from "./components/ChipList";
 export { default as ClinvarStars } from "./components/ClinvarStars";
 export { default as ColorRamp } from "./components/ColorRamp.tsx";
@@ -32,7 +32,7 @@ export * from "./components/Button";
 export { default as KnownDrugsSourceDrawer } from "./components/KnownDrugsSourceDrawer";
 export { default as LabelChip } from "./components/LabelChip";
 export { default as Legend } from "./components/Legend";
-export { default as Link } from "./components/Link";
+export { default as Link } from "./components/Link/Link";
 export { default as LoadingBackdrop } from "./components/LoadingBackdrop";
 export { default as LongList } from "./components/LongList";
 export { default as LongText } from "./components/LongText";

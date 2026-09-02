@@ -1,0 +1,96 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Configuration/Deployment Profile" />
+
+# Deployment Profile
+
+The Platform reads runtime configuration at startup — either from environment variables injected by the deployment environment or from `window.config*` globals set in the page shell. This allows a single build artifact to serve multiple deployment profiles without recompilation.
+
+---
+
+## Core options
+
+### `configUrlApi`
+
+URL of the Platform GraphQL API. Required for all deployments.
+
+### `configPrimaryColor`
+
+Primary colour used by MUI components and data visualisations.  
+Default: `#3489ca`
+
+### `partnerColorRange`
+
+Custom colour scale for heatmap visualisations (associations pages, etc.). Comma-separated hex values, light to dark.  
+Default: `'#e5edf4,#ccdcea,#b2cbe0,#99b9d6,#7fa8cc,#6697c1,#4c85b7,#3274ad,#1963a3,#005299'`
+
+---
+
+## Widget visibility
+
+On profile pages you can hide widgets entirely or restrict them based on access level.
+
+### Target page
+
+| Option | Effect |
+|---|---|
+| `hideTargetSectionIds` | Comma-separated widget IDs to hide on the target profile page |
+| `partnerTargetSectionIds` | Comma-separated widget IDs to restrict to credentialed users |
+
+### Disease page
+
+| Option | Effect |
+|---|---|
+| `hideDiseaseSectionIds` | Comma-separated widget IDs to hide on the disease profile page |
+| `partnerDiseaseSectionIds` | Comma-separated widget IDs to restrict |
+
+### Drug page
+
+| Option | Effect |
+|---|---|
+| `hideDrugSectionIds` | Comma-separated widget IDs to hide on the drug profile page |
+| `partnerDrugSectionIds` | Comma-separated widget IDs to restrict |
+
+### Evidence page
+
+| Option | Effect |
+|---|---|
+| `hideEvidenceSectionIds` | Comma-separated widget IDs to hide on the evidence page |
+| `partnerEvidenceSectionIds` | Comma-separated widget IDs to restrict |
+
+**Example:**
+
+```
+hideTargetSectionIds=bibliography,otProjects
+partnerTargetSectionIds=ot_crispr
+```
+
+---
+
+## Associations page
+
+Control which data types and sources appear in the associations heatmap and facets panel.
+
+### `hideDataTypes`
+
+Comma-separated data type IDs to remove from associations pages entirely.
+
+```
+hideDataTypes=literature,animal_model
+```
+
+### `partnerDataTypes`
+
+Comma-separated data type IDs to restrict to credentialed users (shown with a lock icon in the facets panel).
+
+```
+partnerDataTypes=ot_partner
+```
+
+### `partnerDataSources`
+
+Comma-separated data source IDs to restrict to credentialed users.
+
+```
+partnerDataSources=ot_crispr
+```

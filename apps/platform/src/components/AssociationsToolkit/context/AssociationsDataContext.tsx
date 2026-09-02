@@ -43,6 +43,9 @@ export function AssociationsDataProvider({ children }: { children: ReactNode }) 
 
   const resolvedSortBy = METRICS_SORT_FIELD[sorting[0].id] ?? sorting[0].id;
 
+  const sortedPinnedEntries = useMemo(() => pinnedEntries.toSorted(), [pinnedEntries]);
+  const sortedUploadedEntries = useMemo(() => uploadedEntries.toSorted(), [uploadedEntries]);
+
   const sharedOptions = {
     id,
     entity,
@@ -74,9 +77,9 @@ export function AssociationsDataProvider({ children }: { children: ReactNode }) 
     query,
     options: {
       ...sharedOptions,
-      size: pinnedEntries.length,
-      rowsFilter: pinnedEntries.toSorted(),
-      laodingCount: pinnedEntries.length,
+      size: sortedPinnedEntries.length,
+      rowsFilter: sortedPinnedEntries,
+      laodingCount: sortedPinnedEntries.length,
     },
   });
 
@@ -90,9 +93,9 @@ export function AssociationsDataProvider({ children }: { children: ReactNode }) 
     query,
     options: {
       ...sharedOptions,
-      size: uploadedEntries.length,
-      rowsFilter: uploadedEntries.toSorted(),
-      laodingCount: uploadedEntries.length,
+      size: sortedUploadedEntries.length,
+      rowsFilter: sortedUploadedEntries,
+      laodingCount: sortedUploadedEntries.length,
     },
   });
 
