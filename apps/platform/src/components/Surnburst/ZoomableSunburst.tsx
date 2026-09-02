@@ -42,7 +42,6 @@ export default function ZoomableSunburst({
     gRef,
     svgRef,
     panState,
-    zoomState,
     isPanning,
     handleMouseDown,
     handleMouseMove,
@@ -71,38 +70,44 @@ export default function ZoomableSunburst({
     handleClick(root);
   }, [handleClick, root]);
 
-  // Download sunburst as PNG
-  const handleDownloadPng = useCallback(() => {
+  // Download sunburst as SVG
+  const handleDownloadSvg = useCallback(() => {
     const svgElement = svgRef.current;
     const gElement = gRef.current;
     if (!svgElement || !gElement) return;
 
-    // Get the bounding box of the g element
+    // Get the bounding box of the g element. Arc labels can overhang further
+    // on one side than the other, so the raw bbox isn't centered on the
+    // chart's true center (0,0) — cropping to it directly would make the
+    // sunburst look off-center. Instead, expand symmetrically around the
+    // origin so (0,0) stays at the exact center of the export.
     const bbox = (gElement as any).getBBox();
     const padding = 20;
-    // Render at a higher resolution when the user is zoomed in so text that
-    // relies on the zoom to be legible on screen stays legible in the export.
-    const scale = 2 * Math.max(1, zoomState.current.current);
+    const halfWidth = Math.max(Math.abs(bbox.x), Math.abs(bbox.x + bbox.width)) + padding;
+    const halfHeight = Math.max(Math.abs(bbox.y), Math.abs(bbox.y + bbox.height)) + padding;
+    const exportWidth = halfWidth * 2;
+    const exportHeight = halfHeight * 2;
 
-    // Create canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = (bbox.width + padding * 2) * scale;
-    canvas.height = (bbox.height + padding * 2) * scale;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.scale(scale, scale);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, bbox.width + padding * 2, bbox.height + padding * 2);
-
-    // Clone SVG and set viewBox to just the content
+    // Clone SVG and set viewBox centered on the origin
     const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
-    clonedSvg.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
-    clonedSvg.setAttribute("width", String(bbox.width));
-    clonedSvg.setAttribute("height", String(bbox.height));
+    clonedSvg.setAttribute(
+      "viewBox",
+      `${-halfWidth} ${-halfHeight} ${exportWidth} ${exportHeight}`
+    );
+    clonedSvg.setAttribute("width", String(exportWidth));
+    clonedSvg.setAttribute("height", String(exportHeight));
     // The SVG normally inherits its font from the surrounding page via CSS,
     // which is lost once it's serialized on its own — set it explicitly.
     clonedSvg.setAttribute("font-family", fontFamily);
+
+    // White background so the export isn't transparent
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(-halfWidth));
+    background.setAttribute("y", String(-halfHeight));
+    background.setAttribute("width", String(exportWidth));
+    background.setAttribute("height", String(exportHeight));
+    background.setAttribute("fill", "white");
+    clonedSvg.insertBefore(background, clonedSvg.firstChild);
 
     // Undo the current pan/zoom on the cloned content so the full plot is
     // exported, not just whatever portion is currently visible on screen.
@@ -111,29 +116,18 @@ export default function ZoomableSunburst({
       (clonedG as SVGGElement).style.transform = "translate(0px, 0px) scale(1)";
     }
 
-    // Serialize and create image
+    // Serialize and download
     const serializer = new XMLSerializer();
     const svgString = serializer.serializeToString(clonedSvg);
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
 
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, padding, padding, bbox.width, bbox.height);
-      canvas.toBlob((pngBlob) => {
-        if (pngBlob) {
-          const pngUrl = URL.createObjectURL(pngBlob);
-          const link = document.createElement("a");
-          link.download = "sunburst.png";
-          link.href = pngUrl;
-          link.click();
-          URL.revokeObjectURL(pngUrl);
-          URL.revokeObjectURL(url);
-        }
-      }, "image/png");
-    };
-    img.src = url;
-  }, [svgRef, gRef, zoomState, fontFamily]);
+    const link = document.createElement("a");
+    link.download = "sunburst.svg";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [svgRef, gRef, fontFamily]);
 
   const active = focus ?? root;
 
@@ -271,7 +265,7 @@ export default function ZoomableSunburst({
           <FontAwesomeIcon icon={faCompress} fontSize="0.85rem" />
         </IconButton>
         <Box sx={{ borderTop: "1px solid", borderColor: "divider" }} />
-        <IconButton size="small" onClick={handleDownloadPng} title="Download PNG">
+        <IconButton size="small" onClick={handleDownloadSvg} title="Download SVG">
           <FontAwesomeIcon icon={faDownload} fontSize="0.85rem" />
         </IconButton>
       </Box>
