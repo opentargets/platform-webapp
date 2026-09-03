@@ -40,7 +40,7 @@ function Header({
     }
     sourceLink = {
       id: "GWAS Catalog",
-      url: `https://www.ebi.ac.uk/gwas/studies/${studyId}`,
+      url: `https://www.ebi.ac.uk/gwas/studies/${studyId.replace(/_.*/, "")}`,
     };
   } else if (projectId?.startsWith("FINNGEN")) {
     if (diseases?.length) {
