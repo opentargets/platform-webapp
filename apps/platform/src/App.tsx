@@ -2,6 +2,7 @@ import { ReactElement } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { SearchProvider, PrivateRoute, OTConfigurationProvider, FromGeneticsModal } from "ui";
 import { getConfig } from "@ot/config";
+import { GeneEnrichmentProvider } from "./components/GeneEnrichmentAnalysis";
 
 import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
@@ -30,37 +31,39 @@ function App(): ReactElement {
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."
       >
         <Router>
-          <FromGeneticsModal />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/api" element={<APIPage />} />
-            <Route
-              path="/analysis"
-              element={
-                <PrivateRoute>
-                  <AnalysisPage />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/downloads/*" element={<DownloadsPage />} />
-            <Route path="/target/:ensgId/*" element={<TargetPage />} />
-            <Route path="/disease/:efoId/*" element={<DiseasePage />} />
-            <Route path="/evidence/:ensgId/:efoId/*" element={<EvidencePage />} />
-            <Route path="/drug/:chemblId/*" element={<DrugPage />} />
-            <Route path="/variant/:varId/*" element={<VariantPage />} />
-            <Route path="/study/:studyId/*" element={<StudyPage />} />
-            <Route path="/credible-set/:studyLocusId/*" element={<CredibleSetPage />} />
-            <Route
-              path="/projects"
-              element={
-                <PrivateRoute>
-                  <ProjectsPage />
-                </PrivateRoute>
-              }
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <GeneEnrichmentProvider>
+            <FromGeneticsModal />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/api" element={<APIPage />} />
+              <Route
+                path="/analysis"
+                element={
+                  // <PrivateRoute>
+                    <AnalysisPage />
+                  // </PrivateRoute>
+                }
+              />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/downloads/*" element={<DownloadsPage />} />
+              <Route path="/target/:ensgId/*" element={<TargetPage />} />
+              <Route path="/disease/:efoId/*" element={<DiseasePage />} />
+              <Route path="/evidence/:ensgId/:efoId/*" element={<EvidencePage />} />
+              <Route path="/drug/:chemblId/*" element={<DrugPage />} />
+              <Route path="/variant/:varId/*" element={<VariantPage />} />
+              <Route path="/study/:studyId/*" element={<StudyPage />} />
+              <Route path="/credible-set/:studyLocusId/*" element={<CredibleSetPage />} />
+              <Route
+                path="/projects"
+                element={
+                  <PrivateRoute>
+                    <ProjectsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </GeneEnrichmentProvider>
         </Router>
       </SearchProvider>
     </OTConfigurationProvider>

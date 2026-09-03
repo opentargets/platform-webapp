@@ -91,3 +91,10 @@ export function setStandaloneGenes(genes: Gene[] | null): Action {
     payload: genes,
   };
 }
+
+export function hydrateRunHistory(runs: AnalysisRun[], activeRunId: string | null): Action {
+  return {
+    type: ActionType.HYDRATE_RUN_HISTORY,
+    payload: { runs, activeRunId },
+  };
+}
