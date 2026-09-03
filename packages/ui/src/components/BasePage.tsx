@@ -9,6 +9,7 @@ import {
   appCanonicalUrl,
   externalLinks,
   mainMenuItems,
+  toolsMenuItems,
 } from "@ot/constants";
 import GlobalSearch from "./GlobalSearch/GlobalSearch";
 
@@ -27,7 +28,14 @@ function BasePage({ title, children, description, location }: BasePageProps): Re
 
   return (
     <Page
-      header={<NavBar name="Platform" search={<GlobalSearch />} items={mainMenuItems} />}
+      header={
+        <NavBar
+          name="Platform"
+          search={<GlobalSearch />}
+          items={mainMenuItems}
+          tools={toolsMenuItems}
+        />
+      }
       footer={<Footer externalLinks={externalLinks} />}
     >
       <Helmet title={composedTitle}>

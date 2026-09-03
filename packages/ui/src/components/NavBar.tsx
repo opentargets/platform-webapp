@@ -10,6 +10,7 @@ import { v1 } from "uuid";
 import Link from "./Link";
 import OpenTargetsTitle from "./OpenTargetsTitle";
 import HeaderMenu from "./HeaderMenu";
+import ToolsMenu from "./ToolsMenu";
 import PrivateWrapper from "./PrivateWrapper";
 
 const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`
@@ -91,6 +92,11 @@ type MenuExternalLinkProps = {
   children: ReactNode;
 };
 
+type ToolsMenuItem = {
+  name: string;
+  url: string;
+};
+
 type NavBarProps = {
   name?: string;
   search?: ReactNode;
@@ -100,6 +106,7 @@ type NavBarProps = {
   contact?: string;
   homepage?: boolean;
   items?: NavBarItem[];
+  tools?: ToolsMenuItem[];
   placement?: PopperPlacementType;
 };
 
@@ -113,7 +120,18 @@ function MenuExternalLink({ classes, href, children }: MenuExternalLinkProps): R
   );
 }
 
-function NavBar({ name, search, api, downloads, docs, contact, homepage, items, placement }: NavBarProps): ReactElement {
+function NavBar({
+  name,
+  search,
+  api,
+  downloads,
+  docs,
+  contact,
+  homepage,
+  items,
+  tools,
+  placement,
+}: NavBarProps): ReactElement {
   const classes = useStyles();
   const theme = useTheme<Theme>();
   const smMQ = useMediaQuery(theme.breakpoints.down("sm"));
@@ -193,6 +211,10 @@ function NavBar({ name, search, api, downloads, docs, contact, homepage, items, 
             <MenuExternalLink classes={classes} href={contact}>
               Contact
             </MenuExternalLink>
+          ) : null}
+
+          {tools && tools.length ? (
+            <ToolsMenu items={tools} className={classes.menuLink} />
           ) : null}
 
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}

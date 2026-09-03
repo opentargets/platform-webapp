@@ -171,6 +171,15 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
   },
 ];
 
+// Tools Menu Items Configuration
+export const toolsMenuItems: MenuItem[] = [
+  {
+    name: "GSEA Analysis",
+    url: "/analysis",
+    external: false,
+  },
+];
+
 export const QTLStudyType = [
   "scsqtl",
   "sceqtl",
