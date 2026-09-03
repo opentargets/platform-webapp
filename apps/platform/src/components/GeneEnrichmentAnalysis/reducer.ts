@@ -45,7 +45,9 @@ export function geneEnrichmentReducer(state: State = initialState, action: Actio
       return {
         ...state,
         modalOpen: action.modalOpen,
-        // Clear activeRunId when opening modal so form is shown first
+        // Clicking the GSEA menu item always starts fresh with the input
+        // form — the run stays in history either way, reachable from the
+        // sidebar regardless of which page/tab created it.
         activeRunId: action.modalOpen ? null : state.activeRunId,
       };
     }
@@ -120,6 +122,9 @@ export function geneEnrichmentReducer(state: State = initialState, action: Actio
     }
     case ActionType.SET_STANDALONE_GENES: {
       return { ...state, standaloneGenes: action.payload };
+    }
+    case ActionType.HYDRATE_RUN_HISTORY: {
+      return { ...state, runs: action.payload.runs, activeRunId: action.payload.activeRunId };
     }
     default: {
       return state;
