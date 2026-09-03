@@ -41,7 +41,6 @@ export default function ZoomableSunburst({
   const {
     gRef,
     svgRef,
-    panState,
     isPanning,
     handleMouseDown,
     handleMouseMove,
@@ -221,6 +220,7 @@ export default function ZoomableSunburst({
       <Box
         sx={{
           position: "relative",
+          top: -16,
           zIndex: 10,
           backgroundColor: "background.paper",
           flexShrink: 0,
