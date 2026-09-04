@@ -11,8 +11,8 @@ import TargetDescription from "./TargetDescription";
 import { clearDescriptionCodes } from "@ot/utils";
 
 import TARGET_PROFILE_HEADER_FRAGMENT from "./TargetProfileHeader.gql";
-import { Box } from "@mui/material";
-import { getGenomicLocation } from "@ot/constants";
+import { Box, Typography } from "@mui/material";
+import { getGenomicLocation, GenomicLocationPresentationType } from "@ot/constants";
 import GenomicLocation from "ui/src/components/GenomicLocation";
 
 /*
@@ -82,6 +82,8 @@ function ProfileHeader() {
     },
   ];
 
+  const { genomicLocation, canonicalTranscript } = data?.target ?? {};
+
   return (
     <BaseProfileHeader>
       <>
@@ -90,8 +92,61 @@ function ProfileHeader() {
           descriptions={targetDescription}
           targetId={data?.target.id}
         />
-        {data?.target.genomicLocation && (
-          <GenomicLocation geneLoc={data?.target.genomicLocation} />
+        {/* { genomicLocation && 
+          <Field loading={loading} title="Full gene body">
+            <GenomicLocation
+              geneLoc={genomicLocation}
+              type={GenomicLocationPresentationType.BODY}
+            />
+          </Field>
+        }
+        {canonicalTranscript && (
+          <Field loading={loading} title="Canonical Transcript">
+            <GenomicLocation
+              geneLoc={canonicalTranscript}
+              type={GenomicLocationPresentationType.BODY}
+            />
+          </Field>
+        )} */}
+        {/* <GenomicLocation geneLoc={data?.target.genomicLocation} /> */}
+        {genomicLocation && (
+          <>
+            <Field loading={loading} title="Position">
+              GRCh38 | Chr{genomicLocation.chromosome} (
+                {genomicLocation.strand === "+" || genomicLocation.strand > 0 ? "+" : "-"}
+              )
+            </Field>
+            <table style={{ borderCollapse: "collapse", marginLeft: "1rem" }}>
+              <tr>
+                <td style={{ padding: "0 6px 0 0" }}>
+                  <Typography variant="body2">
+                    Full gene body:
+                  </Typography>
+                </td>
+                <td style={{ padding: 0 }}>
+                  <Typography variant="body2" sx={{ fontVariant: "common-ligatures tabular-nums" }}>
+                    {genomicLocation.start.toLocaleString()}-
+                    {genomicLocation.end.toLocaleString()}
+                  </Typography>
+                </td>
+              </tr>
+              {canonicalTranscript && (
+                <tr>
+                  <td style={{ padding: "1px 6px 0 0" }}>
+                    <Typography variant="body2">
+                      Canonical transcript:
+                    </Typography>
+                  </td>
+                  <td style={{ padding: 0 }}>
+                    <Typography variant="body2" sx={{ fontVariant: "common-ligatures tabular-nums" }}>
+                      {canonicalTranscript.start.toLocaleString()}-
+                      {canonicalTranscript.end.toLocaleString()}
+                    </Typography>
+                  </td>
+                </tr>
+              )}
+            </table>
+          </>
         )}
         {geneInfo
           .filter(gi => gi.isVisible)

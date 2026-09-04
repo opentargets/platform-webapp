@@ -7,5 +7,6 @@ export interface IGeneomicLocation {
 
 export enum GenomicLocationPresentationType {
     PLAIN = "plain",
+    BODY = "body",
     CHIP = "chip",
 }

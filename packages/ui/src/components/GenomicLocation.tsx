@@ -13,16 +13,17 @@ interface GenomicLocationProps {
 const GenomicLocation: React.FC<GenomicLocationProps> = ({ geneLoc, type = GenomicLocationPresentationType.CHIP }) => {
     const [build, location] = getGenomicLocation(geneLoc);
 
-    if(type === GenomicLocationPresentationType.PLAIN) {
+    if(type === GenomicLocationPresentationType.PLAIN || type === GenomicLocationPresentationType.BODY) {
         return (
-            <Box sx={{ mt: 1, typography: "body2" }} component="span">
+            <Box sx={{ ...(type === GenomicLocationPresentationType.PLAIN && { mt: 1 }), typography: "body2" }} component="span">
                  <Tooltip title="build | chromosome:start-end,strand">
                      <Box
                         component="span"
                         sx={{
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: theme => theme.palette.grey[600],
+                        ...(type === GenomicLocationPresentationType.PLAIN && {
+                            fontSize: "0.75rem",
+                            color: theme => theme.palette.grey[600],
+                        }),
                         }}
                     >
                         {build} | {location}
