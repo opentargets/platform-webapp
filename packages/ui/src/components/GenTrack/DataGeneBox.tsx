@@ -58,6 +58,18 @@ export function DataGeneBox({
   // Color for the hover highlight box
   const hoverTint = hoverBoxColor ?? 0xcccccc;
 
+  // NOTE: this context read does not actually reach the real GenTrackTooltipProvider —
+  // @pixi/react's <Stage> renders its children (including this component) through a
+  // separate React reconciler root, which does not bridge `useContext` reads from the
+  // surrounding DOM tree (props/closures cross fine, context reads do not). So
+  // `isMyGeneSticky` below is effectively always false today; the gene-stays-highlighted-
+  // while-stuck behavior is a known, deferred bug — see GenTrack/README.md. A previous fix
+  // attempt moved this check into getGenesTracks.tsx (where context reads work) and passed
+  // it down as a prop, but that caused GeneVisInner to re-render on every hover (since
+  // `useGenTrackTooltipState()`'s value changes on every pointer movement), which cascaded
+  // into visible flicker across the whole visualization. Do not reintroduce that without
+  // first isolating the read to a low-frequency-changing slice of state (e.g. splitting
+  // "sticky" out from "hover" into separate contexts).
   const tooltipState = useGenTrackTooltipState() as any;
   const isMyGeneSticky = tooltipState?.stickyLabelCenter !== null &&
     tooltipState?.stickyLabelCenter !== undefined &&

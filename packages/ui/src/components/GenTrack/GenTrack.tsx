@@ -36,7 +36,11 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
-  const { onDatumClick } = (tooltipProps as Record<string, any>);
+  const { onDatumClick, stickyOnClick } = (tooltipProps as Record<string, any>);
+
+  if (process.env.NODE_ENV !== "production" && onDatumClick && stickyOnClick) {
+    console.warn("GenTrack: `onDatumClick` and `stickyOnClick` were both provided; `stickyOnClick` takes precedence and `onDatumClick` will be ignored.");
+  }
 
   const handleMouseEnter = () => {
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: canvasType });
@@ -48,14 +52,40 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
 
   const handleClick = () => {
     if (isInnerDragging) return;
+    if (canvasType !== "inner") return;
     const hover = genTrackTooltipState?.hover;
-    if (canvasType === "inner" && hover?.datum && onDatumClick) {
+
+    if (stickyOnClick) {
+      if (!hover?.datum) {
+        if (genTrackTooltipState?.sticky) genTrackTooltipDispatch({ type: "clearSticky" });
+        return;
+      }
+      const alreadyStuckOnThis = genTrackTooltipState?.sticky && genTrackTooltipState?.datum?.id === hover.datum.id;
+      if (alreadyStuckOnThis) {
+        genTrackTooltipDispatch({ type: "clearSticky" });
+      } else {
+        genTrackTooltipDispatch({
+          type: "setSticky",
+          value: {
+            sticky: true,
+            datum: hover.datum,
+            globalXY: hover.globalXY,
+            genomicX: hover.globalXY?.genomicX,
+            labelCenter: hover.labelCenter,
+            activeCanvas: canvasType,
+          },
+        });
+      }
+      return;
+    }
+
+    if (hover?.datum && onDatumClick) {
       onDatumClick(hover.datum);
     }
   };
 
   const computedCursor = cursor ?? (
-    canvasType === "inner" && genTrackTooltipState?.hover?.datum && onDatumClick ? "pointer" : "default"
+    canvasType === "inner" && genTrackTooltipState?.hover?.datum && (onDatumClick || stickyOnClick) ? "pointer" : "default"
   );
 
   if (!children && crosshairs === "none") return null;
@@ -88,6 +118,7 @@ function useInnerPanDrag(
   scalesRefHolder: React.MutableRefObject<ScalesRef | null>,
   updateViewWindow: (start: number, end: number) => void,
   onDatumClick?: (datum: any) => void,
+  stickyOnClick?: boolean,
 ) {
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const setIsInnerDragging = useGenTrackDragDispatch();
@@ -173,7 +204,7 @@ function useInnerPanDrag(
   const cursor = isDragging
     ? "grabbing"
     : genTrackTooltipState?.hover?.datum
-      ? (onDatumClick ? "pointer" : "default")
+      ? ((onDatumClick || stickyOnClick) ? "pointer" : "default")
       : "crosshair";
 
   return { cursor, handleMouseDown, isDragging };
@@ -213,6 +244,7 @@ const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipL
     scalesRefHolder,
     updateViewWindow,
     (tooltipProps as any)?.onDatumClick,
+    (tooltipProps as any)?.stickyOnClick,
   );
 
   return (

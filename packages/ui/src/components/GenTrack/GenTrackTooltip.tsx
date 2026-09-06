@@ -53,6 +53,12 @@ function GenTrackTooltip({
     return () => observer.disconnect();
   }, [datum, otherData, activeCanvas, canvasType]);
 
+  // Focus the sticky tooltip so Escape can dismiss it via a component-scoped keydown handler
+  // (no global document listener) — MUST be before any conditional returns (Rules of Hooks)
+  useEffect(() => {
+    if (sticky) tooltipBoxRef.current?.focus();
+  }, [sticky]);
+
   // rAF loop: while sticky, track gene X (pan/zoom) + Y (scroll) imperatively, and auto-dismiss when needed
   // MUST be before any conditional returns (Rules of Hooks)
   useEffect(() => {
@@ -223,7 +229,14 @@ function GenTrackTooltip({
       {anchorRef.current && createPortal(
         <Box
           ref={tooltipBoxRef}
+          tabIndex={-1}
           onClick={e => e.stopPropagation()}
+          onKeyDown={e => {
+            if (e.key === "Escape" && sticky) {
+              e.stopPropagation();
+              genTrackTooltipDispatch({ type: "clearSticky" });
+            }
+          }}
           sx={{
             position: "fixed",
             left: fixedLeft,
@@ -231,6 +244,7 @@ function GenTrackTooltip({
             transform: transformY ? `translateY(${transformY})` : undefined,
             pointerEvents: "auto",
             zIndex: 9999,
+            outline: "none",
           }}
         >
           {children}

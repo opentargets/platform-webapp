@@ -89,45 +89,49 @@ function UnifiedTooltip() {
       borderRadius: 1,
       boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
     }}>
-      <Box
-        sx={{
-          p: 1,
-          py: 0,
-          fontSize: "0.7rem",
-          color: theme => theme.palette.grey[700],
-          textDecoration: "underline",
-        }}
-      >
-        {`${entityType}/${data.id}`}
-      </Box>
-      <Box sx={{ display: "flex", gap: 1, py: 1 }}>
-        <Box sx={{ p: 1, color: theme => theme.palette.primary.main }}>
-          <FontAwesomeIcon size="2x" icon={getEntityIcon(entityType || "")} />
-        </Box>
-        <Box sx={{ pt: 0.4, flex: 1 }}>
+      <Link to={`/${entityType}/${data.id}`}>
+        <Box sx={{ display: "block", cursor: "pointer" }}>
           <Box
             sx={{
-              typography: "subtitle2",
-              color: theme => theme.palette.grey[900],
-              textTransform: "capitalize",
-              fontWeight: "bold",
+              p: 1,
+              py: 0,
+              fontSize: "0.7rem",
+              color: theme => theme.palette.grey[700],
+              textDecoration: "underline",
             }}
           >
-            {data.name || data.id || naLabel}
+            {`${entityType}/${data.id}`}
           </Box>
-          <Box sx={{ typography: "body2", color: theme => theme.palette.grey[800] }}>
-            {getEntityDescription(entityType || "", data as Record<string, unknown>)}
+          <Box sx={{ display: "flex", gap: 1, py: 1 }}>
+            <Box sx={{ p: 1, color: theme => theme.palette.primary.main }}>
+              <FontAwesomeIcon size="2x" icon={getEntityIcon(entityType || "")} />
+            </Box>
+            <Box sx={{ pt: 0.4, flex: 1 }}>
+              <Box
+                sx={{
+                  typography: "subtitle2",
+                  color: theme => theme.palette.grey[900],
+                  textTransform: "capitalize",
+                  fontWeight: "bold",
+                }}
+              >
+                {data.name || data.id || naLabel}
+              </Box>
+              <Box sx={{ typography: "body2", color: theme => theme.palette.grey[800] }}>
+                {getEntityDescription(entityType || "", data as Record<string, unknown>)}
+              </Box>
+            </Box>
           </Box>
+          {entityType === "target" && data.genomicLocation?.chromosome && (
+            <Box sx={{ mt: 1, px: 1, typography: "body2" }} component="span">
+              <OtGenomicLocation
+                type={GenomicLocationPresentationType.PLAIN}
+                geneLoc={data.genomicLocation}
+              />
+            </Box>
+          )}
         </Box>
-      </Box>
-      {entityType === "target" && data.genomicLocation?.chromosome && (
-        <Box sx={{ mt: 1, px: 1, typography: "body2" }} component="span">
-          <OtGenomicLocation
-            type={GenomicLocationPresentationType.PLAIN}
-            geneLoc={data.genomicLocation}
-          />
-        </Box>
-      )}
+      </Link>
       {hasL2G && l2GPredictions && (
         <Box sx={{ mt: 1 }}>
           <Divider />

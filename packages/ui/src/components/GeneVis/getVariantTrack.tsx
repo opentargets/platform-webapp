@@ -147,7 +147,7 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
 
 export function getVariantTrack({ data }: { data: any }) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
-  
+
   // Calculate dynamic yMax based on data
   const dynamicYMax = calculateDynamicYMax(data);
 
@@ -189,6 +189,7 @@ export function getVariantTrack({ data }: { data: any }) {
             })
             .map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => {
               const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? 0x888888;
+              const y = dynamicYMax - posteriorProbability;
               return (
                 <DataSprite
                   key={variant.id}
@@ -197,7 +198,7 @@ export function getVariantTrack({ data }: { data: any }) {
                   scalesRef={scalesRef}
                   trackId="variants"
                   x={variant.position}
-                  y={dynamicYMax - posteriorProbability}
+                  y={y}
                   radiusPixels={4}
                   tint={consequenceColor}
                   eventMode="static"
@@ -207,7 +208,7 @@ export function getVariantTrack({ data }: { data: any }) {
                     const pointerPageY = nativeEvent?.clientY != null
                       ? nativeEvent.clientY + window.scrollY
                       : undefined;
-                    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY };
+                    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, genomicX: variant.position };
                     genTrackTooltipDispatch({ type: "setDatum", value: variant });
                     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
                     genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });

@@ -1,6 +1,5 @@
 // import { useState, Fragment} from "react";
 import { useRef } from "react";
-import { useNavigate } from "react-router";
 import {
   GenTrack,
   useGenTrackState,
@@ -59,7 +58,6 @@ function GeneVisInner(props: {
 }) {
   const { initialZoom, fixedTracks, zoomableTracks } = props;
 
-  const navigate = useNavigate();
   const genTrackState = useGenTrackState();
   const { data, xMin, xMax } = genTrackState;
 
@@ -288,10 +286,7 @@ function GeneVisInner(props: {
           gap: 4,
           tooltipWidth: TOOLTIP_WIDTH,
           scalesRef: innerScalesRef,
-          onDatumClick: (datum: any) => {
-            if (datum?.approvedSymbol) navigate(`/target/${datum.id}`);
-            else if (datum?.chromosome) navigate(`/variant/${datum.id}`);
-          },
+          stickyOnClick: true,
         }}
         onInnerScalesReady={(ref) => { innerScalesRef.current = ref.current; }}
         innerOverlayGraphics={

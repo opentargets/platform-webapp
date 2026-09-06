@@ -198,14 +198,36 @@ function MyTooltip() {
 }
 ```
 
+#### Click-to-stick tooltip
+
+Pass `stickyOnClick: true` in `tooltipProps`/`innerTooltipProps` to make clicking a datum lock ("stick") its tooltip open instead of dismissing on `pointerout`, so the tooltip content can contain interactive elements (links, tables, etc.) without disappearing when the cursor leaves the sprite. This only applies to the inner (zoomed) canvas, matching the existing datum-click gating.
+
+`stickyOnClick` and `onDatumClick` are mutually exclusive on a given `Tooltip`/`InnerTooltip` config — if both are set, `stickyOnClick` wins and a dev-only console warning is logged. Prefer putting any click-triggered navigation/actions inside the tooltip content itself (e.g. a `Link` in the tooltip) rather than on `onDatumClick`, since a click no longer has a "free" meaning once sticky is enabled.
+
+While sticky:
+
+- Highlighting the stuck gene's box (`DataGeneBox`'s `isMyGeneSticky`) is currently a **known, non-functional, deferred bug** — see the important note below for why, and why the obvious fix (reading tooltip state where context reads actually work, and passing it down as a prop) can't be done naively. There is also no equivalent highlight for variants or other entity types — generalizing this into a shared, performant hover/sticky-highlight mechanism is tracked as follow-up work.
+- The tooltip continues to track the datum's position through pan/zoom/scroll (see the `sticky`/`stickyGenomicX`/`stickyLabelCenter` state in `GenTrackTooltipProvider` and the tracking loop in `GenTrackTooltip`), and auto-dismisses if the widget is resized or the datum scrolls out of meaningful view.
+- Clicking a different datum switches the stuck tooltip to it; clicking the same stuck datum again, or clicking empty canvas, dismisses it; pressing Escape while the tooltip has focus also dismisses it.
+
+All of this is implemented with component-scoped event handlers only (the canvas's own `onClick`, and a `tabIndex`/`onKeyDown` on the tooltip itself) — there is deliberately no global `document`-level listener. One consequence: clicking outside the widget entirely (elsewhere on the page) does **not** dismiss a stuck tooltip.
+
+##### Important: context reads don't work inside the Pixi tree
+
+`@pixi/react`'s `<Stage>` renders its children through a **separate React reconciler root** (its own `PixiFiber`/`react-reconciler` instance), not the surrounding DOM tree's reconciler. Props and closures cross that boundary fine (e.g. `genTrackTooltipDispatch`, captured outside `<Stage>` and passed down, works correctly when invoked from a sprite's `pointerover` handler) — but a `useContext`/`useGenTrackTooltipState()` call made *inside* a component that only ever renders inside `<Stage>` (e.g. `DataGeneBox`, `DataSprite`) does **not** resolve against the real Provider; it silently falls back to the context's default value.
+
+This is why `scalesRef` is threaded through as an explicit ref/prop rather than read via context. It's also why `DataGeneBox`'s existing `useGenTrackTooltipState()` call for `isMyGeneSticky` (which pre-dates click-to-stick) has always been a no-op — it never actually detects tooltip state changes, so the box's highlight never persists once the pointer leaves it, regardless of sticky state.
+
+Moving that read up to `getGenesTracks.tsx` (which runs in the outer DOM tree, where context reads do work) and passing the result down as a prop was tried and **reverted** — it fixes the read, but subscribing `getGenesTracks()`/`GeneVisInner` to `useGenTrackTooltipState()` means the whole (expensive) `GeneVisInner` tree re-renders on every `hover` change, i.e. on every pointer movement over any sprite, not just on the rare `sticky` transitions. That cascades into `GenTrack`'s resize-handling effect (which hides the canvas while recomputing) firing far more often than intended, causing visible flicker/disappearance across the whole visualization on hover.
+
+The correct fix needs to avoid subscribing to the full, high-frequency tooltip state just to read the low-frequency `sticky`/`stickyLabelCenter` fields — e.g. by splitting those into a separate, infrequently-changing context, or using an imperative ref-based/event-driven update path (matching how `scalesRef` position updates and hover-tint changes already bypass React reactivity entirely). This is left as follow-up work alongside the highlight generalization above.
+
 #### Improvements/Features To Add
 
 - Allow 'underlay' and 'overlay' components to draw arbitraty content over the entire canvas. E.g.
   - draw linking enhancers in one track to genes in another
 
 - Tooltip position currently at mouse position. Allow passing e.g. a `position` prop:  a functoin with access to data, otherData, globalXY as well as scales to get from data->canvas coodinates.
-
-- Highlight datum that tooltip is hovering on? Possibly tough since store this in a context where as should store manually for Pixi to see?
 
 - Improves appearance of pan-zoom:
   - in pan-zoo bar: white/transparent backround in visible window, light gray in regions either side where not in window
