@@ -30,12 +30,15 @@ interface DataGeneBoxProps {
   y: number;                // box top y in data coords
   height: number;           // box height in data coords
   hoverBoxColor?: number;    // color for the hover highlight box
+  stickyBorderColor?: number; // color for the sticky highlight border
   pointerover?: (e: any) => void;
   pointerout?: (e: any) => void;
   pointertap?: (e: any) => void;
 }
 
 const PADDING_PIXELS = 4; // constant screen-space padding around gene+label
+const STICKY_BORDER_TINT = 0x424242;
+const STICKY_BORDER_PIXELS = 1;
 
 export function DataGeneBox({
   scalesRef,
@@ -47,16 +50,24 @@ export function DataGeneBox({
   y,
   height,
   hoverBoxColor,
+  stickyBorderColor,
   pointerover,
   pointerout,
   pointertap,
 }: DataGeneBoxProps) {
   const app = useApp();
   const spriteRef = useRef<PixiSprite | null>(null);
+  const borderRefs = useRef<Array<PixiSprite | null>>([]);
   const texture = getOrCreateRectTexture(app);
 
   // Color for the hover highlight box
   const hoverTint = hoverBoxColor ?? 0xcccccc;
+  const stickyBorderTint = stickyBorderColor ?? STICKY_BORDER_TINT;
+  const setBorderAlpha = useCallback((alpha: number) => {
+    for (const border of borderRefs.current) {
+      if (border) border.alpha = alpha;
+    }
+  }, []);
 
   // Sticky (click-locked) check reads scalesRef.current.stickyLabelCenter — NOT via
   // useGenTrackTooltipState() — because @pixi/react's <Stage> renders its children
@@ -77,7 +88,9 @@ export function DataGeneBox({
     isStuck => {
       const sprite = spriteRef.current;
       if (sprite) {
+        sprite.tint = hoverTint;
         sprite.alpha = isStuck ? 1.0 : 0;
+        setBorderAlpha(isStuck ? 1.0 : 0);
         app.render();
       }
     },
@@ -99,11 +112,12 @@ export function DataGeneBox({
       if (sprite) {
         sprite.tint = hoverTint;
         sprite.alpha = 1.0;
+        setBorderAlpha(scales?.stickyLabelCenter === labelCenter ? 1.0 : 0);
         app.render();
       }
     }
     pointerover?.(e);
-  }, [pointerover, app, hoverTint, scalesRef, labelCenter]);
+  }, [pointerover, app, hoverTint, scalesRef, labelCenter, setBorderAlpha]);
 
   const handlePointerTap = useCallback((e: any) => {
     if (!isPointerOverCanvas(e)) return;
@@ -119,10 +133,11 @@ export function DataGeneBox({
     if (sprite && !isStuck) {
       sprite.tint = hoverTint;
       sprite.alpha = 0;
+      setBorderAlpha(0);
       app.render();
     }
     pointerout?.(e);
-  }, [pointerout, app, hoverTint, scalesRef, labelCenter, isMyGeneStickyRef]);
+  }, [pointerout, app, hoverTint, scalesRef, labelCenter, isMyGeneStickyRef, setBorderAlpha]);
 
   // Imperative update on every tick - recalculates bounds based on current zoom
   useTick(() => {
@@ -153,12 +168,47 @@ export function DataGeneBox({
     const screenWidth = boxWidth * xScale;
     const screenHeight = height * (yScaleInfo?.yScale ?? 1);
 
-    // Update sprite position and size (preserve alpha - managed by event handlers)
+    // Update the fill and fixed-pixel border position and size (alpha is event-managed).
+    const renderedWidth = Math.max(screenWidth, 1);
+    const renderedHeight = Math.max(screenHeight, 1);
+    const isVisible = screenX + screenWidth > 0 && screenX < scales.canvasWidth;
     sprite.x = screenX;
     sprite.y = screenY;
-    sprite.width = Math.max(screenWidth, 1);
-    sprite.height = Math.max(screenHeight, 1);
-    sprite.visible = screenX + screenWidth > 0 && screenX < scales.canvasWidth;
+    sprite.width = renderedWidth;
+    sprite.height = renderedHeight;
+    sprite.visible = isVisible;
+
+    const horizontalThickness = Math.min(STICKY_BORDER_PIXELS, renderedHeight);
+    const verticalThickness = Math.min(STICKY_BORDER_PIXELS, renderedWidth);
+    const [top, right, bottom, left] = borderRefs.current;
+    if (top) {
+      top.x = screenX;
+      top.y = screenY;
+      top.width = renderedWidth;
+      top.height = horizontalThickness;
+      top.visible = isVisible;
+    }
+    if (right) {
+      right.x = screenX + renderedWidth - verticalThickness;
+      right.y = screenY;
+      right.width = verticalThickness;
+      right.height = renderedHeight;
+      right.visible = isVisible;
+    }
+    if (bottom) {
+      bottom.x = screenX;
+      bottom.y = screenY + renderedHeight - horizontalThickness;
+      bottom.width = renderedWidth;
+      bottom.height = horizontalThickness;
+      bottom.visible = isVisible;
+    }
+    if (left) {
+      left.x = screenX;
+      left.y = screenY;
+      left.width = verticalThickness;
+      left.height = renderedHeight;
+      left.visible = isVisible;
+    }
   });
 
   const scales = scalesRef.current;
@@ -167,19 +217,31 @@ export function DataGeneBox({
   const initialY = yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y;
 
   return (
-    <Sprite
-      ref={spriteRef}
-      texture={texture}
-      x={initialX}
-      y={initialY}
-      width={100}
-      height={height}
-      tint={hoverTint}
-      alpha={0}
-      eventMode="static"
-      pointerover={handlePointerOver}
-      pointerout={handlePointerOut}
-      pointertap={handlePointerTap}
-    />
+    <>
+      <Sprite
+        ref={spriteRef}
+        texture={texture}
+        x={initialX}
+        y={initialY}
+        width={100}
+        height={height}
+        tint={hoverTint}
+        alpha={0}
+        eventMode="static"
+        pointerover={handlePointerOver}
+        pointerout={handlePointerOut}
+        pointertap={handlePointerTap}
+      />
+      {[0, 1, 2, 3].map(index => (
+        <Sprite
+          key={index}
+          ref={border => { borderRefs.current[index] = border; }}
+          texture={texture}
+          tint={stickyBorderTint}
+          alpha={0}
+          eventMode="none"
+        />
+      ))}
+    </>
   );
 }

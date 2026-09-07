@@ -1,8 +1,9 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 import { scaleLinear, axisLeft, select } from "d3";
 import { Box, Collapse, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { DataSprite, DataText, DataVLine, DataBackground, getOrCreateRingTexture, useStickyTick } from "../GenTrack";
+import { DataSprite, DataText, DataVLine, DataBackground, getOrCreateRingTexture } from "../GenTrack";
 import type { TrackLegendProps } from "../GenTrack";
 import { Container, Sprite, useApp, useTick } from '@pixi/react';
 import type { Sprite as PixiSprite } from 'pixi.js';
@@ -13,7 +14,8 @@ import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
 
 const VARIANT_TRACK_HEIGHT = 67;
 const H_LINE_COLOR = 0xdddddd;
-const STUCK_HIGHLIGHT_COLOR = 0xe0e0e0;
+const HOVER_HIGHLIGHT_COLOR = 0x555555;
+const STUCK_HIGHLIGHT_COLOR = 0x000000;
 const STUCK_HIGHLIGHT_STROKE_PIXELS = 2;
 const STUCK_HIGHLIGHT_RADIUS_PIXELS = 7;
 
@@ -149,12 +151,79 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
   );
 }
 
-// Renders a highlight ring behind a variant sprite while it is hovered or sticky (clicked).
-// Reads scalesRef.current.stickyDatumId directly (via useStickyTick), NOT via
-// useGenTrackTooltipState() — @pixi/react's <Stage> renders its children through a
-// separate React reconciler root that does not bridge useContext reads made from inside
-// it. See ScalesContext.tsx / useStickyTick.ts / GenTrack/README.md, and DataGeneBox.tsx
-// for the equivalent gene-highlight mechanism this mirrors.
+type VariantHighlightState = {
+  hoveredVariant: { id: string; x: number; y: number } | null;
+  refresh: (() => void) | null;
+};
+
+function VariantHighlightOverlay({
+  scalesRef,
+  variantCoordinates,
+  highlightStateRef,
+}: {
+  scalesRef: any;
+  variantCoordinates: Map<string, { x: number; y: number }>;
+  highlightStateRef: MutableRefObject<VariantHighlightState>;
+}) {
+  const app = useApp();
+  const spriteRef = useRef<PixiSprite | null>(null);
+  const lastAppearanceRef = useRef<string | null>(null);
+  const texture = getOrCreateRingTexture(app, STUCK_HIGHLIGHT_STROKE_PIXELS, STUCK_HIGHLIGHT_RADIUS_PIXELS);
+
+  const syncHighlight = useCallback((renderImmediately: boolean) => {
+    const sprite = spriteRef.current;
+    const scales = scalesRef.current;
+    if (!sprite || !scales) return;
+
+    const stickyDatumId = scales.stickyDatumId;
+    const hoveredVariant = highlightStateRef.current.hoveredVariant;
+    const activeVariant = stickyDatumId
+      ? variantCoordinates.get(stickyDatumId)
+      : hoveredVariant;
+    const appearance = activeVariant
+      ? `${stickyDatumId ? "sticky" : "hover"}:${stickyDatumId ?? activeVariant.id}`
+      : null;
+
+    if (activeVariant) {
+      const yScaleInfo = scales.yScales.get("variants");
+      sprite.x = activeVariant.x * scales.xScale + scales.xOffset;
+      sprite.y = yScaleInfo
+        ? activeVariant.y * yScaleInfo.yScale + yScaleInfo.yOffset
+        : activeVariant.y;
+      sprite.tint = stickyDatumId ? STUCK_HIGHLIGHT_COLOR : HOVER_HIGHLIGHT_COLOR;
+      sprite.alpha = 0.9;
+    } else {
+      sprite.alpha = 0;
+    }
+
+    if (renderImmediately || appearance !== lastAppearanceRef.current) {
+      app.render();
+    }
+    lastAppearanceRef.current = appearance;
+  }, [app, highlightStateRef, scalesRef, variantCoordinates]);
+
+  useEffect(() => {
+    highlightStateRef.current.refresh = () => syncHighlight(true);
+    return () => {
+      highlightStateRef.current.refresh = null;
+    };
+  }, [highlightStateRef, syncHighlight]);
+
+  useTick(() => syncHighlight(false));
+
+  return (
+    <Sprite
+      ref={spriteRef}
+      texture={texture}
+      width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+      height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+      anchor={[0.5, 0.5]}
+      tint={HOVER_HIGHLIGHT_COLOR}
+      alpha={0}
+    />
+  );
+}
+
 function VariantMarker({
   scalesRef,
   x,
@@ -162,6 +231,7 @@ function VariantMarker({
   variant,
   tint,
   genTrackTooltipDispatch,
+  highlightStateRef,
 }: {
   scalesRef: any;
   x: number;
@@ -169,38 +239,8 @@ function VariantMarker({
   variant: any;
   tint: number;
   genTrackTooltipDispatch: (action: { type: string; value: any }) => void;
+  highlightStateRef: MutableRefObject<VariantHighlightState>;
 }) {
-  const app = useApp();
-  const spriteRef = useRef<PixiSprite | null>(null);
-  const texture = getOrCreateRingTexture(app, STUCK_HIGHLIGHT_STROKE_PIXELS, STUCK_HIGHLIGHT_RADIUS_PIXELS);
-
-  useStickyTick(
-    scalesRef,
-    scales => scales.stickyDatumId === variant.id,
-    isStuck => {
-      const sprite = spriteRef.current;
-      if (sprite) {
-        sprite.alpha = isStuck ? 0.9 : 0;
-        app.render();
-      }
-    },
-  );
-
-  // Keep the highlight aligned with the variant circle through pan/zoom
-  useTick(() => {
-    const sprite = spriteRef.current;
-    const scales = scalesRef.current;
-    if (!sprite || !scales) return;
-    const yScaleInfo = scales.yScales.get("variants");
-    sprite.x = x * scales.xScale + scales.xOffset;
-    sprite.y = yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y;
-  });
-
-  const scales = scalesRef.current;
-  const initialX = scales ? x * scales.xScale + scales.xOffset : 0;
-  const yScaleInfo = scales?.yScales.get("variants");
-  const initialY = yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y;
-
   const handlePointerOver = useCallback((e: any) => {
     // Match gene boxes: when another datum is pinned, don't reveal a hover highlight
     // that cannot become the active tooltip until the user clicks it.
@@ -208,9 +248,9 @@ function VariantMarker({
     const somethingElseStuck = scales != null
       && (scales.stickyLabelCenter != null || scales.stickyDatumId != null)
       && scales.stickyDatumId !== variant.id;
-    if (!somethingElseStuck && spriteRef.current) {
-      spriteRef.current.alpha = 0.9;
-      app.render();
+    if (!somethingElseStuck) {
+      highlightStateRef.current.hoveredVariant = { id: variant.id, x, y };
+      highlightStateRef.current.refresh?.();
     }
 
     const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
@@ -221,47 +261,33 @@ function VariantMarker({
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
     genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
-  }, [app, genTrackTooltipDispatch, scalesRef, variant]);
+  }, [genTrackTooltipDispatch, highlightStateRef, scalesRef, variant, x, y]);
 
   const handlePointerOut = useCallback(() => {
-    const isStuck = scalesRef.current?.stickyDatumId === variant.id;
-    if (!isStuck && spriteRef.current) {
-      spriteRef.current.alpha = 0;
-      app.render();
+    if (highlightStateRef.current.hoveredVariant?.id === variant.id) {
+      highlightStateRef.current.hoveredVariant = null;
+      highlightStateRef.current.refresh?.();
     }
     genTrackTooltipDispatch({ type: "setDatum", value: null });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
     genTrackTooltipDispatch({ type: "setHover", value: null });
-  }, [app, genTrackTooltipDispatch, scalesRef, variant.id]);
+  }, [genTrackTooltipDispatch, highlightStateRef, variant.id]);
 
   return (
-    <>
-      <Sprite
-        ref={spriteRef}
-        texture={texture}
-        x={initialX}
-        y={initialY}
-        width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
-        height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
-        anchor={[0.5, 0.5]}
-        tint={STUCK_HIGHLIGHT_COLOR}
-        alpha={0}
-      />
-      <DataSprite
-        shape="circle"
-        strokePixels={1.5}
-        scalesRef={scalesRef}
-        trackId="variants"
-        x={x}
-        y={y}
-        radiusPixels={4}
-        tint={tint}
-        eventMode="static"
-        alpha={0.9}
-        pointerover={handlePointerOver}
-        pointerout={handlePointerOut}
-      />
-    </>
+    <DataSprite
+      shape="circle"
+      strokePixels={1.5}
+      scalesRef={scalesRef}
+      trackId="variants"
+      x={x}
+      y={y}
+      radiusPixels={4}
+      tint={tint}
+      eventMode="static"
+      alpha={0.9}
+      pointerover={handlePointerOver}
+      pointerout={handlePointerOut}
+    />
   );
 }
 
@@ -280,7 +306,14 @@ export function getVariantTrack({ data }: { data: any }) {
     YInfo: () => <VariantsYInfo yMax={dynamicYMax} />,
     Legend: VariantLegend,
     legendPosition: "top-right",
-    Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {  
+    Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {
+      const highlightStateRef = useRef<VariantHighlightState>({ hoveredVariant: null, refresh: null });
+      const variantCoordinates = new Map<string, { x: number; y: number }>(
+        (data?.locus?.rows ?? []).map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => [
+          variant.id,
+          { x: variant.position, y: dynamicYMax - posteriorProbability },
+        ] as [string, { x: number; y: number }]),
+      );
 
       return (
         <Container>
@@ -311,18 +344,24 @@ export function getVariantTrack({ data }: { data: any }) {
               const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? 0x888888;
               const y = dynamicYMax - posteriorProbability;
               return (
-                <Fragment key={variant.id}>
-                  <VariantMarker
-                    scalesRef={scalesRef}
-                    x={variant.position}
-                    y={y}
-                    variant={variant}
-                    tint={consequenceColor}
-                    genTrackTooltipDispatch={genTrackTooltipDispatch}
-                  />
-                </Fragment>
+                <VariantMarker
+                  key={variant.id}
+                  scalesRef={scalesRef}
+                  x={variant.position}
+                  y={y}
+                  variant={variant}
+                  tint={consequenceColor}
+                  genTrackTooltipDispatch={genTrackTooltipDispatch}
+                  highlightStateRef={highlightStateRef}
+                />
               );
             })}
+
+          <VariantHighlightOverlay
+            scalesRef={scalesRef}
+            variantCoordinates={variantCoordinates}
+            highlightStateRef={highlightStateRef}
+          />
 
           {/* lead variant label */}
           {data?.variant && (

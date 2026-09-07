@@ -207,6 +207,7 @@ export function getGenesTracks({
                   y={boxY}
                   height={boxHeight}
                   hoverBoxColor={hoverBoxColor}
+                  stickyBorderColor={geneColor}
                   pointerover={(e: any) => {
                     const scales = scalesRef.current;
                     const ysi = trackId ? scales?.yScales.get(trackId) : undefined;
