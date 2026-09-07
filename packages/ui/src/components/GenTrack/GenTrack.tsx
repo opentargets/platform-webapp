@@ -30,9 +30,13 @@ interface TooltipLayerProps {
   cursor?: string;
   onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
   crosshairs?: CrosshairMode;
+  // Only passed for the inner (zoomed) canvas — used to imperatively mirror the sticky
+  // identity onto ScalesRef for Pixi-tree components to read, since they can't read
+  // tooltip context directly. See ScalesContext.tsx / useStickyTick.ts.
+  scalesRefHolder?: React.RefObject<ScalesRef | null>;
 }
 
-const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = "none" }: TooltipLayerProps, ref) {
+const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = "none", scalesRefHolder }: TooltipLayerProps, ref) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
@@ -50,6 +54,18 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: null });
   };
 
+  // Mirrors the sticky identity onto ScalesRef (for Pixi-tree components, which can't read
+  // tooltip context — see ScalesContext.tsx) and forces one manual Pixi tick so already-
+  // mounted sprites (e.g. DataGeneBox, via useStickyTick) pick up the change promptly
+  // instead of waiting for an incidental tick.
+  const syncStickyToScalesRef = (labelCenter: number | null, datumId: string | null) => {
+    const scales = scalesRefHolder?.current;
+    if (!scales) return;
+    scales.stickyLabelCenter = labelCenter;
+    scales.stickyDatumId = datumId;
+    scales.tickerUpdate?.();
+  };
+
   const handleClick = () => {
     if (isInnerDragging) return;
     if (canvasType !== "inner") return;
@@ -57,12 +73,16 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
 
     if (stickyOnClick) {
       if (!hover?.datum) {
-        if (genTrackTooltipState?.sticky) genTrackTooltipDispatch({ type: "clearSticky" });
+        if (genTrackTooltipState?.sticky) {
+          genTrackTooltipDispatch({ type: "clearSticky" });
+          syncStickyToScalesRef(null, null);
+        }
         return;
       }
       const alreadyStuckOnThis = genTrackTooltipState?.sticky && genTrackTooltipState?.datum?.id === hover.datum.id;
       if (alreadyStuckOnThis) {
         genTrackTooltipDispatch({ type: "clearSticky" });
+        syncStickyToScalesRef(null, null);
       } else {
         genTrackTooltipDispatch({
           type: "setSticky",
@@ -75,6 +95,7 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
             activeCanvas: canvasType,
           },
         });
+        syncStickyToScalesRef(hover.labelCenter ?? null, hover.datum?.id ?? null);
       }
       return;
     }
@@ -128,6 +149,10 @@ function useInnerPanDrag(
   const dragStartEnd = useRef(0);
   const rafRef = useRef<number | null>(null);
   const pendingViewRef = useRef<{ start: number; end: number } | null>(null);
+  // Tracks whether the mouse actually moved beyond a tiny threshold during this
+  // mousedown→mouseup sequence, so a plain click (e.g. to dismiss a sticky tooltip via
+  // empty-canvas click) isn't mistaken for — and suppressed as — a drag release.
+  const hasDraggedRef = useRef(false);
 
   const scheduleViewUpdate = useCallback((start: number, end: number) => {
     pendingViewRef.current = { start, end };
@@ -148,6 +173,7 @@ function useInnerPanDrag(
     const span = dragStartEnd.current - dragStartStart.current;
     if (span <= 0) return;
     const dxPx = e.clientX - dragStartClientX.current;
+    if (Math.abs(dxPx) > 2) hasDraggedRef.current = true;
     const dxData = (dxPx / canvasWidth) * span;
     const newStart = clamp(dragStartStart.current - dxData, xMin, xMax - span);
     const newEnd = newStart + span;
@@ -166,8 +192,15 @@ function useInnerPanDrag(
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
     setIsDragging(false);
-    // Keep the flag true through the overlay's click event; clear afterwards.
-    setTimeout(() => setIsInnerDragging(false), 0);
+    if (hasDraggedRef.current) {
+      // Real drag happened — keep the flag true through the overlay's click event
+      // (so the drag-release doesn't also trigger a click action), clear afterwards.
+      setTimeout(() => setIsInnerDragging(false), 0);
+    } else {
+      // No movement — this was just a click (e.g. on empty canvas to dismiss a sticky
+      // tooltip); clear immediately so the click handler isn't suppressed.
+      setIsInnerDragging(false);
+    }
   }, [updateViewWindow, handleMouseMove, setIsInnerDragging]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -179,6 +212,7 @@ function useInnerPanDrag(
     const fullSpan = xMax - xMin;
     if (span <= 0 || span >= fullSpan) return;
     e.preventDefault();
+    hasDraggedRef.current = false;
     dragStartClientX.current = e.clientX;
     dragStartStart.current = scales.viewStart ?? xMin;
     dragStartEnd.current = scales.viewEnd ?? xMax;
@@ -257,6 +291,7 @@ const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipL
       cursor={innerPanDrag.cursor}
       onMouseDown={innerPanDrag.handleMouseDown}
       crosshairs={crosshairs}
+      scalesRefHolder={scalesRefHolder}
     >
       {children}
     </TooltipLayer>
@@ -608,6 +643,8 @@ function GenTrackInner({
     canvasWidth: 0,
     canvasHeight: 0,
     trackRegistry: new Map(),
+    stickyLabelCenter: null,
+    stickyDatumId: null,
   });
 
   const scalesRef = localScalesRef;
@@ -1019,6 +1056,8 @@ function GenTrack(props: Omit<GenTrackInnerProps, '_scalesRef' | '_isInner' | '_
     trackRegistry: new Map(),
     canvasWidth: 0,
     canvasHeight: 0,
+    stickyLabelCenter: null,
+    stickyDatumId: null,
   });
 
   return (

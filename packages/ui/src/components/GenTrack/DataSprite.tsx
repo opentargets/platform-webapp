@@ -41,7 +41,7 @@ const RING_DEFAULT_STROKE_PIXELS = 2;
 
 const _ringTextureCache = new WeakMap<PixiApplication, Map<string, Texture>>();
 
-function getOrCreateRingTexture(app: PixiApplication, strokePixels: number, radiusPixels: number): Texture {
+export function getOrCreateRingTexture(app: PixiApplication, strokePixels: number, radiusPixels: number): Texture {
   let map = _ringTextureCache.get(app);
   if (!map) { map = new Map(); _ringTextureCache.set(app, map); }
   const key = `${strokePixels}:${radiusPixels}`;

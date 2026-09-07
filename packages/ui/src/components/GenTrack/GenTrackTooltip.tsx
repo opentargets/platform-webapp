@@ -34,7 +34,7 @@ function GenTrackTooltip({
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
 
   const genTrackTooltipState = useGenTrackTooltipState();
-  const { datum, otherData, globalXY, activeCanvas, sticky, stickyGenomicX, stickyLabelCenter } = (genTrackTooltipState as any) ?? {};
+  const { datum, otherData, globalXY, activeCanvas, sticky, stickyGenomicX } = (genTrackTooltipState as any) ?? {};
 
   useLayoutEffect(() => {
     const box = tooltipBoxRef.current;
@@ -58,6 +58,20 @@ function GenTrackTooltip({
   useEffect(() => {
     if (sticky) tooltipBoxRef.current?.focus();
   }, [sticky]);
+
+  // Dismiss sticky state, also clearing the mirrored identity on ScalesRef (and forcing a
+  // tick) so gene/variant highlight boxes clear too — see GenTrack.tsx's
+  // syncStickyToScalesRef / ScalesContext.tsx for why this is needed in addition to the
+  // context dispatch.
+  const clearStickyEverywhere = () => {
+    genTrackTooltipDispatch({ type: "clearSticky" });
+    const scales = (scalesRef as any)?.current;
+    if (scales) {
+      scales.stickyLabelCenter = null;
+      scales.stickyDatumId = null;
+      scales.tickerUpdate?.();
+    }
+  };
 
   // rAF loop: while sticky, track gene X (pan/zoom) + Y (scroll) imperatively, and auto-dismiss when needed
   // MUST be before any conditional returns (Rules of Hooks)
@@ -84,7 +98,7 @@ function GenTrackTooltip({
       if (box && scales && anchor) {
         // Dismiss if widget was resized
         if (scales.canvasWidth !== initialCanvasWidth) {
-          genTrackTooltipDispatch({ type: "clearSticky" });
+          clearStickyEverywhere();
           return;
         }
         // Dismiss when gene is no longer meaningfully in view — but ONLY after a real pan/zoom.
@@ -97,13 +111,16 @@ function GenTrackTooltip({
             const visibleGenomic = Math.max(0, Math.min(genEnd, viewEnd) - Math.max(genStart, viewStart));
             const visiblePixels = visibleGenomic * scales.xScale;
             if (visiblePixels < 10) {
-              genTrackTooltipDispatch({ type: "clearSticky" });
+              clearStickyEverywhere();
               return;
             }
-          } else if (stickyLabelCenter != null) {
-            // Tiny gene (< 10px at click time): dismiss when label center goes out of view
-            if (stickyLabelCenter < viewStart || stickyLabelCenter > viewEnd) {
-              genTrackTooltipDispatch({ type: "clearSticky" });
+          } else if (stickyGenomicX != null) {
+            // Point-like entity (tiny gene, or a variant, which has no genomicLocation
+            // range at all): dismiss when its genomic position goes out of view. Uses
+            // stickyGenomicX (populated for both genes and variants) rather than
+            // stickyLabelCenter, which is gene-only and null for variants.
+            if (stickyGenomicX < viewStart || stickyGenomicX > viewEnd) {
+              clearStickyEverywhere();
               return;
             }
           }
@@ -144,7 +161,7 @@ function GenTrackTooltip({
     };
     rafId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(rafId);
-  }, [sticky, scalesRef, stickyGenomicX, stickyLabelCenter, datum, globalXY, xAnchor, yAnchor, tooltipWidth, dx, dy, width, genTrackTooltipDispatch]);
+  }, [sticky, scalesRef, stickyGenomicX, datum, globalXY, xAnchor, yAnchor, tooltipWidth, dx, dy, width, genTrackTooltipDispatch]);
 
   if (!genTrackTooltipState) return <div ref={anchorRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />;
   if (!datum && !otherData) return <div ref={anchorRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />;
@@ -234,7 +251,7 @@ function GenTrackTooltip({
           onKeyDown={e => {
             if (e.key === "Escape" && sticky) {
               e.stopPropagation();
-              genTrackTooltipDispatch({ type: "clearSticky" });
+              clearStickyEverywhere();
             }
           }}
           sx={{

@@ -1,10 +1,10 @@
-import { useRef, useCallback, useLayoutEffect } from 'react';
-import { useGenTrackTooltipState } from '../../providers/GenTrackTooltipProvider';
+import { useRef, useCallback } from 'react';
 import { Sprite, useTick, useApp } from '@pixi/react';
 import { Sprite as PixiSprite, Graphics as PixiGraphics, Texture } from 'pixi.js';
 import type { RefObject } from 'react';
 import type { ScalesRef } from './ScalesContext';
 import { isPointerOverCanvas } from './pointerOcclusion';
+import { useStickyTick } from './useStickyTick';
 
 const _rectTextureCache = new Map<any, Texture>();
 
@@ -58,26 +58,30 @@ export function DataGeneBox({
   // Color for the hover highlight box
   const hoverTint = hoverBoxColor ?? 0xcccccc;
 
-  // NOTE: this context read does not actually reach the real GenTrackTooltipProvider —
-  // @pixi/react's <Stage> renders its children (including this component) through a
-  // separate React reconciler root, which does not bridge `useContext` reads from the
-  // surrounding DOM tree (props/closures cross fine, context reads do not). So
-  // `isMyGeneSticky` below is effectively always false today; the gene-stays-highlighted-
-  // while-stuck behavior is a known, deferred bug — see GenTrack/README.md. A previous fix
-  // attempt moved this check into getGenesTracks.tsx (where context reads work) and passed
-  // it down as a prop, but that caused GeneVisInner to re-render on every hover (since
-  // `useGenTrackTooltipState()`'s value changes on every pointer movement), which cascaded
-  // into visible flicker across the whole visualization. Do not reintroduce that without
-  // first isolating the read to a low-frequency-changing slice of state (e.g. splitting
-  // "sticky" out from "hover" into separate contexts).
-  const tooltipState = useGenTrackTooltipState() as any;
-  const isMyGeneSticky = tooltipState?.stickyLabelCenter !== null &&
-    tooltipState?.stickyLabelCenter !== undefined &&
-    tooltipState?.stickyLabelCenter === labelCenter;
-
-  // Ref written every render so event handlers always read the current value (no stale closures)
-  const isMyGeneStickyRef = useRef(false);
-  isMyGeneStickyRef.current = isMyGeneSticky;
+  // Sticky (click-locked) check reads scalesRef.current.stickyLabelCenter — NOT via
+  // useGenTrackTooltipState() — because @pixi/react's <Stage> renders its children
+  // (including this component) through a separate React reconciler root that does not
+  // bridge useContext reads made from inside it (props/closures/refs cross fine, context
+  // reads do not). See ScalesContext.tsx / useStickyTick.ts / GenTrack/README.md.
+  //
+  // This intentionally does not use React state/context to drive the alpha update: an
+  // earlier attempt read tooltip state in getGenesTracks.tsx (where context reads do
+  // work) and passed the result down as a prop, but that made getGenesTracks()/
+  // GeneVisInner re-render on every hover (not just sticky transitions), which — because
+  // getGenesTracks() creates a fresh `Track` component function on every call — caused
+  // full remounts of the Pixi track subtree on every hover, visible as flicker across the
+  // whole visualization. useStickyTick avoids re-rendering the outer tree entirely.
+  const isMyGeneStickyRef = useStickyTick(
+    scalesRef,
+    scales => scales.stickyLabelCenter === labelCenter,
+    isStuck => {
+      const sprite = spriteRef.current;
+      if (sprite) {
+        sprite.alpha = isStuck ? 1.0 : 0;
+        app.render();
+      }
+    },
+  );
 
   const handlePointerOver = useCallback((e: any) => {
     if (!isPointerOverCanvas(e)) return;
@@ -97,22 +101,17 @@ export function DataGeneBox({
 
   const handlePointerOut = useCallback((e: any) => {
     const sprite = spriteRef.current;
-    if (sprite && !isMyGeneStickyRef.current) {
+    // Check fresh rather than relying on isMyGeneStickyRef (only updated on tick) so a
+    // pointerout that happens between ticks still sees the current sticky state.
+    const isStuck = scalesRef.current?.stickyLabelCenter === labelCenter;
+    isMyGeneStickyRef.current = isStuck;
+    if (sprite && !isStuck) {
       sprite.tint = hoverTint;
       sprite.alpha = 0;
       app.render();
     }
     pointerout?.(e);
-  }, [pointerout, app, hoverTint]);
-
-  // Safety-net: sync sprite alpha when isMyGeneSticky transitions
-  // (covers the narrow race where pointerout fired before the first post-click render)
-  useLayoutEffect(() => {
-    const sprite = spriteRef.current;
-    if (!sprite) return;
-    sprite.alpha = isMyGeneSticky ? 1.0 : 0;
-    app.render();
-  }, [isMyGeneSticky, app]);
+  }, [pointerout, app, hoverTint, scalesRef, labelCenter, isMyGeneStickyRef]);
 
   // Imperative update on every tick - recalculates bounds based on current zoom
   useTick(() => {

@@ -35,6 +35,17 @@ export interface ScalesRef {
 
   // Whether this scalesRef belongs to an inner (zoomed) track
   isInner?: boolean;
+
+  // Sticky (click-locked) tooltip identity — stored here, rather than read via
+  // useGenTrackTooltipState(), for the same reason as trackRegistry above: @pixi/react's
+  // <Stage> renders its children through a separate React reconciler root that does not
+  // bridge useContext reads made from inside it. Written by GenTrack.tsx's click handler
+  // (which runs outside <Stage>, where context reads work) and consumed imperatively by
+  // Pixi-rendered components (e.g. DataGeneBox, via useStickyTick) inside their useTick
+  // callbacks, forced to re-check promptly via tickerUpdate() right after a click. See the
+  // GenTrack README "context reads don't work inside the Pixi tree" section.
+  stickyLabelCenter: number | null; // identity for genes, matches DataGeneBox's labelCenter
+  stickyDatumId: string | null;     // identity for variants/other entities, matches datum.id
 }
 
 interface ScalesContextValue {

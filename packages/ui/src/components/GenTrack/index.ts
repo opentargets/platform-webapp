@@ -1,6 +1,6 @@
 export { default as GenTrack } from './GenTrack';
 export type { TrackLegendProps, TrackLegendPosition } from './GenTrack';
-export { DataSprite } from './DataSprite';
+export { DataSprite, getOrCreateRingTexture } from './DataSprite';
 export { DataGeneBox } from './DataGeneBox';
 export { DataRect, DataHLine, DataBackground, DataVLine, DataWindowFill } from './DataGraphics';
 export { RegionBoundaryOverlay } from './RegionBoundaryOverlay';
@@ -15,3 +15,4 @@ export {
   useTrackTransform,
   type TrackTransform,
 } from './TrackRegistry';
+export { useStickyTick } from './useStickyTick';

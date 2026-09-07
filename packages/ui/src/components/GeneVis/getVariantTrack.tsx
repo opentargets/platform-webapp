@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { scaleLinear, axisLeft, select } from "d3";
 import { Box, Collapse, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { DataSprite, DataText, DataVLine, DataBackground } from "../GenTrack";
+import { DataSprite, DataText, DataVLine, DataBackground, getOrCreateRingTexture, useStickyTick } from "../GenTrack";
 import type { TrackLegendProps } from "../GenTrack";
-import { Container } from '@pixi/react';
+import { Container, Sprite, useApp, useTick } from '@pixi/react';
+import type { Sprite as PixiSprite } from 'pixi.js';
 import { TextStyle } from 'pixi.js';
 import YDetails from "./YDetails";
 import { useGenTrackTooltipDispatch } from "ui";
@@ -12,6 +13,9 @@ import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
 
 const VARIANT_TRACK_HEIGHT = 67;
 const H_LINE_COLOR = 0xdddddd;
+const STUCK_HIGHLIGHT_COLOR = 0xe0e0e0;
+const STUCK_HIGHLIGHT_STROKE_PIXELS = 2;
+const STUCK_HIGHLIGHT_RADIUS_PIXELS = 7;
 
 // Calculate dynamic yMax based on posterior probabilities, rounded up to sensible intervals
 function calculateDynamicYMax(data: any): number {
@@ -145,6 +149,59 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
   );
 }
 
+// Renders a highlight ring behind a variant sprite while it's the sticky (clicked) datum.
+// Reads scalesRef.current.stickyDatumId directly (via useStickyTick), NOT via
+// useGenTrackTooltipState() — @pixi/react's <Stage> renders its children through a
+// separate React reconciler root that does not bridge useContext reads made from inside
+// it. See ScalesContext.tsx / useStickyTick.ts / GenTrack/README.md, and DataGeneBox.tsx
+// for the equivalent gene-highlight mechanism this mirrors.
+function VariantStickyHighlight({ scalesRef, x, y, datumId }: { scalesRef: any; x: number; y: number; datumId: string }) {
+  const app = useApp();
+  const spriteRef = useRef<PixiSprite | null>(null);
+  const texture = getOrCreateRingTexture(app, STUCK_HIGHLIGHT_STROKE_PIXELS, STUCK_HIGHLIGHT_RADIUS_PIXELS);
+
+  useStickyTick(
+    scalesRef,
+    scales => scales.stickyDatumId === datumId,
+    isStuck => {
+      const sprite = spriteRef.current;
+      if (sprite) {
+        sprite.alpha = isStuck ? 0.9 : 0;
+        app.render();
+      }
+    },
+  );
+
+  // Keep the highlight aligned with the variant circle through pan/zoom
+  useTick(() => {
+    const sprite = spriteRef.current;
+    const scales = scalesRef.current;
+    if (!sprite || !scales) return;
+    const yScaleInfo = scales.yScales.get("variants");
+    sprite.x = x * scales.xScale + scales.xOffset;
+    sprite.y = yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y;
+  });
+
+  const scales = scalesRef.current;
+  const initialX = scales ? x * scales.xScale + scales.xOffset : 0;
+  const yScaleInfo = scales?.yScales.get("variants");
+  const initialY = yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y;
+
+  return (
+    <Sprite
+      ref={spriteRef}
+      texture={texture}
+      x={initialX}
+      y={initialY}
+      width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+      height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+      anchor={[0.5, 0.5]}
+      tint={STUCK_HIGHLIGHT_COLOR}
+      alpha={0}
+    />
+  );
+}
+
 export function getVariantTrack({ data }: { data: any }) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
 
@@ -191,34 +248,36 @@ export function getVariantTrack({ data }: { data: any }) {
               const consequenceColor = PREDICTED_CONSEQUENCE_LOOKUP[variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.color ?? 0x888888;
               const y = dynamicYMax - posteriorProbability;
               return (
-                <DataSprite
-                  key={variant.id}
-                  shape="circle"
-                  strokePixels={1.5}
-                  scalesRef={scalesRef}
-                  trackId="variants"
-                  x={variant.position}
-                  y={y}
-                  radiusPixels={4}
-                  tint={consequenceColor}
-                  eventMode="static"
-                  alpha={0.9}
-                  pointerover={(e: any) => {
-                    const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
-                    const pointerPageY = nativeEvent?.clientY != null
-                      ? nativeEvent.clientY + window.scrollY
-                      : undefined;
-                    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, genomicX: variant.position };
-                    genTrackTooltipDispatch({ type: "setDatum", value: variant });
-                    genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
-                    genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
-                  }}
-                  pointerout={() => {
-                    genTrackTooltipDispatch({ type: "setDatum", value: null });
-                    genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
-                    genTrackTooltipDispatch({ type: "setHover", value: null });
-                  }}
-                />
+                <Fragment key={variant.id}>
+                  <VariantStickyHighlight scalesRef={scalesRef} x={variant.position} y={y} datumId={variant.id} />
+                  <DataSprite
+                    shape="circle"
+                    strokePixels={1.5}
+                    scalesRef={scalesRef}
+                    trackId="variants"
+                    x={variant.position}
+                    y={y}
+                    radiusPixels={4}
+                    tint={consequenceColor}
+                    eventMode="static"
+                    alpha={0.9}
+                    pointerover={(e: any) => {
+                      const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
+                      const pointerPageY = nativeEvent?.clientY != null
+                        ? nativeEvent.clientY + window.scrollY
+                        : undefined;
+                      const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, genomicX: variant.position };
+                      genTrackTooltipDispatch({ type: "setDatum", value: variant });
+                      genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
+                      genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
+                    }}
+                    pointerout={() => {
+                      genTrackTooltipDispatch({ type: "setDatum", value: null });
+                      genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
+                      genTrackTooltipDispatch({ type: "setHover", value: null });
+                    }}
+                  />
+                </Fragment>
               );
             })}
 
