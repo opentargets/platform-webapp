@@ -85,14 +85,25 @@ export function DataGeneBox({
 
   const handlePointerOver = useCallback((e: any) => {
     if (!isPointerOverCanvas(e)) return;
-    const sprite = spriteRef.current;
-    if (sprite) {
-      sprite.tint = hoverTint;
-      sprite.alpha = 1.0;
-      app.render();
+    // Suppress the hover highlight reveal when a *different* gene/variant is currently
+    // stuck — hovering elsewhere while something is pinned shouldn't visually highlight a
+    // box whose tooltip won't actually show (tooltip content stays frozen on the stuck
+    // datum while sticky). The pointer cursor already signals it's still clickable, and
+    // `pointerover` below still fires so click-to-switch continues to work.
+    const scales = scalesRef.current;
+    const somethingElseStuck = scales != null
+      && (scales.stickyLabelCenter != null || scales.stickyDatumId != null)
+      && scales.stickyLabelCenter !== labelCenter;
+    if (!somethingElseStuck) {
+      const sprite = spriteRef.current;
+      if (sprite) {
+        sprite.tint = hoverTint;
+        sprite.alpha = 1.0;
+        app.render();
+      }
     }
     pointerover?.(e);
-  }, [pointerover, app, hoverTint]);
+  }, [pointerover, app, hoverTint, scalesRef, labelCenter]);
 
   const handlePointerTap = useCallback((e: any) => {
     if (!isPointerOverCanvas(e)) return;
