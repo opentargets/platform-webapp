@@ -166,35 +166,39 @@ function VariantHighlightOverlay({
   highlightStateRef: MutableRefObject<VariantHighlightState>;
 }) {
   const app = useApp();
-  const spriteRef = useRef<PixiSprite | null>(null);
+  const hoverSpriteRef = useRef<PixiSprite | null>(null);
+  const stickySpriteRef = useRef<PixiSprite | null>(null);
   const lastAppearanceRef = useRef<string | null>(null);
   const texture = getOrCreateRingTexture(app, STUCK_HIGHLIGHT_STROKE_PIXELS, STUCK_HIGHLIGHT_RADIUS_PIXELS);
 
   const syncHighlight = useCallback((renderImmediately: boolean) => {
-    const sprite = spriteRef.current;
     const scales = scalesRef.current;
-    if (!sprite || !scales) return;
+    const hoverSprite = hoverSpriteRef.current;
+    const stickySprite = stickySpriteRef.current;
+    if (!scales || !hoverSprite || !stickySprite) return;
 
     const stickyDatumId = scales.stickyDatumId;
     const hoveredVariant = highlightStateRef.current.hoveredVariant;
-    const activeVariant = stickyDatumId
-      ? variantCoordinates.get(stickyDatumId)
-      : hoveredVariant;
-    const appearance = activeVariant
-      ? `${stickyDatumId ? "sticky" : "hover"}:${stickyDatumId ?? activeVariant.id}`
-      : null;
+    const stickyVariant = stickyDatumId ? variantCoordinates.get(stickyDatumId) : null;
+    const hoverVariant = hoveredVariant?.id === stickyDatumId ? null : hoveredVariant;
+    const appearance = `sticky:${stickyDatumId ?? ""}|hover:${hoverVariant?.id ?? ""}`;
 
-    if (activeVariant) {
+    const updateRing = (sprite: PixiSprite, variant: { x: number; y: number } | null, tint: number) => {
+      if (!variant) {
+        sprite.alpha = 0;
+        return;
+      }
       const yScaleInfo = scales.yScales.get("variants");
-      sprite.x = activeVariant.x * scales.xScale + scales.xOffset;
+      sprite.x = variant.x * scales.xScale + scales.xOffset;
       sprite.y = yScaleInfo
-        ? activeVariant.y * yScaleInfo.yScale + yScaleInfo.yOffset
-        : activeVariant.y;
-      sprite.tint = stickyDatumId ? STUCK_HIGHLIGHT_COLOR : HOVER_HIGHLIGHT_COLOR;
+        ? variant.y * yScaleInfo.yScale + yScaleInfo.yOffset
+        : variant.y;
+      sprite.tint = tint;
       sprite.alpha = 0.9;
-    } else {
-      sprite.alpha = 0;
-    }
+    };
+
+    updateRing(hoverSprite, hoverVariant, HOVER_HIGHLIGHT_COLOR);
+    updateRing(stickySprite, stickyVariant ?? null, STUCK_HIGHLIGHT_COLOR);
 
     if (renderImmediately || appearance !== lastAppearanceRef.current) {
       app.render();
@@ -212,15 +216,26 @@ function VariantHighlightOverlay({
   useTick(() => syncHighlight(false));
 
   return (
-    <Sprite
-      ref={spriteRef}
-      texture={texture}
-      width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
-      height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
-      anchor={[0.5, 0.5]}
-      tint={HOVER_HIGHLIGHT_COLOR}
-      alpha={0}
-    />
+    <>
+      <Sprite
+        ref={hoverSpriteRef}
+        texture={texture}
+        width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+        height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+        anchor={[0.5, 0.5]}
+        tint={HOVER_HIGHLIGHT_COLOR}
+        alpha={0}
+      />
+      <Sprite
+        ref={stickySpriteRef}
+        texture={texture}
+        width={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+        height={STUCK_HIGHLIGHT_RADIUS_PIXELS * 2}
+        anchor={[0.5, 0.5]}
+        tint={STUCK_HIGHLIGHT_COLOR}
+        alpha={0}
+      />
+    </>
   );
 }
 
@@ -242,16 +257,8 @@ function VariantMarker({
   highlightStateRef: MutableRefObject<VariantHighlightState>;
 }) {
   const handlePointerOver = useCallback((e: any) => {
-    // Match gene boxes: when another datum is pinned, don't reveal a hover highlight
-    // that cannot become the active tooltip until the user clicks it.
-    const scales = scalesRef.current;
-    const somethingElseStuck = scales != null
-      && (scales.stickyLabelCenter != null || scales.stickyDatumId != null)
-      && scales.stickyDatumId !== variant.id;
-    if (!somethingElseStuck) {
-      highlightStateRef.current.hoveredVariant = { id: variant.id, x, y };
-      highlightStateRef.current.refresh?.();
-    }
+    highlightStateRef.current.hoveredVariant = { id: variant.id, x, y };
+    highlightStateRef.current.refresh?.();
 
     const nativeEvent = e.nativeEvent ?? e.data?.originalEvent;
     const pointerPageY = nativeEvent?.clientY != null
@@ -261,7 +268,7 @@ function VariantMarker({
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
     genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
-  }, [genTrackTooltipDispatch, highlightStateRef, scalesRef, variant, x, y]);
+  }, [genTrackTooltipDispatch, highlightStateRef, variant, x, y]);
 
   const handlePointerOut = useCallback(() => {
     if (highlightStateRef.current.hoveredVariant?.id === variant.id) {
