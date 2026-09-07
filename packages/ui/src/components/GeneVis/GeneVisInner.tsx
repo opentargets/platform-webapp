@@ -73,7 +73,7 @@ function GeneVisInner(props: {
       if (biotype === 'protein_coding') {
         return {
           pixelGapCenterToCenter: 95, // Adjusted back from 90 - less tight
-          detailRowHeight: 26, // Adjusted back from 24 - less tight
+          detailRowHeight: 30,
         };
       } else {
         return {
@@ -206,7 +206,8 @@ function GeneVisInner(props: {
       // Compute packing for zoomable track
       const zoomableGeneToRow = packIntervals(targets, {
         bpPerPixel,
-        pixelGap: 3,
+        // Reserve both 6px gene-box side paddings so adjacent boxes cannot overlap.
+        pixelGap: 12,
         pixelGapCenterToCenter: zoomableConfig.pixelGapCenterToCenter,
         priorityIds: zoomablePriorityIds,
         labeledIds: Array.from(zoomableLabeledIds),
@@ -225,10 +226,11 @@ function GeneVisInner(props: {
       const zoomableNRows = Math.max(...Object.values(zoomableGeneToRow).map((v: unknown) => Number(v))) + 1;
       const zoomableRowHeightMap: number[] = [];
       const zoomableRowYOffsets: number[] = [];
-      let zoomableCurrentYOffset = 0;
+      const zoomableTrackVerticalPadding = 2;
+      let zoomableCurrentYOffset = zoomableTrackVerticalPadding;
       const zoomableTallHeight = zoomableConfig.detailRowHeight;
       const zoomableShortHeight = Math.max(16, zoomableTallHeight / 2 + 2);
-      const zoomableRowGap = 1;
+      const zoomableRowGap = 2;
 
       for (let r = 0; r < zoomableNRows; r++) {
         const rowHasLabels = zoomableRowsWithLabels.has(r);
@@ -237,7 +239,7 @@ function GeneVisInner(props: {
         zoomableRowYOffsets[r] = zoomableCurrentYOffset;
         zoomableCurrentYOffset += rowHeight + (r < zoomableNRows - 1 ? zoomableRowGap : 0);
       }
-      const zoomableTrackHeight = zoomableCurrentYOffset;
+      const zoomableTrackHeight = zoomableCurrentYOffset + zoomableTrackVerticalPadding;
       const zoomableFinalTrackHeight = Math.max(zoomableTrackHeight, 20);
       const zoomablePadding = biotype === "protein_coding" ? 10 : Math.max(6, (20 - zoomableTrackHeight) / 2);
 

@@ -27,6 +27,7 @@ interface DataGeneBoxProps {
   intronEnd: number;        // gene end in genomic coords
   labelWidthPixels: number; // label width in screen pixels (constant)
   labelCenter: number;      // label center x in genomic coords
+  getLabelScreenX?: ({ scales }: { scales: ScalesRef }) => number;
   y: number;                // box top y in data coords
   height: number;           // box height in data coords
   hoverBoxColor?: number;    // color for the hover highlight box
@@ -36,7 +37,7 @@ interface DataGeneBoxProps {
   pointertap?: (e: any) => void;
 }
 
-const PADDING_PIXELS = 4; // constant screen-space padding around gene+label
+const PADDING_PIXELS = 6; // constant screen-space padding around gene+label
 const STICKY_BORDER_TINT = 0x424242;
 const STICKY_BORDER_PIXELS = 1;
 
@@ -47,6 +48,7 @@ export function DataGeneBox({
   intronEnd,
   labelWidthPixels,
   labelCenter,
+  getLabelScreenX,
   y,
   height,
   hoverBoxColor,
@@ -138,24 +140,17 @@ export function DataGeneBox({
     const xScale = scales.xScale;
     const yScaleInfo = trackId ? scales.yScales.get(trackId) : undefined;
 
-    // Convert label width from pixels to genomic coords using CURRENT xScale
-    const labelWidthGenomic = labelWidthPixels / xScale;
-    const paddingGenomic = PADDING_PIXELS / xScale;
-
-    // Compute box bounds in genomic coords (dynamic based on zoom)
-    const labelLeft = labelCenter - labelWidthGenomic / 2;
-    const labelRight = labelCenter + labelWidthGenomic / 2;
-
-    const boxX = Math.min(intronStart, labelLeft) - paddingGenomic;
-    const boxRight = Math.max(intronEnd, labelRight) + paddingGenomic;
-    const boxWidth = boxRight - boxX;
-
-    // Convert to screen coords
-    const screenX = boxX * xScale + scales.xOffset;
+    // The label may move to the centre of the visible intron span. Compute the
+    // box in screen space so its measured footprint follows that same position.
+    const labelScreenX = getLabelScreenX?.({ scales }) ?? labelCenter * xScale + scales.xOffset;
+    const intronScreenStart = intronStart * xScale + scales.xOffset;
+    const intronScreenEnd = intronEnd * xScale + scales.xOffset;
+    const screenX = Math.min(intronScreenStart, labelScreenX - labelWidthPixels / 2) - PADDING_PIXELS;
+    const screenRight = Math.max(intronScreenEnd, labelScreenX + labelWidthPixels / 2) + PADDING_PIXELS;
+    const screenWidth = screenRight - screenX;
     const screenY = yScaleInfo
       ? y * yScaleInfo.yScale + yScaleInfo.yOffset
       : y;
-    const screenWidth = boxWidth * xScale;
     const screenHeight = height * (yScaleInfo?.yScale ?? 1);
 
     // Update the fill and fixed-pixel border position and size (alpha is event-managed).

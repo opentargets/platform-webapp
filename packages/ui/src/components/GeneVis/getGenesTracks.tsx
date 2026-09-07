@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { Container } from '@pixi/react';
-import { TextStyle } from "pixi.js";
+import { TextMetrics, TextStyle } from "pixi.js";
 import { Box, Typography } from "@mui/material";
 import { DataSprite, DataText, DataBackground, DataGeneBox, DataVLine } from "../GenTrack";
 import type { TrackLegendProps } from "../GenTrack";
@@ -16,6 +16,15 @@ const NON_L2G_HOVER_BOX_COLOR = 0xe0e0e0;
 
 const DEFAULT_ROW_HEIGHT = 28;
 const DEFAULT_EXON_HEIGHT = 10;
+const GENE_BOX_VERTICAL_PADDING = 4;
+const L2G_LABEL_HORIZONTAL_PADDING = 6;
+const geneLabelStyle = new TextStyle({
+  align: "center",
+  fill: "#000",
+  fontSize: 10.5,
+  fontWeight: "100",
+  wordWrap: false,
+});
 
 function GenesLegend({ data, isInner }: TrackLegendProps) {
   if (!isInner) return null;
@@ -94,7 +103,9 @@ export function getGenesTracks({
   const exonHeight = DEFAULT_EXON_HEIGHT; // 10px for all gene types
   // Labels only shown for L2G genes (protein_coding only)
   const hasAnyLabels = labeledIds.size > 0;
-  const labelHeight = hasAnyLabels ? baseRowHeight - exonHeight : 0;
+  // Reserve the box's bottom padding inside the row so labelled boxes do not
+  // extend into the following row.
+  const labelHeight = hasAnyLabels ? baseRowHeight - exonHeight - GENE_BOX_VERTICAL_PADDING : 0;
 
   // Y-position functions: use variable offsets if provided, otherwise calculate from row index
   const yTop = (rowIndex: number) => {
@@ -179,10 +190,10 @@ export function getGenesTracks({
               ? `${leftArrow}${target.approvedSymbol || target.id}: ${score.toFixed(3)}${rightArrow}`
               : `${leftArrow}${target.approvedSymbol || target.id}${rightArrow}`;
 
-            // Estimate label width in pixels (constant, doesn't change with zoom)
-            const LABEL_FONT_SIZE = 10.5;
-            const CHAR_WIDTH_FACTOR = 0.6;
-            const labelWidthPixels = showGeneLabel ? labelText.length * LABEL_FONT_SIZE * CHAR_WIDTH_FACTOR : 0;
+            // Match the actual Pixi text footprint, including the L2G label background.
+            const labelWidthPixels = showGeneLabel
+              ? TextMetrics.measureText(labelText, geneLabelStyle).width + (isL2G ? L2G_LABEL_HORIZONTAL_PADDING : 0)
+              : 0;
             const labelCenter = (intronStart + intronEnd) / 2;
 
             // Box Y position: for labeled genes, start at top; for unlabeled, center with gene
@@ -191,8 +202,8 @@ export function getGenesTracks({
               ? yTop(rowIndex)
               : ycenter(rowIndex) - exonHeight / 2 - 2; // Center with gene, small padding
             const boxHeight = rowHasLabels
-              ? labelHeight + exonHeight + 4  // Include label + gene + padding
-              : exonHeight + 4; // Just gene + padding
+              ? labelHeight + exonHeight + GENE_BOX_VERTICAL_PADDING // Include label + gene + padding
+              : exonHeight + GENE_BOX_VERTICAL_PADDING; // Just gene + padding
 
             return (
               <Fragment key={target.id}>
@@ -204,6 +215,11 @@ export function getGenesTracks({
                   intronEnd={intronEnd}
                   labelWidthPixels={labelWidthPixels}
                   labelCenter={labelCenter}
+                  getLabelScreenX={({ scales }) => getVisibleGeneLabelScreenX({
+                    intronStart,
+                    intronEnd,
+                    scales,
+                  })}
                   y={boxY}
                   height={boxHeight}
                   hoverBoxColor={hoverBoxColor}
@@ -264,13 +280,7 @@ export function getGenesTracks({
                     y={yTop(rowIndex) + labelHeight}
                     text={labelText}
                     anchor={[0.5, 1]}
-                    style={new TextStyle({
-                      align: 'center',
-                      fill: "#000",
-                      fontSize: 10.5,
-                      fontWeight: '100',
-                      wordWrap: false,
-                    })}
+                    style={geneLabelStyle}
                     getScreenX={({ scales }) => getVisibleGeneLabelScreenX({
                       intronStart,
                       intronEnd,
