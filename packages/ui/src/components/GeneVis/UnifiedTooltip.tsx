@@ -1,4 +1,5 @@
 import { Box, Skeleton, Divider, Typography, Chip } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLazyQuery } from "@apollo/client";
 import { useEffect } from "react";
@@ -17,6 +18,14 @@ import TooltipRow from "../TooltipRow";
 import ScientificNotation from "../ScientificNotation";
 
 export const TOOLTIP_WIDTH = 400;
+
+const TooltipLink = styled(Link)({
+  "&:hover": {
+    textDecoration: "none",
+    textDecorationColor: "transparent",
+    WebkitTextDecorationColor: "transparent",
+  },
+});
 
 function UnifiedTooltip() {
   const { datum } = (useGenTrackTooltipState() ?? {}) as { datum?: any };
@@ -83,14 +92,21 @@ function UnifiedTooltip() {
   return (
     <Box sx={{
       width: tooltipWidth,
-      p: 1,
+      // p: 1,
       backgroundColor: "#fff",
       border: "1px solid #ccc",
       borderRadius: 1,
       boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
     }}>
-      <Link to={`/${entityType}/${data.id}`}>
-        <Box sx={{ display: "block", cursor: "pointer" }}>
+      <TooltipLink to={`/${entityType}/${data.id}`}>
+        <Box
+          sx={{
+            p: 1,
+            display: "block",
+            cursor: "pointer",
+            "&:hover": { backgroundColor: "#e1eff9" },
+          }}
+        >
           <Box
             sx={{
               p: 1,
@@ -131,122 +147,126 @@ function UnifiedTooltip() {
             </Box>
           )}
         </Box>
-      </Link>
+      </TooltipLink>
       {hasL2G && l2GPredictions && (
-        <Box sx={{ mt: 1 }}>
+        <>
           <Divider />
-          <Box sx={{ pl: 0, pt: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                pl: 1, 
-                color: theme => theme.palette.grey[900],
-                fontSize: 13.1,
-                fontWeight: 600,
-              }}
-            >
-              L2G score: {geneL2G.score.toFixed(3) ?? naLabel}
-            </Typography>
-              <HeatmapTable
-                fixedGene={datum?.id}
-                loading={false}
-                data={l2GPredictions}
-                query={L2G_QUERY.loc?.source?.body || L2G_QUERY}
-                variables={{ studyLocusId }}
-                disabledFilter
-                disabledExport
-                disabledLegend
-                singleRowMode
-              />
-          </Box>
-        </Box>
-      )}
-      {entityType === "variant" && (
-        <Box sx={{ mt: 1 }}>
-          <Divider />
-          <Box sx={{ pl: 1, pt: 1 }}>
-            <Typography
-              variant="body2"
-              component="div"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                color: theme => theme.palette.grey[900],
-                fontSize: 13.1,
-                fontWeight: 600,
-              }}
-            >
-              Credible set statistics for{" "}
-              <DisplayVariantId
-                variantId={datum?.id}
-                referenceAllele={datum?.referenceAllele}
-                alternateAllele={datum?.alternateAllele}
-                expand={false}
-              />
-              {isLeadVariant && (
-                <Chip
-                  label="lead"
-                  variant="outlined"
-                  size="small"
-                  sx={{ fontWeight: 400 }}
+          <Box sx={{ p: 1 }}>
+            <Box sx={{ pl: 0, pt: 0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  pl: 1, 
+                  color: theme => theme.palette.grey[900],
+                  fontSize: 13.1,
+                  fontWeight: 600,
+                }}
+              >
+                L2G score: {geneL2G.score.toFixed(3) ?? naLabel}
+              </Typography>
+                <HeatmapTable
+                  fixedGene={datum?.id}
+                  loading={false}
+                  data={l2GPredictions}
+                  query={L2G_QUERY.loc?.source?.body || L2G_QUERY}
+                  variables={{ studyLocusId }}
+                  disabledFilter
+                  disabledExport
+                  disabledLegend
+                  singleRowMode
                 />
-              )}
-            </Typography>
-            <Box sx={{ pl: 0 }}>
-              <TooltipTable>
-                <TooltipRow label="P-value">
-                  {typeof variantLocus?.pValueMantissa === "number" &&
-                  typeof variantLocus?.pValueExponent === "number" ? (
-                    <ScientificNotation
-                      number={[variantLocus.pValueMantissa, variantLocus.pValueExponent]}
-                      dp={2}
-                    />
-                  ) : (
-                    naLabel
-                  )}
-                </TooltipRow>
-                <TooltipRow label="Beta">
-                  {typeof variantLocus?.beta === "number"
-                    ? variantLocus.beta.toPrecision(3)
-                    : naLabel}
-                </TooltipRow>
-                <TooltipRow label="Standard error">
-                  {typeof variantLocus?.standardError === "number"
-                    ? variantLocus.standardError.toFixed(3)
-                    : naLabel}
-                </TooltipRow>
-                <TooltipRow label="LD (r²)">
-                  {typeof variantLocus?.r2Overall === "number"
-                    ? variantLocus.r2Overall.toFixed(3)
-                    : naLabel}
-                </TooltipRow>
-                <TooltipRow label="Posterior probability">
-                  {typeof variantLocus?.posteriorProbability === "number"
-                    ? variantLocus.posteriorProbability.toPrecision(3)
-                    : naLabel}
-                </TooltipRow>
-                <TooltipRow label="log(BF)">
-                  {typeof variantLocus?.logBF === "number"
-                    ? variantLocus.logBF.toPrecision(3)
-                    : naLabel}
-                </TooltipRow>
-                <TooltipRow label="Predicted consequence">
-                  {data?.mostSevereConsequence ? (
-                    <Link
-                      external
-                      to={identifiersOrgLink("SO", data.mostSevereConsequence.id.slice(3))}
-                    >
-                      {data.mostSevereConsequence.label.replace(/_/g, " ")}
-                    </Link>
-                  ) : (
-                    naLabel
-                  )}
-                </TooltipRow>
-              </TooltipTable>
             </Box>
           </Box>
-        </Box>
+        </>
+      )}
+      {entityType === "variant" && (
+        <>
+          <Divider />
+          <Box sx={{ pt: 1.5, pb: 0.5, pl: 1.5, pr: 1 }}>
+            {/* <Box sx={{ p: 1}}> */}
+              <Typography
+                variant="body2"
+                component="div"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  color: theme => theme.palette.grey[900],
+                  fontSize: 13.1,
+                  fontWeight: 600,
+                }}
+              >
+                Credible set statistics for{" "}
+                <DisplayVariantId
+                  variantId={datum?.id}
+                  referenceAllele={datum?.referenceAllele}
+                  alternateAllele={datum?.alternateAllele}
+                  expand={false}
+                />
+                {isLeadVariant && (
+                  <Chip
+                    label="lead"
+                    variant="outlined"
+                    size="small"
+                    sx={{ fontWeight: 400 }}
+                  />
+                )}
+              </Typography>
+              <Box sx={{ pl: 0 }}>
+                <TooltipTable>
+                  <TooltipRow label="P-value">
+                    {typeof variantLocus?.pValueMantissa === "number" &&
+                    typeof variantLocus?.pValueExponent === "number" ? (
+                      <ScientificNotation
+                        number={[variantLocus.pValueMantissa, variantLocus.pValueExponent]}
+                        dp={2}
+                      />
+                    ) : (
+                      naLabel
+                    )}
+                  </TooltipRow>
+                  <TooltipRow label="Beta">
+                    {typeof variantLocus?.beta === "number"
+                      ? variantLocus.beta.toPrecision(3)
+                      : naLabel}
+                  </TooltipRow>
+                  <TooltipRow label="Standard error">
+                    {typeof variantLocus?.standardError === "number"
+                      ? variantLocus.standardError.toFixed(3)
+                      : naLabel}
+                  </TooltipRow>
+                  <TooltipRow label="LD (r²)">
+                    {typeof variantLocus?.r2Overall === "number"
+                      ? variantLocus.r2Overall.toFixed(3)
+                      : naLabel}
+                  </TooltipRow>
+                  <TooltipRow label="Posterior probability">
+                    {typeof variantLocus?.posteriorProbability === "number"
+                      ? variantLocus.posteriorProbability.toPrecision(3)
+                      : naLabel}
+                  </TooltipRow>
+                  <TooltipRow label="log(BF)">
+                    {typeof variantLocus?.logBF === "number"
+                      ? variantLocus.logBF.toPrecision(3)
+                      : naLabel}
+                  </TooltipRow>
+                  <TooltipRow label="Predicted consequence">
+                    {data?.mostSevereConsequence ? (
+                      <Link
+                        external
+                        to={identifiersOrgLink("SO", data.mostSevereConsequence.id.slice(3))}
+                      >
+                        {data.mostSevereConsequence.label.replace(/_/g, " ")}
+                      </Link>
+                    ) : (
+                      naLabel
+                    )}
+                  </TooltipRow>
+                </TooltipTable>
+              </Box>
+            </Box>
+          {/* </Box> */}
+        </>
       )}
     </Box>
   );
