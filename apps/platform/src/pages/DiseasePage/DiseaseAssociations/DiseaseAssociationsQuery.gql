@@ -3,9 +3,7 @@ query DiseaseAssociationsQuery(
   $index: Int!
   $size: Int!
   $sortBy: String!
-  $enableIndirect: Boolean!
-  $isDirect: Boolean!
-  $datasources: [DatasourceSettingsInput!]
+  $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!
   $rowsFilter: [String!]
   $facetFilters: [String!]
   $entitySearch: String!
@@ -15,9 +13,8 @@ query DiseaseAssociationsQuery(
     name
     associatedTargets(
       page: { index: $index, size: $size }
-      orderByScore: $sortBy
-      enableIndirect: $enableIndirect
-      datasources: $datasources
+      sort: { key: $sortBy, direction: DESCENDING }
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -29,18 +26,6 @@ query DiseaseAssociationsQuery(
           id
           approvedSymbol
           approvedName
-          associationTimeSeries(efoId: $id, aggregationTypes: [overall], isDirect: $isDirect, page: { index: 0, size: 500 }) {
-            rows {
-              novelty
-              year
-            }
-          }
-          prioritisation {
-            items {
-              key
-              value
-            }
-          }
         }
         score
         datasourceScores {

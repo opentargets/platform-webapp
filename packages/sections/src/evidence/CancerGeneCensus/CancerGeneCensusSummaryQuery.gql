@@ -1,8 +1,7 @@
 fragment CancerGeneCensusSummary on Disease {
   cancerGeneCensusSummary: evidences(
     ensemblIds: [$ensgId]
-    enableIndirect: true
-    datasourceIds: ["cancer_gene_census"]
+    datasourceIds: [cancer_gene_census]
     size: 1
   ) {
     count

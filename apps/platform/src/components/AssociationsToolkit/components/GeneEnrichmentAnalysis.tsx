@@ -52,7 +52,7 @@ function buildAssociationsState(params: {
 /** Extract entity name from the query results to avoid refetching */
 function getEntityName(entity: ENTITY, data: any[]): string {
   if (!data || data.length === 0) return "";
-  
+
   if (entity === ENTITY.DISEASE) {
     return data[0].diseaseName || "";
   }

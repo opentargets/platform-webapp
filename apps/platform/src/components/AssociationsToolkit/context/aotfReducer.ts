@@ -59,7 +59,7 @@ export function aotfReducer(state: QueryState = initialState, action: Action): Q
       return { ...state, includeMeasurements: action.includeMeasurements };
     }
     case ActionType.SET_INITIAL_STATE: {
-      return { ...initialState };
+      return createInitialState({ entity: action.entity });
     }
     default: {
       throw Error("Unknown action: " + action);

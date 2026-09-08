@@ -3,9 +3,8 @@ query CancerBiomarkersQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     cancerBiomarkersSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
       datasourceIds: ["cancer_biomarkers"]
-      size: $size
+      page: {index: 0 size: $size}
     ) {
       count
       rows {

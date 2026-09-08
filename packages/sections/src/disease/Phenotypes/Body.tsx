@@ -77,21 +77,21 @@ const columns = [
   {
     id: "frequency",
     label: "Frequency",
-    renderCell: ({ evidence }) => {
-      if (evidence.frequencyHPO && evidence.frequencyHPO.id && evidence.frequencyHPO.name)
+    renderCell: ({ evidence, phenotypeHPO }) => {
+      if (phenotypeHPO && phenotypeHPO.id && phenotypeHPO.name)
         return (
           <Link
             external
-            to={`https://identifiers.org/ols/${evidence.frequencyHPO.id.replace("_", ":")}`}
+            to={`https://identifiers.org/ols/${phenotypeHPO.id.replace("_", ":")}`}
           >
-            {evidence.frequencyHPO.name}
+            {phenotypeHPO.name}
           </Link>
         );
-      if (evidence.frequencyHPO && evidence.frequencyHPO.name) return evidence.frequencyHPO.name;
+      if (phenotypeHPO && phenotypeHPO.name) return evidence.frequencyHPO.name;
       return naLabel;
     },
-    filterValue: row => row.evidence.frequencyHPO?.name || naLabel,
-    exportValue: row => row.evidence.frequencyHPO?.name || naLabel,
+    filterValue: row => row.phenotypeHPO?.name || naLabel,
+    exportValue: row => row.phenotypeHPO?.name || naLabel,
   },
   {
     id: "onset",

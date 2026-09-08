@@ -164,7 +164,7 @@ const DeployedVersion = () => {
   return (
     <Typography color="inherit" variant="caption">
       <b>UI: </b>{config?.gitVersion}<br/>
-      <b>API: </b>{apiVersion.x}.{apiVersion.y}.{apiVersion.z}
+      <b>API: </b>{apiVersion.year}.{apiVersion.month}.{apiVersion.revision}
     </Typography>
   );
 };

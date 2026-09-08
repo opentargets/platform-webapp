@@ -217,7 +217,7 @@ export const getAssociationsData = (
   data: EntityData | null
 ): FormattedAssociationData[] => {
   if (!data) return [];
-  const withPrioritisation = fixedEntity === ENTITIES.DISEASE;
+  const withPrioritisation = false;
   const dataRows =
     fixedEntity === ENTITIES.DISEASE
       ? diseaseAssociationsTargetSelector(data)
@@ -237,7 +237,7 @@ export const getAssociationsData = (
       diseaseName,
       dataSources,
       ...(!withPrioritisation && { disease: row.disease }),
-      ...(withPrioritisation && { target: row.target }),
+      ...(!withPrioritisation && { target: row.target }),
       ...(withPrioritisation && getPrioritisationData(row)),
     };
   });

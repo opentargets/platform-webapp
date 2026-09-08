@@ -1,4 +1,4 @@
-import { Action, ActionType } from "../types";
+import { Action, ActionType, ENTITY } from "../types";
 
 export function setDataSourceControl(
   id: string,
@@ -32,9 +32,10 @@ export function aggregationClick(aggregation: string): Action {
   };
 }
 
-export function resetToInitialState(): Action {
+export function resetToInitialState(entity: ENTITY): Action {
   return {
     type: ActionType.SET_INITIAL_STATE,
+    entity,
   };
 }
 

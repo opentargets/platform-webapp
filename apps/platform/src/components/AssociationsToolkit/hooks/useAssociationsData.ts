@@ -81,11 +81,12 @@ function useAssociationsData({
           sortBy,
           enableIndirect,
           isDirect: !enableIndirect,
-          datasources: datasources.map(el => ({
+          datasourcePolicyOverrides: datasources.map(el => ({
             id: el.id,
-            weight: el.weight,
-            propagate: el.propagate,
-            required: el.required,
+            policy: {
+              weight: el.weight,
+              required: el.required,
+            },
           })),
           rowsFilter,
           facetFilters,

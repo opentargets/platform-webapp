@@ -3,9 +3,8 @@ query CancerGeneCensusQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     cancerGeneCensusSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["cancer_gene_census"]
-      size: $size
+      datasourceIds: [cancer_gene_census]
+      page: {index: 0 size: $size}
     ) {
       count
       rows {

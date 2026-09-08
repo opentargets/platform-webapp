@@ -63,6 +63,6 @@ export type Action =
   | { type: ActionType.DATA_SOURCE_CONTROL; payload: columnAdvanceControl }
   | { type: ActionType.RESET_DATA_SOURCE_CONTROL }
   | { type: ActionType.HANDLE_AGGREGATION_CLICK; aggregation: string }
-  | { type: ActionType.SET_INITIAL_STATE }
+  | { type: ActionType.SET_INITIAL_STATE; entity: ENTITY }
   | { type: ActionType.SET_INCLUDE_MEASUREMENTS; includeMeasurements: boolean }
   | { type: ActionType.SET_ENABLE_INDIRECT; enableIndirect: boolean };

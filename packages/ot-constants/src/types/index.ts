@@ -24,11 +24,11 @@ export type ApiVersion = {
   /** Optional version suffix (e.g., alpha, beta, rc) */
   suffix?: Maybe<Scalars['String']['output']>;
   /** Major version number */
-  x: Scalars['String']['output'];
+  year: Scalars['String']['output'];
   /** Minor version number */
-  y: Scalars['String']['output'];
+  month: Scalars['String']['output'];
   /** Patch version number */
-  z: Scalars['String']['output'];
+  revision: Scalars['String']['output'];
 };
 
 /** Significant adverse events associated with drugs sharing the same pharmacological target. This dataset is based on the FDA's Adverse Event Reporting System (FAERS) reporting post-marketing surveillance data and it's filtered to include only reports submitted by health professionals. The significance of a given target-ADR is estimated using a Likelihood Ratio Test (LRT) using all reports associated with the drugs with the same target. */
@@ -71,56 +71,44 @@ export type AlleleFrequency = {
   populationName?: Maybe<Scalars['String']['output']>;
 };
 
-/** Associated disease entity */
-export type AssociatedDisease = {
-  __typename?: 'AssociatedDisease';
-  /** Association scores computed for every datasource (e.g., IMPC, ChEMBL, Gene2Phenotype) */
-  datasourceScores: Array<ScoredComponent>;
-  /** Association scores computed for every datatype (e.g., Genetic associations, Somatic, Literature) */
-  datatypeScores: Array<ScoredComponent>;
-  /** Associated disease entity */
-  disease: Disease;
-  /** A measure of how novel the target–disease association is, calculated based on the accumulation of direct evidence over time */
-  novelty?: Maybe<Scalars['Float']['output']>;
-  /** Overall association score aggregated across all evidence types. A higher score indicates a stronger association between the target and the disease. Scores are normalized to a range of 0-1. */
+export type PagedTargetAssociation = {
+  __typename?: 'PagedTargetAssociation';
+  total: Scalars['Int']['output'];
+  items: Array<TargetAssociation>;
+};
+
+export type ScoredComponent = {
+  __typename?: 'ScoredComponent';
+  id: Scalars['String']['output'];
   score: Scalars['Float']['output'];
 };
 
-/** Target-disease associations computed on-the-fly using configurable datasource weights and evidence filters. Returns associations with aggregated scores and evidence counts supporting the target-disease relationship. */
-export type AssociatedDiseases = {
-  __typename?: 'AssociatedDiseases';
-  /** Total number of target-disease associations matching the query filters */
-  count: Scalars['Long']['output'];
-  /** List of datasource settings with weights and propagation rules used to compute the associations */
-  datasources: Array<DatasourceSettings>;
-  /** List of associated diseases with their association scores and evidence breakdowns */
-  rows: Array<AssociatedDisease>;
-};
-
-/** Associated target entity */
-export type AssociatedTarget = {
-  __typename?: 'AssociatedTarget';
-  /** Association scores computed for every datasource (e.g., IMPC, ChEMBL, Gene2Phenotype) */
-  datasourceScores: Array<ScoredComponent>;
-  /** Association scores computed for every datatype (e.g., Genetic associations, Somatic, Literature) */
-  datatypeScores: Array<ScoredComponent>;
-  /** A measure of how novel the target–disease association is, calculated based on the accumulation of evidence over time */
-  novelty?: Maybe<Scalars['Float']['output']>;
-  /** Overall association score aggregated across all evidence types. A higher score indicates a stronger association between the target and the disease. Scores are normalized to a range of 0-1. */
+export type TargetAssociation = {
+  __typename?: 'TargetAssociation';
   score: Scalars['Float']['output'];
-  /** Associated target entity */
-  target: Target;
+  datatypeScores: Array<ScoredComponent>;
+  datasourceScores: Array<ScoredComponent>;
+  novelty?: Maybe<Scalars['Float']['output']>;
 };
 
-/** Target-disease associations computed on-the-fly using configurable datasource weights and evidence filters. Returns associations with aggregated scores and evidence counts supporting the target-disease relationship. */
-export type AssociatedTargets = {
-  __typename?: 'AssociatedTargets';
-  /** Total number of target-disease associations matching the query filters */
-  count: Scalars['Long']['output'];
-  /** List of datasource settings with weights and propagation rules used to compute the associations */
-  datasources: Array<DatasourceSettings>;
-  /** List of associated targets with their association scores and evidence breakdowns */
-  rows: Array<AssociatedTarget>;
+export type TargetAssociationPage = {
+  __typename?: 'TargetAssociationPage';
+  total: Scalars['Long']['output'];
+  items: Array<TargetAssociation>;
+};
+
+export type DiseaseAssociation = {
+  __typename?: 'DiseaseAssociation';
+  score: Scalars['Float']['output'];
+  datatypeScores: Array<ScoredComponent>;
+  datasourceScores: Array<ScoredComponent>;
+  novelty?: Maybe<Scalars['Float']['output']>;
+};
+
+export type DiseaseAssociationPage = {
+  __typename?: 'DiseaseAssociationPage';
+  total: Scalars['Long']['output'];
+  items: Array<DiseaseAssociation>;
 };
 
 /** Association time series entry for a target-disease association. */
@@ -592,40 +580,42 @@ export type DataVersion = {
   year: Scalars['String']['output'];
 };
 
-/** Data source information for protein coding coordinates */
-export type Datasource = {
-  __typename?: 'Datasource';
-  /** Count of evidence from this data source */
-  datasourceCount: Scalars['Int']['output'];
-  /** Identifier of the data source */
-  datasourceId: Scalars['String']['output'];
-  /** Human-readable name of the data source */
-  datasourceNiceName: Scalars['String']['output'];
-};
+export enum Datasource {
+  CancerBiomarkers = 'cancer_biomarkers',
+  CancerGeneCensus = 'cancer_gene_census',
+  Clingen = 'clingen',
+  ClinicalPrecedence = 'clinical_precedence',
+  Crispr = 'crispr',
+  CrisprScreen = 'crispr_screen',
+  Encore = 'encore',
+  Eva = 'eva',
+  EvaSomatic = 'eva_somatic',
+  Europepmc = 'europepmc',
+  ExpressionAtlas = 'expression_atlas',
+  Gene2Phenotype = 'gene2phenotype',
+  GeneBurden = 'gene_burden',
+  GenomicsEngland = 'genomics_england',
+  GwasCredibleSets = 'gwas_credible_sets',
+  Impc = 'impc',
+  Intogen = 'intogen',
+  Orphanet = 'orphanet',
+  OtCrispr = 'ot_crispr',
+  OtCrisprValidation = 'ot_crispr_validation',
+  Reactome = 'reactome',
+  UniprotLiterature = 'uniprot_literature',
+  UniprotVariants = 'uniprot_variants',
+}
 
-/** Datasource settings configuration used to compute target-disease associations. Allows customization of weights, ontology propagation, and required evidence for each datasource when calculating association scores. Weights must be between 0 and 1, and can control ontology propagation and evidence requirements. */
-export type DatasourceSettings = {
-  __typename?: 'DatasourceSettings';
-  /** Datasource identifier */
-  id: Scalars['String']['output'];
-  /** Whether evidence from this datasource is propagated through the ontology */
-  propagate: Scalars['Boolean']['output'];
-  /** Whether evidence from this datasource is required to compute association scores */
-  required: Scalars['Boolean']['output'];
-  /** Weight assigned to the datasource when computing association scores */
-  weight: Scalars['Float']['output'];
-};
-
-/** Input type for datasource settings configuration. Allows customization of how individual datasources contribute to target-disease association score calculations. Weights must be between 0 and 1, and can control ontology propagation and evidence requirements. */
-export type DatasourceSettingsInput = {
-  /** Datasource identifier */
-  id: Scalars['String']['input'];
-  /** Whether evidence from this datasource is propagated through the ontology */
-  propagate: Scalars['Boolean']['input'];
-  /** Whether evidence from this datasource is required to compute association scores */
-  required?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Weight assigned to the datasource. Should be between 0 and 1 */
+/** Policy controlling how a datasource contributes to association scores. */
+export type DatasourcePolicyInput = {
   weight: Scalars['Float']['input'];
+  required: Scalars['Boolean']['input'];
+};
+
+/** A per-datasource override: which datasource, and the policy to apply. */
+export type DatasourcePolicyOverride = {
+  id: Datasource;
+  policy: DatasourcePolicyInput;
 };
 
 /** Cross-reference information for a variant in different databases */
@@ -654,7 +644,7 @@ export type Disease = {
   /** Ancestor disease nodes in the EFO ontology up to the top-level therapeutic area */
   ancestors: Array<Scalars['String']['output']>;
   /** Target–disease associations computed on the fly with configurable datasource weights and filters */
-  associatedTargets: AssociatedTargets;
+  associatedTargets: TargetAssociationPage;
   /** Association time series */
   associationTimeSeries: AssociationTimeSeriesResults;
   /** Direct child disease nodes in the ontology */
@@ -705,12 +695,12 @@ export type Disease = {
 
 /** Core annotation for diseases or phenotypes. A disease or phenotype in the Platform is understood as any disease, phenotype, biological process or measurement that might have any type of causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO) (slim version) is used as scaffold for the disease or phenotype entity. */
 export type DiseaseAssociatedTargetsArgs = {
-  BFilter?: InputMaybe<Scalars['String']['input']>;
   Bs?: InputMaybe<Array<Scalars['String']['input']>>;
-  datasources?: InputMaybe<Array<DatasourceSettingsInput>>;
-  enableIndirect?: InputMaybe<Scalars['Boolean']['input']>;
+  BFilter?: InputMaybe<Scalars['String']['input']>;
   facetFilters?: InputMaybe<Array<Scalars['String']['input']>>;
-  orderByScore?: InputMaybe<Scalars['String']['input']>;
+  indirect?: InputMaybe<Scalars['Boolean']['input']>;
+  datasourcePolicyOverrides?: InputMaybe<Array<DatasourcePolicyOverride>>;
+  sort?: InputMaybe<AssociationSort>;
   page?: InputMaybe<Pagination>;
 };
 
@@ -2191,14 +2181,6 @@ export type Sample = {
   sampleSize: Scalars['Int']['output'];
 };
 
-/** Scored component used in association scoring */
-export type ScoredComponent = {
-  __typename?: 'ScoredComponent';
-  /** Component identifier (e.g., datatype or datasource name) */
-  id: Scalars['String']['output'];
-  /** Association score for the component. Scores are normalized to a range of 0-1. The higher the score, the stronger the association. */
-  score: Scalars['Float']['output'];
-};
 
 /** Facet category with result count */
 export type SearchFacetsCategory = {
@@ -2449,7 +2431,7 @@ export type Target = {
   /** Approved gene symbol of the target */
   approvedSymbol: Scalars['String']['output'];
   /** Target-disease associations calculated on-the-fly using configurable data source weights and evidence filters. Returns associations with aggregated scores and evidence counts supporting the target-disease relationship. */
-  associatedDiseases: AssociatedDiseases;
+  associatedDiseases: DiseaseAssociationPage;
   /** Association time series */
   associationTimeSeries: AssociationTimeSeriesResults;
   /** Baseline expression */
@@ -2531,16 +2513,26 @@ export type Target = {
   transcripts: Array<Transcript>;
 };
 
+export enum SortDirection {
+  Ascending = 'ASCENDING',
+  Descending = 'DESCENDING',
+}
+
+/** Sort field and direction for associations. */
+export type AssociationSort = {
+  key?: InputMaybe<Scalars['String']['input']>;
+  direction: SortDirection;
+};
 
 /** Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl database and uses the Ensembl gene ID as the  primary identifier. An Ensembl gene ID is considered potential drug target if included in the canonical assembly or if present alternative assemblies but encoding for a reviewed protein product according to the UniProt database. */
 export type TargetAssociatedDiseasesArgs = {
-  BFilter?: InputMaybe<Scalars['String']['input']>;
   Bs?: InputMaybe<Array<Scalars['String']['input']>>;
-  datasources?: InputMaybe<Array<DatasourceSettingsInput>>;
-  enableIndirect?: InputMaybe<Scalars['Boolean']['input']>;
+  BFilter?: InputMaybe<Scalars['String']['input']>;
   facetFilters?: InputMaybe<Array<Scalars['String']['input']>>;
+  indirect?: InputMaybe<Scalars['Boolean']['input']>;
   includeMeasurements?: InputMaybe<Scalars['Boolean']['input']>;
-  orderByScore?: InputMaybe<Scalars['String']['input']>;
+  datasourcePolicyOverrides?: InputMaybe<Array<DatasourcePolicyOverride>>;
+  sort?: InputMaybe<AssociationSort>;
   page?: InputMaybe<Pagination>;
 };
 

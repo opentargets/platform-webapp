@@ -171,7 +171,7 @@ export function AssociationsQueryProvider({
   // Reset all URL-backed state + reducer when entity ID changes
   useEffect(() => {
     if (hasRendered.current) {
-      dispatch(resetToInitialState());
+      dispatch(resetToInitialState(entity));
       updateUrlParams({
         page: null,
         sort: null,
