@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
 
 import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable } from "ui";
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
 
@@ -12,33 +12,18 @@ import { definition } from ".";
 import Description from "./Description";
 import SAFETY_QUERY from "./Safety.gql";
 
-const useStyles = makeStyles(theme => ({
-  blue: {
-    color: theme.palette.primary.main,
-  },
-  grey: {
-    color: theme.palette.grey[300],
-  },
-  direction: {
-    marginBottom: "7px",
-  },
-  circleUp: {
-    marginRight: "10px",
-  },
-}));
-
-function EffectTooltipContent({ classes, effect }) {
+function EffectTooltipContent({ effect }) {
   return (
     <>
       <strong>Direction:</strong>
-      <div className={classes.direction}>{effect.direction}</div>
+      <div style={{ marginBottom: "7px" }}>{effect.direction}</div>
       <strong>Dosing:</strong>
       <div>{effect.dosing}</div>
     </>
   );
 }
 
-function getColumns(classes, symbol) {
+function getColumns(theme, symbol) {
   return [
     {
       id: "event",
@@ -97,26 +82,35 @@ function getColumns(classes, symbol) {
         return (
           <>
             {circleUpData ? (
-              <Tooltip title={<EffectTooltipContent classes={classes} effect={circleUpData} />}>
-                <span className={classes.circleUp}>
-                  <FontAwesomeIcon className={classes.blue} icon={faArrowAltCircleUp} size="lg" />
+              <Tooltip title={<EffectTooltipContent effect={circleUpData} />}>
+                <span style={{ marginRight: "10px" }}>
+                  <FontAwesomeIcon
+                    color={theme.palette.primary.main}
+                    icon={faArrowAltCircleUp}
+                    size="lg"
+                  />
                 </span>
               </Tooltip>
             ) : (
               <FontAwesomeIcon
-                className={`${classes.circleUp} ${classes.grey}`}
+                color={theme.palette.grey[300]}
                 icon={faArrowAltCircleUp}
                 size="lg"
+                style={{ marginRight: "10px" }}
               />
             )}
             {circleDownData ? (
-              <Tooltip title={<EffectTooltipContent classes={classes} effect={circleDownData} />}>
+              <Tooltip title={<EffectTooltipContent effect={circleDownData} />}>
                 <span>
-                  <FontAwesomeIcon className={classes.blue} icon={faArrowAltCircleDown} size="lg" />
+                  <FontAwesomeIcon
+                    color={theme.palette.primary.main}
+                    icon={faArrowAltCircleDown}
+                    size="lg"
+                  />
                 </span>
               </Tooltip>
             ) : (
-              <FontAwesomeIcon className={classes.grey} icon={faArrowAltCircleDown} size="lg" />
+              <FontAwesomeIcon color={theme.palette.grey[300]} icon={faArrowAltCircleDown} size="lg" />
             )}
           </>
         );
@@ -149,7 +143,7 @@ function getColumns(classes, symbol) {
 type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
-  const classes = useStyles();
+  const theme = useTheme();
   const variables = { ensemblId };
   const request = useQuery(SAFETY_QUERY, { variables });
   return (
@@ -163,7 +157,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           showGlobalFilter
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-safety-${entity}`}
-          columns={getColumns(classes, symbol)}
+          columns={getColumns(theme, symbol)}
           rows={request.data?.target.safetyLiabilities}
           rowsPerPageOptions={defaultRowsPerPageOptions}
           query={SAFETY_QUERY.loc.source.body}

@@ -1,36 +1,22 @@
-import { Typography, Paper, Grid, LinearProgress } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Typography, Paper, GridLegacy, LinearProgress } from "@mui/material";
 import { v1 } from "uuid";
 
 import PlotContainerSection from "./PlotContainerSection";
 
-const useStyles = makeStyles(() => ({
-  plotContainer: {
-    marginBottom: "15px",
-  },
-  leftContainer: {
-    marginLeft: "4px",
-  },
-  rightContainer: {
-    marginRight: "4px",
-  },
-}));
-
 function PlotContainer({ loading, error, left, center, right, children }) {
-  const classes = useStyles();
   return (
-    <Paper className={classes.plotContainer} elevation={0}>
+    <Paper sx={{ mb: "15px" }} elevation={0}>
       {left || center || right ? (
         <PlotContainerSection>
-          <Grid container justifyContent="space-between" spacing={1}>
-            <Grid item className={classes.leftContainer}>
+          <GridLegacy container justifyContent="space-between" spacing={1}>
+            <GridLegacy item sx={{ ml: "4px" }}>
               {left}
-            </Grid>
-            <Grid item>{center}</Grid>
-            <Grid item className={classes.rightContainer}>
+            </GridLegacy>
+            <GridLegacy item>{center}</GridLegacy>
+            <GridLegacy item sx={{ mr: "4px" }}>
               {right}
-            </Grid>
-          </Grid>
+            </GridLegacy>
+          </GridLegacy>
         </PlotContainerSection>
       ) : null}
       {loading ? <LinearProgress /> : null}

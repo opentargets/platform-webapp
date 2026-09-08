@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { useState } from "react";
 import FileSaver from "file-saver";
-import { makeStyles } from "@mui/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faFileArrowDown, faTable } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -16,6 +15,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import "graphiql/graphiql.min.css";
 import ApiPlaygroundDrawer from "./ApiPlaygroundDrawer";
 
@@ -97,28 +97,23 @@ const createBlob = format =>
       }),
   }[format]);
 
-const styles = makeStyles(theme => ({
-  messageProgress: {
-    marginRight: "1rem",
-    color: "white !important",
+const StyledSnackbar = styled(Snackbar)({
+  "& .MuiSnackbarContent-root": {
+    padding: 0,
   },
-  snackbarContentMessage: {
+  "& .MuiSnackbarContent-message": {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
     padding: ".75rem 1rem",
     width: "100%",
   },
-  snackbarContentRoot: {
-    padding: 0,
-  },
-}));
+});
 
 function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = "Export" }) {
   const [downloading, setDownloading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const classes = styles();
   const open = Boolean(anchorEl);
 
   const handleClickExportButton = event => {
@@ -199,19 +194,13 @@ function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = 
         </Box>
       </Menu>
 
-      <Snackbar
+      <StyledSnackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         open={downloading}
         TransitionComponent={Slide}
-        ContentProps={{
-          classes: {
-            root: classes.snackbarContentRoot,
-            message: classes.snackbarContentMessage,
-          },
-        }}
         message={
           <>
-            <CircularProgress className={classes.messageProgress} />
+            <CircularProgress sx={{ marginRight: "1rem", color: "white !important" }} />
             Preparing data...
           </>
         }

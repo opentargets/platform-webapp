@@ -1,4 +1,4 @@
-import { makeStyles, useTheme } from "@mui/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDna } from "@fortawesome/free-solid-svg-icons";
 import { Highlights, Link } from "ui";
@@ -6,21 +6,12 @@ import { Highlights, Link } from "ui";
 import { clearDescriptionCodes } from "@ot/utils";
 import TargetDescription from "../TargetPage/TargetDescription";
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    marginBottom: "30px",
-  },
-  subtitle: {
-    fontSize: "20px",
-    fontWeight: 500,
-  },
-  icon: {
-    color: theme.palette.primary.main,
-  },
-}));
+const StyledLink = styled(Link)({
+  fontSize: "20px",
+  fontWeight: 500,
+});
 
 function TargetResult({ data, highlights }) {
-  const classes = useStyles();
   const theme = useTheme();
   const targetDescription = clearDescriptionCodes(
     data.functionDescriptions,
@@ -28,10 +19,10 @@ function TargetResult({ data, highlights }) {
   );
 
   return (
-    <div className={classes.container}>
-      <Link to={`/target/${data.id}/associations`} className={classes.subtitle}>
-        <FontAwesomeIcon icon={faDna} className={classes.icon} /> {data.approvedSymbol}
-      </Link>
+    <div style={{ marginBottom: "30px" }}>
+      <StyledLink to={`/target/${data.id}/associations`}>
+        <FontAwesomeIcon icon={faDna} color={theme.palette.primary.main} /> {data.approvedSymbol}
+      </StyledLink>
       {data.functionDescriptions.length > 0 ? (
         <TargetDescription
           descriptions={targetDescription}

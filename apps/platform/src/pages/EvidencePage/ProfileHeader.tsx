@@ -1,6 +1,7 @@
 import { faDna, faStethoscope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Card, CardContent, CardHeader, Skeleton, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import {
   Link,
   usePlatformApi,
@@ -9,13 +10,10 @@ import {
   ProfileChipList,
 } from "ui";
 
-import { makeStyles } from "@mui/styles";
+const StyledCard = styled(Card)({ height: "100%" });
 
-const useStyles = makeStyles(theme => ({
-  card: { height: "100%" },
-  cardContent: {
-    borderTop: `1px solid ${theme.palette.grey[300]}`,
-  },
+const StyledCardContent = styled(CardContent)(({ theme }) => ({
+  borderTop: `1px solid ${theme.palette.grey[300]}`,
 }));
 
 /**
@@ -47,7 +45,6 @@ const parseSynonyms = diseaseSynonyms => {
 };
 
 function ProfileHeader() {
-  const classes = useStyles();
   const { loading, error, data } = usePlatformApi();
 
   // TODO: Errors!
@@ -76,7 +73,7 @@ function ProfileHeader() {
       {loading ? (
         <Skeleton variant="rect" height="15rem" />
       ) : (
-        <Card className={classes.card} elevation={0}>
+        <StyledCard elevation={0}>
           <CardHeader
             title={
               <Typography variant="h5">
@@ -86,16 +83,16 @@ function ProfileHeader() {
               </Typography>
             }
           />
-          <CardContent className={classes.cardContent}>
+          <StyledCardContent>
             <ProfileDescription>{targetDescription}</ProfileDescription>
             <ProfileChipList title="Synonyms">{targetSynonyms}</ProfileChipList>
-          </CardContent>
-        </Card>
+          </StyledCardContent>
+        </StyledCard>
       )}
       {loading ? (
         <Skeleton variant="rect" height="15rem" />
       ) : (
-        <Card className={classes.card} elevation={0}>
+        <StyledCard elevation={0}>
           <CardHeader
             title={
               <Typography variant="h5">
@@ -105,13 +102,13 @@ function ProfileHeader() {
               </Typography>
             }
           />
-          <CardContent className={classes.cardContent}>
+          <StyledCardContent>
             <ProfileDescription>{diseaseDescription}</ProfileDescription>
             {diseaseSynonyms.length > 0 ? (
               <ProfileChipList title="Synonyms">{diseaseSynonyms}</ProfileChipList>
             ) : null}
-          </CardContent>
-        </Card>
+          </StyledCardContent>
+        </StyledCard>
       )}
     </BaseProfileHeader>
   );

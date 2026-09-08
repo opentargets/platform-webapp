@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode, useMemo, useState, useEffect } from "react";
-import { Box, Grid, IconButton, NativeSelect, Skeleton } from "@mui/material";
+import { Box, GridLegacy, IconButton, NativeSelect, Skeleton } from "@mui/material";
 import {
   useReactTable,
   ColumnFiltersState,
@@ -225,20 +225,20 @@ function OtTable({
 
         </Box>
       ) : (
-        <Grid
+        <GridLegacy
           container
           sx={{ display: "flex", justifyContent: "space-between", gap: { xs: 2, md: 0 } }}
         >
-          <Grid item sm={12} md={4}>
+          <GridLegacy item sm={12} md={4}>
               {showGlobalFilter &&
                 <OtTableSearch
                   setGlobalSearchTerm={setGlobalFilter}
                   placeholderText={globalFilterPlaceholderText}
                 />
               }
-          </Grid>
+          </GridLegacy>
 
-          <Grid item sm={12} md={8} sx={{ display: "flex", justifyContent: "end", gap: 1 }}>
+          <GridLegacy item sm={12} md={8} sx={{ display: "flex", justifyContent: "end", gap: 1 }}>
             {showColumnVisibilityControl && <OtTableColumnVisibility table={table} />}
             {dataDownloader && (
               <DataDownloader
@@ -249,8 +249,8 @@ function OtTable({
                 variables={variables}
               />
             )}
-          </Grid>
-        </Grid>
+          </GridLegacy>
+        </GridLegacy>
       )}
 
       {/* Table component container */}

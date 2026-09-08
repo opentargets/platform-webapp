@@ -1,4 +1,4 @@
-import { makeStyles } from "@mui/styles";
+import { useTheme } from "@mui/material/styles";
 import { useQuery } from "@apollo/client";
 import { SectionItem, Link, Tooltip, OtTable } from "ui";
 
@@ -9,29 +9,15 @@ import Description from "./Description";
 import upperBin6Map from "./upperBin6Map";
 import GENETIC_CONSTRAINT from "./GeneticConstraint.gql";
 
-const useStyles = makeStyles(theme => ({
-  filled: {
-    display: "inline-block",
-    border: "1px solid black",
-    backgroundColor: theme.palette.primary.main,
-    height: "16px",
-    width: "16px",
-    borderRadius: "50%",
-    marginRight: "3px",
-  },
-  notFilled: {
-    display: "inline-block",
-    border: "1px solid black",
-    height: "16px",
-    width: "16px",
-    borderRadius: "50%",
-    marginRight: "3px",
-  },
-  title: {
-    display: "inline-block",
-    marginTop: "11px",
-  },
-}));
+const notFilledStyle = {
+  display: "inline-block",
+  border: "1px solid black",
+  height: "16px",
+  width: "16px",
+  borderRadius: "50%",
+  marginRight: "3px",
+};
+const titleStyle = { display: "inline-block", marginTop: "11px" };
 
 const constraintTypeMap = {
   syn: "Synonymous",
@@ -41,13 +27,12 @@ const constraintTypeMap = {
 
 
 function ConstraintAssessment({ ensemblId, symbol, upperBin6 }) {
-  const classes = useStyles();
+  const theme = useTheme();
+  const filledStyle = { ...notFilledStyle, backgroundColor: theme.palette.primary.main };
   const circles = [];
 
   for (let i = 0; i < 5; i++) {
-    circles.push(
-      <span key={i} className={5 - upperBin6 > i ? classes.filled : classes.notFilled} />
-    );
+    circles.push(<span key={i} style={5 - upperBin6 > i ? filledStyle : notFilledStyle} />);
   }
 
   return (
@@ -56,7 +41,7 @@ function ConstraintAssessment({ ensemblId, symbol, upperBin6 }) {
         title={`Binned representation of ${symbol} rank in the loss-function observed/expected upper bound fraction (LOEUF) distribution. Higher scored assessments correspond to strong selection against predicted loss-of-function (pLoF) variation in the particular gene.`}
         showHelpIcon
       >
-        <span className={classes.title}>Constraint assessment</span>
+        <span style={titleStyle}>Constraint assessment</span>
       </Tooltip>
 
       <div>{circles}</div>

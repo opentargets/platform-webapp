@@ -1,5 +1,4 @@
 import { createTheme, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
-import { ThemeProvider as StylesThemeProvider } from "@mui/styles";
 import { getAlphaFoldConfidence } from "@ot/constants";
 import { useEffect, useState } from "react";
 import { Viewer, ViewerInteractionProvider, ViewerProvider } from "ui";
@@ -9,8 +8,6 @@ type Structure = { structureData: string; info: object };
 // TP53 (P04637) — 393 residues, well-known, manageable size
 const CIF_URL = "https://alphafold.ebi.ac.uk/files/AF-P04637-F1-model_v6.cif";
 
-// createTheme fills in all MUI defaults (background.paper, grey, etc.)
-// which makeStyles inside Tooltip.jsx expects to be present
 const theme = createTheme({
   shape: { borderRadius: 2 },
   typography: { fontFamily: '"Inter", sans-serif' },
@@ -76,26 +73,24 @@ export default function ViewerDemo() {
 
   return (
     <MuiThemeProvider theme={theme}>
-      <StylesThemeProvider theme={theme}>
-        <ViewerProvider initialState={{}} reducer={reducer}>
-          <ViewerInteractionProvider initialState={{}} reducer={reducer}>
-            <Viewer
-              data={data}
-              height="520px"
-              drawAppearance={[
-                {
-                  style: {
-                    cartoon: {
-                      colorfunc: (atom: { b: number }) => getAlphaFoldConfidence(atom, "color"),
-                      arrows: true,
-                    },
+      <ViewerProvider initialState={{}} reducer={reducer}>
+        <ViewerInteractionProvider initialState={{}} reducer={reducer}>
+          <Viewer
+            data={data}
+            height="520px"
+            drawAppearance={[
+              {
+                style: {
+                  cartoon: {
+                    colorfunc: (atom: { b: number }) => getAlphaFoldConfidence(atom, "color"),
+                    arrows: true,
                   },
                 },
-              ]}
-            />
-          </ViewerInteractionProvider>
-        </ViewerProvider>
-      </StylesThemeProvider>
+              },
+            ]}
+          />
+        </ViewerInteractionProvider>
+      </ViewerProvider>
     </MuiThemeProvider>
   );
 }

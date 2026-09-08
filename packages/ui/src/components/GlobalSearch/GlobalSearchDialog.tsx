@@ -32,13 +32,19 @@ function GlobalSearchDialog() {
   return (
     <Dialog
       open={open}
-      role="searchbox"
       scroll="paper"
       tabIndex={0}
       onClose={() => {
         setOpen(false);
         setFilterState(defaultEntityFilterState);
       }}
+      // MUI v7 restricts Dialog's own `role` prop to "dialog" | "alertdialog"
+      // (both a TS type and a runtime PropTypes.oneOf check), but this dialog
+      // is intentionally exposed as a searchbox for accessibility. `role`
+      // ends up on the Paper slot internally regardless of which path sets
+      // it, so overriding it via slotProps.paper reaches the same DOM
+      // element without going through Dialog's own restricted prop.
+      slotProps={{ paper: { role: "searchbox" } }}
       sx={{
         "& .MuiDialog-container": {
           alignItems: "start",

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
-import { Link } from "ui";
+import { useLocation } from "react-router";
+import { Box, GridLegacy, Typography } from "@mui/material";
+import { Link, PageMeta } from "ui";
 import ProjectCard from "./ProjectCard";
 import ProjectsFilter, { EMPTY_FILTERS } from "./ProjectsFilter";
 import projectsData from "./projects-data.json";
@@ -69,6 +70,7 @@ function matchesFilters(project, filters) {
 }
 
 function ProjectPage() {
+  const location = useLocation();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
   const filteredProjects = useMemo(
@@ -78,6 +80,11 @@ function ProjectPage() {
 
   return (
     <>
+      <PageMeta
+        title="Projects page | Open Targets Platform"
+        description="Projects page | Open Targets Platform"
+        location={location}
+      />
       <Typography variant="h4" component="h1" paragraph>
         Open Targets Projects
       </Typography>
@@ -103,15 +110,15 @@ function ProjectPage() {
         </Link>
       </Typography>
 
-      <Grid container sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
+      <GridLegacy container sx={{ display: "flex", justifyContent: "space-between" }}>
+        <GridLegacy item xs={12} md={3} lg={2} sx={{ display: "flex", justifyContent: "center" }}>
           <ProjectsFilter
             filters={filters}
             filterGroups={FILTER_GROUPS}
             onChange={setFilters}
           />
-        </Grid>
-        <Grid
+        </GridLegacy>
+        <GridLegacy
           item
           xs={12}
           md={9}
@@ -126,8 +133,8 @@ function ProjectPage() {
               <ProjectCard key={project.otar_code} data={project} />
             ))}
           </Box>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
     </>
   );
 }

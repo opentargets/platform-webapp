@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Grid, Input, IconButton } from "@mui/material";
+import { GridLegacy, IconButton } from "@mui/material";
 import { faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import useDebounce from "../../hooks/useDebounce";
-import { globalSearchStyles } from "./tableStyles";
+import { StyledGlobalFilterInput } from "./tableStyles";
 
 function GlobalFilter({ onGlobalFilterChange }) {
   const [inputValue, setInputValue] = useState("");
@@ -26,14 +26,11 @@ function GlobalFilter({ onGlobalFilterChange }) {
     [debouncedInputValue]
   );
 
-  const classes = globalSearchStyles();
-
   return (
-    <Grid container>
-      <Grid item xs={12}>
-        <Input
+    <GridLegacy container>
+      <GridLegacy item xs={12}>
+        <StyledGlobalFilterInput
           autoComplete="off"
-          classes={{ root: classes.root }}
           startAdornment={<FontAwesomeIcon icon={faMagnifyingGlass} />}
           endAdornment={
             !!inputValue && (
@@ -47,8 +44,8 @@ function GlobalFilter({ onGlobalFilterChange }) {
           onChange={handleInputChange}
           value={inputValue}
         />
-      </Grid>
-    </Grid>
+      </GridLegacy>
+    </GridLegacy>
   );
 }
 

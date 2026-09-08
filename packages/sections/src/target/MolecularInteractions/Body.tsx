@@ -59,32 +59,36 @@ function Body({ label: symbol, id, entity }: Props) {
 
   // load tabs summary counts
   useEffect(() => {
-    getSummaryCounts(id, client).then(res => {
-      // when there is no data, interactions object is null, so there is no count
-      setCounts(
-        Object.assign(
-          {},
-          ...sources.map(k => ({
-            [k.id]: res.data.target[k.id] ? res.data.target[k.id].count : 0,
-          }))
-        )
-      );
-      // set the sources database versions
-      setVersions(
-        res.data.interactionResources.reduce((a, v) => {
-          const interactionResourceObj = a;
-          interactionResourceObj[v.sourceDatabase] = v.databaseVersion;
-          return a;
-        }, {})
-      );
-      // find first source (tab) with data and set that as the initially selected tab
-      const initialTab = sources.find(
-        s => res.data.target[s.id] && res.data.target[s.id].count > 0
-      );
-      if (initialTab) {
-        setSource(initialTab.id);
-      }
-    });
+    getSummaryCounts(id, client)
+      .then(res => {
+        // when there is no data, interactions object is null, so there is no count
+        setCounts(
+          Object.assign(
+            {},
+            ...sources.map(k => ({
+              [k.id]: res.data.target[k.id] ? res.data.target[k.id].count : 0,
+            }))
+          )
+        );
+        // set the sources database versions
+        setVersions(
+          res.data.interactionResources.reduce((a, v) => {
+            const interactionResourceObj = a;
+            interactionResourceObj[v.sourceDatabase] = v.databaseVersion;
+            return a;
+          }, {})
+        );
+        // find first source (tab) with data and set that as the initially selected tab
+        const initialTab = sources.find(
+          s => res.data.target[s.id] && res.data.target[s.id].count > 0
+        );
+        if (initialTab) {
+          setSource(initialTab.id);
+        }
+      })
+      .catch(error => {
+        console.error(error.message);
+      });
   }, [id]);
 
   return (

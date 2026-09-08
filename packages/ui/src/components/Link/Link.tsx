@@ -1,43 +1,58 @@
 import { ReactElement, ReactNode } from "react";
-import classNames from "classnames";
-import { Link as RouterLink } from "react-router-dom";
-import { makeStyles } from "@mui/styles";
+import { Link as RouterLink } from "react-router";
+import { styled } from "@mui/material/styles";
 import Tooltip from "../Tooltip";
 import OtAsyncTooltip from "../OtAsyncTooltip/OtAsyncTooltip";
 
-const useStyles = makeStyles(theme => ({
-  base: {
+const shouldForwardProp = (prop: string) => prop !== "footer" && prop !== "hasTooltip";
+
+const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) => {
+  if (footer)
+    return {
+      color: "white",
+      "textDecorationColor": "transparent",
+      "WebkitTextDecorationColor": "transparent",
+      "&:hover": {
+        color: theme.palette.primary.light,
+        "textDecorationColor": theme.palette.primary.light,
+        "WebkitTextDecorationColor": theme.palette.primary.light,
+      },
+      display: "flex",
+      alignItems: "center",
+    };
+  if (hasTooltip)
+    return {
+      color: theme.palette.primary.main,
+      "&:hover": { color: theme.palette.primary.dark },
+      textDecoration: "none",
+    };
+  return {
+    color: theme.palette.primary.main,
+    "&:hover": {
+      color: theme.palette.primary.dark,
+      "textDecorationColor": theme.palette.primary.dark,
+      "WebkitTextDecorationColor": theme.palette.primary.dark,
+    },
+  };
+};
+
+const StyledA = styled("a", { shouldForwardProp })<{ footer?: boolean; hasTooltip?: boolean }>(
+  ({ theme, footer, hasTooltip }) => ({
     fontSize: "inherit",
-    "text-decoration-color": "transparent",
-    "-webkit-text-decoration-color": "transparent",
-  },
-  baseDefault: {
-    color: theme.palette.primary.main,
-    "&:hover": {
-      color: theme.palette.primary.dark,
-      "text-decoration-color": theme.palette.primary.dark,
-      "-webkit-text-decoration-color": theme.palette.primary.dark,
-    },
-  },
-  baseTooltip: {
-    color: theme.palette.primary.main,
-    "&:hover": {
-      color: theme.palette.primary.dark,
-    },
-    textDecoration: "none",
-  },
-  baseFooter: {
-    color: "white",
-    "text-decoration-color": "transparent",
-    "-webkit-text-decoration-color": "transparent",
-    "&:hover": {
-      color: theme.palette.primary.light,
-      "text-decoration-color": theme.palette.primary.light,
-      "-webkit-text-decoration-color": theme.palette.primary.light,
-    },
-    display: "flex",
-    alignItems: "center",
-  },
+    "textDecorationColor": "transparent",
+    "WebkitTextDecorationColor": "transparent",
+    ...linkVariantStyles(theme, footer, hasTooltip),
+  })
+);
+
+const StyledRouterLink = styled(RouterLink, { shouldForwardProp })<{
+  footer?: boolean;
+  hasTooltip?: boolean;
+}>(({ theme, footer, hasTooltip }) => ({
+  fontSize: "inherit",
+  "textDecorationColor": "transparent",
+  "WebkitTextDecorationColor": "transparent",
+  ...linkVariantStyles(theme, footer, hasTooltip),
 }));
 
 type LinkProptypes = {
@@ -74,70 +89,45 @@ function Link({
   ariaLabel,
   asyncTooltip,
 }: LinkProptypes = defaultProps): ReactElement {
-  const classes = useStyles();
   const ariaLabelProp = ariaLabel ? { "aria-label": ariaLabel } : {};
   const newTabProps = newTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
 
   if (external)
     return (
-      <a
-        className={classNames(
-          classes.base,
-          {
-            [classes.baseDefault]: !footer && !tooltip,
-            [classes.baseFooter]: footer,
-            [classes.baseTooltip]: tooltip,
-          },
-          className
-        )}
+      <StyledA
+        footer={footer}
+        hasTooltip={!!tooltip}
+        className={className}
         href={to}
         onClick={onClick}
         {...newTabProps}
         {...ariaLabelProp}
       >
         {children}
-      </a>
+      </StyledA>
     );
 
   if (asyncTooltip && !external) {
     const args = to.split("/");
     return (
-      <RouterLink
-        className={classNames(
-          classes.base,
-          {
-            [classes.baseDefault]: !footer && !tooltip,
-            [classes.baseFooter]: footer,
-            [classes.baseTooltip]: tooltip,
-          },
-          className
-        )}
+      <StyledRouterLink
+        footer={footer}
+        hasTooltip={!!tooltip}
+        className={className}
         to={to}
         onClick={onClick}
       >
         <OtAsyncTooltip entity={args[1]} id={args[2]}>
           <span>{children}</span>
         </OtAsyncTooltip>
-      </RouterLink>
+      </StyledRouterLink>
     );
   }
 
   return (
-    <RouterLink
-      className={classNames(
-        classes.base,
-        {
-          [classes.baseDefault]: !footer && !tooltip,
-          [classes.baseFooter]: footer,
-          [classes.baseTooltip]: tooltip,
-        },
-        className
-      )}
-      to={to}
-      onClick={onClick}
-    >
+    <StyledRouterLink footer={footer} hasTooltip={!!tooltip} className={className} to={to} onClick={onClick}>
       <Tooltip title={tooltip}>{children}</Tooltip>
-    </RouterLink>
+    </StyledRouterLink>
   );
 }
 

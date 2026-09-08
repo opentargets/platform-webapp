@@ -1,10 +1,8 @@
 import { ReactElement, ReactNode } from "react";
-import { Link as ReactRouterLink } from "react-router-dom";
+import { Link as ReactRouterLink } from "react-router";
 import { AppBar, Toolbar, Button, Typography, useMediaQuery, Box, Theme } from "@mui/material";
-import { CSSProperties, makeStyles, useTheme } from "@mui/styles";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { PopperPlacementType } from "@mui/material";
-import classNames from "classnames";
 import { v1 } from "uuid";
 
 import Link from "./Link";
@@ -18,64 +16,63 @@ const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`
   color: white;
 `;
 
-const useStyles = makeStyles((theme: Theme) => ({
-  navbar: {
-    backgroundColor: `${theme.palette.primary.dark} !important`,
-    margin: 0,
-    width: "100%",
-  },
-  navbarHomepage: {
+const StyledAppBar = styled(AppBar, {
+  shouldForwardProp: prop => prop !== "homepage",
+})<{ homepage?: boolean }>(({ theme, homepage }) => ({
+  backgroundColor: `${theme.palette.primary.dark} !important`,
+  margin: 0,
+  width: "100%",
+  ...(homepage && {
     left: 0,
     top: 0,
-    position: "absolute !important",
-  }  as unknown as CSSProperties,
-  flex: {
-    flexGrow: 1,
+    position: "absolute !important" as "absolute",
+  }),
+}));
+
+const StyledToolbar = styled(Toolbar)({
+  display: "flex",
+  justifyContent: "space-between",
+});
+
+const StyledNavMenu = styled("div")({
+  flex: 1,
+  display: "flex",
+  justifyContent: "end",
+});
+
+const StyledMenuExternalLinkTypography = styled(Typography)({
+  fontSize: "1rem",
+  "&:first-of-type": {
+    marginLeft: "1rem",
   },
-  menuExternalLinkContainer: {
-    fontSize: "1rem",
-    "&:first-of-type": {
-      marginLeft: "1rem",
-    },
-    "&:not(:last-child)": {
-      marginRight: "1rem",
-    },
+  "&:not(:last-child)": {
+    marginRight: "1rem",
   },
-  menuExternalLink: {
-    color: "inherit",
-    textDecoration: "none",
-    "&:hover": {
-      color: theme.palette.secondary.main,
-    },
+});
+
+const StyledMenuExternalLinkAnchor = styled("a")(({ theme }) => ({
+  color: "inherit",
+  textDecoration: "none",
+  "&:hover": {
+    color: theme.palette.secondary.main,
   },
-  menuList: {
-    display: "flex",
-  },
-  menuLink: {
+}));
+
+const StyledMenuLink = styled(Link)(({ theme }) => ({
+  color: theme.palette.secondary.contrastText,
+  margin: `0 ${theme.spacing(2)}`,
+  whiteSpace: "nowrap",
+  "&:hover": {
     color: theme.palette.secondary.contrastText,
-    margin: `0 ${theme.spacing(2)}`,
-    whiteSpace: "nowrap",
-    "&:hover": {
-      color: theme.palette.secondary.contrastText,
-    },
   },
-  spaceBetween: {
-    display: "flex",
-    justifyContent: "space-between",
-  },
-  navLogo: {
-    flex: 1,
-    display: "none",
-  },
-  navSearch: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "center",
-  },
-  navMenu: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "end",
+}));
+
+const StyledToolsMenu = styled(ToolsMenu)(({ theme }) => ({
+  color: theme.palette.secondary.contrastText,
+  margin: `0 ${theme.spacing(2)}`,
+  whiteSpace: "nowrap",
+  "&:hover": {
+    color: theme.palette.secondary.contrastText,
   },
 }));
 
@@ -87,7 +84,6 @@ type NavBarItem = {
 };
 
 type MenuExternalLinkProps = {
-  classes: Record<string, string>;
   href: string;
   children: ReactNode;
 };
@@ -110,13 +106,13 @@ type NavBarProps = {
   placement?: PopperPlacementType;
 };
 
-function MenuExternalLink({ classes, href, children }: MenuExternalLinkProps): ReactElement {
+function MenuExternalLink({ href, children }: MenuExternalLinkProps): ReactElement {
   return (
-    <Typography color="inherit" className={classes.menuExternalLinkContainer}>
-      <a target="_blank" rel="noopener noreferrer" href={href} className={classes.menuExternalLink}>
+    <StyledMenuExternalLinkTypography color="inherit">
+      <StyledMenuExternalLinkAnchor target="_blank" rel="noopener noreferrer" href={href}>
         {children}
-      </a>
-    </Typography>
+      </StyledMenuExternalLinkAnchor>
+    </StyledMenuExternalLinkTypography>
   );
 }
 
@@ -132,20 +128,12 @@ function NavBar({
   tools,
   placement,
 }: NavBarProps): ReactElement {
-  const classes = useStyles();
   const theme = useTheme<Theme>();
   const smMQ = useMediaQuery(theme.breakpoints.down("sm"));
   const isHomePageRegular = homepage && !smMQ;
   return (
-    <AppBar
-      className={classNames(classes.navbar, {
-        [classes.navbarHomepage]: homepage,
-      })}
-      position="static"
-      color="primary"
-      elevation={0}
-    >
-      <Toolbar variant="dense" className={classNames(classes.spaceBetween)}>
+    <StyledAppBar homepage={homepage} position="static" color="primary" elevation={0}>
+      <StyledToolbar variant="dense">
         {homepage ? null : (
           <Box
             component={ReactRouterLink}
@@ -188,34 +176,16 @@ function NavBar({
           {search || null}
         </Box>
 
-        <div className={classes.navMenu}>
-          {docs ? (
-            <MenuExternalLink classes={classes} href={docs}>
-              Docs
-            </MenuExternalLink>
-          ) : null}
+        <StyledNavMenu>
+          {docs ? <MenuExternalLink href={docs}>Docs</MenuExternalLink> : null}
 
-          {api ? (
-            <MenuExternalLink classes={classes} href={api}>
-              API
-            </MenuExternalLink>
-          ) : null}
+          {api ? <MenuExternalLink href={api}>API</MenuExternalLink> : null}
 
-          {downloads ? (
-            <MenuExternalLink classes={classes} href={downloads}>
-              Downloads
-            </MenuExternalLink>
-          ) : null}
+          {downloads ? <MenuExternalLink href={downloads}>Downloads</MenuExternalLink> : null}
 
-          {contact ? (
-            <MenuExternalLink classes={classes} href={contact}>
-              Contact
-            </MenuExternalLink>
-          ) : null}
+          {contact ? <MenuExternalLink href={contact}>Contact</MenuExternalLink> : null}
 
-          {tools && tools.length ? (
-            <ToolsMenu items={tools} className={classes.menuLink} />
-          ) : null}
+          {tools && tools.length ? <StyledToolsMenu items={tools} /> : null}
 
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}
 
@@ -225,34 +195,23 @@ function NavBar({
                 if (item.showOnlyPartner) {
                   return (
                     <PrivateWrapper key={v1()}>
-                      <Link
-                        footer
-                        external={item.external}
-                        to={item.url}
-                        className={classes.menuLink}
-                      >
+                      <StyledMenuLink footer external={item.external} to={item.url}>
                         <Typography variant="body2">{item.name}</Typography>
-                      </Link>
+                      </StyledMenuLink>
                     </PrivateWrapper>
                   );
                 }
                 return (
-                  <Link
-                    key={v1()}
-                    footer
-                    external={item.external}
-                    to={item.url}
-                    className={classes.menuLink}
-                  >
+                  <StyledMenuLink key={v1()} footer external={item.external} to={item.url}>
                     <Typography variant="body2">{item.name}</Typography>
-                  </Link>
+                  </StyledMenuLink>
                 );
               })}
             </Box>
           )}
-        </div>
-      </Toolbar>
-    </AppBar>
+        </StyledNavMenu>
+      </StyledToolbar>
+    </StyledAppBar>
   );
 }
 

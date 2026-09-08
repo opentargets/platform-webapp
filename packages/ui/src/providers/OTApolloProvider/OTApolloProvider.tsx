@@ -19,12 +19,14 @@ export const useApolloClient = (): ApolloClient<NormalizedCacheObject> => {
 
 export const OTApolloProvider = ({
   config,
+  client: providedClient,
   children,
 }: {
   config: Config;
+  client?: ApolloClient<NormalizedCacheObject>;
   children: React.ReactNode;
 }) => {
-  const client = createApolloClient(config);
+  const client = providedClient ?? createApolloClient(config);
 
   return (
     <ApolloClientContext.Provider value={client}>

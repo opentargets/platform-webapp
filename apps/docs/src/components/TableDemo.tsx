@@ -1,5 +1,4 @@
 import { createTheme, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
-import { ThemeProvider as StylesThemeProvider } from "@mui/styles";
 import { DataTable } from "ui";
 
 const theme = createTheme({
@@ -148,17 +147,15 @@ const rows = [
 export default function TableDemo() {
   return (
     <MuiThemeProvider theme={theme}>
-      <StylesThemeProvider theme={theme}>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          sortBy="score"
-          order="desc"
-          showGlobalFilter
-          pageSize={10}
-          hover
-        />
-      </StylesThemeProvider>
+      <DataTable
+        columns={columns}
+        rows={rows}
+        sortBy="score"
+        order="desc"
+        showGlobalFilter
+        pageSize={10}
+        hover
+      />
     </MuiThemeProvider>
   );
 }

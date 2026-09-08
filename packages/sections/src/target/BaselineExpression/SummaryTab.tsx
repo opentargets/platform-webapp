@@ -1,4 +1,4 @@
-import { Alert, AlertTitle, Grid, Typography } from "@mui/material";
+import { Alert, AlertTitle, GridLegacy, Typography } from "@mui/material";
 import { DataDownloader } from "ui";
 import BaselineExpressionTable from "./BaselineExpressionTable";
 import EXPRESSION_QUERY from "./ExpressionQuery.gql";
@@ -52,7 +52,7 @@ function SummaryTab({ symbol, ensgId, data, viewMode, expandSpecificity }) {
   };
 
   return (
-    <Grid container justifyContent="center">
+    <GridLegacy container justifyContent="center">
       <BaselineExpressionTable
         symbol={symbol}
         data={processedData}
@@ -71,7 +71,7 @@ function SummaryTab({ symbol, ensgId, data, viewMode, expandSpecificity }) {
         viewMode={viewMode}
         expandSpecificity={expandSpecificity}
       />
-    </Grid>
+    </GridLegacy>
   );
 }
 

@@ -1,27 +1,26 @@
 import { ReactElement, useState, MouseEvent, KeyboardEvent } from "react";
 import { v1 } from "uuid";
 import { Menu, MenuItem, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { makeStyles } from "@mui/styles";
-import classNames from "classnames";
 import Link from "./Link";
 
-const useStyles = makeStyles(() => ({
-  trigger: {
-    display: "inline-flex",
-    alignItems: "center",
-    cursor: "pointer",
-  },
-  icon: {
-    marginLeft: "6px",
-    fontSize: "0.75rem",
-  },
-  menuLink: {
-    width: "100%",
-    color: "inherit",
-  },
-}));
+const StyledTrigger = styled("span")({
+  display: "inline-flex",
+  alignItems: "center",
+  cursor: "pointer",
+});
+
+const StyledIcon = styled(FontAwesomeIcon)({
+  marginLeft: "6px",
+  fontSize: "0.75rem",
+});
+
+const StyledMenuLink = styled(Link)({
+  width: "100%",
+  color: "inherit",
+});
 
 type ToolsMenuItem = {
   name: string;
@@ -34,7 +33,6 @@ type ToolsMenuProps = {
 };
 
 function ToolsMenu({ items, className }: ToolsMenuProps): ReactElement {
-  const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMenuOpen = Boolean(anchorEl);
 
@@ -55,26 +53,26 @@ function ToolsMenu({ items, className }: ToolsMenuProps): ReactElement {
 
   return (
     <>
-      <span
+      <StyledTrigger
         role="button"
         tabIndex={0}
         onClick={handleMenuToggle}
         onKeyDown={handleKeyDown}
-        className={classNames(classes.trigger, className)}
+        className={className}
         aria-haspopup="true"
         aria-expanded={isMenuOpen}
         aria-label="open tools menu"
       >
         <Typography variant="body2">Tools</Typography>
-        <FontAwesomeIcon className={classes.icon} icon={isMenuOpen ? faCaretUp : faCaretDown} />
-      </span>
+        <StyledIcon icon={isMenuOpen ? faCaretUp : faCaretDown} />
+      </StyledTrigger>
 
       <Menu anchorEl={anchorEl} open={isMenuOpen} onClose={handleMenuClose}>
         {items.map(item => (
           <MenuItem key={v1()} onClick={handleMenuClose} dense>
-            <Link to={item.url} className={classes.menuLink} footer={false}>
+            <StyledMenuLink to={item.url} footer={false}>
               <Typography variant="body2">{item.name}</Typography>
-            </Link>
+            </StyledMenuLink>
           </MenuItem>
         ))}
       </Menu>

@@ -5,69 +5,41 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, ButtonBase, Divider, Drawer, IconButton, Paper, Typography } from "@mui/material";
+import { styled, useTheme } from "@mui/material/styles";
 import { useState } from "react";
-import { makeStyles } from "@mui/styles";
 import { naLabel } from "@ot/constants";
 import { v1 } from "uuid";
 import Link from "./Link";
 import OtTable from "./OtTable/OtTable";
 import Tooltip from "./Tooltip";
 
-const sourceDrawerStyles = makeStyles(theme => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  },
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
     maxWidth: "100%",
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
-  },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
-  AccordionExpanded: {
-    margin: "1rem !important",
-  },
-  AccordionRoot: {
-    border: "1px solid #ccc",
-    margin: "1rem 1rem 0 1rem",
-    padding: "1rem",
-    "&::before": {
-      backgroundColor: "transparent",
-    },
-  },
-  AccordionSubtitle: {
-    color: theme.palette.grey[400],
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-  },
-  AccordionTitle: {
-    color: theme.palette.grey[700],
-    fontSize: "1rem",
-    fontWeight: "bold",
-  },
-  summaryBoxRoot: {
-    marginRight: "2rem",
-  },
-  blue: {
-    color: theme.palette.primary.dark,
-  },
-  grey: {
-    color: theme.palette.grey[400],
-  },
+}));
+
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
 }));
 
 const LABEL = {
@@ -85,7 +57,7 @@ const LABEL = {
 };
 
 export function DirectionalityList({ variantAnnotation }) {
-  const classes = sourceDrawerStyles();
+  const theme = useTheme();
 
   function getTooltipTitle(directionality) {
     if (!directionality) return LABEL.default.title;
@@ -116,13 +88,19 @@ export function DirectionalityList({ variantAnnotation }) {
           >
             <Tooltip title={getTooltipTitle(directionality)} style={{ background: `red` }}>
               <FontAwesomeIcon
-                className={directionality === "increased" ? classes.blue : classes.grey}
+                color={
+                  directionality === "increased" ? theme.palette.primary.dark : theme.palette.grey[400]
+                }
                 icon={LABEL.increased.icon}
                 size="lg"
               />
               <Box sx={{ mt: 1 }}>
                 <FontAwesomeIcon
-                  className={directionality === "decreased" ? classes.blue : classes.grey}
+                  color={
+                    directionality === "decreased"
+                      ? theme.palette.primary.dark
+                      : theme.palette.grey[400]
+                  }
                   icon={LABEL.decreased.icon}
                   size="lg"
                 />
@@ -158,7 +136,6 @@ export function DirectionalityList({ variantAnnotation }) {
 
 function DirectionalityDrawer({ variantAnnotation, customLabel, caption }) {
   const [open, setOpen] = useState(false);
-  const classes = sourceDrawerStyles();
 
   if (!variantAnnotation || !variantAnnotation.length) {
     return naLabel;
@@ -177,7 +154,7 @@ function DirectionalityDrawer({ variantAnnotation, customLabel, caption }) {
 
   return (
     <>
-      <ButtonBase disableRipple onClick={toggleDrawer} className={classes.drawerLink}>
+      <StyledButtonBase disableRipple onClick={toggleDrawer}>
         <Typography variant="body2">
           {" "}
           {customLabel ||
@@ -185,31 +162,26 @@ function DirectionalityDrawer({ variantAnnotation, customLabel, caption }) {
               variantAnnotation.length === 1 ? "entry" : "entries"
             }`}{" "}
         </Typography>
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
-        anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
-        open={open}
-        onClose={closeDrawer}
-      >
-        <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+        <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography className={classes.drawerTitleCaption}>{caption}</Typography>
+            <StyledTitleCaption>{caption}</StyledTitleCaption>
             <IconButton onClick={closeDrawer}>
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>
-        </Paper>
+        </StyledPaperTitle>
 
-        <Box width={600} maxWidth="100%" className={classes.drawerBody}>
+        <StyledBody width={600} maxWidth="100%">
           {open && (
             <Box my={3} mx={3} p={3} pb={6} bgcolor="white">
               <DirectionalityList variantAnnotation={variantAnnotation} />
             </Box>
           )}
-        </Box>
-      </Drawer>
+        </StyledBody>
+      </StyledDrawer>
     </>
   );
 }

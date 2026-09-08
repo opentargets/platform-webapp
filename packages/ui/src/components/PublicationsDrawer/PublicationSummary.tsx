@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { makeStyles, createStyles } from "@mui/styles";
-import { Collapse, Box, Typography, Button, Theme } from "@mui/material";
+import { Collapse, Box, Typography, Button } from "@mui/material";
 
 import { faCircleNodes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,37 +20,11 @@ type PublicationSummaryProps = {
 const helpText =
   "Evidence summarisation based on the available full-text article. Free-to-use full-text article provided by Europe PMC and summarised using OpenAI's gpt-3.5-turbo model.";
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    fileLabel: {
-      cursor: "pointer",
-      color: "#5a5f5f",
-      fontSize: "0.875rem",
-      fontFamily: '"Inter", "sans-serif"',
-    },
-    detailPanel: {
-      background: `${theme.palette.grey[100]}`,
-      marginTop: "10px",
-      marginBottom: "10px",
-      padding: "25px 20px",
-      position: "relative",
-    },
-    summarySpan: {
-      whiteSpace: "normal",
-    },
-    detailsButton: {
-      margin: "0 ",
-    },
-  })
-);
-
 function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): JSX.Element {
   const [loading, setLoading] = useState<LoadingState>(false);
   const [error, setError] = useState<TextState>(null);
   const [summaryText, setSummaryText] = useState<TextState>(null);
   const [collapseOpen, setCollapseOpen] = useState<CollapsedState>(false);
-
-  const classes = useStyles();
 
   const handleChange = () => {
     setCollapseOpen(prev => !prev);
@@ -120,7 +93,7 @@ function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): J
     <div>
       <PublicationActionsTooltip title={helpText} placement="top">
         <Button
-          className={classes.detailsButton}
+          sx={{ margin: "0 " }}
           variant="outlined"
           size="small"
           onClick={() => {
@@ -132,11 +105,19 @@ function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): J
         </Button>
       </PublicationActionsTooltip>
       <Collapse in={collapseOpen}>
-        <Box className={classes.detailPanel}>
+        <Box
+          sx={theme => ({
+            background: theme.palette.grey[100],
+            marginTop: "10px",
+            marginBottom: "10px",
+            padding: "25px 20px",
+            position: "relative",
+          })}
+        >
           {loading && <SummaryLoader />}
           {!loading && error && (
             <>
-              <span className={classes.summarySpan}>
+              <span style={{ whiteSpace: "normal" }}>
                 <b>Error: </b>
                 {error}
               </span>
@@ -150,7 +131,7 @@ function PublicationSummary({ pmcId, symbol, name }: PublicationSummaryProps): J
           {!loading && !error && (
             <>
               <Typography variant="subtitle2">Evidence summary</Typography>
-              <span className={classes.summarySpan}>{summaryText}</span>
+              <span style={{ whiteSpace: "normal" }}>{summaryText}</span>
             </>
           )}
           <PublicationSummaryLabel />

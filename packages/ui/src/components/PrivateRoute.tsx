@@ -1,19 +1,14 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
 import usePermissions from "../hooks/usePermissions";
-import { ReactNode } from "react";
 
-type PrivateRouteProps = {
-  children: ReactNode;
-}
-
-function PrivateRoute({ children }: PrivateRouteProps) {
+function PrivateRoute() {
   const { isPartnerPreview } = usePermissions();
 
   if (!isPartnerPreview) {
-    return <Navigate to="/404" />;
+    return <Navigate to="/404" replace />;
   }
 
-  return children;
+  return <Outlet />;
 }
 
 export default PrivateRoute;

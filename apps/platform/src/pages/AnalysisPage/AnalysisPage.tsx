@@ -1,7 +1,7 @@
 import { Box, Container, Typography } from "@mui/material";
 import { useEffect, type ReactElement } from "react";
-import { useSearchParams } from "react-router-dom";
-import { BasePage } from "ui";
+import { useSearchParams } from "react-router";
+import { PageMeta } from "ui";
 import { setAssociationsState, setStandaloneGenes } from "../../components/GeneEnrichmentAnalysis/actions";
 import StandaloneAnalysisContainer from "../../components/GeneEnrichmentAnalysis/components/StandaloneAnalysisContainer";
 import {
@@ -75,9 +75,10 @@ function AnalysisPageContent(): ReactElement {
 
 function AnalysisPage(): ReactElement {
   return (
-    <BasePage>
+    <>
+      <PageMeta />
       <AnalysisPageContent />
-    </BasePage>
+    </>
   );
 }
 

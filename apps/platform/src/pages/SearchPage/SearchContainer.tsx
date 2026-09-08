@@ -1,5 +1,5 @@
 import {
-  Grid,
+  GridLegacy,
   Card,
   Typography,
   Checkbox,
@@ -8,7 +8,7 @@ import {
   TablePagination,
   Box,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartBar,
@@ -46,84 +46,70 @@ const getCounts = entities => {
   return counts;
 };
 
-const useStyles = makeStyles(theme => ({
-  label: {
-    marginLeft: "-6px",
-  },
-  labelIcon: {
-    color: theme.palette.primary.main,
-    marginRight: "2px",
-  },
-}));
+const StyledFormControlLabel = styled(FormControlLabel)({
+  marginLeft: "-6px",
+});
 
 const SearchFilters = ({ entities, entitiesCount, setEntity }) => {
   const counts = getCounts(entitiesCount);
-  const classes = useStyles();
+  const theme = useTheme();
+  const iconStyle = { color: theme.palette.primary.main, marginRight: "2px" };
 
   return (
     <>
-      <FormControlLabel
-        className={classes.label}
+      <StyledFormControlLabel
         control={<Checkbox checked={entities.includes("target")} onChange={setEntity("target")} />}
         label={
           <>
-            <FontAwesomeIcon icon={faDna} fixedWidth className={classes.labelIcon} />
+            <FontAwesomeIcon icon={faDna} fixedWidth style={iconStyle} />
             <Typography variant="body2" display="inline">
               Target ({counts.target})
             </Typography>
           </>
         }
       />
-      <FormControlLabel
-        className={classes.label}
+      <StyledFormControlLabel
         control={
           <Checkbox checked={entities.includes("variant")} onChange={setEntity("variant")} />
         }
         label={
           <>
-            <FontAwesomeIcon icon={faMapPin} fixedWidth className={classes.labelIcon} />
+            <FontAwesomeIcon icon={faMapPin} fixedWidth style={iconStyle} />
             <Typography variant="body2" display="inline">
               Variant ({counts.variant})
             </Typography>
           </>
         }
       />
-      <FormControlLabel
-        className={classes.label}
+      <StyledFormControlLabel
         control={<Checkbox checked={entities.includes("study")} onChange={setEntity("study")} />}
         label={
           <>
-            <FontAwesomeIcon icon={faChartBar} fixedWidth className={classes.labelIcon} />
+            <FontAwesomeIcon icon={faChartBar} fixedWidth style={iconStyle} />
             <Typography variant="body2" display="inline">
               Study ({counts.study})
             </Typography>
           </>
         }
       />
-      <FormControlLabel
-        className={classes.label}
+      <StyledFormControlLabel
         control={
           <Checkbox checked={entities.includes("disease")} onChange={setEntity("disease")} />
         }
         label={
           <>
-            <FontAwesomeIcon icon={faStethoscope} fixedWidth className={classes.labelIcon} />
+            <FontAwesomeIcon icon={faStethoscope} fixedWidth style={iconStyle} />
             <Typography variant="body2" display="inline">
               Disease or phenotype ({counts.disease})
             </Typography>
           </>
         }
       />
-      <FormControlLabel
-        className={classes.label}
+      <StyledFormControlLabel
         control={<Checkbox checked={entities.includes("drug")} onChange={setEntity("drug")} />}
         label={
           <>
-            <FontAwesomeIcon
-              icon={faPrescriptionBottleAlt}
-              fixedWidth
-              className={classes.labelIcon}
-            />
+            <FontAwesomeIcon icon={faPrescriptionBottleAlt} fixedWidth style={iconStyle} />
             <Typography variant="body2" display="inline">
               Drug ({counts.drug})
             </Typography>
@@ -238,8 +224,8 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
       <Typography variant="h5" gutterBottom>
         {data.search.total} results for &quot;<strong>{q}</strong>&quot;
       </Typography>
-      <Grid container spacing={2} sx={{ display: "flex", height: "100%" }}>
-        <Grid item md={3}>
+      <GridLegacy container spacing={2} sx={{ display: "flex", height: "100%" }}>
+        <GridLegacy item md={3}>
           <Typography variant="body2">Refine by:</Typography>
           <FormGroup>
             <SearchFilters
@@ -248,8 +234,8 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
               setEntity={onSetEntity}
             />
           </FormGroup>
-        </Grid>
-        <Grid
+        </GridLegacy>
+        <GridLegacy
           item
           md={6}
           sx={{
@@ -262,15 +248,15 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
           ) : (
             <NoResultsContainer q={q} />
           )}
-        </Grid>
+        </GridLegacy>
 
         {topHit ? (
-          <Grid item md={3}>
+          <GridLegacy item md={3}>
             {" "}
             <TopHitDetail topHit={topHit} />{" "}
-          </Grid>
+          </GridLegacy>
         ) : null}
-      </Grid>
+      </GridLegacy>
     </>
   );
 }

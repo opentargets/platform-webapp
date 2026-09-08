@@ -5,7 +5,7 @@ import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
 import {
   Badge,
   ClickAwayListener,
-  Grid,
+  GridLegacy,
   IconButton,
   InputAdornment,
   List,
@@ -66,9 +66,9 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
       {/* FILTER POPOVER */}
       <OtPopper id={id} open={open} anchorEl={anchorEl}>
         <ClickAwayListener onClickAway={handleClose}>
-          <Grid container direction="column" spacing={2}>
+          <GridLegacy container direction="column" spacing={2}>
             {/* INPUT FOR COLUMN FILTER */}
-            <Grid sx={{ width: 1 }} item>
+            <GridLegacy sx={{ width: 1 }} item>
               <TextField
                 sx={{ width: 1, padding: theme => `${theme.spacing(1)} ${theme.spacing(1.5)}` }}
                 autoFocus
@@ -86,9 +86,9 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
                   ),
                 }}
               />
-            </Grid>
+            </GridLegacy>
             {/* LIST OF UNIQUE VALUES IN COLUMN */}
-            <Grid item>
+            <GridLegacy item>
               <List aria-label="filter-list">
                 {Object.keys(sortedUniqueValues).map(
                   keyName =>
@@ -115,8 +115,8 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
                     )
                 )}
               </List>
-            </Grid>
-          </Grid>
+            </GridLegacy>
+          </GridLegacy>
         </ClickAwayListener>
       </OtPopper>
 

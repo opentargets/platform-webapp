@@ -2,7 +2,7 @@ import FileSaver from "file-saver";
 import { useState, useMemo, useEffect, useReducer } from "react";
 import {
   Button,
-  Grid,
+  GridLegacy,
   Typography,
   Snackbar,
   Slide,
@@ -27,7 +27,6 @@ import {
   ListItemIcon,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { makeStyles } from "@mui/styles";
 import { faCaretDown, faFileDownload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { CopyUrlButton, useAPIMetadata, useApolloClient, useBatchDownloader } from "ui";
@@ -67,22 +66,18 @@ const BorderAccordion = styled(Accordion)(({ theme }) => ({
   borderRadius: `${theme.spacing(1)} !important`,
 }));
 
-const styles = makeStyles(theme => ({
-  messageProgress: {
-    marginRight: "1rem",
-    color: "white !important",
+const StyledSnackbar = styled(Snackbar)({
+  "& .MuiSnackbarContent-root": {
+    padding: 0,
   },
-  snackbarContentMessage: {
+  "& .MuiSnackbarContent-message": {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
     padding: ".75rem 1rem",
     width: "100%",
   },
-  snackbarContentRoot: {
-    padding: 0,
-  },
-}));
+});
 
 const allAssociationsAggregation = [...new Set(dataSources.map(e => e.aggregation))];
 const allPrioritizationAggregation = [...new Set(prioritizationCols.map(e => e.aggregation))];
@@ -146,7 +141,6 @@ const DOWNLOAD_CHUNCK_SIZE = 300;
 function DataDownloader() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { version } = useAPIMetadata();
-  const classes = styles();
   const {
     id,
     query,
@@ -446,35 +440,29 @@ function DataDownloader() {
               <Typography>Download data as:</Typography>
             </Box>
             <Box>
-              <Grid container alignItems="center" spacing={3}>
-                <Grid item>
+              <GridLegacy container alignItems="center" spacing={3}>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadJSON} size="small">
                     JSON
                   </Button>
-                </Grid>
-                <Grid item>
+                </GridLegacy>
+                <GridLegacy item>
                   <Button variant="outlined" onClick={handleClickDownloadTSV} size="small">
                     TSV
                   </Button>
-                </Grid>
-              </Grid>
+                </GridLegacy>
+              </GridLegacy>
             </Box>
           </Box>
         </DialogContent>
       </Dialog>
-      <Snackbar
+      <StyledSnackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         open={downloading}
         TransitionComponent={Slide}
-        ContentProps={{
-          classes: {
-            root: classes.snackbarContentRoot,
-            message: classes.snackbarContentMessage,
-          },
-        }}
         message={
           <>
-            <CircularProgress className={classes.messageProgress} />
+            <CircularProgress sx={{ marginRight: "1rem", color: "white !important" }} />
             Preparing the data. This may take several minutes...
           </>
         }

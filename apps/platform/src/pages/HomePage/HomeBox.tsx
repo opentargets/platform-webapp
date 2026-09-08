@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Grid, Paper, Box, Typography } from "@mui/material";
+import { GridLegacy, Paper, Box, Typography } from "@mui/material";
 import { SxProps } from "@mui/system";
 import { usePermissions, Link } from "ui";
 
@@ -61,7 +61,7 @@ function HomeBox({ children }: HomeBoxProps): JSX.Element {
   const { isPartnerPreview } = usePermissions();
 
   return (
-    <Grid item xs={12} sm={12} md={8} lg={8}>
+    <GridLegacy item xs={12} sm={12} md={8} lg={8}>
       <Paper elevation={1} sx={styles.homeboxContainer}>
         <Box sx={styles.homeboxHeader}>
           {isPartnerPreview ? <PPOTLogo sx={styles.logo} /> : <OTLogo sx={styles.logo} />}
@@ -89,7 +89,7 @@ function HomeBox({ children }: HomeBoxProps): JSX.Element {
           </Typography>
         </Paper>
       )}
-    </Grid>
+    </GridLegacy>
   );
 }
 
