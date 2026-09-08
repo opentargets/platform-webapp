@@ -1,0 +1,282 @@
+[
+  {
+    "id": "ENSG00000294897",
+    "name": null,
+    "start": 18512,
+    "end": 50681,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 50105,
+        "end": 50681
+      },
+      {
+        "start": 18512,
+        "end": 18878
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000294916",
+    "name": null,
+    "start": 20627,
+    "end": 52486,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 52259,
+        "end": 52474
+      },
+      {
+        "start": 34265,
+        "end": 34370
+      },
+      {
+        "start": 25378,
+        "end": 27285
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000278673",
+    "name": null,
+    "start": 20741,
+    "end": 22392,
+    "strand": -1,
+    "biotype": "pseudogene",
+    "exons": [
+      {
+        "start": 21629,
+        "end": 22392
+      },
+      {
+        "start": 20741,
+        "end": 21627
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000277890",
+    "name": "U6",
+    "start": 34890,
+    "end": 34996,
+    "strand": 1,
+    "biotype": "snRNA",
+    "exons": [
+      {
+        "start": 34890,
+        "end": 34996
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307608",
+    "name": null,
+    "start": 64692,
+    "end": 71131,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 70946,
+        "end": 71131
+      },
+      {
+        "start": 64692,
+        "end": 65368
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276760",
+    "name": null,
+    "start": 136160,
+    "end": 167571,
+    "strand": -1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 166680,
+        "end": 167571
+      },
+      {
+        "start": 162197,
+        "end": 162311
+      },
+      {
+        "start": 161864,
+        "end": 162037
+      },
+      {
+        "start": 158949,
+        "end": 159055
+      },
+      {
+        "start": 157474,
+        "end": 157611
+      },
+      {
+        "start": 154895,
+        "end": 154965
+      },
+      {
+        "start": 153238,
+        "end": 153458
+      },
+      {
+        "start": 152230,
+        "end": 152499
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000277927",
+    "name": "U6",
+    "start": 156089,
+    "end": 156195,
+    "strand": -1,
+    "biotype": "snRNA",
+    "exons": [
+      {
+        "start": 156089,
+        "end": 156195
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000294368",
+    "name": null,
+    "start": 178912,
+    "end": 188399,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 178912,
+        "end": 178984
+      },
+      {
+        "start": 187871,
+        "end": 188399
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000297236",
+    "name": null,
+    "start": 241258,
+    "end": 434941,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 307016,
+        "end": 307100
+      },
+      {
+        "start": 322698,
+        "end": 322792
+      },
+      {
+        "start": 412093,
+        "end": 412255
+      },
+      {
+        "start": 413861,
+        "end": 413938
+      },
+      {
+        "start": 434650,
+        "end": 434936
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000275249",
+    "name": null,
+    "start": 372322,
+    "end": 373405,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 372322,
+        "end": 373405
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000274792",
+    "name": null,
+    "start": 386278,
+    "end": 387620,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 386278,
+        "end": 387620
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276872",
+    "name": null,
+    "start": 417283,
+    "end": 418206,
+    "strand": 1,
+    "biotype": "pseudogene",
+    "exons": [
+      {
+        "start": 417283,
+        "end": 417351
+      },
+      {
+        "start": 417355,
+        "end": 418206
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000309787",
+    "name": null,
+    "start": 437194,
+    "end": 440503,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 437194,
+        "end": 437399
+      },
+      {
+        "start": 437485,
+        "end": 437770
+      },
+      {
+        "start": 440346,
+        "end": 440503
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000309802",
+    "name": null,
+    "start": 437233,
+    "end": 439860,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 439776,
+        "end": 439860
+      },
+      {
+        "start": 437233,
+        "end": 438143
+      }
+    ]
+  }
+]

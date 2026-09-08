@@ -1,0 +1,152 @@
+[
+  {
+    "id": "ENSG00000301406",
+    "name": null,
+    "start": 12396,
+    "end": 13988,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 12396,
+        "end": 12715
+      },
+      {
+        "start": 12994,
+        "end": 13988
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307206",
+    "name": null,
+    "start": 21341,
+    "end": 24234,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 23241,
+        "end": 24222
+      },
+      {
+        "start": 21508,
+        "end": 21638
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000298142",
+    "name": null,
+    "start": 26722,
+    "end": 28038,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 28005,
+        "end": 28038
+      },
+      {
+        "start": 26722,
+        "end": 27632
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000310376",
+    "name": null,
+    "start": 113837,
+    "end": 140657,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 134429,
+        "end": 134759
+      },
+      {
+        "start": 139918,
+        "end": 140014
+      },
+      {
+        "start": 140142,
+        "end": 140657
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000310392",
+    "name": null,
+    "start": 120506,
+    "end": 121345,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 121297,
+        "end": 121345
+      },
+      {
+        "start": 120506,
+        "end": 120848
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000273739",
+    "name": null,
+    "start": 122136,
+    "end": 122225,
+    "strand": 1,
+    "biotype": "misc_RNA",
+    "exons": [
+      {
+        "start": 122136,
+        "end": 122225
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276700",
+    "name": "RNA5-8SN4",
+    "start": 128877,
+    "end": 129029,
+    "strand": 1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 128877,
+        "end": 129029
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276312",
+    "name": null,
+    "start": 167218,
+    "end": 167307,
+    "strand": 1,
+    "biotype": "misc_RNA",
+    "exons": [
+      {
+        "start": 167218,
+        "end": 167307
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000275757",
+    "name": "5_8S_rRNA",
+    "start": 173956,
+    "end": 174108,
+    "strand": 1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 173956,
+        "end": 174108
+      }
+    ]
+  }
+]
