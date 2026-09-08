@@ -334,7 +334,7 @@ export function getVariantTrack({ data }: { data: any }) {
 
       return (
         <Container>
-          <DataBackground scalesRef={scalesRef} trackId={trackId} color="#f0f5fe" alpha={1} />
+          <DataBackground scalesRef={scalesRef} trackId={trackId} color="#eaf4fb" alpha={1} />
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={1} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0.5} color={H_LINE_COLOR} /> */}
           {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0} color={H_LINE_COLOR} /> */}

@@ -44,6 +44,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
 
   // Internal view state — owns current position, only initialized from props once
   const [internalView, setInternalView] = useState({ start: viewStart, end: viewEnd });
+  const [isMovingWindow, setIsMovingWindow] = useState(false);
   const internalViewRef = useRef({ start: viewStart, end: viewEnd });
 
   const HANDLE_WIDTH = 8;
@@ -158,6 +159,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
     const rect = containerRef.current.getBoundingClientRect();
 
     const { start, end } = internalViewRef.current;
+    setIsMovingWindow(type === 'move');
     const startX = (start - xMin) / (xMax - xMin) * canvasWidth;
     const startW = (end - start) / (xMax - xMin) * canvasWidth;
     dragState.current = {
@@ -193,6 +195,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
     upHandlerRef.current = undefined;
 
     dragState.current = null;
+    setIsMovingWindow(false);
     const { start, end } = internalViewRef.current;
     onViewChange(start, end);
     setInternalView({ start, end });
@@ -238,7 +241,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
           borderLeft: 'none',
           borderRight: 'none',
           boxSizing: 'border-box',
-          cursor: 'default',
+          cursor: isMovingWindow ? 'grabbing' : 'grab',
           zIndex: 2,
         }}
         onMouseDown={(e) => handleMouseDown('move', e)}
