@@ -20,22 +20,24 @@ function YDetails({
   Label,
   SubLabel,
   Axis,
+  labelOffset = 0,
 }: {
   Label?: LabelProp;
   SubLabel?: LabelProp;
   Axis?: ElementType | null;
+  labelOffset?: number | string;
 }) {
   return (
     <Box
       sx={{ 
         width: "100%", 
-        height: "100%", 
+      height: "100%", 
         display: "flex", 
         justifyContent: "flex-end", 
         alignItems: "flex-start",
         gap: 0.75,
       }}>
-      <Box sx={{ height: "100%" }}>
+      <Box sx={{ height: "100%", mt: labelOffset }}>
         {renderLabel(Label, {
           height: "100%",
           display: "flex",

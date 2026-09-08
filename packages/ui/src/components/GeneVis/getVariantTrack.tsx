@@ -82,7 +82,7 @@ function VariantsYInfo({ yMax }: { yMax: number }) {
           gap: 0,
           mr: -3,
         }}>
-          <Typography variant="caption" sx={{ textAlign: 'right' }}>
+          <Typography variant="caption" sx={{ textAlign: 'right', fontWeight: 600 }}>
             Variants
           </Typography>
           <Typography variant="caption" sx={{ textAlign: 'right', fontSize: '11px' }}>

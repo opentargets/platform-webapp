@@ -3,11 +3,10 @@ import { useRef } from "react";
 import {
   GenTrack,
   useGenTrackState,
-  useGenTrackTooltipDispatch,
   RegionBoundaryOverlay,
   DataVLine,
 } from "ui";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useMeasure } from "@uidotdev/usehooks";
 import XAxis from "./XAxis";
 import XAxisLabel from "./XAxisLabel";
@@ -123,7 +122,12 @@ function GeneVisInner(props: {
       // YInfo component for this biotype
       const TrackYInfo = () => (
         <YDetails
-          SubLabel={BIOTYPE_DISPLAY_NAMES[biotype]}
+          labelOffset="-0.25rem"
+          SubLabel={() => (
+            <Typography variant="caption" sx={{ textAlign: 'right', fontWeight: 600 }}>
+              {BIOTYPE_DISPLAY_NAMES[biotype]}
+            </Typography>
+          )}
           Axis={null}
         />
       );

@@ -17,7 +17,7 @@ import TooltipTable from "../TooltipTable";
 import TooltipRow from "../TooltipRow";
 import ScientificNotation from "../ScientificNotation";
 
-export const TOOLTIP_WIDTH = 400;
+export const TOOLTIP_WIDTH = 420;
 
 const TooltipLink = styled(Link)({
   "&:hover": {
@@ -92,7 +92,6 @@ function UnifiedTooltip() {
   return (
     <Box sx={{
       width: tooltipWidth,
-      // p: 1,
       backgroundColor: "#fff",
       border: "1px solid #ccc",
       borderRadius: 1,
@@ -101,7 +100,9 @@ function UnifiedTooltip() {
       <TooltipLink to={`/${entityType}/${data.id}`}>
         <Box
           sx={{
-            p: 1,
+            py: 1,
+            pl: 1,
+            pr: 2,
             display: "block",
             cursor: "pointer",
             "&:hover": { backgroundColor: "#e1eff9" },
@@ -184,90 +185,88 @@ function UnifiedTooltip() {
       {entityType === "variant" && (
         <>
           <Divider />
-          <Box sx={{ pt: 1.5, pb: 0.5, pl: 1.5, pr: 1 }}>
-            {/* <Box sx={{ p: 1}}> */}
-              <Typography
-                variant="body2"
-                component="div"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  color: theme => theme.palette.grey[900],
-                  fontSize: 13.1,
-                  fontWeight: 600,
-                }}
-              >
-                Credible set statistics for{" "}
-                <DisplayVariantId
-                  variantId={datum?.id}
-                  referenceAllele={datum?.referenceAllele}
-                  alternateAllele={datum?.alternateAllele}
-                  expand={false}
+          <Box sx={{ pt: 1.5, pb: 0.5, px: 2 }}>
+            <Typography
+              variant="body2"
+              component="div"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                color: theme => theme.palette.grey[900],
+                fontSize: 13.1,
+                fontWeight: 600,
+              }}
+            >
+              Credible set statistics for{" "}
+              <DisplayVariantId
+                variantId={datum?.id}
+                referenceAllele={datum?.referenceAllele}
+                alternateAllele={datum?.alternateAllele}
+                expand={false}
+              />
+              {isLeadVariant && (
+                <Chip
+                  label="lead"
+                  variant="outlined"
+                  size="small"
+                  sx={{ fontWeight: 400 }}
                 />
-                {isLeadVariant && (
-                  <Chip
-                    label="lead"
-                    variant="outlined"
-                    size="small"
-                    sx={{ fontWeight: 400 }}
-                  />
-                )}
-              </Typography>
-              <Box sx={{ pl: 0 }}>
-                <TooltipTable>
-                  <TooltipRow label="P-value">
-                    {typeof variantLocus?.pValueMantissa === "number" &&
-                    typeof variantLocus?.pValueExponent === "number" ? (
-                      <ScientificNotation
-                        number={[variantLocus.pValueMantissa, variantLocus.pValueExponent]}
-                        dp={2}
-                      />
-                    ) : (
-                      naLabel
-                    )}
-                  </TooltipRow>
-                  <TooltipRow label="Beta">
-                    {typeof variantLocus?.beta === "number"
-                      ? variantLocus.beta.toPrecision(3)
-                      : naLabel}
-                  </TooltipRow>
-                  <TooltipRow label="Standard error">
-                    {typeof variantLocus?.standardError === "number"
-                      ? variantLocus.standardError.toFixed(3)
-                      : naLabel}
-                  </TooltipRow>
-                  <TooltipRow label="LD (r²)">
-                    {typeof variantLocus?.r2Overall === "number"
-                      ? variantLocus.r2Overall.toFixed(3)
-                      : naLabel}
-                  </TooltipRow>
-                  <TooltipRow label="Posterior probability">
-                    {typeof variantLocus?.posteriorProbability === "number"
-                      ? variantLocus.posteriorProbability.toPrecision(3)
-                      : naLabel}
-                  </TooltipRow>
-                  <TooltipRow label="log(BF)">
-                    {typeof variantLocus?.logBF === "number"
-                      ? variantLocus.logBF.toPrecision(3)
-                      : naLabel}
-                  </TooltipRow>
-                  <TooltipRow label="Predicted consequence">
-                    {data?.mostSevereConsequence ? (
-                      <Link
-                        external
-                        to={identifiersOrgLink("SO", data.mostSevereConsequence.id.slice(3))}
-                      >
-                        {data.mostSevereConsequence.label.replace(/_/g, " ")}
-                      </Link>
-                    ) : (
-                      naLabel
-                    )}
-                  </TooltipRow>
-                </TooltipTable>
-              </Box>
+              )}
+            </Typography>
+            <Box sx={{ pl: 0 }}>
+              <TooltipTable>
+                <TooltipRow label="P-value">
+                  {typeof variantLocus?.pValueMantissa === "number" &&
+                  typeof variantLocus?.pValueExponent === "number" ? (
+                    <ScientificNotation
+                      number={[variantLocus.pValueMantissa, variantLocus.pValueExponent]}
+                      dp={2}
+                    />
+                  ) : (
+                    naLabel
+                  )}
+                </TooltipRow>
+                <TooltipRow label="Beta">
+                  {typeof variantLocus?.beta === "number"
+                    ? variantLocus.beta.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Standard error">
+                  {typeof variantLocus?.standardError === "number"
+                    ? variantLocus.standardError.toFixed(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="LD (r²)">
+                  {typeof variantLocus?.r2Overall === "number"
+                    ? variantLocus.r2Overall.toFixed(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Posterior probability">
+                  {typeof variantLocus?.posteriorProbability === "number"
+                    ? variantLocus.posteriorProbability.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="log(BF)">
+                  {typeof variantLocus?.logBF === "number"
+                    ? variantLocus.logBF.toPrecision(3)
+                    : naLabel}
+                </TooltipRow>
+                <TooltipRow label="Predicted consequence">
+                  {data?.mostSevereConsequence ? (
+                    <Link
+                      external
+                      to={identifiersOrgLink("SO", data.mostSevereConsequence.id.slice(3))}
+                    >
+                      {data.mostSevereConsequence.label.replace(/_/g, " ")}
+                    </Link>
+                  ) : (
+                    naLabel
+                  )}
+                </TooltipRow>
+              </TooltipTable>
             </Box>
-          {/* </Box> */}
+          </Box>
         </>
       )}
     </Box>
