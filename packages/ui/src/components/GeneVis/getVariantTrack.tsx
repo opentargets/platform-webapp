@@ -264,7 +264,16 @@ function VariantMarker({
     const pointerPageY = nativeEvent?.clientY != null
       ? nativeEvent.clientY + window.scrollY
       : undefined;
-    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, genomicX: variant.position };
+    const scales = scalesRef.current;
+    const yScaleInfo = scales?.yScales.get("variants");
+    const markerScreenY = yScaleInfo
+      ? y * yScaleInfo.yScale + yScaleInfo.yOffset + (yScaleInfo.containerY ?? 0)
+      : e.global.y;
+    const canvasPageY = (pointerPageY ?? 0) - e.global.y;
+    const markerRadius = 4;
+    const boxTopPageY = canvasPageY + markerScreenY - markerRadius;
+    const boxBottomPageY = canvasPageY + markerScreenY + markerRadius;
+    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, boxTopPageY, boxBottomPageY, genomicX: variant.position };
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
