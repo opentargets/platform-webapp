@@ -262,7 +262,7 @@ function GeneVisInner(props: {
   const innerScalesRef = useRef<any>(null);
 
   return (
-    <Box ref={widthRef} sx={{mr: 3}}>
+    <Box ref={widthRef} sx={{ mr: 3, pb: 2 }}>
       <GenTrack
         // XInfo={XAxis}
         // XYInfo={XAxisLabel}

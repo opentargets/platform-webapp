@@ -951,6 +951,7 @@ function GenTrackInner({
                   XYInfo={InnerXYInfo}
                   xyInfoHeight={innerXYInfoHeight}
                   yInfoWidth={yInfoWidth}
+                  paddingBottom={paddingBottom}
                   panZoomBottomGap={panZoomBottomGap}
                   Tooltip={InnerTooltip}
                   tooltipProps={innerTooltipProps}
