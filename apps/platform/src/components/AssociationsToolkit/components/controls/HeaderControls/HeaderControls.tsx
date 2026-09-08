@@ -1,4 +1,4 @@
-import { Box, Collapse, Grid, Typography } from "@mui/material";
+import { Box, Collapse, GridLegacy, Typography } from "@mui/material";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -114,7 +114,7 @@ function HeaderControls({ cols = [] }: HeaderControlsProps): ReactNode {
   return (
     <Collapse in={activeHeadersControlls}>
       <WeightsControllsContainer data-testid="weights-controls-container">
-        <Grid container direction="row" wrap="nowrap">
+        <GridLegacy container direction="row" wrap="nowrap">
           <CloseContainer onClick={handleClose} data-testid="close-weights-button">
             <FontAwesomeIcon icon={faXmark} size="lg" />
           </CloseContainer>
@@ -155,7 +155,7 @@ function HeaderControls({ cols = [] }: HeaderControlsProps): ReactNode {
             ))}
           </GridContainer>
           <MetricsSpacerCol />
-        </Grid>
+        </GridLegacy>
       </WeightsControllsContainer>
     </Collapse>
   );

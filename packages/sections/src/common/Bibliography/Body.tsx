@@ -1,6 +1,7 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { Autocomplete, Box, Button, Chip, Grid, TextField, Typography } from "@mui/material";
+import { Component , useState} from "react";
+import { v1 } from "uuid";
+import { Autocomplete, Box, Button, Chip, GridLegacy, TextField, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 // TODO: note this component is not actually used.
 // Only SimplePublication is used in evidence bibliography
 
@@ -71,27 +72,29 @@ const AGG_TYPES: AggregationType[] = [
   // {value: 'pub_date_histogram', label: 'publication date'}
 ];
 
-const styles = {
-  filterCategoryContainer: {
-    display: "flex",
-    "& p": {
-      margin: ".2rem 1rem 0 0",
-    },
+const FilterCategoryContainer = styled(Box)({
+  display: "flex",
+  "& p": {
+    margin: ".2rem 1rem 0 0",
   },
-  aggtypeAutocomplete: {
-    width: "15rem",
-    "& .MuiFormControl-root": { marginTop: 0 },
-  },
-  chip: {
-    margin: 0.25,
-  },
-  noTagsSelected: {
-    margin: ".375rem 0",
-  },
-  resultCount: {
-    marginBottom: "2rem",
-  },
-};
+});
+
+const AggtypeAutocomplete = styled(Autocomplete)({
+  width: "15rem",
+  "& .MuiFormControl-root": { marginTop: 0 },
+}) as typeof Autocomplete;
+
+const StyledChip = styled(Chip)({
+  margin: 0.25,
+});
+
+const NoTagsSelected = styled(Typography)({
+  margin: ".375rem 0",
+});
+
+const ResultCount = styled(Typography)({
+  marginBottom: "2rem",
+});
 
 const Body: FC<BodyProps> = ({ id, label, definition }) => {
   const reportContext = useReportSectionContext();
@@ -231,10 +234,10 @@ const Body: FC<BodyProps> = ({ id, label, definition }) => {
           spacing={2}
         >
           <Grid item xs={12}>
-            <Box sx={styles.filterCategoryContainer}>
+            <FilterCategoryContainer>
               <Typography>Tag category:</Typography>
               {/* Dropdown menu */}
-              <Autocomplete
+              <AggtypeAutocomplete
                 disableClearable
                 getOptionLabel={option => option.label}
                 isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -242,37 +245,32 @@ const Body: FC<BodyProps> = ({ id, label, definition }) => {
                 options={AGG_TYPES}
                 renderInput={params => <TextField {...params} margin="normal" />}
                 value={selectedAggregation}
-                sx={styles.aggtypeAutocomplete}
               />
-            </Box>
+            </FilterCategoryContainer>
             {/* Chips */}
             <Box>
               {selected.length > 1 ? (
                 selected.map((sel, i) =>
                   i > 0 ? (
-                    <Chip
+                    <StyledChip
                       key={uuidv4()}
                       color="primary"
                       label={sel.label || sel.key}
                       onDelete={() => handleDeselectChip(i)}
-                      sx={styles.chip}
                     />
                   ) : null
                 )
               ) : (
-                <Typography sx={styles.noTagsSelected}>
-                  No tags selected, please select from below
-                </Typography>
+                <NoTagsSelected>No tags selected, please select from below</NoTagsSelected>
               )}
             </Box>
             <Box>
               {currentAggregationBuckets.map(agg => (
-                <Chip
+                <StyledChip
                   key={uuidv4()}
                   variant="outlined"
                   label={agg.label || agg.key}
                   onClick={() => handleSelectChip(agg)}
-                  sx={styles.chip}
                 />
               ))}
             </Box>
@@ -280,9 +278,9 @@ const Body: FC<BodyProps> = ({ id, label, definition }) => {
 
           <Grid item xs={12}>
             {/* Total result */}
-            <Typography variant="body2" sx={styles.resultCount}>
+            <ResultCount variant="body2">
               Showing {Math.min(hits.length, bibliographyCount)} of {bibliographyCount} results
-            </Typography>
+            </ResultCount>
 
             {/* Publications */}
             <Grid

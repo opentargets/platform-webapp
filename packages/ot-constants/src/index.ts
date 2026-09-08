@@ -462,4 +462,5 @@ export * from "./partnerPreviewUtils";
 export * from "./searchSuggestions";
 export * from "./types";
 export * from "./types/geneLoc";
+export * from "./types/sections";
 export * from "./variant";

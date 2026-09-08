@@ -172,24 +172,25 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         onClose={handleMenuClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
-        {activeReport && (
-          <>
-            <MenuItem
-              onClick={handleAddToActiveReport}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 2,
-                backgroundColor: "rgba(25, 103, 210, 0.08)",
-                fontWeight: 500,
-              }}
-            >
-              <span>Add to "{activeReport.name}"</span>
-              <FontAwesomeIcon icon={faFloppyDisk} />
-            </MenuItem>
-            {reportsCount > 1 && <div style={{ borderBottom: "1px solid #e0e0e0" }} />}
-          </>
-        )}
+        {activeReport && [
+          <MenuItem
+            key="active-report"
+            onClick={handleAddToActiveReport}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 2,
+              backgroundColor: "rgba(25, 103, 210, 0.08)",
+              fontWeight: 500,
+            }}
+          >
+            <span>Add to "{activeReport.name}"</span>
+            <FontAwesomeIcon icon={faFloppyDisk} />
+          </MenuItem>,
+          reportsCount > 1 && (
+            <div key="active-report-divider" style={{ borderBottom: "1px solid #e0e0e0" }} />
+          ),
+        ]}
 
         {Array.from(state.reports.values())
           .filter((r) => r.id !== activeReport?.id)

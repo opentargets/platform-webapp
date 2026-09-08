@@ -1,0 +1,17 @@
+<script>
+  // Set window configuration before any React code loads
+  // This is required by @ot/config theme used by UI components
+  window.configProfile = {
+    primaryColor: '#3489ca',
+    secondaryColor: '#18405e',
+    isPartnerPreview: false,
+    partnerDataTypes: [],
+  };
+
+  // Set other required config values
+  // Using production API endpoint as it has CORS enabled for Storybook
+  window.configUrlApi = 'https://api.platform.opentargets.org/api/v4/graphql';
+  window.configOTAiApi = 'https://ai.platform.opentargets.org';
+  window.configGeneticsPortalUrl = 'https://genetics.opentargets.org';
+  window.gitVersion = 'storybook-dev';
+</script>

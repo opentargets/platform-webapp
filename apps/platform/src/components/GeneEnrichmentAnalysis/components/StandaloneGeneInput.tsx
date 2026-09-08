@@ -14,13 +14,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { AnalysisInputs, Gene } from "../types";
 import { genesToText, parseGeneList } from "../utils/parseGeneList";
+import { GseaLibrariesMap } from "../constants";
 
-const LIBRARY_DISPLAY_NAMES: Record<string, string> = {
-  ReactomePathways_2025: "Reactome 2025",
-  "GO:BP_2025": "Gene Ontology (Biological Process) 2025",
-  "GO:CC_2025": "Gene Ontology (Cellular Component) 2025",
-  "GO:MF_2025": "Gene Ontology (Molecular Function) 2025",
-};
+const LIBRARY_DISPLAY_NAMES: Record<string, string> = GseaLibrariesMap;
 
 function getLibraryDisplayName(library: string): string {
   const parts = library.split("/");

@@ -26,20 +26,27 @@ function NoveltySparkline({ data }: NoveltySparklineProps) {
     const color = theme.palette.primary.main;
     const gradientId = "novelty-sparkline-gradient";
 
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 25;
+    const paddedData =
+      data.length > 0 && data[0].year > startYear
+        ? [{ year: startYear, novelty: 0 }, ...data]
+        : data;
+
     const plot = Plot.plot({
       width: 60,
       height: 32,
       margin: 2,
-      style: { width: "100%", overflow: "visible", background: "none" },
-      x: { axis: null },
+      style: { width: "100%", overflow: "hidden", background: "none" },
+      x: { axis: null, domain: [startYear, currentYear] },
       y: { axis: null, domain: [0, 1] },
       marks: [
-        Plot.areaY(data, {
+        Plot.areaY(paddedData, {
           x: "year",
           y: "novelty",
           fill: `url(#${gradientId})`,
         }),
-        Plot.line(data, {
+        Plot.line(paddedData, {
           x: "year",
           y: "novelty",
           stroke: color,
@@ -72,7 +79,6 @@ function NoveltySparkline({ data }: NoveltySparklineProps) {
 
     ref.current.appendChild(plot);
 
-    // Draw-in animation
     const paths = plot.querySelectorAll<SVGPathElement>("path");
     if (paths.length >= 2) {
       const linePath = paths[paths.length - 1];

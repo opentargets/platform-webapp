@@ -1,12 +1,12 @@
-import { Collapse, Grid, Grow, Skeleton } from "@mui/material";
+import { Collapse, GridLegacy, Grow, Skeleton } from "@mui/material";
 
 function GlobalSearchLoadingState() {
   const listItemsToShow = new Array<number>(4).fill(0);
   return (
     <Collapse appear in>
       <div>
-        <Grid container justifyContent="flex-start" alignItems="center" style={{ padding: 20 }}>
-          <Grid
+        <GridLegacy container justifyContent="flex-start" alignItems="center" style={{ padding: 20 }}>
+          <GridLegacy
             container
             justifyContent="flex-start"
             alignItems="center"
@@ -16,9 +16,9 @@ function GlobalSearchLoadingState() {
           >
             <Skeleton animation="wave" variant="circular" width="2rem" height="2rem" />
             <Skeleton variant="text" animation="wave" width="10vw" height="3vh" />
-          </Grid>
+          </GridLegacy>
           {listItemsToShow.map((_item, index) => (
-            <Grid
+            <GridLegacy
               key={index}
               container
               justifyContent="flex-start"
@@ -28,16 +28,16 @@ function GlobalSearchLoadingState() {
                 padding: "1rem",
               }}
             >
-              <Grid container justifyContent="space-between" className="name-container">
+              <GridLegacy container justifyContent="space-between" className="name-container">
                 <Skeleton animation="wave" width="20vw" height="2vh" />
                 <Skeleton animation="wave" width="6vw" height="1vh" />
-              </Grid>
-              <Grid className="author-container">
+              </GridLegacy>
+              <GridLegacy className="author-container">
                 <Skeleton animation="wave" width="15vw" height="2vh" />
-              </Grid>
-            </Grid>
+              </GridLegacy>
+            </GridLegacy>
           ))}
-        </Grid>
+        </GridLegacy>
       </div>
     </Collapse>
   );

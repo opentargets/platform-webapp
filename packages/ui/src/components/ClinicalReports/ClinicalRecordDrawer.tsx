@@ -9,7 +9,7 @@ import {
   Chip,
   CircularProgress,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { clinicalStageCategories, clinicalReportsSourcesInfo, stopReasonMap } from "@ot/constants";
@@ -22,31 +22,33 @@ import useDelayedFlag from "../../hooks/useDelayedFlag";
 import { sentenceCase } from "@ot/utils";
 import RECORD_DETAIL_QUERY from "./RecordDetailQuery.gql";
 
-const useDrawerStyles = makeStyles((theme: any) => ({
-  drawerLink: {
-    color: `${theme.palette.primary.main} !important`,
+const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
+  color: `${theme.palette.primary.main} !important`,
+}));
+
+const StyledBody = styled(Box)({
+  overflowY: "overlay",
+});
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  "& .MuiBackdrop-root": {
+    opacity: "0 !important",
   },
-  drawerBody: {
-    overflowY: "overlay",
-  },
-  drawerModal: {
-    "& .MuiBackdrop-root": {
-      opacity: "0 !important",
-    },
-  },
-  drawerPaper: {
+  "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.grey[300],
     maxWidth: "100%",
   },
-  drawerTitle: {
-    borderBottom: "1px solid #ccc",
-    padding: "1rem",
-  },
-  drawerTitleCaption: {
-    color: theme.palette.grey[700],
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-  },
+}));
+
+const StyledPaperTitle = styled(Paper)({
+  borderBottom: "1px solid #ccc",
+  padding: "1rem",
+});
+
+const StyledTitleCaption = styled(Typography)(({ theme }) => ({
+  color: theme.palette.grey[700],
+  fontSize: "1.2rem",
+  fontWeight: "bold",
 }));
 
 const getDetails = (client, query, clinicalReportId) =>
@@ -384,7 +386,6 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
 function ClinicalRecordDrawer({ recordId, recordDetailQuery, children }: any) {
   const [open, setOpen] = useState(false);
-  const classes = useDrawerStyles();
 
   const toggleDrawer = (event: any) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
@@ -399,38 +400,32 @@ function ClinicalRecordDrawer({ recordId, recordDetailQuery, children }: any) {
 
   return (
     <>
-      <ButtonBase
+      <StyledButtonBase
         disableRipple
         onClick={toggleDrawer}
-        className={classes.drawerLink}
         sx={{ maxWidth: "100%", overflow: "hidden", display: "block" }}
       >
         {children}
-      </ButtonBase>
+      </StyledButtonBase>
 
-      <Drawer
-        anchor="right"
-        classes={{ modal: classes.drawerModal, paper: classes.drawerPaper }}
-        open={open}
-        onClose={closeDrawer}
-      >
-        <Paper classes={{ root: classes.drawerTitle }} elevation={0}>
+      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+        <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography className={classes.drawerTitleCaption}>Report</Typography>
+            <StyledTitleCaption>Report</StyledTitleCaption>
             <IconButton onClick={closeDrawer}>
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>
-        </Paper>
+        </StyledPaperTitle>
 
-        <Box width={700} maxWidth="100%" className={classes.drawerBody}>
+        <StyledBody width={700} maxWidth="100%">
           {open && (
             <Box mt={2} mb={3} mx={3} p={3} pb={6} bgcolor="white">
               <RecordDetails recordId={recordId} recordDetailQuery={recordDetailQuery} />
             </Box>
           )}
-        </Box>
-      </Drawer>
+        </StyledBody>
+      </StyledDrawer>
     </>
   );
 }

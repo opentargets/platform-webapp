@@ -350,11 +350,13 @@
     "project_name": "Phenotypic mapping of gene functions in immune cells",
     "project_lead": "Gosia Trynka",
     "generates_data": "Yes",
-    "integrated_into_PPP": "N",
+    "integrated_into_PPP": "Y",
     "integrated_into_Public": "N",
     "project_status": "Active",
     "open_targets_therapeutic_area": "Immunology and Inflammation",
-    "disease_mapping": []
+    "disease_mapping": [
+       { "label": "autoimmune disease", "disease_id": "MONDO_0007179" }
+    ]
   },
   {
     "otar_code": "OTAR2074",

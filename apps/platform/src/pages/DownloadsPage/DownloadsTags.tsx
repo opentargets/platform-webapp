@@ -3,7 +3,7 @@ import { Box, Chip, Divider, Popover } from "@mui/material";
 import { DownloadsContext } from "./context/DownloadsContext";
 import { useContext, useState } from "react";
 import { Link, PublicationsDrawer } from "ui";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignLeft, faFileLines, faTableList } from "@fortawesome/free-solid-svg-icons";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -12,13 +12,13 @@ import { epmcUrl } from "@ot/utils";
 const DownloadsLink = styled("a")(({ theme }) => ({
   color: theme.palette.primary.main,
   fontSize: "inherit",
-  "text-decoration-color": "transparent",
-  "-webkit-text-decoration-color": "transparent",
+  "textDecorationColor": "transparent",
+  "WebkitTextDecorationColor": "transparent",
   marginTop: `10px !important`,
   "&:hover": {
     color: theme.palette.primary.dark,
-    "text-decoration-color": theme.palette.primary.dark,
-    "-webkit-text-decoration-color": theme.palette.primary.dark,
+    "textDecorationColor": theme.palette.primary.dark,
+    "WebkitTextDecorationColor": theme.palette.primary.dark,
   },
 }));
 

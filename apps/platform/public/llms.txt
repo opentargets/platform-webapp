@@ -1,0 +1,41 @@
+# Open Targets Platform
+
+> The Open Targets Platform integrates publicly available datasets to support systematic identification and prioritisation of drug targets, connecting targets, diseases, drugs, variants, studies and credible sets through evidence. This file orients AI agents to the Platform's resources and APIs.
+
+The Platform is organised around entity pages — target, disease, drug, variant, study and credible set — each aggregating evidence and associations for that entity. Pages live under `https://platform.opentargets.org/<entity>/<id>` (for example `/target/ENSG00000169174`). Programmatic access is available through bulk data downloads (recommended for large-scale use), the GraphQL API, or the MCP server — all listed below.
+
+## Documentation
+
+- [Documentation home](https://platform-docs.opentargets.org)
+- [Data sources](https://platform-docs.opentargets.org/data-sources)
+- [Data access](https://platform-docs.opentargets.org/data-access)
+
+## API
+
+- [GraphQL endpoint](https://api.platform.opentargets.org/api/v4/graphql)
+- [GraphQL browser / playground](https://api.platform.opentargets.org/api/v4/graphql/browser)
+- [GraphQL schema](https://api.platform.opentargets.org/api/v4/graphql/schema)
+- [API how-to](https://platform-docs.opentargets.org/data-access/graphql-api)
+- [MCP server](http://mcp.platform.opentargets.org/mcp): Model Context Protocol endpoint for AI agents
+
+## Data downloads
+
+- [Downloads page](https://platform.opentargets.org/downloads)
+- [Google Cloud bucket](gs://open-targets-data-releases/)
+- [AWS S3 bucket](s3://open-targets-public-data-releases/platform/)
+- [Google BigQuery](https://console.cloud.google.com/bigquery?p=bigquery-public-data&d=open_targets_platform): dataset bigquery-public-data.open_targets_platform
+- [FTP / HTTPS at EBI](https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/)
+
+## Source & citation
+
+- [GitHub organisation](https://github.com/opentargets)
+- [Release software versions](https://github.com/opentargets/ot-snapshot)
+- [Release notes](https://platform-docs.opentargets.org/release-notes#overall-data-metrics)
+- [How to cite](https://platform-docs.opentargets.org/citation#latest-publication)
+
+## Community
+
+- [Community forum](https://community.opentargets.org)
+- [Feature requests](https://community.opentargets.org/c/feature-requests/16)
+- [Report a bug](https://github.com/opentargets/issues)
+- [Blog](https://blog.opentargets.org)

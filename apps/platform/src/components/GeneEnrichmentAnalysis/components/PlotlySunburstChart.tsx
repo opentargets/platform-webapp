@@ -142,7 +142,7 @@ function PlotlySunburstChart({ results, height = 600 }: PlotlySunburstChartProps
 
     // Add root node
     data.ids.push("root");
-    data.labels.push("All Pathways");
+    data.labels.push("");
     data.parents.push("");
     data.values.push(0); // Will be calculated as sum of children with remainder mode
     data.customdata.push({ type: "root", count: results.length });
@@ -159,11 +159,8 @@ function PlotlySunburstChart({ results, height = 600 }: PlotlySunburstChartProps
 
       const nes = pathway.NES || 0;
       const pValue = pathway["p-value"] || 1;
-      const genes = pathway["Leading edge genes"] || "";
-      const geneList = genes
-        .split(",")
-        .map((g) => g.trim())
-        .filter(Boolean);
+      const genes = pathway["Leading edge genes"] || [];
+      const geneList = Array.isArray(genes) ? genes : [];
 
       // Get children first to determine if this is a leaf
       const children = childrenMap.get(id) || [];

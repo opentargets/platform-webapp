@@ -1,5 +1,6 @@
 query MolQTLColocQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
   credibleSet(studyLocusId: $studyLocusId) {
+    studyLocusId
     molqtlcolocalisation: colocalisation(
       studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
       page: { size: $size, index: $index }

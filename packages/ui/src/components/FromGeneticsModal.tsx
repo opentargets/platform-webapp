@@ -1,6 +1,6 @@
 import { Modal, Box, Typography, Button, styled } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { Link } from "ui";
 
 const StyledButton = styled(Button)(({ theme }) => ({

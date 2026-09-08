@@ -19,6 +19,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
     count
   }
   variant {
+    id
     chromosome
     position
     rsIds
@@ -29,6 +30,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
   locusEnd
   confidence
   study {
+    id
     projectId
     publicationFirstAuthor
     publicationDate

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Box, Typography } from "@mui/material";
 import { gql, useQuery } from "@apollo/client";
 import * as Plot from "@observablehq/plot";
 import dataSourcesAssoc from "../../static_datasets/dataSourcesAssoc";
@@ -16,20 +17,35 @@ export const NOVELTY_TIME_SERIES_QUERY = gql`
           year
           aggregationType
           aggregationValue
+          associationScore
         }
       }
     }
   }
 `;
 
+export const CATEGORICAL_COLORS = [
+  "#6929c4", // Purple
+  "#005d5d", // Teal
+  "#9f1853", // Magenta
+  "#fa4d56", // Red
+  "#570408", // Dark red
+  "#198038", // Green
+  "#002d9c", // Blue
+  "#ee538b", // Magenta light
+  "#b28600", // Yellow
+  "#009d9a", // Teal light
+  "#8a3800", // Orange
+  "#a56eff", // Purple light
+];
+
 export const DATASOURCE_LABEL_MAP: Record<string, string> = Object.fromEntries(
   dataSourcesAssoc.map(d => [d.id, d.label])
 );
 
-export const CATEGORICAL_COLORS = [
-  "#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951",
-  "#ff8ab7", "#a463f2", "#97bbf5", "#9c6b4e", "#9498a0",
-];
+export const DATASOURCE_COLOR_MAP: Record<string, string> = Object.fromEntries(
+  dataSourcesAssoc.map((d, i) => [d.label, CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]])
+);
 
 export const CHART_MARGIN = { left: 52, right: 16, top: 8, bottom: 36 };
 
@@ -38,6 +54,7 @@ export type RawRow = {
   year: number;
   aggregationType: string;
   aggregationValue: string;
+  associationScore?: number;
 };
 
 export type LabeledRow = RawRow & { label: string };
@@ -61,7 +78,7 @@ export function injectGradient(plot: SVGSVGElement, id: string, color: string) {
 function sharedAxis() {
   return {
     x: { label: "Year", tickFormat: (d: number) => String(d), line: true },
-    y: { label: "Novelty", domain: [0, 1] as [number, number], tickFormat: ".1f" },
+    y: { label: "Score", labelAnchor: "center", domain: [0, 1] as [number, number], tickFormat: ".1f" },
     style: { width: "100%", background: "none" } as React.CSSProperties,
     marginLeft: CHART_MARGIN.left,
     marginRight: CHART_MARGIN.right,
@@ -76,18 +93,24 @@ export function OverallChart({
   height = 180,
   plotWidth = 500,
   showArea = true,
+  scoreColor = "#9e9e9e",
 }: {
   rows: LabeledRow[];
   color: string;
   height?: number;
   plotWidth?: number;
   showArea?: boolean;
+  scoreColor?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const plotRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredRow, setHoveredRow] = useState<LabeledRow | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (!ref.current || !rows.length) return;
+    if (!plotRef.current || !rows.length) return;
     const gradientId = "novelty-overall-gradient";
+    const scoreRows = rows.filter(r => r.associationScore != null);
 
     const plot = Plot.plot({
       width: plotWidth,
@@ -99,16 +122,82 @@ export function OverallChart({
           ? [Plot.areaY(rows, { x: "year", y: "novelty", fill: `url(#${gradientId})` })]
           : []),
         Plot.line(rows, { x: "year", y: "novelty", stroke: color, strokeWidth: 2.5 }),
+        ...(scoreRows.length
+          ? [Plot.line(scoreRows, { x: "year", y: "associationScore", stroke: scoreColor, strokeWidth: 1.5, strokeDasharray: "5,3" })]
+          : []),
         Plot.ruleX(rows, Plot.pointerX({ x: "year", stroke: "#999", strokeWidth: 1, strokeDasharray: "4,2" })),
       ],
     });
 
     if (showArea) injectGradient(plot, gradientId, color);
-    ref.current.appendChild(plot);
-    return () => plot.remove();
-  }, [rows, color, height, plotWidth, showArea]);
 
-  return <div ref={ref} style={{ width: "100%" }} />;
+    const onInput = () => setHoveredRow(((plot as any).value as LabeledRow) ?? null);
+    plot.addEventListener("input", onInput);
+
+    plotRef.current.appendChild(plot);
+    return () => { plot.removeEventListener("input", onInput); plot.remove(); };
+  }, [rows, color, height, plotWidth, showArea, scoreColor]);
+
+  const hasScore = rows.some(r => r.associationScore != null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const handleMouseLeave = () => { setMousePos(null); setHoveredRow(null); };
+
+  return (
+    <Box ref={containerRef} sx={{ position: "relative" }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <Box sx={{ display: "flex", gap: 2, mb: 0.75, mr: `${CHART_MARGIN.right}px`, alignItems: "center", justifyContent: "flex-end" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          <Box sx={{ width: 20, height: 2.5, bgcolor: color, borderRadius: 1 }} />
+          <Typography variant="caption">Novelty</Typography>
+        </Box>
+        {hasScore && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <svg width="20" height="4" style={{ display: "block" }}>
+              <line x1="0" y1="2" x2="20" y2="2" stroke={scoreColor} strokeWidth="1.5" strokeDasharray="5,3" />
+            </svg>
+            <Typography variant="caption">Association score</Typography>
+          </Box>
+        )}
+      </Box>
+      <div ref={plotRef} style={{ width: "100%" }} />
+      {mousePos && hoveredRow && (
+        <Box sx={{
+          position: "absolute",
+          left: mousePos.x > (containerRef.current?.offsetWidth ?? 0) / 2 ? mousePos.x - 8 : mousePos.x + 12,
+          transform: mousePos.x > (containerRef.current?.offsetWidth ?? 0) / 2 ? "translateX(-100%)" : undefined,
+          top: mousePos.y - 12,
+          pointerEvents: "none",
+          zIndex: 10,
+          bgcolor: "white",
+          border: "1px solid",
+          borderColor: "grey.300",
+          borderRadius: 1,
+          boxShadow: 3,
+          p: 1,
+          minWidth: 148,
+        }}>
+          <Typography variant="caption" sx={{ fontWeight: "bold", display: "block", mb: 0.5 }}>
+            {hoveredRow.year}
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+            <Typography variant="caption" color="text.secondary">Novelty</Typography>
+            <Typography variant="caption">{hoveredRow.novelty != null ? hoveredRow.novelty.toFixed(3) : "—"}</Typography>
+          </Box>
+          {hoveredRow.associationScore != null && (
+            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+              <Typography variant="caption" color="text.secondary">Assoc. score</Typography>
+              <Typography variant="caption">{hoveredRow.associationScore.toFixed(3)}</Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
 }
 
 export function SourcesChart({
@@ -124,10 +213,13 @@ export function SourcesChart({
   plotWidth?: number;
   showLegend?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const plotRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredYear, setHoveredYear] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!plotRef.current) return;
 
     const plot = Plot.plot({
       width: plotWidth,
@@ -136,7 +228,7 @@ export function SourcesChart({
       color: {
         legend: showLegend,
         domain: dsLabels,
-        range: CATEGORICAL_COLORS.slice(0, dsLabels.length),
+        range: dsLabels.map(l => DATASOURCE_COLOR_MAP[l] ?? "#bdbdbd"),
       },
       marks: [
         Plot.ruleY([0], { stroke: "#e0e0e0" }),
@@ -145,12 +237,62 @@ export function SourcesChart({
       ],
     });
 
+    const onInput = () => {
+      const datum = (plot as any).value as LabeledRow | null;
+      setHoveredYear(datum?.year ?? null);
+    };
+    plot.addEventListener("input", onInput);
+
     (plot as HTMLElement).style.margin = "0";
-    ref.current.appendChild(plot);
-    return () => plot.remove();
+    plotRef.current.appendChild(plot);
+    return () => { plot.removeEventListener("input", onInput); plot.remove(); };
   }, [rows, dsLabels, height, plotWidth, showLegend]);
 
-  return <div ref={ref} style={{ width: "100%" }} />;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const handleMouseLeave = () => { setMousePos(null); setHoveredYear(null); };
+
+  const points = hoveredYear != null
+    ? rows.filter(r => r.year === hoveredYear).sort((a, b) => (b.novelty ?? 0) - (a.novelty ?? 0))
+    : [];
+
+  return (
+    <Box ref={containerRef} sx={{ position: "relative" }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <div ref={plotRef} style={{ width: "100%" }} />
+      {mousePos && points.length > 0 && (
+        <Box sx={{
+          position: "absolute",
+          left: mousePos.x > (containerRef.current?.offsetWidth ?? 0) / 2 ? mousePos.x - 8 : mousePos.x + 12,
+          transform: mousePos.x > (containerRef.current?.offsetWidth ?? 0) / 2 ? "translateX(-100%)" : undefined,
+          top: mousePos.y - 12,
+          pointerEvents: "none",
+          zIndex: 10,
+          bgcolor: "white",
+          border: "1px solid",
+          borderColor: "grey.300",
+          borderRadius: 1,
+          boxShadow: 3,
+          p: 1,
+          minWidth: 180,
+        }}>
+          <Typography variant="caption" sx={{ fontWeight: "bold", display: "block", mb: 0.5 }}>
+            {hoveredYear}
+          </Typography>
+          {points.map(p => (
+            <Box key={p.label} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: DATASOURCE_COLOR_MAP[p.label] ?? "#bdbdbd", flexShrink: 0 }} />
+              <Typography variant="caption" sx={{ flex: 1 }}>{p.label}</Typography>
+              <Typography variant="caption" sx={{ ml: 1 }}>{p.novelty != null ? p.novelty.toFixed(3) : "—"}</Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
 }
 
 export function useNoveltyTimeSeries({

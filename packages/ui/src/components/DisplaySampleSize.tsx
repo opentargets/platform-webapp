@@ -15,7 +15,7 @@ export default function DisplaySampleSize({
   const display = (
     <>
       {nSamples?.toLocaleString()}
-      {cohorts ? ` (cohorts: ${cohorts.join(", ")})` : ""}
+      {cohorts?.length > 0 ? ` (cohorts: ${cohorts.join(", ")})` : ""}
     </>
   );
 

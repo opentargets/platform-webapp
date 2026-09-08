@@ -1,0 +1,102 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Associations/Overview" />
+
+# Associations on the Fly
+
+**Associations on the Fly (AOTF)** is the core interactive feature of the Open Targets Platform. It renders a live, user-configurable table of target–disease association scores, letting researchers slice and weight evidence data sources in real time without any page reload or pre-computed query.
+
+It appears on two entity pages:
+- **Target page** (`/target/:id`) — rows are diseases associated with a given target
+- **Disease page** (`/disease/:id`) — rows are targets associated with a given disease
+
+---
+
+## What it does
+
+### Evidence table
+
+The primary view shows a scored matrix. Each row is an associated entity (target or disease). Each column is a data source or aggregated data type. Cell colour encodes the association score (0 → white, 1 → dark blue).
+
+Columns available:
+- Overall association score
+- Data type scores (genetic associations, somatic mutations, clinical, pathways, text mining, RNA expression, animal models)
+- Data source scores (individual evidence providers per data type)
+- Novelty gauge (recency-weighted score)
+
+### Prioritisation table
+
+A second display mode (`displayedTable: "prioritisations"`) switches to target safety and tractability columns — same table infrastructure, different column set and colour scale.
+
+### Interactive controls
+
+| Control | What it does |
+|---|---|
+| **Facets search** | Filter rows by ontology term, tissue, publication, etc. |
+| **Name filter** | Free-text search over row entity names |
+| **Column options** | Per-datasource weight sliders and "required" toggles |
+| **Display mode switch** | Toggle between associations and prioritisations views |
+| **Data uploader** | Bulk upload a list of entity IDs to pin as a separate table section |
+| **Export menu** | Download current view as CSV/TSV |
+| **API playground** | Open a GraphiQL drawer pre-populated with the current query |
+| **Analysis menu** | Launch analysis tools (gene enrichment, etc.) |
+
+### Row expansion
+
+Clicking a cell opens an evidence section drawer beneath that row, showing the underlying evidence records for that target–disease–datasource combination. The active row and open section are synchronised to the URL (`focus` param) so deep links work.
+
+### Interactors expansion
+
+A row can be expanded to show its protein–protein interactors as a sub-table, fetched live from the interactors query.
+
+---
+
+## Three table instances
+
+AOTF renders three independent TanStack table instances sharing column definitions:
+
+| Table | Source | Purpose |
+|---|---|---|
+| **Core** | Paginated GraphQL query | Main paginated, sortable, filterable table |
+| **Pinned** | `pinnedData` from context | Fixed rows pinned by the user (up to 150) |
+| **Uploaded** | `uploadedData` from context | Rows from bulk upload (up to 150) |
+
+Pinned and uploaded sections appear above the core table in collapsible panels.
+
+---
+
+## URL state
+
+All user-navigable state is URL-backed. A URL like:
+
+```
+/target/ENSG00000141510/associations?sort=genetic_association:desc&page=2&pinned=EFO_0001378,EFO_0000249
+```
+
+opens the target associations page sorted by genetic association score, page 2, with two diseases pinned. This enables shareable deep links and browser back/forward navigation.
+
+| Param | Owner | Example |
+|---|---|---|
+| `page` | QueryContext | `2` |
+| `pageSize` | QueryContext | `50` |
+| `sort` | QueryContext | `genetic_association:desc` |
+| `q` | QueryContext | `BRCA` |
+| `facets` | QueryContext | `id~Breast cancer~disease` |
+| `table` | URLContext | `prioritisations` |
+| `pinned` | URLContext | `EFO_0001378,EFO_0000249` |
+| `uploaded` | URLContext | comma-separated IDs |
+| `weights` | URLContext | `1` when column weight panel is open |
+| `focus` | FocusContext | `core\|EFO_0001378\|ot_genetics_portal\|` |
+
+---
+
+## Adding a new data source column
+
+1. Add an entry to `apps/platform/src/components/AssociationsToolkit/static_datasets/dataSourcesAssoc.ts` for evidence columns, or `prioritisationColumns.ts` for prioritisation.
+2. The column is auto-picked up by `getDatasources()` in `TableAssociations.tsx`.
+3. For partner-preview-only columns, set `isPrivate: true`.
+
+## Adding a new row metric
+
+1. Add an entry to `static_datasets/rowMetrics.ts` with a `format` function.
+2. For a custom cell renderer, add a matching key to `CUSTOM_CELL_RENDERERS` in `TableAssociations.tsx`.

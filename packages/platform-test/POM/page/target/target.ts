@@ -19,7 +19,9 @@ export class TargetPage {
    */
   async goToTargetPage(ensgId: string): Promise<void> {
     await this.page.goto(`/target/${ensgId}`);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   /**
@@ -34,7 +36,9 @@ export class TargetPage {
    */
   async goToProfilePage(): Promise<void> {
     await this.page.goto(this.getProfilePageUrl());
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   /**
@@ -43,7 +47,9 @@ export class TargetPage {
   async goToAssociationsPage(): Promise<void> {
     const baseUrl = this.getProfilePageUrl();
     await this.page.goto(`${baseUrl}/associations`);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
+      state: "visible",
+    });
   }
 
   // Tab navigation
@@ -227,7 +233,6 @@ export class TargetPage {
     await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
       state: "visible",
     });
-    await this.page.waitForLoadState("networkidle");
   }
 
   /**

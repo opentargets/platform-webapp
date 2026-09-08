@@ -3,7 +3,7 @@ import {
   Card,
   CardActions,
   CardContent,
-  Grid,
+  GridLegacy,
   Paper,
   Skeleton,
   Typography,
@@ -17,11 +17,11 @@ function DownloadsLoading() {
     <Box>
       <DownloadsHeaderLoading />
       <DownloadsTagsLoading />
-      <Grid container sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Grid item xs={12} md={3} lg={2}>
+      <GridLegacy container sx={{ display: "flex", justifyContent: "space-between" }}>
+        <GridLegacy item xs={12} md={3} lg={2}>
           <DownloadsFilterLoading />
-        </Grid>
-        <Grid
+        </GridLegacy>
+        <GridLegacy
           item
           xs={12}
           md={9}
@@ -43,8 +43,8 @@ function DownloadsLoading() {
               <DownloadsCardLoading key={v1()} />
             ))}
           </Box>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
     </Box>
   );
 }

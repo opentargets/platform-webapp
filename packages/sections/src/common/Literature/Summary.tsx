@@ -1,0 +1,34 @@
+import { gql } from "@apollo/client";
+
+import { SummaryItem, usePlatformApi } from "ui";
+import { WidgetDefinition } from "../../types/widget";
+
+const SIMILARENTTIES_SUMMARY_FRAGMENT = gql`
+  fragment SimilarEntitiesDisease on Disease {
+    similarEntities(threshold: 0.5, size: 20) {
+      score
+    }
+  }
+`;
+
+type Props = { definition: WidgetDefinition };
+
+function Summary({ definition }: Props) {
+  const request = usePlatformApi(SIMILARENTTIES_SUMMARY_FRAGMENT);
+
+  return (
+    <SummaryItem
+      definition={definition}
+      request={request}
+      renderSummary={data =>
+        data.similarEntities?.length > 0 ? <>Data available</> : <>no data</>
+      }
+    />
+  );
+}
+
+Summary.fragments = {
+  SimilarEntitiesDisease: SIMILARENTTIES_SUMMARY_FRAGMENT,
+};
+
+export default Summary;

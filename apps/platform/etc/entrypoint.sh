@@ -8,4 +8,12 @@ EOF
 
 cat "/usr/share/nginx/html/profiles/${WEBAPP_FLAVOR:-platform}.js" >> /usr/share/nginx/html/config.js
 
+# Select the PPP llms.txt variant when running the partner flavor
+if [ "${WEBAPP_FLAVOR:-platform}" = "ppp" ]; then
+  cp /usr/share/nginx/html/llms.ppp.txt /usr/share/nginx/html/llms.txt
+fi
+
+# Remove the inactive partner variant so it is never served on the public origin
+rm -f /usr/share/nginx/html/llms.ppp.txt
+
 exec "$@"

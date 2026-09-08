@@ -67,6 +67,7 @@ export interface AnalysisRun {
   status: RunStatus;
   inputs: AnalysisInputs;
   efoId: string;
+  efoName: string;
   genes: Gene[];
   results: GseaResult[];
   inputOverlap: InputOverlap | null;

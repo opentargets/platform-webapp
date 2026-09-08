@@ -1,0 +1,30 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Introduction" />
+
+# Open Targets Platform Web App 
+
+This is the component and package documentation for the [Open Targets Platform](https://platform.opentargets.org) web app — a data integration tool for systematic drug target identification and prioritisation.
+
+The Platform is a React SPA built as a Yarn monorepo. This Storybook documents the shared libraries and composed widgets that the app is assembled from, so you can explore a component's API and behaviour in isolation, without running the full application against live data.
+
+## Who this is for
+
+- **Contributors** building or changing UI components, data sections, and shared packages.
+- **Reviewers** who need to see a component's props and states without spinning up the platform app.
+- **AI tooling** — every package has a dedicated page exposing its public API and type signatures, and stories ship with realistic props, so agents can read the component surface directly instead of re-deriving it from source.
+
+## How the docs are organised
+
+| Section | What it covers |
+|---|---|
+| **Getting Started** | Prerequisites, running the docs, and adding your own stories and pages |
+| **Architecture** | The monorepo layout, package roles, dependency graph, and data flow |
+| **Packages** | API reference for `ot-config`, `ot-constants`, `ot-utils`, and `sections` |
+| **Components** | Hand-written docs for `Table`, `DataTable`, and the 3D `Viewer` |
+| **Configuration** | Partner preview and private instance options |
+| **UI Components** | Auto-generated docs for `packages/ui` primitives |
+| **Sections** | Stories for the composed data widgets in `packages/sections` |
+| **Associations** | Dedicated docs for the Associations on the Fly toolkit |
+
+New here? Start with **Getting Started** to run the site locally, then read **Architecture** to understand how the packages fit together.

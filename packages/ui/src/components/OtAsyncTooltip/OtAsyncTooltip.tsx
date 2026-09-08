@@ -29,7 +29,7 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
   [`& .${tooltipClasses.tooltip}`]: {
     backgroundColor: theme.palette.common.white,
     maxWidth: 400,
-    boxShadow: theme.boxShadow.default,
+    // boxShadow: theme.boxShadow.default,
     cursor: "pointer",
     border: `1px solid ${theme.palette.grey[300]}`,
     borderRadius: 4,

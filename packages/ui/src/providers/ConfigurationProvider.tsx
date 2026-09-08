@@ -1,4 +1,5 @@
 import { PropsWithChildren, createContext, useContext } from "react";
+import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
 import { Config, theme } from "@ot/config";
 import { OTApolloProvider } from "./OTApolloProvider/OTApolloProvider";
 import ThemeProvider from "./ThemeProvider/ThemeProvider";
@@ -9,17 +10,22 @@ type ContextType = {
 };
 interface ProviderProps extends PropsWithChildren {
   config: Config | null;
+  client?: ApolloClient<NormalizedCacheObject>;
 }
 
 export const OTConfigurationContext = createContext<ContextType>({ config: null });
 
-export const OTConfigurationProvider = ({ children, config }: ProviderProps): JSX.Element => {
+export const OTConfigurationProvider = ({
+  children,
+  config,
+  client,
+}: ProviderProps): JSX.Element => {
   if (!config) {
     throw new Error("ConfigurationProvider requires a Config object");
   }
   return (
     <OTConfigurationContext.Provider value={{ config }}>
-      <OTApolloProvider config={config}>
+      <OTApolloProvider config={config} client={client}>
         <ThemeProvider theme={theme}>
           <APIMetadataProvider>{children}</APIMetadataProvider>
         </ThemeProvider>

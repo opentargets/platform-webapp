@@ -1,0 +1,174 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Packages/ot-constants" />
+
+# `@ot/constants`
+
+Application-wide constants and generated GraphQL types for the Open Targets Platform.
+
+**Package name:** `@ot/constants`  
+**Location:** `packages/ot-constants/`  
+**Entry point:** `packages/ot-constants/src/index.ts`
+
+---
+
+## Two categories of content
+
+### 1. Application constants (`src/index.ts` and sub-modules)
+
+Named exports covering every domain constant in the platform.
+
+#### API and data configuration
+
+```ts
+export const PPP_API_URL       // Partner preview GraphQL endpoint
+export const PPP_WEB_URL       // Partner preview web URL
+export const tableChunkSize    // 100 — default rows per paginated request
+export const table2HChunkSize  // 200
+export const table5HChunkSize  // 500
+export const downloaderChunkSize    // 2500
+export const sectionsBaseSizeQuery  // 3500
+export const sections5kSizeQuery    // 5000
+export const sections10kSizeQuery   // 10000
+export const defaultRowsPerPageOptions  // [10, 25, 100]
+export const naLabel           // "N/A"
+export const decimalPlaces     // 3
+```
+
+#### Colour and visual constants
+
+```ts
+export const colorRange   // 10-step blue gradient array
+export const PHARM_GKB_COLOR  // { green, yellow, red }
+export const baselineUnits    // units per expression modality
+```
+
+#### Clinical and evidence maps
+
+```ts
+export const clinicalStageCategories  // UNKNOWN → PHASE_4 → WITHDRAWAL (ordered)
+export const stopReasonMap(category)  // human-readable stop reason labels
+export const clinvarStarMap           // review status → star count (0–4)
+export const credsetConfidenceMap     // SuSiE/PICS credible set confidence (1–4)
+export const clinicalReportsSourcesInfo  // AACT, TTD, FDA, EMA, etc. — name + URL
+```
+
+#### Study and variant constants
+
+```ts
+export const QTLStudyType     // ["scsqtl", "sceqtl", "sqtl", "eqtl", "pqtl", ...]
+export const studySourceMap   // { FINNGEN: "FinnGen", GCST: "GWAS Catalog", ... }
+export const populationMap    // { fin: "Finnish", afr: "African", ... }
+export const variantConsequenceSource  // { VEP, ProtVar, QTL } with labels/tooltips
+export const formatMap        // { json: "JSON", parquet: "Parquet" }
+export const VIEW             // { chart: "Visualisation", table: "Table" }
+```
+
+#### Navigation and UI
+
+```ts
+export const externalLinks    // about, license, network, partners, help, social links
+export const mainMenuItems    // default nav items (overridable via profile)
+export const appTitle         // "Open Targets Platform"
+export const appDescription
+export const appCanonicalUrl
+```
+
+#### Helper functions
+
+```ts
+export function getStudyTypeDisplay(studyType)    // uppercase QTL/GWAS in display strings
+export function getStudyItemMetaData({ studyType, credibleSetsCount, nSamples })
+export function getGenomicLocation(genomicLocation)  // → ["GRCh38", "Chr1: 1000-2000,+"]
+export function stopReasonMap(category)
+```
+
+#### Sub-module re-exports
+
+```ts
+export * from "./alphaFold"           // AlphaFold confidence colour/label maps
+export * from "./dataTypes"           // data type definitions (genetic_association, etc.)
+export * from "./particlesBackground" // background particle config
+export * from "./partnerPreviewUtils" // isPrivateDataType() helper
+export * from "./searchSuggestions"   // default search suggestion entries
+export * from "./variant"             // variant consequence helpers
+export * from "./types"               // IGeneomicLocation and other domain types
+export * from "./types/geneLoc"       // genomic location type
+```
+
+---
+
+### 2. Generated GraphQL types (`src/types/index.ts`)
+
+This file (~140 KB) is the output of `graphql-codegen` against the production Open Targets GraphQL schema. **Do not edit it by hand** — regenerate with:
+
+```bash
+yarn generateAPITypes
+```
+
+It exports:
+- All GraphQL scalars mapped to TypeScript primitives
+- Every object type in the schema (e.g. `Target`, `Disease`, `Drug`, `Variant`, `Study`, `CredibleSet`, `Evidence`, `Interaction`, `MousePhenotype`, …)
+- All query/mutation/fragment operation types
+- `GraphQLClient` and `RequestOptions` types from `graphql-request`
+
+#### Key type exports
+
+```ts
+// Scalar types
+export type Maybe<T> = T | null;
+export type Scalars = { ID, String, Boolean, Int, Float, Long }
+
+// Entity types (sample)
+export type Target = { /* id, approvedSymbol, biotype, ... */ }
+export type Disease = { /* id, name, description, ... */ }
+export type Drug = { /* id, name, maximumClinicalTrialPhase, ... */ }
+export type Variant = { /* variantId, chromosome, position, ... */ }
+export type Study = { /* studyId, studyType, nSamples, ... */ }
+export type CredibleSet = { /* credibleSetId, pValueMantissa, ... */ }
+
+// Association types
+export type AssociatedTarget = { /* score, datatypeScores, target: Target */ }
+export type AssociatedDisease = { /* score, datatypeScores, disease: Disease */ }
+
+// Evidence types
+export type GeneticAssociationEvidence = { /* ... */ }
+export type SomaticMutationEvidence = { /* ... */ }
+// ... one type per data source
+```
+
+#### Usage in components
+
+```ts
+import type { Target, AssociatedDisease } from "@ot/constants";
+
+function TargetCard({ target }: { target: Target }) {
+  return <div>{target.approvedSymbol}</div>;
+}
+```
+
+For query result types, import the generated operation type alongside the query document:
+
+```ts
+import type { TargetAssociationsQuery } from "@ot/constants";
+import TARGET_ASSOCIATIONS_QUERY from "./TargetAssociationsQuery.gql";
+
+const { data } = useQuery<TargetAssociationsQuery>(TARGET_ASSOCIATIONS_QUERY);
+```
+
+---
+
+## Data types reference
+
+The platform groups evidence into data types, each with an `id` and display `label`:
+
+| ID | Label |
+|---|---|
+| `genetic_association` | Genetic associations |
+| `somatic_mutation` | Somatic mutations |
+| `clinical` | Clinical |
+| `affected_pathway` | Pathways & systems biology |
+| `literature` | Text mining |
+| `rna_expression` | RNA expression |
+| `animal_model` | Animal models |
+| `ot_partner` | Partner data _(partner preview only)_ |

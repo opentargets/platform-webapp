@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
 /**
  * Interactor for Molecular Interactions section on Target page
@@ -23,9 +24,9 @@ export class MolecularInteractionsSection {
    * Wait for the section to be visible
    */
   async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: 10000 });
+    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
     await this.getTable()
-      .waitFor({ state: "visible", timeout: 10000 })
+      .waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT })
       .catch(() => {});
   }
 
