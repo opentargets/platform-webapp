@@ -267,6 +267,7 @@ function VariantMarker({
     const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, genomicX: variant.position };
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
+    genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
     genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
   }, [genTrackTooltipDispatch, highlightStateRef, variant, x, y]);
 
