@@ -246,6 +246,7 @@ function GenTrackTooltip({
       {anchorRef.current && createPortal(
         <Box
           ref={tooltipBoxRef}
+          data-gentrack-overlay-blocker
           tabIndex={-1}
           onClick={e => e.stopPropagation()}
           onKeyDown={e => {

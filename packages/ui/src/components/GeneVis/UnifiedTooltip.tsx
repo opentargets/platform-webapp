@@ -164,17 +164,19 @@ function UnifiedTooltip() {
               >
                 L2G score: {geneL2G.score.toFixed(3) ?? naLabel}
               </Typography>
-                <HeatmapTable
-                  fixedGene={datum?.id}
-                  loading={false}
-                  data={l2GPredictions}
-                  query={L2G_QUERY.loc?.source?.body || L2G_QUERY}
-                  variables={{ studyLocusId }}
-                  disabledFilter
-                  disabledExport
-                  disabledLegend
-                  singleRowMode
-                />
+                <Box sx={{ pointerEvents: "none" }}>
+                  <HeatmapTable
+                    fixedGene={datum?.id}
+                    loading={false}
+                    data={l2GPredictions}
+                    query={L2G_QUERY.loc?.source?.body || L2G_QUERY}
+                    variables={{ studyLocusId }}
+                    disabledFilter
+                    disabledExport
+                    disabledLegend
+                    singleRowMode
+                  />
+                </Box>
             </Box>
           </Box>
         </>
