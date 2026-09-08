@@ -273,7 +273,8 @@ function VariantMarker({
     const markerRadius = 4;
     const boxTopPageY = canvasPageY + markerScreenY - markerRadius;
     const boxBottomPageY = canvasPageY + markerScreenY + markerRadius;
-    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, boxTopPageY, boxBottomPageY, genomicX: variant.position };
+    const genomicX = scales ? (e.global.x - scales.xOffset) / scales.xScale : variant.position;
+    const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, boxTopPageY, boxBottomPageY, genomicX };
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
