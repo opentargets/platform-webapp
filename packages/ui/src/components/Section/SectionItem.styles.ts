@@ -1,4 +1,4 @@
-import { Avatar, Box, CardContent, Typography, styled } from "@mui/material";
+import { Avatar, Box, CardContent, styled, Typography } from "@mui/material";
 
 export const CardHeaderContainer = styled(Box)({
   display: "flex",
@@ -23,7 +23,7 @@ export const StyledAvatar = styled(Avatar)(({ theme }) => ({
 }));
 
 export const StyledTitle = styled("div", {
-  shouldForwardProp: prop => prop !== "error",
+  shouldForwardProp: (prop) => prop !== "error",
 })<{ error?: boolean }>(({ theme, error }) => ({
   color: error ? theme.palette.secondary.main : theme.palette.grey[700],
   fontWeight: "bold !important",

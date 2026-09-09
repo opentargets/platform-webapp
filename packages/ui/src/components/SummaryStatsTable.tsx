@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
-import { v1 } from "uuid";
 import { Tooltip } from "ui";
+import { v1 } from "uuid";
 
 const dicSummary = [
   { id: "n_variants", label: "Total variants", tooltip: "Number of harmonised variants" },
@@ -69,7 +69,7 @@ export default function SummaryStatsTable({ sumstatQCValues }: any) {
       <table>
         <tbody>
           {sumstatQCValues.map(({ QCCheckName, QCCheckValue }) => {
-            const sumstat = dicSummary.find(({ id }) => id === QCCheckName );
+            const sumstat = dicSummary.find(({ id }) => id === QCCheckName);
             if (!sumstat) return null;
             return (
               <tr key={v1()}>

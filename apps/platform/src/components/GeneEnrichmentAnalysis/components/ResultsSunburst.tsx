@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from "ui";
 import * as d3 from "d3";
 import { useEffect, useMemo, useRef } from "react";
 import type { GseaResult } from "../api/gseaApi";

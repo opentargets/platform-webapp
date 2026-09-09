@@ -1,8 +1,7 @@
 import { ReactElement } from "react";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
-import { Box, Tabs, Tab } from "@mui/material";
-import { PageMeta, ScrollToTop } from "ui";
-import Header from "./Header";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab, PROFILE_TABS_SENTINEL_ID } from "ui";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import VARIANT_PAGE_QUERY from "./VariantPage.gql";
 import Profile from "./Profile";
@@ -25,6 +24,8 @@ function VariantPage(): ReactElement {
     return <NotFoundPage />;
   }
 
+  const headerMeta = buildHeaderMeta({ variantId: varId, variantPageData: data?.variant });
+
   return (
     <>
       <PageMeta
@@ -35,7 +36,7 @@ function VariantPage(): ReactElement {
       <Header loading={false} variantId={varId} variantPageData={data?.variant} />
       <ScrollToTop />
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
@@ -45,7 +46,11 @@ function VariantPage(): ReactElement {
           />
         </Tabs>
       </Box>
-      <Profile varId={varId} />
+      <Profile
+        varId={varId}
+        Icon={headerMeta.Icon}
+        externalLinks={headerMeta.externalLinks}
+      />
     </>
   );
 }

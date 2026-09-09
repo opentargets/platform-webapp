@@ -5,7 +5,12 @@ function GlobalSearchLoadingState() {
   return (
     <Collapse appear in>
       <div>
-        <GridLegacy container justifyContent="flex-start" alignItems="center" style={{ padding: 20 }}>
+        <GridLegacy
+          container
+          justifyContent="flex-start"
+          alignItems="center"
+          style={{ padding: 20 }}
+        >
           <GridLegacy
             container
             justifyContent="flex-start"

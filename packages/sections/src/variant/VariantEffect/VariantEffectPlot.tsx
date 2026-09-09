@@ -2,9 +2,8 @@ import { useRef, useEffect } from "react";
 import * as PlotLib from "@observablehq/plot";
 import { rgb } from "d3";
 import { useMeasure } from "@uidotdev/usehooks";
-import { Box, Fade, Skeleton } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { DataDownloader } from "ui";
+import { DataDownloader, Box, Fade, Skeleton } from "ui";
 import { VARIANT_EFFECT_METHODS } from "@ot/constants";
 import { useTheme } from "@mui/material/styles";
 

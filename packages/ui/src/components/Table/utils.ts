@@ -1,7 +1,7 @@
 /*
   Returns a list of breakpoints translating values from hidden prop.
  */
-export const getHiddenBreakpoints = column =>
+export const getHiddenBreakpoints = (column) =>
   column.hidden?.reduce(
     (obj, b) => {
       if (b.includes("Only")) {

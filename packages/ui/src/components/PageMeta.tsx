@@ -1,6 +1,6 @@
+import { appCanonicalUrl, appDescription, appTitle } from "@ot/constants";
+import type { Location } from "history";
 import { Helmet } from "react-helmet";
-import { appTitle, appDescription, appCanonicalUrl } from "@ot/constants";
-import { Location } from "history";
 
 type PageMetaProps = {
   description?: string;

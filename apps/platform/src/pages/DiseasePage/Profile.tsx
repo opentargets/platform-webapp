@@ -1,7 +1,10 @@
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   SectionsRenderer,
   SummaryRenderer,
@@ -47,7 +50,14 @@ const DISEASE_PROFILE_QUERY = gql`
   ${DISEASE_PROFILE_SUMMARY_FRAGMENT}
 `;
 
-function Profile({ efoId, name }: { efoId: string; name: string }) {
+type ProfileProps = {
+  efoId: string;
+  name: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
+};
+
+function Profile({ efoId, name, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={DISEASE}
@@ -57,6 +67,12 @@ function Profile({ efoId, name }: { efoId: string; name: string }) {
       }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={name}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={DISEASE_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={DISEASE_WIDGETS} />
       </SummaryContainer>

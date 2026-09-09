@@ -17,15 +17,7 @@ type HeaderProps = {
   testId?: string;
 };
 
-function Header({
-  loading,
-  studyId,
-  backgroundTraits,
-  targetId,
-  diseases,
-  projectId,
-  testId,
-}: HeaderProps) {
+export function buildHeaderMeta({ studyId, backgroundTraits, targetId, diseases, projectId }) {
   let traitLinks, sourceLink;
   if (projectId === "GCST") {
     if (diseases?.length) {
@@ -85,26 +77,51 @@ function Header({
     };
   }
 
+  return {
+    title: studyId,
+    subtitle: null,
+    Icon: faChartBar,
+    externalLinks: (
+      <>
+        {traitLinks}
+        {projectId === "GWAS" && backgroundTraits?.length > 0 && (
+          <XRefLinks
+            label="Background traits"
+            urlStem="../disease/"
+            ids={backgroundTraits.map(t => t.id)}
+            names={backgroundTraits.map(t => t.name)}
+          />
+        )}
+        <ExternalLink title="Source" id={sourceLink.id} url={sourceLink.url} />
+      </>
+    ),
+  };
+}
+
+function Header({
+  loading,
+  studyId,
+  backgroundTraits,
+  targetId,
+  diseases,
+  projectId,
+  testId,
+}: HeaderProps) {
+  const { title, subtitle, Icon, externalLinks } = buildHeaderMeta({
+    studyId,
+    backgroundTraits,
+    targetId,
+    diseases,
+    projectId,
+  });
+
   return (
     <HeaderBase
       loading={loading}
-      title={studyId}
-      subtitle={null}
-      Icon={faChartBar}
-      externalLinks={
-        <>
-          {traitLinks}
-          {projectId === "GWAS" && backgroundTraits?.length > 0 && (
-            <XRefLinks
-              label="Background traits"
-              urlStem="../disease/"
-              ids={backgroundTraits.map(t => t.id)}
-              names={backgroundTraits.map(t => t.name)}
-            />
-          )}
-          <ExternalLink title="Source" id={sourceLink.id} url={sourceLink.url} />
-        </>
-      }
+      title={title}
+      subtitle={subtitle}
+      Icon={Icon}
+      externalLinks={externalLinks}
     />
   );
 }

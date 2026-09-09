@@ -1,6 +1,5 @@
-import { Box, Typography } from "@mui/material";
 import { naLabel } from "@ot/constants";
-import { TooltipRow, TooltipTable } from "ui";
+import { TooltipRow, TooltipTable, Box, Typography } from "ui";
 
 function formatToPercent(v) {
   if (v === 0) return 0;

@@ -44,6 +44,44 @@ function processXRefs(dbXRefs) {
   return xrefs;
 }
 
+export function buildHeaderMeta({
+  variantId,
+  variantPageData,
+}: {
+  variantId: string;
+  variantPageData: VariantPageDataType;
+}) {
+  const xrefs = processXRefs(variantPageData?.dbXrefs || []);
+
+  return {
+    title: (
+      <DisplayVariantId
+        variantId={variantId}
+        referenceAllele={variantPageData?.referenceAllele}
+        alternateAllele={variantPageData?.alternateAllele}
+      />
+    ),
+    Icon: faMapPin,
+    externalLinks: (
+      <>
+        {Object.keys(xrefs).map(xref => {
+          const { label, urlBuilder, urlStem, ids } = xrefs[xref];
+          return (
+            <XRefLinks
+              key={xref}
+              label={label}
+              urlStem={urlStem}
+              urlBuilder={urlBuilder ? id => urlBuilder(id, variantPageData) : null}
+              ids={[...ids]}
+              limit="3"
+            />
+          );
+        })}
+      </>
+    ),
+  };
+}
+
 type HeaderProps = {
   loading: boolean;
   variantId: string;
@@ -51,37 +89,10 @@ type HeaderProps = {
 };
 
 function Header({ loading, variantId, variantPageData }: HeaderProps) {
-  const xrefs = processXRefs(variantPageData?.dbXrefs || []);
+  const { title, Icon, externalLinks } = buildHeaderMeta({ variantId, variantPageData });
 
   return (
-    <HeaderBase
-      loading={loading}
-      title={
-        <DisplayVariantId
-          variantId={variantId}
-          referenceAllele={variantPageData?.referenceAllele}
-          alternateAllele={variantPageData?.alternateAllele}
-        />
-      }
-      Icon={faMapPin}
-      externalLinks={
-        <>
-          {Object.keys(xrefs).map(xref => {
-            const { label, urlBuilder, urlStem, ids } = xrefs[xref];
-            return (
-              <XRefLinks
-                key={xref}
-                label={label}
-                urlStem={urlStem}
-                urlBuilder={urlBuilder ? id => urlBuilder(id, variantPageData) : null}
-                ids={[...ids]}
-                limit="3"
-              />
-            );
-          })}
-        </>
-      }
-    />
+    <HeaderBase loading={loading} title={title} Icon={Icon} externalLinks={externalLinks} />
   );
 }
 

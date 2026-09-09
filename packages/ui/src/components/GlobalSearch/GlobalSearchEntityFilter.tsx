@@ -1,8 +1,8 @@
 import { Box, Checkbox, Chip, Divider, FormControlLabel, FormGroup } from "@mui/material";
 import { useContext } from "react";
+import GlobalSearchIcon from "./GlobalSearchIcon";
 import { defaultEntityFilterState, SearchContext } from "./SearchContext";
 import { getSelectedEntityFilterLength } from "./utils/searchUtils";
-import GlobalSearchIcon from "./GlobalSearchIcon";
 
 const ALL = "All";
 
@@ -45,7 +45,7 @@ function GlobalSearchEntityFilter() {
                         fontWeight: "bold",
                         display: "flex",
                         padding: "15px 6px",
-                        color: theme => theme.palette.grey[500],
+                        color: (theme) => theme.palette.grey[500],
                         ".MuiChip-icon": {
                           fontSize: "12px",
                         },
@@ -65,7 +65,7 @@ function GlobalSearchEntityFilter() {
                         fontWeight: "bold",
                         display: "flex",
                         padding: "15px 6px",
-                        backgroundColor: theme => `${theme.palette.primary.light}30`,
+                        backgroundColor: (theme) => `${theme.palette.primary.light}30`,
                         ".MuiChip-icon": {
                           fontSize: "12px",
                         },
@@ -87,7 +87,7 @@ function GlobalSearchEntityFilter() {
             tabIndex="-1"
             sx={{
               width: "1px",
-              borderLeft: theme => `1px solid ${theme.palette.grey[400]}`,
+              borderLeft: (theme) => `1px solid ${theme.palette.grey[400]}`,
               marginY: "10px",
               paddingX: "6px",
             }}
@@ -102,7 +102,7 @@ function GlobalSearchEntityFilter() {
                   <>
                     <Checkbox
                       checked={value}
-                      onChange={e => handleChangeFilter(key, e)}
+                      onChange={(e) => handleChangeFilter(key, e)}
                       inputProps={{ "aria-label": "controlled" }}
                       data-testid={`entity-filter-${key.toLowerCase()}`}
                       size="small"
@@ -113,7 +113,7 @@ function GlobalSearchEntityFilter() {
                             fontWeight: "bold",
                             display: "flex",
                             padding: "15px 6px",
-                            color: theme => theme.palette.grey[500],
+                            color: (theme) => theme.palette.grey[500],
                             ".MuiChip-icon": {
                               fontSize: "12px",
                             },
@@ -133,7 +133,7 @@ function GlobalSearchEntityFilter() {
                             fontWeight: "bold",
                             display: "flex",
                             padding: "15px 6px",
-                            backgroundColor: theme => `${theme.palette.primary.light}30`,
+                            backgroundColor: (theme) => `${theme.palette.primary.light}30`,
                             ".MuiChip-icon": {
                               fontSize: "12px",
                             },

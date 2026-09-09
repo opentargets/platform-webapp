@@ -1,7 +1,16 @@
-import { Box, Button, Card, CardContent, CardActions, Chip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare, faCircleCheck, faCircleNotch } from "@fortawesome/free-solid-svg-icons";
-import { DetailPopover, Link } from "ui";
+import {
+  DetailPopover,
+  Link,
+  Box,
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Button,
+  Chip,
+} from "ui";
 
 type Disease = { label?: string; disease_id: string };
 

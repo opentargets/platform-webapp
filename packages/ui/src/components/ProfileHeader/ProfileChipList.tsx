@@ -1,8 +1,7 @@
-import { Box, Skeleton, Typography, Tooltip } from "@mui/material";
+import { Box, Skeleton, Tooltip, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { ReactNode } from "react";
-
 import _ from "lodash";
+import type { ReactNode } from "react";
 import Chip from "../Chip";
 import LongList from "../LongList";
 
@@ -41,7 +40,7 @@ function ChipList({
   if (!children || children.length === 0) return null;
 
   return (
-    <Box data-testid={`profile-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Box data-testid={`profile-${title.toLowerCase().replace(/\s+/g, "-")}`}>
       <Typography variant={titleVariant} display={inline ? "inline" : ""}>
         {title}
         {inline ? ": " : ""}

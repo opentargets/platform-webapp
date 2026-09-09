@@ -1,9 +1,8 @@
 import { useRef, useEffect } from "react";
 import * as Plot from "@observablehq/plot";
 import { useMeasure } from "@uidotdev/usehooks";
-import { Box } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { DataDownloader } from "ui";
+import { DataDownloader, Box } from "ui";
 import { sentenceCase } from "@ot/utils";
 
 const prepareData = (data = []) => {

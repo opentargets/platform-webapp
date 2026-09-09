@@ -8,8 +8,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Chip,  Typography } from "@mui/material";
-import { Tooltip } from "ui";
+import { Tooltip, Box, Typography, Chip } from "ui";
 import type { Facet } from "../../Facets/facetsTypes";
 import { setIncludeMeasurements } from "../../context/aotfActions";
 import { useAotfQueryState, useAotfQueryDispatch } from "../../context/AssociationsQueryContext";
@@ -27,6 +26,7 @@ function FilterChip({ onDelete, label, tootltipContent, maxWidth = 150, testId }
       <Box sx={{ maxWidth: `${maxWidth}px` }}>
         <Chip
           data-testid={testId}
+          variant="filled"
           sx={{
             borderRadius: 2,
             "& .MuiChip-label": {

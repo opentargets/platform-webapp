@@ -13,8 +13,9 @@ import {
   SummaryStatsTable,
   DisplaySampleSize,
   StudyPublication,
+  Box,
+  Typography,
 } from "ui";
-import { Box, Typography } from "@mui/material";
 import CREDIBLE_SET_PROFILE_HEADER_FRAGMENT from "./ProfileHeader.gql";
 import { epmcUrl, getSortedAncestries } from "@ot/utils";
 import { credsetConfidenceMap, populationMap } from "@ot/constants";

@@ -1,4 +1,5 @@
-import { MouseEvent, ReactElement, useState } from "react";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Badge,
   Box,
@@ -10,11 +11,9 @@ import {
   List,
   ListItemButton,
 } from "@mui/material";
-import { faGear } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-import { OtTableColumnVisibilityProps } from "./table.types";
-import OtPopper from "../OtPopper";
+import { type MouseEvent, type ReactElement, useState } from "react";
+import Popper from "../Popper";
+import type { OtTableColumnVisibilityProps } from "./table.types";
 
 function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): ReactElement {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>();
@@ -47,12 +46,12 @@ function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): React
         </Button>
       </Badge>
 
-      <OtPopper id={id} open={open} anchorEl={anchorEl}>
+      <Popper id={id} open={open} anchorEl={anchorEl}>
         <ClickAwayListener onClickAway={handleClose}>
           <Box>
             <FormGroup>
               <List sx={{ p: 0 }} aria-label="column-visibility-list">
-                {table.getAllLeafColumns().map(column => (
+                {table.getAllLeafColumns().map((column) => (
                   <ListItemButton key={column.id} sx={{ px: 1.5, py: 0.2, typography: "caption" }}>
                     <FormControlLabel
                       control={
@@ -71,7 +70,7 @@ function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): React
             </FormGroup>
           </Box>
         </ClickAwayListener>
-      </OtPopper>
+      </Popper>
     </>
   );
 }

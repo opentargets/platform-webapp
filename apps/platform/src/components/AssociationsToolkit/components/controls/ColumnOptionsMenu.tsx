@@ -1,17 +1,9 @@
 import { useState } from "react";
-import { Button, Box } from "@mui/material";
+import { Box, ButtonNoBorder } from "ui";
 import { faCaretUp, faCaretDown, faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { styled } from "@mui/material/styles";
 
 import { useAotfURLState } from "../../context/AssociationsURLContext";
-
-const StyledBotton = styled(Button)({
-  border: "none",
-  "& .MuiButton-startIcon": {
-    fontSize: "14px !important",
-  },
-});
 
 function DataMenu() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -30,7 +22,7 @@ function DataMenu() {
 
   return (
     <>
-      <StyledBotton
+      <ButtonNoBorder
         data-testid="column-options-button"
         aria-describedby={id}
         onClick={handleClick}
@@ -51,7 +43,7 @@ function DataMenu() {
             <FontAwesomeIcon icon={faCaretDown} />
           )}
         </Box>
-      </StyledBotton>
+      </ButtonNoBorder>
     </>
   );
 }

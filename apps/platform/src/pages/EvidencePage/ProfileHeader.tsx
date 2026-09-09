@@ -1,6 +1,5 @@
 import { faDna, faStethoscope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Card, CardContent, CardHeader, Skeleton, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
   Link,
@@ -8,6 +7,11 @@ import {
   ProfileDescription,
   ProfileHeader as BaseProfileHeader,
   ProfileChipList,
+  Card,
+  CardContent,
+  CardHeader,
+  Skeleton,
+  Typography,
 } from "ui";
 
 const StyledCard = styled(Card)({ height: "100%" });

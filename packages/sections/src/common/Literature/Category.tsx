@@ -1,7 +1,6 @@
-import { InputLabel, FormGroup, Checkbox, FormControlLabel } from "@mui/material";
 import { useLiterature, useSelectedCategories, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { useApolloClient } from "ui";
+import { useApolloClient, InputLabel, FormGroup, Checkbox, FormControlLabel } from "ui";
 
 const toggleValue = (selected, categories) => {
   const isChecked = categories.indexOf(selected) !== -1;

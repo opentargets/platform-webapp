@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box } from "ui";
 import { forwardRef } from "react";
 
 export const EnrichmentMapContainer = forwardRef<HTMLDivElement>((_, ref) => {

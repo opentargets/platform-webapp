@@ -1,11 +1,15 @@
 import FileSaver from "file-saver";
 import { useState, useMemo, useEffect, useReducer } from "react";
+import { styled } from "@mui/material/styles";
+import { faCaretDown, faFileDownload } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Button,
+  CopyUrlButton,
+  useAPIMetadata,
+  useApolloClient,
+  useBatchDownloader,
   GridLegacy,
   Typography,
-  Snackbar,
-  Slide,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -13,23 +17,22 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   ListItemText,
   Box,
-  FormHelperText,
   ListItemIcon,
-} from "@mui/material";
-import { styled } from "@mui/material/styles";
-import { faCaretDown, faFileDownload } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CopyUrlButton, useAPIMetadata, useApolloClient, useBatchDownloader } from "ui";
+  Button,
+  Snackbar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider,
+  FormHelperText,
+  Slide,
+} from "ui";
 import { getConfig } from "@ot/config";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";

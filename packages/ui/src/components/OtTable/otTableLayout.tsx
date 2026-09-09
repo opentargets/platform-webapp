@@ -32,7 +32,7 @@ export const OtTableContainer = styled("table")(({ theme }) => ({
 }));
 
 export const OtTableHeader = styled("div", {
-  shouldForwardProp: prop => prop !== "canBeSorted" && prop !== "numeric",
+  shouldForwardProp: (prop) => prop !== "canBeSorted" && prop !== "numeric",
 })(({ theme, canBeSorted, numeric }) =>
   theme.unstable_sx({
     display: "flex",
@@ -61,7 +61,7 @@ export const FontAwesomeIconPadded = styled(FontAwesomeIcon)(({ theme }) => ({
 }));
 
 export const OtTH = styled("th", {
-  shouldForwardProp: prop => prop !== "stickyColumn",
+  shouldForwardProp: (prop) => prop !== "stickyColumn",
 })(({ theme, stickyColumn }) => ({
   ...(stickyColumn && {
     left: "0",
@@ -72,7 +72,7 @@ export const OtTH = styled("th", {
 }));
 
 export const OtTD = styled("td", {
-  shouldForwardProp: prop => prop !== "stickyColumn",
+  shouldForwardProp: (prop) => prop !== "stickyColumn",
 })(({ theme, stickyColumn }) => ({
   ...(stickyColumn && {
     left: "0",
@@ -83,7 +83,7 @@ export const OtTD = styled("td", {
 }));
 
 export const OtTR = styled("tr", {
-  shouldForwardProp: prop => prop !== "enableRowSelection" && prop !== "isSelected",
+  shouldForwardProp: (prop) => prop !== "enableRowSelection" && prop !== "isSelected",
 })(({ theme, enableRowSelection, isSelected }) =>
   theme.unstable_sx({
     ...(enableRowSelection && {
@@ -96,7 +96,7 @@ export const OtTR = styled("tr", {
 );
 
 export const OtTableHeaderText = styled(Box, {
-  shouldForwardProp: prop => prop !== "verticalHeader",
+  shouldForwardProp: (prop) => prop !== "verticalHeader",
 })(({ theme, verticalHeader }) =>
   theme.unstable_sx({
     typography: "subtitle2",
@@ -110,7 +110,7 @@ export const OtTableHeaderText = styled(Box, {
 );
 
 export const OtTableCellContainer = styled(Box, {
-  shouldForwardProp: prop => prop !== "numeric",
+  shouldForwardProp: (prop) => prop !== "numeric",
 })(({ theme, numeric }) =>
   theme.unstable_sx({
     typography: "body2",

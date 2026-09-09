@@ -1,5 +1,5 @@
 import { Suspense, useMemo } from "react";
-import { Widget } from "sections";
+import type { Widget } from "sections";
 import usePermissions from "../../hooks/usePermissions";
 import SectionLoader from "./SectionLoader";
 
@@ -20,7 +20,7 @@ function SectionsRenderer({ id, label, entity, widgets }: SectionsRendererProps)
   // re-fire its data-fetching effects from scratch - on every re-render, not just
   // on real navigation between entities.
   const bodyComponents = useMemo(
-    () => widgets.map(widget => ({ widget, Body: widget.getBodyComponent() })),
+    () => widgets.map((widget) => ({ widget, Body: widget.getBodyComponent() })),
     [widgets]
   );
 

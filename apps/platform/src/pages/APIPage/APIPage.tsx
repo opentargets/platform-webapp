@@ -1,14 +1,17 @@
 import { Suspense, useState, lazy } from "react";
-import { LoadingBackdrop, Link, PageMeta, PrivateWrapper } from "ui";
 import {
+  LoadingBackdrop,
+  Link,
+  PageMeta,
+  PrivateWrapper,
+  GridLegacy,
+  Typography,
+  Button,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Button,
-  GridLegacy,
-  Typography,
-  styled,
-} from "@mui/material";
+} from "ui";
+import { styled } from "@mui/material";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fetcher } from "@ot/utils";

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Typography } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -11,6 +10,7 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableSSP,
+  Typography,
 } from "ui";
 import { epmcUrl, sentenceCase, identifiersOrgLink } from "@ot/utils";
 import { dataTypesMap, clinvarStarMap, naLabel, variantConsequenceSource, type EvidenceBodyProps} from "@ot/constants";

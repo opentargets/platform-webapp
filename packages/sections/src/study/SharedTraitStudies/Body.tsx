@@ -1,6 +1,14 @@
 import { Fragment, ReactElement } from "react";
-import { Box, Typography } from "@mui/material";
-import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTable, useBatchQuery } from "ui";
+import {
+  Link,
+  SectionItem,
+  Tooltip,
+  PublicationsDrawer,
+  OtTable,
+  useBatchQuery,
+  Box,
+  Typography,
+} from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import { naLabel, table5HChunkSize } from "@ot/constants";

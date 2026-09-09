@@ -1,16 +1,16 @@
-import { Box, Button, Chip, Typography, styled } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faPrescriptionBottleAlt,
-  faStethoscope,
-  faDna,
   faChartBar,
+  faDna,
   faMapPin,
+  faPrescriptionBottleAlt,
   faStar,
+  faStethoscope,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
-import { clearAllRecent } from "./utils/searchUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Button, Chip, styled, Typography } from "@mui/material";
 import GlobalSearchIcon from "./GlobalSearchIcon";
+import { clearAllRecent } from "./utils/searchUtils";
 
 const ClearAllButton = styled(Button)`
   border: none;
