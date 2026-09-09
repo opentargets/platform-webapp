@@ -2,6 +2,7 @@
   <img src="apps/docs/public/OT_logo_colour.svg" alt="Open Targets" width="340" />
   <br /><br />
   <a href="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/opentargets/platform-webapp/actions/workflows/e2e-ci.yml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/e2e-ci.yml/badge.svg" alt="Tests: E2E" /></a>
   <a href="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml"><img src="https://github.com/opentargets/platform-webapp/actions/workflows/publish.yaml/badge.svg" alt="Development build" /></a>
 </div>
 
