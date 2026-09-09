@@ -398,7 +398,10 @@ function Tracks({
   if (scalesRef.current) scalesRef.current.tickerUpdate = () => app.ticker.update();
   const trackContainersRef = useRef([]);
 
-  // Stop continuous ticking and recompute scales — runs whenever canvas geometry changes
+  // Stop continuous ticking and recompute scales when canvas geometry or the
+  // track subtree changes. Track definitions can be recreated after a late
+  // layout render, remounting their Pixi marks; those marks need an initial tick
+  // just as much as marks mounted with the canvas itself.
   useEffect(() => {
     app.ticker.stop();
     // Hide canvas immediately to avoid flash of stale sprites during resize
@@ -423,7 +426,7 @@ function Tracks({
       onReady?.();
     }, 0);
     return () => clearTimeout(id);
-  }, [app, scalesRef, xMin, xMax, canvasWidth, isInner, onReady, canvasBoxRef]);
+  }, [app, scalesRef, tracks, xMin, xMax, canvasWidth, isInner, onReady, canvasBoxRef]);
 
   // Register track transforms whenever tracks or scales change
   useEffect(() => {

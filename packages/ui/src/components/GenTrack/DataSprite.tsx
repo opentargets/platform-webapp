@@ -174,8 +174,10 @@ export function DataSprite({
     sprite.x = screenX;
     sprite.y = screenY;
     
-    // After first positioning with eventMode, trigger re-render to make sprite visible
-    if (!isPositioned && scales && spriteProps.eventMode) {
+    // After first positioning, trigger a one-time re-render to keep the sprite
+    // visible across subsequent React reconciliations. This applies to both
+    // interactive and purely visual sprites.
+    if (!isPositioned && scales) {
       setIsPositioned(true);
     }
   });
