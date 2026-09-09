@@ -36,38 +36,35 @@ function processXRefs(dbXRefs) {
   return xrefs;
 }
 
-function Header({ loading, efoId, name, dbXRefs = [] }) {
+export function buildHeaderMeta({ efoId, name, dbXRefs = [] }) {
   const efoUrl = `https://www.ebi.ac.uk/ols4/ontologies/efo/terms?short_form=${efoId}`;
   const xrefs = processXRefs(dbXRefs);
 
-  return (
-    <HeaderBase
-      loading={loading}
-      title={name || "Missing name"}
-      Icon={faStethoscope}
-      externalLinks={
-        <>
-          {efoId.startsWith("OTAR") ? (
-            `EFO: ${efoId}`
-          ) : (
-            <ExternalLink title="EFO" id={efoId} url={efoUrl} />
-          )}
-          {Object.keys(xrefs).map(xref => {
-            const { label, urlStem, ids } = xrefs[xref];
-            return (
-              <XRefLinks
-                key={xref}
-                label={label}
-                urlStem={urlStem}
-                ids={Array.from(ids)}
-                limit="3"
-              />
-            );
-          })}
-        </>
-      }
-    />
-  );
+  return {
+    title: name || "Missing name",
+    Icon: faStethoscope,
+    externalLinks: (
+      <>
+        {efoId.startsWith("OTAR") ? (
+          `EFO: ${efoId}`
+        ) : (
+          <ExternalLink title="EFO" id={efoId} url={efoUrl} />
+        )}
+        {Object.keys(xrefs).map(xref => {
+          const { label, urlStem, ids } = xrefs[xref];
+          return (
+            <XRefLinks key={xref} label={label} urlStem={urlStem} ids={Array.from(ids)} limit="3" />
+          );
+        })}
+      </>
+    ),
+  };
+}
+
+function Header({ loading, efoId, name, dbXRefs = [] }) {
+  const { title, Icon, externalLinks } = buildHeaderMeta({ efoId, name, dbXRefs });
+
+  return <HeaderBase loading={loading} title={title} Icon={Icon} externalLinks={externalLinks} />;
 }
 
 export default Header;

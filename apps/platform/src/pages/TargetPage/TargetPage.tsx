@@ -1,9 +1,9 @@
 import { lazy, ReactElement, Suspense } from "react";
 import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
-import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs } from "ui";
+import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs, PROFILE_TABS_SENTINEL_ID } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
-import Header from "./Header";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import TARGET_PAGE_QUERY from "./TargetPage.gql";
 import { apolloClient } from "../../apolloClient";
@@ -35,6 +35,7 @@ function TargetPage(): ReactElement {
   const { approvedSymbol: symbol, approvedName } = data?.target || {};
   const uniprotIds = getUniprotIds(data.target.proteinIds);
   const crisprId = data?.target.dbXrefs.find(p => p.source === "ProjectScore")?.id;
+  const headerMeta = buildHeaderMeta({ ensgId, uniprotIds, symbol, name: approvedName });
 
   return (
     <>
@@ -61,7 +62,7 @@ function TargetPage(): ReactElement {
         crisprId={crisprId}
       />
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={
@@ -84,7 +85,17 @@ function TargetPage(): ReactElement {
 
       <Suspense fallback={<LoadingBackdrop height={800} />}>
         <Routes>
-          <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
+          <Route
+            path="/"
+            element={
+              <Profile
+                ensgId={ensgId}
+                symbol={symbol}
+                Icon={headerMeta.Icon}
+                externalLinks={headerMeta.externalLinks}
+              />
+            }
+          />
           <Route path="/associations" element={<Associations ensgId={ensgId} />} />
         </Routes>
       </Suspense>

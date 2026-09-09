@@ -1,6 +1,8 @@
 import { CardHeader, GridLegacy, LinearProgress, Skeleton } from "@mui/material";
+import { useNavigate } from "react-router";
 import { scroller } from "react-scroll";
 import PartnerLockIcon from "../PartnerLockIcon";
+import { SCROLL_OFFSET } from "../Section/scrollOffset";
 import {
   StyledAvatar,
   StyledCard,
@@ -22,13 +24,16 @@ function SummaryItem<T>({
   const { loading, error, data } = request;
   const shortName = createShortName(definition);
   const hasData = !loading && !error && data && definition.hasData(data);
+  const navigate = useNavigate();
 
   const handleClickSection = () => {
     scroller.scrollTo(definition.id, {
       duration: 500,
       delay: 100,
       smooth: true,
+      offset: SCROLL_OFFSET,
     });
+    navigate({ hash: `#${definition.id}` }, { replace: true, preventScrollReset: true });
   };
 
   return (

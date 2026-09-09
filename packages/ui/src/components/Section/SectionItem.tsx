@@ -97,7 +97,10 @@ function SectionItem({
 
   return (
     <GridLegacy item xs={12}>
-      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}>
+      <section
+        id={definition.id}
+        data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}
+      >
         <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>

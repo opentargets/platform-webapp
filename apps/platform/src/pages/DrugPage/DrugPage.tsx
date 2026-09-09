@@ -1,7 +1,7 @@
-import { PageMeta, ScrollToTop, Box, Tabs, Tab } from "ui";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab, PROFILE_TABS_SENTINEL_ID } from "ui";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Routes, Route, Link } from "react-router";
 
-import Header from "./Header";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import DRUG_PAGE_QUERY from "./DrugPage.gql";
 import { apolloClient } from "../../apolloClient";
@@ -27,6 +27,7 @@ function DrugPage(): ReactNode {
   }
 
   const { name, crossReferences } = data?.drug || {};
+  const headerMeta = buildHeaderMeta({ chemblId, name, crossReferences });
 
   return (
     <>
@@ -42,7 +43,7 @@ function DrugPage(): ReactNode {
         crossReferences={crossReferences}
       />
       <ScrollToTop />
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
@@ -53,7 +54,17 @@ function DrugPage(): ReactNode {
         </Tabs>
       </Box>
       <Routes>
-        <Route path="/" element={<Profile chemblId={chemblId} name={name} />} />
+        <Route
+          path="/"
+          element={
+            <Profile
+              chemblId={chemblId}
+              name={name}
+              Icon={headerMeta.Icon}
+              externalLinks={headerMeta.externalLinks}
+            />
+          }
+        />
       </Routes>
     </>
   );

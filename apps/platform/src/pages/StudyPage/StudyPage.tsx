@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
-import { PageMeta, ScrollToTop, Box, Tabs, Tab } from "ui";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab, PROFILE_TABS_SENTINEL_ID } from "ui";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
-import Header from "./Header";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import STUDY_PAGE_QUERY from "./StudyPage.gql";
 import Profile from "./Profile";
@@ -26,6 +26,13 @@ function StudyPage(): ReactElement {
   const study = data?.study;
   const studyType = study?.studyType;
   const projectId = study?.projectId;
+  const headerMeta = buildHeaderMeta({
+    studyId,
+    backgroundTraits: study?.backgroundTraits,
+    targetId: study?.target?.id,
+    diseases: study?.diseases,
+    projectId,
+  });
 
   return (
     <>
@@ -44,7 +51,7 @@ function StudyPage(): ReactElement {
       />
       <ScrollToTop />
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
@@ -59,6 +66,8 @@ function StudyPage(): ReactElement {
         studyType={studyType}
         projectId={projectId}
         diseases={study?.diseases}
+        Icon={headerMeta.Icon}
+        externalLinks={headerMeta.externalLinks}
       />
     </>
   );
