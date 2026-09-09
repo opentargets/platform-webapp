@@ -19,6 +19,11 @@ import ScientificNotation from "../ScientificNotation";
 
 export const TOOLTIP_WIDTH = 420;
 
+const credibleSetTooltipPositionProps = {
+  tooltipZIndex: 10000,
+  tooltipOffset: -5,
+};
+
 const TooltipLink = styled(Link)({
   "&:hover": {
     textDecoration: "none",
@@ -227,32 +232,56 @@ function UnifiedTooltip() {
                     naLabel
                   )}
                 </TooltipRow>
-                <TooltipRow label="Beta">
+                <TooltipRow
+                  label="Beta"
+                  tooltip="Beta with respect to the ALT allele"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {typeof variantLocus?.beta === "number"
                     ? variantLocus.beta.toPrecision(3)
                     : naLabel}
                 </TooltipRow>
-                <TooltipRow label="Standard error">
+                <TooltipRow
+                  label="Standard error"
+                  tooltip="Standard Error: Estimate of the standard deviation of the sampling distribution of the beta"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {typeof variantLocus?.standardError === "number"
                     ? variantLocus.standardError.toFixed(3)
                     : naLabel}
                 </TooltipRow>
-                <TooltipRow label="LD (r²)">
+                <TooltipRow
+                  label="LD (r²)"
+                  tooltip="Linkage disequilibrium with the lead variant"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {typeof variantLocus?.r2Overall === "number"
                     ? variantLocus.r2Overall.toFixed(3)
                     : naLabel}
                 </TooltipRow>
-                <TooltipRow label="Posterior probability">
+                <TooltipRow
+                  label="Posterior probability"
+                  tooltip="Posterior inclusion probability that this variant is causal within the fine-mapped credible set"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {typeof variantLocus?.posteriorProbability === "number"
                     ? variantLocus.posteriorProbability.toPrecision(3)
                     : naLabel}
                 </TooltipRow>
-                <TooltipRow label="log(BF)">
+                <TooltipRow
+                  label="log(BF)"
+                  tooltip="Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {typeof variantLocus?.logBF === "number"
                     ? variantLocus.logBF.toPrecision(3)
                     : naLabel}
                 </TooltipRow>
-                <TooltipRow label="Predicted consequence">
+                <TooltipRow
+                  label="Predicted consequence"
+                  tooltip="Most severe consequence of the variant. Source: Ensembl VEP"
+                  {...credibleSetTooltipPositionProps}
+                >
                   {data?.mostSevereConsequence ? (
                     <Link
                       external
