@@ -4,7 +4,7 @@ import { ExternalLink, TepLink, XRefLinks, Header as HeaderBase } from "ui";
 
 export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
   const ensemblUrl = `https://identifiers.org/ensembl:${ensgId}`;
-  const genecardsUrl = `https://identifiers.org/genecards:${symbol}`;
+  const genecardsUrl = `https://www.genecards.org/card/${symbol}`;
   const hgncUrl = `https://identifiers.org/hgnc.symbol:${symbol}`;
 
   return {
