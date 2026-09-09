@@ -1,7 +1,8 @@
 import { faCaretDown, faCaretRight, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { Box, Collapse, styled, Typography } from "@mui/material";
+import { styled } from "@mui/material";
+import { Box, Collapse, Typography } from "ui";
 import { grey } from "@mui/material/colors";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";

@@ -1,4 +1,3 @@
-import { List, ListItem, Typography } from "@mui/material";
 import { useQuery } from "@apollo/client";
 import { v1 } from "uuid";
 import {
@@ -9,6 +8,9 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTable,
+  List,
+  ListItem,
+  Typography,
 } from "ui";
 
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";

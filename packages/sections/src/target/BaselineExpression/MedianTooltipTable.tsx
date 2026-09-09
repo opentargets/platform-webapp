@@ -1,5 +1,4 @@
-import { Box } from "@mui/material";
-import { TooltipRow, TooltipTable } from "ui";
+import { TooltipRow, TooltipTable, Box } from "ui";
 
 function formatExpression(v) {
   if (v === 0) return 0;

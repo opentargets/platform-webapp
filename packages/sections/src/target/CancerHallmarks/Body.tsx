@@ -1,6 +1,5 @@
-import { Box, Typography } from "@mui/material";
 import { useQuery } from "@apollo/client";
-import { ChipList, SectionItem, PublicationsDrawer, OtTable } from "ui";
+import { ChipList, SectionItem, PublicationsDrawer, OtTable, Box, Typography } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

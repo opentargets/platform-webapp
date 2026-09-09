@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { GridLegacy, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
-import { Link, Tooltip, DataTable, EllsWrapper, useApolloClient } from "ui";
+import { Link, Tooltip, DataTable, EllsWrapper, useApolloClient, GridLegacy, Typography } from "ui";
 import { MethodIconText, MethodIconArrow } from "./custom/MethodIcons";
 import { defaultRowsPerPageOptions } from "@ot/constants";
 

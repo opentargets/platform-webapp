@@ -1,7 +1,6 @@
 import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
-import { SectionItem, Tooltip, OtTable, Link } from "ui";
+import { SectionItem, Tooltip, OtTable, Link, Typography } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import { naLabel, VARIANT_EFFECT_METHODS, VIEW } from "@ot/constants";

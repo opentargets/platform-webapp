@@ -1,6 +1,5 @@
 import { ReactElement } from "react";
-import { PageMeta, ScrollToTop } from "ui";
-import { Box, Tabs, Tab } from "@mui/material";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab } from "ui";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
 import Header from "./Header";
 import NotFoundPage from "../NotFoundPage";

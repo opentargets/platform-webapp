@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { Component } from "react";
-import { Button, GridLegacy, Typography } from "@mui/material";
+import { GridLegacy, Typography, Button } from "ui";
 import { v1 } from "uuid";
 
 import Abstract from "./Abstract";

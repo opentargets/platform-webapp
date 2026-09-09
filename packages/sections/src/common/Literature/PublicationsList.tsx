@@ -1,6 +1,14 @@
 import { useEffect } from "react";
-import { Box, GridLegacy, Fade, Skeleton, Typography } from "@mui/material";
-import { PublicationWrapper, Table, useApolloClient } from "ui";
+import {
+  PublicationWrapper,
+  Table,
+  useApolloClient,
+  Box,
+  GridLegacy,
+  Fade,
+  Skeleton,
+  Typography,
+} from "ui";
 import Loader from "./Loader";
 import { PublicationType, DetailsStateType } from "./types";
 import {

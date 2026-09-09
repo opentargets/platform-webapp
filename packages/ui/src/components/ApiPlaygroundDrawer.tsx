@@ -12,14 +12,14 @@ import {
   Paper,
   styled,
 } from "@mui/material";
-import { KeyboardEvent, ReactElement, Suspense, lazy, useState } from "react";
 import { fetcher } from "@ot/utils";
+import { type KeyboardEvent, lazy, type ReactElement, Suspense, useState } from "react";
 
 import Link from "./Link";
 
 // lazy load GraphiQL and remove Logo and Toolbar
 const GraphiQL = lazy(() =>
-  import("graphiql").then(module => {
+  import("graphiql").then((module) => {
     function GraphiQLEmpty() {
       return <></>;
     }
@@ -91,7 +91,7 @@ function ApiPlaygroundDrawer({
           sx: { width: "80%", overflowY: "hidden" },
         }}
         open={open}
-        onClose={e => close(e)}
+        onClose={(e) => close(e)}
         anchor="right"
       >
         <Box
@@ -102,16 +102,16 @@ function ApiPlaygroundDrawer({
             backgroundColor: "white",
             borderBottom: "1px solid #ccc",
             fontWeight: "bold",
-            p: theme => theme.spacing(2),
+            p: (theme) => theme.spacing(2),
           }}
         >
           API query
-          <IconButton onClick={e => close(e)}>
+          <IconButton onClick={(e) => close(e)}>
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </Box>
         <Paper
-          sx={{ m: theme => theme.spacing(2), p: theme => theme.spacing(2) }}
+          sx={{ m: (theme) => theme.spacing(2), p: (theme) => theme.spacing(2) }}
           variant="outlined"
         >
           Press the Play button to explore the GraphQL API query used to populate this table. You
@@ -126,7 +126,7 @@ function ApiPlaygroundDrawer({
           for more how-to guides and tutorials.
         </Paper>
         {query ? (
-          <Box sx={{ height: 1, m: theme => theme.spacing(2), mt: 0 }}>
+          <Box sx={{ height: 1, m: (theme) => theme.spacing(2), mt: 0 }}>
             <Suspense fallback={<div>Loading...</div>}>
               <GraphiQL
                 fetcher={fetcher}

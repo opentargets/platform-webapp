@@ -1,16 +1,15 @@
 import {
   Box,
-  Typography,
-  FormLabel,
   FormControl,
   FormControlLabel,
-  RadioGroup,
+  FormLabel,
   Radio,
+  RadioGroup,
+  Typography,
 } from "@mui/material";
 import { useViewerState } from "ui";
 
 function ViewerRadios({ titleLabel, options, defaultValue, stateProperty, onChange }) {
-
   const viewerState = useViewerState();
 
   return (
@@ -23,7 +22,7 @@ function ViewerRadios({ titleLabel, options, defaultValue, stateProperty, onChan
       }}
     >
       <FormControl>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2  }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <FormLabel
             sx={{
               "&.Mui-focused": {
@@ -39,30 +38,28 @@ function ViewerRadios({ titleLabel, options, defaultValue, stateProperty, onChan
             value={viewerState[stateProperty]}
             onChange={onChange}
           >
-            {Object.entries(options).map(([label, value], index, array) => (              
-                <FormControlLabel
-                  key={label}
-                  value={value}
-                  control={<Radio size="small" />}
-                  label={label}
-                  slotProps={{
-                    typography: { variant: "body2" },
-                  }}
-                  sx={{
-                    mr: label === array.at(-1)[0] ? 0 : 2,
-                    "& .MuiFormControlLabel-label": {
-                      marginLeft: -0.7,
-                    },
-                  }}
-                />
-              ))
-            }
+            {Object.entries(options).map(([label, value], index, array) => (
+              <FormControlLabel
+                key={label}
+                value={value}
+                control={<Radio size="small" />}
+                label={label}
+                slotProps={{
+                  typography: { variant: "body2" },
+                }}
+                sx={{
+                  mr: label === array.at(-1)[0] ? 0 : 2,
+                  "& .MuiFormControlLabel-label": {
+                    marginLeft: -0.7,
+                  },
+                }}
+              />
+            ))}
           </RadioGroup>
         </Box>
       </FormControl>
     </Box>
   );
-
 }
 
 export default ViewerRadios;

@@ -1,6 +1,5 @@
-import { Box, Typography } from "@mui/material";
 
-import { LongText, Link } from "ui";
+import { LongText, Link, Box, Typography } from "ui";
 
 const pmUrl = "https://europepmc.org/";
 // const pmTitleUrl = 'abstract/med/';

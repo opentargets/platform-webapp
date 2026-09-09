@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from "ui";
 import { styled } from "@mui/material/styles";
 
 const StyledMatchInnerContainer = styled(Box)(({ theme }) => ({

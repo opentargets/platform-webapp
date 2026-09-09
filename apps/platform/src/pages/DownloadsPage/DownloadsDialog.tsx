@@ -1,17 +1,17 @@
+import { Params, useNavigate, useParams } from "react-router";
+
+import DownloadsSchema from "./DownloadsSchema";
+import DownloadsAccessOptions from "./DownloadsAccessOptions";
 import {
+  CopyUrlButton,
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Typography,
-} from "@mui/material";
-import { Params, useNavigate, useParams } from "react-router";
-
-import DownloadsSchema from "./DownloadsSchema";
-import DownloadsAccessOptions from "./DownloadsAccessOptions";
-import { CopyUrlButton } from "ui";
+  Button,
+} from "ui";
 import { useContext, useEffect, useMemo } from "react";
 import { DownloadsContext } from "./context/DownloadsContext";
 

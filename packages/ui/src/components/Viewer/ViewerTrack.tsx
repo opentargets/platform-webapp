@@ -1,8 +1,8 @@
-import { useRef, useEffect } from "react";
 import { Box } from "@mui/material";
+import { format, scaleLinear } from "d3";
+import { useEffect, useRef } from "react";
+import { useViewerInteractionDispatch, useViewerInteractionState } from "ui";
 import { useViewerState } from "../../providers/ViewerProvider";
-import { useViewerInteractionState, useViewerInteractionDispatch } from "ui";
-import { scaleLinear, format } from "d3";
 
 const trackHeight = 8;
 const topSpace = 24;
@@ -22,10 +22,7 @@ function tickGroup({
   fontWeight = 400,
 }) {
   const g = svgElement("g");
-  g.setAttribute(
-    "transform",
-    `translate(${x - 0.5}, 0)`
-  );
+  g.setAttribute("transform", `translate(${x - 0.5}, 0)`);
   let yLine, yLabel, dominantBaseline;
   if (position === "top") {
     yLine = topSpace - 5;
@@ -60,22 +57,22 @@ function tickGroup({
 
 function updateTextScale(textOrSvg) {
   let xScale;
-  const textElements = textOrSvg.tagName.toLowerCase() === "text"
-    ? [textOrSvg]
-    : textOrSvg.querySelectorAll("._track_text_");
+  const textElements =
+    textOrSvg.tagName.toLowerCase() === "text"
+      ? [textOrSvg]
+      : textOrSvg.querySelectorAll("._track_text_");
   for (const text of textElements) {
     if (!xScale) {
       text.setAttribute("transform", `scale(1, 1)`);
       xScale ??= text.getCTM().a;
     }
-    text.setAttribute("transform", `scale(${1/xScale}, 1)`);
+    text.setAttribute("transform", `scale(${1 / xScale}, 1)`);
   }
 }
 
 // currently for alphaFold only - assumes single/first structure and contiguous
 // residue indices from 1 to structure length
 export default function ViewerTrack({ trackColor, trackTicks }) {
-
   const viewerState = useViewerState();
   const viewerInteractionState = useViewerInteractionState();
   const viewerInteractionDispatch = useViewerInteractionDispatch();
@@ -123,7 +120,7 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
       rect.setAttribute("height", trackHeight);
       rect.setAttribute("fill", trackColor(viewerState, resi));
       rect.setAttribute("pointer-events", "none");
-      rect.setAttribute("shape-rendering","crispEdges");
+      rect.setAttribute("shape-rendering", "crispEdges");
 
       // larger invisible rect for interaction
       const invisibleRect = svgElement("rect");
@@ -132,12 +129,12 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
       invisibleRect.setAttribute("width", 1);
       invisibleRect.setAttribute("height", totalHeight);
       invisibleRect.setAttribute("stoke", "none");
-      invisibleRect.setAttribute("fill-opacity", 0);  // so can still trigger evevnts
+      invisibleRect.setAttribute("fill-opacity", 0); // so can still trigger evevnts
       invisibleRect.setAttribute("data-resi", resi);
       invisibleRect.addEventListener("click", handleClick);
       rects.push(rect, invisibleRect);
     }
-    
+
     // add rects and event handlers
     svg.append(...rects);
     svg.addEventListener("pointermove", handlePointerMove);
@@ -145,12 +142,16 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
 
     // track ticks
     if (trackTicks) {
-      svg.append(...trackTicks(viewerState).map(({ resi, label }) => tickGroup({
-        x: resi,
-        position: "top",
-        fontWeight: 500,
-        label,
-      })));
+      svg.append(
+        ...trackTicks(viewerState).map(({ resi, label }) =>
+          tickGroup({
+            x: resi,
+            position: "top",
+            fontWeight: 500,
+            label,
+          })
+        )
+      );
     }
 
     // add hover tick group once and reuse
@@ -160,15 +161,17 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
     svg.append(g);
 
     // axis
-    const ticks = scaleLinear()
-      .domain([0, nResidues])
-      .ticks()
+    const ticks = scaleLinear().domain([0, nResidues]).ticks();
     if (ticks[0] === 0) ticks[0] = 1;
     const tickFormatter = format(",");
-    svg.append(...ticks.map(value => tickGroup({
-      x: value,
-      label: tickFormatter(value),
-    })));
+    svg.append(
+      ...ticks.map((value) =>
+        tickGroup({
+          x: value,
+          label: tickFormatter(value),
+        })
+      )
+    );
     updateTextScale(svg);
     window.addEventListener("resize", () => updateTextScale(svg));
   }, [viewerState]);
@@ -178,7 +181,7 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
     if (!viewerInteractionState) return;
     const svg = svgRef.current;
     if (!svg) return;
-    svg.querySelector('._clicked_tick_group_')?.remove();
+    svg.querySelector("._clicked_tick_group_")?.remove();
     const resi = viewerInteractionState.clickedResi;
     if (resi) {
       const g = tickGroup({
@@ -199,12 +202,9 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
     if (!svg) return;
     const resi = viewerInteractionState.hoveredResi;
     const g = svg.querySelector("._hovered_tick_group_");
-    if(!g) return;
+    if (!g) return;
     if (resi) {
-      g.setAttribute(
-        "transform",
-        `translate(${resi - 0.5}, 0)`
-      );
+      g.setAttribute("transform", `translate(${resi - 0.5}, 0)`);
       const text = g.querySelector("text");
       text.textContent = `${viewerState.atomsByResi.get(+resi)[0].resn} ${resi}`;
       g.style.display = "inline";
@@ -215,13 +215,15 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
 
   if (!viewerInteractionState) return null;
 
-	return (
-    <Box sx={{
-      height: `${totalHeight}px`,
-      display: "flex",
-      alignItems: "center",
-      px: 3,
-    }}>
+  return (
+    <Box
+      sx={{
+        height: `${totalHeight}px`,
+        display: "flex",
+        alignItems: "center",
+        px: 3,
+      }}
+    >
       <svg
         ref={svgRef}
         viewBox={`0 0 100 ${totalHeight}`}
@@ -231,7 +233,7 @@ export default function ViewerTrack({ trackColor, trackTicks }) {
           height: `${totalHeight}px`,
           overflow: "visible",
         }}
-      >  
+      >
         {/* rectangles and highlight added by useEffect */}
       </svg>
     </Box>

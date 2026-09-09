@@ -1,13 +1,20 @@
-import { ReactElement, ReactNode } from "react";
-import { Link as ReactRouterLink } from "react-router";
-import { AppBar, Toolbar, Button, Typography, useMediaQuery, Box, Theme } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  Button,
+  type PopperPlacementType,
+  type Theme,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
-import { PopperPlacementType } from "@mui/material";
+import type { ReactElement, ReactNode } from "react";
+import { Link as ReactRouterLink } from "react-router";
 import { v1 } from "uuid";
-
+import HeaderMenu from "./HeaderMenu";
 import Link from "./Link";
 import OpenTargetsTitle from "./OpenTargetsTitle";
-import HeaderMenu from "./HeaderMenu";
 import PrivateWrapper from "./PrivateWrapper";
 
 const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`
@@ -16,7 +23,7 @@ const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`
 `;
 
 const StyledAppBar = styled(AppBar, {
-  shouldForwardProp: prop => prop !== "homepage",
+  shouldForwardProp: (prop) => prop !== "homepage",
 })<{ homepage?: boolean }>(({ theme, homepage }) => ({
   backgroundColor: `${theme.palette.primary.dark} !important`,
   margin: 0,
@@ -100,7 +107,17 @@ function MenuExternalLink({ href, children }: MenuExternalLinkProps): ReactEleme
   );
 }
 
-function NavBar({ name, search, api, downloads, docs, contact, homepage, items, placement }: NavBarProps): ReactElement {
+function NavBar({
+  name,
+  search,
+  api,
+  downloads,
+  docs,
+  contact,
+  homepage,
+  items,
+  placement,
+}: NavBarProps): ReactElement {
   const theme = useTheme<Theme>();
   const smMQ = useMediaQuery(theme.breakpoints.down("sm"));
   const isHomePageRegular = homepage && !smMQ;
@@ -162,7 +179,7 @@ function NavBar({ name, search, api, downloads, docs, contact, homepage, items, 
 
           {isHomePageRegular && (
             <Box sx={{ display: "flex" }}>
-              {(items ?? []).map(item => {
+              {(items ?? []).map((item) => {
                 if (item.showOnlyPartner) {
                   return (
                     <PrivateWrapper key={v1()}>

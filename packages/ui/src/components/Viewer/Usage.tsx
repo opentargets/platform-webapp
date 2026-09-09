@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button, Typography } from "@mui/material";
+import { useState } from "react";
 import { Tooltip } from "ui";
 
 // !!!!! ADD TYPES !!!!!
@@ -12,7 +12,7 @@ function Usage({ instructions }) {
 
   const handleClick = () => {
     setIsHovered(false);
-    setIsClicked(prev => !prev);
+    setIsClicked((prev) => !prev);
   };
 
   const handleMouseEnter = () => {

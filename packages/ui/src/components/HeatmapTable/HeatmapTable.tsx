@@ -1,20 +1,20 @@
-import { useCallback, useState } from "react";
-import { hsl, scaleLinear } from "d3";
-import { ObsPlot, DataDownloader, Link } from "../../index";
-import { Box, Typography, Popover, Dialog, Checkbox, FormControlLabel } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownWideShort, faChevronRight, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { renderWaterfallPlot } from "./renderWaterfallPlot";
-import HeatmapLegend from "./HeatmapLegend";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Checkbox, Dialog, FormControlLabel, Popover, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
+import { hsl, scaleLinear } from "d3";
+import { useCallback, useState } from "react";
+import { DataDownloader, Link, ObsPlot } from "../../index";
 import {
-  waterfallMaxWidth,
-  waterfallMargins,
-  waterfallMaxCanvasWidth,
   featureToGroup,
   groupNames,
+  waterfallMargins,
+  waterfallMaxCanvasWidth,
+  waterfallMaxWidth,
 } from "./constants";
-import { getGroupResults, computeWaterfall, getColorInterpolator } from "./helpers";
+import HeatmapLegend from "./HeatmapLegend";
+import { computeWaterfall, getColorInterpolator, getGroupResults } from "./helpers";
+import { renderWaterfallPlot } from "./renderWaterfallPlot";
 
 function THead({ children }) {
   return (
@@ -48,7 +48,7 @@ function BodyRow({ row, colorInterpolator, data }) {
   const [over, setOver] = useState(false);
 
   const { row: waterfallRow, xDomain: waterfallXDomain } = computeWaterfall(
-    data.rows.find(d => d.target.id === row.targetId)
+    data.rows.find((d) => d.target.id === row.targetId)
   );
 
   function handleMouseEnter(event) {
@@ -79,7 +79,7 @@ function BodyRow({ row, colorInterpolator, data }) {
       <CellWrapper {...cellWrapperProps}>
         <ScoreCell value={row.score.toFixed(3)} />
       </CellWrapper>
-      {groupNames.map(groupName => (
+      {groupNames.map((groupName) => (
         <CellWrapper key={groupName} {...cellWrapperProps}>
           <HeatCell
             value={row[groupName]?.toFixed(3)}
@@ -160,7 +160,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
 
   function handleClick(event) {
     const filteredWaterfallRow = structuredClone(waterfallRow);
-    filteredWaterfallRow.features = filteredWaterfallRow.features.filter(d => {
+    filteredWaterfallRow.features = filteredWaterfallRow.features.filter((d) => {
       return featureToGroup[d.name] === groupName;
     });
     let { row, xDomain } = computeWaterfall(filteredWaterfallRow, waterfallXDomain, true);
@@ -399,7 +399,7 @@ function HeatmapTable({
     ({ all }) => {
       if (!filterProvied) return all;
       if (filterProvied && showAll) return all;
-      return all.filter(row => row.targetId === fixedGene);
+      return all.filter((row) => row.targetId === fixedGene);
     },
     [showAll]
   );
@@ -487,7 +487,7 @@ function HeatmapTable({
             ))}
           </THead>
           <TBody>
-            {rows.map(row => (
+            {rows.map((row) => (
               <BodyRow
                 data={data}
                 key={row.targetId}

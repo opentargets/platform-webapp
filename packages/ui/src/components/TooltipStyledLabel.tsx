@@ -1,5 +1,5 @@
-import { Typography } from '@mui/material';
-import { ReactNode } from 'react';
+import { Typography } from "@mui/material";
+import type { ReactNode } from "react";
 
 type TooltipStyledLabelProps = {
   label: string;
@@ -20,8 +20,7 @@ function TooltipStyledLabel({
 }: TooltipStyledLabelProps): ReactNode {
   return (
     <Typography variant="body2">
-      {label ? <span style={{ fontWeight: 'bold' }}>{label}:</span> : ''}{' '}
-      {newline ? <br /> : null}
+      {label ? <span style={{ fontWeight: "bold" }}>{label}:</span> : ""} {newline ? <br /> : null}
       {description}
     </Typography>
   );

@@ -1,4 +1,4 @@
-import { Box, Chip, Skeleton, Typography, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { credsetConfidenceMap, naLabel } from "@ot/constants";
 import { Fragment } from "react";
@@ -13,6 +13,10 @@ import {
   Tooltip,
   TooltipRow,
   TooltipTable,
+  Box,
+  Skeleton,
+  Typography,
+  Chip,
 } from "ui";
 
 const palette = [
@@ -337,7 +341,7 @@ function renderTooltip(datum) {
           {datum.variant.id === datum._pageId ? (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayId}
-              <Chip label="self" variant="outlined" size="small" />
+              <Chip label="self" />
             </Box>
           ) : (
             <Link asyncTooltip to={`/variant/${datum.variant.id}`}>

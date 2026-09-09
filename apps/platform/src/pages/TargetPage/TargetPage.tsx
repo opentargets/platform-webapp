@@ -1,7 +1,6 @@
 import { lazy, ReactElement, Suspense } from "react";
-import { Box, Tab, Tabs } from "@mui/material";
 import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
-import { LoadingBackdrop, PageMeta, ScrollToTop } from "ui";
+import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
 import Header from "./Header";

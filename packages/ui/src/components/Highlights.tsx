@@ -1,5 +1,5 @@
-import { ReactNode, useState } from "react";
 import { Box, Typography } from "@mui/material";
+import { type ReactNode, useState } from "react";
 
 type HighlightItem = string | TrustedHTML;
 

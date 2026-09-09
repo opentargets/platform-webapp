@@ -1,7 +1,6 @@
-import { Box, Container, Typography } from "@mui/material";
 import { useEffect, type ReactElement } from "react";
 import { useSearchParams } from "react-router";
-import { PageMeta } from "ui";
+import { PageMeta, Box, Container, Typography } from "ui";
 import { setAssociationsState, setStandaloneGenes } from "../../components/GeneEnrichmentAnalysis/actions";
 import StandaloneAnalysisContainer from "../../components/GeneEnrichmentAnalysis/components/StandaloneAnalysisContainer";
 import { GeneEnrichmentProvider, useGeneEnrichmentDispatch } from "../../components/GeneEnrichmentAnalysis/Provider";

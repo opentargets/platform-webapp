@@ -1,10 +1,18 @@
 import { useState } from "react";
 
-import { Drawer, Link as MuiLink, IconButton, Paper, Typography, ButtonBase } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link, PublicationsDrawer, MouseModelAllelicComposition } from "ui";
+import {
+  Link,
+  PublicationsDrawer,
+  MouseModelAllelicComposition,
+  Drawer,
+  IconButton,
+  Paper,
+  Typography,
+  ButtonBase,
+} from "ui";
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
   color: `${theme.palette.primary.main} !important`,

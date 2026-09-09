@@ -1,8 +1,8 @@
+import { useQuery } from "@apollo/client";
 import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tooltip } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useQuery } from "@apollo/client";
 
 import Link from "../Link";
 
