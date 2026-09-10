@@ -103,7 +103,7 @@ function ByStudyTypeHBar({
     const marginTop = externalLabelPadding + aboveLanes * externalLabelLaneHeight;
     const marginBottom = externalLabelPadding + belowLanes * externalLabelLaneHeight;
     const chartHeight = marginTop + barHeight + marginBottom;
-    const insideLabels = labels.filter((label) => !label.isExternal).map((label) => label.item);
+    const externalLabelIndexes = new Set(externalLabels.map((label) => label.index));
 
     const chart = Plot.plot({
       width: chartWidth,
@@ -123,14 +123,16 @@ function ByStudyTypeHBar({
             fill: (item) => getStudyTypeColor(item.category, studyTypeOrder),
             insetTop: 2,
             insetBottom: 2,
+            className: "study-type-segment",
           })
         ),
         Plot.text(
-          insideLabels,
+          data,
           Plot.stackX1({
             x: "count",
             y: () => "Studies",
-            text: (item) => formatStudyType(item.name),
+            text: (item, index) =>
+              externalLabelIndexes.has(index) ? "" : formatStudyType(item.name),
             textAnchor: "start",
             dx: 6,
             dy: -16,
@@ -140,11 +142,12 @@ function ByStudyTypeHBar({
           })
         ),
         Plot.text(
-          insideLabels,
+          data,
           Plot.stackX1({
             x: "count",
             y: () => "Studies",
-            text: (item) => item.count.toLocaleString(),
+            text: (item, index) =>
+              externalLabelIndexes.has(index) ? "" : item.count.toLocaleString(),
             textAnchor: "start",
             dx: 6,
             fill: labelFill,
@@ -153,11 +156,14 @@ function ByStudyTypeHBar({
           })
         ),
         Plot.text(
-          insideLabels,
+          data,
           Plot.stackX1({
             x: "count",
             y: () => "Studies",
-            text: (item) => `${((item.count / totalCount) * 100).toFixed(1)}%`,
+            text: (item, index) =>
+              externalLabelIndexes.has(index)
+                ? ""
+                : `${((item.count / totalCount) * 100).toFixed(1)}%`,
             textAnchor: "start",
             dx: 6,
             dy: 16,
@@ -247,17 +253,16 @@ function appendExternalLabels({
   totalCount: number;
 }) {
   const namespace = "http://www.w3.org/2000/svg";
-  const segments = Array.from(chart.querySelectorAll("rect")).filter(
-    (segment) => {
-      const fill = segment.getAttribute("fill");
-      return fill !== null && fill !== "none";
-    }
+  const segments = Array.from(
+    chart.querySelectorAll<SVGRectElement>("g.study-type-segment rect")
   );
 
   labels.forEach((label) => {
     if (!label.position || !label.lane) return;
 
-    const segment = segments[label.index];
+    const segment = segments.find(
+      (element) => (element as SVGRectElement & { __data__?: number }).__data__ === label.index
+    );
     if (!segment) return;
 
     const isAbove = label.position === "above";
@@ -267,10 +272,11 @@ function appendExternalLabels({
     const segmentHeight = Number(segment.getAttribute("height"));
     const center = segmentX + segmentWidth / 2;
     const segmentBottom = segmentTop + segmentHeight;
+    const isRightAligned = center >= Number(chart.getAttribute("width")) / 2;
     const labelY = isAbove
       ? segmentTop - externalLabelOffset - (label.lane - 1) * externalLabelLaneHeight
       : segmentBottom + externalLabelOffset + (label.lane - 1) * externalLabelLaneHeight;
-    const lineEnd = center - externalLabelGap;
+    const lineEnd = center + (isRightAligned ? -externalLabelGap : externalLabelGap);
     const path = document.createElementNS(namespace, "path");
     const text = document.createElementNS(namespace, "text");
 
@@ -283,11 +289,14 @@ function appendExternalLabels({
     path.setAttribute("stroke-width", "1");
     chart.append(path);
 
-    text.setAttribute("x", `${lineEnd - externalLabelPadding / 2}`);
+    text.setAttribute(
+      "x",
+      `${lineEnd + (isRightAligned ? -externalLabelPadding / 2 : externalLabelPadding / 2)}`
+    );
     text.setAttribute("y", `${labelY + 2}`);
     text.setAttribute("fill", "currentColor");
     text.setAttribute("font-size", "12");
-    text.setAttribute("text-anchor", "end");
+    text.setAttribute("text-anchor", isRightAligned ? "end" : "start");
     text.setAttribute("dominant-baseline", "middle");
     appendTextSpan(text, formatStudyType(label.item.name), 13.5, 600);
     appendTextSpan(text, `\u00a0${label.item.count.toLocaleString()}`, 12, 400);
