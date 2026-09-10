@@ -10,6 +10,8 @@ import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
+// import ByStudyTypeDonut from "./ByStudyTypeDonut";
+import ByStudyTypeHBar from "./ByStudyTypeHBar";
 import VariantsByConsequence from "./VariantsByConsequence";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
@@ -47,6 +49,23 @@ function MetricsPage() {
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
       <ColocalisationByType data={data} />
+      <br />
+      <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
+      <br />
+      {/* <ByStudyTypeDonut data={data} dataset="study" title="Studies by study type" />
+      <br /> */}
+      <ByStudyTypeHBar
+        data={data}
+        dataset="credible_set"
+        title="Credible sets by study type"
+      />
+      <br />
+      <ByStudyTypeHBar
+        data={data}
+        dataset="colocalisation"
+        metric="studyTypePair"
+        title="Colocalisation by type"
+      />
       <br />
       <VariantsByConsequence data={data} />
       {/* <Typography sx={{ pt: 3 }}><b>Polish:</b>Can we remove "variant" from every bar label?</Typography> */}
