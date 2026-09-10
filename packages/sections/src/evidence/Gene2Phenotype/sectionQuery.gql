@@ -7,9 +7,8 @@ query OpenTargetsGeneticsQuery(
     id
     gene2Phenotype: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["gene2phenotype"]
-      size: $size
+      datasourceIds: [gene2phenotype]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

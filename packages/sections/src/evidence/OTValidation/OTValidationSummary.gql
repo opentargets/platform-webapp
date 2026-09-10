@@ -1,9 +1,8 @@
 fragment otValidationSummary on Disease {
   otValidationSummary: evidences(
     ensemblIds: [$ensgId]
-    enableIndirect: true
-    datasourceIds: ["ot_crispr_validation"]
-    size: 1
+    datasourceIds: [ot_crispr_validation]
+    page: { index: 0 size: 1 }
   ) {
     count
   }

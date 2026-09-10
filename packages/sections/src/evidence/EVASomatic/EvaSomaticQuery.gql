@@ -3,12 +3,9 @@ query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $size: Int!, $cursor
     id
     eva_somatic: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["eva_somatic"]
-      size: $size
-      cursor: $cursor
+      datasourceIds: [eva_somatic]
+      page: { index: 0 size: $size }
     ) {
-      cursor
       count
       rows {
         disease {

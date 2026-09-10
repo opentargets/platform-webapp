@@ -3,9 +3,8 @@ query ClingenQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     clingenSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["clingen"]
-      size: $size
+      datasourceIds: [clingen]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

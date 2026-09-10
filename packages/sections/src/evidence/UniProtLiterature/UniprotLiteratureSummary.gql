@@ -1,9 +1,8 @@
 fragment UniprotLiteratureSummary on Disease {
   uniprotLiteratureSummary: evidences(
     ensemblIds: [$ensgId]
-    enableIndirect: true
-    datasourceIds: ["uniprot_literature"]
-    size: 1
+    datasourceIds: [uniprot_literature]
+    page: { index: 0 size: 1 }
   ) {
     count
   }

@@ -3,9 +3,8 @@ query GeneBurdenQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     geneBurdenSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["gene_burden"]
-      size: $size
+      datasourceIds: [gene_burden]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

@@ -2,8 +2,8 @@ fragment Gene2PhenotypeSummaryFragment on Disease {
   gene2Phenotype: evidences(
     ensemblIds: [$ensgId]
     enableIndirect: true
-    datasourceIds: ["gene2phenotype"]
-    size: 1
+    datasourceIds: [gene2phenotype]
+    page: { index: 0 size: 1 }
   ) {
     count
   }

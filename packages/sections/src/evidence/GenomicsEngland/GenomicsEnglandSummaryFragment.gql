@@ -1,9 +1,8 @@
 fragment GenomicsEnglandSummaryFragment on Disease {
   genomicsEngland: evidences(
     ensemblIds: [$ensgId]
-    enableIndirect: true
-    datasourceIds: ["genomics_england"]
-    size: 1
+    datasourceIds: [genomics_england]
+    page: { index: 0 size: 1 }
   ) {
     count
   }

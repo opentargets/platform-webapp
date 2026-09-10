@@ -3,8 +3,8 @@ query CancerBiomarkersQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     cancerBiomarkersSummary: evidences(
       ensemblIds: [$ensemblId]
-      datasourceIds: ["cancer_biomarkers"]
-      page: {index: 0 size: $size}
+      datasourceIds: [cancer_biomarkers]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {
@@ -18,7 +18,7 @@ query CancerBiomarkersQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
           geneticVariation {
             geneticVariationId: id
             name
-            functionalConsequenceId {
+            functionalConsequence {
               id
               label
             }

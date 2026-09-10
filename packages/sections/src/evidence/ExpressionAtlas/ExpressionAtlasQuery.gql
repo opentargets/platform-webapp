@@ -3,9 +3,8 @@ query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     expressionAtlasSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["expression_atlas"]
-      size: $size
+      datasourceIds: [expression_atlas]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

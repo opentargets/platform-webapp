@@ -6,9 +6,8 @@ query OrphanetQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     orphanetSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["orphanet"]
-      size: $size
+      datasourceIds: [orphanet]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

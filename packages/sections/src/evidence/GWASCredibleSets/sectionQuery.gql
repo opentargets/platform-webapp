@@ -7,9 +7,8 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     name
     gwasCredibleSets: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["gwas_credible_sets"]
-      size: $size
+      datasourceIds: [gwas_credible_sets]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

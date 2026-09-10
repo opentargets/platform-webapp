@@ -6,9 +6,8 @@ query UniprotVariantsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     uniprotVariantsSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["uniprot_variants"]
-      size: $size
+      datasourceIds: [uniprot_variants]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

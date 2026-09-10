@@ -3,9 +3,8 @@ query CrisprQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     crisprSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["crispr"]
-      size: $size
+      datasourceIds: [crispr]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

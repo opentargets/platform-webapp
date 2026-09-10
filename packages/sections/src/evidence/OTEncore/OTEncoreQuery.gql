@@ -3,9 +3,8 @@ query EncoreQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     otEncoreSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["encore"]
-      size: $size
+      datasourceIds: [encore]
+      size: { index: 0 $size }
     ) {
       count
       rows {

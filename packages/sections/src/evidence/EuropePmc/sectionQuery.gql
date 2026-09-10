@@ -2,19 +2,15 @@ query EuropePMCQuery(
   $ensemblId: String!
   $efoId: String!
   $size: Int!
-  $cursor: String
 ) {
   disease(efoId: $efoId) {
     id
     europePmc: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      size: $size
-      datasourceIds: ["europepmc"]
-      cursor: $cursor
+      datasourceIds: [europepmc]
+      page: { index: 0 size: $size }
     ) {
       count
-      cursor
       rows {
         disease {
           name

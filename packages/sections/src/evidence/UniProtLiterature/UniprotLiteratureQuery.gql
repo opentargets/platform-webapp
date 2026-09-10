@@ -6,9 +6,8 @@ query UniprotLiteratureQuery($ensemblId: String!, $efoId: String!, $size: Int!) 
     id
     uniprotLiteratureSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["uniprot_literature"]
-      size: $size
+      datasourceIds: [uniprot_literature]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

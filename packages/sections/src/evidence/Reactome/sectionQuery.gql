@@ -6,9 +6,8 @@ query reactomeQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     reactomeSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["reactome"]
-      size: $size
+      datasourceIds: [reactome]
+      page: { index: 0 size: $size }
     ) {
       count
       rows {

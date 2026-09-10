@@ -3,9 +3,8 @@ query ValidationQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     id
     otValidationSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["ot_crispr_validation"]
-      size: $size
+      datasourceIds: [ot_crispr_validation]
+      page: { index: 0 size: $size}
     ) {
       count
       rows {
