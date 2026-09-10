@@ -2503,8 +2503,6 @@ export type Target = {
   synonyms: Array<LabelAndSource>;
   /** Target classification categories from ChEMBL */
   targetClass: Array<TargetClass>;
-  /** Target Enabling Package (TEP) information */
-  tep?: Maybe<Tep>;
   /** Tractability information for the target */
   tractability: Array<Tractability>;
   /** List of Ensembl transcript identifiers associated with the target */
@@ -2618,19 +2616,6 @@ export type TargetPrioritisation = {
   __typename?: 'TargetPrioritisation';
   /** List of key-value pairs representing prioritisation factors */
   items: Array<KeyValuePair>;
-};
-
-/** Target Enabling Package (TEP) information */
-export type Tep = {
-  __typename?: 'Tep';
-  /** Description of the TEP target */
-  description: Scalars['String']['output'];
-  /** Ensembl gene ID for the TEP target */
-  name: Scalars['String']['output'];
-  /** Therapeutic area associated with the TEP target */
-  therapeuticArea: Scalars['String']['output'];
-  /** URL linking to more information on the TEP target */
-  uri: Scalars['String']['output'];
 };
 
 /** Baseline RNA and protein expression data across tissues. This data does not contain raw expression values, instead to shows how targets are selectively expressed across different tissues. This dataset combines expression values from multiple sources including Expression Atlas and Human Protein Atlas. */
