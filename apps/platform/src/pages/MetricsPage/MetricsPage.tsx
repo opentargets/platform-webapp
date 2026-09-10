@@ -4,8 +4,7 @@ import { Typography } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
 import MetricsCards from "./MetricsCards";
 import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
-import EvidenceChart from "./EvidenceChart";
-import AssociationPlot from "./AssociationPlot";
+import AssociationFacetChart from "./AssociationFacetChart";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
@@ -24,20 +23,16 @@ function MetricsPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ mb: 2 }}>Data Metrics</Typography>
+      {/* <Typography variant="h4" sx={{ mb: 2 }}>Data Metrics</Typography> */}
       <MetricsCards data={data} />
       {/* <Typography sx={{ pt: 3 }}><b>Polish:</b> do these look like buttons? </Typography>
       <Typography><b>Todo:</b> finalise card order and icons - what for coloc? evidence and cred sets ok to be same? more info in tooltip where approp? - e.g. explain a prioritised gene</Typography>
       <Typography sx={{ pb: 3 }}><b>Alternative:</b> more hierarchical, e.g. split into top-level entity counts then evidence linking targets and diseases, credible sets and colocs in variants section.</Typography> */}
       
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography>
+      {/* <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography> */}
 
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
-      <EvidenceChart data={data} />
-      <br />
-      <AssociationPlot data={data} datasetPrefix="association_by_datasource_direct" title="Direct associations" />
-      <br />
-      <AssociationPlot data={data} datasetPrefix="association_by_datasource_indirect" title="Indirect associations" />
+      <AssociationFacetChart data={data} />
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
       <DrugsByClinicalStage data={data} />
