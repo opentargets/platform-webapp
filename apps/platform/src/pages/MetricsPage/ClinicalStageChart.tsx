@@ -1,4 +1,4 @@
-import { Box, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { clinicalStageCategories } from "@ot/constants";
 import { ObsPlot } from "ui";
@@ -19,8 +19,7 @@ function ClinicalStageChart({ data, dataset, title }: { data: MetricRow[]; datas
   if (chartData.length === 0) return null;
 
   return (
-    <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
-      <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0 }}>{title}</Typography>
         <ObsPlot
           data={chartData}
@@ -35,8 +34,7 @@ function ClinicalStageChart({ data, dataset, title }: { data: MetricRow[]; datas
           gapInfo={0}
           renderInfo={() => null}
         />
-      </Box>
-    </Paper>
+    </Box>
   );
 
   function renderChart({ data, width, height }: { data: ClinicalStageCount[]; width?: number; height: number }) {
@@ -46,7 +44,7 @@ function ClinicalStageChart({ data, dataset, title }: { data: MetricRow[]; datas
     const outsideData = data.filter((item) => !insideData.includes(item));
 
     return Plot.plot({
-      width: width ?? 0, height, style: { fontSize: "13.5px" }, marginTop: 4, marginBottom: 4, marginLeft: 240, marginRight: 0,
+      width: width ?? 0, height, style: { fontSize: "13.5px" }, marginTop: 4, marginBottom: 4, marginLeft: 140, marginRight: 0,
       x: { axis: null }, y: { domain: data.map((item) => item.name), label: null, tickSize: 0, tickPadding: 8 },
       marks: [
         Plot.barX(data, { x: "count", y: "name", fill: theme.palette.primary.main, insetTop: 2, insetBottom: 2, className: "obs-tooltip" }),

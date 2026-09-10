@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { ObsPlot } from "ui";
 import type { MetricRow } from "./MetricsPage";
@@ -66,8 +66,7 @@ function ByStudyTypeHBar({
   if (chartData.length === 0) return null;
 
   return (
-    <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
-      <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0, position: "absolute" }}>
           {title}
         </Typography>
@@ -79,8 +78,7 @@ function ByStudyTypeHBar({
           gapInfo={0}
           renderInfo={() => null}
         />
-      </Box>
-    </Paper>
+    </Box>
   );
 
   function renderChart({ data, width }: { data: StudyTypeCount[]; width?: number }) {

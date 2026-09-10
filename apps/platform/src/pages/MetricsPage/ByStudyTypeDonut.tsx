@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 import type { MetricRow } from "./MetricsPage";
@@ -117,14 +117,14 @@ function ByStudyTypeDonut({
   if (chartData.length === 0) return null;
 
   return (
-    <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+    <>
       <Typography variant="subtitle2" sx={{ m: 0 }}>
         {title}
       </Typography>
       <Box sx={{ minWidth: 0 }}>
         <svg ref={svgRef} width="100%" height={chartHeight} role="img" aria-label={title} />
       </Box>
-    </Paper>
+    </>
   );
 }
 

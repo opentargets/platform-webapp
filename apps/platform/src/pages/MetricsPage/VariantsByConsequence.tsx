@@ -1,4 +1,4 @@
-import { Box, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/constants";
 import { ObsPlot } from "ui";
@@ -41,12 +41,7 @@ function VariantsByConsequence({ data }: { data: MetricRow[] }) {
   if (chartData.length === 0) return null;
 
   return (
-    <Paper
-      sx={{ py: 2, px: 3, maxWidth: "100%" }}
-      elevation={0}
-      variant="outlined"
-    >
-      <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0 }}>
           Variants by most severe consequence
         </Typography>
@@ -64,8 +59,7 @@ function VariantsByConsequence({ data }: { data: MetricRow[] }) {
           gapInfo={0}
           renderInfo={() => null}
         />
-      </Box>
-    </Paper>
+    </Box>
   );
 
   function renderChart({

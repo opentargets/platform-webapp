@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { therapeuticAreas } from "@ot/constants";
 import { ObsPlot } from "ui";
@@ -51,7 +51,7 @@ function DiseasesByTherapeuticArea({ data }: { data: MetricRow[] }) {
   if (chartData.length === 0) return null;
 
   return (
-    <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined" >
+    <>
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0 }}>
           Diseases by therapeutic area
@@ -74,7 +74,7 @@ function DiseasesByTherapeuticArea({ data }: { data: MetricRow[] }) {
       <Typography variant="caption" component="p" sx={{ textAlign: "right", fontStyle: "italic" }}>
         A disease can belong to more than one therapeutic area
       </Typography>
-    </Paper>
+    </>
   );
 
   function renderChart({

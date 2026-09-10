@@ -1,4 +1,4 @@
-import { Box, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { ObsPlot } from "ui";
 import dataSourcesAssoc from "../../components/AssociationsToolkit/static_datasets/dataSourcesAssoc";
@@ -62,8 +62,7 @@ function AssociationFacetChart({ data }: { data: MetricRow[] }) {
   if (chartData.length === 0) return null;
 
   return (
-    <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
-      <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0 }}>Association evidence coverage</Typography>
         <Box
           sx={{
@@ -84,8 +83,7 @@ function AssociationFacetChart({ data }: { data: MetricRow[] }) {
             renderInfo={() => null}
           />
         </Box>
-      </Box>
-    </Paper>
+    </Box>
   );
 
   function renderChart({ data, width, height }: { data: FacetCount[]; width?: number; height: number }) {

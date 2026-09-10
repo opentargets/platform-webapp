@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Box } from "ui";
 import { autoType, csv } from "d3";
-import { Typography } from "@mui/material";
+import { Paper, Typography } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
 import MetricsCards from "./MetricsCards";
 import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
@@ -34,40 +35,48 @@ function MetricsPage() {
       {/* <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Coverage</Typography> */}
 
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
-      <AssociationFacetChart data={data} />
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
+        <AssociationFacetChart data={data} />
+      </Paper>
       <br />
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
-      <DrugsByClinicalStage data={data} />
-      <br />
-      <ClinicalReportsByStage data={data} />
+      
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+        <DrugsByClinicalStage data={data} />
+        <Box sx={{ height: "8px", width: "100%" }}></Box>
+        <ClinicalReportsByStage data={data} />
+      </Paper>
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
-      <StudiesByStudyType data={data} />
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+        <StudiesByStudyType data={data} />
+        <Box sx={{ height: "8px", width: "100%" }}></Box>
+        <CredibleSetsByStudyType data={data} />
+        <Box sx={{ height: "8px", width: "100%" }}></Box>
+        <ColocalisationByType data={data} />
+      </Paper>
       <br />
-      <CredibleSetsByStudyType data={data} />
-      <br />
-      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
-      <ColocalisationByType data={data} />
-      <br />
-      <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
-      <br />
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+        <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
       {/* <ByStudyTypeDonut data={data} dataset="study" title="Studies by study type" />
       <br /> */}
-      <ByStudyTypeHBar
-        data={data}
-        dataset="credible_set"
-        title="Credible sets by study type"
-      />
+        <ByStudyTypeHBar
+          data={data}
+          dataset="credible_set"
+          title="Credible sets by study type"
+        />
+        <ByStudyTypeHBar
+          data={data}
+          dataset="colocalisation"
+          metric="studyTypePair"
+          title="Colocalisation by type"
+        />
+      </Paper>
       <br />
-      <ByStudyTypeHBar
-        data={data}
-        dataset="colocalisation"
-        metric="studyTypePair"
-        title="Colocalisation by type"
-      />
-      <br />
-      <VariantsByConsequence data={data} />
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+        <VariantsByConsequence data={data} />
+      </Paper>
       {/* <Typography sx={{ pt: 3 }}><b>Polish:</b>Can we remove "variant" from every bar label?</Typography> */}
       {/* <Typography ><b>Alternative:</b>Replace Other+tooltip with 'show more'?</Typography> */}
     </>
