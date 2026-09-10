@@ -2,37 +2,50 @@ import { Box, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 import type { MetricRow } from "./MetricsPage";
+import {
+  formatStudyType,
+  getStudyTypeCategory,
+  getStudyTypeColor,
+  getStudyTypeOrder,
+  getStudyTypeRank,
+  type StudyTypeCount,
+} from "./studyTypeUtils";
 
-type StudyTypeCount = { name: string; count: number };
 type StudyTypeArc = d3.PieArcDatum<StudyTypeCount>;
 
 const chartHeight = 360;
 const labelOffset = 24;
 
-function formatStudyType(name: string) {
-  return name.replaceAll(/(gwas|qtl)/gi, (match) => match.toUpperCase());
-}
-
 function ByStudyTypeDonut({
   data,
   dataset,
+  metric = "studyType",
   title,
 }: {
   data: MetricRow[];
   dataset: string;
+  metric?: string;
   title: string;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const studyTypeOrder = getStudyTypeOrder(data);
   const chartData: StudyTypeCount[] = data
     .filter(
       (row) =>
         row.dataset === dataset &&
         row.kind === "grouping" &&
-        row.expression === "studyType" &&
+        row.metric === metric &&
         row.group_value
     )
-    .map((row) => ({ name: row.group_value, count: row.value }))
-    .sort((a, b) => b.count - a.count);
+    .map((row) => ({
+      name: row.group_value,
+      category: getStudyTypeCategory(row.group_value),
+      count: row.value,
+    }))
+    .sort(
+      (a, b) =>
+        getStudyTypeRank(a.category, studyTypeOrder) - getStudyTypeRank(b.category, studyTypeOrder)
+    );
 
   useEffect(() => {
     if (!svgRef.current || chartData.length === 0) return;
@@ -43,7 +56,6 @@ function ByStudyTypeDonut({
     const totalCount = d3.sum(chartData, (item) => item.count);
     const pie = d3.pie<StudyTypeCount>().value((item) => item.count).sort(null);
     const arc = d3.arc<StudyTypeArc>().innerRadius(radius * 0.6).outerRadius(radius);
-    const color = d3.scaleOrdinal(d3.schemeTableau10).domain(chartData.map((item) => item.name));
     const labelRadius = radius + labelOffset;
     const chart = svg
       .attr("viewBox", `0 0 ${width} ${chartHeight}`)
@@ -62,7 +74,7 @@ function ByStudyTypeDonut({
       .data(arcs)
       .join("path")
       .attr("class", "segment")
-      .attr("fill", (item) => color(item.data.name))
+      .attr("fill", (item) => getStudyTypeColor(item.data.category, studyTypeOrder))
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .attr("d", arc);
@@ -117,14 +129,14 @@ function ByStudyTypeDonut({
   if (chartData.length === 0) return null;
 
   return (
-    <>
+    <Box sx={{ minWidth: 0 }}>
       <Typography variant="subtitle2" sx={{ m: 0 }}>
         {title}
       </Typography>
       <Box sx={{ minWidth: 0 }}>
         <svg ref={svgRef} width="100%" height={chartHeight} role="img" aria-label={title} />
       </Box>
-    </>
+    </Box>
   );
 }
 

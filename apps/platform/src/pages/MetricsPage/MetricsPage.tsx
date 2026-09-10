@@ -11,7 +11,7 @@ import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
-// import ByStudyTypeDonut from "./ByStudyTypeDonut";
+import ByStudyTypeDonut from "./ByStudyTypeDonut";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
 import VariantsByConsequence from "./VariantsByConsequence";
 
@@ -39,14 +39,12 @@ function MetricsPage() {
         <AssociationFacetChart data={data} />
       </Paper>
       <br />
-      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography>       */}
       
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
         <DrugsByClinicalStage data={data} />
         <Box sx={{ height: "8px", width: "100%" }}></Box>
         <ClinicalReportsByStage data={data} />
       </Paper>
-      {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> </Typography> */}
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
@@ -56,11 +54,10 @@ function MetricsPage() {
         <Box sx={{ height: "8px", width: "100%" }}></Box>
         <ColocalisationByType data={data} />
       </Paper>
+
       <br />
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
         <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
-      {/* <ByStudyTypeDonut data={data} dataset="study" title="Studies by study type" />
-      <br /> */}
         <ByStudyTypeHBar
           data={data}
           dataset="credible_set"
@@ -73,6 +70,31 @@ function MetricsPage() {
           title="Colocalisation by type"
         />
       </Paper>
+      <br />
+
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" },
+          }}
+        >
+          <ByStudyTypeDonut data={data} dataset="study" title="Studies by study type" />
+          <ByStudyTypeDonut
+            data={data}
+            dataset="credible_set"
+            title="Credible sets by study type"
+          />
+          <ByStudyTypeDonut
+            data={data}
+            dataset="colocalisation"
+            metric="studyTypePair"
+            title="Colocalisation by type"
+          />
+        </Box>
+      </Paper>
+
       <br />
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
         <VariantsByConsequence data={data} />

@@ -2,8 +2,15 @@ import { Box, Typography } from "@mui/material";
 import * as Plot from "@observablehq/plot";
 import { ObsPlot } from "ui";
 import type { MetricRow } from "./MetricsPage";
+import {
+  formatStudyType,
+  getStudyTypeCategory,
+  getStudyTypeColor,
+  getStudyTypeOrder,
+  getStudyTypeRank,
+  type StudyTypeCount,
+} from "./studyTypeUtils";
 
-type StudyTypeCount = { name: string; category: string; count: number };
 type LabelLayout = {
   item: StudyTypeCount;
   index: number;
@@ -20,19 +27,6 @@ const externalLabelPadding = 8;
 const externalLabelLaneHeight = 22;
 const externalLabelOffset = 18;
 const insideLabelPadding = 12;
-const studyTypeColors = [
-  "#4269d0",
-  "#efb118",
-  "#ff725c",
-  "#6cc5b0",
-  "#3ca951",
-  "#ff8ab7",
-];
-
-function formatStudyType(name: string) {
-  return name.replaceAll(/(gwas|qtl)/ig, (match) => match.toUpperCase());
-}
-
 function ByStudyTypeHBar({
   data,
   dataset,
@@ -181,35 +175,6 @@ function ByStudyTypeHBar({
 
     return chart;
   }
-}
-
-function getStudyTypeOrder(data: MetricRow[]) {
-  const studyTypes = data
-    .filter(
-      (row) =>
-        row.dataset === "study" &&
-        row.kind === "grouping" &&
-        row.metric === "studyType" &&
-        row.group_value
-    )
-    .sort((a, b) => b.value - a.value)
-    .map((row) => getStudyTypeCategory(row.group_value));
-  const orderedStudyTypes = ["gwas", ...studyTypes.filter((studyType) => studyType !== "gwas")];
-
-  return new Map(orderedStudyTypes.map((studyType, index) => [studyType, index]));
-}
-
-function getStudyTypeCategory(name: string) {
-  return name.split("-")[1] ?? name;
-}
-
-function getStudyTypeColor(category: string, studyTypeOrder: Map<string, number>) {
-  const index = getStudyTypeRank(category, studyTypeOrder);
-  return studyTypeColors[index % studyTypeColors.length];
-}
-
-function getStudyTypeRank(category: string, studyTypeOrder: Map<string, number>) {
-  return studyTypeOrder.get(category) ?? studyTypeColors.length;
 }
 
 function calculateLabelLayout(
