@@ -8,6 +8,7 @@ import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
 import AssociationFacetChart from "./AssociationFacetChart";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
+import DrugsAndClinicalReportsByStage from "./DrugsAndClinicalReportsByStage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
@@ -44,6 +45,9 @@ function MetricsPage() {
         <DrugsByClinicalStage data={data} />
         <Box sx={{ height: "8px", width: "100%" }}></Box>
         <ClinicalReportsByStage data={data} />
+      </Paper>
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <DrugsAndClinicalReportsByStage data={data} />
       </Paper>
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
