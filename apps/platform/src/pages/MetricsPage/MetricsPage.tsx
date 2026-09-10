@@ -9,6 +9,7 @@ import AssociationFacetChart from "./AssociationFacetChart";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import DrugsAndClinicalReportsByStage from "./DrugsAndClinicalReportsByStage";
+import DrugsCoverage from "./DrugsCoverage";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
@@ -48,6 +49,9 @@ function MetricsPage() {
       </Paper>
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
         <DrugsAndClinicalReportsByStage data={data} />
+      </Paper>
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <DrugsCoverage data={data} />
       </Paper>
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
