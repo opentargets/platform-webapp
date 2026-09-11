@@ -5,7 +5,8 @@ import { Paper, Typography } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
 import MetricsCards from "./MetricsCards";
 import DiseasesByTherapeuticArea from "./DiseasesByTherapeuticArea";
-import AssociationFacetChart from "./AssociationFacetChart";
+import AssociationChart from "./AssociationChart";
+import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import DrugsAndClinicalReportsByStage from "./DrugsAndClinicalReportsByStage";
@@ -16,6 +17,7 @@ import StudiesByStudyType from "./StudiesByStudyType";
 import ByStudyTypeDonut from "./ByStudyTypeDonut";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
 import VariantsByConsequence from "./VariantsByConsequence";
+import AssociationFacetChart from "./AssociationFacetChart";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
 
@@ -39,6 +41,12 @@ function MetricsPage() {
       {/* <Typography sx={{ py: 3 }}><b>Alternative:</b> Replace Other+tooltip with 'show more'?</Typography> */}
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
         <AssociationFacetChart data={data} />
+      </Paper>
+      <br />
+
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
+        <AssociationChart data={data} />
+        <HierarchicalAssociationChart data={data} />
       </Paper>
       <br />
       

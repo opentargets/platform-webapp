@@ -2,7 +2,8 @@ import type { MetricRow } from "./MetricsPage";
 
 export type StudyTypeCount = { name: string; category: string; count: number };
 
-const studyTypeColors = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7"];
+const studyTypeColors = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7", "#a463f2", "#97bbf5", "#9c6b4e", "#9498a0"];
+// const studyTypeColors = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7"];
 
 export function formatStudyType(name: string) {
   return name.replaceAll(/(gwas|qtl)/gi, (match) => match.toUpperCase());
