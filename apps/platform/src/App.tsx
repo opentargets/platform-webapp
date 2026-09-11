@@ -31,6 +31,13 @@ const router = createBrowserRouter([
             lazy: () => import("./pages/APIPage/APIPage").then(m => ({ Component: m.default })),
           },
           {
+            path: "/metrics",
+            lazy: () =>
+              import("./pages/MetricsPage/MetricsPageWrapper").then(m => ({
+                Component: m.default,
+              })),
+          },
+          {
             path: "/search",
             lazy: () =>
               import("./pages/SearchPage/SearchPage").then(m => ({ Component: m.default })),
