@@ -258,18 +258,7 @@ export type CanonicalTranscript = {
   /** Genomic start position of the canonical transcript */
   start: Scalars['Long']['output'];
   /** Strand orientation of the canonical transcript */
-  strand: Scalars['String']['output'];
-};
-
-/** Cell type where protein levels were measured */
-export type CellType = {
-  __typename?: 'CellType';
-  /** Level of expression for this cell type */
-  level: Scalars['Int']['output'];
-  /** Cell type name */
-  name: Scalars['String']['output'];
-  /** Reliability of the cell type measurement */
-  reliability: Scalars['Boolean']['output'];
+  strand: Strand;
 };
 
 /** Chemical probes related to the target. High-quality chemical probes are small molecules that can be used to modulate and study the function of proteins. */
@@ -288,8 +277,6 @@ export type ChemicalProbe = {
   mechanismOfAction?: Maybe<Array<Scalars['String']['output']>>;
   /** Origin of the chemical probe */
   origin?: Maybe<Array<Scalars['String']['output']>>;
-  /** Score from ProbeMiner for chemical probe quality */
-  probeMinerScore?: Maybe<Scalars['Float']['output']>;
   /** Score for chemical probes related to druggability */
   probesDrugsScore?: Maybe<Scalars['Float']['output']>;
   /** Score indicating chemical probe activity in cells */
@@ -357,12 +344,14 @@ export type ClinicalReport = {
   diseases: Array<ClinicalDiseaseListItem>;
   /** List of drugs mentioned in the report */
   drugs: Array<ClinRepDrugListItem>;
-  /** Whether the clinical report has been reviewed by an expert or not */
-  hasExpertReview: Scalars['Boolean']['output'];
   /** Report ID */
   id: Scalars['String']['output'];
+  /** Nature of the record the report originates from (e.g. CLINICAL_TRIAL, DRUG_LABEL, REGULATORY_AGENCY, CURATED_RESOURCE). */
+  origin: Scalars['String']['output'];
   /** Clinical phase reported at source */
   phaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Resource or organisation that distributes the data fetched from the primary source (e.g. AACT, ChEMBL, EMA, PMDA, TTD). */
+  provider: Scalars['String']['output'];
   /** Flags related to report concerns */
   qualityControls: Array<Scalars['String']['output']>;
   /** Side effects associated with the clinical report. */
@@ -374,7 +363,7 @@ export type ClinicalReport = {
   /** Description of the trial associated with the clinical report */
   trialDescription?: Maybe<Scalars['String']['output']>;
   /** List of PMIDs linked to the trial associated with the clinical report */
-  trialLiterature: Array<Scalars['String']['output']>;
+  trialLiterature: Array<TrialLiterature>;
   /** Number of arms in the trial associated with the clinical report */
   trialNumberOfArms?: Maybe<Scalars['Int']['output']>;
   /** Official title of the clinical trial as registered */
@@ -385,6 +374,8 @@ export type ClinicalReport = {
   trialPhase?: Maybe<Scalars['String']['output']>;
   /** Purpose for the intervention of the clinical trial associated with the clinical report */
   trialPrimaryPurpose?: Maybe<Scalars['String']['output']>;
+  /** Information on the entity or individual initiating the study. */
+  trialSponsor?: Maybe<TrialSponsor>;
   /** Start date of the trial associated with the clinical report */
   trialStartDate?: Maybe<Scalars['String']['output']>;
   /** Assigned categories based on trialWhyStopped */
@@ -1108,14 +1099,11 @@ export type Evidence = {
   drugResponse?: Maybe<Disease>;
   /** Earliest data for the evidence */
   evidenceDate?: Maybe<Scalars['String']['output']>;
-  /** Description of the interaction between the two genes */
-  geneInteractionType?: Maybe<Scalars['String']['output']>;
-  /** False discovery rate of the genetic interaction test */
   geneticInteractionFDR?: Maybe<Scalars['Float']['output']>;
-  /** P-value of the genetic interaction test */
-  geneticInteractionPValue?: Maybe<Scalars['Float']['output']>;
   /** The strength of the genetic interaction. Directionality is captured as well: antagonistics < 0 < cooperative */
   geneticInteractionScore?: Maybe<Scalars['Float']['output']>;
+  /** Description of the interaction between the two genes */
+  geneticInteractionType?: Maybe<Scalars['String']['output']>;
   /** Identifer of the disease/target evidence */
   id: Scalars['String']['output'];
   /** Identifer of the interacting target */
@@ -1143,11 +1131,8 @@ export type Evidence = {
   pValueMantissa?: Maybe<Scalars['Float']['output']>;
   /** List of pooled pathways */
   pathways?: Maybe<Array<Pathway>>;
-  /** False discovery rate of the genetic test */
-  phenotypicConsequenceFDR?: Maybe<Scalars['Float']['output']>;
   /** Log 2 fold change of the cell survival */
   phenotypicConsequenceLogFoldChange?: Maybe<Scalars['Float']['output']>;
-  /** P-value of the the cell survival test */
   phenotypicConsequencePValue?: Maybe<Scalars['Float']['output']>;
   /** Primary Project Hit */
   primaryProjectHit?: Maybe<Scalars['Boolean']['output']>;
@@ -1219,6 +1204,7 @@ export type Evidence = {
   trialWhyStopped?: Maybe<Scalars['String']['output']>;
   /** Reference to linked external resource (e.g. clinical trials, studies, package inserts, reports, etc.) */
   urls?: Maybe<Array<LabelledUri>>;
+  validationReadouts?: Maybe<Array<ValidationReadouts>>;
   /** Variant supporting the relationship between the target and the disease */
   variant?: Maybe<Variant>;
   /** Descriptions of variant consequences at protein level */
@@ -1283,17 +1269,6 @@ export type Evidences = {
   rows: Array<Evidence>;
 };
 
-/** Array of structs containing expression data relevant to a particular gene and biosample combination */
-export type Expression = {
-  __typename?: 'Expression';
-  /** Protein expression values for the biosample and gene combination */
-  protein: ProteinExpression;
-  /** RNA expression values for the biosample and gene combination */
-  rna: RnaExpression;
-  /** Tissue/biosample information for the expression data */
-  tissue: Tissue;
-};
-
 /** CRISPR screening experiments supporting the essentiality assessment. Represents individual cell line assays from DepMap. */
 export type GeneEssentialityScreen = {
   __typename?: 'GeneEssentialityScreen';
@@ -1346,8 +1321,7 @@ export type GenomicLocation = {
   end: Scalars['Long']['output'];
   /** Genomic start position of the target gene */
   start: Scalars['Long']['output'];
-  /** Strand orientation of the target gene */
-  strand: Scalars['Int']['output'];
+  strand: Strand;
 };
 
 /** Human Phenotype Ontology subset of information included in the Platform. */
@@ -1454,10 +1428,6 @@ export type InteractionEvidence = {
   hostOrganismScientificName?: Maybe<Scalars['String']['output']>;
   /** NCBI taxon ID of the host organism */
   hostOrganismTaxId?: Maybe<Scalars['Long']['output']>;
-  /** Source where interactor A is identified */
-  intASource: Scalars['String']['output'];
-  /** Source where interactor B is identified */
-  intBSource: Scalars['String']['output'];
   /** Molecular Interactions (MI) identifier for the interaction detection method [bioregistry:mi] */
   interactionDetectionMethodMiIdentifier: Scalars['String']['output'];
   /** Short name of the method used to detect the interaction */
@@ -1597,7 +1567,7 @@ export type LabelledUri = {
   /** Optional human-readable label for the URL */
   niceName?: Maybe<Scalars['String']['output']>;
   /** URL to the external resource */
-  url: Scalars['String']['output'];
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 /** Collection of populations referenced by the study. Used to describe the linkage disequilibrium (LD) population structure of GWAS studies. */
@@ -1886,17 +1856,6 @@ export type ProteinCodingCoordinates = {
   rows: Array<ProteinCodingCoordinate>;
 };
 
-/** Struct containing relevant protein expression values for a particular biosample and gene combination */
-export type ProteinExpression = {
-  __typename?: 'ProteinExpression';
-  /** List of cell types were protein levels were measured */
-  cellType: Array<CellType>;
-  /** Level of protein expression normalised to 0-5 or -1 if absent */
-  level: Scalars['Int']['output'];
-  /** Reliability of the protein expression measurement */
-  reliability: Scalars['Boolean']['output'];
-};
-
 /** Referenced publication information */
 export type Publication = {
   __typename?: 'Publication';
@@ -2080,19 +2039,6 @@ export type QueryTargetsArgs = {
 /** Root query type providing access to all entities and search functionality in the Open Targets Platform. Supports retrieval of targets, diseases, drugs, variants, studies, credible sets, and their associations. Includes full-text search, mapping, and filtering capabilities. */
 export type QueryVariantArgs = {
   variantId: Scalars['String']['input'];
-};
-
-/** RNA expression values for a particular biosample and gene combination */
-export type RnaExpression = {
-  __typename?: 'RNAExpression';
-  /** Level of RNA expression normalised to 0-5 or -1 if absent */
-  level: Scalars['Int']['output'];
-  /** Unit for the RNA expression */
-  unit: Scalars['String']['output'];
-  /** Expression value */
-  value: Scalars['Float']['output'];
-  /** Expression zscore */
-  zscore: Scalars['Long']['output'];
 };
 
 /** Reactome pathway information for the target */
@@ -2330,6 +2276,16 @@ export type Similarity = {
   score: Scalars['Float']['output'];
 };
 
+/** Strand orientation of a genomic feature */
+export enum Strand {
+  /** Negative strand */
+  Negative = 'NEGATIVE',
+  /** Positive strand */
+  Positive = 'POSITIVE',
+  /** Unknown strand */
+  Unknown = 'UNKNOWN'
+}
+
 /** List of GWAS and molecular QTL studies with total count */
 export type Studies = {
   __typename?: 'Studies';
@@ -2469,8 +2425,6 @@ export type Target = {
   drugAndClinicalCandidates: ClinicalTargets;
   /** Target-disease evidence from all data sources supporting associations between this target and diseases or phenotypes. Evidence entries are reported and scored according to confidence in the association. */
   evidences: Evidences;
-  /** Baseline RNA and protein expression data across tissues for this target. Expression data shows how targets are selectively expressed across different tissues and biosamples, combining values from multiple sources including Expression Atlas and Human Protein Atlas. */
-  expressions: Array<Expression>;
   /** Functional descriptions of the target gene sourced from UniProt */
   functionDescriptions: Array<Scalars['String']['output']>;
   /** List of Gene Ontology (GO) annotations related to the target */
@@ -2521,8 +2475,6 @@ export type Target = {
   synonyms: Array<LabelAndSource>;
   /** Target classification categories from ChEMBL */
   targetClass: Array<TargetClass>;
-  /** Target Enabling Package (TEP) information */
-  tep?: Maybe<Tep>;
   /** Tractability information for the target */
   tractability: Array<Tractability>;
   /** List of Ensembl transcript identifiers associated with the target */
@@ -2628,32 +2580,6 @@ export type TargetPrioritisation = {
   items: Array<KeyValuePair>;
 };
 
-/** Target Enabling Package (TEP) information */
-export type Tep = {
-  __typename?: 'Tep';
-  /** Description of the TEP target */
-  description: Scalars['String']['output'];
-  /** Ensembl gene ID for the TEP target */
-  name: Scalars['String']['output'];
-  /** Therapeutic area associated with the TEP target */
-  therapeuticArea: Scalars['String']['output'];
-  /** URL linking to more information on the TEP target */
-  uri: Scalars['String']['output'];
-};
-
-/** Baseline RNA and protein expression data across tissues. This data does not contain raw expression values, instead to shows how targets are selectively expressed across different tissues. This dataset combines expression values from multiple sources including Expression Atlas and Human Protein Atlas. */
-export type Tissue = {
-  __typename?: 'Tissue';
-  /** List of anatomical systems that the biosample can be found in */
-  anatomicalSystems: Array<Scalars['String']['output']>;
-  /** UBERON id */
-  id: Scalars['String']['output'];
-  /** Name of the biosample the expression data is from */
-  label: Scalars['String']['output'];
-  /** List of organs that the biosample can be found in */
-  organs: Array<Scalars['String']['output']>;
-};
-
 /** Tractability information for the target. Indicates the feasibility of targeting the gene/protein with different therapeutic modalities. */
 export type Tractability = {
   __typename?: 'Tractability';
@@ -2719,6 +2645,30 @@ export type TranscriptConsequence = {
   uniprotAccessions?: Maybe<Array<Scalars['String']['output']>>;
   /** The sequence ontology term of the consequence of the variant based on Ensembl VEP in the context of the transcript */
   variantConsequences: Array<SequenceOntologyTerm>;
+};
+
+export type TrialLiterature = {
+  __typename?: 'TrialLiterature';
+  /** PubMed identifier of the reference, when the source records one. */
+  id: Scalars['String']['output'];
+  /** How the reference relates to the trial: RESULT and DERIVED report its outcome, BACKGROUND is literature its authors cited. */
+  type: Scalars['String']['output'];
+};
+
+export type TrialSponsor = {
+  __typename?: 'TrialSponsor';
+  /** Type of sponsor organisation. */
+  agencyClass?: Maybe<Scalars['String']['output']>;
+  /** Name of sponsor organisation. */
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+export type ValidationReadouts = {
+  __typename?: 'ValidationReadouts';
+  hsaValue?: Maybe<Scalars['Float']['output']>;
+  isValidated?: Maybe<Scalars['Boolean']['output']>;
+  readoutMethodName?: Maybe<Scalars['String']['output']>;
+  screen?: Maybe<Scalars['String']['output']>;
 };
 
 /** Core variant information for all variants in the Platform. Variants are included if any phenotypic information is available for the variant, including GWAS or molQTL credible sets, ClinVar, Uniprot or ClinPGx. The dataset includes variant metadata as well as variant effects derived from Ensembl VEP. */
