@@ -13,7 +13,7 @@ function VariantsByConsequence({ data }: { data: MetricRow[] }) {
       (row) =>
         row.dataset === "variant" &&
         row.kind === "grouping" &&
-        row.expression === "mostSevereConsequenceId" &&
+        row.expression === "aggregationValue" &&
         row.group_value,
     )
     .map((row) => ({
