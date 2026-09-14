@@ -3,7 +3,7 @@ import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLazyQuery } from "@apollo/client";
 import { useEffect } from "react";
-import { DisplayVariantId, OtGenomicLocation, Link } from "../..";
+import { DisplayVariantId, GenomicLocation, Link } from "../..";
 import { useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { useGenTrackState } from "../../providers/GenTrackProvider";
 import { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY } from "../OtAsyncTooltip/utils/asyncTooltipUtil";
@@ -146,7 +146,7 @@ function UnifiedTooltip() {
           </Box>
           {entityType === "target" && data.genomicLocation?.chromosome && (
             <Box sx={{ mt: 1, px: 1, typography: "body2" }} component="span">
-              <OtGenomicLocation
+              <GenomicLocation
                 type={GenomicLocationPresentationType.PLAIN}
                 geneLoc={data.genomicLocation}
               />
