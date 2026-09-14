@@ -42,23 +42,24 @@ function VariantsByConsequence({ data }: { data: MetricRow[] }) {
 
   return (
     <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2" sx={{ m: 0 }}>
-          Variants by most severe consequence
-        </Typography>
-        <ObsPlot
-          data={chartData}
-          otherData={{ textColor: theme.palette.text.primary }}
-          minWidth={320}
-          height={chartData.length * 23 + 8}
-          renderChart={renderChart}
-          xTooltip={(item) => item.count}
-          yTooltip={(item) => item.name}
-          xAnchorTooltip="adapt"
-          yAnchorTooltip="adapt"
-          renderTooltip={renderTooltip}
-          gapInfo={0}
-          renderInfo={() => null}
-        />
+      <Typography variant="subtitle2" sx={{ m: 0 }}>
+        Variants by most severe consequence
+      </Typography>
+      <ObsPlot
+        data={chartData}
+        otherData={{ textColor: theme.palette.text.primary }}
+        minWidth={320}
+        height={chartData.length * 23 + 8}
+        renderChart={renderChart}
+        xTooltip={(item) => item.count}
+        yTooltip={(item) => item.name}
+        xAnchorTooltip="adapt"
+        yAnchorTooltip="adapt"
+        renderTooltip={renderTooltip}
+        gapInfo={0}
+        renderInfo={() => null}
+      />
+      <Typography variant="caption" component="p" sx={{ pt: 4, fontSize: 13 }}>Note: have not investigated alternatives to this yet</Typography>
     </Box>
   );
 

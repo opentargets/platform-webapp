@@ -121,6 +121,7 @@ function AssociationChart({ data }: { data: MetricRow[] }) {
             renderInfo={() => null}
           />
         </Box>
+        <Typography variant="caption" component="p" sx={{ pt: 2, fontSize: 13 }}>Alternative: use single color</Typography>
     </Box>
   );
 

@@ -11,6 +11,7 @@ import DrugsByClinicalStage from "./DrugsByClinicalStage";
 import ClinicalReportsByStage from "./ClinicalReportsByStage";
 import DrugsAndClinicalReportsByStage from "./DrugsAndClinicalReportsByStage";
 import DrugsCoverage from "./DrugsCoverage";
+import DrugsbyStageBubbles from "./DrugsbyStageBubbles";
 import CredibleSetsByStudyType from "./CredibleSetsByStudyType";
 import ColocalisationByType from "./ColocalisationByType";
 import StudiesByStudyType from "./StudiesByStudyType";
@@ -46,6 +47,9 @@ function MetricsPage() {
 
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
         <AssociationChart data={data} />
+      </Paper>
+
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
         <HierarchicalAssociationChart data={data} />
       </Paper>
       <br />
@@ -60,6 +64,9 @@ function MetricsPage() {
       </Paper>
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
         <DrugsCoverage data={data} />
+      </Paper>
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <DrugsbyStageBubbles data={data} />
       </Paper>
 
       <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
@@ -109,6 +116,7 @@ function MetricsPage() {
             title="Colocalisation by type"
           />
         </Box>
+        <Typography variant="caption" component="p" sx={{ pt: 4, fontSize: 13 }}>Note: not polished!</Typography>
       </Paper>
 
       <br />
