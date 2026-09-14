@@ -1,43 +1,46 @@
-import { ReactElement, ReactNode, useEffect, useMemo, useReducer, useState } from "react";
-import { Box, CircularProgress, GridLegacy, IconButton, NativeSelect, Skeleton } from "@mui/material";
+import { faAngleLeft, faAngleRight, faBackwardStep } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  useReactTable,
+  Box,
+  CircularProgress,
+  GridLegacy,
+  IconButton,
+  NativeSelect,
+  Skeleton,
+} from "@mui/material";
+import {
+  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  flexRender,
-  PaginationState,
-  Row,
+  type PaginationState,
+  type Row,
+  useReactTable,
 } from "@tanstack/react-table";
-import { faAngleLeft, faAngleRight, faBackwardStep } from "@fortawesome/free-solid-svg-icons";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import { type ReactElement, type ReactNode, useEffect, useMemo, useReducer, useState } from "react";
+import useCursorBatchDownloader from "../../hooks/useCursorBatchDownloader";
+import { useApolloClient } from "../../providers/OTApolloProvider/OTApolloProvider";
+import DataDownloader from "../DataDownloader";
+import Tooltip from "../Tooltip";
+import { addRows, setLoading, setNewData, textSearch } from "./context/otTableActions";
+import { createInitialState, otTableReducer } from "./context/otTableReducer";
+import OtTableColumnVisibility from "./OtTableColumnVisibility";
 import OtTableSearch from "./OtTableSearch";
-import { INIT_PAGE_SIZE, OtTableSSPProps } from "./types/tableTypes";
 import {
+  OtTableCellContainer,
   OtTableContainer,
   OtTableHeader,
-  OtTH,
   OtTableHeaderText,
   OtTD,
-  OtTableCellContainer,
+  OtTH,
   OtTR,
 } from "./otTableLayout";
-import DataDownloader from "../DataDownloader";
+import { getTableRows } from "./service/tableService";
+import { INIT_PAGE_SIZE, type OtTableSSPProps } from "./types/tableTypes";
 import {
   getCurrentPagePosition,
   isNestedColumns,
   mapTableColumnToTanstackColumns,
 } from "./utils/tableUtils";
-import Tooltip from "../Tooltip";
-import OtTableColumnVisibility from "./OtTableColumnVisibility";
-
-import { getTableRows } from "./service/tableService";
-import { createInitialState, otTableReducer } from "./context/otTableReducer";
-import { addRows, setLoading, setNewData, textSearch } from "./context/otTableActions";
-
-import useCursorBatchDownloader from "../../hooks/useCursorBatchDownloader";
-import { useApolloClient } from "../../providers/OTApolloProvider/OTApolloProvider";
 
 function OtTableSSP({
   showGlobalFilter = true,
@@ -175,7 +178,7 @@ function OtTableSSP({
       size: pagination.pageSize,
       freeTextQuery: state.freeTextQuery,
       client,
-    }).then(d => {
+    }).then((d) => {
       dispatch(addRows(d.data[entity][sectionName]));
       setPagination(newPagination);
     });
@@ -197,7 +200,7 @@ function OtTableSSP({
       size: newPagination.pageSize,
       freeTextQuery,
       client,
-    }).then(d => {
+    }).then((d) => {
       dispatch(setNewData(d.data[entity][sectionName]));
       if (!state.freeTextQuery) setInitialRequestData(d);
     });
@@ -254,7 +257,7 @@ function OtTableSSP({
         <GridLegacy item sm={12} md={4}>
           {showGlobalFilter && (
             <OtTableSearch
-              setGlobalSearchTerm={freeTextQuery => {
+              setGlobalSearchTerm={(freeTextQuery) => {
                 dispatch(textSearch(freeTextQuery));
               }}
             />
@@ -276,13 +279,13 @@ function OtTableSSP({
         </GridLegacy>
       </GridLegacy>
       {/* Table component container */}
-      <Box sx={{ w: 1, overflowX: "auto", marginTop: theme => theme.spacing(3) }}>
+      <Box sx={{ w: 1, overflowX: "auto", marginTop: (theme) => theme.spacing(3) }}>
         {/* Table component */}
         <OtTableContainer>
           <thead>
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => {
+                {headerGroup.headers.map((header) => {
                   return (
                     <OtTH
                       key={header.id}
@@ -314,7 +317,7 @@ function OtTableSSP({
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map(row => {
+            {table.getRowModel().rows.map((row) => {
               return (
                 <OtTR
                   key={row.id}
@@ -322,7 +325,7 @@ function OtTableSSP({
                   enableRowSelection={enableRowSelection}
                   isSelected={row.getIsSelected()}
                 >
-                  {row.getVisibleCells().map(cell => {
+                  {row.getVisibleCells().map((cell) => {
                     return (
                       <OtTD key={cell.id} stickyColumn={cell.column.columnDef.sticky}>
                         <OtTableCellContainer numeric={cell.column.columnDef.numeric}>
@@ -348,19 +351,19 @@ function OtTableSSP({
           display: "flex",
           justifyContent: "end",
           alignItems: "center",
-          padding: theme => `${theme.spacing(2)} 0 `,
+          padding: (theme) => `${theme.spacing(2)} 0 `,
         }}
       >
-        {state.loading && <CircularProgress sx={{ mx: theme => theme.spacing(2) }} size={25} />}
+        {state.loading && <CircularProgress sx={{ mx: (theme) => theme.spacing(2) }} size={25} />}
         <div>
           <label htmlFor="paginationSelect">Rows per page:</label>
           <NativeSelect
             id="paginationSelect"
             disableUnderline
             disabled={state.loading}
-            sx={{ pl: theme => theme.spacing(2) }}
+            sx={{ pl: (theme) => theme.spacing(2) }}
             value={pagination.pageSize}
-            onChange={e => {
+            onChange={(e) => {
               table.setPageSize(Number(e.target.value));
               setPagination({
                 pageIndex: 0,
@@ -369,7 +372,7 @@ function OtTableSSP({
             }}
           >
             {/* TODO: set page size  */}
-            {[10, 25, 100].map(pageSize => (
+            {[10, 25, 100].map((pageSize) => (
               <option key={pageSize} value={pageSize}>
                 {pageSize}
               </option>
@@ -380,8 +383,8 @@ function OtTableSSP({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: theme => theme.spacing(3),
-            marginLeft: theme => theme.spacing(3),
+            gap: (theme) => theme.spacing(3),
+            marginLeft: (theme) => theme.spacing(3),
           }}
         >
           <div>
@@ -423,7 +426,7 @@ function OtTableSSP({
 // TODO: FIND A WAY TO USE SAME FUNCTION FROM CLIENT TABLE
 function getLoadingCells(columms: Array<Record<string, unknown>>) {
   const arr: Record<string, unknown>[] = [];
-  columms.forEach(e => {
+  columms.forEach((e) => {
     if (isNestedColumns(e)) {
       const headerObj = {
         header: e.header || e.label,

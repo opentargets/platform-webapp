@@ -1,6 +1,5 @@
-import { Typography } from "@mui/material";
 
-import { EmptyPage, PageMeta } from "ui";
+import { EmptyPage, PageMeta, Typography } from "ui";
 import { getConfig } from "@ot/config";
 
 const config = getConfig();

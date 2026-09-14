@@ -1,17 +1,17 @@
 import { Box } from "@mui/material";
-import OtCopyToClipboard from "./OtCopyToClipboard";
 import type { ReactNode } from "react";
+import CopyToClipboard from "./CopyToClipboard";
 
-type OtCodeBlockPropTypes = {
+type CodeBlockPropTypes = {
   children: ReactNode;
   textToCopy?: string | null;
 };
 
-function OtCodeBlock({ children, textToCopy }: OtCodeBlockPropTypes) {
+function CodeBlock({ children, textToCopy }: CodeBlockPropTypes) {
   return (
     <Box
       sx={{
-        background: theme => theme.palette.grey[100],
+        background: (theme) => theme.palette.grey[100],
         pb: textToCopy ? 3 : 1,
         borderRadius: 3,
         px: 3,
@@ -31,7 +31,7 @@ function OtCodeBlock({ children, textToCopy }: OtCodeBlockPropTypes) {
               w: 1,
             }}
           >
-            <OtCopyToClipboard textToCopy={textToCopy} />{" "}
+            <CopyToClipboard textToCopy={textToCopy} />{" "}
           </Box>
         )}
         {children}
@@ -39,4 +39,4 @@ function OtCodeBlock({ children, textToCopy }: OtCodeBlockPropTypes) {
     </Box>
   );
 }
-export default OtCodeBlock;
+export default CodeBlock;

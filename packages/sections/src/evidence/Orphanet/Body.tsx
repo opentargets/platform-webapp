@@ -1,5 +1,4 @@
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
 import {
   Link,
   Tooltip,
@@ -8,6 +7,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTable,
+  Typography,
 } from "ui";
 
 import { definition } from ".";

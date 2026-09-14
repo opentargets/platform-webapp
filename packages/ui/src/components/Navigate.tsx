@@ -1,7 +1,7 @@
+import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box } from "@mui/material";
 import Link from "./Link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
 
 type NavigateProps = {
   to: string;

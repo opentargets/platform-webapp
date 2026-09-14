@@ -1,13 +1,4 @@
-import {
-  Box,
-  Card,
-  CardActions,
-  CardContent,
-  GridLegacy,
-  Paper,
-  Skeleton,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardActions, CardContent, GridLegacy, Paper, Skeleton, Typography } from "ui";
 import { v1 } from "uuid";
 
 function DownloadsLoading() {

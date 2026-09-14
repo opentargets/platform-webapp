@@ -1,4 +1,4 @@
-import { Box, Skeleton, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { credsetConfidenceMap, naLabel } from "@ot/constants";
 import {
@@ -11,6 +11,8 @@ import {
   Tooltip,
   TooltipRow,
   TooltipTable,
+  Box,
+  Skeleton,
 } from "ui";
 
 function ManhattanPlot({ loading, data: originalData }) {

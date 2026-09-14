@@ -1,6 +1,5 @@
-import _ from "lodash";
-
 import { safeToString } from "@ot/utils";
+import _ from "lodash";
 
 function ascendingComparator(a, b, sortBy) {
   if (a[sortBy] === undefined || a[sortBy] < b[sortBy]) return -1;
@@ -9,7 +8,7 @@ function ascendingComparator(a, b, sortBy) {
 }
 
 export function getComparator(columns, order, sortBy) {
-  const column = columns.find(col => col.id === sortBy);
+  const column = columns.find((col) => col.id === sortBy);
   const columnComparator = column?.comparator ? column.comparator : ascendingComparator;
 
   return order === "asc"
@@ -30,6 +29,6 @@ export function globalFilter(row, columns, value) {
   }, []);
 
   return contents
-    .map(content => safeToString(content).toLowerCase().includes(value.toLowerCase()))
-    .some(e => e);
+    .map((content) => safeToString(content).toLowerCase().includes(value.toLowerCase()))
+    .some((e) => e);
 }

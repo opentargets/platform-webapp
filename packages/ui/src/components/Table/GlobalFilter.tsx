@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { GridLegacy, IconButton } from "@mui/material";
 import { faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { GridLegacy, IconButton } from "@mui/material";
+import { useEffect, useState } from "react";
 
 import useDebounce from "../../hooks/useDebounce";
 import { StyledGlobalFilterInput } from "./tableStyles";
@@ -10,7 +10,7 @@ function GlobalFilter({ onGlobalFilterChange }) {
   const [inputValue, setInputValue] = useState("");
   const debouncedInputValue = useDebounce(inputValue, 300);
 
-  const handleInputChange = e => {
+  const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 

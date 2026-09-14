@@ -1,9 +1,8 @@
-import { Box, GridLegacy, Skeleton, SxProps, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ReactElement, ReactNode } from "react";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Box, GridLegacy, Skeleton, type SxProps, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import type { ReactElement, ReactNode } from "react";
 
 type HeaderProps = {
   externalLinks?: ReactNode;
@@ -69,7 +68,10 @@ function Header({
                 </Box>
                 {loading ? <Skeleton width="10vw" /> : title}
               </Typography>
-              <Typography sx={{ display: "flex", paddingLeft: "5px", alignItems: "center" }} variant="h5">
+              <Typography
+                sx={{ display: "flex", paddingLeft: "5px", alignItems: "center" }}
+                variant="h5"
+              >
                 {loading ? <Skeleton width="50vw" /> : subtitle}
               </Typography>
             </GridLegacy>

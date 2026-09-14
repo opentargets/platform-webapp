@@ -1,13 +1,12 @@
 import { Box, Typography } from "@mui/material";
 import { useViewerState } from "ui";
+import { domainColors, hydrophobicityColorInterpolator } from "ui/src/components/Viewer/helpers";
 import CompactAlphaFoldDomainLegend from "./CompactAlphaFoldDomainLegend";
 import CompactAlphaFoldHydrophobicityLegend from "./CompactAlphaFoldHydrophobicityLegend";
 import CompactAlphaFoldLegend from "./CompactAlphaFoldLegend";
 import CompactAlphaFoldPathogenicityLegend from "./CompactAlphaFoldPathogenicityLegend";
-import { domainColors, hydrophobicityColorInterpolator } from "ui/src/components/Viewer/helpers";
 
 function ViewerLegend() {
-
   // these value are used if there is no viewer state (i.e. not in side a viewerProvider)
   let colorBy = "confidence";
   let pathogenicityScores;
@@ -16,7 +15,7 @@ function ViewerLegend() {
   const viewerState = useViewerState();
   if (viewerState) {
     ({ colorBy, pathogenicityScores, domains } = viewerState);
-  } 
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -26,7 +25,7 @@ function ViewerLegend() {
           Mean AlphaMissense pathogenicity over possible amino acid substitutions
         </Typography>
       )}
-    
+
       <Box
         sx={{
           display: "flex",
@@ -38,15 +37,16 @@ function ViewerLegend() {
       >
         <Box>
           {colorBy === "confidence" ? (
-              <CompactAlphaFoldLegend showTitle={!viewerState} />
-            ) : colorBy === "pathogenicity" && pathogenicityScores ? (
-              <CompactAlphaFoldPathogenicityLegend showTitle={false} />
-            ) : colorBy === "domain" && domains ? (
-              <CompactAlphaFoldDomainLegend domains={domains} colorScheme={domainColors} />
-            ) : colorBy === "hydrophobicity" ? (
-              <CompactAlphaFoldHydrophobicityLegend colorInterpolator={hydrophobicityColorInterpolator} />
-            ) : null
-          }
+            <CompactAlphaFoldLegend showTitle={!viewerState} />
+          ) : colorBy === "pathogenicity" && pathogenicityScores ? (
+            <CompactAlphaFoldPathogenicityLegend showTitle={false} />
+          ) : colorBy === "domain" && domains ? (
+            <CompactAlphaFoldDomainLegend domains={domains} colorScheme={domainColors} />
+          ) : colorBy === "hydrophobicity" ? (
+            <CompactAlphaFoldHydrophobicityLegend
+              colorInterpolator={hydrophobicityColorInterpolator}
+            />
+          ) : null}
         </Box>
       </Box>
     </Box>

@@ -1,9 +1,8 @@
-import { CardContent, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStethoscope } from "@fortawesome/free-solid-svg-icons";
 
-import { LongText, Link } from "ui";
+import { LongText, Link, CardContent, Typography } from "ui";
 
 const StyledLink = styled(Link)({
   display: "block",

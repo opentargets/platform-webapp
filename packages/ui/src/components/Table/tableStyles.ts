@@ -1,4 +1,14 @@
-import { Box, CircularProgress, GridLegacy, Input, TableCell, TableContainer, TableRow, Table as MuiTable, styled } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  GridLegacy,
+  Input,
+  Table as MuiTable,
+  styled,
+  TableCell,
+  TableContainer,
+  TableRow,
+} from "@mui/material";
 
 export const StyledFilterGrid = styled(GridLegacy)(({ theme }) => ({
   order: 0,
@@ -22,7 +32,7 @@ export const StyledTableContainer = styled(TableContainer)({
 });
 
 export const StyledMuiTable = styled(MuiTable, {
-  shouldForwardProp: prop => prop !== "fixed",
+  shouldForwardProp: (prop) => prop !== "fixed",
 })<{ fixed?: boolean }>(({ fixed }) => ({
   tableLayout: fixed ? "fixed" : "auto",
 }));
@@ -47,7 +57,8 @@ export const StyledHeaderLabelSpan = styled("span")({
 });
 
 export const StyledHeaderCell = styled(TableCell, {
-  shouldForwardProp: prop => prop !== "isHeaderGroup" && prop !== "sticky" && prop !== "noWrapHeader",
+  shouldForwardProp: (prop) =>
+    prop !== "isHeaderGroup" && prop !== "sticky" && prop !== "noWrapHeader",
 })<{ isHeaderGroup?: boolean; sticky?: boolean; noWrapHeader?: boolean }>(
   ({ theme, isHeaderGroup, sticky, noWrapHeader }) => ({
     "&:first-of-type": {
@@ -75,7 +86,7 @@ export const StyledHeaderCell = styled(TableCell, {
 );
 
 export const StyledTableRow = styled(TableRow, {
-  shouldForwardProp: prop => prop !== "isFixedRow",
+  shouldForwardProp: (prop) => prop !== "isFixedRow",
 })<{ isFixedRow?: boolean }>(({ theme, isFixedRow }) => ({
   ...(isFixedRow && {
     backgroundColor: theme.palette.grey[300],
@@ -83,7 +94,7 @@ export const StyledTableRow = styled(TableRow, {
 }));
 
 export const StyledBodyCell = styled(TableCell, {
-  shouldForwardProp: prop => prop !== "numeric" && prop !== "sticky" && prop !== "noWrap",
+  shouldForwardProp: (prop) => prop !== "numeric" && prop !== "sticky" && prop !== "noWrap",
 })<{ numeric?: boolean; sticky?: boolean; noWrap?: boolean }>(
   ({ theme, numeric, sticky, noWrap }) => ({
     "&:first-of-type": {

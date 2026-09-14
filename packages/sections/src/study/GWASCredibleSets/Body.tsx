@@ -9,8 +9,8 @@ import {
   OtTable,
   useBatchQuery,
   Navigate,
+  Box,
 } from "ui";
-import { Box } from "@mui/material";
 import { mantissaExponentComparator, nullishComparator, variantComparator } from "@ot/utils";
 import { naLabel, credsetConfidenceMap, table5HChunkSize } from "@ot/constants";
 import { definition } from ".";

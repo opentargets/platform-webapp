@@ -2,7 +2,7 @@ import { useState } from "react";
 import { flexRender } from "@tanstack/react-table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownWideShort, faBook, faLock } from "@fortawesome/free-solid-svg-icons";
-import { Box, GridLegacy } from "@mui/material";
+import { Box, GridLegacy } from "ui";
 import { styled } from "@mui/material/styles";
 
 import AggregationsRow from "./AggregationsRow";

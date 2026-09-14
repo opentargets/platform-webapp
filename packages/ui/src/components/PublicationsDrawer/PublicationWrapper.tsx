@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
-import { faPlusCircle, faMinusCircle, faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { faFileAlt, faMinusCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-
-import LongText from "../LongText";
-import Link from "../Link";
-
-import PublicationSummary from "./PublicationSummary";
+import { useEffect, useState } from "react";
 import { useConfigContext } from "../../providers/ConfigurationProvider";
+import Link from "../Link";
+import LongText from "../LongText";
+import PublicationSummary from "./PublicationSummary";
 
 const pmUrl = "https://europepmc.org/";
 const pmTitleUrlMED = "abstract/med/";
@@ -143,7 +141,13 @@ function PublicationWrapper({
       </Box>
 
       {showAbstract && (
-        <Box sx={theme => ({ background: theme.palette.grey[100], marginTop: "10px", padding: "20px" })}>
+        <Box
+          sx={(theme) => ({
+            background: theme.palette.grey[100],
+            marginTop: "10px",
+            padding: "20px",
+          })}
+        >
           <Typography variant="subtitle2">Abstract</Typography>
           <span style={{ whiteSpace: "normal" }} dangerouslySetInnerHTML={{ __html: abstract }} />
         </Box>

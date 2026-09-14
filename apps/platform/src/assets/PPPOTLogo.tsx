@@ -1,4 +1,4 @@
-import { SvgIcon } from "@mui/material";
+import { SvgIcon } from "ui";
 import { getConfig } from "@ot/config";
 
 const config = getConfig();

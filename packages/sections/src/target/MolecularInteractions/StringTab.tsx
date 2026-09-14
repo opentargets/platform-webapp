@@ -1,8 +1,7 @@
 import type { CSSProperties } from "react";
 import { useState, useEffect } from "react";
-import { GridLegacy } from "@mui/material";
 import { scaleQuantize } from "d3";
-import { Link, Legend, OtTable, useApolloClient } from "ui";
+import { Link, Legend, OtTable, useApolloClient, GridLegacy } from "ui";
 import { colorRange } from "@ot/constants";
 
 import INTERACTIONS_QUERY from "./InteractionsStringQuery.gql";

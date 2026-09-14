@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from "react";
-import { Slider } from "@mui/material";
+import { Slider } from "ui";
 import { styled } from "@mui/material/styles";
 
 const OTSlider = styled(Slider)({

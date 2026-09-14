@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 function BrokenSearchIcon({ color = "#3489ca" }): ReactNode {
   const styles = {

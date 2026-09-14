@@ -1,5 +1,4 @@
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -8,6 +7,7 @@ import {
   EllsWrapper,
   OtTable,
   TableDrawer,
+  Typography,
 } from "ui";
 
 import { definition } from ".";

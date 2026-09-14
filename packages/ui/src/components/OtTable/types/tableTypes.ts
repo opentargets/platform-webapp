@@ -1,5 +1,5 @@
-import { ApolloClient, DocumentNode, NormalizedCacheObject } from "@apollo/client";
-import { ColumnDef, Row, Table } from "@tanstack/table-core";
+import type { ApolloClient, DocumentNode, NormalizedCacheObject } from "@apollo/client";
+import type { ColumnDef, Row, Table } from "@tanstack/table-core";
 
 export const INIT_PAGE_SIZE = 10;
 
@@ -12,13 +12,13 @@ export type DefaultSortProp =
       {
         id: string;
         desc: boolean;
-      }
+      },
     ]
   | undefined;
 
 export type OtTableProps = {
   showGlobalFilter: boolean;
-  globalFilterPlaceholderText?: string,
+  globalFilterPlaceholderText?: string;
   tableDataLoading: boolean;
   columns: Array<Record<string, unknown>>;
   rows: Array<Record<string, unknown>>;
@@ -38,8 +38,8 @@ export type OtTableProps = {
   loading: boolean;
   enableMultipleRowSelection: boolean;
   getSelectedRows: (r: Row<any>[]) => void;
-  getFilteredRows: any,
-  wrapControls: any,
+  getFilteredRows: any;
+  wrapControls: any;
 };
 
 export type loadingTableRows = {

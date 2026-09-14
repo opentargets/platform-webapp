@@ -8,6 +8,7 @@ import {
   PublicationsDrawer,
   OtTable,
   DirectionalityDrawer,
+  Box,
 } from "ui";
 
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
@@ -15,7 +16,6 @@ import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type TargetBodyProp
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
-import { Box } from "@mui/material";
 
 import { definition } from ".";
 import Description from "./Description";

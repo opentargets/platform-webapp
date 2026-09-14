@@ -1,14 +1,12 @@
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GridLegacy, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
-import Link from "./Link";
-import { EmailLink } from "./EmailLink";
-
-import PrivateWrapper from "./PrivateWrapper";
-import { useConfigContext } from "../providers/ConfigurationProvider";
 import { useAPIMetadata } from "../providers/APIMetadataProvider";
+import { useConfigContext } from "../providers/ConfigurationProvider";
+import { EmailLink } from "./EmailLink";
+import Link from "./Link";
+import PrivateWrapper from "./PrivateWrapper";
 
 const FOOTER_BACKGROUND_COLOR = "#2e2d35";
 
@@ -55,7 +53,7 @@ type FooterSocialProps = {
   social: FooterExternalLink[];
 };
 const FooterSocial = ({ social }: FooterSocialProps) => {
-  const socialsWithIcons = social.filter(s => s.icon);
+  const socialsWithIcons = social.filter((s) => s.icon);
   return (
     <>
       <FooterSectionHeading>Follow us</FooterSectionHeading>
@@ -80,7 +78,15 @@ type FooterSectionProps = {
 };
 const FooterSection = ({ heading, links, social, children }: FooterSectionProps) => {
   return (
-    <GridLegacy item xs={12} sm={6} md={3} container direction="column" justifyContent="space-between">
+    <GridLegacy
+      item
+      xs={12}
+      sm={6}
+      md={3}
+      container
+      direction="column"
+      justifyContent="space-between"
+    >
       <GridLegacy item sx={{ width: "100%" }}>
         <FooterSectionHeading>{heading}</FooterSectionHeading>
         {links.map((link, i) => {
@@ -160,11 +166,16 @@ const LicenseCC0 = ({ link }: LicenseCC0Props) => {
 
 const DeployedVersion = () => {
   const { config } = useConfigContext();
-  const { version: { apiVersion } } = useAPIMetadata();
+  const {
+    version: { apiVersion },
+  } = useAPIMetadata();
   return (
     <Typography color="inherit" variant="caption">
-      <b>UI: </b>{config?.gitVersion}<br/>
-      <b>API: </b>{apiVersion.x}.{apiVersion.y}.{apiVersion.z}
+      <b>UI: </b>
+      {config?.gitVersion}
+      <br />
+      <b>API: </b>
+      {apiVersion.x}.{apiVersion.y}.{apiVersion.z}
     </Typography>
   );
 };

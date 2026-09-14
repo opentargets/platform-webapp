@@ -1,6 +1,13 @@
 import { useQuery } from "@apollo/client";
-import { Link, Tooltip, SectionItem, PublicationsDrawer, ClinvarStars, OtTable } from "ui";
-import { Typography } from "@mui/material";
+import {
+  Link,
+  Tooltip,
+  SectionItem,
+  PublicationsDrawer,
+  ClinvarStars,
+  OtTable,
+  Typography,
+} from "ui";
 import { clinvarStarMap, naLabel } from "@ot/constants";
 import { definition } from ".";
 

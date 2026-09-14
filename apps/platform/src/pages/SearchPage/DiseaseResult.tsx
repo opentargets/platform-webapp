@@ -1,9 +1,8 @@
-import { Typography } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStethoscope } from "@fortawesome/free-solid-svg-icons";
 
-import { LongText, Link, Highlights } from "ui";
+import { LongText, Link, Highlights, Typography } from "ui";
 
 const StyledLink = styled(Link)({
   fontSize: "20px",

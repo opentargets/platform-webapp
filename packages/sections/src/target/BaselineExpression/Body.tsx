@@ -1,10 +1,9 @@
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Alert, Collapse, Tab, Tabs, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { sentenceCase } from "@ot/utils";
 import { Fragment, useEffect, useState } from "react";
-import { SectionItem, useApolloClient } from "ui";
+import { SectionItem, useApolloClient, Alert, Collapse, Tab, Tabs, Typography } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -58,7 +57,7 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
       showContentLoading={true}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => (
-        <Fragment key={crypto.randomUUID()}>
+        <Fragment>
           <Tabs value={tab} onChange={handleChangeTab} style={{ marginBottom: "1rem" }}>
             <Tab value="summary" label="Summary" />
             <Tab value="gtex" label="Variation (GTEx)" />

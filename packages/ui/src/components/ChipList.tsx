@@ -1,7 +1,7 @@
-import { Box, Chip, SxProps, Theme, Tooltip, styled } from "@mui/material";
-import { v1 } from "uuid";
+import { Box, Chip, type SxProps, styled, type Theme, Tooltip } from "@mui/material";
 import { naLabel } from "@ot/constants";
-import { ElementType, ReactElement } from "react";
+import type { ElementType, ReactElement } from "react";
+import { v1 } from "uuid";
 
 const StyledTooltip = styled(Tooltip)(({ theme }) => ({
   "& .MuiTooltip-tooltip": {

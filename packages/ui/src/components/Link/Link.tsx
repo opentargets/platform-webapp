@@ -1,8 +1,8 @@
-import { ReactElement, ReactNode } from "react";
-import { Link as RouterLink } from "react-router";
 import { styled } from "@mui/material/styles";
-import Tooltip from "../Tooltip";
+import type { ReactElement, ReactNode } from "react";
+import { Link as RouterLink } from "react-router";
 import OtAsyncTooltip from "../OtAsyncTooltip/OtAsyncTooltip";
+import Tooltip from "../Tooltip";
 
 const shouldForwardProp = (prop: string) => prop !== "footer" && prop !== "hasTooltip";
 
@@ -10,12 +10,12 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
   if (footer)
     return {
       color: "white",
-      "textDecorationColor": "transparent",
-      "WebkitTextDecorationColor": "transparent",
+      textDecorationColor: "transparent",
+      WebkitTextDecorationColor: "transparent",
       "&:hover": {
         color: theme.palette.primary.light,
-        "textDecorationColor": theme.palette.primary.light,
-        "WebkitTextDecorationColor": theme.palette.primary.light,
+        textDecorationColor: theme.palette.primary.light,
+        WebkitTextDecorationColor: theme.palette.primary.light,
       },
       display: "flex",
       alignItems: "center",
@@ -30,8 +30,8 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
     color: theme.palette.primary.main,
     "&:hover": {
       color: theme.palette.primary.dark,
-      "textDecorationColor": theme.palette.primary.dark,
-      "WebkitTextDecorationColor": theme.palette.primary.dark,
+      textDecorationColor: theme.palette.primary.dark,
+      WebkitTextDecorationColor: theme.palette.primary.dark,
     },
   };
 };
@@ -39,8 +39,8 @@ const linkVariantStyles = (theme: any, footer?: boolean, hasTooltip?: boolean) =
 const StyledA = styled("a", { shouldForwardProp })<{ footer?: boolean; hasTooltip?: boolean }>(
   ({ theme, footer, hasTooltip }) => ({
     fontSize: "inherit",
-    "textDecorationColor": "transparent",
-    "WebkitTextDecorationColor": "transparent",
+    textDecorationColor: "transparent",
+    WebkitTextDecorationColor: "transparent",
     ...linkVariantStyles(theme, footer, hasTooltip),
   })
 );
@@ -50,8 +50,8 @@ const StyledRouterLink = styled(RouterLink, { shouldForwardProp })<{
   hasTooltip?: boolean;
 }>(({ theme, footer, hasTooltip }) => ({
   fontSize: "inherit",
-  "textDecorationColor": "transparent",
-  "WebkitTextDecorationColor": "transparent",
+  textDecorationColor: "transparent",
+  WebkitTextDecorationColor: "transparent",
   ...linkVariantStyles(theme, footer, hasTooltip),
 }));
 
@@ -125,7 +125,13 @@ function Link({
   }
 
   return (
-    <StyledRouterLink footer={footer} hasTooltip={!!tooltip} className={className} to={to} onClick={onClick}>
+    <StyledRouterLink
+      footer={footer}
+      hasTooltip={!!tooltip}
+      className={className}
+      to={to}
+      onClick={onClick}
+    >
       <Tooltip title={tooltip}>{children}</Tooltip>
     </StyledRouterLink>
   );

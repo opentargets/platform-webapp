@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
-import { Box, Typography } from "@mui/material";
-import { Link, useAPIMetadata } from "ui";
+import { Link, useAPIMetadata, Box, Typography } from "ui";
 
 interface VersionData {
   month: number;

@@ -44,7 +44,6 @@ export const featureToGroup = {
   geneCount500kb: "Other",
   proteinGeneCount500kb: "Other",
   credibleSetConfidence: "Other",
-
 };
 
 export const groupToFeature = Object.groupBy(

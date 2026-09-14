@@ -1,21 +1,21 @@
-import { ReactNode, useState } from "react";
-import {
-  List,
-  ListItem,
-  Drawer,
-  AccordionSummary,
-  AccordionDetails,
-  Accordion,
-  Box,
-  Paper,
-  IconButton,
-  Typography,
-  ButtonBase,
-} from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { faChevronDown, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  ButtonBase,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import _ from "lodash";
+import { type ReactNode, useState } from "react";
 
 import { Link } from "ui";
 
@@ -77,14 +77,14 @@ const StyledAccordionSubtitle = styled(Typography)(({ theme }) => ({
 
 const tableSourceLabel = (name: string) =>
   ({
-  ATC: "ATC",
-  ClinicalTrials: "ClinicalTrials.gov",
-  DailyMed: "DailyMed",
-  FDA: "FDA",
-  EMA: "European Medicines Agency",
-  INN: "International Nonproprietary Names",
-  USAN: "United States Adopted Name",
-}[name]);
+    ATC: "ATC",
+    ClinicalTrials: "ClinicalTrials.gov",
+    DailyMed: "DailyMed",
+    FDA: "FDA",
+    EMA: "European Medicines Agency",
+    INN: "International Nonproprietary Names",
+    USAN: "United States Adopted Name",
+  })[name];
 
 const drawerSourceLabel = (name: string, url: string) => {
   if (name === "ClinicalTrials") {
@@ -106,11 +106,11 @@ type Reference = {
   __typename: string;
   name: string;
   url: string;
-}
+};
 
 type KnownDrugsSourceDrawerProps = {
   references: Reference[];
-}
+};
 
 function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): ReactNode {
   const [open, setOpen] = useState(false);
@@ -129,8 +129,12 @@ function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): Re
 
   const groupedReferences: Record<string, Reference[]> = _.groupBy(references, "name");
 
-  const toggleDrawer: React.MouseEventHandler = event => {
-    if (event.type === "keydown" && ((event as unknown as KeyboardEvent).key === "Tab" || (event as unknown as KeyboardEvent).key === "Shift")) {
+  const toggleDrawer: React.MouseEventHandler = (event) => {
+    if (
+      event.type === "keydown" &&
+      ((event as unknown as KeyboardEvent).key === "Tab" ||
+        (event as unknown as KeyboardEvent).key === "Shift")
+    ) {
       return;
     }
 
@@ -153,7 +157,7 @@ function KnownDrugsSourceDrawer({ references }: KnownDrugsSourceDrawerProps): Re
       </StyledPaperTitle>
 
       <StyledBody>
-        {Object.keys(groupedReferences).map(group => (
+        {Object.keys(groupedReferences).map((group) => (
           <StyledAccordion
             elevation={0}
             key={group}

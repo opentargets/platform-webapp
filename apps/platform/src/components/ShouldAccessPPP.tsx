@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
+import { styled } from "@mui/material";
 import {
   Dialog,
   DialogTitle,
   DialogActions,
   DialogContent,
-  DialogContentText,
   Button,
+  DialogContentText,
   Snackbar,
-  styled,
-} from "@mui/material";
+} from "ui";
 import { useLocation } from "react-router";
 import { isOnPublic, testPPPaccess } from "@ot/utils";
 import { PPP_WEB_URL } from "@ot/constants";

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
 import { useApolloClient } from "@apollo/client";
+import { useEffect, useMemo, useState } from "react";
 import CLINICAL_RECORDS_QUERY from "../components/ClinicalReports/ClinicalRecordsQuery.gql";
 
 type GetClinicalReportsIds<Row> = (row: Row) => string[] | undefined | null;
@@ -26,13 +26,16 @@ type UseClinicalReportsMasterDetailResult<Row> = {
 };
 
 function groupByClinicalStage(rows: any[]): Record<string, any[]> {
-  return rows.reduce((acc, row) => {
-    const key = row?.clinicalStage;
-    if (!key) return acc;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(row);
-    return acc;
-  }, {} as Record<string, any[]>);
+  return rows.reduce(
+    (acc, row) => {
+      const key = row?.clinicalStage;
+      if (!key) return acc;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(row);
+      return acc;
+    },
+    {} as Record<string, any[]>
+  );
 }
 
 function useClinicalReportsMasterDetail<Row = any>({

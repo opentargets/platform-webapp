@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import {
   Box,
-  Button,
-  Chip,
   CircularProgress,
-  Divider,
   IconButton,
   List,
   ListItem,
-  ListItemButton,
   ListItemText,
-  Tooltip,
   Typography,
-} from "@mui/material";
+  Button,
+  Chip,
+  MuiTooltip as Tooltip,
+  Divider,
+  ListItemButton,
+} from "ui";
 import {
   faPlus,
   faChevronLeft,
@@ -293,6 +293,7 @@ function RunHistorySidebar({
                             {isComplete && (
                               <Chip
                                 label={`${run.results.length} pathways`}
+                                variant="filled"
                                 size="small"
                                 sx={{ height: 18, fontSize: "0.65rem" }}
                               />

@@ -16,6 +16,12 @@ import {
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import { getStudyItemMetaData } from "@ot/utils";
+import CREDIBLE_SETS_TOOLTIP_QUERY from "../queries/CredibleSetsTooltipQuery.gql";
+import DISEASE_TOOLTIP_QUERY from "../queries/DiseaseTooltipQuery.gql";
+import DRUG_TOOLTIP_QUERY from "../queries/DrugTooltipQuery.gql";
+import STUDY_TOOLTIP_QUERY from "../queries/StudyTooltipQuery.gql";
+import TARGET_TOOLTIP_QUERY from "../queries/TargetTooltipQuery.gql";
+import VARIANT_TOOLTIP_QUERY from "../queries/VariantTooltipQuery.gql";
 
 export function getQueryVariables(entity: string, id: string): Record<string, string> {
   switch (entity) {

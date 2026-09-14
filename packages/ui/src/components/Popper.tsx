@@ -1,6 +1,6 @@
-import { Popper, styled } from "@mui/material";
+import { Popper as MuiPopper, styled } from "@mui/material";
 
-const OtPopper = styled(Popper)(({ theme }) => ({
+const Popper = styled(MuiPopper)(({ theme }) => ({
   // maxHeight: "60vh",
   borderRadius: 4,
   border: `1px solid ${theme.palette.grey[400]}`,
@@ -8,4 +8,4 @@ const OtPopper = styled(Popper)(({ theme }) => ({
   zIndex: "10000",
 }));
 
-export default OtPopper;
+export default Popper;

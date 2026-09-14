@@ -1,7 +1,16 @@
-import { GridLegacy, Typography, Box, Theme } from "@mui/material";
+import { Theme } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
-import { Footer, GlobalSearch, Link, NavBar, usePermissions } from "ui";
+import {
+  Footer,
+  GlobalSearch,
+  Link,
+  NavBar,
+  usePermissions,
+  GridLegacy,
+  Typography,
+  Box,
+} from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

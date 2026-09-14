@@ -5,8 +5,10 @@ import {
   ProfileDescription,
   Field,
   ProfileHeader as BaseProfileHeader,
+  Paper,
+  Modal,
+  Button,
 } from "ui";
-import { Button, Paper, Modal } from "@mui/material";
 import { Fragment, useState } from "react";
 import { parseDrugLabels } from "@ot/utils";
 import { clinicalStageCategories } from "@ot/constants";

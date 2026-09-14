@@ -1,5 +1,5 @@
 import { Box, GridLegacy } from "@mui/material";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type PageProps = {
   header: ReactNode;

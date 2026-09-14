@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Paper, Typography } from "@mui/material";
+import { Box, CircularProgress, Paper, Typography } from "ui";
 import { useContext, useRef, useMemo, useEffect, useState } from "react";
 import {
   EnrichmentMapContainer,

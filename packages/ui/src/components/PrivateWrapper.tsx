@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import usePermissions from "../hooks/usePermissions";
 
 type PrivateWrapperProps = {
   children: ReactNode;
-}
+};
 
 function PrivateWrapper({ children }: PrivateWrapperProps): ReactNode {
   const { isPartnerPreview } = usePermissions();

@@ -1,5 +1,5 @@
 import { Box, GridLegacy } from "@mui/material";
-import { ReactElement } from "react";
+import type { ReactElement } from "react";
 
 type PageProps = {
   children: ReactElement;

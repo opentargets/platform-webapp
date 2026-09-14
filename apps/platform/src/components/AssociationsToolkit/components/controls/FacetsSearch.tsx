@@ -1,7 +1,6 @@
 import { faFilter } from "@fortawesome/free-solid-svg-icons";
-import { Box, Divider, Popover, Switch, Typography } from "@mui/material";
 import { type MouseEvent, type ReactElement, useState } from "react";
-import { FacetsSelect, PopoverButton } from "ui";
+import { FacetsSelect, PopoverButton, ButtonNoBorder, Box, Popover, Switch, Typography, Divider } from "ui";
 import {  setIncludeMeasurements } from "../../context/aotfActions";
 import { useAotfQueryState, useAotfQueryDispatch } from "../../context/AssociationsQueryContext";
 
@@ -35,6 +34,7 @@ function FacetsSearch(): ReactElement {
         iconSize="lg"
         sx={{ height: 1, maxHeight: "45px" }}
         testId="facets-search-button"
+        as={ButtonNoBorder}
       />
 
       <Popover

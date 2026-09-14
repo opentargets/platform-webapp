@@ -1,8 +1,7 @@
 import { ReactElement } from "react";
 import { LoaderFunctionArgs, useLoaderData, useLocation, useParams, Link } from "react-router";
-import { Box, Tabs, Tab } from "@mui/material";
-import { PageMeta, ScrollToTop } from "ui";
-import Header from "./Header";
+import { PageMeta, ScrollToTop, Box, Tabs, Tab, PROFILE_TABS_SENTINEL_ID } from "ui";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 import CREDIBLE_SET_PAGE_QUERY from "./CredibleSetPage.gql";
 import Profile from "./Profile";
@@ -27,6 +26,12 @@ function CredibleSetPage(): ReactElement {
 
   const { id: studyId } = data?.credibleSet?.study || {};
   const { id: variantId, referenceAllele, alternateAllele } = data?.credibleSet?.variant || {};
+  const headerMeta = buildHeaderMeta({
+    variantId: variantId ?? "",
+    referenceAllele: referenceAllele ?? "",
+    alternateAllele: alternateAllele ?? "",
+    studyId: studyId ?? "",
+  });
 
   return (
     <>
@@ -45,7 +50,7 @@ function CredibleSetPage(): ReactElement {
         alternateAllele={alternateAllele ?? ""}
       />
       <ScrollToTop />
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
@@ -55,7 +60,14 @@ function CredibleSetPage(): ReactElement {
           />
         </Tabs>
       </Box>
-      {variantId && <Profile studyLocusId={studyLocusId} variantId={variantId} />}
+      {variantId && (
+        <Profile
+          studyLocusId={studyLocusId}
+          variantId={variantId}
+          Icon={headerMeta.Icon}
+          externalLinks={headerMeta.externalLinks}
+        />
+      )}
     </>
   );
 }

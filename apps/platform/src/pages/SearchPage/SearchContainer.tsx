@@ -1,13 +1,3 @@
-import {
-  GridLegacy,
-  Card,
-  Typography,
-  Checkbox,
-  FormGroup,
-  FormControlLabel,
-  TablePagination,
-  Box,
-} from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,7 +7,19 @@ import {
   faPrescriptionBottleAlt,
   faStethoscope,
 } from "@fortawesome/free-solid-svg-icons";
-import { ErrorBoundary, BrokenSearchIcon, Link } from "ui";
+import {
+  ErrorBoundary,
+  BrokenSearchIcon,
+  Link,
+  GridLegacy,
+  Card,
+  Typography,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
+  TablePagination,
+  Box,
+} from "ui";
 
 import DiseaseDetail from "./DiseaseDetail";
 import DiseaseResult from "./DiseaseResult";

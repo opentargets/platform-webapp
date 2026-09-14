@@ -1,6 +1,6 @@
-import { ReactElement, useState } from "react";
-import { useMeasure } from "@uidotdev/usehooks";
 import { Box, Fade } from "@mui/material";
+import { useMeasure } from "@uidotdev/usehooks";
+import { type ReactElement, useState } from "react";
 import { ObsChart, ObsTooltip } from "ui";
 
 type ObsPlotProps = {
