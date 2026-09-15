@@ -1,0 +1,747 @@
+{
+  "run": "platform-2609-2",
+  "datasets": {
+    "association_by_datasource_direct": {
+      "count": 7522466,
+      "file_size": 861231637,
+      "number_of_partitions": 14,
+      "groupings": {
+        "datasource": {
+          "impc": 3498650,
+          "europepmc": 2442941,
+          "gwas_credible_sets": 1107646,
+          "expression_atlas": 168029,
+          "clinical_precedence": 106998,
+          "cancer_gene_census": 91572,
+          "eva": 39247,
+          "genomics_england": 12183,
+          "crispr_screen": 10951,
+          "gene_burden": 8856,
+          "orphanet": 6681,
+          "uniprot_literature": 6284,
+          "uniprot_variants": 4899,
+          "gene2phenotype": 4745,
+          "clingen": 3958,
+          "reactome": 2930,
+          "intogen": 2595,
+          "eva_somatic": 2315,
+          "crispr": 517,
+          "cancer_biomarkers": 469
+        }
+      },
+      "filter_counts": {}
+    },
+    "association_by_datasource_indirect": {
+      "count": 20852416,
+      "file_size": 2732458731,
+      "number_of_partitions": 43,
+      "groupings": {
+        "datasource": {
+          "europepmc": 8180465,
+          "impc": 7905951,
+          "gwas_credible_sets": 2997795,
+          "cancer_gene_census": 383070,
+          "clinical_precedence": 372927,
+          "eva": 239843,
+          "expression_atlas": 168029,
+          "genomics_england": 105504,
+          "orphanet": 81980,
+          "uniprot_literature": 81662,
+          "uniprot_variants": 64407,
+          "crispr_screen": 54735,
+          "gene2phenotype": 49053,
+          "clingen": 43872,
+          "gene_burden": 32478,
+          "intogen": 29152,
+          "eva_somatic": 28209,
+          "reactome": 20254,
+          "crispr": 7694,
+          "cancer_biomarkers": 5336
+        }
+      },
+      "filter_counts": {}
+    },
+    "association_by_datatype_direct": {
+      "count": 7495759,
+      "file_size": 860236411,
+      "number_of_partitions": 15,
+      "groupings": {
+        "datatype": {
+          "animal_model": 3498650,
+          "literature": 2442941,
+          "genetic_association": 1152812,
+          "rna_expression": 168029,
+          "known_drug": 106998,
+          "somatic_mutation": 94749,
+          "genetic_literature": 16768,
+          "affected_pathway": 14812
+        }
+      },
+      "filter_counts": {}
+    },
+    "association_by_datatype_indirect": {
+      "count": 20453173,
+      "file_size": 2695525482,
+      "number_of_partitions": 41,
+      "groupings": {
+        "datatype": {
+          "literature": 8180465,
+          "animal_model": 7905951,
+          "genetic_association": 3203003,
+          "somatic_mutation": 407135,
+          "known_drug": 372927,
+          "rna_expression": 168029,
+          "genetic_literature": 129639,
+          "affected_pathway": 86024
+        }
+      },
+      "filter_counts": {}
+    },
+    "association_overall_direct": {
+      "count": 7225847,
+      "file_size": 839148848,
+      "number_of_partitions": 14,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "association_overall_indirect": {
+      "count": 17459960,
+      "file_size": 2411937431,
+      "number_of_partitions": 39,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "baseline_expression": {
+      "count": 83290030,
+      "file_size": 1696383415,
+      "number_of_partitions": 21,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "biosample": {
+      "count": 35477,
+      "file_size": 5968153,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "chemical_probe": {
+      "count": 1265,
+      "file_size": 38586,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "clinical_indication": {
+      "count": 86451,
+      "file_size": 4989955,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "clinical_report": {
+      "count": 289954,
+      "file_size": 75924085,
+      "number_of_partitions": 1,
+      "groupings": {
+        "clinicalStage": {
+          "PHASE_2": 64522,
+          "PHASE_1": 50129,
+          "UNKNOWN": 39512,
+          "PHASE_3": 38959,
+          "PHASE_4": 30510,
+          "APPROVAL": 29328,
+          "PHASE_1_2": 16155,
+          "PHASE_2_3": 6244,
+          "EARLY_PHASE_1": 4928,
+          "IND": 4626,
+          "PRECLINICAL": 3812,
+          "WITHDRAWAL": 1061,
+          "PREAPPROVAL": 168
+        }
+      },
+      "filter_counts": {}
+    },
+    "clinical_target": {
+      "count": 13261,
+      "file_size": 2815006,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "colocalisation": {
+      "count": 283303467,
+      "file_size": 16519695769,
+      "number_of_partitions": 200,
+      "groupings": {
+        "studyTypePair": {
+          "gwas-gwas": 203415997,
+          "gwas-eqtl": 36928981,
+          "gwas-sqtl": 19144070,
+          "gwas-tuqtl": 11382592,
+          "gwas-pqtl": 7393415,
+          "gwas-sceqtl": 5038412
+        }
+      },
+      "filter_counts": {}
+    },
+    "credible_set": {
+      "count": 4761925,
+      "file_size": 2990567440,
+      "number_of_partitions": 200,
+      "groupings": {
+        "studyType": {
+          "eqtl": 1718748,
+          "gwas": 1519507,
+          "sqtl": 844764,
+          "tuqtl": 521558,
+          "sceqtl": 123630,
+          "pqtl": 33718
+        }
+      },
+      "filter_counts": {}
+    },
+    "disease": {
+      "count": 45896,
+      "file_size": 6346458,
+      "number_of_partitions": 1,
+      "groupings": {
+        "therapeuticArea": {
+          "EFO_0001444": 25413,
+          "OTAR_0000018": 10565,
+          "EFO_0000651": 7619,
+          "MONDO_0005071": 4269,
+          "MONDO_0045024": 3678,
+          "OTAR_0000006": 3099,
+          "OTAR_0000020": 1939,
+          "MONDO_0005151": 1492,
+          "MONDO_0024458": 1398,
+          "MONDO_0002051": 1367,
+          "EFO_0010282": 1320,
+          "OTAR_0000017": 1314,
+          "MONDO_0004995": 1272,
+          "MONDO_0005046": 1149,
+          "MONDO_0005570": 1082,
+          "MONDO_0005550": 873,
+          "GO_0008150": 811,
+          "MONDO_0002118": 673,
+          "OTAR_0000010": 546,
+          "MONDO_0002025": 310,
+          "MONDO_0002515": 276,
+          "MONDO_0021205": 186,
+          "OTAR_0000009": 151,
+          "OTAR_0000014": 75,
+          "MONDO_0005583": 71,
+          "EFO_0002571": 61
+        }
+      },
+      "filter_counts": {}
+    },
+    "disease_hpo": {
+      "count": 32082,
+      "file_size": 1743207,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "disease_phenotype": {
+      "count": 163973,
+      "file_size": 6459952,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "drug_mechanism_of_action": {
+      "count": 1751,
+      "file_size": 310875,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "drug_molecule": {
+      "count": 19170,
+      "file_size": 6867467,
+      "number_of_partitions": 1,
+      "groupings": {
+        "clinicalStage": {
+          "UNKNOWN": 7251,
+          "APPROVAL": 5448,
+          "PHASE_2": 2723,
+          "PHASE_3": 1542,
+          "PHASE_1": 1257,
+          "PHASE_1_2": 441,
+          "PHASE_2_3": 242,
+          "IND": 132,
+          "PRECLINICAL": 69,
+          "EARLY_PHASE_1": 36,
+          "PREAPPROVAL": 29
+        }
+      },
+      "filter_counts": {}
+    },
+    "drug_warning": {
+      "count": 2009,
+      "file_size": 167517,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "enhancer_to_gene": {
+      "count": 48808491,
+      "file_size": 1770117834,
+      "number_of_partitions": 30,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "evidence_cancer_biomarkers": {
+      "count": 1301,
+      "file_size": 84458,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "affected_pathway": 1301
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_cancer_gene_census": {
+      "count": 91572,
+      "file_size": 3893074,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "somatic_mutation": 91572
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_clingen": {
+      "count": 4031,
+      "file_size": 327206,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_literature": 4031
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_clinical_precedence": {
+      "count": 876506,
+      "file_size": 39436998,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "clinical": 876506
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_crispr": {
+      "count": 517,
+      "file_size": 49090,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "affected_pathway": 517
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_crispr_screen": {
+      "count": 21640,
+      "file_size": 939664,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "affected_pathway": 21640
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_europepmc": {
+      "count": 26544648,
+      "file_size": 6050329882,
+      "number_of_partitions": 125,
+      "groupings": {
+        "datatype": {
+          "literature": 26544648
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_eva": {
+      "count": 3667606,
+      "file_size": 263357122,
+      "number_of_partitions": 8,
+      "groupings": {
+        "datatype": {
+          "genetic_association": 3667606
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_eva_somatic": {
+      "count": 8875,
+      "file_size": 617395,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "somatic_mutation": 8875
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_expression_atlas": {
+      "count": 238857,
+      "file_size": 11077626,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "rna_expression": 238857
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_gene2phenotype": {
+      "count": 4865,
+      "file_size": 364655,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_literature": 4865
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_gene_burden": {
+      "count": 55016,
+      "file_size": 3995278,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_association": 55016
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_genomics_england": {
+      "count": 42315,
+      "file_size": 2701120,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_literature": 42315
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_gwas_credible_sets": {
+      "count": 3445546,
+      "file_size": 205475934,
+      "number_of_partitions": 3,
+      "groupings": {
+        "datatype": {
+          "genetic_association": 3445546
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_impc": {
+      "count": 6911070,
+      "file_size": 906883118,
+      "number_of_partitions": 25,
+      "groupings": {
+        "datatype": {
+          "animal_model": 6911070
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_intogen": {
+      "count": 4223,
+      "file_size": 229698,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "somatic_mutation": 4223
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_orphanet": {
+      "count": 6771,
+      "file_size": 458043,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_association": 6771
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_reactome": {
+      "count": 10749,
+      "file_size": 561115,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "affected_pathway": 10749
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_uniprot_literature": {
+      "count": 6394,
+      "file_size": 524486,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_literature": 6394
+        }
+      },
+      "filter_counts": {}
+    },
+    "evidence_uniprot_variants": {
+      "count": 34698,
+      "file_size": 1860017,
+      "number_of_partitions": 1,
+      "groupings": {
+        "datatype": {
+          "genetic_association": 34698
+        }
+      },
+      "filter_counts": {}
+    },
+    "go": {
+      "count": 48340,
+      "file_size": 2879854,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "homology": {
+      "count": 3817240,
+      "file_size": 24460478,
+      "number_of_partitions": 2,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "interaction": {
+      "count": 14612199,
+      "file_size": 251918150,
+      "number_of_partitions": 2,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "interaction_evidence": {
+      "count": 27396304,
+      "file_size": 344089677,
+      "number_of_partitions": 6,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "l2g_prediction": {
+      "count": 3293342,
+      "file_size": 509628512,
+      "number_of_partitions": 200,
+      "groupings": {},
+      "filter_counts": {
+        "prioritised_genes": 15802
+      }
+    },
+    "literature_entity_lut": {
+      "count": 173137629,
+      "file_size": 1960195895,
+      "number_of_partitions": 35,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "literature_vector": {
+      "count": 56266,
+      "file_size": 26110852,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "mouse_phenotype": {
+      "count": 203583,
+      "file_size": 6772968,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "openfda_significant_adverse_drug_reactions": {
+      "count": 118247,
+      "file_size": 1353695,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "pharmacogenomics": {
+      "count": 33479,
+      "file_size": 3443612,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "reactome": {
+      "count": 2883,
+      "file_size": 143400,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "so": {
+      "count": 2620,
+      "file_size": 28197,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "study": {
+      "count": 3004247,
+      "file_size": 97748879,
+      "number_of_partitions": 1,
+      "groupings": {
+        "studyType": {
+          "eqtl": 1476085,
+          "sqtl": 767929,
+          "tuqtl": 476698,
+          "gwas": 165517,
+          "sceqtl": 114263,
+          "pqtl": 3755
+        },
+        "datasource": {
+          "GTEx-v10": 1933030,
+          "GCST": 163181,
+          "Schmiedel_2018": 74866,
+          "Quach_2016": 73698,
+          "TwinsUK": 68298,
+          "FUSION": 64642,
+          "OTAR2057_IBDverse": 64198,
+          "BLUEPRINT": 59813,
+          "OTAR3087_MAGE": 46050,
+          "BrainSeq": 36103,
+          "ROSMAP": 35086,
+          "CommonMind": 31234,
+          "GEUVADIS": 26863,
+          "Lepik_2017": 26599,
+          "HipSci": 25743,
+          "GENCORD": 25713,
+          "Alasoo_2018": 24550,
+          "Nedelec_2016": 22950,
+          "CAP": 19517,
+          "Cytoimmgen": 17044,
+          "Fairfax_2014": 16003,
+          "OneK1K": 14356,
+          "CEDAR": 14210,
+          "Bossini-Castillo_2019": 12429,
+          "PhLiPS": 10896,
+          "Walker_2019": 10574,
+          "Nathan_2022": 10540,
+          "Steinberg_2020": 7678,
+          "iPSCORE": 6582,
+          "Aygun_2021": 6554,
+          "Schwartzentruber_2018": 5339,
+          "van_de_Bunt_2015": 5280,
+          "Kim-Hellmuth_2017": 5254,
+          "PISA": 5020,
+          "Jerber_2021": 4869,
+          "Peng_2018": 4775,
+          "Braineac2": 3307,
+          "Kasela_2017": 3192,
+          "Gilchrist_2021": 3055,
+          "UKB_PPP_EUR": 2953,
+          "Fairfax_2012": 2899,
+          "FINNGEN_R12": 2336,
+          "Perez_2022": 1860,
+          "Young_2019": 1793,
+          "Randolph_2021": 1396,
+          "Naranbhai_2015": 1117,
+          "Sun_2018": 802
+        }
+      },
+      "filter_counts": {}
+    },
+    "target": {
+      "count": 78733,
+      "file_size": 21633117,
+      "number_of_partitions": 3,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "target_essentiality": {
+      "count": 18464,
+      "file_size": 246596435,
+      "number_of_partitions": 4,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "target_prioritisation": {
+      "count": 78733,
+      "file_size": 1551695,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "target_safety_event": {
+      "count": 4387,
+      "file_size": 122127,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "target_tractability": {
+      "count": 528332,
+      "file_size": 127897,
+      "number_of_partitions": 2,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "transcript": {
+      "count": 644292,
+      "file_size": 30907117,
+      "number_of_partitions": 1,
+      "groupings": {},
+      "filter_counts": {}
+    },
+    "variant": {
+      "count": 7886762,
+      "file_size": 1967290736,
+      "number_of_partitions": 25,
+      "groupings": {
+        "consequence": {
+          "SO_0001627": 3820783,
+          "SO_0001631": 1695977,
+          "SO_0001583": 1110179,
+          "SO_0001819": 447757,
+          "SO_0001624": 141349,
+          "SO_0001589": 125535,
+          "SO_0001792": 106707,
+          "SO_0001630": 99402,
+          "SO_0002169": 81222,
+          "SO_0001587": 76604,
+          "SO_0001575": 47756,
+          "SO_0001574": 42327,
+          "SO_0001623": 23640,
+          "SO_0002170": 23246,
+          "SO_0001822": 16090,
+          "SO_0001787": 12616,
+          "SO_0001821": 6396,
+          "SO_0001632": 3390,
+          "SO_0002012": 2835,
+          "SO_0001578": 1017,
+          "SO_0001818": 784,
+          "SO_0001628": 473,
+          "SO_0001567": 396,
+          "SO_0001620": 156,
+          "SO_0001893": 96,
+          "SO_0001580": 28,
+          "null": 1
+        }
+      },
+      "filter_counts": {}
+    }
+  }
+}
