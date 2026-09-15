@@ -1,0 +1,520 @@
+[
+  {
+    "id": "ENSG00000210049",
+    "name": "MT-TF",
+    "start": 577,
+    "end": 647,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 577,
+        "end": 647
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000211459",
+    "name": "MT-RNR1",
+    "start": 648,
+    "end": 1601,
+    "strand": 1,
+    "biotype": "Mt_rRNA",
+    "exons": [
+      {
+        "start": 648,
+        "end": 1601
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210077",
+    "name": "MT-TV",
+    "start": 1602,
+    "end": 1670,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 1602,
+        "end": 1670
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210082",
+    "name": "MT-RNR2",
+    "start": 1671,
+    "end": 3229,
+    "strand": 1,
+    "biotype": "Mt_rRNA",
+    "exons": [
+      {
+        "start": 1671,
+        "end": 3229
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000209082",
+    "name": "MT-TL1",
+    "start": 3230,
+    "end": 3304,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 3230,
+        "end": 3304
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198888",
+    "name": "MT-ND1",
+    "start": 3307,
+    "end": 4262,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 3307,
+        "end": 4262
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210100",
+    "name": "MT-TI",
+    "start": 4263,
+    "end": 4331,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 4263,
+        "end": 4331
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210107",
+    "name": "MT-TQ",
+    "start": 4329,
+    "end": 4400,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 4329,
+        "end": 4400
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210112",
+    "name": "MT-TM",
+    "start": 4402,
+    "end": 4469,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 4402,
+        "end": 4469
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198763",
+    "name": "MT-ND2",
+    "start": 4470,
+    "end": 5511,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 4470,
+        "end": 5511
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210117",
+    "name": "MT-TW",
+    "start": 5512,
+    "end": 5579,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 5512,
+        "end": 5579
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210127",
+    "name": "MT-TA",
+    "start": 5587,
+    "end": 5655,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 5587,
+        "end": 5655
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210135",
+    "name": "MT-TN",
+    "start": 5657,
+    "end": 5729,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 5657,
+        "end": 5729
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210140",
+    "name": "MT-TC",
+    "start": 5761,
+    "end": 5826,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 5761,
+        "end": 5826
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210144",
+    "name": "MT-TY",
+    "start": 5826,
+    "end": 5891,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 5826,
+        "end": 5891
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198804",
+    "name": "MT-CO1",
+    "start": 5904,
+    "end": 7445,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 5904,
+        "end": 7445
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210151",
+    "name": "MT-TS1",
+    "start": 7446,
+    "end": 7514,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 7446,
+        "end": 7514
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210154",
+    "name": "MT-TD",
+    "start": 7518,
+    "end": 7585,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 7518,
+        "end": 7585
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198712",
+    "name": "MT-CO2",
+    "start": 7586,
+    "end": 8269,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 7586,
+        "end": 8269
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210156",
+    "name": "MT-TK",
+    "start": 8295,
+    "end": 8364,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 8295,
+        "end": 8364
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000228253",
+    "name": "MT-ATP8",
+    "start": 8366,
+    "end": 8572,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 8366,
+        "end": 8572
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198899",
+    "name": "MT-ATP6",
+    "start": 8527,
+    "end": 9207,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 8527,
+        "end": 9207
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198938",
+    "name": "MT-CO3",
+    "start": 9207,
+    "end": 9990,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 9207,
+        "end": 9990
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210164",
+    "name": "MT-TG",
+    "start": 9991,
+    "end": 10058,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 9991,
+        "end": 10058
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198840",
+    "name": "MT-ND3",
+    "start": 10059,
+    "end": 10404,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 10059,
+        "end": 10404
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210174",
+    "name": "MT-TR",
+    "start": 10405,
+    "end": 10469,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 10405,
+        "end": 10469
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000212907",
+    "name": "MT-ND4L",
+    "start": 10470,
+    "end": 10766,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 10470,
+        "end": 10766
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198886",
+    "name": "MT-ND4",
+    "start": 10760,
+    "end": 12137,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 10760,
+        "end": 12137
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210176",
+    "name": "MT-TH",
+    "start": 12138,
+    "end": 12206,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 12138,
+        "end": 12206
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210184",
+    "name": "MT-TS2",
+    "start": 12207,
+    "end": 12265,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 12207,
+        "end": 12265
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210191",
+    "name": "MT-TL2",
+    "start": 12266,
+    "end": 12336,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 12266,
+        "end": 12336
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198786",
+    "name": "MT-ND5",
+    "start": 12337,
+    "end": 14148,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 12337,
+        "end": 14148
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198695",
+    "name": "MT-ND6",
+    "start": 14149,
+    "end": 14673,
+    "strand": -1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 14149,
+        "end": 14673
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210194",
+    "name": "MT-TE",
+    "start": 14674,
+    "end": 14742,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 14674,
+        "end": 14742
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000198727",
+    "name": "MT-CYB",
+    "start": 14747,
+    "end": 15887,
+    "strand": 1,
+    "biotype": "protein_coding",
+    "exons": [
+      {
+        "start": 14747,
+        "end": 15887
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210195",
+    "name": "MT-TT",
+    "start": 15888,
+    "end": 15953,
+    "strand": 1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 15888,
+        "end": 15953
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000210196",
+    "name": "MT-TP",
+    "start": 15956,
+    "end": 16023,
+    "strand": -1,
+    "biotype": "Mt_tRNA",
+    "exons": [
+      {
+        "start": 15956,
+        "end": 16023
+      }
+    ]
+  }
+]

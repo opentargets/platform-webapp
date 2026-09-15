@@ -1,0 +1,134 @@
+[
+  {
+    "id": "ENSG00000296546",
+    "name": null,
+    "start": 4413,
+    "end": 7660,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 5541,
+        "end": 7279
+      },
+      {
+        "start": 4413,
+        "end": 4710
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000305511",
+    "name": null,
+    "start": 97136,
+    "end": 122360,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 104556,
+        "end": 104685
+      },
+      {
+        "start": 121605,
+        "end": 121701
+      },
+      {
+        "start": 121829,
+        "end": 122360
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000305525",
+    "name": null,
+    "start": 103657,
+    "end": 104499,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 104448,
+        "end": 104499
+      },
+      {
+        "start": 103657,
+        "end": 103995
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276197",
+    "name": null,
+    "start": 105287,
+    "end": 105376,
+    "strand": 1,
+    "biotype": "misc_RNA",
+    "exons": [
+      {
+        "start": 105287,
+        "end": 105376
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000274917",
+    "name": "RNA5-8SN5",
+    "start": 112025,
+    "end": 112177,
+    "strand": 1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 112025,
+        "end": 112177
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000296713",
+    "name": null,
+    "start": 147633,
+    "end": 148469,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 148420,
+        "end": 148469
+      },
+      {
+        "start": 147633,
+        "end": 147971
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000273937",
+    "name": null,
+    "start": 149259,
+    "end": 149348,
+    "strand": 1,
+    "biotype": "misc_RNA",
+    "exons": [
+      {
+        "start": 149259,
+        "end": 149348
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000273730",
+    "name": "5_8S_rRNA",
+    "start": 155997,
+    "end": 156149,
+    "strand": 1,
+    "biotype": "rRNA",
+    "exons": [
+      {
+        "start": 155997,
+        "end": 156149
+      }
+    ]
+  }
+]

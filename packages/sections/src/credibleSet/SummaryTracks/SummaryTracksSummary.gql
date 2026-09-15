@@ -1,0 +1,6 @@
+fragment SummaryTracksSummaryFragment on CredibleSet {
+  l2GPredictions {
+    count
+  }
+}
+

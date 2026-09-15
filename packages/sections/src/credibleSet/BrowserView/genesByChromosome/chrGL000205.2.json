@@ -1,0 +1,110 @@
+[
+  {
+    "id": "ENSG00000307088",
+    "name": null,
+    "start": 7529,
+    "end": 145168,
+    "strand": -1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 63781,
+        "end": 63869
+      },
+      {
+        "start": 55341,
+        "end": 55822
+      },
+      {
+        "start": 51114,
+        "end": 51567
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307143",
+    "name": null,
+    "start": 44576,
+    "end": 61804,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 44576,
+        "end": 44674
+      },
+      {
+        "start": 59935,
+        "end": 61804
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307166",
+    "name": null,
+    "start": 75648,
+    "end": 85014,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 75648,
+        "end": 75749
+      },
+      {
+        "start": 84437,
+        "end": 85014
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000307122",
+    "name": null,
+    "start": 75988,
+    "end": 100753,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 75988,
+        "end": 76278
+      },
+      {
+        "start": 100015,
+        "end": 100753
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000276932",
+    "name": "Y_RNA",
+    "start": 93050,
+    "end": 93150,
+    "strand": -1,
+    "biotype": "misc_RNA",
+    "exons": [
+      {
+        "start": 93050,
+        "end": 93150
+      }
+    ]
+  },
+  {
+    "id": "ENSG00000302801",
+    "name": null,
+    "start": 163302,
+    "end": 168527,
+    "strand": 1,
+    "biotype": "lncRNA",
+    "exons": [
+      {
+        "start": 163302,
+        "end": 163641
+      },
+      {
+        "start": 167759,
+        "end": 168527
+      }
+    ]
+  }
+]
