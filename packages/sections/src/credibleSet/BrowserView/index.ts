@@ -1,10 +1,14 @@
 import { lazy } from "react";
+import { isPrivateCredibleSetSection } from "@ot/constants";
+
+const id = "browserView";
 
 export const definition = {
-  id: "browserView",
+  id,
   name: "Browser View",
   shortName: "BV",
   hasData: () => true,  // !! NEEDS UPDATED ONCE HAVE FINAL QUERIES !!
+  isPrivate: isPrivateCredibleSetSection(id),
 };
 
 // Components
