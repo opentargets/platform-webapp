@@ -1,5 +1,5 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import { clinicalStageCategories } from "@ot/constants";
+import { clinicalStageCategories, SEQUEANTIAL_SCHEME_BLUE,  } from "@ot/constants";
 import type { MetricRow } from "./MetricsPage";
 
 type ClinicalStage = { value: string; name: string; index: number };
@@ -241,14 +241,16 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
   }
 
   function stageColor(stage: Pick<ClinicalStage, "index">) {
-    if (stage.index === clinicalStageCategories.UNKNOWN.index) return "rgb(225, 239, 249)";
+    if (stage.index === clinicalStageCategories.UNKNOWN.index) return "#e3e3e3";
 
     const position = Math.min(
       Math.max((stage.index - preclinicalIndex) / (approvalIndex - preclinicalIndex), 0),
       1
     );
-    const color = gradientStart.map((start, index) => Math.round(start + (gradientEnd[index] - start) * position));
-    return `rgb(${color.join(", ")})`;
+    console.log("position", position, stage.index, preclinicalIndex, approvalIndex, stage);
+
+    const color = SEQUEANTIAL_SCHEME_BLUE[Math.floor(position * (SEQUEANTIAL_SCHEME_BLUE.length - 1))];
+    return color
   }
 
   function countTextColor(stage: ClinicalStage) {

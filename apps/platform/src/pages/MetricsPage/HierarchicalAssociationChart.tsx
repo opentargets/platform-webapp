@@ -1,19 +1,14 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import * as Plot from "@observablehq/plot";
-import { schemeDark2, schemeCategory10, schemeSet1, schemeTableau10 } from "d3";
 import { ObsPlot } from "ui";
+import { CATEGORICAL_SCHEME_BASE } from "@ot/constants";
 import dataSourcesAssoc from "../../components/AssociationsToolkit/static_datasets/dataSourcesAssoc";
 import type { MetricRow } from "./MetricsPage";
 
 type FacetCount = { name: string; group: string; facet: string; count: number; color: string };
 
-// const colorScheme = schemeDark2;
-// const colorScheme = schemeTableau10
-// const colorScheme = schemeCategory10;
-// const colorScheme = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7"];
-const colorScheme = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7", "#a463f2", "#97bbf5", "#9c6b4e", "#9498a0"];
-// const colorScheme = schemeDark2;
+const colorScheme = CATEGORICAL_SCHEME_BASE;
 
 const dataSourceTypes = new Map(dataSourcesAssoc.map((source) => [source.id, source.aggregation]));
 const FACETS = ["Target-disease evidence", "Indirect associations", "Direct associations"] as const;
@@ -155,7 +150,8 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           textAnchor: "end",
           lineAnchor: "middle",
           fontSize: 12.5,
-          fill: "white",
+          fill:   'white',
+          fontWeight: 600,
         }),
         Plot.text(outsideData, {
           x: "count",
@@ -245,7 +241,7 @@ function appendGroupDecorations({
     band.setAttribute("y", String(top));
     band.setAttribute("width", String(chartWidth - CHART_EDGE_PADDING * 2));
     band.setAttribute("height", String(bottom - top));
-    band.setAttribute("fill", groupIndex % 2 === 0 ? grey[200] : grey[50]);
+    band.setAttribute("fill", "transparent");
     bands.appendChild(band);
 
     const groupCenter = (yPositions[groupStart] + yPositions[groupEnd]) / 2;

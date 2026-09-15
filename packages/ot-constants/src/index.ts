@@ -696,6 +696,7 @@ export const therapeuticAreas: Record<string, string> = {
 };
 
 export * from "./alphaFold";
+export * from "./colorSchemas";
 export * from "./dataTypes";
 export * from "./particlesBackground";
 export * from "./partnerPreviewUtils";
