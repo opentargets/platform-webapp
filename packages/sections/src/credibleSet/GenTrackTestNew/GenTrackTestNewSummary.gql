@@ -1,5 +1,0 @@
-fragment GenTrackTestNewSummaryFragment on CredibleSet {
-  l2GPredictions {
-    count
-  }
-}
