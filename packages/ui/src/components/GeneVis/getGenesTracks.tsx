@@ -8,6 +8,7 @@ import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
 import { grey, green } from "@mui/material/colors";
+import { getCanonicalTranscript } from "./getCanonicalTranscript";
 
 const L2G_GENE_COLOR = 0x138160;
 const L2G_HOVER_BOX_COLOR = Number.parseInt(green[100].slice(1), 16);
@@ -73,6 +74,7 @@ function getVisibleGeneLabelScreenX({
 }
 
 export function getGenesTracks({
+    targets,
     geneToRow,
     biotype,
     id,
@@ -88,9 +90,6 @@ export function getGenesTracks({
   const genTrackState = useGenTrackState();
   const { data, xMin, xMax } = genTrackState ?? { data: null, xMin: 0, xMax: 1 };
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
-
-  // Look up targets from pre-grouped data in context
-  const targets = data?.region?.groupedTargets?.[biotype] ?? [];
 
   // Check if using variable row heights (new mode) or fixed row height (legacy mode)
   const useVariableHeights = rowHeightMap !== undefined && rowYOffsets !== undefined;
@@ -121,7 +120,7 @@ export function getGenesTracks({
     const currentRowHeight = useVariableHeights ? (rowHeightMap[rowIndex] || baseRowHeight) : rowHeight;
     if (hasAnyLabels && labeledIds.size > 0) {
       // If this specific row has labels, position below label area
-      const rowHasLabels = targets.some(g => geneToRow[g.target.id] === rowIndex && labeledIds.has(g.target.id));
+      const rowHasLabels = targets.some(target => geneToRow[target.id] === rowIndex && labeledIds.has(target.id));
       if (rowHasLabels) {
         // Label takes space at top, center gene in remaining space below
         // But shift slightly up to visually balance with label text above
@@ -165,7 +164,7 @@ export function getGenesTracks({
           )}
 
           {targets.map(gene => {
-            const { target } = gene;
+            const target = gene;
             const rowIndex = geneToRow[target.id];
             if (rowIndex === undefined) return null;
             // Only show label if this specific gene is in the labeledIds set
@@ -176,16 +175,15 @@ export function getGenesTracks({
             const hoverBoxColor = isL2G ? L2G_HOVER_BOX_COLOR : NON_L2G_HOVER_BOX_COLOR;
 
             // Compute exon span for intron line and label positioning
-            const exons = target.canonicalExons ?? [];
-            const exonStarts = exons.map((e: { start: number }) => e.start);
-            const exonEnds = exons.map((e: { end: number }) => e.end);
-            const intronStart = exonStarts.length > 0 ? Math.min(...exonStarts) : target.genomicLocation.start;
-            const intronEnd = exonEnds.length > 0 ? Math.max(...exonEnds) : target.genomicLocation.end;
+            const canonicalTranscript = getCanonicalTranscript(target);
+            const exons = canonicalTranscript?.exons ?? [];
+            const intronStart = canonicalTranscript?.start ?? target.genomicLocation.start;
+            const intronEnd = canonicalTranscript?.end ?? target.genomicLocation.end;
 
             // Compute label text and width for gene box
             const score = data?.l2GPredictions?.rows.find((r: any) => r.target.id === target.id)?.score;
-            const leftArrow = target.genomicLocation.strand === -1 ? "← " : "";
-            const rightArrow = target.genomicLocation.strand === 1 ? " →" : "";
+            const leftArrow = target.genomicLocation.strand === "NEGATIVE" ? "← " : "";
+            const rightArrow = target.genomicLocation.strand === "POSITIVE" ? " →" : "";
             const labelText = score !== undefined
               ? `${leftArrow}${target.approvedSymbol || target.id}: ${score.toFixed(3)}${rightArrow}`
               : `${leftArrow}${target.approvedSymbol || target.id}${rightArrow}`;
@@ -259,7 +257,7 @@ export function getGenesTracks({
                   tint={geneColor}
                   minPixelWidth={1}
                 />
-                {target.canonicalExons?.map(exon => (
+                {exons.map(exon => (
                   <DataSprite
                     key={`${target.id}-${exon.start}-${exon.end}`}
                     scalesRef={scalesRef}

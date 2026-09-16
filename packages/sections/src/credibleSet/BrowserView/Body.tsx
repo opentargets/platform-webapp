@@ -1,11 +1,12 @@
 import { useQuery } from "@apollo/client";
 import { GeneVis, SectionItem, useBatchQuery } from "ui";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
-import {table5HChunkSize } from "@ot/constants";
+import REGION_TARGETS_QUERY from "./RegionTargetsQuery.gql";
+import { table5HChunkSize } from "@ot/constants";
 
 type BodyProps = {
 	id: string;
@@ -45,9 +46,6 @@ const REGION_PADDING = 1_000_000;
 const PAN_ZOOM_PADDING = 250_000;
 
 function Body({ id, entity }: BodyProps) {
-  const [combinedData, setCombinedData] = useState<any[] | null>(null);
-
-  // trivial request to satisfy SectionItem; not used for rendering yet
   const variables = {
     studyLocusId: id,
     size: table5HChunkSize,
@@ -63,136 +61,82 @@ function Body({ id, entity }: BodyProps) {
 
   const data = request.data?.credibleSet;
 
-  // get region: chromosome, start, end, and initial pan-zoom window
-  let chromosome: string | undefined;
+  const locusRows = data?.locus?.rows ?? [];
+  const chromosome = locusRows[0]?.variant?.chromosome;
+  const chromosomeLength = chromosomeInfo.find(item => item.chromosome === chromosome)?.length;
+  const locusPositions = locusRows
+    .map(row => row.variant?.position)
+    .filter((position): position is number => Number.isFinite(position));
+  const l2GPositions = (data?.l2GPredictions?.rows ?? []).flatMap(row => {
+    const genomicLocation = row.target?.genomicLocation;
+    if (
+      genomicLocation?.chromosome !== chromosome ||
+      !Number.isFinite(genomicLocation.start) ||
+      !Number.isFinite(genomicLocation.end)
+    ) {
+      return [];
+    }
+    return [genomicLocation.start, genomicLocation.end];
+  });
+  const positions = [...locusPositions, ...l2GPositions];
+  const earliestPosition = positions.length > 0 ? Math.min(...positions) : undefined;
+  const highestPosition = positions.length > 0 ? Math.max(...positions) : undefined;
+
   let start: number | undefined;
   let end: number | undefined;
   let initialZoom: [number, number] | undefined;
-  let earliestPosition: number | undefined;
-  let highestPosition: number | undefined;
 
-  if (data) {
-    chromosome = data.locus.rows[0].variant.chromosome;
-    const positions = [
-      ...data.locus.rows.map(({ variant }) => variant.position),
-      ...data.l2GPredictions.rows.flatMap(({ target: { genomicLocation }}) => [
-        genomicLocation.start,
-        genomicLocation.end,
-      ]),
-    ];
-    earliestPosition = Math.min(...positions);
-    highestPosition = Math.max(...positions);
-
+  if (chromosome && chromosomeLength && earliestPosition !== undefined && highestPosition !== undefined) {
     const regionWidth = Math.min(
       highestPosition - earliestPosition + REGION_PADDING,
       MAX_REGION_WIDTH
     );
     const center = Math.round((earliestPosition + highestPosition) / 2);
+    start = Math.floor(center - regionWidth / 2);
+    end = Math.ceil(center + regionWidth / 2);
 
-    start = center - regionWidth / 2;
-    end = center + regionWidth / 2;
     if (start < 0) {
       end -= start;
       start = 0;
-    } else {
-      const chromosomeLength = chromosomeInfo.find(obj => obj.chromosome === chromosome).length;
-      if (end > chromosomeLength) {
-        const overflow = end - chromosomeLength;
-        end = chromosomeLength;
-        start -= overflow;
-      }
+    } else if (end > chromosomeLength) {
+      const overflow = end - chromosomeLength;
+      end = chromosomeLength;
+      start -= overflow;
     }
 
-    let zoomStart = start + PAN_ZOOM_PADDING;
-    let zoomEnd = end - PAN_ZOOM_PADDING;
-    if (
-      zoomStart >= zoomEnd ||
-      earliestPosition === undefined ||
-      highestPosition === undefined ||
-      zoomStart > earliestPosition ||
-      zoomEnd < highestPosition
-    ) {
-      zoomStart = start;
-      zoomEnd = end;
-    }
-    initialZoom = [zoomStart, zoomEnd];
+    const zoomStart = start + PAN_ZOOM_PADDING;
+    const zoomEnd = end - PAN_ZOOM_PADDING;
+    initialZoom = zoomStart >= zoomEnd || zoomStart > earliestPosition || zoomEnd < highestPosition
+      ? [start, end]
+      : [zoomStart, zoomEnd];
   }
 
-  // !! LOAD LOCAL CHROMOSOME DATA AND MERGE TARGETS DATA INTO THE API DATA !! 
+  const regionVariables = chromosome && start !== undefined && end !== undefined
+    ? { chromosome: `chr${chromosome}`, positionStart: start, positionEnd: end }
+    : undefined;
+  const regionRequest = useQuery(REGION_TARGETS_QUERY, {
+    variables: regionVariables,
+    skip: !regionVariables,
+  });
+
   useEffect(() => {
-    if (!chromosome || start === undefined || end === undefined) return;
-    const regionStart = start;
-    const regionEnd = end;
+    const targets = regionRequest.data?.region?.targets?.rows;
+    if (!targets) return;
 
-    let cancelled = false;
+    const biotypeCounts = targets.reduce((counts, target) => {
+      const biotype = target.biotype ?? "unknown";
+      counts[biotype] = (counts[biotype] ?? 0) + 1;
+      return counts;
+    }, {} as Record<string, number>);
+    // eslint-disable-next-line no-console
+    console.info("Browser View region target biotypes", biotypeCounts);
+  }, [regionRequest.data]);
 
-    const load = async () => {
-      try {
-        const mod = await import(`./genesByChromosome/chr${chromosome}.json`);
-        const arr = (mod as any).default ?? mod;
 
-        // filter to those within (or overlapping) start-to-end
-        let filtered = Array.isArray(arr)
-          ? arr.filter((item: any) => {
-              const gs = Number(item.start);
-              const ge = Number(item.end);
-              return Number.isFinite(gs) && Number.isFinite(ge) && ge >= regionStart && gs <= regionEnd;
-            })
-          : [];
 
-        // // !! FILTER ON BIOTYPE HERE FOR NOW !!
-        // filtered = filtered.filter(o => (
-        //   // o.biotype.includes("protein_coding")
-        //   // !o.biotype.includes("pseudogene") && 
-        //   // !o.biotype.includes("RNA")
-        //   // true
-        // ));
-        
-        // rewrite data into format returned by API
-        if (!cancelled) {
-          const formatted = filtered.map(o => ({
-            target: {
-              id: o.id,
-              approvedSymbol: o.name,
-              biotype: o.biotype,
-              canonicalExons: o.exons,
-              genomicLocation: {
-                start: o.start,
-                end: o.end,
-                strand: o.strand,
-                chromosome: chromosome,
-              }
-            }
-          }));
-
-          // group targets
-          const groupedTargets = Object.groupBy(formatted, obj => {
-            const biotype = obj.target.biotype.toLowerCase();
-            if (biotype === "protein_coding") return "protein_coding";
-            else if (biotype === "processed_transcript") return "processed_transcript";
-            else if (biotype.includes("pseudogene")) return "pseudogene";
-            else if (biotype.includes("rna")) return "rna";
-            else return "other";
-          });
-
-          setCombinedData({ ...data, region: { targets: formatted, groupedTargets } });
-        }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to load chromosome data", e);
-        // if (!cancelled) setCombinedData([] as any);
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chromosome, start, end]);
-
-  // !! CURRENTLY MUST HAVE combinedData FOR FIRST RENDER OF GENEVIS !!
-  if (!combinedData) return null;
+  const combinedData = data && regionRequest.data
+    ? { ...data, region: regionRequest.data.region }
+    : undefined;
 
 	return (
 		<SectionItem
@@ -202,23 +146,34 @@ function Body({ id, entity }: BodyProps) {
 			showContentLoading
 			loadingMessage="Loading data. This may take some time..."
 			renderDescription={() => <Description />}
-      renderBody={() => (data && chromosome && start !== undefined && end !== undefined)
-        ? <Box sx={{ pt: 1 }}>
+      renderBody={() => {
+        if (regionRequest.error) {
+          return <Box sx={{ py: 2, px: 1.5 }}>
+            <Typography color="text.secondary">Could not download region data</Typography>
+          </Box>;
+        }
+
+        if (data && !regionVariables) {
+          return <Box sx={{ py: 2, px: 1.5 }}>
+            <Typography color="text.secondary">Could not determine genomic region</Typography>
+          </Box>;
+        }
+
+        if (!combinedData || !chromosome || start === undefined || end === undefined) {
+          return <Typography component="h2">Loading region data...</Typography>;
+        }
+
+        return <Box sx={{ pt: 1 }}>
           <GeneVis
               data={combinedData}
               chromosome={chromosome}
               xMin={start}
               xMax={end}
               initialZoom={initialZoom}
-              geneLabel={target => `${target.genomicLocation.strand === -1 ? "← " : ""}${
-                target.approvedSymbol ?? target.id}${
-                target.genomicLocation.strand === 1 ? " →" : ""}`
-              }
               variantColor={() => "grey"}
             />
           </Box>
-        : <h2>Loading...</h2>
-      }
+      }}
 		/>
 	);
 }

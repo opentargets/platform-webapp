@@ -1,7 +1,9 @@
+import { getCanonicalTranscript } from "./getCanonicalTranscript";
+
 type GenomicLocation = {
   start: number;
   end: number;
-  strand: number;
+  strand: string;
   chromosome: string;
 };
 
@@ -9,13 +11,11 @@ type Target = {
   id: string;
   approvedSymbol: string;
   biotype: string;
-  canonicalExons: any;
+  transcripts: any;
   genomicLocation: GenomicLocation;
 };
 
-type IntervalInput = {
-  target: Target;
-};
+type IntervalInput = Target;
 
 type PackResult = Record<string, number>; // id -> rowIndex
 
@@ -50,15 +50,11 @@ export function packIntervals(
   const priorityCenterGapBp = priorityPixelGapCenterToCenter * bpPerPixel;
 
   const annotated = intervals.map((d, i) => {
-    const exons = d.target.canonicalExons ?? [];
-    const intronStart = exons.length > 0
-      ? Math.min(...exons.map((exon: { start: number }) => exon.start))
-      : d.target.genomicLocation.start;
-    const intronEnd = exons.length > 0
-      ? Math.max(...exons.map((exon: { end: number }) => exon.end))
-      : d.target.genomicLocation.end;
+    const canonicalTranscript = getCanonicalTranscript(d);
+    const intronStart = canonicalTranscript?.start ?? d.genomicLocation.start;
+    const intronEnd = canonicalTranscript?.end ?? d.genomicLocation.end;
     const center = (intronStart + intronEnd) / 2;
-    const labelWidth = labelWidthPixelsById[d.target.id];
+    const labelWidth = labelWidthPixelsById[d.id];
     const labelHalfWidth = labelWidth === undefined ? 0 : labelWidth * bpPerPixel / 2;
 
     return {
@@ -67,9 +63,9 @@ export function packIntervals(
       _start: Math.min(intronStart, center - labelHalfWidth),
       _end: Math.max(intronEnd, center + labelHalfWidth),
       _center: center,
-      _preferredRow: previousLayout[d.target.id],
-      _isPriority: prioritySet.has(d.target.id),
-      _hasLabel: labeledSet.has(d.target.id),
+      _preferredRow: previousLayout[d.id],
+      _isPriority: prioritySet.has(d.id),
+      _hasLabel: labeledSet.has(d.id),
       _hasMeasuredLabel: labelWidth !== undefined,
     };
   });
@@ -131,7 +127,7 @@ export function packIntervals(
 
   // Helper to place an interval in a row (maintains sorted order by start position)
   const placeInRow = (interval: typeof annotated[0], rowIdx: number): void => {
-    idToRow[interval.target.id] = rowIdx;
+    idToRow[interval.id] = rowIdx;
     if (!rowIntervals[rowIdx]) rowIntervals[rowIdx] = [];
 
     const newInterval = {

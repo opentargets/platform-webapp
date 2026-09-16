@@ -19,13 +19,10 @@ const DEFAULT_ROW_HEIGHT = 10;
 const BAR_HEIGHT = 8;
 const LABEL_HEIGHT = 10;
 
-export function getGeneMinimapTracks({ geneToRow, color, nonL2GColor, highlightIds = new Set(), biotype, id, YInfo, background = undefined, rowHeight = DEFAULT_ROW_HEIGHT, rowHeightMap, rowYOffsets, trackHeight: explicitTrackHeight, paddingTop: explicitPaddingTop, labeledIds = new Set() }) {
+export function getGeneMinimapTracks({ targets, geneToRow, color, nonL2GColor, highlightIds = new Set(), biotype, id, YInfo, background = undefined, rowHeight = DEFAULT_ROW_HEIGHT, rowHeightMap, rowYOffsets, trackHeight: explicitTrackHeight, paddingTop: explicitPaddingTop, labeledIds = new Set() }) {
   const genTrackState = useGenTrackState();
   const { data } = genTrackState ?? { data: null };
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
-
-  // Look up targets from pre-grouped data in context
-  const targets = data?.region?.groupedTargets?.[biotype] ?? [];
 
   // Check if using variable row heights (new mode) or fixed row height (legacy mode)
   const useVariableHeights = rowHeightMap !== undefined && rowYOffsets !== undefined;
@@ -52,7 +49,7 @@ export function getGeneMinimapTracks({ geneToRow, color, nonL2GColor, highlightI
     const hasLabels = labeledIds.size > 0;
     if (hasLabels) {
       // If this specific row has labels, position bar directly below label
-      const rowHasLabels = targets.some(g => geneToRow[g.target.id] === rowIndex && labeledIds.has(g.target.id));
+      const rowHasLabels = targets.some(target => geneToRow[target.id] === rowIndex && labeledIds.has(target.id));
       if (rowHasLabels) {
         // Position bar just below label with small gap (3px)
         return rowStart + LABEL_HEIGHT + 3 - BAR_HEIGHT / 2;
@@ -75,7 +72,7 @@ export function getGeneMinimapTracks({ geneToRow, color, nonL2GColor, highlightI
         <Container>
           <DataBackground scalesRef={scalesRef} trackId={trackId} color={grey[100]} alpha={1} />
           {targets.map(gene => {
-            const { target } = gene;
+            const target = gene;
             const rowIndex = geneToRow[target.id];
             if (rowIndex === undefined) return null;
             const hasLabel = labeledIds.has(target.id);
@@ -85,8 +82,8 @@ export function getGeneMinimapTracks({ geneToRow, color, nonL2GColor, highlightI
               <Fragment key={target.id}>
                 {hasLabel && (() => {
                   const score = data?.l2GPredictions?.rows.find((r: any) => r.target.id === target.id)?.score;
-                  const leftArrow = target.genomicLocation.strand === -1 ? "← " : "";
-                  const rightArrow = target.genomicLocation.strand === 1 ? " →" : "";
+                  const leftArrow = target.genomicLocation.strand === "NEGATIVE" ? "← " : "";
+                  const rightArrow = target.genomicLocation.strand === "POSITIVE" ? " →" : "";
                   const labelText = score !== undefined
                     ? `${leftArrow}${target.approvedSymbol || target.id}: ${score.toFixed(3)}${rightArrow}`
                     : `${leftArrow}${target.approvedSymbol || target.id}${rightArrow}`;

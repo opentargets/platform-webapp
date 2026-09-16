@@ -32,15 +32,15 @@ const geneLabelStyle = new TextStyle({ align: "center", fill: "#000", fontSize: 
 const L2G_LABEL_PADDING = 6;
 
 function getGeneLabelText(gene: any, score: number | undefined) {
-  const leftArrow = gene.target.genomicLocation.strand === -1 ? "← " : "";
-  const rightArrow = gene.target.genomicLocation.strand === 1 ? " →" : "";
-  const name = gene.target.approvedSymbol || gene.target.id;
+  const leftArrow = gene.genomicLocation.strand === "NEGATIVE" ? "← " : "";
+  const rightArrow = gene.genomicLocation.strand === "POSITIVE" ? " →" : "";
+  const name = gene.approvedSymbol || gene.id;
   return score !== undefined ? `${leftArrow}${name}: ${score.toFixed(3)}${rightArrow}` : `${leftArrow}${name}${rightArrow}`;
 }
 
 function groupTargetsByBiotype(targets) {
   return Object.groupBy(targets, gene => {
-    const b = gene.target.biotype.toLowerCase();
+    const b = gene.biotype?.toLowerCase() ?? "other";
     if (b === "protein_coding") return "protein_coding";
     if (b === "processed_transcript") return "processed_transcript";
     if (b.includes("pseudogene")) return "pseudogene";
@@ -64,6 +64,7 @@ function GeneVisInner(props: {
   const l2gGeneIds = new Set(
     data?.l2GPredictions?.rows?.map(row => row.target.id) || []
   );
+  const regionTargets = data?.region?.targets?.rows ?? [];
 
   // Per-biotype track configuration
   const getBiotypeConfig = (hasLabels: boolean, biotype?: string) => {
@@ -96,7 +97,7 @@ function GeneVisInner(props: {
   const bpPerPixel = (canvasWidth > 0 && xMax > xMin) ? (xMax - xMin) / canvasWidth : 1;
 
   // Check if we have gene data
-  const hasGenes = data?.region?.targets?.length &&
+  const hasGenes = regionTargets.length > 0 &&
     (fixedTracks === true || fixedTracks?.includes("genes") ||
      zoomableTracks === true || zoomableTracks?.includes("genes"));
 
@@ -112,7 +113,7 @@ function GeneVisInner(props: {
   // gene tracks
   if (hasGenes) {
     // Group genes by biotype
-    const groupedTargets = groupTargetsByBiotype(data.region.targets);
+    const groupedTargets = groupTargetsByBiotype(regionTargets);
 
     // Create tracks for each biotype that has genes
     for (const biotype of BIOTYPE_ORDER) {
@@ -135,7 +136,7 @@ function GeneVisInner(props: {
       // ===== MINIMAP TRACK (top level) =====
       // Only L2G genes get labels in minimap
       const minimapLabeledIds = new Set(
-        targets.filter(g => l2gGeneIds.has(g.target.id)).map(g => g.target.id)
+        targets.filter(g => l2gGeneIds.has(g.id)).map(g => g.id)
       );
       const minimapConfig = getBiotypeConfig(minimapLabeledIds.size > 0, biotype);
       const minimapPriorityIds = Array.from(minimapLabeledIds) as string[];
@@ -152,8 +153,8 @@ function GeneVisInner(props: {
       // Build minimap row heights
       const minimapRowsWithLabels = new Set<number>();
       for (const gene of targets) {
-        const row = minimapGeneToRow[gene.target.id];
-        if (row !== undefined && minimapLabeledIds.has(gene.target.id)) {
+        const row = minimapGeneToRow[gene.id];
+        if (row !== undefined && minimapLabeledIds.has(gene.id)) {
           minimapRowsWithLabels.add(row);
         }
       }
@@ -178,6 +179,7 @@ function GeneVisInner(props: {
 
       // Add minimap track with variable row heights
       fixedTrackList.push(getGeneMinimapTracks({
+        targets,
         geneToRow: minimapGeneToRow,
         color: 0x555555,
         biotype,
@@ -195,16 +197,16 @@ function GeneVisInner(props: {
       // ===== ZOOMABLE TRACK (detail level) =====
       // Only protein-coding genes get labels in zoomable view
       const zoomableLabeledIds = biotype === "protein_coding"
-        ? new Set<string>(targets.map((g: { target: { id: string } }) => g.target.id))
+        ? new Set<string>(targets.map((gene: { id: string }) => gene.id))
         : new Set<string>();
       const zoomableConfig = getBiotypeConfig(true, biotype); // Always has labels
       const zoomablePriorityIds = Array.from(
-        targets.filter((g: { target: { id: string } }) => l2gGeneIds.has(g.target.id)).map((g: { target: { id: string } }) => g.target.id)
+        targets.filter((gene: { id: string }) => l2gGeneIds.has(gene.id)).map((gene: { id: string }) => gene.id)
       ) as string[];
       const zoomableLabelWidths = Object.fromEntries((biotype === "protein_coding" ? targets : []).map((gene: any) => {
-        const score = data?.l2GPredictions?.rows.find((row: any) => row.target.id === gene.target.id)?.score;
+        const score = data?.l2GPredictions?.rows.find((row: any) => row.target.id === gene.id)?.score;
         const textWidth = TextMetrics.measureText(getGeneLabelText(gene, score), geneLabelStyle).width;
-        return [gene.target.id, textWidth + (l2gGeneIds.has(gene.target.id) ? L2G_LABEL_PADDING : 0)];
+        return [gene.id, textWidth + (l2gGeneIds.has(gene.id) ? L2G_LABEL_PADDING : 0)];
       }));
 
       // Compute packing for zoomable track
@@ -221,8 +223,8 @@ function GeneVisInner(props: {
       // Build zoomable row heights
       const zoomableRowsWithLabels = new Set<number>();
       for (const gene of targets) {
-        const row = zoomableGeneToRow[gene.target.id];
-        if (row !== undefined && zoomableLabeledIds.has(gene.target.id)) {
+        const row = zoomableGeneToRow[gene.id];
+        if (row !== undefined && zoomableLabeledIds.has(gene.id)) {
           zoomableRowsWithLabels.add(row);
         }
       }
@@ -249,6 +251,7 @@ function GeneVisInner(props: {
 
       // Add zoomable detail track
       innerTrackList.push(getGenesTracks({
+        targets,
         geneToRow: zoomableGeneToRow,
         biotype,
         id: `genes-${biotype}`,
