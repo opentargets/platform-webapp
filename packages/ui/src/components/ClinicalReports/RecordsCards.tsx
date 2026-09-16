@@ -97,7 +97,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
                   <Typography variant="caption">Source:</Typography>
                   <Typography variant="caption" sx={{ fontSize: 13 }}>
                     {source}
-                    {sourceInfo?.name !== source && (
+                    {sourceInfo?.name !== source && sourceInfo?.name && (
                       <Tooltip
                         showHelpIcon
                         title={
