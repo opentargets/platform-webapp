@@ -29,6 +29,7 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           publicationJournal
           studyType
           biosample {
+            biosampleId
             biosampleName
           }
           target {
