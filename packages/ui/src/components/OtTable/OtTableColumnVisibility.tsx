@@ -13,7 +13,7 @@ import {
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { OtTableColumnVisibilityProps } from "./table.types";
+import { OtTableColumnVisibilityProps } from "./types/tableTypes";
 import OtPopper from "../OtPopper";
 
 function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): ReactElement {

@@ -18,6 +18,10 @@ import SectionViewToggle from "./SectionViewToggle";
 import { AddToReportButton } from "../Report";
 import { ReactNode, useState } from "react";
 import { VIEW } from "@ot/constants";
+import {
+  ReportComponentStateProvider,
+  useReportComponentState,
+} from "../../providers/ReportComponentStateContext";
 
 type definitionType = {
   id: string;
@@ -63,6 +67,13 @@ function SectionItem({
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
 
+  // If we're already inside a ReportComponentStateProvider (e.g. a report section
+  // being reconstructed with its saved componentState), reuse it rather than
+  // shadowing it with a fresh, empty one. On a normal page there's no ancestor
+  // provider, so we create one below purely to let this section's widget(s)
+  // save state into, ready to be captured by "Add to Report".
+  const existingReportComponentState = useReportComponentState();
+
 
   if (data && entity && data[entity]) {
     hasData = definition.hasData((data as any)[entity]);
@@ -87,7 +98,7 @@ function SectionItem({
     return <NoData> No data available for this {entity}. </NoData>;
   }
 
-  return (
+  const sectionContent = (
     <GridLegacy item xs={12}>
       <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
         <div id={definition.id}>
@@ -138,6 +149,12 @@ function SectionItem({
       </section>
     </GridLegacy>
   );
+
+  if (existingReportComponentState) {
+    return sectionContent;
+  }
+
+  return <ReportComponentStateProvider>{sectionContent}</ReportComponentStateProvider>;
 }
 
 export default SectionItem;

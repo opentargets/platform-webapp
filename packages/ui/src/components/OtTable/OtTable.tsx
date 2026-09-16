@@ -3,6 +3,9 @@ import { Box, GridLegacy, IconButton, NativeSelect, Skeleton } from "@mui/materi
 import {
   useReactTable,
   ColumnFiltersState,
+  RowSelectionState,
+  SortingState,
+  PaginationState,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -12,6 +15,7 @@ import {
   getFacetedUniqueValues,
   Row,
 } from "@tanstack/react-table";
+import { useReportComponentState } from "../../providers/ReportComponentStateContext";
 import {
   faAngleLeft,
   faAngleRight,
@@ -60,6 +64,19 @@ declare module "@tanstack/table-core" {
   }
 }
 
+/**
+ * Shape of the OtTable-specific slice of state saved into a report section's
+ * componentState (see ReportComponentStateContext). Keyed under "otTable" so it
+ * doesn't collide with other state a Body component might save under its own keys.
+ */
+interface OtTableSavedState {
+  globalFilter?: string;
+  columnFilters?: ColumnFiltersState;
+  rowSelection?: RowSelectionState;
+  sorting?: SortingState;
+  pagination?: PaginationState;
+}
+
 const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value);
@@ -105,10 +122,48 @@ function OtTable({
   getEnteredRow,
   getExitedRow,
   wrapControls,
+  reportStateKey,
 }: OtTableProps): ReactElement {
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = useState({});
+  // Read once at mount: the exact filter/sort/selection state this table had when
+  // it was added to a report, if we're being (re)rendered inside a report section.
+  // Outside a report context (normal page usage) this is always undefined and
+  // every field below falls back to its previous default.
+  //
+  // Keyed per-table (not a single fixed key) because one section can render more
+  // than one OtTable side by side (e.g. a master/detail layout) — sharing one key
+  // would let one table's saved columnFilters/sorting get applied to another
+  // table with entirely different column ids, which throws at render time.
+  const tableStateKey = `otTable:${reportStateKey || dataDownloaderFileStem || "default"}`;
+  const reportComponentState = useReportComponentState();
+  const saveReportState = reportComponentState?.saveState;
+  const [initialSavedState] = useState<OtTableSavedState | undefined>(
+    () => reportComponentState?.getState(tableStateKey)
+  );
+
+  // Defensive: only trust restored columnFilters/sorting entries whose column id
+  // actually exists on this table. Guards against the state-key collision above
+  // ever recurring (a stale/foreign key would otherwise crash TanStack outright)
+  // and against a section's columns having changed since the state was captured.
+  const validColumnIds = useMemo(
+    () => new Set(columns.filter(c => !isNestedColumns(c)).map(c => c.id as string)),
+    [columns]
+  );
+
+  const [globalFilter, setGlobalFilter] = useState(initialSavedState?.globalFilter ?? "");
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() =>
+    (initialSavedState?.columnFilters ?? []).filter(f => validColumnIds.has(f.id))
+  );
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>(
+    initialSavedState?.rowSelection ?? {}
+  );
+  const [sorting, setSorting] = useState<SortingState>(() =>
+    (initialSavedState?.sorting ?? getDefaultSortObj(sortBy, order) ?? []).filter(s =>
+      validColumnIds.has(s.id)
+    )
+  );
+  const [pagination, setPagination] = useState<PaginationState>(
+    initialSavedState?.pagination ?? { pageIndex: 0, pageSize: 10 }
+  );
 
   const mappedColumns = mapTableColumnToTanstackColumns(columns);
   const loadingRows = getLoadingRows(10);
@@ -135,12 +190,13 @@ function OtTable({
       columnFilters,
       globalFilter,
       rowSelection,
-    },
-    initialState: {
-      sorting: getDefaultSortObj(sortBy, order),
+      sorting,
+      pagination,
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     globalFilterFn: searchFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -169,7 +225,11 @@ function OtTable({
   // }, [table.getSortedRowModel()]);
 
   useEffect(() => {
-    enableRowSelection && setRowSelection({ 0: true });
+    // Only apply the "select first row by default" behavior when there's no
+    // restored selection to respect (including a restored *empty* selection).
+    if (enableRowSelection && initialSavedState?.rowSelection === undefined) {
+      setRowSelection({ 0: true });
+    }
   }, []);
 
   useEffect(() => {
@@ -179,6 +239,13 @@ function OtTable({
   useEffect(() => {
     getFilteredRows?.(table.getFilteredRowModel().rows);
   }, [table.getFilteredRowModel().rows]);
+
+  // Persist the current filter/sort/selection state so it can be captured if this
+  // table is added to a report. `saveReportState` is referentially stable (see
+  // ReportComponentStateContext), so this can't loop on its own re-renders.
+  useEffect(() => {
+    saveReportState?.(tableStateKey, { globalFilter, columnFilters, rowSelection, sorting, pagination });
+  }, [saveReportState, tableStateKey, globalFilter, columnFilters, rowSelection, sorting, pagination]);
 
   return (
     <div>
@@ -218,6 +285,7 @@ function OtTable({
                 <OtTableSearch
                   setGlobalSearchTerm={setGlobalFilter}
                   placeholderText={globalFilterPlaceholderText}
+                  initialValue={globalFilter}
                 />
               }
             </Box>
@@ -234,6 +302,7 @@ function OtTable({
                 <OtTableSearch
                   setGlobalSearchTerm={setGlobalFilter}
                   placeholderText={globalFilterPlaceholderText}
+                  initialValue={globalFilter}
                 />
               }
           </GridLegacy>

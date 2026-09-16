@@ -1,45 +1,12 @@
-import { ReactNode } from "react";
 import { ReportSection } from "../types/report";
 import { createRenderFunctionsFromMetadata, getSectionComponent } from "../providers/SectionRegistry";
-
-/**
- * Registry to store render function factories for each section definition
- * Maps definition.id -> render functions factory
- */
-const sectionRendererRegistry = new Map<
-  string,
-  (definition: any, request: any) => {
-    renderBody: () => ReactNode;
-    renderChart?: () => ReactNode;
-    renderDescription: () => ReactNode;
-  }
->();
-
-/**
- * Register render functions for a section definition
- * Call this from components that can render sections (e.g., SectionItem)
- */
-export const registerSectionRenderer = (
-  definitionId: string,
-  rendererFactory: (
-    definition: any,
-    request: any
-  ) => {
-    renderBody: () => ReactNode;
-    renderChart?: () => ReactNode;
-    renderDescription: () => ReactNode;
-  }
-) => {
-  sectionRendererRegistry.set(definitionId, rendererFactory);
-};
 
 /**
  * Get render functions for a section definition + request
  * Tries multiple strategies to get content:
  * 1. Cached renders from when section was added
- * 2. Registered renderer factory (if component mounted)
- * 3. Metadata-based reconstruction (if component registered in global registry)
- * 4. Fallback placeholder
+ * 2. Metadata-based reconstruction (if component registered in global registry)
+ * 3. Fallback placeholder
  */
 export const getRenderFunctions = (section: ReportSection) => {
   // Strategy 1: If we have meaningful cached renderers (from initial add), use them
@@ -55,13 +22,7 @@ export const getRenderFunctions = (section: ReportSection) => {
     };
   }
 
-  // Strategy 2: Look up renderer from registry (if component instance mounted)
-  const factory = sectionRendererRegistry.get(section.definition.id);
-  if (factory) {
-    return factory(section.definition, section.request);
-  }
-
-  // Strategy 3: Try to reconstruct from registered component metadata
+  // Strategy 2: Try to reconstruct from registered component metadata
   // Use composite ID format "entity:sectionId" to match registerAllSections format
   const compositeId = `${section.definition.entity}:${section.definition.id}`;
   const componentData = getSectionComponent(compositeId);
@@ -71,7 +32,8 @@ export const getRenderFunctions = (section: ReportSection) => {
       section.request,
       section.entityId,
       section.entityLabel,
-      componentData
+      componentData,
+      section.componentState
     );
     if (reconstructed) {
       return reconstructed;
@@ -105,11 +67,4 @@ export const useReportSectionContent = (section: ReportSection) => {
     chart: renderers.renderChart ? renderers.renderChart() : undefined,
     description: renderers.renderDescription(),
   };
-};
-
-/**
- * Clear the registry (useful for testing)
- */
-export const clearSectionRendererRegistry = () => {
-  sectionRendererRegistry.clear();
 };

@@ -85,6 +85,7 @@ type ReportBuilderAction =
       selectedView?: ReportSectionViewType;
       tags?: string[];
       chipText?: string;
+      componentState?: Record<string, any>;
     }
   | {
       type: "removeSectionFromReport";

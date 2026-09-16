@@ -85,20 +85,40 @@ const columns = [
     label: "Distance from start site (bp)",
     numeric: true,
     sortable: true,
-    renderCell: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss.toLocaleString(),
-    exportValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss?.toString(),
-    filterValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss.toLocaleString(),
-    comparator: (a: any, b: any) => a.distanceToTss - b.distanceToTss,
+    renderCell: ({ distanceToTss }: { distanceToTss: number }) =>
+      distanceToTss === null || distanceToTss === undefined ? naLabel : distanceToTss.toLocaleString(),
+    exportValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss?.toString() ?? "",
+    filterValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss?.toLocaleString() ?? "",
+    comparator: (a: any, b: any) => {
+      if (a.distanceToTss === null || a.distanceToTss === undefined) return 1;
+      if (b.distanceToTss === null || b.distanceToTss === undefined) return -1;
+      return a.distanceToTss - b.distanceToTss;
+    },
   },
   {
     id: "size",
     label: "Interval size (bp)",
     numeric: true,
     sortable: true,
-    renderCell: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toLocaleString()}`,
-    exportValue: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toString()}`,
-    filterValue: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toLocaleString()}`,
-    comparator: (a: any, b: any) => (a.end - a.start + 1) - (b.end - b.start + 1),
+    renderCell: ({ start, end }: { start: number; end: number }) =>
+      start === null || start === undefined || end === null || end === undefined
+        ? naLabel
+        : `${(end - start + 1).toLocaleString()}`,
+    exportValue: ({ start, end }: { start: number; end: number }) =>
+      start === null || start === undefined || end === null || end === undefined
+        ? ""
+        : `${(end - start + 1).toString()}`,
+    filterValue: ({ start, end }: { start: number; end: number }) =>
+      start === null || start === undefined || end === null || end === undefined
+        ? ""
+        : `${(end - start + 1).toLocaleString()}`,
+    comparator: (a: any, b: any) => {
+      const sizeA = a.start != null && a.end != null ? a.end - a.start + 1 : null;
+      const sizeB = b.start != null && b.end != null ? b.end - b.start + 1 : null;
+      if (sizeA === null) return 1;
+      if (sizeB === null) return -1;
+      return sizeA - sizeB;
+    },
   },
   {
     id: "start_end",
@@ -108,17 +128,26 @@ const columns = [
       chromosome: string;
       start: number;
       end: number;
-    }) => `${chromosome}:${start.toString()}-${end.toString()}`,
+    }) =>
+      chromosome == null || start == null || end == null
+        ? ""
+        : `${chromosome}:${start.toString()}-${end.toString()}`,
     renderCell: ({ chromosome, start, end }: {
       chromosome: string;
       start: number;
       end: number;
-    }) => `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
+    }) =>
+      chromosome == null || start == null || end == null
+        ? naLabel
+        : `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
     filterValue:  ({ chromosome, start, end }: {
       chromosome: string;
       start: number;
       end: number;
-    }) => `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
+    }) =>
+      chromosome == null || start == null || end == null
+        ? ""
+        : `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
   },
   {
     id: "score",
@@ -133,9 +162,13 @@ const columns = [
       </>
     ),
     filterValue: ({ score }: { score: number }) => score?.toFixed(3) ?? "",
-    renderCell: ({ score }: { score: number }) => score.toFixed(3),
-    exportValue: ({ score }: { score: number }) => score.toString(),
-    comparator: (a: any, b: any) => a.score - b.score,
+    renderCell: ({ score }: { score: number }) => (score === null || score === undefined ? naLabel : score.toFixed(3)),
+    exportValue: ({ score }: { score: number }) => score?.toString() ?? "",
+    comparator: (a: any, b: any) => {
+      if (a.score === null || a.score === undefined) return 1;
+      if (b.score === null || b.score === undefined) return -1;
+      return a.score - b.score;
+    },
   },
 ];
 

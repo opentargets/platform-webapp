@@ -1,4 +1,4 @@
-import { DefaultSortProp, loadingTableRows } from "./table.types";
+import { DefaultSortProp, loadingTableRows } from "../types/tableTypes";
 
 /*********************************************************************
  * FN TO CONVERT CLASSIC MUI TABLE COLUMNS TO TANSTACK TABLE COLUMNS *

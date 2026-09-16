@@ -14,6 +14,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
+import { useReportComponentState } from "../../providers/ReportComponentStateContext";
 import { ReportSectionDefinition, ReportRequest, ReportSectionViewType } from "../../types/report";
 
 interface AddToReportButtonProps {
@@ -53,6 +54,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
   onCaptureState,
 }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
+  const reportComponentState = useReportComponentState();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newReportName, setNewReportName] = useState("");
@@ -73,7 +75,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
       // The entity label is the name/symbol (used in descriptions and visualizations)
       const entityId = request?.data?.[entity]?.id;
       const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
-      const componentState = onCaptureState?.() || {};
+      const componentState = onCaptureState?.() || reportComponentState?.getAllState() || {};
 
       dispatch({
         type: "addSectionToReport",
@@ -110,7 +112,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
       // Extract entity ID and label from the request data
       const entityId = request?.data?.[entity]?.id;
       const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
-      const componentState = onCaptureState?.() || {};
+      const componentState = onCaptureState?.() || reportComponentState?.getAllState() || {};
 
       dispatch({
         type: "addSectionToReport",

@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { ReportSectionDefinition, ReportRequest } from "../types/report";
 import { ReportSectionContext } from "./ReportSectionContext";
 import { ReportQueryVariablesProvider } from "./ReportQueryVariablesProvider";
-import { getComponentAsync, getComponentSync } from "./ComponentRegistry";
+import { ReportComponentStateProvider } from "./ReportComponentStateContext";
 
 /**
  * Section Component Constructor
@@ -39,25 +39,6 @@ export const getSectionComponent = (sectionId: string) => {
 };
 
 /**
- * Preload components for report sections
- * Useful for ensuring components are cached before rendering a report
- * Returns a promise that resolves when all components are loaded
- */
-export const preloadSectionComponents = async (sectionIds: string[]): Promise<void> => {
-  const promises = sectionIds.map(async (sectionId) => {
-    // // Try in-memory registry first
-    // if (sectionComponentRegistry.has(sectionId)) {
-    //   return;
-    // }
-
-    // Try to lazy-load the component
-    await getComponentAsync(sectionId);
-  });
-
-  await Promise.all(promises);
-};
-
-/**
  * Create render functions from stored request data
  * The request object includes:
  * - data: The fetched GraphQL data
@@ -69,7 +50,8 @@ export const createRenderFunctionsFromMetadata = (
   request: ReportRequest,
   entityId?: string,
   entityLabel?: string,
-  sectionComponentData?: SectionComponentConstructor
+  sectionComponentData?: SectionComponentConstructor,
+  componentState?: Record<string, any>
 ) => {
   const entityIdToUse = entityId || request?.data?.[definition.entity]?.id;
   const entityLabelToUse = entityLabel || request?.data?.[definition.entity]?.name || request?.data?.[definition.entity]?.symbol;
@@ -78,60 +60,29 @@ export const createRenderFunctionsFromMetadata = (
   const compositeId = `${definition.entity}:${definition.id}`;
   const component = sectionComponentData || getSectionComponent(compositeId);
 
-  if (false) {
-    // Try to get from lazy-loaded cache
-    const lazyComponent = getComponentSync(definition.id);
-    if (!lazyComponent) {
-      return null; // Cannot reconstruct
-    }
-    
-    const Body = lazyComponent;
-
-    return {
-      renderBody: () => (
-        <Suspense fallback={<div style={{ padding: "16px", textAlign: "center" }}>Loading section...</div>}>
-          <ReportSectionContext.Provider 
-            value={{ 
-              entityId, 
-              entityLabel, 
-              entityType: definition.entity 
-            }}
-          >
-            <Body
-              id={entityId}
-              label={entityLabel}
-              entity={definition.entity}
-              request={request}
-            />
-          </ReportSectionContext.Provider>
-        </Suspense>
-      ),
-      renderChart: undefined,
-      renderDescription: () => <div>Section: {definition.name}</div>,
-    };
-  }
-
   const { Body } = component;
 
   return {
     renderBody: () => (
       <Suspense fallback={<div style={{ padding: "16px", textAlign: "center" }}>Loading section...</div>}>
-        <ReportQueryVariablesProvider variables={request?.variables}>
-          <ReportSectionContext.Provider 
-            value={{ 
-              entityId: entityIdToUse, 
-              entityLabel: entityLabelToUse, 
-              entityType: definition.entity 
-            }}
-          >
-            <Body
-              id={entityIdToUse}
-              label={entityLabelToUse}
-              entity={definition.entity}
-              request={request}
-            />
-          </ReportSectionContext.Provider>
-        </ReportQueryVariablesProvider>
+        <ReportComponentStateProvider initialState={componentState}>
+          <ReportQueryVariablesProvider variables={request?.variables}>
+            <ReportSectionContext.Provider
+              value={{
+                entityId: entityIdToUse,
+                entityLabel: entityLabelToUse,
+                entityType: definition.entity
+              }}
+            >
+              <Body
+                id={entityIdToUse}
+                label={entityLabelToUse}
+                entity={definition.entity}
+                request={request}
+              />
+            </ReportSectionContext.Provider>
+          </ReportQueryVariablesProvider>
+        </ReportComponentStateProvider>
       </Suspense>
     ),
     renderChart: undefined,
