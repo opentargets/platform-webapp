@@ -27,7 +27,7 @@ function AnalysisMenu() {
   }
 
   if(!isPartnerPreview) {
-    return null;
+    // return null;
   }
 
   return (
@@ -41,7 +41,7 @@ function AnalysisMenu() {
         ariaLabel="Advanced options"
         disableElevation
         iconSize="lg"
-        sx={{ height: 1, maxHeight: "45px" }}
+        sx={{ height: 1, maxHeight: "45px", border: "none" }}
       />
 
       <Popover

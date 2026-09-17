@@ -15,6 +15,7 @@ import { v1 } from "uuid";
 import HeaderMenu from "./HeaderMenu";
 import Link from "./Link";
 import OpenTargetsTitle from "./OpenTargetsTitle";
+import ToolsMenu from "./ToolsMenu";
 import PrivateWrapper from "./PrivateWrapper";
 
 const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`
@@ -85,6 +86,11 @@ type MenuExternalLinkProps = {
   children: ReactNode;
 };
 
+type ToolsMenuItem = {
+  name: string;
+  url: string;
+};
+
 type NavBarProps = {
   name?: string;
   search?: ReactNode;
@@ -94,6 +100,7 @@ type NavBarProps = {
   contact?: string;
   homepage?: boolean;
   items?: NavBarItem[];
+  tools?: ToolsMenuItem[];
   placement?: PopperPlacementType;
 };
 
@@ -116,6 +123,7 @@ function NavBar({
   contact,
   homepage,
   items,
+  tools,
   placement,
 }: NavBarProps): ReactElement {
   const theme = useTheme<Theme>();
@@ -174,6 +182,8 @@ function NavBar({
           {downloads ? <MenuExternalLink href={downloads}>Downloads</MenuExternalLink> : null}
 
           {contact ? <MenuExternalLink href={contact}>Contact</MenuExternalLink> : null}
+
+          {tools && tools.length ? <ToolsMenu items={tools} /> : null}
 
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}
 
