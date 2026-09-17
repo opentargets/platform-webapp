@@ -1,5 +1,5 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import { clinicalStageCategories, SEQUEANTIAL_SCHEME_BLUE,  } from "@ot/constants";
+import { clinicalStageCategories, SEQUENTIAL_SCHEME_BLUE,  } from "@ot/constants";
 import type { MetricRow } from "./MetricsPage";
 
 type ClinicalStage = { value: string; name: string; index: number };
@@ -79,7 +79,6 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
           </CoverageRow>
         </Box>
       </Box>
-      <Typography variant="caption" component="p" sx={{ pt: 4, fontSize: 13 }}>Note: if we like this, will need improvement to work on narrower screens</Typography>
     </Box>
   );
 
@@ -249,7 +248,7 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
     );
     console.log("position", position, stage.index, preclinicalIndex, approvalIndex, stage);
 
-    const color = SEQUEANTIAL_SCHEME_BLUE[Math.floor(position * (SEQUEANTIAL_SCHEME_BLUE.length - 1))];
+    const color = SEQUENTIAL_SCHEME_BLUE[Math.floor(position * (SEQUENTIAL_SCHEME_BLUE.length - 1))];
     return color
   }
 

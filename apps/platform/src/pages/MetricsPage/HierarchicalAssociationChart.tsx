@@ -105,7 +105,6 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           renderInfo={() => null}
         />
       </Box>
-      <Typography variant="caption" component="p" sx={{ pt: 2, fontSize: 13 }}>Alternative: drop one or two of colors, zebra stripes or brackets for indicating datatype.</Typography>
     </Box>
   );
 

@@ -12,7 +12,7 @@ export const CATEGORICAL_SCHEME_BASE: string[] = [
   "#DF9B82",
 ];
 
-export const SEQUEANTIAL_SCHEME_BLUE: string[] = [
+export const SEQUENTIAL_SCHEME_BLUE: string[] = [
   "#dbeaf6",
   "#BFDAEE",
   "#A5CAE6",

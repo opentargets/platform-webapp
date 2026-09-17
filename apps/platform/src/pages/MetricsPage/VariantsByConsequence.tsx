@@ -43,7 +43,7 @@ function VariantsByConsequence({ data }: { data: MetricRow[] }) {
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="subtitle2" sx={{ m: 0 }}>
-        Variants by most severe consequence
+        Variants by impact
       </Typography>
       <ObsPlot
         data={chartData}

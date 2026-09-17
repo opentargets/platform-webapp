@@ -7,6 +7,9 @@ import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import DrugsbyStageBubbles from "./DrugsbyStageBubbles";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
 import VariantsByConsequence from "./VariantsByConsequence";
+import VariantsByConsequenceImpact from "./VariantsByConsequenceImpact";
+import VariantsFacet from "./VariantsFacet";
+import VariantLollipops from "./VariantLollipops";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
 
@@ -51,8 +54,16 @@ function MetricsPage() {
 
       <br />
 
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
-        <VariantsByConsequence data={data} />
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <VariantsByConsequenceImpact data={data} />
+      </Paper>
+
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <VariantsFacet data={data} />
+      </Paper>
+
+      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
+        <VariantLollipops data={data} />
       </Paper>
       
     </>
