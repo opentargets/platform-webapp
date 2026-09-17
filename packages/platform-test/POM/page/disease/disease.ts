@@ -67,7 +67,7 @@ export class DiseasePage {
   async waitForPageLoad(): Promise<void> {
     // Wait for the main page header to be visible
     await this.page
-      .waitForSelector("[data-testid='profile-page-header']", {
+      .waitForSelector("[data-testid='profile-page-header-block']", {
         state: "visible",
         timeout: WIDGET_LOAD_TIMEOUT,
       })

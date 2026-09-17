@@ -9,7 +9,7 @@ export class ClinicalPrecedenceSection {
 
   // Section container
   getSection(): Locator {
-    return this.page.locator("[data-testid='section-knowndrugs']");
+    return this.page.locator("[data-testid='section-drugs']");
   }
 
   async isSectionVisible(): Promise<boolean> {
@@ -18,7 +18,7 @@ export class ClinicalPrecedenceSection {
 
   // Section header
   getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-knowndrugs-header']");
+    return this.page.locator("[data-testid='section-drugs-header']");
   }
 
   async getSectionTitle(): Promise<string | null> {
@@ -27,7 +27,7 @@ export class ClinicalPrecedenceSection {
 
   // Table
   getTable(): Locator {
-    return this.getSection().locator("table");
+    return this.getSection().locator("table").first();
   }
 
   async isTableVisible(): Promise<boolean> {
@@ -64,11 +64,11 @@ export class ClinicalPrecedenceSection {
 
   // Pagination
   getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='next-page-button']");
+    return this.getSection().locator("[data-testid='pagination-next-button']");
   }
 
   getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='previous-page-button']");
+    return this.getSection().locator("[data-testid='pagination-previous-button']");
   }
 
   async clickNextPage(): Promise<void> {
