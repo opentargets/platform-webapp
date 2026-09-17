@@ -183,9 +183,7 @@ function NavBar({
 
           {contact ? <MenuExternalLink href={contact}>Contact</MenuExternalLink> : null}
 
-          {tools && tools.length ? (
-            <ToolsMenu items={tools} className={classes.menuLink} />
-          ) : null}
+          {tools && tools.length ? <ToolsMenu items={tools} /> : null}
 
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}
 

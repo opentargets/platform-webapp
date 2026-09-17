@@ -47,7 +47,6 @@ function ToolsMenu({ items }: ToolsMenuProps): ReactElement {
         tabIndex={0}
         onClick={handleMenuToggle}
         onKeyDown={handleKeyDown}
-        className={className}
         sx={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}
         aria-haspopup="true"
         aria-expanded={isMenuOpen}

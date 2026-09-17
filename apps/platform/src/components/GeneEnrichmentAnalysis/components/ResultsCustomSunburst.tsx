@@ -9,7 +9,6 @@ import { Box, Typography, Popover, Chip } from "ui";
 import { useMemo, useState } from "react";
 import type { GseaResult } from "../api/gseaApi";
 import { PRIORITISATION_COLORS } from "../utils/colorPalettes";
-import PlotlySunburstChart from "./PlotlySunburstChart";
 import SunburstFilters, { type PathwayFilters } from "./SunburstFilters";
 import ZoomableSunburst from "../../Surnburst/ZoomableSunburst";
 import {gseaToSunburst} from "../../Surnburst/utils/gseaToSunburst";
