@@ -43,23 +43,35 @@ const GenomicLocation: React.FC<GenomicLocationProps> = ({
   }
 
   return (
-    <Box sx={{ mt: 1 }} component="span">
+    <Box sx={{ mt: 1, typography: "body2" }} component="span">
+      {label && (
+        <Box
+          component="span"
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: "bold",
+            color: (theme) => theme.palette.grey[600],
+            mr: "5px",
+          }}
+        >
+          {label}:
+        </Box>
+      )}
       <Tooltip title={tooltipTitle}>
-        <Chip
-          variant="filled"
-          size="small"
-          sx={{ borderRadius: 2 }}
-          label={
-            <>
-              {label && (
-                <Box component="span" sx={{ fontWeight: "bold", mr: "5px" }}>
-                  {label}:
-                </Box>
-              )}
-              {build} | {location}
-            </>
-          }
-        />
+        <Box component="span" sx={{ display: "inline-flex", whiteSpace: "nowrap" }}>
+          <Chip
+            variant="filled"
+            size="small"
+            label={build}
+            sx={{ borderRadius: "4px 0 0 4px" }}
+          />
+          <Chip
+            variant="filled"
+            size="small"
+            label={location}
+            sx={{ borderRadius: "0 4px 4px 0", ml: "1px" }}
+          />
+        </Box>
       </Tooltip>
     </Box>
   );
