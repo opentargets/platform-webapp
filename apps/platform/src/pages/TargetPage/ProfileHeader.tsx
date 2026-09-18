@@ -90,9 +90,17 @@ function ProfileHeader() {
           descriptions={targetDescription}
           targetId={data?.target.id}
         />
-        {data?.target.genomicLocation && (
-          <GenomicLocation geneLoc={data?.target.genomicLocation} />
-        )}
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+          {data?.target.genomicLocation && (
+            <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
+          )}
+          {data?.target.canonicalTranscript && (
+            <GenomicLocation
+              label="Canonical transcript"
+              geneLoc={data?.target.canonicalTranscript}
+            />
+          )}
+        </Box>
         {geneInfo
           .filter(gi => gi.isVisible)
           .map(e => (
