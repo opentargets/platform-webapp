@@ -64,7 +64,7 @@ function VariantsByConsequenceImpact({ data }: { data: MetricRow[] }) {
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="subtitle2" sx={{ m: 0 }}>
-        Variants by impact
+        Variants by most severe consequence
       </Typography>
       <Box sx={{ alignItems: "flex-start", display: "flex", gap: 4, mt: 2, pr: 1 }}>
         <Box sx={{ flex: "1 1 0", minWidth: 0 }}>

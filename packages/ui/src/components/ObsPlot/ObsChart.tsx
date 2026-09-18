@@ -19,6 +19,7 @@ type ObsChartProps = {
   setChart: Dispatch<SetStateAction<SVGSVGElement>>;
   setDatum: Dispatch<SetStateAction<any>>;
   renderSVGOverlay: (chart: SVGSVGElement) => SVGElement | null;
+  onChartMounted?: (chart: SVGSVGElement) => void;
 };
 
 function ObsChart({
@@ -34,6 +35,7 @@ function ObsChart({
   setChart,
   setDatum,
   renderSVGOverlay,
+  onChartMounted,
 }: ObsChartProps) {
   const headerRef = useRef();
 
@@ -102,6 +104,7 @@ function ObsChart({
       });
     }
     headerRef.current.append(chart);
+    onChartMounted?.(chart);
     return () => {
       setDatum(null);
       chart.remove();
@@ -118,6 +121,7 @@ function ObsChart({
     resetElement,
     setChart,
     setDatum,
+    onChartMounted,
   ]);
 
   return <Box ref={headerRef}></Box>;

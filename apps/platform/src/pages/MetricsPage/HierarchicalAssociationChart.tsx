@@ -11,15 +11,16 @@ type FacetCount = { name: string; group: string; facet: string; count: number; c
 const colorScheme = CATEGORICAL_SCHEME_BASE;
 
 const dataSourceTypes = new Map(dataSourcesAssoc.map((source) => [source.id, source.aggregation]));
+const dataSourceLabels = new Map(dataSourcesAssoc.map((source) => [source.id, source.label]));
+const dataSourceOrder = new Map(dataSourcesAssoc.map((source, index) => [source.id, index]));
 const FACETS = ["Target-disease evidence", "Indirect associations", "Direct associations"] as const;
 const DATATYPE_COLUMN_WIDTH = 170;
 const CHART_EDGE_PADDING = 8;
-const DATATYPE_LABEL_X = 150;
-const LEADER_LINE_START = DATATYPE_LABEL_X + 10;
 const BRACKET_WIDTH = 8;
-const LEADER_LINE_PADDING = 12;
+const LEADER_LINE_PADDING = 14;
 const DATASOURCE_LABEL_HALF_HEIGHT = 7;
 const BRACKET_VERTICAL_PADDING = 2;
+const LABEL_TO_DECORATION_GAP = BRACKET_VERTICAL_PADDING + 2;
 
 function extractCounts(data: MetricRow[], facet: (typeof FACETS)[number]) {
   if (facet === "Target-disease evidence") {
@@ -47,16 +48,12 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
   const sources = [...bySource.entries()].map(([sourceId, counts]) => ({
     sourceId,
     group: dataSourceTypes.get(sourceId) ?? "Other",
-    maxCount: Math.max(...FACETS.map((facet) => counts[facet] ?? 0)),
   }));
 
-  const groupMaxCounts = new Map<string, number>();
-  sources.forEach((source) => groupMaxCounts.set(source.group, Math.max(groupMaxCounts.get(source.group) ?? 0, source.maxCount)));
   sources.sort(
     (a, b) =>
-      (groupMaxCounts.get(b.group) ?? 0) - (groupMaxCounts.get(a.group) ?? 0) ||
-      a.group.localeCompare(b.group) ||
-      b.maxCount - a.maxCount,
+      (dataSourceOrder.get(a.sourceId) ?? Number.MAX_SAFE_INTEGER) -
+        (dataSourceOrder.get(b.sourceId) ?? Number.MAX_SAFE_INTEGER) || a.sourceId.localeCompare(b.sourceId),
   );
 
   const sourcesByGroup = new Map<string, typeof sources>();
@@ -101,6 +98,14 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           minWidth={640}
           height={nameOrder.length * 23 + 40}
           renderChart={renderChart}
+          onChartMounted={(chart) =>
+            appendGroupDecorations({
+              chart,
+              groups,
+              rowCount: nameOrder.length,
+              labelColor: theme.palette.text.primary,
+            })
+          }
           gapInfo={0}
           renderInfo={() => null}
         />
@@ -134,7 +139,7 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
         label: null,
         tickSize: 0,
         tickPadding: 8,
-        tickFormat: (name: string) => name.replaceAll("_", " "),
+        tickFormat: (name: string) => dataSourceLabels.get(name) ?? name.replaceAll("_", " "),
       },
       fx: { domain: FACETS, label: null, axis: "top", paddingInner: 0.25 },
       marks: [
@@ -171,19 +176,11 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
             y: "name",
             fx: "facet",
             title: (item: FacetCount) =>
-              `${item.name.replaceAll("_", " ")}\n${item.facet}: ${item.count.toLocaleString()}`,
+              `${dataSourceLabels.get(item.name) ?? item.name.replaceAll("_", " ")}\n${item.facet}: ${item.count.toLocaleString()}`,
           }),
         ),
       ],
     }) as SVGSVGElement;
-
-    appendGroupDecorations({
-      chart,
-      groups,
-      rowCount: nameOrder.length,
-      height,
-      labelColor: theme.palette.text.primary,
-    });
 
     return chart;
   }
@@ -193,46 +190,49 @@ function appendGroupDecorations({
   chart,
   groups,
   rowCount,
-  height,
   labelColor,
 }: {
   chart: SVGSVGElement;
   groups: [string, { sourceId: string }[]][];
   rowCount: number;
-  height: number;
   labelColor: string;
 }) {
   const yLabels = [...chart.querySelectorAll<SVGTextElement>("[aria-label='y-axis tick label'] text")];
   if (yLabels.length !== rowCount) return;
 
-  const labelPositions = yLabels.map((label) => getTranslation(label, chart));
-  if (labelPositions.some(({ x, y }) => Number.isNaN(x) || Number.isNaN(y))) return;
+  const chartBounds = chart.getBoundingClientRect();
+  const chartWidth = Number(chart.getAttribute("width"));
+  const chartHeight = Number(chart.getAttribute("height"));
+  if (!chartBounds.width || !chartBounds.height || Number.isNaN(chartWidth) || Number.isNaN(chartHeight)) return;
+
+  const labelBounds = yLabels.map((label) => label.getBoundingClientRect());
+  const labelPositions = labelBounds.map((bounds) => ({
+    x: ((bounds.left - chartBounds.left) * chartWidth) / chartBounds.width,
+    y: ((bounds.top + bounds.height / 2 - chartBounds.top) * chartHeight) / chartBounds.height,
+  }));
 
   const namespace = "http://www.w3.org/2000/svg";
   const bands = document.createElementNS(namespace, "g");
   const annotations = document.createElementNS(namespace, "g");
-  const chartWidth = Number(chart.getAttribute("width"));
-  const labelMeasureContext = document.createElement("canvas").getContext("2d");
-  if (!labelMeasureContext) return;
-  labelMeasureContext.font = "13.5px sans-serif";
-  const labelStart = (index: number) =>
-    labelPositions[index].x - labelMeasureContext.measureText(yLabels[index].textContent ?? "").width;
+  const labelStart = (index: number) => labelPositions[index].x;
   const yPositions = labelPositions.map(({ y }) => y);
   const rowSpacing = yPositions.length > 1 ? yPositions[1] - yPositions[0] : 23;
   let groupStart = 0;
 
-  groups.forEach(([group, groupSources], groupIndex) => {
+  groups.forEach(([group, groupSources]) => {
     const groupEnd = groupStart + groupSources.length - 1;
     const datasourceLabelStart = Math.min(
       ...Array.from({ length: groupSources.length }, (_, index) => labelStart(groupStart + index)),
     );
-    const singleLeaderEnd = datasourceLabelStart - LEADER_LINE_PADDING;
-    const bracketX = singleLeaderEnd - BRACKET_WIDTH;
+    const bracketX = datasourceLabelStart - LABEL_TO_DECORATION_GAP - BRACKET_WIDTH;
+    const leaderEnd = groupSources.length === 1 ? datasourceLabelStart - LABEL_TO_DECORATION_GAP : bracketX;
+    const leaderStart = datasourceLabelStart - BRACKET_WIDTH - LEADER_LINE_PADDING;
+    const categoryLabelX = leaderStart - LABEL_TO_DECORATION_GAP;
     const top = groupStart === 0
       ? Math.max(CHART_EDGE_PADDING, yPositions[groupStart] - rowSpacing / 2)
       : (yPositions[groupStart - 1] + yPositions[groupStart]) / 2;
     const bottom = groupEnd === rowCount - 1
-      ? Math.min(height - CHART_EDGE_PADDING, yPositions[groupEnd] + rowSpacing / 2)
+      ? Math.min(chartHeight - CHART_EDGE_PADDING, yPositions[groupEnd] + rowSpacing / 2)
       : (yPositions[groupEnd] + yPositions[groupEnd + 1]) / 2;
     const band = document.createElementNS(namespace, "rect");
 
@@ -245,7 +245,7 @@ function appendGroupDecorations({
 
     const groupCenter = (yPositions[groupStart] + yPositions[groupEnd]) / 2;
     const label = document.createElementNS(namespace, "text");
-    label.setAttribute("x", String(DATATYPE_LABEL_X));
+    label.setAttribute("x", String(categoryLabelX));
     label.setAttribute("y", String(groupCenter));
     label.setAttribute("text-anchor", "end");
     label.setAttribute("dominant-baseline", "middle");
@@ -256,8 +256,8 @@ function appendGroupDecorations({
     annotations.appendChild(label);
 
     const leader = document.createElementNS(namespace, "line");
-    leader.setAttribute("x1", String(LEADER_LINE_START));
-    leader.setAttribute("x2", String(groupSources.length === 1 ? singleLeaderEnd : bracketX));
+    leader.setAttribute("x1", String(leaderStart));
+    leader.setAttribute("x2", String(leaderEnd));
     leader.setAttribute("y1", String(groupCenter));
     leader.setAttribute("y2", String(groupCenter));
     leader.setAttribute("stroke", grey[500]);
@@ -279,23 +279,9 @@ function appendGroupDecorations({
     groupStart += groupSources.length;
   });
 
+  chart.style.overflow = "visible";
   chart.insertBefore(bands, chart.firstChild);
   chart.appendChild(annotations);
-}
-
-function getTranslation(element: SVGElement, chart: SVGSVGElement) {
-  let x = 0;
-  let y = 0;
-  let current: SVGElement | null = element;
-
-  while (current && current !== chart) {
-    const translate = current.getAttribute("transform")?.match(/translate\(([^,]+),\s*([^)]+)\)/);
-    x += Number(translate?.[1] ?? 0);
-    y += Number(translate?.[2] ?? 0);
-    current = current.parentElement instanceof SVGElement ? current.parentElement : null;
-  }
-
-  return { x, y };
 }
 
 export default HierarchicalAssociationChart;
