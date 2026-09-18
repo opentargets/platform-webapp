@@ -91,21 +91,10 @@ function ProfileHeader() {
           descriptions={targetDescription}
           targetId={data?.target.id}
         />
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          {data?.target.genomicLocation && (
-            <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
-          )}
-          {data?.target.canonicalTranscript && (
-            <GenomicLocation
-              label="Canonical transcript"
-              geneLoc={data?.target.canonicalTranscript}
-            />
-          )}
-        </Box>
         {geneInfo
           .filter(gi => gi.isVisible)
           .map(e => (
-            <Box key={e.label} sx={{ mt: 1 }} component="span">
+            <Box key={e.label} sx={{ mt: 2 }} component="span">
               <Tooltip title={e.tooltip}>
                 <Chip
                   variant="filled"
@@ -120,6 +109,17 @@ function ProfileHeader() {
               </Tooltip>
             </Box>
           ))}
+        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", mb:2 }}>
+          {data?.target.genomicLocation && (
+            <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
+          )}
+          {data?.target.canonicalTranscript && (
+            <GenomicLocation
+              label="Canonical transcript"
+              geneLoc={data?.target.canonicalTranscript}
+            />
+          )}
+        </Box>
       </>
       <ProfileChipList title="Synonyms" loading={loading}>
         {synonyms}

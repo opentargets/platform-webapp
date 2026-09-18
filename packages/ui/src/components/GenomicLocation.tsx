@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { grey } from "@mui/material/colors";
 import {
   GenomicLocationPresentationType,
   getGenomicLocation,
@@ -63,7 +64,7 @@ const GenomicLocation: React.FC<GenomicLocationProps> = ({
             variant="filled"
             size="small"
             label={build}
-            sx={{ borderRadius: "4px 0 0 4px" }}
+            sx={{ borderRadius: "4px 0 0 4px", backgroundColor: grey[400], color: grey[900] }}
           />
           <Chip
             variant="filled"
