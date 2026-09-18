@@ -5,7 +5,7 @@ import {
   type IGeneomicLocation,
 } from "@ot/constants";
 import type React from "react";
-import { Tooltip } from "ui";
+import { Chip, Tooltip } from "ui";
 
 interface GenomicLocationProps {
   geneLoc: IGeneomicLocation;
@@ -43,46 +43,23 @@ const GenomicLocation: React.FC<GenomicLocationProps> = ({
   }
 
   return (
-    <Box sx={{ mt: 1, typography: "body2" }} component="span">
+    <Box sx={{ mt: 1 }} component="span">
       <Tooltip title={tooltipTitle}>
-        <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-          {label && (
-            <Box
-              component="span"
-              sx={{
-                fontSize: "0.75rem",
-                fontWeight: "bold",
-                color: (theme) => theme.palette.grey[600],
-                mr: "5px",
-              }}
-            >
-              {label}:
-            </Box>
-          )}
-          <Box
-            component="span"
-            sx={{
-              background: (theme) => theme.palette.grey[600],
-              border: (theme) => `1px solid ${theme.palette.grey[600]}`,
-              p: "1px 5px",
-              color: "white",
-              borderRadius: "5px 0 0 5px",
-            }}
-          >
-            {build}
-          </Box>
-          <Box
-            component="span"
-            sx={{
-              p: "1px 5px",
-              color: (theme) => theme.palette.grey[600],
-              border: (theme) => `1px solid ${theme.palette.grey[600]}`,
-              borderRadius: "0 5px 5px 0",
-            }}
-          >
-            {location}
-          </Box>
-        </Box>
+        <Chip
+          variant="filled"
+          size="small"
+          sx={{ borderRadius: 2 }}
+          label={
+            <>
+              {label && (
+                <Box component="span" sx={{ fontWeight: "bold", mr: "5px" }}>
+                  {label}:
+                </Box>
+              )}
+              {build} | {location}
+            </>
+          }
+        />
       </Tooltip>
     </Box>
   );
