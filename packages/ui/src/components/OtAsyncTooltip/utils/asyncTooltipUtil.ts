@@ -1,3 +1,11 @@
+import DRUG_TOOLTIP_QUERY from "../queries/DrugTooltipQuery.gql";
+import DISEASE_TOOLTIP_QUERY from "../queries/DiseaseTooltipQuery.gql";
+import STUDY_TOOLTIP_QUERY from "../queries/StudyTooltipQuery.gql";
+import TARGET_TOOLTIP_QUERY from "../queries/TargetTooltipQuery.gql";
+import VARIANT_TOOLTIP_QUERY from "../queries/VariantTooltipQuery.gql";
+import CREDIBLE_SETS_TOOLTIP_QUERY from "../queries/CredibleSetsTooltipQuery.gql";
+
+export { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY };
 import {
   faChartBar,
   faDiagramProject,

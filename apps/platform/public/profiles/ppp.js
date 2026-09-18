@@ -54,6 +54,11 @@ var configProfile = {
   hideDrugSectionIds: [""],
   partnerDrugSectionIds: [""],
 
+  // credible set page
+  hideCredibleSetSectionIds: [""],
+  // partnerCredibleSetSectionIds: ["browserView"],
+  partnerCredibleSetSectionIds: [],
+
   // evidence page
   hideEvidenceSectionIds: [""],
   partnerEvidenceSectionIds: ["encore", "ot_crispr", "ot_crispr_validation"],
