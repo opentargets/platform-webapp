@@ -5,6 +5,7 @@ import {
   Field,
   Tooltip,
   Box,
+  Chip,
 } from "ui";
 import { useTheme } from "@mui/material/styles";
 import TargetDescription from "./TargetDescription";
@@ -104,20 +105,19 @@ function ProfileHeader() {
         {geneInfo
           .filter(gi => gi.isVisible)
           .map(e => (
-            <Box
-              key={e.label}
-              sx={{
-                whiteSpace: "nowrap",
-                p: "1px 5px",
-                color: theme => theme.palette.grey[600],
-                border: theme => `1px solid ${theme.palette.grey[600]}`,
-                borderRadius: "5px",
-                width: "min-content",
-                mt: 1,
-                typography: "body2",
-              }}
-            >
-              <Tooltip title={e.tooltip}>{e.label}</Tooltip>
+            <Box key={e.label} sx={{ mt: 1 }} component="span">
+              <Tooltip title={e.tooltip}>
+                <Chip
+                  variant="filled"
+                  size="small"
+                  label={e.label}
+                  sx={{
+                    borderRadius: "4px",
+                    backgroundColor: theme => theme.palette.primary.dark,
+                    color: theme => theme.palette.primary.contrastText,
+                  }}
+                />
+              </Tooltip>
             </Box>
           ))}
       </>
