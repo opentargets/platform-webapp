@@ -1,6 +1,7 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import * as Plot from "@observablehq/plot";
+import { scaleLog } from "d3";
 import { ObsPlot } from "ui";
 import { CATEGORICAL_SCHEME_BASE } from "@ot/constants";
 import dataSourcesAssoc from "../../components/AssociationsToolkit/static_datasets/dataSourcesAssoc";
@@ -132,6 +133,20 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           COUNT_LABEL_RIGHT_INSET,
     );
     const outsideData = plottedData.filter((item) => !insideData.includes(item));
+    const xTicks = scaleLog().domain([minCount, xDomainMax]).ticks(4);
+    const xAxisMarks =
+      (width ?? 0) < theme.breakpoints.values.lg
+        ? [
+            Plot.axisX(xTicks.filter((_, index) => index % 2 === 0), { tickSize: 0, tickPadding: 3, tickFormat: "~s" }),
+            Plot.axisX(xTicks.filter((_, index) => index % 2 === 1), {
+              stroke: grey[300],
+              strokeOpacity: 0.9,
+              tickSize: 12,
+              tickPadding: 4,
+              tickFormat: "~s",
+            }),
+          ]
+        : [];
     const chart = Plot.plot({
       width: width ?? 0,
       height,
@@ -140,7 +155,15 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
       marginBottom: 24,
       marginLeft: 150 + DATATYPE_COLUMN_WIDTH,
       marginRight: 16,
-      x: { type: "log", label: null, ticks: 4, tickFormat: "~s", tickSize: 0, domain: [minCount, xDomainMax] },
+      x: {
+        type: "log",
+        label: null,
+        axis: (width ?? 0) < theme.breakpoints.values.lg ? null : "bottom",
+        ticks: 4,
+        tickFormat: "~s",
+        tickSize: 0,
+        domain: [minCount, xDomainMax],
+      },
       y: {
         domain: nameOrder,
         label: null,
@@ -150,6 +173,7 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
       },
       fx: { domain: FACETS, label: null, axis: "top", paddingInner: FACET_PADDING_INNER },
       marks: [
+        ...xAxisMarks,
         Plot.gridX({ ticks: 4, stroke: grey[300], strokeWidth: 1, strokeOpacity: 0.9 }),
         Plot.barX(plottedData, { x1: minCount, x2: "count", y: "name", fx: "facet", fill: "color", insetTop: 3, insetBottom: 3 }),
         Plot.text(insideData, {
