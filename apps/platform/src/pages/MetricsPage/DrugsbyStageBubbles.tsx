@@ -188,7 +188,7 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
               <Box aria-label={`${stage.name}: ${countLabel} clinical reports`} sx={{ alignItems: "flex-start", bgcolor: stageColor(stage), bottom: 0, display: "flex", height: `${height}px`, justifyContent: "center", left: "50%", position: "absolute", pt: showCountInside ? 0.5 : 0, transform: "translateX(-50%)", width: `${barWidth}px` }}>
                 {showCountInside && <Typography variant="caption" sx={{ color: countTextColor(stage), fontSize: "12.5px", fontWeight: 400 }}>{countLabel}</Typography>}
               </Box>
-              {!showCountInside && <Typography align="center" variant="caption" sx={{ bottom: `${height + 4}px`, fontSize: "12.5px", fontWeight: 400, left: 0, position: "absolute", right: 0 }}>{countLabel}</Typography>}
+              {!showCountInside && <Typography align="center" variant="caption" sx={{ bottom: height + 1, fontSize: "12.5px", fontWeight: 400, left: 0, position: "absolute", right: 0 }}>{countLabel}</Typography>}
             </Box>
           );
         })}

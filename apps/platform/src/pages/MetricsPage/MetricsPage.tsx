@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { autoType, csv } from "d3";
 import { Paper, Typography } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
-import MetricsCards from "./MetricsCards";
+import MetricsCards, { PlatformMetricsSummary } from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import DrugsbyStageBubbles from "./DrugsByStageBubbles";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
@@ -22,6 +22,9 @@ function MetricsPage() {
 
   return (
     <>
+      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+        Platform Metrics
+      </Typography>
       <MetricsCards data={data} />
 
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
@@ -57,14 +60,6 @@ function MetricsPage() {
       <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
         <VariantsByConsequenceImpact data={data} />
       </Paper>
-
-      {/* <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
-        <VariantsFacet data={data} />
-      </Paper>
-
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
-        <VariantLollipops data={data} />
-      </Paper> */}
       
     </>
   );
