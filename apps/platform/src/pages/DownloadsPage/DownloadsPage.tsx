@@ -138,6 +138,8 @@ function DownloadsPage() {
     }
   }, [data, loading, error]);
 
+  console.log(splitRatio, cardsVisible, graphVisible)
+
   if (state.loading) return <DownloadsLoading />;
 
   return (

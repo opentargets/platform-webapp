@@ -25,7 +25,7 @@ interface ClassifiedNode {
   degree: number;
 }
 
-const CORE_ENTITIES = new Set(['target', 'disease', 'drug', 'variant', 'study']);
+export const CORE_ENTITIES = new Set(['target', 'disease', 'drug', 'variant', 'study']);
 
 const EVIDENCE_KEYWORDS = [
   'evidence',
