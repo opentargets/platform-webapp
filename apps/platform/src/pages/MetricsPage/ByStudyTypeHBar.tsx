@@ -144,7 +144,7 @@ function ByStudyTypeHBar({
             dx: 6,
             fill: labelFill,
             fontSize: 12,
-            fontWeight: 400,
+            fontWeight: 500,
           })
         ),
         Plot.text(
@@ -161,7 +161,7 @@ function ByStudyTypeHBar({
             dy: 16,
             fill: labelFill,
             fontSize: 12,
-            fontWeight: 400,
+            fontWeight: 500,
           })
         ),
       ],

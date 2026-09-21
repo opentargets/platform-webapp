@@ -1,16 +1,29 @@
 import { type RGBColor, rgb } from "d3";
 
-export const CATEGORICAL_SCHEME_BASE: string[] = [
-  "#F0BA70",
-  "#F55D73",
-  "#92ACC4",
-  "#C77F92",
-  "#078F91",
-  "#447899",
-  "#B18FC5",
-  "#8EB276",
-  "#DF9B82",
-];
+export const CATEGORICAL_SCHEME_BASE: string[] =
+  [
+    "#F2AA45",
+    "#F13F5D",
+    "#789BB9",
+    "#C85F7A",
+    "#008B8B",
+    "#326B96",
+    "#9B72BD",
+    "#66A84E",
+    "#E9825F",
+  ];
+
+  // [
+  //   "#F0BA70",
+  //   "#F55D73",
+  //   "#92ACC4",
+  //   "#C77F92",
+  //   "#078F91",
+  //   "#447899",
+  //   "#B18FC5",
+  //   "#8EB276",
+  //   "#DF9B82",
+  // ];
 
 export const SEQUENTIAL_SCHEME_BLUE: string[] = [
   "#dbeaf6",

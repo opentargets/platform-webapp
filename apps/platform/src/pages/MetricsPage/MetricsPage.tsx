@@ -30,13 +30,13 @@ function MetricsPage() {
         <MetricsWidget
           id="disease-target-associations"
           icon={faHexagonNodes}
-          title="Evidence and associations"
+          title="Associations and evidence"
           description={
             <Typography variant="body2">
               Target-disease{" "}
-              <Link external to="https://platform-docs.opentargets.org/evidence">evidence</Link>
-              {" "}and{" "}
               <Link external to="https://platform-docs.opentargets.org/associations">associations</Link>
+              {" "}and{" "}
+              <Link external to="https://platform-docs.opentargets.org/evidence">evidence</Link>
               {" "}by data source and data type.
             </Typography>
           }

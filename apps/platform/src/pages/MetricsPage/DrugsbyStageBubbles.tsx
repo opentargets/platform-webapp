@@ -1,4 +1,5 @@
 import { Box, Typography, useTheme } from "@mui/material";
+import { getContrastRatio } from "@mui/material/styles";
 import { clinicalStageCategories, SEQUENTIAL_SCHEME_BLUE } from "@ot/constants";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { interpolateRgbBasis } from "d3";
@@ -203,8 +204,10 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
   }
 
   function countTextColor(stage: ClinicalStage) {
-    return stage.index === clinicalStageCategories.UNKNOWN.index || stage.index === preclinicalIndex
-      ? theme.palette.text.primary
+    const backgroundColor = stageColor(stage);
+
+    return getContrastRatio(backgroundColor, theme.palette.text.primary) >= getContrastRatio(backgroundColor, theme.palette.common.white)
+      ? "#000000"
       : theme.palette.common.white;
   }
 }

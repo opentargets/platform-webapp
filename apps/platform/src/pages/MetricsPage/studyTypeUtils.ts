@@ -4,7 +4,6 @@ import { CATEGORICAL_SCHEME_BASE } from "@ot/constants";
 export type StudyTypeCount = { name: string; category: string; count: number };
 
 const studyTypeColors = CATEGORICAL_SCHEME_BASE;
-// const studyTypeColors = ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#ff8ab7"];
 
 export function formatStudyType(name: string) {
   return name.replaceAll(/(gwas|qtl)/gi, (match) => match.toUpperCase());

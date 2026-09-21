@@ -14,7 +14,12 @@ const colorScheme = CATEGORICAL_SCHEME_BASE;
 const dataSourceTypes = new Map(dataSourcesAssoc.map((source) => [source.id, source.aggregation]));
 const dataSourceLabels = new Map(dataSourcesAssoc.map((source) => [source.id, source.label]));
 const dataSourceOrder = new Map(dataSourcesAssoc.map((source, index) => [source.id, index]));
-const FACETS = ["Target-disease evidence", "Indirect associations", "Direct associations"] as const;
+const FACETS = ["Direct associations", "Indirect associations", "Target-disease evidence"] as const;
+const facetLabels: Record<(typeof FACETS)[number], string> = {
+  "Target-disease evidence": "Evidence",
+  "Indirect associations": "Indirect associations",
+  "Direct associations": "Direct associations",
+};
 const DATATYPE_COLUMN_WIDTH = 170;
 const CHART_EDGE_PADDING = 8;
 const BRACKET_WIDTH = 8;
@@ -168,7 +173,13 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
         tickPadding: 8,
         tickFormat: (name: string) => dataSourceLabels.get(name) ?? name.replaceAll("_", " "),
       },
-      fx: { domain: FACETS, label: null, axis: "top", paddingInner: FACET_PADDING_INNER },
+      fx: {
+        domain: FACETS,
+        label: null,
+        axis: "top",
+        paddingInner: FACET_PADDING_INNER,
+        tickFormat: (facet: (typeof FACETS)[number]) => facetLabels[facet],
+      },
       marks: [
         ...xAxisMarks,
         Plot.gridX({ ticks: 4, stroke: grey[300], strokeWidth: 1, strokeOpacity: 0.9 }),
@@ -182,7 +193,7 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           textAnchor: "end",
           lineAnchor: "middle",
           fontSize: 12.5,
-          fill:   'white',
+          fill: 'white',
           fontWeight: 500,
         }),
         Plot.text(outsideData, {
