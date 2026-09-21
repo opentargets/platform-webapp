@@ -18,5 +18,4 @@ export { useGraphLayout } from './hooks/useGraphLayout';
 export { transformDownloadsToGraph, transformRecordSetToGraph, toCytoscapeElements, mergeGraphs, filterGraphByNodeType } from './utils/dataTransformer';
 export { classifyNode, enrichNodesWithClassification, getNodeTypes } from './utils/nodeClassifier';
 export { getLayoutConfig, getResponsiveLayoutConfig, getDefaultLayoutConfig } from './utils/layoutConfig';
-export { getMockGraphData } from './utils/mockSchema';
 
