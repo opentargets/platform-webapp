@@ -1,33 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-const STORAGE_KEY = "ot-downloads-split-ratio";
-const DEFAULT_RATIO = 0.5;
+// Cards pane's share of the row - fixed on every load rather than persisted,
+// so the split always starts predictable regardless of a prior session's
+// (or a stale/corrupted) saved value.
+export const DEFAULT_RATIO = 0.6;
 const MIN_PANE_PX = 260;
 const EDGE_SNAP_PX = 32;
 const KEYBOARD_STEP = 0.04;
-
-function readStoredRatio(): number {
-  if (typeof window === "undefined") return DEFAULT_RATIO;
-  const stored = Number(window.localStorage.getItem(STORAGE_KEY));
-  return Number.isFinite(stored) && stored >= 0 && stored <= 1 ? stored : DEFAULT_RATIO;
-}
 
 /**
  * Drives the draggable split between the cards grid and the graph panel on
  * the downloads page. `ratio` is the cards pane's share of the row (0-1).
  * Dragging (or a keyboard nudge) all the way to either edge collapses that
  * pane so the other fills the whole row - "expand to whole view" is just the
- * extreme of the same drag, not a separate mode. Persisted to localStorage so
- * a user's preferred split survives a reload.
+ * extreme of the same drag, not a separate mode. Not persisted - each load
+ * starts back at DEFAULT_RATIO, so a pane collapsed to an edge is never more
+ * than a refresh away from being recoverable.
  */
 export function useResizableSplit() {
-  const [ratio, setRatio] = useState(readStoredRatio);
+  const [ratio, setRatio] = useState(DEFAULT_RATIO);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, String(ratio));
-  }, [ratio]);
 
   // Clamp to a minimum pixel width per pane so neither shrinks to something
   // unusable, except once the pointer crosses close enough to an edge - then

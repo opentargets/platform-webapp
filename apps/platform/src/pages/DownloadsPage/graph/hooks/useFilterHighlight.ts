@@ -23,7 +23,7 @@ export const useFilterHighlight = ({ svgRef, matchedIds, isReady }: UseFilterHig
     if (!isReady || !svg) return;
 
     const nodeSel = svg.selectAll('g.graph-node');
-    const linkSel = svg.selectAll('line.graph-edge');
+    const linkSel = svg.selectAll('path.graph-edge');
 
     if (!matchedIds) {
       nodeSel.classed('filter-faded', false);

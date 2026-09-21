@@ -24,7 +24,7 @@ export const useSelectionHighlight = ({
     if (!isReady || !svg) return;
 
     const nodeSel = svg.selectAll('g.graph-node');
-    const linkSel = svg.selectAll('line.graph-edge');
+    const linkSel = svg.selectAll('path.graph-edge');
 
     if (!selectedNode) {
       nodeSel.classed('selected', false).classed('faded', false);

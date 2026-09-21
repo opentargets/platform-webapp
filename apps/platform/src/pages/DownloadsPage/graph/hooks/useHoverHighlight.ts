@@ -30,7 +30,7 @@ export const useHoverHighlight = ({
       const svg = svgRef.current;
       if (!svg) return;
       const nodeSel = svg.selectAll('g.graph-node');
-      const linkSel = svg.selectAll('line.graph-edge');
+      const linkSel = svg.selectAll('path.graph-edge');
 
       if (!hoverNode) {
         nodeSel.classed('hover-faded', false);

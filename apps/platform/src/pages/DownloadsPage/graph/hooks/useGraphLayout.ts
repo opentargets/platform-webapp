@@ -1,57 +1,25 @@
 /**
  * Hook: useGraphLayout
- * Computes D3 force-simulation parameters, adapting to graph size and viewport
+ * Base D3 force-simulation parameters (collision padding, cooling/friction).
+ *
+ * Panel-size responsiveness lives in useGraphSimulation instead of here - it
+ * measures the graph panel's own container via ResizeObserver (see
+ * getResponsiveLayoutConfig in layoutConfig.ts) and drives the actual
+ * width/height-adaptive layout (see radialLayout.ts), rather than this hook
+ * reading the browser window's size, which can be much larger than the
+ * panel itself once the cards/graph split divider is dragged.
  */
 
 import { useMemo } from 'react';
-import {
-  getLayoutConfig,
-  getResponsiveLayoutConfig,
-  ForceLayoutConfig,
-} from '../utils/layoutConfig';
-
-interface UseGraphLayoutOptions {
-  nodeCount?: number;
-  edgeCount?: number;
-  responsive?: boolean;
-}
+import { getLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
 
 interface LayoutState {
   layoutConfig: ForceLayoutConfig;
 }
 
-/**
- * Build a force-simulation layout configuration for the current graph
- */
-export const useGraphLayout = ({
-  nodeCount = 50,
-  edgeCount = 100,
-  responsive = true,
-}: UseGraphLayoutOptions = {}): LayoutState => {
-  // Get viewport dimensions for responsive layout
-  const viewportSize = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return { width: 800, height: 600 };
-    }
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-  }, []);
-
-  // Generate layout configuration, scaled to graph size and viewport
-  const layoutConfig = useMemo(() => {
-    const config = getLayoutConfig({ nodeCount, edgeCount });
-
-    if (responsive) {
-      return { ...config, ...getResponsiveLayoutConfig(viewportSize) };
-    }
-
-    return config;
-  }, [nodeCount, edgeCount, responsive, viewportSize]);
-
+export const useGraphLayout = (): LayoutState => {
+  const layoutConfig = useMemo(() => getLayoutConfig(), []);
   return { layoutConfig };
 };
 
 export default useGraphLayout;
-

@@ -1,75 +1,44 @@
 /**
- * D3 force-simulation layout configuration
- * Provides force parameters tuned for a hub-and-spoke topology
+ * D3 force-simulation layout configuration.
+ *
+ * The layout itself is now the deterministic radial hub-and-spoke placement
+ * in `radialLayout.ts` - what's left for the simulation to tune is just the
+ * local collision-avoidance pass (nodes nudging apart when a hub sector gets
+ * crowded) and how quickly it settles.
  */
 
 export interface ForceLayoutConfig {
-  /** d3.forceManyBody() strength (negative = repulsion) */
-  chargeStrength: number;
-  /** d3.forceLink() target distance */
-  linkDistance: number;
-  /** d3.forceLink() strength */
-  linkStrength: number;
   /** Extra spacing added to d3.forceCollide() radius */
   collidePadding: number;
-  /** Strength of the per-tick pull of each node toward its group's (category) centroid */
-  clusterStrength: number;
   /** Simulation cooling rate */
   alphaDecay: number;
   /** Simulation friction */
   velocityDecay: number;
 }
 
-interface LayoutOptions {
-  nodeCount?: number;
-  edgeCount?: number;
-}
-
-interface ViewportSize {
-  width?: number;
-  height?: number;
-}
+/**
+ * Get the base force-simulation parameters
+ */
+export const getLayoutConfig = (): ForceLayoutConfig => ({
+  collidePadding: 12,
+  alphaDecay: 0.02,
+  velocityDecay: 0.35,
+});
 
 /**
- * Get force-simulation parameters scaled to the size of the graph
+ * Tighter collision padding for a narrow graph panel, so a compact panel
+ * doesn't waste as much space per node. Takes the graph panel's own measured
+ * width (see useGraphSimulation, which tracks it reactively via
+ * ResizeObserver) - not the browser window, which can be much wider than the
+ * panel actually is (e.g. after the cards/graph split divider is dragged).
  */
-export const getLayoutConfig = ({
-  nodeCount = 50,
-  edgeCount = 100,
-}: LayoutOptions = {}): ForceLayoutConfig => {
-  // Larger graphs need more repulsion and longer links to avoid crowding
-  const chargeStrength = -Math.min(1200, 250 + nodeCount * 12);
-  const linkDistance = Math.min(220, 90 + edgeCount / 4);
-
-  return {
-    chargeStrength,
-    linkDistance,
-    linkStrength: 0.4,
-    collidePadding: 12,
-    clusterStrength: 0.15,
-    alphaDecay: 0.02,
-    velocityDecay: 0.35,
-  };
-};
-
-/**
- * Adjust the layout for small viewports (tighter spacing, faster settle)
- */
-export const getResponsiveLayoutConfig = ({
-  width = 800,
-}: ViewportSize = {}): Partial<ForceLayoutConfig> => {
-  const isSmallScreen = width < 600;
-
-  return isSmallScreen
-    ? { chargeStrength: -200, linkDistance: 70, collidePadding: 6 }
-    : {};
-};
+export const getResponsiveLayoutConfig = (panelWidth: number): Partial<ForceLayoutConfig> =>
+  panelWidth < 600 ? { collidePadding: 6 } : {};
 
 /**
  * Get default layout options (used as fallback)
  */
-export const getDefaultLayoutConfig = (): ForceLayoutConfig =>
-  getLayoutConfig({ nodeCount: 50, edgeCount: 100 });
+export const getDefaultLayoutConfig = (): ForceLayoutConfig => getLayoutConfig();
 
 export default {
   getLayoutConfig,

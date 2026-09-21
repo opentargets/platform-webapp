@@ -84,11 +84,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   }, [allNodes, state.freeTextQuery, state.selectedFilters]);
 
   // Get layout configuration
-  const { layoutConfig } = useGraphLayout({
-    nodeCount: nodes.length,
-    edgeCount: edges.length,
-    responsive: true,
-  });
+  const { layoutConfig } = useGraphLayout();
 
   // Only pass the selected id through if it still exists in the data - guards
   // against a stale id after the underlying schema changes.

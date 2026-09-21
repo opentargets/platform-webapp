@@ -9,6 +9,8 @@ export interface GraphNodeDatum extends d3.SimulationNodeDatum {
   label: string;
   type: 'core' | 'evidence' | 'attribute';
   degree?: number;
+  /** Degree-bucketed size hint (40/60/80) computed by nodeClassifier.enrichNodesWithClassification, driving node box size */
+  size?: number;
   description?: string;
   [key: string]: any;
 }

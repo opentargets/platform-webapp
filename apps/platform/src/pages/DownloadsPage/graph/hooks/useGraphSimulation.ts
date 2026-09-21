@@ -15,10 +15,18 @@
 import { useLayoutEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { lightenHex } from '../../categoryColors';
-import { getDefaultLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
-import { forceIsolatedToClusterPeriphery, forceCluster } from '../utils/forces';
+import { getDefaultLayoutConfig, getResponsiveLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
+import { computeRadialLayout } from '../utils/radialLayout';
 import { computeFitTransform } from '../utils/fitTransform';
-import { GRAPH_STYLES, EDGE_COLOR, strokeOf } from '../utils/graphVisuals';
+import { curvedEdgePath } from '../utils/edgePath';
+import {
+  GRAPH_STYLES,
+  EDGE_COLOR,
+  strokeOf,
+  getNodeBoxSize,
+  getNodeHalfDiagonal,
+  truncateLabel,
+} from '../utils/graphVisuals';
 import { GraphNodeDatum, GraphLinkDatum, GraphCallbacks } from '../types';
 
 interface UseGraphSimulationOptions {
@@ -61,23 +69,28 @@ export const useGraphSimulation = ({
     // layout by translation, without reheating the simulation.
     let width = container.clientWidth || 800;
     let height = container.clientHeight || 600;
-    const config = layoutConfig || getDefaultLayoutConfig();
+    // Tighter collision padding on a narrow panel - based on this panel's
+    // own measured width, not the browser window (see getResponsiveLayoutConfig).
+    const config = { ...(layoutConfig || getDefaultLayoutConfig()), ...getResponsiveLayoutConfig(width) };
 
-    const simNodes: GraphNodeDatum[] = nodes.map((n) => {
-      const prev = positionsRef.current.get(n.data.id);
-      return {
-        ...n.data,
-        x: prev?.x ?? width / 2 + (Math.random() - 0.5) * 40,
-        y: prev?.y ?? height / 2 + (Math.random() - 0.5) * 40,
-      };
-    });
-
-    const NODE_RADIUS = 14;
+    const simNodes: GraphNodeDatum[] = nodes.map((n) => ({ ...n.data, x: 0, y: 0 }));
 
     const nodeIds = new Set(simNodes.map((n) => n.id));
     const simLinks: GraphLinkDatum[] = edges
       .map((e) => ({ ...e.data }))
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+
+    // Deterministic hub-and-spoke target positions (see radialLayout.ts) -
+    // seed every node straight at its target (or its last dragged/settled
+    // position, so re-renders don't jump) rather than a random scatter, so
+    // the graph paints already laid out instead of animating from chaos.
+    let radialLayout = computeRadialLayout(simNodes, simLinks, width, height);
+    simNodes.forEach((n) => {
+      const prev = positionsRef.current.get(n.id);
+      const target = radialLayout.positions.get(n.id) ?? { x: width / 2, y: height / 2 };
+      n.x = prev?.x ?? target.x;
+      n.y = prev?.y ?? target.y;
+    });
 
     const svg = d3
       .select(container)
@@ -120,10 +133,11 @@ export const useGraphSimulation = ({
     });
 
     const link: any = linkGroup
-      .selectAll('line')
+      .selectAll('path')
       .data(simLinks, (d: any) => d.id)
-      .join('line')
+      .join('path')
       .attr('class', 'graph-edge')
+      .attr('fill', 'none')
       .attr('stroke', EDGE_COLOR)
       .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.6)
@@ -137,25 +151,39 @@ export const useGraphSimulation = ({
       .data(simNodes, (d: any) => d.id)
       .join((enter: any) => {
         const g = enter.append('g').attr('class', 'graph-node');
-        g.append('circle');
+        g.append('rect');
         g.append('text');
         return g;
       });
 
     const fillOf = (d: GraphNodeDatum) => lightenHex(strokeOf(d), 0.25);
 
+    // Rounded-rectangle "card" per node (like an ER-diagram table) rather
+    // than a circle, since each node represents a dataset - sized by degree
+    // (via `size`, computed by nodeClassifier.enrichNodesWithClassification)
+    // so hubs and other heavily-referenced datasets stand out as bigger
+    // boxes. The label lives outside the box, not inside it (see below).
     node
-      .select('circle')
-      .attr('r', NODE_RADIUS)
+      .select('rect')
+      .attr('width', (d: GraphNodeDatum) => getNodeBoxSize(d.size).width)
+      .attr('height', (d: GraphNodeDatum) => getNodeBoxSize(d.size).height)
+      .attr('x', (d: GraphNodeDatum) => -getNodeBoxSize(d.size).width / 2)
+      .attr('y', (d: GraphNodeDatum) => -getNodeBoxSize(d.size).height / 2)
+      .attr('rx', 5)
+      .attr('ry', 5)
       .attr('fill', fillOf)
       .attr('stroke', strokeOf)
       .attr('stroke-width', 1.5);
 
+    // Labels sit below the box rather than inside it - most stay hidden
+    // until zoomed in (see the zoom handler above), only high-degree hub
+    // nodes are labelled by default, so ~50 always-on labels don't turn the
+    // graph into unreadable clutter at the initial fit.
     label = node
       .select('text')
-      .text((d: GraphNodeDatum) => (d.label.length > 20 ? `${d.label.slice(0, 19)}…` : d.label))
+      .text((d: GraphNodeDatum) => truncateLabel(d.label))
       .attr('text-anchor', 'middle')
-      .attr('dy', NODE_RADIUS + 14)
+      .attr('dy', (d: GraphNodeDatum) => getNodeBoxSize(d.size).height / 2 + 14)
       .attr('font-size', 11)
       .attr('font-weight', 500)
       .attr('fill', 'rgba(0, 0, 0, 0.6)')
@@ -185,27 +213,27 @@ export const useGraphSimulation = ({
         callbacksRef.current?.onNodeHover?.(null);
       });
 
+    // `link` is kept purely so d3 resolves each link's string source/target
+    // into references to the actual node objects (what the highlight hooks
+    // and `updatePositions` below expect) - strength 0 means it never pulls
+    // nodes around; the radial layout above already decided where they go.
+    // `collide` is the only thing still allowed to move a node off its
+    // target, and only to nudge apart two nodes placed too close within the
+    // same hub sector.
     const simulation = d3
       .forceSimulation<GraphNodeDatum>(simNodes)
+      .force('link', d3.forceLink<GraphNodeDatum, GraphLinkDatum>(simLinks).id((d) => d.id).strength(0))
       .force(
-        'link',
-        d3
-          .forceLink<GraphNodeDatum, GraphLinkDatum>(simLinks)
-          .id((d) => d.id)
-          .distance(config.linkDistance)
-          .strength(config.linkStrength)
+        'x',
+        d3.forceX<GraphNodeDatum>((d) => radialLayout.positions.get(d.id)?.x ?? width / 2).strength(0.85)
       )
       .force(
-        'charge',
-        (d3.forceManyBody<GraphNodeDatum>().strength((d) => ((d.degree ?? 0) === 0 ? config.chargeStrength * 0.1 : config.chargeStrength)) as any)
-          .distanceMax(config.linkDistance * 2)
+        'y',
+        d3.forceY<GraphNodeDatum>((d) => radialLayout.positions.get(d.id)?.y ?? height / 2).strength(0.85)
       )
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('isolatedCluster', forceIsolatedToClusterPeriphery(0.25))
-      .force('cluster', forceCluster(config.clusterStrength))
       .force(
         'collide',
-        d3.forceCollide<GraphNodeDatum>(NODE_RADIUS + config.collidePadding)
+        d3.forceCollide<GraphNodeDatum>((d) => getNodeHalfDiagonal(d.size) + config.collidePadding)
       )
       .alphaDecay(config.alphaDecay)
       .velocityDecay(config.velocityDecay)
@@ -213,52 +241,16 @@ export const useGraphSimulation = ({
     simulationRef.current = simulation;
 
     // Pre-converge synchronously so the graph first paints already settled,
-    // instead of animating through the chaotic/vibrating early iterations
-    // where nodes start randomly placed and forces are strongest.
+    // instead of animating through the early iterations where any collided
+    // nodes are still being nudged apart.
     const preTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
     for (let i = 0; i < preTicks; i += 1) simulation.tick();
-
-    // The radial forces above (charge/link/center) have no directional bias,
-    // so the settled layout comes out roughly circular regardless of the
-    // container's shape. Fitting a circular blob into a wide-but-short (or
-    // tall-but-narrow) panel then bottlenecks on the tighter axis, leaving
-    // the other mostly empty. `applyAspectStretch` stretches node positions
-    // (never compresses) so the layout's bounding box matches whatever the
-    // panel's current aspect ratio is - recomputed on every resize (see
-    // `handleResize` below) so dragging the split divider or resizing the
-    // window keeps re-optimizing for the space actually available, in
-    // whichever dimension grew. It's driven off `basePositions` (the
-    // unstretched, pre-convergence layout) rather than the current node
-    // positions, so repeated resizes re-derive the stretch from scratch
-    // instead of compounding on top of a previous stretch.
-    const basePositions = new Map(simNodes.map((n) => [n.id, { x: n.x ?? 0, y: n.y ?? 0 }]));
-    const MAX_STRETCH = 3;
-    const applyAspectStretch = (w: number, h: number) => {
-      const xs = Array.from(basePositions.values(), (p) => p.x);
-      const ys = Array.from(basePositions.values(), (p) => p.y);
-      const graphWidth = Math.max(Math.max(...xs) - Math.min(...xs), 1);
-      const graphHeight = Math.max(Math.max(...ys) - Math.min(...ys), 1);
-      const containerAspect = w / h;
-      const graphAspect = graphWidth / graphHeight;
-      const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
-      const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
-      const stretchX = graphAspect < containerAspect ? Math.min(containerAspect / graphAspect, MAX_STRETCH) : 1;
-      const stretchY = graphAspect > containerAspect ? Math.min(graphAspect / containerAspect, MAX_STRETCH) : 1;
-
-      simNodes.forEach((n) => {
-        const base = basePositions.get(n.id);
-        if (!base) return;
-        n.x = cx + (base.x - cx) * stretchX;
-        n.y = cy + (base.y - cy) * stretchY;
-      });
-    };
-    applyAspectStretch(width, height);
 
     // The simulation is frozen after its initial layout (see below) - dragging
     // just repositions the one node directly, with no physics pushback on its
     // neighbours and no reheating of the simulation. Tracked so a later
     // resize's auto-refit (see `handleResize`) doesn't clobber a manually
-    // dragged node back to its pre-drag, aspect-stretched position.
+    // dragged node back to its pre-drag, radial-layout position.
     let userDraggedNode = false;
     const drag = (d3 as any).drag().on('drag', (d: GraphNodeDatum) => {
       userDraggedNode = true;
@@ -269,11 +261,11 @@ export const useGraphSimulation = ({
     (node as any).call(drag);
 
     const updatePositions = () => {
-      link
-        .attr('x1', (d: any) => (d.source as GraphNodeDatum).x ?? 0)
-        .attr('y1', (d: any) => (d.source as GraphNodeDatum).y ?? 0)
-        .attr('x2', (d: any) => (d.target as GraphNodeDatum).x ?? 0)
-        .attr('y2', (d: any) => (d.target as GraphNodeDatum).y ?? 0);
+      link.attr('d', (d: any) => {
+        const source = d.source as GraphNodeDatum;
+        const target = d.target as GraphNodeDatum;
+        return curvedEdgePath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0);
+      });
 
       node.attr('transform', (d: GraphNodeDatum) => `translate(${d.x ?? 0}, ${d.y ?? 0})`);
 
@@ -303,7 +295,7 @@ export const useGraphSimulation = ({
     setIsReady(true);
 
     // On resize (e.g. the card grid narrowing when a node is selected, or the
-    // split divider being dragged), re-derive the aspect stretch for the new
+    // split divider being dragged), re-derive the radial layout for the new
     // panel shape and re-fit to it - so growing the panel in either
     // dimension keeps spreading nodes to use the extra space, not just
     // recentering the old layout. That re-fit is only applied if the view is
@@ -343,7 +335,13 @@ export const useGraphSimulation = ({
         return;
       }
 
-      applyAspectStretch(w, h);
+      radialLayout = computeRadialLayout(simNodes, simLinks, w, h);
+      simNodes.forEach((n) => {
+        const target = radialLayout.positions.get(n.id);
+        if (!target) return;
+        n.x = target.x;
+        n.y = target.y;
+      });
       updatePositions();
       const fit = computeFitTransform(simNodes, w, h);
       const nextTransform = d3.zoomIdentity.translate(fit.translateX, fit.translateY).scale(fit.scale);

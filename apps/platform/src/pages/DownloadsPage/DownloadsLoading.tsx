@@ -1,41 +1,51 @@
-import { Box, Card, CardActions, CardContent, GridLegacy, Paper, Skeleton, Typography } from "ui";
+import { Box, Card, CardContent, Paper, Skeleton, Typography } from "ui";
 import { v1 } from "uuid";
+import { DEFAULT_RATIO } from "./hooks/useResizableSplit";
 
 function DownloadsLoading() {
-  const emptyDownloadsArray = new Array(36).fill("");
+  const emptyDownloadsArray = new Array(12).fill("");
 
   return (
     <Box>
       <DownloadsHeaderLoading />
       <DownloadsTagsLoading />
-      <GridLegacy container sx={{ display: "flex", justifyContent: "space-between" }}>
-        <GridLegacy item xs={12} md={3} lg={2}>
-          <DownloadsFilterLoading />
-        </GridLegacy>
-        <GridLegacy
-          item
-          xs={12}
-          md={9}
-          lg={10}
-          sx={{ display: "flex", flexDirection: "column", gap: 1, pl: { md: 2 } }}
+      <DownloadsFilterLoading />
+
+      <Box
+        sx={{
+          display: "grid",
+          // Mirrors DownloadsPage's split grid: cards pane + divider gap +
+          // graph pane, collapsing to a plain two-column layout below `md`
+          // where the draggable divider doesn't render. The real page's split
+          // isn't persisted (see useResizableSplit), so the skeleton can just
+          // use the same fixed starting ratio every time.
+          gridTemplateColumns: {
+            xs: "minmax(0, 7fr) minmax(0, 3fr)",
+            md: `${DEFAULT_RATIO}fr 28px ${1 - DEFAULT_RATIO}fr`,
+          },
+          gap: { xs: 3, md: 0 },
+          alignItems: "start",
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 2,
+            overflow: "hidden",
+          }}
         >
-          <Typography variant="h6" sx={{ display: "flex", fontWeight: "bold", mb: 2 }}>
-            All Datasets <Skeleton width={20} sx={{ mx: 1, px: 1 }} />
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 2,
-            }}
-          >
-            {emptyDownloadsArray.map(e => (
-              <DownloadsCardLoading key={v1()} />
-            ))}
-          </Box>
-        </GridLegacy>
-      </GridLegacy>
+          {emptyDownloadsArray.map(() => (
+            <DownloadsCardLoading key={v1()} />
+          ))}
+        </Box>
+
+        <Box sx={{ display: { xs: "none", md: "block" } }} />
+
+        <Box sx={{ height: 420, overflow: "hidden" }}>
+          <Skeleton variant="rounded" height="100%" />
+        </Box>
+      </Box>
     </Box>
   );
 }
@@ -44,10 +54,9 @@ function DownloadsCardLoading() {
   return (
     <Card
       sx={{
-        width: "350px",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
         justifyContent: "space-between",
         boxShadow: "none",
         border: theme => `1px solid ${theme.palette.grey[300]}`,
@@ -59,65 +68,53 @@ function DownloadsCardLoading() {
           flexDirection: "column",
           justifyContent: "space-between",
           height: 1,
-          width: 1,
         }}
       >
         <Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mb: 1,
-              gap: 1,
-            }}
-          >
-            <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-              <Skeleton height={50} width={150} />
-            </Typography>
-            <Skeleton height={40} width={50} sx={{ borderRadius: 8 }} />
-          </Box>
+          <Skeleton variant="text" width="70%" height={32} sx={{ mb: 1 }} />
+          <Skeleton variant="text" />
+          <Skeleton variant="text" width="80%" />
+        </Box>
 
-          <Skeleton variant="rounded" height={120} />
-          <br />
-          <Typography component="span" sx={{ color: "text.secondary", mb: 1.5 }}>
-            <Skeleton height={40} width={50} sx={{ borderRadius: 8 }} />
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, my: 1 }}>
+          <Skeleton variant="rounded" width={70} height={20} sx={{ borderRadius: 4 }} />
+          <Skeleton variant="rounded" width={36} height={20} sx={{ borderRadius: 4 }} />
         </Box>
       </CardContent>
-      <CardActions sx={{ display: "flex", width: 1, pb: 2, px: 2 }}>
-        <Box sx={{ width: "50%" }}>
-          <Skeleton height={50} />
-        </Box>
-        <Box sx={{ width: "50%" }}>
-          <Skeleton height={50} />
-        </Box>
-      </CardActions>
+      <Box sx={{ display: "flex", flexDirection: "column", width: 1, pb: 3, px: 2, gap: 1 }}>
+        <Skeleton variant="rounded" height={40} />
+        <Skeleton variant="rounded" height={40} />
+      </Box>
     </Card>
   );
 }
 
 function DownloadsFilterLoading() {
+  const chipsArray = new Array(6).fill(0);
   return (
     <Paper
       variant="outlined"
       elevation={0}
-      sx={{ width: "100%", maxWidth: "350px", justifySelf: "center", mb: 2 }}
+      sx={{
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        mb: 3,
+        px: 2,
+        py: 1.5,
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 1.25,
+        backgroundColor: "background.paper",
+      }}
     >
-      <Box sx={{ p: 3 }}>
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ wordBreak: "break-all", fontWeight: "bold", mb: 2 }}
-        >
-          Filters
-        </Typography>
-        <Skeleton height={50} width="100%" />
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: "bold" }}>
-          Data Categories
-        </Typography>
-        <Skeleton height={300} />
-      </Box>
+      <Skeleton variant="rounded" width={220} height={40} />
+      {chipsArray.map(() => (
+        <Skeleton key={v1()} variant="rounded" width={90} height={24} sx={{ borderRadius: 4 }} />
+      ))}
+      <Box sx={{ flex: 1 }} />
+      <Skeleton variant="text" width={80} />
     </Paper>
   );
 }
@@ -125,11 +122,9 @@ function DownloadsFilterLoading() {
 function DownloadsTagsLoading() {
   const chipsArray = new Array(4).fill(0);
   return (
-    <Box sx={{ display: "flex", gap: 3, my: 1, flexWrap: "wrap" }}>
-      {chipsArray.map(e => (
-        <Box key={v1()} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Skeleton width={80} height={50} sx={{ borderRadius: 10 }} />
-        </Box>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3, p: 1, flexWrap: "wrap" }}>
+      {chipsArray.map(() => (
+        <Skeleton key={v1()} variant="rounded" width={100} height={28} sx={{ borderRadius: 4 }} />
       ))}
     </Box>
   );
@@ -138,15 +133,12 @@ function DownloadsTagsLoading() {
 function DownloadsHeaderLoading() {
   return (
     <Box>
-      <Typography variant="h2">
-        <Skeleton width="500px" />
+      <Typography variant="h4" component="h1" paragraph>
+        <Skeleton width="320px" />
       </Typography>
-      <Typography variant="body1">
+      <Typography paragraph>
         <Skeleton />
-        <Skeleton />
-        <Skeleton sx={{ display: { xs: "block", md: "none" } }} />
-        <Skeleton sx={{ display: { xs: "block", lg: "none" } }} />
-        <Skeleton sx={{ display: { xs: "block", xl: "none" } }} />
+        <Skeleton width="60%" />
       </Typography>
     </Box>
   );
