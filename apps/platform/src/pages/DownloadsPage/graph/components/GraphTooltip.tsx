@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Card, Typography, Box } from '@mui/material';
+import { Card, Typography, Box } from 'ui';
 import { getCategoryColor } from '../../categoryColors';
 
 interface TooltipNode {

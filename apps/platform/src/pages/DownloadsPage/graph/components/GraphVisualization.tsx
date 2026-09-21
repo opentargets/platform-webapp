@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useContext } from 'react';
-import { Box } from '@mui/material';
+import { Box } from 'ui';
 import GraphCanvas from './GraphCanvas';
 import GraphControls from './GraphControls';
 import GraphTooltip from './GraphTooltip';
