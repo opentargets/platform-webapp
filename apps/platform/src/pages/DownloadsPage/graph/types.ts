@@ -37,6 +37,7 @@ export interface GraphPointerPosition {
 export interface GraphCallbacks {
   onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
-  onEdgeSelect?: (edgeId: string) => void;
+  onEdgeSelect?: (edgeId: string, position?: GraphPointerPosition) => void;
+  onEdgeHover?: (edgeId: string | null, position?: GraphPointerPosition) => void;
   onNodeHover?: (nodeId: string | null, position?: GraphPointerPosition) => void;
 }

@@ -19,6 +19,13 @@ export const GRAPH_STYLES = `
   .graph-edge.hover-faded { opacity: 0.08 !important; }
   .graph-edge.filter-faded { opacity: 0.06 !important; }
   .graph-edge.hover-highlighted { stroke-width: 2.5px; }
+  .graph-edge.edge-active,
+  .graph-edge.edge-pinned {
+    stroke: #2196F3 !important;
+    stroke-width: 3.5px !important;
+    stroke-opacity: 1 !important;
+    opacity: 1 !important;
+  }
   .graph-edge.highlighted {
     stroke: #2196F3 !important;
     stroke-width: 3px !important;

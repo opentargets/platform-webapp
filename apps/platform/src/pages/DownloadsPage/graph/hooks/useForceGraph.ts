@@ -26,6 +26,8 @@ interface UseForceGraphOptions extends GraphCallbacks {
   nodes: any[];
   edges: any[];
   selectedNode?: string | null;
+  /** Id of the edge whose details are pinned open */
+  selectedEdge?: string | null;
   /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
   externalHighlightId?: string | null;
   /** Ids of nodes matching the active filter chips/search; null means no filter active */
@@ -46,12 +48,14 @@ export const useForceGraph = ({
   nodes,
   edges,
   selectedNode,
+  selectedEdge,
   externalHighlightId,
   filterMatchedIds,
   layoutConfig,
   onNodeSelect,
   onNodeDeselect,
   onEdgeSelect,
+  onEdgeHover,
   onNodeHover,
 }: UseForceGraphOptions): UseForceGraphResult => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,10 +66,10 @@ export const useForceGraph = ({
   const initialFitTransformRef = useRef<d3.ZoomTransform | null>(null);
 
   // Keep latest callbacks available to D3 event handlers without rebuilding the graph
-  const callbacksRef = useRef<GraphCallbacks>({ onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover });
+  const callbacksRef = useRef<GraphCallbacks>({ onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover });
   useEffect(() => {
-    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover };
-  }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover]);
+    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover };
+  }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover]);
 
   const isReady = useGraphSimulation({
     containerRef,
@@ -89,7 +93,7 @@ export const useForceGraph = ({
     isReady,
   });
 
-  useSelectionHighlight({ svgRef, selectedNode, isReady });
+  useSelectionHighlight({ svgRef, selectedNode, selectedEdge, isReady });
 
   useFilterHighlight({ svgRef, matchedIds: filterMatchedIds ?? null, isReady });
 

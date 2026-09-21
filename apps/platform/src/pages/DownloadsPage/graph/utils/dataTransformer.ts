@@ -117,25 +117,39 @@ export const classifyRecordSetType = (
 const stripCategoryTag = (description = ''): string =>
   description.replace(/\s*\[[^\]]*\]\s*$/, '').trim();
 
+/** One foreign-key reference: a field (by path, for nested fields) pointing at a field of another dataset */
+export interface FieldReference {
+  targetDatasetId: string;
+  /** Dotted path to the referencing field within its own dataset, e.g. "targets.targetId" for a nested field */
+  sourceField: string;
+  /** Name of the referenced field within the target dataset */
+  targetField: string;
+}
+
 /**
  * Recursively walk a RecordSet's fields (and any nested subFields) collecting
- * the id of every dataset referenced through a foreign key ("references")
+ * every foreign-key reference: which field references which field of which
+ * other dataset.
  */
-const collectReferencedDatasetIds = (fields: CroissantField[] = []): string[] => {
-  const referenced: string[] = [];
+const collectFieldReferences = (fields: CroissantField[] = [], parentPath = ''): FieldReference[] => {
+  const references: FieldReference[] = [];
 
   fields.forEach((field) => {
+    const path = parentPath ? `${parentPath}.${field.name}` : field.name;
     const refFieldId = field.references?.field?.['@id'];
     if (refFieldId) {
-      const datasetId = refFieldId.split('/').slice(0, -1).join('/');
-      if (datasetId) referenced.push(datasetId);
+      const parts = refFieldId.split('/');
+      const targetDatasetId = parts.slice(0, -1).join('/');
+      if (targetDatasetId) {
+        references.push({ targetDatasetId, sourceField: path, targetField: parts[parts.length - 1] });
+      }
     }
     if (field.subField?.length) {
-      referenced.push(...collectReferencedDatasetIds(field.subField));
+      references.push(...collectFieldReferences(field.subField, path));
     }
   });
 
-  return referenced;
+  return references;
 };
 
 /**
@@ -159,26 +173,33 @@ export const transformRecordSetToGraph = (
     },
   }));
 
-  const seenEdges = new Set<string>();
+  const edgeByKey = new Map<string, CytoscapeEdge>();
   const edges: CytoscapeEdge[] = [];
 
   recordSets.forEach((recordSet) => {
-    const referencedIds = collectReferencedDatasetIds(recordSet.field);
-
-    referencedIds.forEach((targetId) => {
+    collectFieldReferences(recordSet.field).forEach((ref) => {
+      const targetId = ref.targetDatasetId;
       if (targetId === recordSet['@id'] || !datasetIds.has(targetId)) return;
 
       const edgeKey = `${recordSet['@id']}->${targetId}`;
-      if (seenEdges.has(edgeKey)) return;
-      seenEdges.add(edgeKey);
-
-      edges.push({
-        data: {
-          id: `edge-${edges.length}`,
-          source: recordSet['@id'],
-          target: targetId,
-        },
-      });
+      let edge = edgeByKey.get(edgeKey);
+      if (!edge) {
+        edge = {
+          data: {
+            id: `edge-${edges.length}`,
+            source: recordSet['@id'],
+            target: targetId,
+            references: [] as Array<{ sourceField: string; targetField: string }>,
+          },
+        };
+        edgeByKey.set(edgeKey, edge);
+        edges.push(edge);
+      }
+      const already = edge.data.references.some(
+        (r: { sourceField: string; targetField: string }) =>
+          r.sourceField === ref.sourceField && r.targetField === ref.targetField
+      );
+      if (!already) edge.data.references.push({ sourceField: ref.sourceField, targetField: ref.targetField });
     });
   });
 

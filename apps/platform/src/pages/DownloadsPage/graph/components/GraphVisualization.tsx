@@ -13,6 +13,7 @@ import { Box } from 'ui';
 import GraphCanvas from './GraphCanvas';
 import GraphControls from './GraphControls';
 import GraphTooltip from './GraphTooltip';
+import GraphEdgeTooltip, { EdgeTooltipInfo } from './GraphEdgeTooltip';
 import useGraphData from '../hooks/useGraphData';
 import useGraphLayout from '../hooks/useGraphLayout';
 import { GraphController, GraphPointerPosition } from '../hooks/useForceGraph';
@@ -56,6 +57,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
 
   const [hoveredNode, setHoveredNode] = useState<HoveredNodeInfo | null>(null);
   const [controller, setController] = useState<GraphController | null>(null);
+  const [hoveredEdge, setHoveredEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
+  const [pinnedEdge, setPinnedEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
 
   // Get graph data from schema context
   const { nodes: allNodes, edges: allEdges } = useGraphData();
@@ -115,6 +118,49 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     [nodes, onNodeHoverChange]
   );
 
+  // Resolve an edge id to what the tooltip needs: the two datasets' names and
+  // the field-level references (see dataTransformer's `references`).
+  const describeEdge = useCallback(
+    (edgeId: string): EdgeTooltipInfo | null => {
+      const edge = edges.find((e) => e.data.id === edgeId);
+      if (!edge) return null;
+      const labelOf = (id: string) => nodes.find((n) => n.data.id === id)?.data.label ?? id;
+      return {
+        id: edgeId,
+        sourceLabel: labelOf(edge.data.source),
+        targetLabel: labelOf(edge.data.target),
+        references: edge.data.references ?? [],
+      };
+    },
+    [edges, nodes]
+  );
+
+  const handleEdgeHover = useCallback((edgeId: string | null, position?: GraphPointerPosition) => {
+    setHoveredEdge(edgeId && position ? { id: edgeId, position } : null);
+  }, []);
+
+  const handleEdgeSelect = useCallback((edgeId: string, position?: GraphPointerPosition) => {
+    if (position) setPinnedEdge({ id: edgeId, position });
+    setHoveredEdge(null);
+  }, []);
+
+  // Anything that moves focus elsewhere (selecting a node, clicking empty
+  // canvas, "reset view") closes a pinned edge.
+  const handleNodeSelect = useCallback(
+    (nodeId: string) => {
+      setPinnedEdge(null);
+      onNodeSelect?.(nodeId);
+    },
+    [onNodeSelect]
+  );
+  const handleNodeDeselect = useCallback(() => {
+    setPinnedEdge(null);
+    onNodeDeselect?.();
+  }, [onNodeDeselect]);
+
+  const hoveredEdgeInfo = hoveredEdge && hoveredEdge.id !== pinnedEdge?.id ? describeEdge(hoveredEdge.id) : null;
+  const pinnedEdgeInfo = pinnedEdge ? describeEdge(pinnedEdge.id) : null;
+
   const handleGraphReady = useCallback((graphController: GraphController | null) => {
     setController(graphController);
   }, []);
@@ -127,8 +173,11 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         selectedNode={hasSelectedNode ? selectedNodeId : null}
         externalHighlightId={externalHighlightId}
         filterMatchedIds={filterMatchedIds}
-        onNodeSelect={onNodeSelect}
-        onNodeDeselect={onNodeDeselect}
+        selectedEdge={pinnedEdge?.id ?? null}
+        onNodeSelect={handleNodeSelect}
+        onNodeDeselect={handleNodeDeselect}
+        onEdgeSelect={handleEdgeSelect}
+        onEdgeHover={handleEdgeHover}
         onNodeHover={handleNodeHover}
         layoutConfig={layoutConfig}
         onGraphReady={handleGraphReady}
@@ -138,13 +187,24 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
       <Box sx={{ position: 'absolute', top: 24, right: 24, zIndex: 2 }}>
         <GraphControls
           controller={controller}
-          onReset={onNodeDeselect}
+          onReset={handleNodeDeselect}
           sx={{ backgroundColor: 'background.paper', boxShadow: 2 }}
         />
       </Box>
 
       {/* Compact tooltip that follows the pointer while hovering a node */}
       {hoveredNode && <GraphTooltip node={hoveredNode} position={hoveredNode.position} />}
+
+      {/* Edge details: follows the pointer on hover, pinned in place on click */}
+      {hoveredEdgeInfo && hoveredEdge && <GraphEdgeTooltip edge={hoveredEdgeInfo} position={hoveredEdge.position} />}
+      {pinnedEdgeInfo && pinnedEdge && (
+        <GraphEdgeTooltip
+          edge={pinnedEdgeInfo}
+          position={pinnedEdge.position}
+          pinned
+          onClose={() => setPinnedEdge(null)}
+        />
+      )}
     </Box>
   );
 };
