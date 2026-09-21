@@ -22,7 +22,7 @@ function MetricsPage() {
   return (
     <>
       <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        Platform Metrics
+        Open Targets Platform Metrics
       </Typography>
       <MetricsCards data={data} />
 

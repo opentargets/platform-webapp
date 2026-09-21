@@ -154,6 +154,11 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     external: false,
   },
   {
+    name: "Metrics",
+    url: "/metrics",
+    external: false,
+  },
+  {
     name: "API",
     url: "/api",
     external: false,
