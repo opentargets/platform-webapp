@@ -63,10 +63,10 @@ function VariantsByConsequenceImpact({ data }: { data: MetricRow[] }) {
 
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography variant="subtitle2" sx={{ m: 0 }}>
-        Variants by most severe consequence
+      <Typography variant="subtitle2" sx={{ m: 0, fontSize: 13, fontWeight: 700 }}>
+        Most severe consequence
       </Typography>
-      <Box sx={{ alignItems: "flex-start", display: "flex", gap: 4, mt: 2, pr: 1 }}>
+      <Box sx={{ alignItems: "flex-start", display: "flex", gap: 4, mt: 1, pr: 1 }}>
         <Box sx={{ flex: "1 1 0", minWidth: 0 }}>
           <Box
             sx={{
@@ -226,7 +226,7 @@ function renderAxis({
 function ImpactLegend() {
   return (
     <Box sx={{ display: "flex", flex: "0 0 auto", flexDirection: "column", gap: 0.5, pt: 0.5 }}>
-      <Typography sx={{ fontSize: "13.5px", fontWeight: 700 }}>Impact</Typography>
+      <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 700 }}>Likely impact</Typography>
       {IMPACTS.map((impact) => (
         <Box key={impact} sx={{ alignItems: "center", display: "flex", gap: 0.5 }}>
           <Box sx={{ backgroundColor: IMPACT_COLORS[impact], height: 12, width: 12 }} />

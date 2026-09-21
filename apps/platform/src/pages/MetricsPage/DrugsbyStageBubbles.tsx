@@ -79,7 +79,6 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
 
   return (
     <Box sx={{ minWidth: 0, pb: 1.5 }}>
-      <Typography variant="subtitle2" sx={{ m: 0 }}>Drug coverage</Typography>
       <Box ref={chartRef} sx={{ overflowX: "auto", mt: 2 }}>
         <Box sx={{ minWidth: `${minimumChartWidth}px` }}>
           <StageLabels />
@@ -129,7 +128,7 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
     if (!hasSideLabels) {
       return (
         <Box sx={{ mb: 1 }}>
-          <Typography variant="caption" sx={{ display: "block", fontWeight: 700, mb: 0.5 }}>{title}</Typography>
+          <Typography variant="caption" sx={{ display: "block", fontWeight: 700, mb: 0.5, fontSize: 13 }}>{title}</Typography>
           {children}
         </Box>
       );
@@ -137,7 +136,7 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
 
     return (
       <Box sx={{ display: "grid", gridTemplateColumns: `${rowLabelWidth}px minmax(0, 1fr)` }}>
-        <Typography align="right" variant="caption" sx={{ alignSelf: "center", fontWeight: 700, pr: 2 }}>{title}</Typography>
+        <Typography align="right" variant="caption" sx={{ alignSelf: "center", fontWeight: 700, pr: 2, fontSize: 13 }}>{title}</Typography>
         {children}
       </Box>
     );

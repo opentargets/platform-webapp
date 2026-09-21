@@ -61,7 +61,7 @@ function ByStudyTypeHBar({
 
   return (
     <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2" sx={{ m: 0, position: "absolute" }}>
+        <Typography variant="subtitle2" sx={{ m: 0, position: "absolute", fontSize: 13, fontWeight: 700 }}>
           {title}
         </Typography>
         <ObsPlot

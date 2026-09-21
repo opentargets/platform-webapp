@@ -85,9 +85,6 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
 
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography variant="subtitle2" sx={{ m: 0 }}>
-        Association evidence coverage
-      </Typography>
       <Box
         sx={{
           "& [aria-label='fx-axis tick label']": { fontWeight: 700, fontSize: "13px" },
@@ -95,7 +92,7 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           "& figure": { display: "flex", flexDirection: "column" },
           "& figure > svg": { order: 0 },
           "& figure > :not(svg)": { order: 1, marginTop: "36px" },
-          mt: 3,
+          my: 2,
         }}
       >
         <ObsPlot

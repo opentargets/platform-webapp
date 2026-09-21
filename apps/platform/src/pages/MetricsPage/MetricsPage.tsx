@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { autoType, csv } from "d3";
-import { Paper, Typography } from "@mui/material";
+import { faCircleNodes, faShareNodes, faHexagonNodes, faPrescriptionBottleMedical, faMapPin, faChartBar } from "@fortawesome/free-solid-svg-icons";
+import { Paper, Typography, Box } from "@mui/material";
 import metricsCsv from "./metrics.csv?url";
 import MetricsCards, { PlatformMetricsSummary } from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
+import MetricsWidget from "./MetricsWidget";
 import DrugsbyStageBubbles from "./DrugsByStageBubbles";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
-// import VariantsByConsequence from "./VariantsByConsequence";
 import VariantsByConsequenceImpact from "./VariantsByConsequenceImpact";
-// import VariantsFacet from "./VariantsFacet";
-// import VariantLollipops from "./VariantLollipops";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
 
@@ -27,40 +26,54 @@ function MetricsPage() {
       </Typography>
       <MetricsCards data={data} />
 
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 4 }} elevation={0} variant="outlined">
-        <HierarchicalAssociationChart data={data} />
-      </Paper>
-      <br />
-      
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
-        <DrugsbyStageBubbles data={data} />
-      </Paper>
+      <Box component="section" sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 6 }}>
+        <MetricsWidget
+          id="disease-target-associations"
+          icon={faHexagonNodes}
+          title="Evidence and associations"
+          description="Total evidence counts and association counts"
+        >
+          <HierarchicalAssociationChart data={data} />
+        </MetricsWidget>
 
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>Genetics</Typography>
+        <MetricsWidget
+          id="drugs"
+          icon={faPrescriptionBottleMedical}
+          title="Drugs"
+          description="Drug and clinical reports words"
+        >
+          <DrugsbyStageBubbles data={data} />
+        </MetricsWidget>
 
-      <br />
+        <MetricsWidget
+          id="studies-and-credible-sets"
+          icon={faChartBar}
+          title="Studies and credible sets"
+          description="Studies and credible sets words"
+        >
+          <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
+          <ByStudyTypeHBar
+            data={data}
+            dataset="credible_set"
+            title="Credible sets by study type"
+          />
+          <ByStudyTypeHBar
+            data={data}
+            dataset="colocalisation"
+            metric="studyTypePair"
+            title="Colocalisation by type"
+          />
+        </MetricsWidget>
 
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%" }} elevation={0} variant="outlined">
-        <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
-        <ByStudyTypeHBar
-          data={data}
-          dataset="credible_set"
-          title="Credible sets by study type"
-        />
-        <ByStudyTypeHBar
-          data={data}
-          dataset="colocalisation"
-          metric="studyTypePair"
-          title="Colocalisation by type"
-        />
-      </Paper>
-
-      <br />
-
-      <Paper sx={{ py: 2, px: 3, maxWidth: "100%", mt: 2 }} elevation={0} variant="outlined">
-        <VariantsByConsequenceImpact data={data} />
-      </Paper>
-      
+        <MetricsWidget
+          id="variants"
+          icon={faMapPin}
+          title="Variants"
+          description="Variants words"
+        >
+          <VariantsByConsequenceImpact data={data} />
+        </MetricsWidget>
+      </Box>
     </>
   );
 }
