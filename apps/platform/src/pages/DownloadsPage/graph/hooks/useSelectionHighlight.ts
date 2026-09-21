@@ -11,14 +11,23 @@ import { getLinkEndpointId } from '../utils/graphVisuals';
 interface UseSelectionHighlightOptions {
   svgRef: React.RefObject<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>;
   selectedNode?: string | null;
+  /** Edge whose details are pinned open (clicked), kept visibly highlighted */
+  selectedEdge?: string | null;
   isReady: boolean;
 }
 
 export const useSelectionHighlight = ({
   svgRef,
   selectedNode,
+  selectedEdge,
   isReady,
 }: UseSelectionHighlightOptions) => {
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!isReady || !svg) return;
+    svg.selectAll('path.graph-edge').classed('edge-pinned', (d: any) => d.id === selectedEdge);
+  }, [svgRef, selectedEdge, isReady]);
+
   useEffect(() => {
     const svg = svgRef.current;
     if (!isReady || !svg) return;

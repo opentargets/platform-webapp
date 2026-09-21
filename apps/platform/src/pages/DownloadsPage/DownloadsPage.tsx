@@ -254,7 +254,10 @@ function DownloadsPage() {
             }}
           >
             <GraphVisualization
-              externalHighlightId={hoveredSource === "card" ? hoveredId : null}
+              // While a node's connection filter is active the graph already
+              // shows that selection, so hovering other cards shouldn't
+              // re-highlight it.
+              externalHighlightId={hoveredSource === "card" && !connectionFilter ? hoveredId : null}
               onNodeHoverChange={handleNodeHoverChange}
               selectedNodeId={selectedNodeId}
               onNodeSelect={setSelectedNodeId}

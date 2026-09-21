@@ -65,8 +65,8 @@ export const useGraphSimulation = ({
     setIsReady(false);
     d3.select(container).selectAll('*').remove();
 
-    // Mutable so `handleResize` (below) can re-center the already-settled
-    // layout by translation, without reheating the simulation.
+    // Mutable so `handleResize` (below) can re-lay-out for the new size
+    // without reheating the simulation.
     let width = container.clientWidth || 800;
     let height = container.clientHeight || 600;
     // Tighter collision padding on a narrow panel - based on this panel's
@@ -133,7 +133,7 @@ export const useGraphSimulation = ({
     });
 
     const link: any = linkGroup
-      .selectAll('path')
+      .selectAll('path.graph-edge')
       .data(simLinks, (d: any) => d.id)
       .join('path')
       .attr('class', 'graph-edge')
@@ -141,9 +141,36 @@ export const useGraphSimulation = ({
       .attr('stroke', EDGE_COLOR)
       .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.6)
+      .style('pointer-events', 'none');
+
+    // Invisible, much wider stroke on top of each edge purely to catch
+    // pointer events - the visible 2px edge is too thin to hover or click.
+    const linkHit: any = linkGroup
+      .selectAll('path.graph-edge-hit')
+      .data(simLinks, (d: any) => d.id)
+      .join('path')
+      .attr('class', 'graph-edge-hit')
+      .attr('fill', 'none')
+      .attr('stroke', 'transparent')
+      .attr('stroke-width', 12)
+      .style('cursor', 'pointer')
       .on('click', function (d: any) {
-        (d3 as any).event.stopPropagation();
-        callbacksRef.current?.onEdgeSelect?.(d.id);
+        const event = (d3 as any).event;
+        event.stopPropagation();
+        callbacksRef.current?.onEdgeSelect?.(d.id, { x: event.clientX, y: event.clientY });
+      })
+      .on('mouseover', function (d: any) {
+        const event = (d3 as any).event;
+        link.filter((l: any) => l.id === d.id).classed('edge-active', true);
+        callbacksRef.current?.onEdgeHover?.(d.id, { x: event.clientX, y: event.clientY });
+      })
+      .on('mousemove', function (d: any) {
+        const event = (d3 as any).event;
+        callbacksRef.current?.onEdgeHover?.(d.id, { x: event.clientX, y: event.clientY });
+      })
+      .on('mouseout', function (d: any) {
+        link.filter((l: any) => l.id === d.id).classed('edge-active', false);
+        callbacksRef.current?.onEdgeHover?.(null);
       });
 
     const node: any = nodeGroup
@@ -248,12 +275,8 @@ export const useGraphSimulation = ({
 
     // The simulation is frozen after its initial layout (see below) - dragging
     // just repositions the one node directly, with no physics pushback on its
-    // neighbours and no reheating of the simulation. Tracked so a later
-    // resize's auto-refit (see `handleResize`) doesn't clobber a manually
-    // dragged node back to its pre-drag, radial-layout position.
-    let userDraggedNode = false;
+    // neighbours and no reheating of the simulation.
     const drag = (d3 as any).drag().on('drag', (d: GraphNodeDatum) => {
-      userDraggedNode = true;
       d.x = (d3 as any).event.x;
       d.y = (d3 as any).event.y;
       updatePositions();
@@ -261,11 +284,13 @@ export const useGraphSimulation = ({
     (node as any).call(drag);
 
     const updatePositions = () => {
-      link.attr('d', (d: any) => {
+      const edgePath = (d: any) => {
         const source = d.source as GraphNodeDatum;
         const target = d.target as GraphNodeDatum;
         return curvedEdgePath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0);
-      });
+      };
+      link.attr('d', edgePath);
+      linkHit.attr('d', edgePath);
 
       node.attr('transform', (d: GraphNodeDatum) => `translate(${d.x ?? 0}, ${d.y ?? 0})`);
 
@@ -294,17 +319,14 @@ export const useGraphSimulation = ({
 
     setIsReady(true);
 
-    // On resize (e.g. the card grid narrowing when a node is selected, or the
-    // split divider being dragged), re-derive the radial layout for the new
-    // panel shape and re-fit to it - so growing the panel in either
-    // dimension keeps spreading nodes to use the extra space, not just
-    // recentering the old layout. That re-fit is only applied if the view is
-    // still exactly where the last auto-fit left it: if the user has since
-    // zoomed or panned by hand, their view is preserved as before, just
-    // recentered by panning (the pan, not the raw node coordinates, has to
-    // move: node screen position is `k * x + translate`, so nudging `x` only
-    // shifts the screen by `k * dx` at the current zoom scale - panning by
-    // `dx` directly is what keeps the layout centered at any zoom level).
+    // On every resize (window, split divider, or the card grid changing the
+    // panel's height) re-derive the radial layout for the new panel shape and
+    // re-fit to it - so the graph keeps adapting to the space available even
+    // after the user has zoomed, panned, or dragged a node. The user's zoom
+    // level is kept as a multiple of the auto-fit scale (so a zoomed-in view
+    // stays proportionally zoomed in as the panel changes shape), but pan
+    // and dragged-node positions can't be carried across a re-layout and are
+    // reset to the new fit.
     const handleResize = () => {
       const c = containerRef.current;
       if (!c) return;
@@ -314,26 +336,11 @@ export const useGraphSimulation = ({
 
       const current = (d3 as any).zoomTransform(svg.node());
       const lastAutoFit = initialFitTransformRef.current;
-      const hasCustomView =
-        userDraggedNode ||
-        !lastAutoFit ||
-        Math.abs(current.k - lastAutoFit.k) > 1e-6 ||
-        Math.abs(current.x - lastAutoFit.x) > 0.5 ||
-        Math.abs(current.y - lastAutoFit.y) > 0.5;
+      const zoomMultiple = lastAutoFit ? current.k / lastAutoFit.k : 1;
 
-      const dx = w / 2 - width / 2;
-      const dy = h / 2 - height / 2;
       width = w;
       height = h;
       svg.attr('viewBox', `0 0 ${w} ${h}`);
-
-      if (hasCustomView) {
-        if (dx !== 0 || dy !== 0) {
-          const next = d3.zoomIdentity.translate(current.x + dx, current.y + dy).scale(current.k);
-          (svg as any).call(zoom.transform, next);
-        }
-        return;
-      }
 
       radialLayout = computeRadialLayout(simNodes, simLinks, w, h);
       simNodes.forEach((n) => {
@@ -343,9 +350,20 @@ export const useGraphSimulation = ({
         n.y = target.y;
       });
       updatePositions();
+
       const fit = computeFitTransform(simNodes, w, h);
-      const nextTransform = d3.zoomIdentity.translate(fit.translateX, fit.translateY).scale(fit.scale);
-      initialFitTransformRef.current = nextTransform;
+      initialFitTransformRef.current = d3.zoomIdentity
+        .translate(fit.translateX, fit.translateY)
+        .scale(fit.scale);
+
+      // Keep the fit's centre point in the middle of the panel at the user's
+      // zoom multiple.
+      const scale = Math.min(3, Math.max(0.1, fit.scale * zoomMultiple));
+      const centerX = (w / 2 - fit.translateX) / fit.scale;
+      const centerY = (h / 2 - fit.translateY) / fit.scale;
+      const nextTransform = d3.zoomIdentity
+        .translate(w / 2 - scale * centerX, h / 2 - scale * centerY)
+        .scale(scale);
       (svg as any).call(zoom.transform, nextTransform);
     };
     window.addEventListener('resize', handleResize);
