@@ -61,6 +61,19 @@ export const getNodeHalfDiagonal = (size: number = BASE_DEGREE_SIZE): number => 
   return Math.sqrt((width / 2) ** 2 + (height / 2) ** 2);
 };
 
+/**
+ * Experiment flag: true shows every node's label at all zoom levels; false
+ * restores the progressive reveal (only high-degree nodes labelled until the
+ * user zooms in past LABEL_REVEAL_ZOOM).
+ */
+export const ALWAYS_SHOW_LABELS = true;
+export const LABEL_REVEAL_ZOOM = 1.6;
+export const LABEL_REVEAL_DEGREE = 4;
+
+/** Whether a node's label is visible at the given zoom scale */
+export const isLabelVisible = (degree: number | undefined, zoomScale: number): boolean =>
+  ALWAYS_SHOW_LABELS || (degree ?? 0) >= LABEL_REVEAL_DEGREE || zoomScale >= LABEL_REVEAL_ZOOM;
+
 const CHARS_PER_LABEL = 20;
 
 export const truncateLabel = (label: string, maxChars = CHARS_PER_LABEL): string =>

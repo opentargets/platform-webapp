@@ -13,7 +13,6 @@ import {
   faMagnifyingGlassMinus,
   faArrowRotateLeft,
   faImage,
-  faFileCode,
 } from '@fortawesome/free-solid-svg-icons';
 import { GraphController } from '../hooks/useForceGraph';
 
@@ -54,14 +53,9 @@ const GraphControls: React.FC<GraphControlsProps> = ({ controller, onReset, sx =
           <FontAwesomeIcon icon={faArrowRotateLeft} size="sm" />
         </MuiButton>
       </MuiTooltip>
-      <MuiTooltip title="Download PNG" arrow>
-        <MuiButton onClick={() => controller?.exportPNG()} aria-label="Download PNG">
-          <FontAwesomeIcon icon={faImage} size="sm" />
-        </MuiButton>
-      </MuiTooltip>
       <MuiTooltip title="Download SVG" arrow>
         <MuiButton onClick={() => controller?.exportSVG()} aria-label="Download SVG">
-          <FontAwesomeIcon icon={faFileCode} size="sm" />
+          <FontAwesomeIcon icon={faImage} size="sm" />
         </MuiButton>
       </MuiTooltip>
     </ButtonGroup>

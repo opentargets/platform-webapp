@@ -26,6 +26,7 @@ import {
   getNodeBoxSize,
   getNodeHalfDiagonal,
   truncateLabel,
+  isLabelVisible,
 } from '../utils/graphVisuals';
 import { GraphNodeDatum, GraphLinkDatum, GraphCallbacks } from '../types';
 
@@ -118,9 +119,7 @@ export const useGraphSimulation = ({
         const { transform } = (d3 as any).event;
         zoomLayer.attr('transform', transform);
         // Reveal the rest of the labels once zoomed in enough to read them
-        label?.attr('display', (d: GraphNodeDatum) =>
-          (d.degree ?? 0) >= 4 || transform.k >= 1.6 ? null : 'none'
-        );
+        label?.attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, transform.k) ? null : 'none'));
       });
     (svg as any).call(zoom);
     zoomRef.current = zoom;
@@ -202,10 +201,9 @@ export const useGraphSimulation = ({
       .attr('stroke', strokeOf)
       .attr('stroke-width', 1.5);
 
-    // Labels sit below the box rather than inside it - most stay hidden
-    // until zoomed in (see the zoom handler above), only high-degree hub
-    // nodes are labelled by default, so ~50 always-on labels don't turn the
-    // graph into unreadable clutter at the initial fit.
+    // Labels sit below the box rather than inside it. Whether they're all
+    // shown or revealed progressively on zoom is controlled by
+    // ALWAYS_SHOW_LABELS (see graphVisuals.ts).
     label = node
       .select('text')
       .text((d: GraphNodeDatum) => truncateLabel(d.label))
@@ -218,7 +216,7 @@ export const useGraphSimulation = ({
       .attr('stroke', '#fff')
       .attr('stroke-width', 3)
       .attr('stroke-linejoin', 'round')
-      .attr('display', (d: GraphNodeDatum) => ((d.degree ?? 0) >= 4 ? null : 'none'))
+      .attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, 0) ? null : 'none'))
       .style('pointer-events', 'none')
       .style('user-select', 'none');
 

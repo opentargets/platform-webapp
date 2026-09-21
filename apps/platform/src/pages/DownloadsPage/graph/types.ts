@@ -25,7 +25,6 @@ export interface GraphController {
   fit: () => void;
   center: () => void;
   reset: () => void;
-  exportPNG: () => void;
   exportSVG: () => void;
 }
 
