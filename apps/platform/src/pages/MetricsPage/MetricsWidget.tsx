@@ -23,7 +23,7 @@ function MetricsWidget({ icon, title, description, children, id }: MetricsWidget
     <section id={id}>
       <Card elevation={0} variant="outlined">
         <CardHeaderContainer>
-          <Box sx={{ color: "primary.main", fontSize: "1.9rem" }}>
+          <Box sx={{ color: "secondary.main", fontSize: "1.9rem" }}>
             <FontAwesomeIcon icon={icon} />
           </Box>
           <Box sx={{ flex: 1 }}>

@@ -55,17 +55,17 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
     >
       {metrics.map(([label, icon, value]) => (
         <Card key={label} sx={{ width: "100%" }} elevation={0} variant="outlined">
-          <CardContent sx={{ display: "flex", alignItems: "start", gap: 1, flexDirection: "column", justifyContent: "space-between", p:4 }}>
+          <CardContent sx={{ display: "flex", alignItems: "start", gap: 1, flexDirection: "column", justifyContent: "space-between", px: 3 }}>
             <Box >
-              <Tooltip title={format(",")(value)}>
-                <Typography color="secondary" variant="h4" fontWeight="900">{formatRoundedCount(value)}</Typography>
-              </Tooltip>
+                <Typography color="secondary" variant="h4" fontWeight="800" fontSize={29} >{formatRoundedCount(value)}</Typography>
             </Box>
-            <Box sx={{ textAlign: "left", display: "flex", alignItems: "center", justifyContent: "start" }}>
-              <Box sx={{color: "primary.main", fontSize: "1.4rem", width: 35}}>
+            <Box sx={{ textAlign: "left", display: "flex", alignItems: "center", justifyContent: "start", columnGap: "4px" }}>
+              <Box sx={{ color: "secondary.main", fontSize: "1.4rem", flex: "0 0 35px", width: "35px" }}>
                 <FontAwesomeIcon icon={icon as IconDefinition} />
               </Box>
-              <Typography color="secondary" variant="body2" sx={{ textTransform: "capitalize" }}>{label}</Typography>
+              {/* <Tooltip title={format(",")(value)}> */}
+                <Typography color="secondary" variant="body2" sx={{ textTransform: "capitalize", fontWeight: 400, fontSize: 14.5 }}>{label}</Typography>
+              {/* </Tooltip> */}
             </Box>
           </CardContent>
         </Card>

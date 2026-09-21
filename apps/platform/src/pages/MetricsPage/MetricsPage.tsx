@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { autoType, csv } from "d3";
-import { faCircleNodes, faShareNodes, faHexagonNodes, faPrescriptionBottleMedical, faMapPin, faChartBar } from "@fortawesome/free-solid-svg-icons";
-import { Paper, Typography, Box } from "@mui/material";
+import { faHexagonNodes, faPrescriptionBottleMedical, faMapPin, faChartBar } from "@fortawesome/free-solid-svg-icons";
+import { Typography, Box, Link } from "ui";
 import metricsCsv from "./metrics.csv?url";
-import MetricsCards, { PlatformMetricsSummary } from "./MetricsCards";
+import MetricsCards from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import MetricsWidget from "./MetricsWidget";
 import DrugsbyStageBubbles from "./DrugsByStageBubbles";
@@ -31,7 +31,15 @@ function MetricsPage() {
           id="disease-target-associations"
           icon={faHexagonNodes}
           title="Evidence and associations"
-          description="Total evidence counts and association counts"
+          description={
+            <Typography variant="body2">
+              Target-disease{" "}
+              <Link external to="https://platform-docs.opentargets.org/evidence">evidence</Link>
+              {" "}and{" "}
+              <Link external to="https://platform-docs.opentargets.org/associations">associations</Link>
+              {" "}by data source and data type.
+            </Typography>
+          }
         >
           <HierarchicalAssociationChart data={data} />
         </MetricsWidget>
@@ -40,7 +48,12 @@ function MetricsPage() {
           id="drugs"
           icon={faPrescriptionBottleMedical}
           title="Drugs"
-          description="Drug and clinical reports words"
+          description={
+            <Typography variant="body2">
+              <Link external to="https://platform-docs.opentargets.org/drug">Drugs and clinical reports</Link>
+              {" "}by stage.
+            </Typography>
+          }
         >
           <DrugsbyStageBubbles data={data} />
         </MetricsWidget>
@@ -48,8 +61,17 @@ function MetricsPage() {
         <MetricsWidget
           id="studies-and-credible-sets"
           icon={faChartBar}
-          title="Studies and credible sets"
-          description="Studies and credible sets words"
+          title="GWAS and QTL"
+          description={
+            <Typography variant="body2">
+              <Link external to="https://platform-docs.opentargets.org/study">Studies</Link>
+              ,{" "}
+              <Link external to="https://platform-docs.opentargets.org/credible-set">credible sets</Link>
+              {" "}and{" "}
+              <Link external to="https://platform-docs.opentargets.org/gentropy/colocalisation">colocalisations</Link>
+              {" "}by type.
+            </Typography>
+          }
         >
           <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
           <ByStudyTypeHBar
@@ -69,7 +91,13 @@ function MetricsPage() {
           id="variants"
           icon={faMapPin}
           title="Variants"
-          description="Variants words"
+          description={
+            <Typography variant="body2">
+              <Link external to="https://platform-docs.opentargets.org/variant">Variants</Link>
+              {" "}by{" "}
+              most severe consequence and impact.
+            </Typography>
+          }
         >
           <VariantsByConsequenceImpact data={data} />
         </MetricsWidget>
