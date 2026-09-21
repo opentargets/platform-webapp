@@ -9,7 +9,7 @@ import { useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
 import { GraphController, GraphNodeDatum, GraphLinkDatum, GraphCallbacks } from '../types';
 import { computeFitTransform } from '../utils/fitTransform';
-import { exportSvgAsPng, downloadSvgFile } from '../utils/svgExport';
+import { downloadSvgFile } from '../utils/svgExport';
 
 interface UseGraphControllerOptions {
   containerRef: React.RefObject<HTMLDivElement>;
@@ -95,10 +95,6 @@ export const useGraphController = ({
           n.fy = null;
         });
         callbacksRef.current?.onNodeDeselect?.();
-      },
-      exportPNG: () => {
-        const svgEl = svgRef.current?.node();
-        if (svgEl) exportSvgAsPng(svgEl);
       },
       exportSVG: () => {
         const svgEl = svgRef.current?.node();
