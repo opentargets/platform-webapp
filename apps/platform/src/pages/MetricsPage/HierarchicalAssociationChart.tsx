@@ -194,7 +194,7 @@ function HierarchicalAssociationChart({ data }: { data: MetricRow[] }) {
           lineAnchor: "middle",
           fontSize: 12.5,
           fill: 'white',
-          fontWeight: 500,
+          fontWeight: 600,
         }),
         Plot.text(outsideData, {
           x: "count",
