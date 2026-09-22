@@ -62,106 +62,6 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
     }
   });
 
-  test("specified genes have correct evidence widgets for their data cells", async ({
-    page,
-    testConfig,
-  }) => {
-    const aotfTable = new AotfTable(page);
-    const aotfActions = new AotfActions(page);
-    const evidenceSection = new EvidenceSection(page);
-    const genesToTest = testConfig.disease.aotfGenes || [];
-
-    if (genesToTest.length === 0) {
-      test.skip(true, "No genes specified in test config");
-      return;
-    }
-
-    // test.fail() marks the whole test as expected-to-fail from that point on;
-    // it doesn't fail just the current gene. Collect problems instead and
-    // assert them together at the end, so every gene still gets checked but
-    // the test's pass/fail outcome is a real, deterministic assertion.
-    const issues: string[] = [];
-
-    for (const geneSymbol of genesToTest) {
-      // Search for the specific gene
-      await aotfActions.applyNameFilterAndWaitForResults(geneSymbol);
-
-      // Wait for table to load with filtered results
-      await aotfTable.waitForTableLoad();
-
-      // Find the row for this gene
-      const rowIndex = await aotfTable.findRowIndexByGeneSymbol(geneSymbol);
-
-      if (rowIndex === null) {
-        issues.push(`Gene ${geneSymbol} not found in table`);
-        continue;
-      }
-
-      // Get all data cells with scores for this gene
-      const dataCells = await aotfTable.getDataCellsWithScores(rowIndex);
-
-      if (dataCells.length === 0) {
-        issues.push(`Gene ${geneSymbol} has no data cells with scores`);
-        continue;
-      }
-
-      // Filter out non-evidence columns
-      const nonEvidenceColumns = ["score"];
-      const cellsToTest = dataCells.filter((cell) => !nonEvidenceColumns.includes(cell.columnId));
-
-      if (cellsToTest.length === 0) {
-        issues.push(`Gene ${geneSymbol} has no evidence data cells`);
-        continue;
-      }
-
-      for (const cell of cellsToTest) {
-        // Click on the data cell to open the evidence section
-        await aotfTable.clickDataCell(rowIndex, cell.columnId);
-
-        // Wait for section to load
-        await evidenceSection.waitForSectionLoad(cell.columnId);
-
-        // Verify that an evidence section is visible
-        const hasSections = await evidenceSection.hasAnyEvidenceSection();
-        test
-          .expect(
-            hasSections,
-            `Gene ${geneSymbol} - ${cell.columnId}: Should have evidence sections`
-          )
-          .toBe(true);
-
-        // Verify the specific section for this data source is visible
-        const isVisible = await evidenceSection.isEvidenceSectionVisible(cell.columnId);
-        test
-          .expect(
-            isVisible,
-            `Gene ${geneSymbol} - ${cell.columnId}: Evidence section should be visible`
-          )
-          .toBe(true);
-
-        // Verify no loader is visible
-        const hasLoader = await evidenceSection.isLoaderVisible();
-        test
-          .expect(hasLoader, `Gene ${geneSymbol} - ${cell.columnId}: Loader should not be visible`)
-          .toBe(false);
-
-        // Click the same cell again to close/toggle the section
-        await aotfTable.clickDataCell(rowIndex, cell.columnId);
-
-        // Wait for evidence section to close
-        await evidenceSection.waitForLoaderToDisappear();
-      }
-
-      // Clear the search filter for next gene
-      await aotfActions.clearNameFilter();
-
-      // Wait for table to reload with all results
-      await aotfTable.waitForTableLoad();
-    }
-
-    expect(issues, issues.join("\n")).toEqual([]);
-  });
-
   test("specified genes in target prioritization view have correct evidence widgets", async ({
     page,
     testConfig,
@@ -276,6 +176,121 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
             hasLoader,
             `Prioritization - Gene ${geneSymbol} - ${cell.columnId} (section: ${sectionId}): Loader should not be visible`
           )
+          .toBe(false);
+
+        // Click the same cell again to close/toggle the section
+        await aotfTable.clickDataCell(rowIndex, cell.columnId);
+
+        // Wait for evidence section to close
+        await evidenceSection.waitForLoaderToDisappear();
+      }
+
+      // Clear the search filter for next gene
+      await aotfActions.clearNameFilter();
+
+      // Wait for table to reload with all results
+      await aotfTable.waitForTableLoad();
+    }
+
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// Not tagged @smoke: this sweeps every configured gene and every evidence
+// cell for each in the default associations view, which is reliable but
+// too slow for the CI smoke budget. Covered by the equivalent (and tagged)
+// prioritization-view test above, so the smoke suite still exercises this
+// same evidence-section flow.
+test.describe("Disease Page - AOTF Evidence Widgets - Full Gene Sweep", () => {
+  test.beforeEach(async ({ page, baseURL, testConfig }) => {
+    //if no disease id, skip all tests
+    if (!testConfig.disease.primary) {
+      test.skip();
+    }
+    await page.goto(`${baseURL}/disease/${testConfig.disease.primary}/associations`);
+  });
+
+  test("specified genes have correct evidence widgets for their data cells", async ({
+    page,
+    testConfig,
+  }) => {
+    const aotfTable = new AotfTable(page);
+    const aotfActions = new AotfActions(page);
+    const evidenceSection = new EvidenceSection(page);
+    const genesToTest = testConfig.disease.aotfGenes || [];
+
+    if (genesToTest.length === 0) {
+      test.skip(true, "No genes specified in test config");
+      return;
+    }
+
+    // test.fail() marks the whole test as expected-to-fail from that point on;
+    // it doesn't fail just the current gene. Collect problems instead and
+    // assert them together at the end, so every gene still gets checked but
+    // the test's pass/fail outcome is a real, deterministic assertion.
+    const issues: string[] = [];
+
+    for (const geneSymbol of genesToTest) {
+      // Search for the specific gene
+      await aotfActions.applyNameFilterAndWaitForResults(geneSymbol);
+
+      // Wait for table to load with filtered results
+      await aotfTable.waitForTableLoad();
+
+      // Find the row for this gene
+      const rowIndex = await aotfTable.findRowIndexByGeneSymbol(geneSymbol);
+
+      if (rowIndex === null) {
+        issues.push(`Gene ${geneSymbol} not found in table`);
+        continue;
+      }
+
+      // Get all data cells with scores for this gene
+      const dataCells = await aotfTable.getDataCellsWithScores(rowIndex);
+
+      if (dataCells.length === 0) {
+        issues.push(`Gene ${geneSymbol} has no data cells with scores`);
+        continue;
+      }
+
+      // Filter out non-evidence columns
+      const nonEvidenceColumns = ["score"];
+      const cellsToTest = dataCells.filter((cell) => !nonEvidenceColumns.includes(cell.columnId));
+
+      if (cellsToTest.length === 0) {
+        issues.push(`Gene ${geneSymbol} has no evidence data cells`);
+        continue;
+      }
+
+      for (const cell of cellsToTest) {
+        // Click on the data cell to open the evidence section
+        await aotfTable.clickDataCell(rowIndex, cell.columnId);
+
+        // Wait for section to load
+        await evidenceSection.waitForSectionLoad(cell.columnId);
+
+        // Verify that an evidence section is visible
+        const hasSections = await evidenceSection.hasAnyEvidenceSection();
+        test
+          .expect(
+            hasSections,
+            `Gene ${geneSymbol} - ${cell.columnId}: Should have evidence sections`
+          )
+          .toBe(true);
+
+        // Verify the specific section for this data source is visible
+        const isVisible = await evidenceSection.isEvidenceSectionVisible(cell.columnId);
+        test
+          .expect(
+            isVisible,
+            `Gene ${geneSymbol} - ${cell.columnId}: Evidence section should be visible`
+          )
+          .toBe(true);
+
+        // Verify no loader is visible
+        const hasLoader = await evidenceSection.isLoaderVisible();
+        test
+          .expect(hasLoader, `Gene ${geneSymbol} - ${cell.columnId}: Loader should not be visible`)
           .toBe(false);
 
         // Click the same cell again to close/toggle the section
