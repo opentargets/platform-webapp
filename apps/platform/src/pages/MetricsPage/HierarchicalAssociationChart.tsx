@@ -14,7 +14,7 @@ const colorScheme = CATEGORICAL_SCHEME_BASE;
 const dataSourceTypes = new Map(dataSourcesAssoc.map((source) => [source.id, source.aggregation]));
 const dataSourceLabels = new Map(dataSourcesAssoc.map((source) => [source.id, source.label]));
 const dataSourceOrder = new Map(dataSourcesAssoc.map((source, index) => [source.id, index]));
-const FACETS = ["Direct associations", "Indirect associations", "Target-disease evidence"] as const;
+const FACETS = ["Target-disease evidence", "Direct associations", "Indirect associations"] as const;
 const facetLabels: Record<(typeof FACETS)[number], string> = {
   "Target-disease evidence": "Evidence",
   "Indirect associations": "Indirect associations",

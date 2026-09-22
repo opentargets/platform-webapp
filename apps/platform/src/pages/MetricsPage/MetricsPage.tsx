@@ -25,13 +25,13 @@ function MetricsPage() {
         <MetricsWidget
           id="disease-target-associations"
           icon={faHexagonNodes}
-          title="Associations and evidence"
+          title="Evidence and Associations"
           description={
             <Typography variant="body2">
               Target-disease{" "}
-              <Link external to="https://platform-docs.opentargets.org/associations">associations</Link>
-              {" "}and{" "}
               <Link external to="https://platform-docs.opentargets.org/evidence">evidence</Link>
+              {" "}and{" "}
+              <Link external to="https://platform-docs.opentargets.org/associations">associations</Link>
               {" "}by data source and data type.
             </Typography>
           }
@@ -42,10 +42,10 @@ function MetricsPage() {
         <MetricsWidget
           id="drugs"
           icon={faPrescriptionBottleMedical}
-          title="Drugs"
+          title="Drugs and Clinical Candidates"
           description={
             <Typography variant="body2">
-              <Link external to="https://platform-docs.opentargets.org/drug">Drugs and clinical reports</Link>
+              <Link external to="https://platform-docs.opentargets.org/drug">Drugs, clinical candidates and clinical reports</Link>
               {" "}by stage.
             </Typography>
           }
@@ -56,7 +56,7 @@ function MetricsPage() {
         <MetricsWidget
           id="studies-and-credible-sets"
           icon={faChartBar}
-          title="GWAS and QTL"
+          title="GWAS and molQTL"
           description={
             <Typography variant="body2">
               <Link external to="https://platform-docs.opentargets.org/study">Studies</Link>
@@ -88,10 +88,10 @@ function MetricsPage() {
           title="Variants"
           description={
             <Typography variant="body2">
-              <Link external to="https://platform-docs.opentargets.org/variant">Variants</Link>
+              <Link external to="https://platform-docs.opentargets.org/variant">Phenotype-associated variants</Link>
               {" "}by{" "}
               <Link external to=" https://www.ensembl.org/tools/vep">
-                most severe consequence and impact
+                most severe consequence
               </Link>
               .
             </Typography>

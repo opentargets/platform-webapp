@@ -28,13 +28,13 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
   const metrics = [
     ["Targets", faDna, count(data, "target")],
     ["Diseases", faStethoscope, count(data, "disease")],
-    ["Drugs", faPrescriptionBottleMedical, count(data, "drug_molecule")],
-    ["Clinical reports", faChartBar, count(data, "clinical_report")],
+    ["Drugs and Clinical Candidates", faPrescriptionBottleMedical, count(data, "drug_molecule")],
+    ["Clinical Reports", faChartBar, count(data, "clinical_report")],
     ["GWAS", faChartBar, count(data, "study")],
-    ["Direct target-disease association", faHexagonNodes, count(data, "association_overall_direct")],
-    ["Indirect target-disease association", faHexagonNodes, count(data, "association_overall_indirect")],
-    ["Target-disease Evidence", faHexagonNodes, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
-    ["Credible sets", faProjectDiagram, count(data, "credible_set")],
+    ["Target-Disease Evidence", faHexagonNodes, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
+    ["Direct Target-Disease Associations", faHexagonNodes, count(data, "association_overall_direct")],
+    ["Indirect Target-Disease associations", faHexagonNodes, count(data, "association_overall_indirect")],
+    ["Credible Sets", faProjectDiagram, count(data, "credible_set")],
     ["Variants", faMapPin, count(data, "variant")],
   ] as const;
 
@@ -63,9 +63,7 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
               <Box sx={{ color: "secondary.main", fontSize: "1.4rem", flex: "0 0 35px", width: "35px" }}>
                 <FontAwesomeIcon icon={icon as IconDefinition} />
               </Box>
-              {/* <Tooltip title={format(",")(value)}> */}
-                <Typography color="secondary" variant="body2" sx={{ textTransform: "capitalize", fontWeight: 400, fontSize: 14.5 }}>{label}</Typography>
-              {/* </Tooltip> */}
+              <Typography color="secondary" variant="body2" sx={{ fontWeight: 400, fontSize: 14.5 }}>{label}</Typography>
             </Box>
           </CardContent>
         </Card>
