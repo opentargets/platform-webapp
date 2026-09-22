@@ -209,7 +209,7 @@ export const useGraphSimulation = ({
       .text((d: GraphNodeDatum) => truncateLabel(d.label))
       .attr('text-anchor', 'middle')
       .attr('dy', (d: GraphNodeDatum) => getNodeBoxSize(d.size).height / 2 + 14)
-      .attr('font-size', 11)
+      .attr('font-size', 14)
       .attr('font-weight', 500)
       .attr('fill', 'rgba(0, 0, 0, 0.6)')
       .attr('paint-order', 'stroke')

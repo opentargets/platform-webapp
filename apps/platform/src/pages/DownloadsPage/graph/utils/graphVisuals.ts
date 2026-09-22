@@ -45,8 +45,8 @@ export const EDGE_COLOR = '#D8DEE4';
  * with radialLayout.ts so the deterministic layout's spacing calculations
  * match what's actually drawn.
  */
-const NODE_WIDTH = 34;
-const NODE_HEIGHT = 22;
+const NODE_WIDTH = 44;
+const NODE_HEIGHT = 29;
 /** `size` bucket a box at (NODE_WIDTH, NODE_HEIGHT) corresponds to - the medium-degree bucket, so low/high-degree nodes scale down/up from this baseline */
 const BASE_DEGREE_SIZE = 60;
 
