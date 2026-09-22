@@ -158,6 +158,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
     trialWhyStopped,
     trialStopReasonCategories,
     trialStartDate,
+    year,
     url,
     trialDescription,
     trialLiterature,
@@ -228,6 +229,12 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       {trialStartDate && (
         <FieldRow label="Start">
           <Typography variant="body2">{trialStartDate}</Typography>
+        </FieldRow>
+      )}
+
+      {year && (
+        <FieldRow label="Year">
+          <Typography variant="body2">{year}</Typography>
         </FieldRow>
       )}
 

@@ -43,5 +43,6 @@ query RecordDetailQuery($clinicalReportId: String!) {
     type
     trialStudyType
     url
+    year
   }
 }
