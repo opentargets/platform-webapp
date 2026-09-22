@@ -19,7 +19,7 @@ export function interpolateColor(t) {
   return interpolateRgbBasis(SEQUENTIAL_SCHEME_BLUE.slice(1))(t);
 }
 
-function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
+function DrugsByStageBubbles({ data }: { data: MetricRow[] }) {
   const theme = useTheme();
   const chartRef = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(0);
@@ -212,4 +212,4 @@ function DrugsbyStageBubbles({ data }: { data: MetricRow[] }) {
   }
 }
 
-export default DrugsbyStageBubbles;
+export default DrugsByStageBubbles;

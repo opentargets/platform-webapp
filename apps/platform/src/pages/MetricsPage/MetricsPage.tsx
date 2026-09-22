@@ -6,7 +6,7 @@ import metricsCsv from "./metrics.csv?url";
 import MetricsCards from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import MetricsWidget from "./MetricsWidget";
-import DrugsbyStageBubbles from "./DrugsByStageBubbles";
+import DrugsByStageBubbles from "./DrugsByStageBubbles";
 import ByStudyTypeHBar from "./ByStudyTypeHBar";
 import VariantsByConsequenceImpact from "./VariantsByConsequenceImpact";
 
@@ -55,7 +55,7 @@ function MetricsPage() {
             </Typography>
           }
         >
-          <DrugsbyStageBubbles data={data} />
+          <DrugsByStageBubbles data={data} />
         </MetricsWidget>
 
         <MetricsWidget
