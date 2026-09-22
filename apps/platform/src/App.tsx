@@ -2,6 +2,7 @@ import { ReactElement } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { SearchProvider, PrivateRoute, OTConfigurationProvider, LoadingBackdrop } from "ui";
 import { getConfig } from "@ot/config";
+import { GeneEnrichmentProvider } from "./components/GeneEnrichmentAnalysis";
 
 import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
@@ -145,7 +146,9 @@ function App(): ReactElement {
         searchQuery={SEARCH_QUERY}
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."
       >
-        <RouterProvider router={router} />
+        <GeneEnrichmentProvider>
+          <RouterProvider router={router} />
+        </GeneEnrichmentProvider>
       </SearchProvider>
     </OTConfigurationProvider>
   );

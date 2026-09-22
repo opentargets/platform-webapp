@@ -143,6 +143,12 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     external: true,
   },
   {
+    name: "GSEA Analysis",
+    url: "/analysis",
+    showOnlyPartner: true,
+    external: false,
+  },
+  {
     name: "PPP Documentation",
     url: "https://home.opentargets.org/ppp-documentation",
     external: true,
