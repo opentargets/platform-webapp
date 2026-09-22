@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router';
 import { ButtonGroup, MuiButton, MuiTooltip } from 'ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -13,19 +14,24 @@ import {
   faMagnifyingGlassMinus,
   faArrowRotateLeft,
   faImage,
+  faSitemap,
 } from '@fortawesome/free-solid-svg-icons';
 import { GraphController } from '../hooks/useForceGraph';
 
 interface GraphControlsProps {
   controller: GraphController | null;
   onReset?: () => void;
+  /** Shows the "Schema diagram" link button - suppressed when GraphControls is reused on the schema-diagram page itself */
+  showDiagramLink?: boolean;
   sx?: any;
 }
 
 /**
  * Controls for graph navigation and export
  */
-const GraphControls: React.FC<GraphControlsProps> = ({ controller, onReset, sx = {} }) => {
+const GraphControls: React.FC<GraphControlsProps> = ({ controller, onReset, showDiagramLink = true, sx = {} }) => {
+  const navigate = useNavigate();
+
   const handleResetView = () => {
     controller?.reset();
     onReset?.();
@@ -58,6 +64,13 @@ const GraphControls: React.FC<GraphControlsProps> = ({ controller, onReset, sx =
           <FontAwesomeIcon icon={faImage} size="sm" />
         </MuiButton>
       </MuiTooltip>
+      {showDiagramLink && (
+        <MuiTooltip title="View schema diagram" arrow>
+          <MuiButton onClick={() => navigate('/downloads/schema-diagram')} aria-label="View schema diagram">
+            <FontAwesomeIcon icon={faSitemap} size="sm" />
+          </MuiButton>
+        </MuiTooltip>
+      )}
     </ButtonGroup>
   );
 };
