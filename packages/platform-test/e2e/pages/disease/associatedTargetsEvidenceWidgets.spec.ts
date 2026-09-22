@@ -1,4 +1,4 @@
-import { test } from "../../../fixtures";
+import { expect, test } from "../../../fixtures";
 import { EvidenceSection } from "../../../POM/objects/components/EvidenceSection/evidenceSection";
 import { AotfActions } from "../../../POM/objects/widgets/AOTF/aotfActions";
 import { AotfTable } from "../../../POM/objects/widgets/AOTF/aotfTable";
@@ -76,6 +76,12 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       return;
     }
 
+    // test.fail() marks the whole test as expected-to-fail from that point on;
+    // it doesn't fail just the current gene. Collect problems instead and
+    // assert them together at the end, so every gene still gets checked but
+    // the test's pass/fail outcome is a real, deterministic assertion.
+    const issues: string[] = [];
+
     for (const geneSymbol of genesToTest) {
       // Search for the specific gene
       await aotfActions.applyNameFilterAndWaitForResults(geneSymbol);
@@ -87,7 +93,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const rowIndex = await aotfTable.findRowIndexByGeneSymbol(geneSymbol);
 
       if (rowIndex === null) {
-        test.fail(true, `Gene ${geneSymbol} not found in table`);
+        issues.push(`Gene ${geneSymbol} not found in table`);
         continue;
       }
 
@@ -95,7 +101,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const dataCells = await aotfTable.getDataCellsWithScores(rowIndex);
 
       if (dataCells.length === 0) {
-        test.fail(true, `Gene ${geneSymbol} has no data cells with scores`);
+        issues.push(`Gene ${geneSymbol} has no data cells with scores`);
         continue;
       }
 
@@ -104,7 +110,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const cellsToTest = dataCells.filter((cell) => !nonEvidenceColumns.includes(cell.columnId));
 
       if (cellsToTest.length === 0) {
-        test.fail(true, `Gene ${geneSymbol} has no evidence data cells`);
+        issues.push(`Gene ${geneSymbol} has no evidence data cells`);
         continue;
       }
 
@@ -152,6 +158,8 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       // Wait for table to reload with all results
       await aotfTable.waitForTableLoad();
     }
+
+    expect(issues, issues.join("\n")).toEqual([]);
   });
 
   test("specified genes in target prioritization view have correct evidence widgets", async ({
@@ -195,6 +203,12 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
     await aotfActions.switchToPrioritisationView();
     await aotfTable.waitForTableLoad();
 
+    // test.fail() marks the whole test as expected-to-fail from that point on;
+    // it doesn't fail just the current gene. Collect problems instead and
+    // assert them together at the end, so every gene still gets checked but
+    // the test's pass/fail outcome is a real, deterministic assertion.
+    const issues: string[] = [];
+
     for (const geneSymbol of genesToTest) {
       // Search for the specific gene
       await aotfActions.applyNameFilterAndWaitForResults(geneSymbol);
@@ -206,7 +220,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const rowIndex = await aotfTable.findRowIndexByGeneSymbol(geneSymbol);
 
       if (rowIndex === null) {
-        test.fail(true, `Gene ${geneSymbol} not found in prioritization table`);
+        issues.push(`Gene ${geneSymbol} not found in prioritization table`);
         continue;
       }
 
@@ -214,7 +228,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const dataCells = await aotfTable.getDataCellsWithScores(rowIndex);
 
       if (dataCells.length === 0) {
-        test.fail(true, `Gene ${geneSymbol} has no data cells with scores in prioritization view`);
+        issues.push(`Gene ${geneSymbol} has no data cells with scores in prioritization view`);
         continue;
       }
 
@@ -223,7 +237,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       const cellsToTest = dataCells.filter((cell) => !nonEvidenceColumns.includes(cell.columnId));
 
       if (cellsToTest.length === 0) {
-        test.fail(true, `Gene ${geneSymbol} has no evidence data cells in prioritization view`);
+        issues.push(`Gene ${geneSymbol} has no evidence data cells in prioritization view`);
         continue;
       }
 
@@ -277,5 +291,7 @@ test.describe("Disease Page - AOTF Evidence Widgets", { tag: "@smoke" }, () => {
       // Wait for table to reload with all results
       await aotfTable.waitForTableLoad();
     }
+
+    expect(issues, issues.join("\n")).toEqual([]);
   });
 });
