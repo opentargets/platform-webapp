@@ -98,7 +98,7 @@ function DownloadsFilter({
                 borderColor: color,
                 color: active ? "#fff" : color,
                 backgroundColor: active ? color : tintHex(color, 0.08),
-                "&:hover": {
+                "&.MuiChip-clickable:hover": {
                   backgroundColor: active ? color : tintHex(color, 0.18),
                 },
               }}
