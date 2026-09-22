@@ -141,7 +141,9 @@ export class MolecularInteractionsSection {
 
   // Table search
   getSearchInput(): Locator {
-    return this.getSection().locator("[data-testid='table-search-input'], input[placeholder*='Search']");
+    return this.getSection().locator(
+      "[data-testid='table-search-input'], input[placeholder*='Search']"
+    );
   }
 
   async search(searchTerm: string): Promise<void> {

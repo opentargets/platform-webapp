@@ -56,12 +56,12 @@ export class AotfActions {
   }
 
   // Facet filter selections
-  getFacetFilterOption(facetName: string): Locator {
+  getFacetFilterOption(): Locator {
     return this.page.getByRole("combobox", { name: "Facet filter" });
   }
 
-  async selectFacetFilter(facetName: string, optionValue: string): Promise<void> {
-    await this.getFacetFilterOption(facetName).click();
+  async selectFacetFilter(optionValue: string): Promise<void> {
+    await this.getFacetFilterOption().click();
     await this.page.locator(`[data-value='${optionValue}']`).click();
   }
 
@@ -237,8 +237,8 @@ export class AotfActions {
 
   async openAndConfigureFacets(facetConfig: Record<string, string>): Promise<void> {
     await this.openFacetsSearch();
-    for (const [facetName, optionValue] of Object.entries(facetConfig)) {
-      await this.selectFacetFilter(facetName, optionValue);
+    for (const optionValue of Object.values(facetConfig)) {
+      await this.selectFacetFilter(optionValue);
     }
   }
 }
