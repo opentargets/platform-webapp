@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { autoType, csv } from "d3";
+import { autoType, csvParse } from "d3";
 import { faHexagonNodes, faPrescriptionBottleMedical, faMapPin, faChartBar } from "@fortawesome/free-solid-svg-icons";
 import { Typography, Box, Link } from "ui";
-import metricsCsv from "./metrics.csv?url";
+import metricsCsv from "./metrics.csv?raw";
 import MetricsCards from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import MetricsWidget from "./MetricsWidget";
@@ -12,13 +11,9 @@ import VariantsByConsequenceImpact from "./VariantsByConsequenceImpact";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
 
+const data = csvParse(metricsCsv, autoType) as unknown as MetricRow[];
+
 function MetricsPage() {
-  const [data, setData] = useState<MetricRow[]>([]);
-
-  useEffect(() => {
-    csv(metricsCsv, autoType).then((d) => setData(d as unknown as MetricRow[]));
-  }, []);
-
   return (
     <>
       <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
