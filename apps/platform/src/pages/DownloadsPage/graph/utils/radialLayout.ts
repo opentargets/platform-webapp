@@ -45,7 +45,7 @@ export interface RadialLayoutResult {
 const HUB_FALLBACK_COUNT = 5;
 // Extra clearance kept between two nodes' circumscribing circles, on top of
 // their own half-diagonals.
-const SPACING_PADDING = 14;
+const SPACING_PADDING = 8;
 
 const minSpacingFor = (group: GraphNodeDatum[]): number => {
   const maxDiag = group.reduce((m, n) => Math.max(m, getNodeHalfDiagonal(n.size)), getNodeHalfDiagonal());
@@ -145,10 +145,10 @@ export const computeRadialLayout = (
   // Floors are kept small - just enough to avoid a degenerate near-zero
   // radius on a tiny container - so a genuinely narrow or short panel can
   // still compress that axis rather than being forced back toward square.
-  let hubRx = Math.max(width * 0.16, 50);
-  let hubRy = Math.max(height * 0.16, 50);
-  const spokeRx = Math.max(width * 0.26, 70);
-  const spokeRy = Math.max(height * 0.26, 70);
+  let hubRx = Math.max(width * 0.13, 50);
+  let hubRy = Math.max(height * 0.13, 50);
+  const spokeRx = Math.max(width * 0.2, 70);
+  const spokeRy = Math.max(height * 0.2, 70);
 
   const positions = new Map<string, { x: number; y: number }>();
   const hubs = pickHubs(nodes);
@@ -229,8 +229,13 @@ export const computeRadialLayout = (
   const tierGap = minSpacingFor(nodes);
   const multiRx = maxSingleReachX + tierGap * (maxSingleReachX / avgSingleReach);
   const multiRy = maxSingleReachY + tierGap * (maxSingleReachY / avgSingleReach);
-  let maxMultiReachX = multiRx;
-  let maxMultiReachY = multiRy;
+  // Only reserve the multi-hub tier's gap when there's actually a multi-hub
+  // group to place there - otherwise this tier sits empty and the isolated
+  // ring below (which starts one further tierGap past *this* value) ends up
+  // two tier-gaps past the single-hub fan instead of one, needlessly
+  // stranding isolated nodes far from the rest of the graph.
+  let maxMultiReachX = multiHubGroups.size > 0 ? multiRx : maxSingleReachX;
+  let maxMultiReachY = multiHubGroups.size > 0 ? multiRy : maxSingleReachY;
   multiHubGroups.forEach((group, key) => {
     const hubsFor = key.split('|');
     const sin = hubsFor.reduce((s, id) => s + Math.sin(hubAngle.get(id) ?? 0), 0);
@@ -266,14 +271,20 @@ export const computeRadialLayout = (
   }
 
   // Fully isolated (no edges at all) or unreachable from any hub - outermost
-  // ring (starting past the deepest multi-hub band), evenly spaced around the
-  // full circle so they never overlap each other. Grown further out if there
-  // are enough of them that the base radius can't fit them all.
+  // ring (starting just past the deepest multi-hub band), evenly spaced
+  // around the full circle so they never overlap each other. Grown further
+  // out if there are enough of them that the base radius can't fit them all.
+  // The gap past the multi-hub band only needs to clear these nodes' own
+  // footprint, sized off `sortedRest` itself - not `tierGap`, which is sized
+  // to the single largest node anywhere in the *whole* graph (a size-80 hub
+  // box) and would strand every isolated node far from the rest of the
+  // layout regardless of how small they actually are.
   const avgMultiReach = (maxMultiReachX + maxMultiReachY) / 2;
-  const baseIsolatedRx = maxMultiReachX + tierGap * (maxMultiReachX / avgMultiReach);
-  const baseIsolatedRy = maxMultiReachY + tierGap * (maxMultiReachY / avgMultiReach);
   const sortedRest = unplaced.sort((a, b) => a.label.localeCompare(b.label));
   const isolatedMinSpacing = minSpacingFor(sortedRest);
+  const isolatedGap = isolatedMinSpacing / 2;
+  const baseIsolatedRx = maxMultiReachX + isolatedGap * (maxMultiReachX / avgMultiReach);
+  const baseIsolatedRy = maxMultiReachY + isolatedGap * (maxMultiReachY / avgMultiReach);
   const isolatedRx = ringRadiusForCount(sortedRest.length, isolatedMinSpacing, baseIsolatedRx);
   const isolatedRy = ringRadiusForCount(sortedRest.length, isolatedMinSpacing, baseIsolatedRy);
   sortedRest.forEach((n, i) => {

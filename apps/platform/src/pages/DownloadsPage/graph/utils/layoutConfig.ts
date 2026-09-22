@@ -20,7 +20,7 @@ export interface ForceLayoutConfig {
  * Get the base force-simulation parameters
  */
 export const getLayoutConfig = (): ForceLayoutConfig => ({
-  collidePadding: 12,
+  collidePadding: 8,
   alphaDecay: 0.02,
   velocityDecay: 0.35,
 });
@@ -33,7 +33,7 @@ export const getLayoutConfig = (): ForceLayoutConfig => ({
  * panel actually is (e.g. after the cards/graph split divider is dragged).
  */
 export const getResponsiveLayoutConfig = (panelWidth: number): Partial<ForceLayoutConfig> =>
-  panelWidth < 600 ? { collidePadding: 6 } : {};
+  panelWidth < 600 ? { collidePadding: 4 } : {};
 
 /**
  * Get default layout options (used as fallback)
