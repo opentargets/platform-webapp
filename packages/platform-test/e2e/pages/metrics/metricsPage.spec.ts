@@ -84,7 +84,9 @@ test.describe("Metrics Page", { tag: "@smoke" }, () => {
     test("Evidence and Associations widget links to the platform docs", async ({ page }) => {
       const metricsPage = new MetricsPage(page);
 
-      const linksCount = await metricsPage.getWidgetExternalLinksCount("disease-target-associations");
+      const linksCount = await metricsPage.getWidgetExternalLinksCount(
+        "disease-target-associations"
+      );
       expect(linksCount).toBeGreaterThanOrEqual(2);
 
       const firstLink = metricsPage.getWidgetExternalLinks("disease-target-associations").first();
