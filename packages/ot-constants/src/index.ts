@@ -177,7 +177,6 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
   },
 ];
 
-
 export const QTLStudyType = [
   "scsqtl",
   "sceqtl",
