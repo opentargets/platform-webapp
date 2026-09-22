@@ -9,7 +9,7 @@ import { EnrichmentMapControlsProvider } from "./ResultsEnrichmentMap/utils/Enri
 import ResultsTable from "./ResultsTable";
 import ResultsTreeView from "./ResultsTreeView";
 
-type ViewMode = "table" | "tree" | "plotly" | "network";
+type ViewMode = "table" | "tree" | "sunburst" | "network";
 
 interface AnalysisResultsProps {
   results: GseaResult[];
@@ -65,11 +65,7 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
               <FontAwesomeIcon icon={faSitemap} style={{ marginRight: 6 }} />
               Tree view
             </ToggleButton>
-            {/* <ToggleButton value="sunburst">
-              <FontAwesomeIcon icon={faCircle} style={{ marginRight: 6 }} />
-              Sunburst
-            </ToggleButton> */}
-            <ToggleButton value="plotly">
+            <ToggleButton value="sunburst">
               <FontAwesomeIcon icon={faChartPie} style={{ marginRight: 6 }} />
               Sunburst
             </ToggleButton>
@@ -88,10 +84,10 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
         </Alert>
       )}
       {/* Scrollable content */}
-      <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'plotly'].includes(viewMode) ? 0 : 2 }}>
+      <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'sunburst'].includes(viewMode) ? 0 : 2 }}>
         {viewMode === "table" && <ResultsTable results={results} />}
         {viewMode === "tree" && <ResultsTreeView results={results} />}
-        {viewMode === "plotly" && (
+        {viewMode === "sunburst" && (
           <ResultsCustomSunburst
             key={activeRunId}
             results={results}
