@@ -63,14 +63,22 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Get graph data from schema context
   const { nodes: allNodes, edges: allEdges } = useGraphData();
 
-  // The canvas always renders the full node/edge set - the simulation is
-  // keyed off `nodes`/`edges` identity (see useGraphSimulation), so swapping
-  // in a smaller filtered array on every chip toggle would tear down and
-  // rebuild the whole layout, making it jump. Instead we compute which nodes
-  // match the same search text + category filters the card view uses
-  // (DownloadsContext) and dim the rest in place (see useFilterHighlight).
-  const nodes = allNodes;
-  const edges = allEdges;
+  // The canvas renders the full node/edge set minus datasets with no
+  // schema-declared relationship to anything else in the graph (degree 0) -
+  // those have no edges to draw, so keeping them only forces the radial
+  // layout (see radialLayout.ts) to reserve an entire extra ring of space
+  // for them far from the connected part of the graph. This is distinct
+  // from the category/search filters the card view uses: those toggle on
+  // every keystroke/click, so instead of re-filtering `nodes`/`edges`
+  // (which would tear down and rebuild the whole simulation, keyed off
+  // their identity - see useGraphSimulation) matches are dimmed in place
+  // via `filterMatchedIds` below. The degree filter below only changes when
+  // `allNodes` itself does, i.e. when the underlying schema data changes.
+  const nodes = useMemo(() => allNodes.filter((n) => (n.data.degree ?? 0) > 0), [allNodes]);
+  const edges = useMemo(() => {
+    const keptIds = new Set(nodes.map((n) => n.data.id));
+    return allEdges.filter((e) => keptIds.has(e.data.source) && keptIds.has(e.data.target));
+  }, [allEdges, nodes]);
 
   const filterMatchedIds = useMemo(() => {
     const query = state.freeTextQuery?.toLowerCase() ?? '';

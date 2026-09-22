@@ -128,6 +128,20 @@ function DownloadsPage() {
     return [selectedRow, ...filtered];
   }, [state.filteredRows, connectionFilter, neighborsById]);
 
+  // Everything else that still matches the search/category filters but isn't
+  // the selected node or one of its neighbours - shown as its own section
+  // below the connection-filtered cards, rather than just dropped, so
+  // narrowing to a node's connections doesn't also hide unrelated datasets
+  // the user was filtering for.
+  const remainderRows = useMemo(() => {
+    if (!connectionFilter) return [];
+    const neighbors = neighborsById.get(connectionFilter.id);
+    return state.filteredRows.filter(row => {
+      const id = String(row["@id"]).replace("-fileset", "");
+      return !(neighbors?.has(id) ?? false);
+    });
+  }, [state.filteredRows, connectionFilter, neighborsById]);
+
   useEffect(() => {
     if (loading) {
       dispatch(setLoading(true));
@@ -195,37 +209,74 @@ function DownloadsPage() {
             alignItems: "start",
           }}
         >
-          <Box
-            ref={cardsVisible ? cardsGridRef : undefined}
-            sx={{
-              display: "grid",
-              // Column count tracks the pane's actual pixel width (which the
-              // split divider controls directly), not the viewport breakpoint -
-              // a fixed column count per breakpoint would ignore how wide the
-              // user has actually dragged this pane to be.
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 2,
-              alignContent: "start",
-              minWidth: 0,
-              overflow: "hidden",
-            }}
-          >
-            {cardsToShow.length > 0 ? (
-              cardsToShow.map(e => {
-                const id = String(e["@id"]).replace("-fileset", "");
-                return (
-                  <DownloadsCard
-                    key={String(e["@id"])}
-                    data={e}
-                    connections={degreeById.get(id)}
-                    onViewConnections={handleViewConnections}
-                    highlighted={hoveredId === id || connectionFilter?.id === id}
-                    onHoverChange={hovering => handleCardHoverChange(hovering, id)}
-                  />
-                );
-              })
-            ) : (
-              <InvalidResultFilters />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+            <Box
+              ref={cardsVisible ? cardsGridRef : undefined}
+              sx={{
+                display: "grid",
+                // Column count tracks the pane's actual pixel width (which the
+                // split divider controls directly), not the viewport breakpoint -
+                // a fixed column count per breakpoint would ignore how wide the
+                // user has actually dragged this pane to be.
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 2,
+                alignContent: "start",
+                minWidth: 0,
+                overflow: "hidden",
+              }}
+            >
+              {cardsToShow.length > 0 ? (
+                cardsToShow.map(e => {
+                  const id = String(e["@id"]).replace("-fileset", "");
+                  return (
+                    <DownloadsCard
+                      key={String(e["@id"])}
+                      data={e}
+                      connections={degreeById.get(id)}
+                      onViewConnections={handleViewConnections}
+                      highlighted={hoveredId === id || connectionFilter?.id === id}
+                      onHoverChange={hovering => handleCardHoverChange(hovering, id)}
+                    />
+                  );
+                })
+              ) : (
+                <InvalidResultFilters />
+              )}
+            </Box>
+
+            {remainderRows.length > 0 && (
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: "bold", color: "text.secondary", mb: 2 }}
+                >
+                  Remainder datasets
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: 2,
+                    alignContent: "start",
+                    minWidth: 0,
+                    overflow: "hidden",
+                  }}
+                >
+                  {remainderRows.map(e => {
+                    const id = String(e["@id"]).replace("-fileset", "");
+                    return (
+                      <DownloadsCard
+                        key={String(e["@id"])}
+                        data={e}
+                        connections={degreeById.get(id)}
+                        onViewConnections={handleViewConnections}
+                        highlighted={hoveredId === id}
+                        onHoverChange={hovering => handleCardHoverChange(hovering, id)}
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
             )}
           </Box>
 
