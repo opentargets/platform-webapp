@@ -2,8 +2,7 @@
  * Category color palette shared between the card view (category chips,
  * filter checkboxes) and the graph view (node fill/stroke), so a category
  * means the same thing in both places instead of two disconnected color
- * languages. Disease keeps the platform's primary blue (#3489ca) so the
- * graph reads as part of the same product rather than a standalone widget.
+ * languages.
  *
  * Keyed by category name (not index) so a category's color stays stable as
  * the live API's category list grows or shrinks over time - unlike an
@@ -12,13 +11,13 @@
  */
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Target-Disease': '#6929c4',
-  Target: '#005d5d',
-  Disease: '#9f1853',
-  Drug: '#570408',
-  Genetics: '#009d9a',
-  Ontology: '#b28600',
-  Literature: '#002d9c',
+  'Target-Disease': '#F0BA70',
+  Target: '#F55D73',
+  Disease: '#92ACC4',
+  Drug: '#C77F92',
+  Genetics: '#078F91',
+  Ontology: '#447899',
+  Literature: '#B18FC5',
 };
 
 const OVERFLOW_COLOR = '#757575';
