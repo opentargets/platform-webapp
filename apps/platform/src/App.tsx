@@ -107,7 +107,7 @@ const router = createBrowserRouter([
             errorElement: <RouteErrorBoundary />,
           },
           {
-            // element: <PrivateRoute />,
+            element: <PrivateRoute />,
             children: [
               {
                 path: "/analysis",

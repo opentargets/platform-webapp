@@ -15,7 +15,6 @@ import { v1 } from "uuid";
 import HeaderMenu from "./HeaderMenu";
 import Link from "./Link";
 import OpenTargetsTitle from "./OpenTargetsTitle";
-import ToolsMenu from "./ToolsMenu";
 import PrivateWrapper from "./PrivateWrapper";
 
 const LogoBTN = styled(Button)<{ component?: React.ElementType; to?: string }>`

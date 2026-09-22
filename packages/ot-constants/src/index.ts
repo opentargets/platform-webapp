@@ -145,7 +145,8 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
   {
     name: "GSEA Analysis",
     url: "/analysis",
-    showOnlyPartner: false,
+    showOnlyPartner: true,
+    external: false,
   },
   {
     name: "PPP Documentation",
