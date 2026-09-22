@@ -11,6 +11,7 @@ const INITIAL_ROW_COUNT = 12;
 const ROW_HEIGHT = 23;
 const AXIS_HEIGHT = 32;
 const BUTTON_HEIGHT = 36;
+const COUNT_LABEL_GAP = 10;
 const IMPACTS = ["HIGH", "MODERATE", "LOW", "MODIFIER"] as const;
 const IMPACT_COLORS = {
   HIGH: DIVERGENT_SCHEME_RED_GREEN[1].toString(),
@@ -185,7 +186,7 @@ function renderChart({
         y: "name",
         text: (consequence) => consequence.count.toLocaleString(),
         textAnchor: "start",
-        dx: 8,
+        dx: COUNT_LABEL_GAP,
         fill: textColor,
         lineAnchor: "middle",
         fontSize: 12.5,
@@ -253,7 +254,7 @@ function getChartMarginRight(data: ConsequenceCount[], maxCount: number) {
       ? `${finalTick / 1_000}k`
       : finalTick.toString();
 
-  return Math.max(widestCount + 12, context.measureText(finalTickLabel).width / 2 + 4);
+  return Math.max(widestCount + COUNT_LABEL_GAP + 4, context.measureText(finalTickLabel).width / 2 + 4);
 }
 
 function getLabelColumnWidth(data: ConsequenceCount[]) {

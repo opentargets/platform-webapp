@@ -28,7 +28,7 @@ function MetricsWidget({ icon, title, description, children, id }: MetricsWidget
           </Box>
           <Box sx={{ flex: 1 }}>
             <StyledTitle>{title}</StyledTitle>
-            {description && <StyledDescription>{description}</StyledDescription>}
+            {description && <StyledDescription component="div">{description}</StyledDescription>}
           </Box>
         </CardHeaderContainer>
         <StyledCardContent>{children}</StyledCardContent>

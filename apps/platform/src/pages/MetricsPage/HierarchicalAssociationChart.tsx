@@ -1,4 +1,4 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import * as Plot from "@observablehq/plot";
 import { scaleLog } from "d3";

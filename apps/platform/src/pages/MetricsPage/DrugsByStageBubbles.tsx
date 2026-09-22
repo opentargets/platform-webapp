@@ -83,7 +83,7 @@ function DrugsByStageBubbles({ data }: { data: MetricRow[] }) {
       <Box ref={chartRef} sx={{ overflowX: "auto", mt: 2 }}>
         <Box sx={{ minWidth: `${minimumChartWidth}px` }}>
           <StageLabels />
-          <CoverageRow title="Drugs or candidates by max stage"><DrugBubbles data={drugData} maxCount={maxDrugCount} /></CoverageRow>
+          <CoverageRow title="Drugs and candidates by max stage"><DrugBubbles data={drugData} maxCount={maxDrugCount} /></CoverageRow>
           <CoverageRow title="Clinical reports"><ReportBars data={reportData} maxCount={maxReportCount} /></CoverageRow>
         </Box>
       </Box>
