@@ -68,14 +68,14 @@ export class GeneticConstraintSection {
   // Observed value
   async getObservedValue(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const obsCell = row.locator("td").nth(1);
+    const obsCell = row.locator("td").nth(2);
     return await obsCell.textContent();
   }
 
   // Expected value
   async getExpectedValue(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const expCell = row.locator("td").nth(2);
+    const expCell = row.locator("td").nth(1);
     return await expCell.textContent();
   }
 

@@ -16,7 +16,7 @@ const data = csvParse(metricsCsv, autoType) as unknown as MetricRow[];
 function MetricsPage() {
   return (
     <>
-      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+      <Typography variant="h4" component="h1" sx={{ mb: 3 }} data-testid="metrics-page-title">
         Open Targets Platform Metrics
       </Typography>
       <MetricsCards data={data} />
