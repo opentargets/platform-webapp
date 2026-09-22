@@ -108,14 +108,23 @@ function DownloadsFilter({
       </div>
 
       {connectionFilter && (
-        <Chip
-          size="small"
-          icon={<FontAwesomeIcon icon={faDiagramProject} size="xs" />}
-          label={`${connectionFilter.label} + ${connectionFilter.count} connected`}
-          onDelete={onClearConnectionFilter}
-          color="primary"
-          variant="outlined"
-        />
+        <>
+          {/* Zero-height, full-width flex item: forces everything after it
+              onto a fresh line within the flex-wrap bar above, rather than
+              sharing a line with the category chips whenever there happens
+              to be room. Kept separate from the chip itself so the chip
+              stays its normal pill size instead of stretching to fill the
+              row (which a flex-basis: 100% directly on the chip would do). */}
+          <Box sx={{ flexBasis: "100%", height: 0 }} />
+          <Chip
+            size="small"
+            icon={<FontAwesomeIcon icon={faDiagramProject} size="xs" />}
+            label={`${connectionFilter.label} + ${connectionFilter.count} connected`}
+            onDelete={onClearConnectionFilter}
+            color="primary"
+            variant="outlined"
+          />
+        </>
       )}
 
       <Box sx={{ flex: 1 }} />
