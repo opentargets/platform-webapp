@@ -143,6 +143,11 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     external: true,
   },
   {
+    name: "GSEA Analysis",
+    url: "/analysis",
+    showOnlyPartner: false,
+  },
+  {
     name: "PPP Documentation",
     url: "https://home.opentargets.org/ppp-documentation",
     external: true,
@@ -171,14 +176,6 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
   },
 ];
 
-// Tools Menu Items Configuration
-export const toolsMenuItems: MenuItem[] = [
-  {
-    name: "GSEA Analysis",
-    url: "/analysis",
-    external: false,
-  },
-];
 
 export const QTLStudyType = [
   "scsqtl",

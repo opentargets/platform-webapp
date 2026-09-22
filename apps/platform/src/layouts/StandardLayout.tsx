@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
 import { Page, NavBar, Footer, GlobalSearch } from "ui";
-import { externalLinks, mainMenuItems, toolsMenuItems } from "@ot/constants";
+import { externalLinks, mainMenuItems } from "@ot/constants";
 
 function StandardLayout() {
   return (
@@ -10,7 +10,6 @@ function StandardLayout() {
           name="Platform"
           search={<GlobalSearch />}
           items={mainMenuItems}
-          tools={toolsMenuItems}
         />
       }
       footer={<Footer externalLinks={externalLinks} />}

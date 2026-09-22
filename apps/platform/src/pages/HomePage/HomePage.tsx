@@ -148,7 +148,6 @@ function HomePage(): JSX.Element {
           name="platform"
           homepage
           items={mainMenuItems}
-          tools={toolsMenuItems}
           placement="bottom-end"
         />
         <HomeBox>

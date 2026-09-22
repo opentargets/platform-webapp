@@ -123,7 +123,6 @@ function NavBar({
   contact,
   homepage,
   items,
-  tools,
   placement,
 }: NavBarProps): ReactElement {
   const theme = useTheme<Theme>();
@@ -182,9 +181,6 @@ function NavBar({
           {downloads ? <MenuExternalLink href={downloads}>Downloads</MenuExternalLink> : null}
 
           {contact ? <MenuExternalLink href={contact}>Contact</MenuExternalLink> : null}
-
-          {tools && tools.length ? <ToolsMenu items={tools} /> : null}
-
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}
 
           {isHomePageRegular && (
