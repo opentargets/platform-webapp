@@ -21,6 +21,13 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
     if (maxClinicalStage === "APPROVAL" && !records.APPROVAL) {
       initStage = records.PHASE_4 ? "PHASE_4" : "WITHDRAWAL";
     }
+    // maxClinicalStage is server-computed independently of the fetched clinicalReports
+    // records, so it can name a stage with no matching records — fall back to any
+    // stage actually present, or none at all if there are no records whatsoever.
+    if (!records[initStage]) {
+      const stages = Object.keys(records);
+      initStage = stages.length > 0 ? stages[0] : null;
+    }
     setSelectedStage(initStage);
   }, [maxClinicalStage, records]);
 
@@ -97,7 +104,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
                   <Typography variant="caption">Source:</Typography>
                   <Typography variant="caption" sx={{ fontSize: 13 }}>
                     {source}
-                    {sourceInfo?.name !== source && (
+                    {sourceInfo?.name !== source && sourceInfo?.name && (
                       <Tooltip
                         showHelpIcon
                         title={

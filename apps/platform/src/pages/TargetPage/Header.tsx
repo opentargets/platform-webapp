@@ -1,6 +1,6 @@
 import { faDna } from "@fortawesome/free-solid-svg-icons";
 
-import { ExternalLink, TepLink, XRefLinks, Header as HeaderBase } from "ui";
+import { ExternalLink, XRefLinks, Header as HeaderBase } from "ui";
 
 export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
   const ensemblUrl = `https://identifiers.org/ensembl:${ensgId}`;
@@ -22,7 +22,6 @@ export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
         />
         <ExternalLink title="GeneCards" id={symbol} url={genecardsUrl} />
         <ExternalLink title="HGNC" id={symbol} url={hgncUrl} />
-        <TepLink ensgId={ensgId} symbol={symbol} />
       </>
     ),
   };

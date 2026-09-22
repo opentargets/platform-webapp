@@ -82,17 +82,6 @@ test.describe("Target Page - Header and Navigation", () => {
       // At minimum: Ensembl, UniProt, GeneCards, HGNC
       expect(linksCount).toBeGreaterThanOrEqual(4);
     });
-
-    test("TEP link is present when target has TEP data", async ({ page }) => {
-      const targetPage = new TargetPage(page);
-      await targetPage.waitForPageLoad();
-
-      // This link may not always be present, so we check conditionally
-      const tepHref = await targetPage.getTEPLinkHref();
-      if (tepHref) {
-        expect(tepHref).toContain("thesgc.org/tep");
-      }
-    });
   });
 
   test.describe("Tab Navigation", () => {
