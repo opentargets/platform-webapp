@@ -8,6 +8,7 @@
  */
 
 import { expect, test } from "../fixtures";
+import { waitForRenderSettled } from "../utils/waitForRenderSettled";
 
 interface PageHealthReport {
   name: string;
@@ -418,7 +419,11 @@ test.describe("GraphQL Health Monitoring - All Pages", () => {
 
       graphqlMonitor.clear();
       await page.goto(pageInfo.url);
-      await page.waitForLoadState("networkidle");
+      // networkidle can hang indefinitely on pages with any background
+      // network activity unrelated to GraphQL; wait on the GraphQL traffic
+      // itself finishing, then confirm the page actually rendered.
+      await graphqlMonitor.waitForIdle();
+      await waitForRenderSettled(page);
 
       const stats = graphqlMonitor.getStats();
       if (stats.averageResponseTime > MAX_RESPONSE_TIME) {

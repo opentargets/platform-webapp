@@ -20,18 +20,22 @@ type MetricsWidgetProps = {
 
 function MetricsWidget({ icon, title, description, children, id }: MetricsWidgetProps) {
   return (
-    <section id={id}>
+    <section id={id} data-testid={id && `metrics-widget-${id}`}>
       <Card elevation={0} variant="outlined">
         <CardHeaderContainer>
           <Box sx={{ color: "secondary.main", fontSize: "1.9rem" }}>
             <FontAwesomeIcon icon={icon} />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <StyledTitle>{title}</StyledTitle>
-            {description && <StyledDescription component="div">{description}</StyledDescription>}
+            <StyledTitle data-testid={id && `metrics-widget-${id}-title`}>{title}</StyledTitle>
+            {description && (
+              <StyledDescription component="div" data-testid={id && `metrics-widget-${id}-description`}>
+                {description}
+              </StyledDescription>
+            )}
           </Box>
         </CardHeaderContainer>
-        <StyledCardContent>{children}</StyledCardContent>
+        <StyledCardContent data-testid={id && `metrics-widget-${id}-content`}>{children}</StyledCardContent>
       </Card>
     </section>
   );
