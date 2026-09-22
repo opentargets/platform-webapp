@@ -4,6 +4,7 @@
  */
 
 import { enrichNodesWithClassification } from './nodeClassifier';
+import { getCategoryColor } from '../../categoryColors';
 
 interface DownloadDataset {
   id: string;
@@ -222,6 +223,113 @@ export const transformRecordSetToGraph = (
   return { nodes: enrichedNodes, edges };
 };
 
+/** One row of an ERD table card - a top-level dataset field (nested subFields aren't broken into their own rows) */
+export interface ErdFieldDatum {
+  name: string;
+  dataType: string;
+  isKey: boolean;
+  isForeign: boolean;
+}
+
+export interface ErdNodeData {
+  id: string;
+  label: string;
+  description: string;
+  category: string;
+  color: string;
+  fields: ErdFieldDatum[];
+}
+
+export interface ErdEdgeData {
+  id: string;
+  source: string;
+  target: string;
+  /** Top-level field name in `source` to anchor the connector at (its row) */
+  sourceField: string;
+  /** Full dotted path to the actual (possibly nested) referencing field, for the tooltip */
+  sourceFieldPath: string;
+  /** Field name in `target` to anchor the connector at (its row) */
+  targetField: string;
+}
+
+export interface ErdNode {
+  data: ErdNodeData;
+}
+
+export interface ErdEdge {
+  data: ErdEdgeData;
+}
+
+/** Strip the "sc:"/"cr:" schema.org/Croissant namespace prefix off a field's dataType, e.g. "sc:Text" -> "Text" */
+const humanizeDataType = (field: CroissantField): string => {
+  const base = field.dataType ? field.dataType.split(':')[1] ?? field.dataType : field.subField?.length ? 'Record' : '';
+  return field.repeated ? `${base}[]` : base;
+};
+
+/** Normalize a RecordSet's `key` (a single field ref or a list of them) into a set of field @ids */
+const keyFieldIds = (key?: { '@id': string } | Array<{ '@id': string }>): Set<string> => {
+  if (!key) return new Set();
+  const list = Array.isArray(key) ? key : [key];
+  return new Set(list.map((k) => k['@id']));
+};
+
+/**
+ * Transform the Downloads page's `recordSet` (Croissant schema) data into an
+ * entity-relationship diagram: one table card per dataset (with a row per
+ * top-level field, its type, and whether it's a primary/foreign key), and
+ * one connector per foreign-key reference - anchored to the specific field
+ * rows it runs between, rather than one merged edge per dataset pair (see
+ * `transformRecordSetToGraph`, used by the force-directed network view).
+ */
+export const transformRecordSetToERD = (
+  recordSets: CroissantRecordSet[] = []
+): { nodes: ErdNode[]; edges: ErdEdge[] } => {
+  const datasetIds = new Set(recordSets.map((recordSet) => recordSet['@id']));
+
+  const nodes: ErdNode[] = recordSets.map((recordSet) => {
+    const keyIds = keyFieldIds(recordSet.key);
+    const category = classifyRecordSetType(recordSet['@id'], recordSet.description);
+    const fields: ErdFieldDatum[] = (recordSet.field ?? []).map((field) => ({
+      name: field.name,
+      dataType: humanizeDataType(field),
+      isKey: keyIds.has(field['@id']),
+      isForeign: Boolean(field.references?.field?.['@id']),
+    }));
+
+    return {
+      data: {
+        id: recordSet['@id'],
+        label: recordSet.name,
+        description: stripCategoryTag(recordSet.description),
+        category,
+        color: getCategoryColor(category),
+        fields,
+      },
+    };
+  });
+
+  const edges: ErdEdge[] = [];
+  recordSets.forEach((recordSet) => {
+    collectFieldReferences(recordSet.field).forEach((ref) => {
+      const targetId = ref.targetDatasetId;
+      if (targetId === recordSet['@id'] || !datasetIds.has(targetId)) return;
+
+      edges.push({
+        data: {
+          id: `erd-edge-${edges.length}`,
+          source: recordSet['@id'],
+          target: targetId,
+          sourceField: ref.sourceField.split('.')[0],
+          sourceFieldPath: ref.sourceField,
+          targetField: ref.targetField,
+        },
+      });
+    });
+  });
+
+  return { nodes, edges };
+};
+
 /**
  * Extract foreign key relationships from schema fields
  */
@@ -357,6 +465,7 @@ export default {
   transformDownloadsToNodes,
   transformSchemaToEdges,
   transformRecordSetToGraph,
+  transformRecordSetToERD,
   toCytoscapeElements,
   mergeGraphs,
   filterGraphByNodeType,
