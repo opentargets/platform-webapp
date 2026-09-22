@@ -95,7 +95,10 @@ function MetricsPage() {
             <Typography variant="body2">
               <Link external to="https://platform-docs.opentargets.org/variant">Variants</Link>
               {" "}by{" "}
-              most severe consequence and impact.
+              <Link external to=" https://www.ensembl.org/tools/vep">
+                most severe consequence and impact
+              </Link>
+              .
             </Typography>
           }
         >
