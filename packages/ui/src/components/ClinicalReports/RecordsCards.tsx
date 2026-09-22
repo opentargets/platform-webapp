@@ -50,7 +50,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
         />
       ),
       renderCell: (record) => {
-        const { source, trialStartDate, type, trialOverallStatus, title } = record;
+        const { source, trialStartDate, type, trialOverallStatus, title, year } = record;
         const sourceInfo = clinicalReportsSourcesInfo[source];
 
         const displayTitle = (
@@ -125,21 +125,38 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
                   </Box>
                 )}
               </Box>
-              {trialStartDate && (
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
-                  <Typography variant="caption">Start:</Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: 13,
-                      fontVariant: "common-ligatures tabular-nums",
-                      letterSpacing: "-0.05em",
-                    }}
-                  >
-                    {trialStartDate.slice(0, 4)}
-                  </Typography>
-                </Box>
-              )}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {trialStartDate && (
+                  <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+                    <Typography variant="caption">Start:</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: 13,
+                        fontVariant: "common-ligatures tabular-nums",
+                        letterSpacing: "-0.05em",
+                      }}
+                    >
+                      {trialStartDate.slice(0, 4)}
+                    </Typography>
+                  </Box>
+                )}
+                {year && (
+                  <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+                    <Typography variant="caption">Year:</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: 13,
+                        fontVariant: "common-ligatures tabular-nums",
+                        letterSpacing: "-0.05em",
+                      }}
+                    >
+                      {year}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Box>
           </Box>
         );
@@ -155,6 +172,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
     { id: "source" },
     { id: "trialOverallStatus" },
     { id: "trialStartDate" },
+    { id: "year" },
   ];
 
   if (showLoading) {
