@@ -232,7 +232,6 @@ export class AotfActions {
     await this.searchByName(name);
     // NameFilter debounces input by 300ms before triggering the search query
     await this.page.waitForTimeout(300);
-    await this.page.waitForLoadState("networkidle");
   }
 
   async openAndConfigureFacets(facetConfig: Record<string, string>): Promise<void> {
