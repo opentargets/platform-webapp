@@ -100,7 +100,7 @@ export const getEntityDescription = (entity, data) => {
 
 const getTrimmedDescription = (description: string | null) => {
   if (!description || description.length < 1) return "No description available.";
-  return description.substring(0, 150);
+  return description;
 };
 
 export const getCredibleSetsDescription = ({ variantId, studyId }): string => {
