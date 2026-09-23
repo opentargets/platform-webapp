@@ -85,6 +85,11 @@ type MenuExternalLinkProps = {
   children: ReactNode;
 };
 
+type ToolsMenuItem = {
+  name: string;
+  url: string;
+};
+
 type NavBarProps = {
   name?: string;
   search?: ReactNode;
@@ -94,6 +99,7 @@ type NavBarProps = {
   contact?: string;
   homepage?: boolean;
   items?: NavBarItem[];
+  tools?: ToolsMenuItem[];
   placement?: PopperPlacementType;
 };
 
@@ -174,7 +180,6 @@ function NavBar({
           {downloads ? <MenuExternalLink href={downloads}>Downloads</MenuExternalLink> : null}
 
           {contact ? <MenuExternalLink href={contact}>Contact</MenuExternalLink> : null}
-
           {items && !isHomePageRegular ? <HeaderMenu items={items} placement={placement} /> : null}
 
           {isHomePageRegular && (

@@ -5,6 +5,7 @@ import {
   Field,
   Tooltip,
   Box,
+  Chip,
 } from "ui";
 import { useTheme } from "@mui/material/styles";
 import TargetDescription from "./TargetDescription";
@@ -90,28 +91,35 @@ function ProfileHeader() {
           descriptions={targetDescription}
           targetId={data?.target.id}
         />
-        {data?.target.genomicLocation && (
-          <GenomicLocation geneLoc={data?.target.genomicLocation} />
-        )}
         {geneInfo
           .filter(gi => gi.isVisible)
           .map(e => (
-            <Box
-              key={e.label}
-              sx={{
-                whiteSpace: "nowrap",
-                p: "1px 5px",
-                color: theme => theme.palette.grey[600],
-                border: theme => `1px solid ${theme.palette.grey[600]}`,
-                borderRadius: "5px",
-                width: "min-content",
-                mt: 1,
-                typography: "body2",
-              }}
-            >
-              <Tooltip title={e.tooltip}>{e.label}</Tooltip>
+            <Box key={e.label} sx={{ mt: 2 }} component="span">
+              <Tooltip title={e.tooltip}>
+                <Chip
+                  variant="filled"
+                  size="small"
+                  label={e.label}
+                  sx={{
+                    borderRadius: "4px",
+                    backgroundColor: theme => theme.palette.primary.dark,
+                    color: theme => theme.palette.primary.contrastText,
+                  }}
+                />
+              </Tooltip>
             </Box>
           ))}
+        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", mb:2 }}>
+          {data?.target.genomicLocation && (
+            <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
+          )}
+          {data?.target.canonicalTranscript && (
+            <GenomicLocation
+              label="Canonical transcript"
+              geneLoc={data?.target.canonicalTranscript}
+            />
+          )}
+        </Box>
       </>
       <ProfileChipList title="Synonyms" loading={loading}>
         {synonyms}

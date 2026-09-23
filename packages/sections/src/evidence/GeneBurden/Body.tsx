@@ -90,6 +90,7 @@ const getColumns = label => [
     label: "Ancestry",
     renderCell: ({ ancestry, ancestryId }) => {
       if (!ancestry) return naLabel;
+      if (!ancestryId) return ancestry;
       return (
         <Link to={`http://purl.obolibrary.org/obo/${ancestryId}`} external>
           {ancestry}

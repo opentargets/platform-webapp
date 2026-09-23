@@ -158,12 +158,13 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
     trialWhyStopped,
     trialStopReasonCategories,
     trialStartDate,
+    year,
     url,
     trialDescription,
     trialLiterature,
+    trialSponsor,
     diseases,
     drugs,
-    hasExpertReview,
   } = details;
 
   const sourceInfo = clinicalReportsSourcesInfo[source];
@@ -183,27 +184,25 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       </Link>
 
       <FieldRow label="Source">
-        <Box
-          sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}
-        >
-          {sourceInfo ? (
-            <Link to={sourceInfo.url}>
-              <Typography variant="body2">
-                {sourceInfo.name} {sourceInfo.name !== source && `(${source})`}
-              </Typography>
-            </Link>
-          ) : (
-            <Typography variant="body2">{source}</Typography>
-          )}
-          {hasExpertReview && (
-            <Chip
-              label={<Typography variant="caption">Expert review</Typography>}
-              variant="outlined"
-              size="small"
-            />
-          )}
-        </Box>
+        {sourceInfo ? (
+          <Link to={sourceInfo.url}>
+            <Typography variant="body2">
+              {sourceInfo.name} {sourceInfo.name !== source && `(${source})`}
+            </Typography>
+          </Link>
+        ) : (
+          <Typography variant="body2">{source}</Typography>
+        )}
       </FieldRow>
+
+      {trialSponsor?.name && (
+        <FieldRow label="Sponsor">
+          <Typography variant="body2">
+            {trialSponsor.name}
+            {trialSponsor.agencyClass && ` (${trialSponsor.agencyClass})`}
+          </Typography>
+        </FieldRow>
+      )}
 
       {countries?.length > 0 && (
         <FieldRow label="Status">
@@ -230,6 +229,12 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       {trialStartDate && (
         <FieldRow label="Start">
           <Typography variant="body2">{trialStartDate}</Typography>
+        </FieldRow>
+      )}
+
+      {year && (
+        <FieldRow label="Year">
+          <Typography variant="body2">{year}</Typography>
         </FieldRow>
       )}
 
@@ -357,7 +362,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
           <Typography variant="subtitle2">Literature</Typography>
           <Box sx={{ mt: -5 }}>
             <PublicationsList
-              entriesIds={trialLiterature}
+              entriesIds={trialLiterature.map((lit: any) => lit.id)}
               hideSearch
               name={undefined}
               symbol={undefined}

@@ -30,6 +30,7 @@ import {
   appCanonicalUrl,
   externalLinks,
   mainMenuItems,
+  toolsMenuItems,
 } from "@ot/constants";
 import HomeBox from "./HomeBox";
 import Splash from "./Splash";
@@ -143,7 +144,12 @@ function HomePage(): JSX.Element {
       </Helmet>
       <GridLegacy container justifyContent="center" alignItems="center">
         <Splash />
-        <NavBar name="platform" homepage items={mainMenuItems} placement="bottom-end" />
+        <NavBar
+          name="platform"
+          homepage
+          items={mainMenuItems}
+          placement="bottom-end"
+        />
         <HomeBox>
           <GlobalSearch isHomePage />
           {/* Search examples */}
