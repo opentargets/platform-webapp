@@ -5,7 +5,13 @@ import { externalLinks, mainMenuItems } from "@ot/constants";
 function StandardLayout() {
   return (
     <Page
-      header={<NavBar name="Platform" search={<GlobalSearch />} items={mainMenuItems} />}
+      header={
+        <NavBar
+          name="Platform"
+          search={<GlobalSearch />}
+          items={mainMenuItems}
+        />
+      }
       footer={<Footer externalLinks={externalLinks} />}
     >
       <Outlet />

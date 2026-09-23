@@ -8,6 +8,7 @@ import {
   PublicationsDrawer,
   OtTable,
   DirectionalityDrawer,
+  DisplayVariantId,
   Box,
 } from "ui";
 
@@ -60,7 +61,7 @@ function getColumns(theme) {
         variantRsId ? (
           <Link
             external
-            to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+            to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
           >
             {variantRsId}
           </Link>
@@ -97,7 +98,23 @@ function getColumns(theme) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }) => genotypeId || naLabel,
+      renderCell: ({ genotypeId }) => {
+        if (!genotypeId) return naLabel;
+        const [chr, pos, ref, alt] = genotypeId.split(",")[0].split("_");
+        if (!chr || !pos || !ref || !alt) return genotypeId;
+        const variantId = `${chr}_${pos}_${ref}_${alt}`;
+        return (
+          <Link asyncTooltip to={`/variant/${variantId}`}>
+            <DisplayVariantId
+              variantId={variantId}
+              referenceAllele={ref}
+              alternateAllele={alt}
+              expand={false}
+            />
+            {genotypeId.includes(",") ? `,${genotypeId.split(",")[1]}` : ""}
+          </Link>
+        );
+      },
     },
     {
       id: "variantConsequence",

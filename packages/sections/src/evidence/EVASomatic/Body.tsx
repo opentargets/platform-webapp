@@ -85,7 +85,7 @@ const getColumns = label => [
       variantRsId ? (
         <Link
           external
-          to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+          to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
         >
           {variantRsId}
         </Link>
