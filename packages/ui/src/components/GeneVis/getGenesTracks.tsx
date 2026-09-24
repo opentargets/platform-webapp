@@ -9,6 +9,7 @@ import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
 import { grey, green } from "@mui/material/colors";
 import { getCanonicalTranscript } from "./getCanonicalTranscript";
+import { getGeneLabelText } from "./helpers";
 
 const L2G_GENE_COLOR = 0x138160;
 const L2G_HOVER_BOX_COLOR = Number.parseInt(green[100].slice(1), 16);
@@ -172,11 +173,7 @@ export function getGenesTracks({
 
             // Compute label text and width for gene box
             const score = data?.l2GPredictions?.rows.find((r: any) => r.target.id === target.id)?.score;
-            const leftArrow = target.genomicLocation.strand === "NEGATIVE" ? "← " : "";
-            const rightArrow = target.genomicLocation.strand === "POSITIVE" ? " →" : "";
-            const labelText = score !== undefined
-              ? `${leftArrow}${target.approvedSymbol || target.id}: ${score.toFixed(3)}${rightArrow}`
-              : `${leftArrow}${target.approvedSymbol || target.id}${rightArrow}`;
+            const labelText = getGeneLabelText(target, score);
 
             // Match the actual Pixi text footprint, including the L2G label background.
             const labelWidthPixels = showGeneLabel

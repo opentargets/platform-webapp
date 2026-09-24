@@ -18,10 +18,7 @@ function GeneVis({
   return (
     <GenTrackProvider initialState={{ data, xMin, xMax, chromosome }} >
       <GenTrackTooltipProvider >
-        <GeneVisInner
-          chromosome={chromosome}
-          initialZoom={initialZoom}
-        />
+        <GeneVisInner initialZoom={initialZoom} />
       </GenTrackTooltipProvider>
     </GenTrackProvider>
   );

@@ -6,16 +6,13 @@ import Description from "./Description";
 import { useEffect } from "react";
 import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
 import REGION_TARGETS_QUERY from "./RegionTargetsQuery.gql";
-import { table5HChunkSize, chromosomeInfo } from "@ot/constants";
+import { table5HChunkSize } from "@ot/constants";
+import { getBrowserViewRegion } from "./helpers";
 
 type BodyProps = {
 	id: string;
 	entity: string;
 };
-
-const MAX_REGION_WIDTH = 5_000_000;
-const REGION_PADDING = 1_000_000;
-const PAN_ZOOM_PADDING = 250_000;
 
 function Body({ id, entity }: BodyProps) {
   const variables = {
@@ -35,57 +32,11 @@ function Body({ id, entity }: BodyProps) {
 
   const locusRows = data?.locus?.rows ?? [];
   const chromosome = locusRows[0]?.variant?.chromosome;
-  const chromosomeLength = chromosomeInfo.find(item => item.chromosome === chromosome)?.length;
-  const locusPositions = locusRows
-    .map(row => row.variant?.position)
-    .filter((position): position is number => Number.isFinite(position));
-  const l2GPositions = (data?.l2GPredictions?.rows ?? []).flatMap(row => {
-    const genomicLocation = row.target?.genomicLocation;
-    if (
-      genomicLocation?.chromosome !== chromosome ||
-      !Number.isFinite(genomicLocation.start) ||
-      !Number.isFinite(genomicLocation.end)
-    ) {
-      return [];
-    }
-    return [genomicLocation.start, genomicLocation.end];
+  const { start, end, initialZoom, regionVariables } = getBrowserViewRegion({
+    chromosome,
+    locusRows,
+    l2gRows: data?.l2GPredictions?.rows ?? [],
   });
-  const positions = [...locusPositions, ...l2GPositions];
-  const earliestPosition = positions.length > 0 ? Math.min(...positions) : undefined;
-  const highestPosition = positions.length > 0 ? Math.max(...positions) : undefined;
-
-  let start: number | undefined;
-  let end: number | undefined;
-  let initialZoom: [number, number] | undefined;
-
-  if (chromosome && chromosomeLength && earliestPosition !== undefined && highestPosition !== undefined) {
-    const regionWidth = Math.min(
-      highestPosition - earliestPosition + REGION_PADDING,
-      MAX_REGION_WIDTH
-    );
-    const center = Math.round((earliestPosition + highestPosition) / 2);
-    start = Math.floor(center - regionWidth / 2);
-    end = Math.ceil(center + regionWidth / 2);
-
-    if (start < 0) {
-      end -= start;
-      start = 0;
-    } else if (end > chromosomeLength) {
-      const overflow = end - chromosomeLength;
-      end = chromosomeLength;
-      start -= overflow;
-    }
-
-    const zoomStart = start + PAN_ZOOM_PADDING;
-    const zoomEnd = end - PAN_ZOOM_PADDING;
-    initialZoom = zoomStart >= zoomEnd || zoomStart > earliestPosition || zoomEnd < highestPosition
-      ? [start, end]
-      : [zoomStart, zoomEnd];
-  }
-
-  const regionVariables = chromosome && start !== undefined && end !== undefined
-    ? { chromosome: `chr${chromosome}`, positionStart: start, positionEnd: end }
-    : undefined;
   const regionRequest = useQuery(REGION_TARGETS_QUERY, {
     variables: regionVariables,
     skip: !regionVariables,
@@ -135,8 +86,9 @@ function Body({ id, entity }: BodyProps) {
           return <Typography component="h2">Loading region data...</Typography>;
         }
 
-        return <Box sx={{ pt: 1 }}>
-          <GeneVis
+        return (
+          <Box sx={{ pt: 1 }}>
+            <GeneVis
               data={combinedData}
               chromosome={chromosome}
               xMin={start}
@@ -144,6 +96,7 @@ function Body({ id, entity }: BodyProps) {
               initialZoom={initialZoom}
             />
           </Box>
+        );
       }}
 		/>
 	);

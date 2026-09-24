@@ -16,41 +16,20 @@ import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
 import UnifiedTooltip, { TOOLTIP_WIDTH } from "./UnifiedTooltip";
-import { TextMetrics, TextStyle } from "pixi.js";
-
-const BIOTYPE_DISPLAY_NAMES = {
-  protein_coding: "Protein coding",
-  processed_transcript: "Processed transcript",
-  pseudogene: "Pseudogene",
-  rna: "RNA",
-  other: "Other",
-};
-
-const BIOTYPE_ORDER = ["protein_coding", "rna", "pseudogene", "processed_transcript", "other"];
-const geneLabelStyle = new TextStyle({ align: "center", fill: "#000", fontSize: 10.5, fontWeight: "100", wordWrap: false });
-const L2G_LABEL_PADDING = 6;
-
-function getGeneLabelText(gene: any, score: number | undefined) {
-  const leftArrow = gene.genomicLocation.strand === "NEGATIVE" ? "← " : "";
-  const rightArrow = gene.genomicLocation.strand === "POSITIVE" ? " →" : "";
-  const name = gene.approvedSymbol || gene.id;
-  return score !== undefined ? `${leftArrow}${name}: ${score.toFixed(3)}${rightArrow}` : `${leftArrow}${name}${rightArrow}`;
-}
-
-function groupTargetsByBiotype(targets) {
-  return Object.groupBy(targets, gene => {
-    const b = gene.biotype?.toLowerCase() ?? "other";
-    if (b === "protein_coding") return "protein_coding";
-    if (b === "processed_transcript") return "processed_transcript";
-    if (b.includes("pseudogene")) return "pseudogene";
-    if (b.includes("rna")) return "rna";
-    return "other";
-  });
-}
+import { TextMetrics } from "pixi.js";
+import {
+  BIOTYPE_DISPLAY_NAMES,
+  BIOTYPE_ORDER,
+  geneLabelStyle,
+  L2G_LABEL_PADDING,
+  getBiotypeConfig,
+  getGeneLabelText,
+  getGeneTrackLayout,
+  groupTargetsByBiotype,
+} from "./helpers";
 
 function GeneVisInner(props: {
   initialZoom?: [number, number];
-  [key: string]: any;
 }) {
   const { initialZoom } = props;
 
@@ -62,20 +41,6 @@ function GeneVisInner(props: {
     data?.l2GPredictions?.rows?.map(row => row.target.id) || []
   );
   const regionTargets = data?.region?.targets?.rows ?? [];
-
-  // Per-biotype track configuration
-  const getBiotypeConfig = (biotype?: string) => {
-    if (biotype === 'protein_coding') {
-      return {
-        pixelGapCenterToCenter: 95, // Adjusted back from 90 - less tight
-        detailRowHeight: 30,
-      };
-    }
-    return {
-      pixelGapCenterToCenter: 80, // Reduced from 100 for tighter spacing
-      detailRowHeight: 20, // Further reduced from 24 for other biotypes
-    };
-  };
 
   const Y_INFO_WIDTH = 150;
   const Y_INFO_GAP = 0;
@@ -145,34 +110,13 @@ function GeneVisInner(props: {
         labelWidthPixelsById: zoomableLabelWidths,
       });
 
-      // Build zoomable row heights
-      const zoomableRowsWithLabels = new Set<number>();
-      for (const gene of targets) {
-        const row = zoomableGeneToRow[gene.id];
-        if (row !== undefined && zoomableLabeledIds.has(gene.id)) {
-          zoomableRowsWithLabels.add(row);
-        }
-      }
-
-      const zoomableNRows = Math.max(...Object.values(zoomableGeneToRow).map((v: unknown) => Number(v))) + 1;
-      const zoomableRowHeightMap: number[] = [];
-      const zoomableRowYOffsets: number[] = [];
-      const zoomableTrackVerticalPadding = 2;
-      let zoomableCurrentYOffset = zoomableTrackVerticalPadding;
-      const zoomableTallHeight = zoomableConfig.detailRowHeight;
-      const zoomableShortHeight = Math.max(16, zoomableTallHeight / 2 + 2);
-      const zoomableRowGap = 2;
-
-      for (let r = 0; r < zoomableNRows; r++) {
-        const rowHasLabels = zoomableRowsWithLabels.has(r);
-        const rowHeight = rowHasLabels ? zoomableTallHeight : zoomableShortHeight;
-        zoomableRowHeightMap[r] = rowHeight;
-        zoomableRowYOffsets[r] = zoomableCurrentYOffset;
-        zoomableCurrentYOffset += rowHeight + (r < zoomableNRows - 1 ? zoomableRowGap : 0);
-      }
-      const zoomableTrackHeight = zoomableCurrentYOffset + zoomableTrackVerticalPadding;
-      const zoomableFinalTrackHeight = Math.max(zoomableTrackHeight, 20);
-      const zoomablePadding = biotype === "protein_coding" ? 10 : Math.max(6, (20 - zoomableTrackHeight) / 2);
+      const zoomableLayout = getGeneTrackLayout({
+        targets,
+        geneToRow: zoomableGeneToRow,
+        labeledIds: zoomableLabeledIds,
+        detailRowHeight: zoomableConfig.detailRowHeight,
+        biotype,
+      });
 
       // Add zoomable detail track
       innerTrackList.push(getGenesTracks({
@@ -181,10 +125,10 @@ function GeneVisInner(props: {
         biotype,
         id: `genes-${biotype}`,
         YInfo: TrackYInfo,
-        rowHeightMap: zoomableRowHeightMap,
-        rowYOffsets: zoomableRowYOffsets,
-        trackHeight: zoomableFinalTrackHeight,
-        paddingTop: zoomablePadding,
+        rowHeightMap: zoomableLayout.rowHeightMap,
+        rowYOffsets: zoomableLayout.rowYOffsets,
+        trackHeight: zoomableLayout.trackHeight,
+        paddingTop: zoomableLayout.paddingTop,
         labeledIds: zoomableLabeledIds,
         highlightIds: new Set(l2gGeneIds),
       }));
