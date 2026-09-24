@@ -1,5 +1,4 @@
 import { createContext, useContext, RefObject } from "react";
-import type { TrackTransform } from "./TrackRegistry";
 
 export interface YScaleInfo {
   yScale: number;
@@ -27,9 +26,6 @@ export interface ScalesRef {
   canvasHeight: number;
   tracksHeight?: number;
 
-  // Track transform registry (stored here to avoid cross-Stage context issues)
-  trackRegistry: Map<string, TrackTransform>;
-
   // Ticker update function — set by Tracks component inside <Stage> to trigger imperative Pixi renders
   tickerUpdate?: () => void;
 
@@ -37,7 +33,7 @@ export interface ScalesRef {
   isInner?: boolean;
 
   // Sticky (click-locked) tooltip identity — stored here, rather than read via
-  // useGenTrackTooltipState(), for the same reason as trackRegistry above: @pixi/react's
+  // useGenTrackTooltipState(): @pixi/react's
   // <Stage> renders its children through a separate React reconciler root that does not
   // bridge useContext reads made from inside it. Written by GenTrack.tsx's click handler
   // (which runs outside <Stage>, where context reads work) and consumed imperatively by

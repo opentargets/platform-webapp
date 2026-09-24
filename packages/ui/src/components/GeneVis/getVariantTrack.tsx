@@ -13,7 +13,6 @@ import { useGenTrackTooltipDispatch } from "ui";
 import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
 
 const VARIANT_TRACK_HEIGHT = 67;
-const H_LINE_COLOR = 0xdddddd;
 const HOVER_HIGHLIGHT_COLOR = 0x555555;
 const STUCK_HIGHLIGHT_COLOR = 0x000000;
 const STUCK_HIGHLIGHT_STROKE_PIXELS = 2;
@@ -336,9 +335,6 @@ export function getVariantTrack({ data }: { data: any }) {
       return (
         <Container>
           <DataBackground scalesRef={scalesRef} trackId={trackId} color="#eaf4fb" alpha={1} />
-          {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={1} color={H_LINE_COLOR} /> */}
-          {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0.5} color={H_LINE_COLOR} /> */}
-          {/* <DataHLine scalesRef={scalesRef} trackId={trackId} y={0} color={H_LINE_COLOR} /> */}
 
           {/* lead variant vertical line — confined to this track's own band so it only
               sits above this track's background and below this track's own sprites;

@@ -10,7 +10,6 @@ import { GenTrackDragProvider, useGenTrackDragDispatch, useGenTrackDragState } f
 import GenTrackTooltip from "./GenTrackTooltip";
 import { useGenTrackTooltipDispatch, useGenTrackTooltipState } from "../../providers/GenTrackTooltipProvider";
 import { ScalesProvider, type ScalesRef } from "./ScalesContext";
-import { TrackRegistryProvider, type TrackTransform } from "./TrackRegistry";
 import { CrosshairOverlay, type CrosshairMode } from "./CrosshairOverlay";
 
 function px(num) {
@@ -449,44 +448,7 @@ function Tracks({
         });
       }
       
-      // Register transform for cross-track features
-      const transform: TrackTransform = {
-        dataToScreen: ({ x, y }) => {
-          const scales = scalesRef.current;
-          if (!scales) return { screenX: 0, screenY: 0 };
-          
-          const xScale = scales.xScale;
-          const xOffset = scales.xOffset;
-          const yScaleInfo = scales.yScales.get(id);
-          
-          return {
-            screenX: x * xScale + xOffset,
-            screenY: yScaleInfo ? y * yScaleInfo.yScale + yScaleInfo.yOffset : y,
-          };
-        },
-        screenToData: ({ x, y }) => {
-          const scales = scalesRef.current;
-          if (!scales) return { dataX: 0, dataY: 0 };
-          
-          const xScale = scales.xScale;
-          const xOffset = scales.xOffset;
-          const yScaleInfo = scales.yScales.get(id);
-          
-          return {
-            dataX: (x - xOffset) / xScale,
-            dataY: yScaleInfo ? (y - yScaleInfo.yOffset) / yScaleInfo.yScale : y,
-          };
-        },
-      };
-      
-      scalesRef.current?.trackRegistry.set(id, transform);
     });
-    
-    return () => {
-      tracks.forEach(({ id }: { id: string }) => {
-        scalesRef.current?.trackRegistry.delete(id);
-      });
-    };
   }, [tracks, yTrackStarts, scalesRef]);
 
   // per-frame, per track updates (optional culling)
@@ -645,7 +607,6 @@ function GenTrackInner({
     yScales: new Map(),
     canvasWidth: 0,
     canvasHeight: 0,
-    trackRegistry: new Map(),
     stickyLabelCenter: null,
     stickyDatumId: null,
   });
@@ -748,7 +709,6 @@ function GenTrackInner({
 
   return (
     <ScalesProvider scalesRef={scalesRef}>
-      <TrackRegistryProvider>
         <GenTrackDragProvider>
         <Box
           ref={widthRef}
@@ -1044,7 +1004,6 @@ function GenTrackInner({
 
         </Box>
         </GenTrackDragProvider>
-      </TrackRegistryProvider>
     </ScalesProvider>
   );
 }
@@ -1057,7 +1016,6 @@ function GenTrack(props: Omit<GenTrackInnerProps, '_scalesRef' | '_isInner' | '_
     xMin: 0,
     xMax: 100,
     yScales: new Map(),
-    trackRegistry: new Map(),
     canvasWidth: 0,
     canvasHeight: 0,
     stickyLabelCenter: null,
@@ -1066,9 +1024,7 @@ function GenTrack(props: Omit<GenTrackInnerProps, '_scalesRef' | '_isInner' | '_
 
   return (
     <ScalesProvider scalesRef={localScalesRef}>
-      <TrackRegistryProvider>
-        <GenTrackInner {...props} _scalesRef={localScalesRef} />
-      </TrackRegistryProvider>
+      <GenTrackInner {...props} _scalesRef={localScalesRef} />
     </ScalesProvider>
   );
 }
