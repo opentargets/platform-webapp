@@ -3,7 +3,7 @@ import { curveMonotoneX, line as d3Line, max } from "d3";
 import { coordCenter, dagStratify, decrossTwoLayer, layeringLongestPath, sugiyama } from "d3-dag";
 import { withContentRect } from "react-measure";
 import { Link } from "react-router";
-import OntologyTooltip from "./OntologyTooltip";
+import { MuiTooltip } from "ui";
 
 const StyledLink = styled(Link)({
   "&:hover": { fontWeight: "700" },
@@ -166,7 +166,7 @@ function OntologySubgraph({ name, data, measureRef, contentRect }) {
           <g transform={`translate(0, ${yOffset})`}>
             {nodes.map(node => (
               <StyledLink to={`/disease/${node.data.id}`} key={node.id}>
-                <OntologyTooltip title={`${node.data.name || "No name"} | ID: ${node.id}`}>
+                <MuiTooltip placement="top" title={`${node.data.name || "No name"} | ID: ${node.id}`}>
                   <g>
                     <text
                       x={node.y - xOffset}
@@ -200,7 +200,7 @@ function OntologySubgraph({ name, data, measureRef, contentRect }) {
                       />
                     )}
                   </g>
-                </OntologyTooltip>
+                </MuiTooltip>
               </StyledLink>
             ))}
           </g>
