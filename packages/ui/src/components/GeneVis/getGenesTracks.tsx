@@ -79,7 +79,6 @@ export function getGenesTracks({
     biotype,
     id,
     YInfo,
-    rowHeight = DEFAULT_ROW_HEIGHT,
     rowHeightMap,
     rowYOffsets,
     trackHeight: explicitTrackHeight,
@@ -91,13 +90,10 @@ export function getGenesTracks({
   const { data, xMin, xMax } = genTrackState ?? { data: null, xMin: 0, xMax: 1 };
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
 
-  // Check if using variable row heights (new mode) or fixed row height (legacy mode)
-  const useVariableHeights = rowHeightMap !== undefined && rowYOffsets !== undefined;
-
   // All gene types should have same visual appearance in zoom-level view
   // Exon/intron heights are consistent regardless of biotype
   const intronHeight = 2;
-  const baseRowHeight = useVariableHeights ? rowHeightMap[0] || 28 : rowHeight;
+  const baseRowHeight = rowHeightMap[0] || DEFAULT_ROW_HEIGHT;
   // Standard exon height for all biotypes - consistent visual appearance
   const exonHeight = DEFAULT_EXON_HEIGHT; // 10px for all gene types
   // Labels only shown for L2G genes (protein_coding only)
@@ -106,18 +102,14 @@ export function getGenesTracks({
   // extend into the following row.
   const labelHeight = hasAnyLabels ? baseRowHeight - exonHeight - GENE_BOX_VERTICAL_PADDING : 0;
 
-  // Y-position functions: use variable offsets if provided, otherwise calculate from row index
   const yTop = (rowIndex: number) => {
-    if (useVariableHeights) {
-      return rowYOffsets[rowIndex] ?? rowIndex * baseRowHeight;
-    }
-    return rowIndex * rowHeight;
+    return rowYOffsets[rowIndex] ?? rowIndex * baseRowHeight;
   };
 
   // Center the gene bar vertically in the available space (below label if labels shown)
   const ycenter = (rowIndex: number) => {
     const rowStart = yTop(rowIndex);
-    const currentRowHeight = useVariableHeights ? (rowHeightMap[rowIndex] || baseRowHeight) : rowHeight;
+    const currentRowHeight = rowHeightMap[rowIndex] || baseRowHeight;
     if (hasAnyLabels && labeledIds.size > 0) {
       // If this specific row has labels, position below label area
       const rowHasLabels = targets.some(target => geneToRow[target.id] === rowIndex && labeledIds.has(target.id));
@@ -133,9 +125,7 @@ export function getGenesTracks({
 
   // Calculate track height
   const nRows = Math.max(...Object.values(geneToRow)) + 1;
-  const trackHeight = explicitTrackHeight ?? (useVariableHeights
-    ? (rowYOffsets[nRows - 1] + rowHeightMap[nRows - 1])
-    : rowHeight * nRows);
+  const trackHeight = explicitTrackHeight ?? (rowYOffsets[nRows - 1] + rowHeightMap[nRows - 1]);
   const paddingTop = explicitPaddingTop ?? 0;
 
   return {

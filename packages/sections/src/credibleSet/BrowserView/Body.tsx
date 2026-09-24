@@ -170,7 +170,6 @@ function Body({ id, entity }: BodyProps) {
               xMin={start}
               xMax={end}
               initialZoom={initialZoom}
-              variantColor={() => "grey"}
             />
           </Box>
       }}

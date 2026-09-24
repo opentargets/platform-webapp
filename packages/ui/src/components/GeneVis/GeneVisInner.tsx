@@ -12,7 +12,6 @@ import XAxis from "./XAxis";
 import XAxisLabel from "./XAxisLabel";
 import YDetails from "./YDetails";
 import { getGenesTracks } from "./getGenesTracks";
-import { getGeneMinimapTracks } from "./getGeneMinimapTracks";
 import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
@@ -51,11 +50,9 @@ function groupTargetsByBiotype(targets) {
 
 function GeneVisInner(props: {
   initialZoom?: [number, number];
-  fixedTracks?: any;
-  zoomableTracks?: any;
   [key: string]: any;
 }) {
-  const { initialZoom, fixedTracks, zoomableTracks } = props;
+  const { initialZoom } = props;
 
   const genTrackState = useGenTrackState();
   const { data, xMin, xMax } = genTrackState;
@@ -67,25 +64,16 @@ function GeneVisInner(props: {
   const regionTargets = data?.region?.targets?.rows ?? [];
 
   // Per-biotype track configuration
-  const getBiotypeConfig = (hasLabels: boolean, biotype?: string) => {
-    // Different row heights for different biotypes when zoomed
-    if (hasLabels) {
-      if (biotype === 'protein_coding') {
-        return {
-          pixelGapCenterToCenter: 95, // Adjusted back from 90 - less tight
-          detailRowHeight: 30,
-        };
-      } else {
-        return {
-          pixelGapCenterToCenter: 80, // Reduced from 100 for tighter spacing
-          detailRowHeight: 20, // Further reduced from 24 for other biotypes
-        };
-      }
+  const getBiotypeConfig = (biotype?: string) => {
+    if (biotype === 'protein_coding') {
+      return {
+        pixelGapCenterToCenter: 95, // Adjusted back from 90 - less tight
+        detailRowHeight: 30,
+      };
     }
-    // Unlabeled rows (minimap)
     return {
-      pixelGapCenterToCenter: 0,
-      detailRowHeight: 16,
+      pixelGapCenterToCenter: 80, // Reduced from 100 for tighter spacing
+      detailRowHeight: 20, // Further reduced from 24 for other biotypes
     };
   };
 
@@ -97,9 +85,7 @@ function GeneVisInner(props: {
   const bpPerPixel = (canvasWidth > 0 && xMax > xMin) ? (xMax - xMin) / canvasWidth : 1;
 
   // Check if we have gene data
-  const hasGenes = regionTargets.length > 0 &&
-    (fixedTracks === true || fixedTracks?.includes("genes") ||
-     zoomableTracks === true || zoomableTracks?.includes("genes"));
+  const hasGenes = regionTargets.length > 0;
 
   const fixedTrackList = [];
   const innerTrackList = [];
@@ -133,73 +119,12 @@ function GeneVisInner(props: {
         />
       );
 
-      // ===== MINIMAP TRACK (top level) =====
-      // Only L2G genes get labels in minimap
-      const minimapLabeledIds = new Set(
-        targets.filter(g => l2gGeneIds.has(g.id)).map(g => g.id)
-      );
-      const minimapConfig = getBiotypeConfig(minimapLabeledIds.size > 0, biotype);
-      const minimapPriorityIds = Array.from(minimapLabeledIds) as string[];
-
-      // Compute packing for minimap
-      const minimapGeneToRow = packIntervals(targets, {
-        bpPerPixel,
-        pixelGap: 2,
-        pixelGapCenterToCenter: minimapConfig.pixelGapCenterToCenter,
-        priorityIds: minimapPriorityIds,
-        labeledIds: Array.from(minimapLabeledIds),
-      });
-
-      // Build minimap row heights
-      const minimapRowsWithLabels = new Set<number>();
-      for (const gene of targets) {
-        const row = minimapGeneToRow[gene.id];
-        if (row !== undefined && minimapLabeledIds.has(gene.id)) {
-          minimapRowsWithLabels.add(row);
-        }
-      }
-
-      const minimapNRows = Math.max(...Object.values(minimapGeneToRow).map((v: unknown) => Number(v))) + 1;
-      const minimapRowHeightMap: number[] = [];
-      const minimapRowYOffsets: number[] = [];
-      let minimapCurrentYOffset = biotype === "protein_coding" ? 5 : 0;
-      const minimapTallHeight = 22; // Taller rows for labeled genes (label + bigger bar)
-      const minimapShortHeight = 12; // Shorter rows for unlabeled genes
-
-      for (let r = 0; r < minimapNRows; r++) {
-        const rowHasLabels = minimapRowsWithLabels.has(r);
-        const rowHeight = rowHasLabels ? minimapTallHeight : minimapShortHeight;
-        minimapRowHeightMap[r] = rowHeight;
-        minimapRowYOffsets[r] = minimapCurrentYOffset;
-        minimapCurrentYOffset += rowHeight;
-      }
-      const minimapTrackHeight = minimapCurrentYOffset;
-      const minimapFinalTrackHeight = Math.max(minimapTrackHeight, 20);
-      const minimapPadding = biotype === "protein_coding" ? 16 : 8; // Larger gap after variant track
-
-      // Add minimap track with variable row heights
-      fixedTrackList.push(getGeneMinimapTracks({
-        targets,
-        geneToRow: minimapGeneToRow,
-        color: 0x555555,
-        biotype,
-        id: `genes-minimap-${biotype}`,
-        YInfo: TrackYInfo,
-        rowHeightMap: minimapRowHeightMap,
-        rowYOffsets: minimapRowYOffsets,
-        trackHeight: minimapFinalTrackHeight,
-        paddingTop: minimapPadding,
-        labeledIds: minimapLabeledIds,
-        nonL2GColor: 0x555555,
-        highlightIds: new Set(l2gGeneIds),
-      }));
-
       // ===== ZOOMABLE TRACK (detail level) =====
       // Only protein-coding genes get labels in zoomable view
       const zoomableLabeledIds = biotype === "protein_coding"
         ? new Set<string>(targets.map((gene: { id: string }) => gene.id))
         : new Set<string>();
-      const zoomableConfig = getBiotypeConfig(true, biotype); // Always has labels
+      const zoomableConfig = getBiotypeConfig(biotype);
       const zoomablePriorityIds = Array.from(
         targets.filter((gene: { id: string }) => l2gGeneIds.has(gene.id)).map((gene: { id: string }) => gene.id)
       ) as string[];
@@ -271,9 +196,7 @@ function GeneVisInner(props: {
   return (
     <Box ref={widthRef} sx={{ mr: 3, pb: 2 }}>
       <GenTrack
-        // XInfo={XAxis}
-        // XYInfo={XAxisLabel}
-        tracks={fixedTrackList.slice(0, 1)}
+        tracks={fixedTrackList}
         InnerXInfo={XAxis}
         innerTracks={innerTrackList}
         InnerXYInfo={XAxisLabel}
