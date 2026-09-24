@@ -6,40 +6,12 @@ import Description from "./Description";
 import { useEffect } from "react";
 import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
 import REGION_TARGETS_QUERY from "./RegionTargetsQuery.gql";
-import { table5HChunkSize } from "@ot/constants";
+import { table5HChunkSize, chromosomeInfo } from "@ot/constants";
 
 type BodyProps = {
 	id: string;
 	entity: string;
 };
-
-// !! SHOULD PROBABLY MOVE OT OT-CONSTANTS
-const chromosomeInfo = [
-  { chromosome: "1", length: 248956422 },
-  { chromosome: "2", length: 242193529 },
-  { chromosome: "3", length: 198295559 },
-  { chromosome: "4", length: 190214555 },
-  { chromosome: "5", length: 181538259 },
-  { chromosome: "6", length: 170805979 },
-  { chromosome: "7", length: 159345973 },
-  { chromosome: "8", length: 145138636 },
-  { chromosome: "9", length: 138394717 },
-  { chromosome: "10", length: 133797422 },
-  { chromosome: "11", length: 135086622 },
-  { chromosome: "12", length: 133275309 },
-  { chromosome: "13", length: 114364328 },
-  { chromosome: "14", length: 107043718 },
-  { chromosome: "15", length: 101991189 },
-  { chromosome: "16", length: 90338345 },
-  { chromosome: "17", length: 83257441 },
-  { chromosome: "18", length: 80373285 },
-  { chromosome: "19", length: 58617616 },
-  { chromosome: "20", length: 64444167 },
-  { chromosome: "21", length: 46709983 },
-  { chromosome: "22", length: 50818468 },
-  { chromosome: "X", length: 156040895 },
-  { chromosome: "Y", length: 57227415 },
-];
 
 const MAX_REGION_WIDTH = 5_000_000;
 const REGION_PADDING = 1_000_000;

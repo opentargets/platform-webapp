@@ -10,7 +10,7 @@ import type { Sprite as PixiSprite } from 'pixi.js';
 import { TextStyle } from 'pixi.js';
 import YDetails from "./YDetails";
 import { useGenTrackTooltipDispatch } from "ui";
-import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
+import { PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/constants";
 
 const VARIANT_TRACK_HEIGHT = 67;
 const HOVER_HIGHLIGHT_COLOR = 0x555555;

@@ -1,7 +1,7 @@
 import { DataSprite, DataVLine } from "../GenTrack";
 import { Container } from '@pixi/react';
 import { useGenTrackTooltipDispatch } from "ui";
-import { PREDICTED_CONSEQUENCE_LOOKUP } from "./helpers";
+import { PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/constants";
 
 const VARIANT_MINIMAP_TRACK_HEIGHT = 20;
 
