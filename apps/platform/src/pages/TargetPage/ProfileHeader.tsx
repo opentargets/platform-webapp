@@ -109,7 +109,7 @@ function ProfileHeader() {
               </Tooltip>
             </Box>
           ))}
-        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", mb:2 }}>
+        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap:2 }}>
           {data?.target.genomicLocation && (
             <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
           )}
