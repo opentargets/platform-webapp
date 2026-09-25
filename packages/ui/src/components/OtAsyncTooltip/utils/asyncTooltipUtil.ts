@@ -1,3 +1,4 @@
+export { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY };
 import {
   faChartBar,
   faDiagramProject,
