@@ -28,6 +28,7 @@ interface TooltipLayerProps {
   tooltipProps: object;
   cursor?: string;
   onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
+  onWheel?: React.WheelEventHandler<HTMLDivElement>;
   crosshairs?: CrosshairMode;
   // Only passed for the inner (zoomed) canvas — used to imperatively mirror the sticky
   // identity onto ScalesRef for Pixi-tree components to read, since they can't read
@@ -35,7 +36,8 @@ interface TooltipLayerProps {
   scalesRefHolder?: React.RefObject<ScalesRef | null>;
 }
 
-const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, crosshairs = "none", scalesRefHolder }: TooltipLayerProps, ref) {
+const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function TooltipLayer({ children, width, height, canvasType, tooltipProps, cursor, onMouseDown, onWheel, crosshairs = "none", scalesRefHolder }: TooltipLayerProps, ref) {
+  const layerRef = useRef<HTMLDivElement | null>(null);
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
   const genTrackTooltipState = useGenTrackTooltipState() as any;
   const isInnerDragging = useGenTrackDragState();
@@ -44,6 +46,23 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
   if (process.env.NODE_ENV !== "production" && onDatumClick && stickyOnClick) {
     console.warn("GenTrack: `onDatumClick` and `stickyOnClick` were both provided; `stickyOnClick` takes precedence and `onDatumClick` will be ignored.");
   }
+
+  useEffect(() => {
+    const node = layerRef.current;
+    if (!node || !onWheel) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      onWheel(event as unknown as React.WheelEvent<HTMLDivElement>);
+    };
+    node.addEventListener("wheel", handleWheel, { passive: false });
+    return () => node.removeEventListener("wheel", handleWheel);
+  }, [onWheel]);
+
+  const setLayerRef = useCallback((node: HTMLDivElement | null) => {
+    layerRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  }, [ref]);
 
   const handleMouseEnter = () => {
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: canvasType });
@@ -112,7 +131,7 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
   
   return (
     <Box 
-      ref={ref}
+      ref={setLayerRef}
       sx={{ 
         position: "absolute", 
         inset: 0, 
@@ -243,6 +262,69 @@ function useInnerPanDrag(
   return { cursor, handleMouseDown, isDragging };
 }
 
+function useInnerWheelZoom(
+  canvasWidth: number,
+  xMin: number,
+  xMax: number,
+  scalesRefHolder: React.MutableRefObject<ScalesRef | null>,
+  updateViewWindow: (start: number, end: number) => void,
+) {
+  const rafRef = useRef<number | null>(null);
+  const pendingViewRef = useRef<{ start: number; end: number } | null>(null);
+
+  const scheduleViewUpdate = useCallback((start: number, end: number) => {
+    pendingViewRef.current = { start, end };
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        if (pendingViewRef.current) {
+          updateViewWindow(pendingViewRef.current.start, pendingViewRef.current.end);
+          pendingViewRef.current = null;
+        }
+        rafRef.current = null;
+      });
+    }
+  }, [updateViewWindow]);
+
+  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey || canvasWidth <= 0) return;
+
+    const scales = scalesRefHolder.current;
+    if (!scales) return;
+
+    event.preventDefault();
+
+    const start = pendingViewRef.current?.start ?? scales.viewStart ?? xMin;
+    const end = pendingViewRef.current?.end ?? scales.viewEnd ?? xMax;
+    const span = end - start;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = clamp((event.clientX - rect.left) / canvasWidth, 0, 1);
+    const anchor = start + ratio * span;
+    const factor = event.deltaY < 0 ? 0.8 : 1.25;
+    const minSpan = 10 * (xMax - xMin) / canvasWidth;
+    const nextSpan = clamp(span * factor, minSpan, xMax - xMin);
+    let nextStart = anchor - ratio * nextSpan;
+    let nextEnd = anchor + (1 - ratio) * nextSpan;
+
+    if (nextStart < xMin) {
+      nextEnd += xMin - nextStart;
+      nextStart = xMin;
+    }
+    if (nextEnd > xMax) {
+      nextStart -= nextEnd - xMax;
+      nextEnd = xMax;
+    }
+
+    scheduleViewUpdate(nextStart, nextEnd);
+  }, [canvasWidth, xMin, xMax, scalesRefHolder, scheduleViewUpdate]);
+
+  useEffect(() => () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    pendingViewRef.current = null;
+  }, []);
+
+  return handleWheel;
+}
+
 interface InnerPanDragTooltipLayerProps {
   width: number;
   height: number;
@@ -279,6 +361,13 @@ const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipL
     (tooltipProps as any)?.onDatumClick,
     (tooltipProps as any)?.stickyOnClick,
   );
+  const handleWheel = useInnerWheelZoom(
+    canvasWidth,
+    xMin,
+    xMax,
+    scalesRefHolder,
+    updateViewWindow,
+  );
 
   return (
     <TooltipLayer
@@ -289,6 +378,7 @@ const InnerPanDragTooltipLayer = forwardRef<HTMLDivElement, InnerPanDragTooltipL
       tooltipProps={tooltipProps}
       cursor={innerPanDrag.cursor}
       onMouseDown={innerPanDrag.handleMouseDown}
+      onWheel={handleWheel}
       crosshairs={crosshairs}
       scalesRefHolder={scalesRefHolder}
     >

@@ -80,6 +80,8 @@ Components rendered inside the Pixi stage should receive `scalesRef` explicitly.
 
 When `innerTracks` are supplied, the inner canvas supports horizontal drag-to-pan. The outer pan/zoom panel controls the selected genomic window, and the inner canvas shows the corresponding detail range.
 
+Hold Ctrl and use the mouse wheel over the inner canvas to zoom around the pointer. The outer pan/zoom panel stays synchronised.
+
 Pan-dragging is disabled while interacting with a datum that provides a tooltip, so hover and click interactions remain available.
 
 ## Tooltips

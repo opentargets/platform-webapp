@@ -174,6 +174,21 @@ function GeneVisInner(props: {
           ) : null
         }
       />
+      <Box sx={{
+        display: "flex",
+        justifyContent: "flex-end",
+        mt: 0.75,
+        columnGap: 1.5,
+        flexWrap: "wrap",
+        color: (theme) => theme.palette.grey[600],
+      }}>
+        <Typography variant="caption">
+          <Box component="span" sx={{ fontWeight: 600 }}>Zoom:</Box> Ctrl + scroll or drag edges of top bar
+        </Typography>
+        <Typography variant="caption">
+          <Box component="span" sx={{ fontWeight: 600 }}>Pan: </Box>drag main panel or top bar
+        </Typography>
+      </Box>
     </Box>
   );
 }
