@@ -56,8 +56,7 @@ var configProfile = {
 
   // credible set page
   hideCredibleSetSectionIds: [""],
-  // partnerCredibleSetSectionIds: ["browserView"],
-  partnerCredibleSetSectionIds: [],
+  partnerCredibleSetSectionIds: ["browserView"],
 
   // evidence page
   hideEvidenceSectionIds: [""],
