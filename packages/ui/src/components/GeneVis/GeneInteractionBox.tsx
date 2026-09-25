@@ -2,9 +2,9 @@ import { useRef, useCallback } from 'react';
 import { Sprite, useTick, useApp } from '@pixi/react';
 import { Sprite as PixiSprite, Graphics as PixiGraphics, Texture } from 'pixi.js';
 import type { RefObject } from 'react';
-import type { ScalesRef } from './ScalesContext';
-import { isPointerOverCanvas } from './pointerOcclusion';
-import { useStickyTick } from './useStickyTick';
+import type { ScalesRef } from '../GenTrack/ScalesContext';
+import { isPointerOverCanvas } from '../GenTrack/pointerOcclusion';
+import { useStickyTick } from '../GenTrack/useStickyTick';
 
 const _rectTextureCache = new Map<any, Texture>();
 
@@ -20,7 +20,7 @@ function getOrCreateRectTexture(app: any): Texture {
   return _rectTextureCache.get(app)!;
 }
 
-interface DataGeneBoxProps {
+interface GeneInteractionBoxProps {
   scalesRef: RefObject<ScalesRef>;
   trackId?: string;
   intronStart: number;      // gene start in genomic coords
@@ -41,7 +41,7 @@ const PADDING_PIXELS = 6; // constant screen-space padding around gene+label
 const STICKY_BORDER_TINT = 0x424242;
 const STICKY_BORDER_PIXELS = 1;
 
-export function DataGeneBox({
+export function GeneInteractionBox({
   scalesRef,
   trackId,
   intronStart,
@@ -56,7 +56,7 @@ export function DataGeneBox({
   pointerover,
   pointerout,
   pointertap,
-}: DataGeneBoxProps) {
+}: GeneInteractionBoxProps) {
   const app = useApp();
   const spriteRef = useRef<PixiSprite | null>(null);
   const borderRefs = useRef<Array<PixiSprite | null>>([]);

@@ -74,7 +74,7 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
 
   // Mirrors the sticky identity onto ScalesRef (for Pixi-tree components, which can't read
   // tooltip context — see ScalesContext.tsx) and forces one manual Pixi tick so already-
-  // mounted sprites (e.g. DataGeneBox, via useStickyTick) pick up the change promptly
+  // mounted sprites (e.g. GeneInteractionBox, via useStickyTick) pick up the change promptly
   // instead of waiting for an incidental tick.
   const syncStickyToScalesRef = (labelCenter: number | null, datumId: string | null) => {
     const scales = scalesRefHolder?.current;

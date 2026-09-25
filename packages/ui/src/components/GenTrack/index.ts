@@ -1,7 +1,6 @@
 export { default as GenTrack } from './GenTrack';
 export type { TrackLegendProps, TrackLegendPosition } from './GenTrack';
 export { DataSprite, getOrCreateRingTexture } from './DataSprite';
-export { DataGeneBox } from './DataGeneBox';
 export { DataRect, DataBackground, DataVLine } from './DataGraphics';
 export { RegionBoundaryOverlay } from './RegionBoundaryOverlay';
 export { DataText } from './DataText';

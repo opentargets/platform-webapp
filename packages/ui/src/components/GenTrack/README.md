@@ -71,7 +71,6 @@ The `GenTrack` package provides primitives for common Pixi content:
 - `DataBackground` for track backgrounds;
 - `DataVLine` for vertical reference lines;
 - `DataRect` for data-positioned rectangles;
-- `DataGeneBox` for interactive gene boxes;
 - `RegionBoundaryOverlay` and `CrosshairOverlay` for overlays.
 
 Components rendered inside the Pixi stage should receive `scalesRef` explicitly. Pixi uses a separate React reconciler, so React context reads from inside the stage cannot reliably access providers in the surrounding DOM tree.

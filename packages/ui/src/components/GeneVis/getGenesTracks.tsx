@@ -2,7 +2,8 @@ import { Fragment } from "react";
 import { Container } from '@pixi/react';
 import { TextMetrics, TextStyle } from "pixi.js";
 import { Box, Typography } from "@mui/material";
-import { DataSprite, DataText, DataBackground, DataGeneBox, DataVLine } from "../GenTrack";
+import { DataSprite, DataText, DataBackground, DataVLine } from "../GenTrack";
+import { GeneInteractionBox } from "./GeneInteractionBox";
 import type { TrackLegendProps } from "../GenTrack";
 import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
@@ -193,7 +194,7 @@ export function getGenesTracks({
             return (
               <Fragment key={target.id}>
                 {/* Gene box: hit area + highlight - RENDERED FIRST (behind gene) */}
-                <DataGeneBox
+                <GeneInteractionBox
                   scalesRef={scalesRef}
                   trackId={trackId}
                   intronStart={intronStart}
