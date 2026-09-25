@@ -153,7 +153,7 @@ export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
 export { default as StickyProfileHeader } from "./components/StickyProfileHeader";
 export { PROFILE_TABS_SENTINEL_ID } from "./components/Section/scrollOffset";
 export * from "./components/Table";
-export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
+export { default as Tooltip } from "./components/Tooltip";
 export { default as TooltipRow } from "./components/TooltipRow";
 export { default as TooltipStyledLabel } from "./components/TooltipStyledLabel";
 export { default as TooltipTable } from "./components/TooltipTable";
