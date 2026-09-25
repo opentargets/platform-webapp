@@ -47,7 +47,7 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
   const [isMovingWindow, setIsMovingWindow] = useState(false);
   const internalViewRef = useRef({ start: viewStart, end: viewEnd });
 
-  const HANDLE_WIDTH = 8;
+  const HANDLE_WIDTH = 10;
   const PANEL_HEIGHT = height;
   const WINDOW_HEIGHT = windowHeight ?? height;
   const BORDER_WIDTH = 1;
@@ -304,6 +304,18 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
           zIndex: 4,
           backgroundColor: HANDLE_COLOR,
           borderRadius: `${WINDOW_HEIGHT}px 0 0 ${WINDOW_HEIGHT}px`,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: '50%',
+            left: '3.5px',
+            width: '5px',
+            height: '5px',
+            borderTop: '2px solid #fff',
+            borderRight: '2px solid #fff',
+            transform: 'translateY(-50%) rotate(225deg)',
+            opacity: 0.8,
+          },
         }}
         onMouseDown={(e) => handleMouseDown('left', e)}
       />
@@ -321,6 +333,18 @@ const PanZoomPanel = forwardRef<PanZoomPanelHandle, PanZoomPanelProps>(function 
           zIndex: 4,
           backgroundColor: HANDLE_COLOR,
           borderRadius: `0 ${WINDOW_HEIGHT}px ${WINDOW_HEIGHT}px 0`,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: '50%',
+            right: '3.5px',
+            width: '5px',
+            height: '5px',
+            borderTop: '2px solid #fff',
+            borderRight: '2px solid #fff',
+            transform: 'translateY(-50%) rotate(45deg)',
+            opacity: 0.8,
+          },
         }}
         onMouseDown={(e) => handleMouseDown('right', e)}
       />
