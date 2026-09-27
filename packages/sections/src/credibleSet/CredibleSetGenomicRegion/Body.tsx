@@ -4,11 +4,13 @@ import { Box, Typography } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
 import { useEffect } from "react";
-import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
-import REGION_TARGETS_QUERY from "./RegionTargetsQuery.gql";
+import CREDIBLE_SET_GENOMIC_REGION_QUERY from "./CredibleSetGenomicRegionQuery.gql";
+import REGION_TARGETS_QUERY from "./CredibleSetGenomicRegionRegionTargetsQuery.gql";
 import { table5HChunkSize } from "@ot/constants";
-import { getBrowserViewRegion, toGeneVisModel } from "./helpers";
-import BrowserViewTooltipDetail, { getBrowserViewTooltipWidth } from "./TooltipDetail";
+import { getCredibleSetGenomicRegion, toGeneVisModel } from "./helpers";
+import CredibleSetGenomicRegionTooltipDetail, {
+  getCredibleSetGenomicRegionTooltipWidth,
+} from "./CredibleSetGenomicRegionTooltipDetail";
 
 type BodyProps = {
 	id: string;
@@ -23,7 +25,7 @@ function Body({ id, entity }: BodyProps) {
   };
 
   const request = useBatchQuery({
-    query: BROWSER_VIEW_QUERY,
+    query: CREDIBLE_SET_GENOMIC_REGION_QUERY,
     variables,
     dataPath: "credibleSet.locus",
     size: table5HChunkSize,
@@ -33,7 +35,7 @@ function Body({ id, entity }: BodyProps) {
 
   const locusRows = data?.locus?.rows ?? [];
   const chromosome = locusRows[0]?.variant?.chromosome;
-  const { start, end, initialZoom, regionVariables } = getBrowserViewRegion({
+  const { start, end, initialZoom, regionVariables } = getCredibleSetGenomicRegion({
     chromosome,
     locusRows,
     l2gRows: data?.l2GPredictions?.rows ?? [],
@@ -53,7 +55,7 @@ function Body({ id, entity }: BodyProps) {
       return counts;
     }, {} as Record<string, number>);
     // eslint-disable-next-line no-console
-    console.info("Browser View region target biotypes", biotypeCounts);
+    console.info("Credible Set Genomic Region target biotypes", biotypeCounts);
   }, [regionRequest.data]);
 
 
@@ -93,8 +95,8 @@ function Body({ id, entity }: BodyProps) {
               model={toGeneVisModel(combinedData)}
               tooltip={{
                 context: combinedData,
-                Detail: BrowserViewTooltipDetail,
-                getWidth: getBrowserViewTooltipWidth,
+                Detail: CredibleSetGenomicRegionTooltipDetail,
+                getWidth: getCredibleSetGenomicRegionTooltipWidth,
               }}
               chromosome={chromosome}
               xMin={start}

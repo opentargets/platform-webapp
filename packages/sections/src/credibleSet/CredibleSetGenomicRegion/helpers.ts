@@ -32,13 +32,17 @@ export function toGeneVisModel(data: any): GeneVisModel {
   };
 }
 
-type BrowserViewRegionArgs = {
+type CredibleSetGenomicRegionArgs = {
   chromosome?: string;
   locusRows: any[];
   l2gRows: any[];
 };
 
-export function getBrowserViewRegion({ chromosome, locusRows, l2gRows }: BrowserViewRegionArgs) {
+export function getCredibleSetGenomicRegion({
+  chromosome,
+  locusRows,
+  l2gRows,
+}: CredibleSetGenomicRegionArgs) {
   const chromosomeLength = chromosomeInfo.find(item => item.chromosome === chromosome)?.length;
   const locusPositions = locusRows
     .map(row => row.variant?.position)

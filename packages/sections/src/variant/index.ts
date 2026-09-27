@@ -7,7 +7,6 @@ export * as VariantEffectPredictor from "./VariantEffectPredictor";
 export * as MolecularStructure from "./MolecularStructure";
 export * as UniProtVariants from "./UniProtVariants";
 export * as EnhancerToGenePredictions from "./EnhancerToGenePredictions";
-
-
+export * as VariantGenomicRegion from "./VariantGenomicRegion";
 
 

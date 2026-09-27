@@ -54,9 +54,13 @@ var configProfile = {
   hideDrugSectionIds: [""],
   partnerDrugSectionIds: [""],
 
+  // variant page
+  hideVariantSectionIds: [""],
+  partnerVariantSectionIds: ["variantGenomicRegion"],
+
   // credible set page
   hideCredibleSetSectionIds: [""],
-  partnerCredibleSetSectionIds: ["browserView"],
+  partnerCredibleSetSectionIds: ["credibleSetGenomicRegion"],
 
   // evidence page
   hideEvidenceSectionIds: [""],

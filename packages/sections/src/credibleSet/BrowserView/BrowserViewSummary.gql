@@ -1,6 +1,0 @@
-fragment BrowserViewSummaryFragment on CredibleSet {
-  l2GPredictions {
-    count
-  }
-}
-

@@ -15,7 +15,7 @@ import L2G_QUERY from "../Locus2Gene/Locus2GeneQuery.gql";
 
 const tooltipPositionProps = { tooltipZIndex: 10000, tooltipOffset: -5 };
 
-function BrowserViewTooltipDetail({ datum, entityType, entity, context, emphasis }: GeneVisTooltipDetailProps) {
+function CredibleSetGenomicRegionTooltipDetail({ datum, entityType, entity, context, emphasis }: GeneVisTooltipDetailProps) {
   const data = context as any;
   const geneL2G = entityType === "target" && data?.l2GPredictions?.rows?.find(
     (row: { target: { id: string } }) => row.target.id === datum.id
@@ -100,7 +100,7 @@ function BrowserViewTooltipDetail({ datum, entityType, entity, context, emphasis
   );
 }
 
-export function getBrowserViewTooltipWidth({ datum, entityType, context }: {
+export function getCredibleSetGenomicRegionTooltipWidth({ datum, entityType, context }: {
   datum: any;
   entityType: GeneVisTooltipEntityType;
   context?: unknown;
@@ -112,4 +112,4 @@ export function getBrowserViewTooltipWidth({ datum, entityType, context }: {
   return hasL2G ? 550 : undefined;
 }
 
-export default BrowserViewTooltipDetail;
+export default CredibleSetGenomicRegionTooltipDetail;

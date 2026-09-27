@@ -1,4 +1,4 @@
-query BrowserViewQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
+query CredibleSetGenomicRegionQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
   credibleSet(studyLocusId: $studyLocusId) {
     variant {
       id

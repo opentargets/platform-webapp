@@ -1,12 +1,12 @@
 import { lazy } from "react";
 import { isPrivateCredibleSetSection } from "@ot/constants";
 
-const id = "browserView";
+const id = "credibleSetGenomicRegion";
 
 export const definition = {
   id,
-  name: "Browser View",
-  shortName: "BV",
+  name: "Genomic Region",
+  shortName: "GR",
   hasData: () => true,  // !! NEEDS UPDATED ONCE HAVE FINAL QUERIES !!
   isPrivate: isPrivateCredibleSetSection(id),
 };

@@ -1,4 +1,4 @@
-query RegionTargetsQuery(
+query VariantGenomicRegionRegionTargetsQuery(
   $chromosome: ChromosomeEnum!
   $positionStart: Int!
   $positionEnd: Int!
