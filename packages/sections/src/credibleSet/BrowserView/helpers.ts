@@ -1,8 +1,36 @@
 import { chromosomeInfo } from "@ot/constants";
+import type { GeneVisModel } from "ui";
 
 const MAX_REGION_WIDTH = 5_000_000;
 const REGION_PADDING = 1_000_000;
 const PAN_ZOOM_PADDING = 250_000;
+
+export function toGeneVisModel(data: any): GeneVisModel {
+  const l2gRows = data?.l2GPredictions?.rows ?? [];
+  const l2gTargetIds = l2gRows.map((row: any) => row.target.id);
+
+  return {
+    genes: data?.region?.targets?.rows ?? [],
+    referencePosition: data?.variant?.position,
+    overviewVariants: (data?.locus?.rows ?? []).map((row: any) => row.variant),
+    variantTrack: data?.locus ? {
+      rows: data.locus.rows ?? [],
+      emphasis: data.variant ? { variantId: data.variant.id, label: "Lead" } : undefined,
+    } : undefined,
+    genePresentation: {
+      priorityIds: l2gTargetIds,
+      highlights: l2gTargetIds.length > 0 ? [{
+        targetIds: l2gTargetIds,
+        geneColor: 0x138160,
+        hoverBoxColor: 0xc8e6c9,
+        labelBackgroundColor: 0xc8e6c9,
+        labelPadding: 6,
+        legend: "L2G score > 0.05",
+      }] : [],
+      scoreByGeneId: Object.fromEntries(l2gRows.map((row: any) => [row.target.id, row.score])),
+    },
+  };
+}
 
 type BrowserViewRegionArgs = {
   chromosome?: string;

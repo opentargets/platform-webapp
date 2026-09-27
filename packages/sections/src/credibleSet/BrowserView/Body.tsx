@@ -7,7 +7,8 @@ import { useEffect } from "react";
 import BROWSER_VIEW_QUERY from "./BrowserViewQuery.gql";
 import REGION_TARGETS_QUERY from "./RegionTargetsQuery.gql";
 import { table5HChunkSize } from "@ot/constants";
-import { getBrowserViewRegion } from "./helpers";
+import { getBrowserViewRegion, toGeneVisModel } from "./helpers";
+import BrowserViewTooltipDetail, { getBrowserViewTooltipWidth } from "./TooltipDetail";
 
 type BodyProps = {
 	id: string;
@@ -89,7 +90,12 @@ function Body({ id, entity }: BodyProps) {
         return (
           <Box sx={{ pt: 1 }}>
             <GeneVis
-              data={combinedData}
+              model={toGeneVisModel(combinedData)}
+              tooltip={{
+                context: combinedData,
+                Detail: BrowserViewTooltipDetail,
+                getWidth: getBrowserViewTooltipWidth,
+              }}
               chromosome={chromosome}
               xMin={start}
               xMax={end}

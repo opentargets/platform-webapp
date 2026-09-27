@@ -25,6 +25,7 @@ const { ScopedProvider, useScopedState, useScopedDispatch } =
         stickyGenomicX: action.value.genomicX ?? null,
         stickyLabelCenter: action.value.labelCenter ?? null,
         ...(action.value.datum !== undefined && { datum: action.value.datum }),
+        ...(action.value.otherData !== undefined && { otherData: action.value.otherData }),
         ...(action.value.globalXY !== undefined && { globalXY: action.value.globalXY }),
         ...(action.value.activeCanvas !== undefined && { activeCanvas: action.value.activeCanvas }),
       }),

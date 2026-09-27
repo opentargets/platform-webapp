@@ -10,7 +10,6 @@ export const BIOTYPE_DISPLAY_NAMES = {
 
 export const BIOTYPE_ORDER = ["protein_coding", "rna", "pseudogene", "processed_transcript", "other"];
 export const geneLabelStyle = new TextStyle({ align: "center", fill: "#000", fontSize: 10.5, fontWeight: "100", wordWrap: false });
-export const L2G_LABEL_PADDING = 6;
 
 export function getGeneLabelText(gene: any, score: number | undefined) {
   const leftArrow = gene.genomicLocation.strand === "NEGATIVE" ? "← " : "";

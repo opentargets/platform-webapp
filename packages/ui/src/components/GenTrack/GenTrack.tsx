@@ -107,6 +107,7 @@ const TooltipLayer = memo(forwardRef<HTMLDivElement, TooltipLayerProps>(function
           value: {
             sticky: true,
             datum: hover.datum,
+            otherData: hover.otherData,
             globalXY: hover.globalXY,
             genomicX: hover.globalXY?.genomicX,
             labelCenter: hover.labelCenter,

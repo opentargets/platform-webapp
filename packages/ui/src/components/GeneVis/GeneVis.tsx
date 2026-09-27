@@ -1,24 +1,26 @@
 import { GenTrackProvider, GenTrackTooltipProvider } from "ui";
 import GeneVisInner from "./GeneVisInner";
+import type { GeneVisModel, GeneVisTooltipOptions } from "./model";
 
 function GeneVis({
-  data,
+  model,
   chromosome,
   xMin,
   xMax,
   initialZoom,
+  tooltip,
 }: {
-  data: any;
+  model: GeneVisModel;
   chromosome: any;
   xMin: any;
   xMax: any;
   initialZoom?: [number, number];
+  tooltip?: GeneVisTooltipOptions;
 }) {
-
   return (
-    <GenTrackProvider initialState={{ data, xMin, xMax, chromosome }} >
+    <GenTrackProvider initialState={{ data: model, xMin, xMax, chromosome }} >
       <GenTrackTooltipProvider >
-        <GeneVisInner initialZoom={initialZoom} />
+        <GeneVisInner initialZoom={initialZoom} tooltip={tooltip} />
       </GenTrackTooltipProvider>
     </GenTrackProvider>
   );

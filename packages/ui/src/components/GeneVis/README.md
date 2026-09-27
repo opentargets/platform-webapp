@@ -1,12 +1,12 @@
 # GeneVis
 
-`GeneVis` is a genome-browser-style visualisation for credible-set variants, locus-to-gene predictions, and genes in a genomic region. It uses `GenTrack` for shared scales, pan/zoom, tracks, and tooltips.
+`GeneVis` is a genome-browser-style visualisation for variants and genes in a genomic region. It uses `GenTrack` for shared scales, pan/zoom, tracks, and tooltips.
 
 ## Usage
 
 ```tsx
 <GeneVis
-  data={data}
+  model={model}
   chromosome={chromosome}
   xMin={start}
   xMax={end}
@@ -14,38 +14,45 @@
 />
 ```
 
-`GeneVis` does not fetch data. The caller supplies the combined data object and the genomic region to display.
+`GeneVis` does not fetch data or calculate a genomic region. The caller adapts its own query result to a query-independent `GeneVisModel` and supplies the genomic range to display.
 
 ## Props
 
 | Prop          | Type               | Description                                                   |
 | ------------- | ------------------ | ------------------------------------------------------------- |
-| `data`        | `object`           | Combined credible-set, locus-to-gene, and region-target data. |
+| `model`       | `GeneVisModel`     | Presentation data: genes, optional reference position, optional overview/detail variants, and optional gene styling. |
 | `chromosome`  | `string`           | Chromosome containing the displayed region.                   |
 | `xMin`        | `number`           | Minimum genomic position for the outer view.                  |
 | `xMax`        | `number`           | Maximum genomic position for the outer view.                  |
 | `initialZoom` | `[number, number]` | Optional initial genomic range for the zoomed view.           |
+| `tooltip`     | `GeneVisTooltipOptions` | Optional widget-owned detail panel, context, and width rule beneath the shared entity header. |
 
-## Data
+## Model
 
-The data object currently contains the following relevant properties:
+`GeneVisModel` intentionally does not mirror a GraphQL response. Its relevant fields are:
 
-- `variant`: the lead variant, including its chromosome and position.
-- `locus.rows`: credible-set variants and their statistical values, such as posterior probability, p-value, beta, standard error, and log Bayes factor.
-- `l2GPredictions.rows`: locus-to-gene predictions, scores, and target genomic locations.
-- `region.targets.rows`: genes overlapping the displayed region.
-- Each region target may include its `biotype`, genomic location, and canonical transcript/exon data.
+- `genes`: genes overlapping the displayed region. Each needs its biotype, genomic location, and canonical transcript/exon data.
+- `referencePosition`: optional vertical reference line position.
+- `overviewVariants`: optional variant markers for the overview track.
+- `variantTrack`: optional posterior-probability variant-detail track, with an optional labelled emphasis.
+- `genePresentation`: optional priority IDs, highlight styles, and per-gene label scores.
+
+With only `genes` supplied, GeneVis renders neutral gene tracks: no reference line, variants, priorities, or highlighted genes.
+
+## Tooltips
+
+GeneVis always renders the standard linked entity header. `tooltip.Detail` may return an optional widget-specific lower panel; `tooltip.context` and `tooltip.getWidth` support that panel without coupling the shared tooltip to a widget query shape.
 
 ## Tracks and behaviour
 
-The visualisation currently contains:
+Depending on the supplied model, the visualisation can contain:
 
-- a simplified variant overview track;
-- a zoomable variant detail track;
+- an overview track, optionally with variants and a reference line;
+- an optional zoomable variant detail track;
 - zoomable gene tracks grouped by biotype;
-- labels and L2G scores for protein-coding genes;
-- highlighting for genes with L2G predictions;
+- labels and optional per-gene scores for protein-coding genes;
+- optional gene highlighting and prioritisation;
 - canonical transcript and exon rendering for genes;
-- a vertical reference line for the lead variant.
+- an optional vertical reference line.
 
 Users can pan and zoom the genomic view, inspect genes and variants with hover tooltips, and click a datum to keep its tooltip visible.
