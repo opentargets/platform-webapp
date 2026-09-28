@@ -31,7 +31,7 @@ var configProfile = {
 
   // target page
   hideTargetSectionIds: [""],
-  partnerTargetSectionIds: [""],
+  partnerTargetSectionIds: ["targetGenomicRegion"],
 
   // drug page
   hideDrugSectionIds: [""],

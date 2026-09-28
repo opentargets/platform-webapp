@@ -68,7 +68,9 @@ function GeneVisInner(props: {
     referencePosition: model?.referencePosition,
     emphasisVariantId: model?.variantTrack?.emphasis?.variantId,
   });
-  fixedTrackList.push(variantMinimapTrack);
+  if (model?.overviewVariants || model?.referencePosition !== undefined) {
+    fixedTrackList.push(variantMinimapTrack);
+  }
   const variantTrack = getVariantTrack({
     variantTrack: model?.variantTrack,
     referencePosition: model?.referencePosition,
