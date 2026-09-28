@@ -298,6 +298,58 @@ export type ChemicalProbeUrl = {
   url?: Maybe<Scalars['String']['output']>;
 };
 
+/** Chromosome */
+export enum ChromosomeEnum {
+  /** Chromosome 1 */
+  Chr1 = 'chr1',
+  /** Chromosome 2 */
+  Chr2 = 'chr2',
+  /** Chromosome 3 */
+  Chr3 = 'chr3',
+  /** Chromosome 4 */
+  Chr4 = 'chr4',
+  /** Chromosome 5 */
+  Chr5 = 'chr5',
+  /** Chromosome 6 */
+  Chr6 = 'chr6',
+  /** Chromosome 7 */
+  Chr7 = 'chr7',
+  /** Chromosome 8 */
+  Chr8 = 'chr8',
+  /** Chromosome 9 */
+  Chr9 = 'chr9',
+  /** Chromosome 10 */
+  Chr10 = 'chr10',
+  /** Chromosome 11 */
+  Chr11 = 'chr11',
+  /** Chromosome 12 */
+  Chr12 = 'chr12',
+  /** Chromosome 13 */
+  Chr13 = 'chr13',
+  /** Chromosome 14 */
+  Chr14 = 'chr14',
+  /** Chromosome 15 */
+  Chr15 = 'chr15',
+  /** Chromosome 16 */
+  Chr16 = 'chr16',
+  /** Chromosome 17 */
+  Chr17 = 'chr17',
+  /** Chromosome 18 */
+  Chr18 = 'chr18',
+  /** Chromosome 19 */
+  Chr19 = 'chr19',
+  /** Chromosome 20 */
+  Chr20 = 'chr20',
+  /** Chromosome 21 */
+  Chr21 = 'chr21',
+  /** Chromosome 22 */
+  Chr22 = 'chr22',
+  /** Chromosome X */
+  ChrX = 'chrX',
+  /** Chromosome Y */
+  ChrY = 'chrY'
+}
+
 export type ClinRepDrugListItem = {
   __typename?: 'ClinRepDrugListItem';
   /** Drug in the report */
@@ -1269,6 +1321,21 @@ export type Evidences = {
   rows: Array<Evidence>;
 };
 
+export type Exon = {
+  __typename?: 'Exon';
+  chromosome: Scalars['String']['output'];
+  end: Scalars['Int']['output'];
+  exonId: Scalars['String']['output'];
+  start: Scalars['Int']['output'];
+  strand: Strand;
+};
+
+export type Flag = {
+  __typename?: 'Flag';
+  label?: Maybe<Scalars['String']['output']>;
+  value?: Maybe<Scalars['String']['output']>;
+};
+
 /** CRISPR screening experiments supporting the essentiality assessment. Represents individual cell line assays from DepMap. */
 export type GeneEssentialityScreen = {
   __typename?: 'GeneEssentialityScreen';
@@ -1911,6 +1978,7 @@ export type Query = {
   mapIds: MappingResults;
   /** Open Targets API metadata, including version and configuration information */
   meta: Meta;
+  region: Region;
   /** Full-text, multi-entity search across all types of entities (targets, diseases, drugs, variants or studies) */
   search: SearchResults;
   /** List GWAS or molecular QTL studies filtered by ID(s) and/or disease(s); supports ontology expansion */
@@ -2002,6 +2070,14 @@ export type QueryMapIdsArgs = {
 
 
 /** Root query type providing access to all entities and search functionality in the Open Targets Platform. Supports retrieval of targets, diseases, drugs, variants, studies, credible sets, and their associations. Includes full-text search, mapping, and filtering capabilities. */
+export type QueryRegionArgs = {
+  chromosome: ChromosomeEnum;
+  positionEnd: Scalars['Int']['input'];
+  positionStart: Scalars['Int']['input'];
+};
+
+
+/** Root query type providing access to all entities and search functionality in the Open Targets Platform. Supports retrieval of targets, diseases, drugs, variants, studies, credible sets, and their associations. Includes full-text search, mapping, and filtering capabilities. */
 export type QuerySearchArgs = {
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   page?: InputMaybe<Pagination>;
@@ -2061,6 +2137,25 @@ export type Reference = {
   source: Scalars['String']['output'];
   /** List of URLs linking to the reference */
   urls?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** Region with chromosome, start, and end positions */
+export type Region = {
+  __typename?: 'Region';
+  /** Chromosome */
+  chromosome: ChromosomeEnum;
+  /** End position */
+  end: Scalars['Int']['output'];
+  /** Start position */
+  start: Scalars['Int']['output'];
+  /** Targets overlapping this region */
+  targets: Targets;
+};
+
+
+/** Region with chromosome, start, and end positions */
+export type RegionTargetsArgs = {
+  page?: InputMaybe<Pagination>;
 };
 
 /** Score from a specific datasource */
@@ -2479,8 +2574,7 @@ export type Target = {
   tractability: Array<Tractability>;
   /** List of Ensembl transcript identifiers associated with the target */
   transcriptIds: Array<Scalars['String']['output']>;
-  /** List of transcripts associated with the target including protein and structure annotations */
-  transcripts: Array<Transcript>;
+  transcripts: Transcripts;
 };
 
 
@@ -2562,6 +2656,13 @@ export type TargetSimilarEntitiesArgs = {
   threshold?: InputMaybe<Scalars['Float']['input']>;
 };
 
+
+/** Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl database and uses the Ensembl gene ID as the  primary identifier. An Ensembl gene ID is considered potential drug target if included in the canonical assembly or if present alternative assemblies but encoding for a reviewed protein product according to the UniProt database. */
+export type TargetTranscriptsArgs = {
+  canonical?: InputMaybe<Scalars['Boolean']['input']>;
+  page?: InputMaybe<Pagination>;
+};
+
 /** Target classification categories from ChEMBL */
 export type TargetClass = {
   __typename?: 'TargetClass';
@@ -2580,6 +2681,15 @@ export type TargetPrioritisation = {
   items: Array<KeyValuePair>;
 };
 
+/** Targets overlapping this region */
+export type Targets = {
+  __typename?: 'Targets';
+  /** Count of hits */
+  count: Scalars['Long']['output'];
+  /** List of targets */
+  rows?: Maybe<Array<Target>>;
+};
+
 /** Tractability information for the target. Indicates the feasibility of targeting the gene/protein with different therapeutic modalities. */
 export type Tractability = {
   __typename?: 'Tractability';
@@ -2591,25 +2701,23 @@ export type Tractability = {
   value: Scalars['Boolean']['output'];
 };
 
-/** Transcript annotation for a target gene */
 export type Transcript = {
   __typename?: 'Transcript';
-  /** AlphaFold structure prediction identifier */
-  alphafoldId?: Maybe<Scalars['String']['output']>;
-  /** Biotype classification of the transcript */
+  alphafoldIds: Array<Scalars['String']['output']>;
   biotype: Scalars['String']['output'];
-  /** Whether this is the Ensembl canonical transcript */
-  isEnsemblCanonical?: Maybe<Scalars['Boolean']['output']>;
-  /** Whether the UniProt entry is reviewed (Swiss-Prot) */
-  isUniprotReviewed?: Maybe<Scalars['Boolean']['output']>;
-  /** Ensembl transcript identifier */
+  chromosome: Scalars['String']['output'];
+  end: Scalars['Int']['output'];
+  exons: Array<Exon>;
+  flags: Array<Flag>;
+  isEnsemblCanonical: Scalars['Boolean']['output'];
+  proteinId?: Maybe<Scalars['String']['output']>;
+  start: Scalars['Int']['output'];
+  strand: Strand;
   transcriptId: Scalars['String']['output'];
-  /** Ensembl translation identifier */
-  translationId?: Maybe<Scalars['String']['output']>;
-  /** UniProt accession mapped to the transcript */
-  uniprotId?: Maybe<Scalars['String']['output']>;
-  /** UniProt isoform identifier */
-  uniprotIsoformId?: Maybe<Scalars['String']['output']>;
+  transcriptionStartSite: Scalars['Int']['output'];
+  uniprotIsoformIds: Array<Scalars['String']['output']>;
+  uniprotSwissprotIds: Array<Scalars['String']['output']>;
+  uniprotTremblIds: Array<Scalars['String']['output']>;
 };
 
 /** Predicted consequences of the variant on transcript context */
@@ -2645,6 +2753,12 @@ export type TranscriptConsequence = {
   uniprotAccessions?: Maybe<Array<Scalars['String']['output']>>;
   /** The sequence ontology term of the consequence of the variant based on Ensembl VEP in the context of the transcript */
   variantConsequences: Array<SequenceOntologyTerm>;
+};
+
+export type Transcripts = {
+  __typename?: 'Transcripts';
+  count: Scalars['Long']['output'];
+  rows: Array<Transcript>;
 };
 
 export type TrialLiterature = {

@@ -18,6 +18,7 @@ import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 const CREDIBLE_SET = "credibleSet";
 
 const credibleSetProfileWidgets = new Map<string, Widget>([
+  [CredibleSet.BrowserView.definition.id, CredibleSet.BrowserView],
   [CredibleSet.Locus2Gene.definition.id, CredibleSet.Locus2Gene],
   [CredibleSet.EnhancerToGenePredictions.definition.id, CredibleSet.EnhancerToGenePredictions],
   [CredibleSet.GWASColoc.definition.id, CredibleSet.GWASColoc],
