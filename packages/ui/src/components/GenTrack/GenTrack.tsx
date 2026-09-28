@@ -484,8 +484,8 @@ function Tracks({
   const app = useApp();
 
   // Store ticker.update on both the dedicated ref and scalesRef so updateViewWindow can reach it
-  tickerUpdateRef.current = () => app.ticker.update();
-  if (scalesRef.current) scalesRef.current.tickerUpdate = () => app.ticker.update();
+  tickerUpdateRef.current = () => app.ticker?.update();
+  if (scalesRef.current) scalesRef.current.tickerUpdate = () => app.ticker?.update();
   const trackContainersRef = useRef([]);
 
   // Stop continuous ticking and recompute scales when canvas geometry or the
@@ -493,7 +493,8 @@ function Tracks({
   // layout render, remounting their Pixi marks; those marks need an initial tick
   // just as much as marks mounted with the canvas itself.
   useEffect(() => {
-    app.ticker.stop();
+    let frameId: number | undefined;
+    app.ticker?.stop();
     // Hide canvas immediately to avoid flash of stale sprites during resize
     if (canvasBoxRef?.current) canvasBoxRef.current.style.visibility = "hidden";
     // Recompute xScale/xOffset synchronously so they're fresh before the deferred tick
@@ -506,16 +507,19 @@ function Tracks({
     }
     // Defer tick so all child DataSprite/DataRect refs are attached first
     const id = setTimeout(() => {
-      app.ticker.update();
+      app.ticker?.update();
       // Reveal canvas imperatively — no React re-render, no flash
       if (canvasBoxRef?.current) canvasBoxRef.current.style.visibility = "visible";
       // Render one more tick after canvas becomes visible to ensure hit areas are calculated
-      requestAnimationFrame(() => {
-        app.ticker.update();
+      frameId = requestAnimationFrame(() => {
+        app.ticker?.update();
       });
       onReady?.();
     }, 0);
-    return () => clearTimeout(id);
+    return () => {
+      clearTimeout(id);
+      if (frameId !== undefined) cancelAnimationFrame(frameId);
+    };
   }, [app, scalesRef, tracks, xMin, xMax, canvasWidth, isInner, onReady, canvasBoxRef]);
 
   // Register track transforms whenever tracks or scales change
@@ -550,9 +554,9 @@ function Tracks({
         onTick?.(trackContainersRef.current[index]);
       }
     };
-    app.ticker.add(update);
-    return () => { app.ticker.remove(update); };
-  }, [tracks, app.ticker]);
+    app.ticker?.add(update);
+    return () => { app.ticker?.remove(update); };
+  }, [tracks, app]);
 
   // Keep static props in scalesRef for DataSprite/useTick to read
   if (scalesRef.current) {
@@ -572,8 +576,8 @@ function Tracks({
       s.xScale = canvasWidth / (domainMax - domainMin);
       s.xOffset = -domainMin * s.xScale;
     };
-    app.ticker.add(updateScales);
-    return () => { app.ticker.remove(updateScales); };
+    app.ticker?.add(updateScales);
+    return () => { app.ticker?.remove(updateScales); };
   }, [app, scalesRef, xMin, xMax, canvasWidth, isInner]);
 
   return (
