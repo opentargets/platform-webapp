@@ -1,8 +1,8 @@
 import { chromosomeInfo } from "@ot/constants";
 import type { GeneVisModel } from "ui";
 
-const OUTER_REGION_WIDTH = 500_000;
-const INITIAL_ZOOM_WIDTH = 250_000;
+const OUTER_REGION_WIDTH = 180_000;
+const INITIAL_ZOOM_WIDTH = 60_000;
 
 function getBoundedRange(center: number, width: number, minimum: number, maximum: number): [number, number] {
   const boundedWidth = Math.min(width, maximum - minimum);

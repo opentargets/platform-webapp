@@ -1,8 +1,9 @@
 import { chromosomeInfo } from "@ot/constants";
 import type { GeneVisModel } from "ui";
 
-const REGION_WIDTH = 500_000;
-const INITIAL_ZOOM_WIDTH = REGION_WIDTH / 2;
+const MAX_WIDTH = 5_000_000;
+const MIN_ZOOM_WIDTH = 250_000;
+const ZOOM_PADDING = 50_000;
 
 function getBoundedRange(
   center: number,
@@ -42,9 +43,12 @@ export function getTargetGenomicRegion(canonicalTranscript?: {
     !Number.isFinite(transcriptEnd)
   ) return undefined;
 
+  const transcriptLength = transcriptEnd - transcriptStart;
   const center = Math.round((transcriptStart + transcriptEnd) / 2);
-  const [start, end] = getBoundedRange(center, REGION_WIDTH, 0, chromosomeLength);
-  const initialZoom = getBoundedRange(center, INITIAL_ZOOM_WIDTH, start, end);
+  const zoomWidth = Math.min(Math.max(transcriptLength + ZOOM_PADDING, MIN_ZOOM_WIDTH), MAX_WIDTH);
+  const regionWidth = Math.min(zoomWidth * 2, MAX_WIDTH);
+  const [start, end] = getBoundedRange(center, regionWidth, 0, chromosomeLength);
+  const initialZoom = getBoundedRange(center, zoomWidth, start, end);
 
   return {
     chromosome,
