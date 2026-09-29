@@ -18,14 +18,14 @@
 
 ## Props
 
-| Prop          | Type               | Description                                                   |
-| ------------- | ------------------ | ------------------------------------------------------------- |
-| `model`       | `GeneVisModel`     | Presentation data: genes, optional reference position, optional overview/detail variants, and optional gene styling. |
-| `chromosome`  | `string`           | Chromosome containing the displayed region.                   |
-| `xMin`        | `number`           | Minimum genomic position for the outer view.                  |
-| `xMax`        | `number`           | Maximum genomic position for the outer view.                  |
-| `initialZoom` | `[number, number]` | Optional initial genomic range for the zoomed view.           |
-| `tooltip`     | `GeneVisTooltipOptions` | Optional widget-owned detail panel, context, and width rule beneath the shared entity header. |
+| Prop          | Type                    | Description                                                                                                          |
+| ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `GeneVisModel`          | Presentation data: genes, optional reference position, optional overview/detail variants, and optional gene styling. |
+| `chromosome`  | `string`                | Chromosome containing the displayed region.                                                                          |
+| `xMin`        | `number`                | Minimum genomic position for the outer view.                                                                         |
+| `xMax`        | `number`                | Maximum genomic position for the outer view.                                                                         |
+| `initialZoom` | `[number, number]`      | Optional initial genomic range for the zoomed view.                                                                  |
+| `tooltip`     | `GeneVisTooltipOptions` | Optional widget-owned detail panel, context, and width rule beneath the shared entity header.                        |
 
 ## Model
 
