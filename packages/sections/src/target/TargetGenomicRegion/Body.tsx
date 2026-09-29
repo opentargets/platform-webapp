@@ -45,6 +45,13 @@ function Body({ entity }: BodyProps) {
         if (!target || !region || !regionRequest.data?.region) {
           return <Typography component="h2">Loading region data...</Typography>;
         }
+        if (regionRequest.data.region.targets.count === 0) {
+          return (
+            <Box sx={{ py: 2, px: 1.5 }}>
+              <Typography color="text.secondary">No genes in the region around this target</Typography>
+            </Box>
+          );
+        }
 
         return (
           <Box sx={{ pt: 1 }}>

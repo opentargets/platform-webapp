@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Genomic Region",
   shortName: "GR",
-  hasData: () => true,  // !! NEEDS UPDATED ONCE HAVE FINAL QUERIES !!
+  hasData: () => true,
   isPrivate: isPrivateCredibleSetSection(id),
 };
 

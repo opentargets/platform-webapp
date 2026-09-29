@@ -3,7 +3,6 @@ import { GeneVis, SectionItem, useBatchQuery } from "ui";
 import { Box, Typography } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
-import { useEffect } from "react";
 import CREDIBLE_SET_GENOMIC_REGION_QUERY from "./CredibleSetGenomicRegionQuery.gql";
 import REGION_TARGETS_QUERY from "./CredibleSetGenomicRegionRegionTargetsQuery.gql";
 import { table5HChunkSize } from "@ot/constants";
@@ -44,21 +43,6 @@ function Body({ id, entity }: BodyProps) {
     variables: regionVariables,
     skip: !regionVariables,
   });
-
-  useEffect(() => {
-    const targets = regionRequest.data?.region?.targets?.rows;
-    if (!targets) return;
-
-    const biotypeCounts = targets.reduce((counts, target) => {
-      const biotype = target.biotype ?? "unknown";
-      counts[biotype] = (counts[biotype] ?? 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
-    // eslint-disable-next-line no-console
-    console.info("Credible Set Genomic Region target biotypes", biotypeCounts);
-  }, [regionRequest.data]);
-
-
 
   const combinedData = data && regionRequest.data
     ? { ...data, region: regionRequest.data.region }
