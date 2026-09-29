@@ -138,15 +138,20 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     showOnlyPartner: true,
   },
   {
-    name: "Documentation",
-    url: "https://platform-docs.opentargets.org/getting-started",
-    external: true,
-  },
-  {
     name: "GSEA Analysis",
     url: "/analysis",
     showOnlyPartner: true,
     external: false,
+  },
+  {
+    name: "Metrics",
+    url: "/metrics",
+    external: false,
+  },
+  {
+    name: "Documentation",
+    url: "https://platform-docs.opentargets.org/getting-started",
+    external: true,
   },
   {
     name: "PPP Documentation",
@@ -159,11 +164,7 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     url: "/downloads",
     external: false,
   },
-  {
-    name: "Metrics",
-    url: "/metrics",
-    external: false,
-  },
+
   {
     name: "API",
     url: "/api",
