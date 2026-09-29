@@ -38,6 +38,7 @@ import { addRows, setLoading, setNewData, textSearch } from "./context/otTableAc
 
 import useCursorBatchDownloader from "../../hooks/useCursorBatchDownloader";
 import { useApolloClient } from "../../providers/OTApolloProvider/OTApolloProvider";
+import { toExportTable, useExportTableSink } from "../../providers/ExportTableSinkContext";
 
 function OtTableSSP({
   showGlobalFilter = true,
@@ -237,6 +238,22 @@ function OtTableSSP({
   useEffect(() => {
     enableRowSelection && getSelectedRows(table.getSelectedRowModel().rows);
   }, [table.getSelectedRowModel()]);
+
+  // Export RenderHost only: publish the rows fetched so far (totalRows = server count)
+  const exportTableSink = useExportTableSink();
+  const exportKey = `otTableSSP:${sectionName || dataDownloaderFileStem || "default"}`;
+  useEffect(() => {
+    if (!exportTableSink) return;
+    if (state.loading || state.initialLoading) {
+      exportTableSink(exportKey, { loading: true });
+      return;
+    }
+    exportTableSink(exportKey, {
+      loading: false,
+      table: toExportTable(columns, state.rows as Record<string, unknown>[], { totalRows: state.count }),
+    });
+  }, [exportTableSink, exportKey, state.loading, state.initialLoading, state.rows, state.count, columns]);
+  useEffect(() => () => exportTableSink?.(exportKey, null), [exportTableSink, exportKey]);
 
   function getCellData(cell: Record<string, unknown>): ReactNode {
     return <>{flexRender(cell.column.columnDef.cell, cell.getContext())}</>;

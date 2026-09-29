@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Drawer,
@@ -6,8 +6,6 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  Card,
-  CardContent,
   Button,
   Dialog,
   DialogTitle,
@@ -17,199 +15,25 @@ import {
   Tab,
   Tabs,
   Chip,
-  Divider,
-  Tooltip,
-  Avatar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faX,
-  faTrash,
-  faGrip,
-  faDownload,
-  faPen,
-  faBroom,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  useDraggable,
-  useDroppable,
-  DragDropProvider,
-} from "@dnd-kit/react";
-import {
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { faX, faTrash, faDownload, faPen, faBroom } from "@fortawesome/free-solid-svg-icons";
+import { DragDropProvider } from "@dnd-kit/react";
+import { isSortable } from "@dnd-kit/react/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
-import { ReportSectionContext } from "../../providers/ReportSectionContext";
-import { ReportComponentStateProvider } from "../../providers/ReportComponentStateContext";
-import { ReportSection } from "../../types/report";
-import { useReportSectionContent } from "../../hooks/useReportSectionRenderer";
+import { NonWidgetBlock } from "../../types/report";
+import { ReportSectionList } from "./ReportSectionList";
+import { ReportSectionInspector } from "./ReportSectionInspector";
+import { BlockInserterMenu } from "./BlockInserterMenu";
+import { BlockEditorProvider, InserterRequest } from "./blocks/BlockEditorContext";
+import { ExportDialog } from "./export/ui/ExportDialog";
 
-/**
- * Draggable Report Section Component
- */
-const DraggableReportSection: React.FC<{
-  section: ReportSection;
-  onRemove: (sectionId: string) => void;
-  onViewChange: (sectionId: string, view: "table" | "chart") => void;
-}> = ({ section, onRemove }) => {
-  const { ref } = useDraggable({
-    id: section.reportSectionId,
-  });
+const NEW_REPORT_TAB = "__new-report__";
 
-  const content = useReportSectionContent(section);
-  const hasContent = !!(content.body && content.description);
-
-  console.log(section, section.selectedView, content.body, content.chart, 'rendering DraggableReportSection');
-
-  return (
-    <Card
-      ref={ref}
-      sx={{
-        mb: 2,
-        border: "1px solid #e0e0e0",
-        transition: "all 0.2s ease",
-        cursor: "grab",
-        "&:active": { cursor: "grabbing" },
-      }}
-      elevation={1}
-    >
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-          {/* Drag Handle */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              color: "text.secondary",
-              mt: 0.5,
-            }}
-          >
-            <FontAwesomeIcon icon={faGrip} />
-          </Box>
-
-          {/* Content */}
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  fontSize: "0.75rem",
-                  backgroundColor: "primary.main",
-                }}
-              >
-                {section.definition.shortName || section.definition.name.charAt(0)}
-              </Avatar>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {section.definition.name}
-              </Typography>
-              {section.definition.isPrivate && (
-                <Chip label="Private" size="small" variant="outlined" />
-              )}
-              {section.chipText && (
-                <Chip label={section.chipText} size="small" />
-              )}
-            </Box>
-
-            <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-              {content.description || (
-                <em style={{ color: "#999" }}>
-                  Description not available (navigate to page to load)
-                </em>
-              )}
-            </Typography>
-
-            {/* Rendered Content Preview */}
-            <Box
-              sx={{
-                backgroundColor: "#f5f5f5",
-                p: 2,
-                mb: 2,
-                border: "1px solid #e0e0e0",
-                borderRadius: 1,
-                minHeight: 200,
-                "& > div, & > table, & > svg, & > canvas": {
-                  width: "100%",
-                  height: "auto",
-                },
-              }}
-            >
-              <ReportComponentStateProvider initialState={section.componentState}>
-                <ReportSectionContext.Provider 
-                  value={{ 
-                    entityId: section.entityId, 
-                    entityLabel: section.entityLabel, 
-                    entityType: section.definition.entity 
-                  }}
-                >
-                  {content.body || content.chart}
-                </ReportSectionContext.Provider>
-              </ReportComponentStateProvider>
-              {!hasContent && (
-                <Box sx={{ textAlign: "center", color: "#999", py: 4 }}>
-                  <Typography variant="body2">
-                    Content not available
-                  </Typography>
-                  <Typography variant="caption">
-                    Navigate to the {section.definition.entity} page to load section content
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-
-            {/* Controls */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-              <Chip
-                label={section.selectedView.toUpperCase()}
-                size="small"
-                variant="outlined"
-              />
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                Added {new Date(section.addedAt).toLocaleDateString()}
-              </Typography>
-              <Box sx={{ flex: 1 }} />
-              <Tooltip title="Remove from report">
-                <IconButton
-                  size="small"
-                  onClick={() => onRemove(section.reportSectionId)}
-                  sx={{ color: "error.main" }}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-};
-
-/**
- * Droppable sections container
- */
-const DroppableSectionsList: React.FC<{
-  sections: ReportSection[];
-  onRemove: (sectionId: string) => void;
-  onViewChange: (sectionId: string, view: "table" | "chart") => void;
-}> = ({ sections, onRemove, onViewChange }) => {
-  const { ref } = useDroppable({
-    id: "report-sections",
-  });
-
-  return (
-    <Box ref={ref}>
-      {sections.map((section) => (
-        <DraggableReportSection
-          key={section.reportSectionId}
-          section={section}
-          onRemove={onRemove}
-          onViewChange={onViewChange}
-        />
-      ))}
-    </Box>
-  );
-};
+const compactButtonSx = { height: 32, textTransform: "none" } as const;
 
 /**
  * Main Report Builder Component
@@ -220,10 +44,45 @@ interface ReportBuilderProps {
 
 export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90vw" }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const theme = useTheme();
+  const isNarrow = useMediaQuery(theme.breakpoints.down("md"));
+  const [dialogMode, setDialogMode] = useState<"edit" | "create" | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [currentTab, setCurrentTab] = useState(0);
+  // Collapsible rows start expanded; this tracks the ones the user collapsed
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set());
+  // The block shown in the inspector: the last one clicked or focused
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [inserterRequest, setInserterRequest] = useState<InserterRequest | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const toggleCollapsed = useCallback((id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // New blocks are selected so the inspector shows them (and are expanded, being new ids)
+  const handleInserted = useCallback((block: NonWidgetBlock) => {
+    setSelectedSectionId(block.reportSectionId);
+  }, []);
+
+  // Everything expanded, nothing selected, whenever the drawer opens or the report changes
+  useEffect(() => {
+    setCollapsedIds(new Set());
+    setSelectedSectionId(null);
+  }, [state.activeReportId, state.isBuilderOpen]);
+
+  // Drop the selection if the selected block was removed
+  const selectedSection =
+    activeReport?.sections.find((s) => s.reportSectionId === selectedSectionId) ?? null;
+  useEffect(() => {
+    if (selectedSectionId && !selectedSection) setSelectedSectionId(null);
+  }, [selectedSectionId, selectedSection]);
 
   if (!state.isBuilderOpen) {
     return null;
@@ -240,19 +99,33 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
     if (activeReport) {
       setEditName(activeReport.name);
       setEditDescription(activeReport.description || "");
-      setEditDialogOpen(true);
+      setDialogMode("edit");
     }
   };
 
-  const handleSaveEdit = () => {
-    if (activeReport && editName.trim()) {
+  const handleOpenCreateDialog = () => {
+    setEditName("");
+    setEditDescription("");
+    setDialogMode("create");
+  };
+
+  const handleSaveDialog = () => {
+    if (!editName.trim()) return;
+    if (dialogMode === "create") {
+      dispatch({
+        type: "createReport",
+        reportName: editName,
+        description: editDescription,
+      });
+    } else if (activeReport) {
       dispatch({
         type: "renameReport",
         reportId: activeReport.id,
         newName: editName,
+        description: editDescription,
       });
-      setEditDialogOpen(false);
     }
+    setDialogMode(null);
   };
 
   const handleClearReport = () => {
@@ -277,32 +150,8 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
     }
   };
 
-  const handleExportReport = () => {
-    if (activeReport) {
-      const exportData = {
-        report: {
-          name: activeReport.name,
-          description: activeReport.description,
-          createdAt: activeReport.createdAt,
-          sections: activeReport.sections.map((s) => ({
-            name: s.definition.name,
-            entity: s.definition.entity,
-            selectedView: s.selectedView,
-            addedAt: s.addedAt,
-          })),
-        },
-      };
-
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${activeReport.name.replace(/\s+/g, "-")}-report.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    }
-  };
+  const reports = Array.from(state.reports.values());
+  const hasSections = !!activeReport && activeReport.sections.length > 0;
 
   return (
     <Drawer
@@ -317,72 +166,75 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
       }}
     >
       <DragDropProvider
+        onDragStart={() => setIsDragging(true)}
         onDragEnd={(event) => {
-          if (event.canceled) return;
+          setIsDragging(false);
+          if (event.canceled || !activeReport) return;
 
-          const { source, target } = event.operation;
+          const { source } = event.operation;
+          if (!isSortable(source)) return;
 
-          if (target && source && source.id !== target.id && activeReport) {
-            const oldIndex = activeReport.sections.findIndex(
-              (s) => s.reportSectionId === String(source.id)
-            );
-            const newIndex = activeReport.sections.findIndex(
-              (s) => s.reportSectionId === String(target.id)
-            );
-
-            if (oldIndex !== -1 && newIndex !== -1) {
-              const newOrder = arrayMove(activeReport.sections, oldIndex, newIndex);
-              dispatch({
-                type: "reorderSections",
-                newOrder,
-              });
-            }
+          const { initialIndex, index } = source;
+          if (initialIndex !== index) {
+            dispatch({
+              type: "reorderSections",
+              newOrder: arrayMove(activeReport.sections, initialIndex, index),
+            });
           }
         }}
       >
         <AppBar position="relative" elevation={1}>
-          <Toolbar>
-            <Typography variant="h6" sx={{ flex: 1, fontWeight: 600 }}>
-              Report Builder
+          <Toolbar sx={{ gap: 1 }}>
+            <Typography variant="h6" noWrap sx={{ flex: 1, fontWeight: 600 }}>
+              Report Builder{activeReport ? ` · ${activeReport.name}` : ""}
             </Typography>
-            <IconButton color="inherit" onClick={handleCloseBuilder}>
+            {activeReport && (
+              <Button
+                variant="outlined"
+                color="inherit"
+                startIcon={<FontAwesomeIcon icon={faDownload} />}
+                onClick={() => setExportOpen(true)}
+                sx={{ ...compactButtonSx, borderColor: "rgba(255,255,255,0.7)" }}
+              >
+                Export
+              </Button>
+            )}
+            <IconButton color="inherit" onClick={handleCloseBuilder} aria-label="Close report builder">
               <FontAwesomeIcon icon={faX} />
             </IconButton>
           </Toolbar>
         </AppBar>
 
-      {/* Tab Navigation for multiple reports */}
-      {state.reports.size > 0 && (
+        {/* Tab Navigation for multiple reports */}
         <Tabs
-          value={currentTab}
-          onChange={(_, newValue) => setCurrentTab(newValue)}
+          value={activeReport?.id ?? false}
+          onChange={(_, value: string) => {
+            if (value === NEW_REPORT_TAB) {
+              handleOpenCreateDialog();
+              return;
+            }
+            dispatch({ type: "setActiveReport", reportId: value });
+          }}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{
-            borderBottom: "1px solid #e0e0e0",
-          }}
+          sx={{ borderBottom: "1px solid", borderColor: "grey.300", flexShrink: 0 }}
         >
-          {Array.from(state.reports.values()).map((report) => (
+          {reports.map((report) => (
             <Tab
               key={report.id}
+              value={report.id}
+              sx={{ textTransform: "none" }}
               label={
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {report.name}
                   <Chip label={report.sections.length} size="small" />
                 </Box>
               }
-              onClick={() => {
-                dispatch({
-                  type: "setActiveReport",
-                  reportId: report.id,
-                });
-              }}
             />
           ))}
+          <Tab value={NEW_REPORT_TAB} label="+ New report" sx={{ textTransform: "none" }} />
         </Tabs>
-      )}
 
-      <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
         {!activeReport ? (
           <Box sx={{ textAlign: "center", py: 4 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -394,122 +246,153 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
           </Box>
         ) : (
           <>
-            {/* Report Header */}
-            <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, mb: 1 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-                    {activeReport.name}
-                  </Typography>
-                  {activeReport.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {activeReport.description}
-                    </Typography>
-                  )}
-                </Box>
-                <Tooltip title="Edit report">
-                  <IconButton size="small" onClick={handleOpenEditDialog}>
-                    <FontAwesomeIcon icon={faPen} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-
-              <Typography variant="caption" color="text.secondary">
-                {activeReport.sections.length} section{activeReport.sections.length !== 1 ? "s" : ""}
-              </Typography>
-
-              <Divider sx={{ my: 1.5 }} />
-
-              {/* Action Buttons */}
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<FontAwesomeIcon icon={faDownload} />}
-                  onClick={handleExportReport}
-                >
-                  Export
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<FontAwesomeIcon icon={faBroom} />}
-                  onClick={handleClearReport}
-                  disabled={activeReport.sections.length === 0}
-                >
-                  Clear
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  startIcon={<FontAwesomeIcon icon={faTrash} />}
-                  onClick={handleDeleteReport}
-                >
-                  Delete
-                </Button>
-              </Box>
+            {/* Report actions */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                px: "18px",
+                py: 1,
+                borderBottom: "1px solid",
+                borderColor: "grey.300",
+                flexShrink: 0,
+              }}
+            >
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<FontAwesomeIcon icon={faPen} />}
+                onClick={handleOpenEditDialog}
+                sx={compactButtonSx}
+              >
+                Edit
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<FontAwesomeIcon icon={faBroom} />}
+                onClick={handleClearReport}
+                disabled={activeReport.sections.length === 0}
+                sx={compactButtonSx}
+              >
+                Clear
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                startIcon={<FontAwesomeIcon icon={faTrash} />}
+                onClick={handleDeleteReport}
+                sx={compactButtonSx}
+              >
+                Delete
+              </Button>
             </Box>
 
-            {/* Sections */}
-            {activeReport.sections.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Typography variant="body2" color="text.secondary">
-                  No sections added yet
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Click "Add to Report" on any widget to get started
-                </Typography>
+            {/* Two-pane layout: section list + inspector */}
+            <BlockEditorProvider
+              report={activeReport}
+              openInserter={setInserterRequest}
+              onInserted={handleInserted}
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "grid",
+                  gridTemplateColumns: isNarrow ? "minmax(0,1fr)" : "minmax(0,1fr) 296px",
+                  gridTemplateRows: "minmax(0,1fr)",
+                }}
+              >
+                {!hasSections ? (
+                  <Box sx={{ textAlign: "center", py: 4, bgcolor: "grey.50" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No sections added yet
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Click "Add to Report" on any widget to get started
+                    </Typography>
+                    <Box sx={{ mt: 2 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        aria-haspopup="dialog"
+                        onClick={(e) => setInserterRequest({ insertIndex: 0, anchorEl: e.currentTarget })}
+                        sx={compactButtonSx}
+                      >
+                        + Add a block
+                      </Button>
+                    </Box>
+                  </Box>
+                ) : (
+                  <ReportSectionList
+                    sections={activeReport.sections}
+                    isDragging={isDragging}
+                    collapsedIds={collapsedIds}
+                    onToggleCollapsed={toggleCollapsed}
+                    onSetCollapsed={setCollapsedIds}
+                    selectedSectionId={selectedSectionId}
+                    onSelect={setSelectedSectionId}
+                    renderInlineInspector={
+                      isNarrow
+                        ? (section) => (
+                            <ReportSectionInspector
+                              report={activeReport}
+                              section={section}
+                              variant="inline"
+                            />
+                          )
+                        : undefined
+                    }
+                    footer={
+                      isNarrow && !selectedSection ? (
+                        <Box sx={{ border: "1px solid", borderColor: "grey.300", mt: 2 }}>
+                          <ReportSectionInspector report={activeReport} section={null} variant="inline" />
+                        </Box>
+                      ) : undefined
+                    }
+                  />
+                )}
+                {!isNarrow && <ReportSectionInspector report={activeReport} section={selectedSection} />}
               </Box>
-            ) : (
-              <DroppableSectionsList
-                sections={activeReport.sections}
-                onRemove={(sectionId) => {
-                  dispatch({
-                    type: "removeSectionFromReport",
-                    reportSectionId: sectionId,
-                  });
-                }}
-                onViewChange={(sectionId, view) => {
-                  dispatch({
-                    type: "updateSectionView",
-                    reportSectionId: sectionId,
-                    selectedView: view,
-                  });
-                }}
-              />
-            )}
+              <BlockInserterMenu request={inserterRequest} onClose={() => setInserterRequest(null)} />
+            </BlockEditorProvider>
           </>
         )}
-      </Box>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Report</DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-          <TextField
-            autoFocus
-            label="Report Name"
-            fullWidth
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-          />
-          <TextField
-            label="Description"
-            fullWidth
-            multiline
-            rows={3}
-            value={editDescription}
-            onChange={(e) => setEditDescription(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveEdit} variant="contained" disabled={!editName.trim()}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Edit / Create Dialog */}
+        <Dialog open={dialogMode !== null} onClose={() => setDialogMode(null)} maxWidth="sm" fullWidth>
+          <DialogTitle>{dialogMode === "create" ? "New Report" : "Edit Report"}</DialogTitle>
+          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+            <TextField
+              autoFocus
+              label="Report Name"
+              fullWidth
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              sx={{ mt: 1 }}
+            />
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={3}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogMode(null)}>Cancel</Button>
+            <Button onClick={handleSaveDialog} variant="contained" disabled={!editName.trim()}>
+              {dialogMode === "create" ? "Create" : "Save"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {activeReport && (
+          <ExportDialog report={activeReport} open={exportOpen} onClose={() => setExportOpen(false)} />
+        )}
       </DragDropProvider>
     </Drawer>
   );

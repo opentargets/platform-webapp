@@ -16,6 +16,7 @@ import {
   Row,
 } from "@tanstack/react-table";
 import { useReportComponentState } from "../../providers/ReportComponentStateContext";
+import { toExportTable, useExportTableSink } from "../../providers/ExportTableSinkContext";
 import {
   faAngleLeft,
   faAngleRight,
@@ -246,6 +247,30 @@ function OtTable({
   useEffect(() => {
     saveReportState?.(tableStateKey, { globalFilter, columnFilters, rowSelection, sorting, pagination });
   }, [saveReportState, tableStateKey, globalFilter, columnFilters, rowSelection, sorting, pagination]);
+
+  // Export RenderHost only: publish the filtered + sorted rows (all pages) as plain values
+  const exportTableSink = useExportTableSink();
+  const exportRows = table.getSortedRowModel().rows;
+  const visibleColumnIds = table
+    .getVisibleLeafColumns()
+    .map(c => c.id)
+    .join("\u0000");
+  useEffect(() => {
+    if (!exportTableSink) return;
+    if (loading) {
+      exportTableSink(tableStateKey, { loading: true });
+      return;
+    }
+    exportTableSink(tableStateKey, {
+      loading: false,
+      table: toExportTable(
+        columns,
+        exportRows.map(r => r.original),
+        { visibleIds: new Set(visibleColumnIds.split("\u0000")) }
+      ),
+    });
+  }, [exportTableSink, tableStateKey, loading, columns, exportRows, visibleColumnIds]);
+  useEffect(() => () => exportTableSink?.(tableStateKey, null), [exportTableSink, tableStateKey]);
 
   return (
     <div>

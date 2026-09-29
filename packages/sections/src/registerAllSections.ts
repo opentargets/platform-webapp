@@ -103,7 +103,7 @@ export const registerAllSections = () => {
     // Disease
     { entity: "disease", definition: DiseaseOntology.definition, getBodyComponent: DiseaseOntology.getBodyComponent },
     { entity: "disease", definition: DiseasePhenotypes.definition, getBodyComponent: DiseasePhenotypes.getBodyComponent },
-    { entity: "disease", definition: DiseaseBibliography.definition, getBodyComponent: DiseaseBibliography.getBodyComponent },
+    { entity: "disease", definition: DiseaseBibliography.definition, getBodyComponent: DiseaseBibliography.getBodyComponent, exportAdapter: DiseaseBibliography.exportAdapter },
     { entity: "disease", definition: DiseaseDrugs.definition, getBodyComponent: DiseaseDrugs.getBodyComponent },
     { entity: "disease", definition: DiseaseGWASStudies.definition, getBodyComponent: DiseaseGWASStudies.getBodyComponent },
     { entity: "disease", definition: DiseaseOTProjects.definition, getBodyComponent: DiseaseOTProjects.getBodyComponent },
@@ -116,7 +116,7 @@ export const registerAllSections = () => {
     { entity: "drug", definition: DrugDrugWarnings.definition, getBodyComponent: DrugDrugWarnings.getBodyComponent },
     { entity: "drug", definition: DrugIndications.definition, getBodyComponent: DrugIndications.getBodyComponent },
     { entity: "drug", definition: DrugPharmacogenomics.definition, getBodyComponent: DrugPharmacogenomics.getBodyComponent },
-    { entity: "drug", definition: DrugBibliography.definition, getBodyComponent: DrugBibliography.getBodyComponent },
+    { entity: "drug", definition: DrugBibliography.definition, getBodyComponent: DrugBibliography.getBodyComponent, exportAdapter: DrugBibliography.exportAdapter },
 
     // Target
     { entity: "target", definition: TargetBaselineExpression.definition, getBodyComponent: TargetBaselineExpression.getBodyComponent },
@@ -136,7 +136,7 @@ export const registerAllSections = () => {
     { entity: "target", definition: TargetGeneticConstraint.definition, getBodyComponent: TargetGeneticConstraint.getBodyComponent },
     { entity: "target", definition: TargetMolecularStructure.definition, getBodyComponent: TargetMolecularStructure.getBodyComponent },
     { entity: "target", definition: TargetMousePhenotypes.definition, getBodyComponent: TargetMousePhenotypes.getBodyComponent },
-    { entity: "target", definition: TargetBibliography.definition, getBodyComponent: TargetBibliography.getBodyComponent },
+    { entity: "target", definition: TargetBibliography.definition, getBodyComponent: TargetBibliography.getBodyComponent, exportAdapter: TargetBibliography.exportAdapter },
 
     // Variant
     { entity: "variant", definition: VariantEnhancerToGenePredictions.definition, getBodyComponent: VariantEnhancerToGenePredictions.getBodyComponent },
@@ -179,7 +179,7 @@ export const registerAllSections = () => {
     { entity: "evidence", definition: EvidenceUniProtLiterature.definition, getBodyComponent: EvidenceUniProtLiterature.getBodyComponent },
     { entity: "evidence", definition: EvidenceExpressionAtlas.definition, getBodyComponent: EvidenceExpressionAtlas.getBodyComponent },
     { entity: "evidence", definition: EvidenceEVASomatic.definition, getBodyComponent: EvidenceEVASomatic.getBodyComponent },
-    { entity: "evidence", definition: EvidenceEuropePmc.definition, getBodyComponent: EvidenceEuropePmc.getBodyComponent },
+    { entity: "evidence", definition: EvidenceEuropePmc.definition, getBodyComponent: EvidenceEuropePmc.getBodyComponent, exportAdapter: EvidenceEuropePmc.exportAdapter },
     { entity: "evidence", definition: EvidenceGeneBurden.definition, getBodyComponent: EvidenceGeneBurden.getBodyComponent },
     { entity: "evidence", definition: EvidenceGene2Phenotype.definition, getBodyComponent: EvidenceGene2Phenotype.getBodyComponent },
     { entity: "evidence", definition: EvidenceIntOgen.definition, getBodyComponent: EvidenceIntOgen.getBodyComponent },
@@ -187,14 +187,16 @@ export const registerAllSections = () => {
   ];
 
   // Register each component with the composite ID format "entity:sectionId"
-  registrations.forEach(({ entity, definition, getBodyComponent }) => {
+  registrations.forEach((registration) => {
+    const { entity, definition, getBodyComponent } = registration;
+    const exportAdapter = "exportAdapter" in registration ? registration.exportAdapter : undefined;
     const compositeId = `${entity}:${definition.id}`;
     const Body = getBodyComponent();
     
     // Add entity field to definition for storage/reconstruction
     const definitionWithEntity = { ...definition, entity } as any;
     
-    registerSectionComponent(compositeId, Body, definitionWithEntity);
+    registerSectionComponent(compositeId, Body, definitionWithEntity, exportAdapter);
   });
 
   console.log(`Registered ${registrations.length} section components`);

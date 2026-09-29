@@ -16,12 +16,35 @@ import { createShortName } from "../Summary/utils";
 import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
 import { AddToReportButton } from "../Report";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { VIEW } from "@ot/constants";
 import {
   ReportComponentStateProvider,
   useReportComponentState,
 } from "../../providers/ReportComponentStateContext";
+import { useReportSectionContext } from "../../providers/ReportSectionContext";
+import {
+  getLiveCaptureKey,
+  registerLiveCapture,
+} from "../../providers/LiveSectionStateRegistry";
+
+/**
+ * Registers this live section's state bag so the report builder can offer
+ * "Update from live page" for report sections of the same entity + section.
+ * Must render inside the section's ReportComponentStateProvider.
+ */
+function LiveCaptureRegistrar({ captureKey }: { captureKey: string }): null {
+  const reportComponentState = useReportComponentState();
+  const stateRef = useRef(reportComponentState);
+  stateRef.current = reportComponentState;
+
+  useEffect(
+    () => registerLiveCapture(captureKey, () => stateRef.current?.getAllState() ?? {}),
+    [captureKey]
+  );
+
+  return null;
+}
 
 type definitionType = {
   id: string;
@@ -73,6 +96,8 @@ function SectionItem({
   // provider, so we create one below purely to let this section's widget(s)
   // save state into, ready to be captured by "Add to Report".
   const existingReportComponentState = useReportComponentState();
+  // Only set when this section is rendered inside a report (drawer / reconstruction)
+  const isInReport = !!useReportSectionContext();
 
 
   if (data && entity && data[entity]) {
@@ -80,6 +105,8 @@ function SectionItem({
   }
 
   if (!hasData && !showEmptySection && !loading) return null;
+
+  const liveEntityId: string | undefined = data?.[entity]?.id;
 
   function getSelectedView(): ReactNode {
     if (error) return <SectionError message={String(error)} />;
@@ -128,19 +155,26 @@ function SectionItem({
                   {renderChart && (
                     <SectionViewToggle defaultValue={defaultView} viewChange={setSelectedView} />
                   )}
-                  <AddToReportButton
-                    definition={{ ...definition, entity } as unknown as any}
-                    request={{ loading, error, data, variables } as unknown as any}
-                    renderedBody={renderBody}
-                    renderedChart={renderChart}
-                    description={renderDescription}
-                    entity={entity}
-                    selectedView={selectedView as unknown as "table" | "chart"}
-                    tags={tags}
-                    chipText={chipText}
-                  />
+                  {!isInReport && (
+                    <AddToReportButton
+                      definition={{ ...definition, entity } as unknown as any}
+                      request={{ loading, error, data, variables } as unknown as any}
+                      renderedBody={renderBody}
+                      renderedChart={renderChart}
+                      description={renderDescription}
+                      entity={entity}
+                      selectedView={selectedView === VIEW.chart ? "chart" : "table"}
+                      tags={tags}
+                      chipText={chipText}
+                    />
+                  )}
                 </Box>
               </CardHeaderContainer>
+              {!existingReportComponentState && liveEntityId && (
+                <LiveCaptureRegistrar
+                  captureKey={getLiveCaptureKey(entity, definition.id, liveEntityId)}
+                />
+              )}
               <Divider />
               <StyledCardContent>{getSelectedView()}</StyledCardContent>
             </ErrorBoundary>

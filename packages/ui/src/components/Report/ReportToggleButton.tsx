@@ -3,6 +3,7 @@ import { Fab, Badge, Tooltip } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
+import { isWidget } from "../../types/report";
 
 /**
  * Floating Action Button to toggle Report Builder drawer
@@ -12,7 +13,7 @@ export const ReportToggleButton: React.FC = () => {
   const { state, dispatch } = useReportBuilder();
   
   const totalSections = Array.from(state.reports.values()).reduce(
-    (sum, report) => sum + report.sections.length,
+    (sum, report) => sum + report.sections.filter(isWidget).length,
     0
   );
 

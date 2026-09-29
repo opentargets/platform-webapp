@@ -3,7 +3,7 @@ import { faCheckSquare, faExclamationTriangle } from "@fortawesome/free-solid-sv
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Typography } from "@mui/material";
 import { v1 } from "uuid";
-import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTable } from "ui";
+import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTable, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";

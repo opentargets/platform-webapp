@@ -7,4 +7,5 @@ export { useReportBuilderDispatch, ReportBuilderProvider, useReportBuilder, useR
 export { AddToReportButton } from './AddToReportButton';
 export { ReportBuilder } from './ReportBuilder';
 export { ReportToggleButton } from './ReportToggleButton';
-export type {ReportBuilderState, ReportBuilderAction, Report, ReportSection, ReportSectionDefinition, ReportRequest, ReportSectionViewType} from "../../types/report";
+export type {ReportBuilderState, ReportBuilderAction, Report, ReportSection, ReportSectionDefinition, ReportRequest, ReportSectionViewType, ReportBlock, BlockKind} from "../../types/report";
+export { isWidget } from "../../types/report";

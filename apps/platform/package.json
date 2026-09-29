@@ -80,6 +80,7 @@
     "@vitejs/plugin-react": "^4.0.4",
     "cross-fetch": "^3.1.4",
     "graphql-tag": "^2.12.6",
+    "notebook-runtime": "*",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.49.10",
     "tsconfig": "*",

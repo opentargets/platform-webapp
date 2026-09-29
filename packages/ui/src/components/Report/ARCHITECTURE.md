@@ -208,3 +208,46 @@ For a design pass, in rough priority order matching the three stated goals:
 
 **Standalone-library framing (goal 3)**
 - A "host adapter" concept surfaced in UI terms probably doesn't need its own wireframe — it's a code-organization goal, not a user-facing feature. Not a wireframing priority.
+
+---
+
+## Notebook blocks (`blocks/notebook/`)
+
+A **notebook** block is a JavaScript cell (d3 v7 + Observable Plot) that reads other blocks in the
+report as named inputs and returns a chart, a table or a value. Spec: "Report Builder — Notebook
+block (3B)".
+
+**Data model.** `NotebookBlock` in `types/report.ts`: `ref`, `inputs: string[]` (refs, chip order),
+`code` (body of an async function), `display`, `height`, `runMode`, `hideCodeInExport`, `takeaway`,
+`caption`, plus persisted `lastRun` and `snapshot` (SVG ≤ 300 KB, else PNG ≤ 300 KB; data ≤ 200 KB).
+Widgets get an optional `ref` the first time they're linked, so every input kind is addressable by
+name; `refOf()` / `uniqueRef()` cover data blocks, notebooks and linked widgets.
+
+**Reducer.** `linkNotebookInput` (rejects cycles via `notebook/graph.ts`), `unlinkNotebookInput`,
+`setNotebookRun` (last run + snapshot), `renameBlockRef` (renames a ref and rewrites every
+notebook's `inputs` and `code`, the latter through acorn so strings and property names are untouched).
+
+**Execution.** User code never runs in the app: `useNotebookRunner` owns a per-block
+`<iframe sandbox="allow-scripts">` pointing at `/notebook-runtime/index.html` (built from
+`packages/notebook-runtime`, see its README). The runtime's CSP has `connect-src 'none'`, so data
+can only enter through linked blocks. Loop guard (2 s per synchronous slice) in the sandbox,
+15 s watchdog in the host; **Stop** replaces the iframe. Live results live in
+`notebookResultsStore` (like `dataResultsStore`); only `lastRun`/`snapshot` are persisted.
+
+**Inputs.** `resolveInputs.ts` binds each ref to a structured-cloneable value:
+widgets → `{ rows, allRows, columns, meta }` (via the section's `exportAdapter.toTable` when it
+has one, else the first table in the captured response with OtTable's captured search/filters/sort
+applied best-effort), tables → `{ rows, columns, meta }`, GraphQL/REST → `{ data, rows, columns,
+meta }` (live result, else snapshot), notebooks → their returned data (`null` when they returned a
+chart). `inputsHash` is a cheap version stamp; auto notebooks re-run when it changes, which is
+what propagates changes downstream in dependency order.
+
+**Editor.** `NotebookEditor` = CodeMirror `lang-javascript` + completions (`completions/columns.ts`:
+refs, fields, column keys, d3/Plot members from generated JSON) + lint (acorn syntax errors and
+"isn't linked" warnings with a quick-fix that opens the picker) + snippets. Read view collapses
+the code once a notebook has run and lost focus.
+
+**Export.** `collect` turns a notebook into a `figure` (live `serialize` request, else snapshot) or
+a `table` (data returns). The code and input refs travel on the IR node's `notebook` field and
+into the methods entry unless `hideCodeInExport` is on. Notebook figures default to full-bleed
+slides.

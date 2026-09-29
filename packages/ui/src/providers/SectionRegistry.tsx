@@ -3,6 +3,19 @@ import { ReportSectionDefinition, ReportRequest } from "../types/report";
 import { ReportSectionContext } from "./ReportSectionContext";
 import { ReportQueryVariablesProvider } from "./ReportQueryVariablesProvider";
 import { ReportComponentStateProvider } from "./ReportComponentStateContext";
+import type { Reference, TableData } from "../components/Report/export/types";
+
+/**
+ * Optional per-section hooks used by the report export (collect/RenderHost).
+ * `data` is the section's captured request.data; `state` its componentState.
+ * Table-backed sections usually need none of this: OtTable publishes its rows
+ * to the RenderHost on its own.
+ */
+export interface SectionExportAdapter {
+  toTable?(data: unknown, state?: Record<string, any>): TableData | undefined;
+  toSvg?(el: HTMLElement): string | undefined;
+  references?(data: unknown): Reference[];
+}
 
 /**
  * Section Component Constructor
@@ -11,6 +24,7 @@ import { ReportComponentStateProvider } from "./ReportComponentStateContext";
 export interface SectionComponentConstructor {
   Body: React.ComponentType<any>;
   definition?: ReportSectionDefinition;
+  exportAdapter?: SectionExportAdapter;
 }
 
 /**
@@ -25,10 +39,11 @@ const sectionComponentRegistry = new Map<string, SectionComponentConstructor>();
 export const registerSectionComponent = (
   sectionId: string,
   Body: React.ComponentType<any>,
-  definition?: ReportSectionDefinition
+  definition?: ReportSectionDefinition,
+  exportAdapter?: SectionExportAdapter
 ) => {
   // sectionId should be in composite format "entity:sectionId" from registerAllSections
-  sectionComponentRegistry.set(sectionId, { Body, definition });
+  sectionComponentRegistry.set(sectionId, { Body, definition, exportAdapter });
 };
 
 /**
@@ -37,6 +52,15 @@ export const registerSectionComponent = (
 export const getSectionComponent = (sectionId: string) => {
   return sectionComponentRegistry.get(sectionId);
 };
+
+/**
+ * Export adapter for a widget's definition, if its section registered one
+ */
+export const getSectionExportAdapter = (definition: {
+  entity: string;
+  id: string;
+}): SectionExportAdapter | undefined =>
+  sectionComponentRegistry.get(`${definition.entity}:${definition.id}`)?.exportAdapter;
 
 /**
  * Create render functions from stored request data
