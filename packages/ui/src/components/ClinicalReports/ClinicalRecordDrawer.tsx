@@ -35,7 +35,7 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     opacity: "0 !important",
   },
   "& .MuiDrawer-paper": {
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: theme.palette.common.white,
     maxWidth: "100%",
   },
 }));
