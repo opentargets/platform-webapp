@@ -13,7 +13,7 @@ import { useGenTrackTooltipDispatch } from "ui";
 import { PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/constants";
 import type { GeneVisVariantEmphasis, GeneVisVariantRow } from "./model";
 
-const VARIANT_TRACK_HEIGHT = 67;
+const VARIANT_TRACK_HEIGHT = 92;
 const HOVER_HIGHLIGHT_COLOR = 0x555555;
 const STUCK_HIGHLIGHT_COLOR = 0x000000;
 const STUCK_HIGHLIGHT_STROKE_PIXELS = 2;
@@ -110,7 +110,7 @@ function VariantLegend({ rows, isInner }: { rows: GeneVisVariantRow[]; isInner: 
   return (
     <Box sx={{
       p: 0.75,
-      bgcolor: "rgba(255, 255, 255, 0.92)",
+      bgcolor: "rgba(255, 255, 255, 0.85)",
       border: "1px solid",
       borderColor: "grey.300",
       borderRadius: 1,

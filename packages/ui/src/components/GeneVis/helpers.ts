@@ -1,11 +1,11 @@
 import { TextStyle } from "pixi.js";
 
 export const BIOTYPE_DISPLAY_NAMES = {
-  protein_coding: "Protein coding",
+  protein_coding: "Protein coding genes",
   processed_transcript: "Processed transcript",
   pseudogene: "Pseudogene",
   rna: "RNA",
-  other: "Other",
+  other: "Other genes",
 };
 
 export const BIOTYPE_ORDER = ["protein_coding", "rna", "pseudogene", "processed_transcript", "other"];
@@ -22,9 +22,6 @@ export function groupTargetsByBiotype(targets) {
   return Object.groupBy(targets, gene => {
     const b = gene.biotype?.toLowerCase() ?? "other";
     if (b === "protein_coding") return "protein_coding";
-    if (b === "processed_transcript") return "processed_transcript";
-    if (b.includes("pseudogene")) return "pseudogene";
-    if (b.includes("rna")) return "rna";
     return "other";
   });
 }

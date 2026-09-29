@@ -38,7 +38,7 @@ function GenesLegend({ highlight, isInner }: { highlight?: GeneVisGeneHighlight;
       display: "flex",
       alignItems: "center",
       gap: 0.75,
-      bgcolor: "rgba(255, 255, 255, 0.92)",
+      bgcolor: "rgba(255, 255, 255, 0.85)",
       border: "1px solid",
       borderColor: "grey.300",
       borderRadius: 1,

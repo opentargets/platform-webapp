@@ -76,7 +76,6 @@ export function toGeneVisModel(
         hoverBoxColor: 0xc8e6c9,
         labelBackgroundColor: 0xc8e6c9,
         labelPadding: 6,
-        legend: "Page target",
       }],
     },
   };

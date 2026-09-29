@@ -49,7 +49,7 @@ function GeneVisInner(props: {
     tooltip?.getWidth?.({ datum, entityType: otherData?.entityType, context: tooltip.context }) ?? TOOLTIP_WIDTH
   );
 
-  const Y_INFO_WIDTH = 150;
+  const Y_INFO_WIDTH = 142;
   const Y_INFO_GAP = 0;
   const [widthRef, { width: totalWidth }] = useMeasure();
   const canvasWidth = (totalWidth ?? 0) - Y_INFO_WIDTH - Y_INFO_GAP;
