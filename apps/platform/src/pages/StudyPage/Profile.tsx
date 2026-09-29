@@ -5,6 +5,7 @@ import {
   SectionContainer,
   SummaryContainer,
   SectionLoader,
+  SectionBody,
   summaryUtils,
 } from "ui";
 import { Study } from "sections";
@@ -76,16 +77,21 @@ function Profile({ studyId, studyType, diseases }: ProfileProps) {
         {studyType === "gwas" && (
           <>
             <Suspense fallback={<SectionLoader />}>
-              <GWASCredibleSetsSection id={studyId} entity={STUDY} />
+              <SectionBody Body={GWASCredibleSetsSection} id={studyId} entity={STUDY} />
             </Suspense>
             <Suspense fallback={<SectionLoader />}>
-              <SharedTraitStudiesSection studyId={studyId} diseaseIds={diseaseIds} entity={STUDY} />
+              <SectionBody
+                Body={SharedTraitStudiesSection}
+                studyId={studyId}
+                diseaseIds={diseaseIds}
+                entity={STUDY}
+              />
             </Suspense>
           </>
         )}
         {studyType !== "gwas" && (
           <Suspense fallback={<SectionLoader />}>
-            <QTLCredibleSetsSection id={studyId} entity={STUDY} />
+            <SectionBody Body={QTLCredibleSetsSection} id={studyId} entity={STUDY} />
           </Suspense>
         )}
       </SectionContainer>

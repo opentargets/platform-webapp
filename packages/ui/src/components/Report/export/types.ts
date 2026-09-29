@@ -314,6 +314,7 @@ export type SlideUnit =
       caption?: string;
       asset?: FigureAsset; // figure nodes
       table?: PlacedTable; // table nodes, rendered as a native table
+      dataNote?: string; // footer pointer to the figure's rows in the appendix
       provenance: Provenance;
       notes: RichTextDoc[]; // speaker notes from attached prose
     }

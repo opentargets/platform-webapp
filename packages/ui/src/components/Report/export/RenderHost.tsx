@@ -83,9 +83,14 @@ const domBusy = (root: HTMLElement) => {
   return BUSY_TEXT.some((t) => text.includes(t));
 };
 
-/** The widget's content area: SectionItem's card content when present, else the whole render. */
+/**
+ * The widget's content area: an element the widget marks with `data-export-capture`,
+ * else SectionItem's card content, else the whole render.
+ */
 const captureTarget = (root: HTMLElement): HTMLElement =>
-  root.querySelector<HTMLElement>("section .MuiCardContent-root") ?? root;
+  root.querySelector<HTMLElement>("[data-export-capture]") ??
+  root.querySelector<HTMLElement>("section .MuiCardContent-root") ??
+  root;
 
 const hasContent = (el: HTMLElement) =>
   (el.textContent ?? "").trim().length > 0 || !!el.querySelector("svg, canvas, img");
@@ -239,11 +244,7 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
       }
       const extra = { tableData, references };
 
-      // Table view with real rows exports as a native table: no picture needed
-      if (section.selectedView !== "chart" && tableData) {
-        return { asset: { kind: "missing", reason: "Exported as a native table" }, ...extra };
-      }
-
+      // Every widget exports as a picture; its rows (tableData) go to the appendix
       const { width: targetWidth, height: targetHeight } = target.getBoundingClientRect();
       try {
         const adapterSvg = adapter?.toSvg?.(target);
@@ -270,7 +271,8 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
 
       try {
         const asset = await rasterize(target, pixelRatio);
-        return { asset, rasterFallback: true, ...extra };
+        // A bitmap is only a loss when the rows aren't exported alongside it
+        return { asset, rasterFallback: !tableData || undefined, ...extra };
       } catch (error) {
         return missing(`Could not capture figure: ${error instanceof Error ? error.message : String(error)}`, extra);
       }

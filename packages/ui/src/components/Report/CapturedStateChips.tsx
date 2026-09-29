@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Chip, Typography } from "@mui/material";
+import { getSectionExportAdapter } from "../../providers/SectionRegistry";
 
 const MAX_ARRAY_ITEMS = 3;
 
@@ -84,12 +85,26 @@ const formatEntry = (key: string, value: unknown, out: string[]) => {
   out.push(`${key === "globalFilter" ? "search" : key} = ${formatScalar(value)}`);
 };
 
+type SectionRef = { entity: string; id: string };
+
 /**
- * Turn a section's captured componentState into short, human-readable labels
+ * Turn a section's captured componentState into short, human-readable labels.
+ * A section registering `describeState` formats its own state.
  */
-export const formatComponentState = (state?: Record<string, any>): string[] => {
+export const formatComponentState = (
+  state?: Record<string, any>,
+  definition?: SectionRef
+): string[] => {
   const out: string[] = [];
   if (!state) return out;
+  const describe = definition && getSectionExportAdapter(definition)?.describeState;
+  if (describe) {
+    try {
+      return describe(state);
+    } catch {
+      // fall back to the generic formatter
+    }
+  }
   Object.entries(state).forEach(([key, value]) => formatEntry(key, value, out));
   return out;
 };
@@ -97,8 +112,11 @@ export const formatComponentState = (state?: Record<string, any>): string[] => {
 /**
  * Summary chip for a collapsed row: the single entry, or "N filters"
  */
-export const CapturedStateSummaryChip: React.FC<{ state?: Record<string, any> }> = ({ state }) => {
-  const entries = formatComponentState(state);
+export const CapturedStateSummaryChip: React.FC<{
+  state?: Record<string, any>;
+  definition?: SectionRef;
+}> = ({ state, definition }) => {
+  const entries = formatComponentState(state, definition);
   if (entries.length === 0) return null;
   return (
     <Chip
@@ -112,8 +130,11 @@ export const CapturedStateSummaryChip: React.FC<{ state?: Record<string, any> }>
 /**
  * Full list of captured-state chips, used by the inspector
  */
-export const CapturedStateChips: React.FC<{ state?: Record<string, any> }> = ({ state }) => {
-  const entries = formatComponentState(state);
+export const CapturedStateChips: React.FC<{
+  state?: Record<string, any>;
+  definition?: SectionRef;
+}> = ({ state, definition }) => {
+  const entries = formatComponentState(state, definition);
 
   if (entries.length === 0) {
     return (

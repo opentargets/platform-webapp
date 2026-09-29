@@ -2,7 +2,7 @@ import { PAPER_SPAN_FIGURE_ASPECT, PAPER_SPAN_TABLE_COLS } from "../layout";
 import type { ExportDocument, ExportPlan, ExportSettings, FigureAsset, MethodsEntry, PaperUnit } from "../types";
 import { orderReferences } from "../citations";
 import { buildCaption, methodsEntry, sliceTable, totalRowsOf } from "./common";
-import type { DataSourceNode, TableNode } from "./common";
+import type { DataSourceNode, FigureNode, TableNode } from "./common";
 import { Counter, SectionNumbering, figLabel, formatDate, tableLabel } from "./numbering";
 import { defaultPaperRole, effectiveRole, nodeOverride } from "./roles";
 import { WarningSink, nodeWarnings, paperTableWarnings } from "./warnings";
@@ -46,11 +46,13 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
     lastBody = undefined;
   };
 
-  const placeTable = (node: TableNode | DataSourceNode, supp: boolean) => {
-    if (!node.data) return undefined;
+  // `dataFor`: a widget figure's rows, captioned as that figure's data
+  const placeTable = (node: TableNode | DataSourceNode | FigureNode, supp: boolean, dataFor?: string) => {
+    const data = node.type === "figure" ? node.tableData : node.data;
+    if (!data) return undefined;
     const n = supp ? suppN.next() : tableN.next();
     const label = p.numberFigures ? tableLabel(n, supp) : undefined;
-    const total = totalRowsOf(node.data);
+    const total = totalRowsOf(data);
     const unit: TableUnit = {
       kind: "paperTable",
       id: `paper-table-${node.id}`,
@@ -60,20 +62,20 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
       caption: buildCaption(
         {
           takeaway: node.type === "table" ? node.takeaway : undefined,
-          caption: node.caption,
+          caption: dataFor ? `Data for ${dataFor}` : node.caption,
           source: node.source,
           provenance: node.provenance,
         },
         release
       ),
       table: {
-        data: sliceTable(node.data, 0, node.data.rows.length),
+        data: sliceTable(data, 0, data.rows.length),
         shownFrom: 0,
         totalRows: total,
-        note: total > node.data.rows.length ? `Showing ${node.data.rows.length} of ${total} rows` : undefined,
+        note: total > data.rows.length ? `Showing ${data.rows.length} of ${total} rows` : undefined,
       },
       // Supplementary tables sit after the body at full page width
-      span: supp ? true : spans(node.id, node.data.columns.length > PAPER_SPAN_TABLE_COLS),
+      span: supp ? true : spans(node.id, data.columns.length > PAPER_SPAN_TABLE_COLS),
       supplementary: supp,
     };
     if (supp) supplementary.push(unit);
@@ -141,13 +143,17 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
         const n = figN.next();
         const label = p.numberFigures ? figLabel(n) : undefined;
         figuresNumbered.push({ nodeId: node.id, n });
+        // Widget figures: the picture stays in the body, its rows go to the supplementary tables
+        const hasData = !!node.tableData?.rows.length;
+        const dataLabel = hasData ? placeTable(node, true, label ?? node.title) : undefined;
+        const caption = buildCaption(node, release);
         units.push({
           kind: "paperFigure",
           id: `paper-figure-${node.id}`,
           nodeId: node.id,
           label,
           title: node.title,
-          caption: buildCaption(node, release),
+          caption: hasData ? `${caption} Data: ${dataLabel ?? "see supplementary tables"}.`.trim() : caption,
           asset: node.asset,
           alt: node.alt,
           span: spans(node.id, assetAspect(node.asset) > PAPER_SPAN_FIGURE_ASPECT),

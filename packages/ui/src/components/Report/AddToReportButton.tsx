@@ -16,6 +16,7 @@ import { faPlus, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
 import { useReportComponentState } from "../../providers/ReportComponentStateContext";
 import { ReportSectionDefinition, ReportRequest, ReportSectionViewType } from "../../types/report";
+import { toStorableBodyProps } from "../../providers/SectionBodyPropsContext";
 
 interface AddToReportButtonProps {
   definition: ReportSectionDefinition;
@@ -32,6 +33,8 @@ interface AddToReportButtonProps {
   showLabel?: boolean;
   // Callback to capture component state (filters, selected rows, etc.)
   onCaptureState?: () => Record<string, any>;
+  // Props the section Body was mounted with, replayed when the report rebuilds it
+  bodyProps?: Record<string, unknown> | null;
 }
 
 /**
@@ -52,6 +55,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
   size = "small",
   showLabel = true,
   onCaptureState,
+  bodyProps,
 }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
   const reportComponentState = useReportComponentState();
@@ -92,6 +96,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         tags,
         chipText,
         componentState,
+        bodyProps: toStorableBodyProps(bodyProps),
       });
       handleMenuClose();
     }
@@ -129,6 +134,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         tags,
         chipText,
         componentState,
+        bodyProps: toStorableBodyProps(bodyProps),
       });
     }, 0);
 

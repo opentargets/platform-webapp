@@ -39,6 +39,7 @@ import { addRows, setLoading, setNewData, textSearch } from "./context/otTableAc
 import useCursorBatchDownloader from "../../hooks/useCursorBatchDownloader";
 import { useApolloClient } from "../../providers/OTApolloProvider/OTApolloProvider";
 import { toExportTable, useExportTableSink } from "../../providers/ExportTableSinkContext";
+import { useReportComponentState } from "../../providers/ReportComponentStateContext";
 
 function OtTableSSP({
   showGlobalFilter = true,
@@ -57,13 +58,32 @@ function OtTableSSP({
   getSelectedRows,
 }: OtTableSSPProps): ReactElement {
   const client = useApolloClient();
-  const [state, dispatch] = useReducer(otTableReducer, "", createInitialState);
+  // Report state (same shape as OtTable's): the search and page size are restored; the page
+  // itself isn't, since rows are fetched by cursor, so a report reopens on the first page
+  const tableStateKey = `otTableSSP:${sectionName || dataDownloaderFileStem || "default"}`;
+  const reportComponentState = useReportComponentState();
+  const [initialSavedState] = useState<
+    { globalFilter?: string; pagination?: PaginationState } | undefined
+  >(() => reportComponentState?.getState(tableStateKey));
+  const [state, dispatch] = useReducer(
+    otTableReducer,
+    initialSavedState?.globalFilter ?? "",
+    createInitialState
+  );
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
   const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: INIT_PAGE_SIZE,
+    pageSize: initialSavedState?.pagination?.pageSize ?? INIT_PAGE_SIZE,
   });
+
+  const saveReportState = reportComponentState?.saveState;
+  useEffect(() => {
+    saveReportState?.(tableStateKey, {
+      globalFilter: state.freeTextQuery ?? "",
+      pagination: { pageIndex: 0, pageSize: pagination.pageSize },
+    });
+  }, [saveReportState, tableStateKey, state.freeTextQuery, pagination.pageSize]);
 
   const enableRowSelection = !!getSelectedRows || enableMultipleRowSelection;
   const mappedColumns = mapTableColumnToTanstackColumns(columns);
@@ -241,7 +261,7 @@ function OtTableSSP({
 
   // Export RenderHost only: publish the rows fetched so far (totalRows = server count)
   const exportTableSink = useExportTableSink();
-  const exportKey = `otTableSSP:${sectionName || dataDownloaderFileStem || "default"}`;
+  const exportKey = tableStateKey;
   useEffect(() => {
     if (!exportTableSink) return;
     if (state.loading || state.initialLoading) {
@@ -271,6 +291,7 @@ function OtTableSSP({
         <GridLegacy item sm={12} md={4}>
           {showGlobalFilter && (
             <OtTableSearch
+              initialValue={state.freeTextQuery ?? ""}
               setGlobalSearchTerm={freeTextQuery => {
                 dispatch(textSearch(freeTextQuery));
               }}

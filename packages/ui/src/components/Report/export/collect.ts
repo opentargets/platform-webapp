@@ -202,36 +202,33 @@ export async function collect(report: Report, opts: CollectOptions): Promise<Exp
       if (references.length) provenance.references = references;
       const takeaway = block.note?.trim() || undefined;
 
-      if (block.selectedView !== "chart" && capture.tableData) {
-        nodes.push({ type: "table", id, source: "widget", title, takeaway, data: capture.tableData, provenance });
-      } else {
-        nodes.push({
-          type: "figure",
-          id,
-          source: "widget",
-          title,
-          takeaway,
-          alt: `${title}${block.entityLabel ? ` for ${block.entityLabel}` : ""}`,
-          asset: capture.asset,
-          provenance,
-          tableData: capture.tableData,
-          rasterFallback: capture.rasterFallback || undefined,
+      // Widgets are always figures; their rows (tableData) are placed in the appendix by the plan
+      nodes.push({
+        type: "figure",
+        id,
+        source: "widget",
+        title,
+        takeaway,
+        alt: `${title}${block.entityLabel ? ` for ${block.entityLabel}` : ""}`,
+        asset: capture.asset,
+        provenance,
+        tableData: capture.tableData,
+        rasterFallback: capture.rasterFallback || undefined,
+      });
+      if (capture.asset.kind === "missing") {
+        warnings.push({
+          nodeId: id,
+          severity: "warn",
+          code: "FIGURE_MISSING",
+          message: `${title}: ${capture.error || capture.asset.reason}`,
         });
-        if (capture.asset.kind === "missing") {
-          warnings.push({
-            nodeId: id,
-            severity: "warn",
-            code: "FIGURE_MISSING",
-            message: `${title}: ${capture.error || capture.asset.reason}`,
-          });
-        } else if (capture.rasterFallback) {
-          warnings.push({
-            nodeId: id,
-            severity: "info",
-            code: "RASTER_FALLBACK",
-            message: `${title}: image only, not re-rendered`,
-          });
-        }
+      } else if (capture.rasterFallback) {
+        warnings.push({
+          nodeId: id,
+          severity: "info",
+          code: "RASTER_FALLBACK",
+          message: `${title}: image only, not re-rendered`,
+        });
       }
       // Let the dialog paint between widgets
       await nextFrame();

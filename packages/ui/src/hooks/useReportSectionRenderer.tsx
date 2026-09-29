@@ -33,7 +33,8 @@ export const getRenderFunctions = (section: ReportSection) => {
       section.entityId,
       section.entityLabel,
       componentData,
-      section.componentState
+      section.componentState,
+      section.bodyProps
     );
     if (reconstructed) {
       return reconstructed;

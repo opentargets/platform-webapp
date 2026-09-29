@@ -253,7 +253,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         break;
       }
       case "figureSlide": {
-        const left = [unit.figureN ? `Fig ${unit.figureN}` : "", unit.caption ?? ""].filter(Boolean).join(" · ");
+        const left = [unit.figureN ? `Fig ${unit.figureN}` : "", unit.caption ?? "", unit.dataNote ?? ""].filter(Boolean).join(" · ");
         const src = assetSrc(unit.asset);
         const reason = unit.asset?.kind === "missing" ? unit.asset.reason : undefined;
         if (unit.layout === "fullBleed") {
@@ -559,6 +559,21 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
     formatDate(irDoc.generatedAt),
   ].filter(Boolean);
 
+  // Widget figures' rows, printed after the body
+  const appendix: string[] = [];
+  const tableBlock = (title: string, data: TableData, before = "", after = "") => {
+    const shown = Math.min(data.rows.length, WORKING_TABLE_ROWS);
+    const total = data.totalRows || data.rows.length;
+    return (
+      `<div class="block table-wrap"><div class="block-title">${esc(title)}</div>` +
+      before +
+      tableHtml(data, WORKING_TABLE_ROWS) +
+      (shown < total ? `<div class="note">Showing ${shown} of ${total} rows — full data in the data export.</div>` : "") +
+      after +
+      "</div>"
+    );
+  };
+
   const blocks = irDoc.nodes.map((node) => {
     switch (node.type) {
       case "chapter":
@@ -578,28 +593,28 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
         const img = src
           ? `<img src="${esc(src)}" alt="${esc(node.alt ?? node.caption ?? node.title)}">`
           : placeholderHtml(node.title, node.caption, node.asset.kind === "missing" ? node.asset.reason : undefined);
+        let dataRef = "";
+        if (node.tableData?.rows.length) {
+          const label = `A${appendix.length + 1}`;
+          appendix.push(tableBlock(`${label} · ${node.title}`, node.tableData));
+          dataRef = `<div class="note">Data: Appendix ${label}</div>`;
+        }
         return (
           `<figure class="block"><div class="block-title">${esc(node.title)}</div>` +
           (node.takeaway ? `<div class="takeaway">${esc(node.takeaway)}</div>` : "") +
           img +
           (node.caption ? `<figcaption>${esc(node.caption)}</figcaption>` : "") +
+          dataRef +
           provenanceHtml(node.provenance) +
           "</figure>"
         );
       }
       case "table": {
-        const shown = Math.min(node.data.rows.length, WORKING_TABLE_ROWS);
-        const total = node.data.totalRows || node.data.rows.length;
-        return (
-          `<div class="block table-wrap"><div class="block-title">${esc(node.title)}</div>` +
-          (node.takeaway ? `<div class="takeaway">${esc(node.takeaway)}</div>` : "") +
-          tableHtml(node.data, WORKING_TABLE_ROWS) +
-          (shown < total
-            ? `<div class="note">Showing ${shown} of ${total} rows — full data in the data export.</div>`
-            : "") +
-          (node.caption ? `<div class="caption">${esc(node.caption)}</div>` : "") +
-          provenanceHtml(node.provenance) +
-          "</div>"
+        return tableBlock(
+          node.title,
+          node.data,
+          node.takeaway ? `<div class="takeaway">${esc(node.takeaway)}</div>` : "",
+          (node.caption ? `<div class="caption">${esc(node.caption)}</div>` : "") + provenanceHtml(node.provenance)
         );
       }
       case "dataSource": {
@@ -632,7 +647,9 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
     PAPER_CSS("A4", false) + WORKING_CSS,
     `<div class="working"><h1 class="paper-title">${esc(irDoc.title)}</h1>` +
       (irDoc.description ? `<p>${esc(irDoc.description)}</p>` : "") +
-      `<div class="doc-meta">${esc(meta.join(" · "))}</div>${blocks.join("")}</div>`,
+      `<div class="doc-meta">${esc(meta.join(" · "))}</div>${blocks.join("")}` +
+      (appendix.length ? `<h1>Appendix: data tables</h1>${appendix.join("")}` : "") +
+      "</div>",
   );
 }
 

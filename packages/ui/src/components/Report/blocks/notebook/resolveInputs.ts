@@ -166,7 +166,7 @@ const resolveWidget = (section: ReportSection, ref: string): ResolvedInput => {
     kind: "widget" as const,
     title,
     entity: { type: section.definition.entity, id: section.entityId, label: section.entityLabel },
-    filters: formatComponentState(section.componentState),
+    filters: formatComponentState(section.componentState, section.definition),
   };
   const tables = widgetTables(section);
   const version = String(section.stateCapturedAt ?? section.addedAt);

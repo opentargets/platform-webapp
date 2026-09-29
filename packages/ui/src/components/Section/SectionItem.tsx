@@ -23,6 +23,7 @@ import {
   useReportComponentState,
 } from "../../providers/ReportComponentStateContext";
 import { useReportSectionContext } from "../../providers/ReportSectionContext";
+import { useSectionBodyProps } from "../../providers/SectionBodyPropsContext";
 import {
   getLiveCaptureKey,
   registerLiveCapture,
@@ -98,6 +99,7 @@ function SectionItem({
   const existingReportComponentState = useReportComponentState();
   // Only set when this section is rendered inside a report (drawer / reconstruction)
   const isInReport = !!useReportSectionContext();
+  const bodyProps = useSectionBodyProps();
 
 
   if (data && entity && data[entity]) {
@@ -166,6 +168,7 @@ function SectionItem({
                       selectedView={selectedView === VIEW.chart ? "chart" : "table"}
                       tags={tags}
                       chipText={chipText}
+                      bodyProps={bodyProps}
                     />
                   )}
                 </Box>

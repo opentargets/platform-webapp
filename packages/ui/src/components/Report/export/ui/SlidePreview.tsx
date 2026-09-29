@@ -224,7 +224,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = memo(({ unit, aspect, i
       );
       break;
     case "figureSlide": {
-      const figureFooter = [unit.figureN ? `Fig ${unit.figureN}` : undefined, unit.caption]
+      const figureFooter = [unit.figureN ? `Fig ${unit.figureN}` : undefined, unit.caption, unit.dataNote]
         .filter(Boolean)
         .join(" · ");
       // Table moved to the appendix: the main slide keeps the takeaway and shows only the note

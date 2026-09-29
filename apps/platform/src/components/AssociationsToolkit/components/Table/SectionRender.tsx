@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { styled } from "@mui/material/styles";
-import { SectionLoader } from "ui";
+import { SectionBody, SectionLoader } from "ui";
 import { ENTITIES } from "../../associationsUtils";
 
 import prioritisationColumns from "../../static_datasets/prioritisationColumns";
@@ -110,7 +110,13 @@ export function SectionRender({
 
   return (
     <Container data-testid={`evidence-section-${section[1]}`} table={table}>
-      <Component id={componentId} label={label} entity={entityOfSection} {...componentProps} />
+      <SectionBody
+        Body={Component}
+        id={componentId}
+        label={label}
+        entity={entityOfSection}
+        {...componentProps}
+      />
     </Container>
   );
 }

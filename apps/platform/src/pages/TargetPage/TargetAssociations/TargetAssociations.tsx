@@ -5,10 +5,19 @@ import TARGET_ASSOCIATIONS_QUERY from "./TargetAssociationsQuery.gql";
 
 type TargetAssociationsProps = {
   ensgId: string;
+  symbol?: string;
 };
 
-function TargetAssociations({ ensgId }: TargetAssociationsProps): ReactElement {
-  return <AssociationsView key={ensgId} id={ensgId} entity={ENTITY.TARGET} query={TARGET_ASSOCIATIONS_QUERY} />;
+function TargetAssociations({ ensgId, symbol }: TargetAssociationsProps): ReactElement {
+  return (
+    <AssociationsView
+      key={ensgId}
+      id={ensgId}
+      entity={ENTITY.TARGET}
+      label={symbol}
+      query={TARGET_ASSOCIATIONS_QUERY}
+    />
+  );
 }
 
 export default TargetAssociations;

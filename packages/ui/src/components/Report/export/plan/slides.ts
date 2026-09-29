@@ -7,9 +7,9 @@ import type {
   MethodsEntry,
   PlacedTable,
   SlideUnit,
+  TableData,
 } from "../types";
 import { chunk, methodsEntry, safeRequest, sliceTable, totalRowsOf } from "./common";
-import type { TableNode } from "./common";
 import { effectiveRole } from "./roles";
 import { WarningSink, nodeWarnings, slideTableWarnings } from "./warnings";
 
@@ -40,7 +40,8 @@ export function planSlides(doc: ExportDocument, settings: ExportSettings): Expor
   let pendingNotes: RichTextDoc[] = [];
   let lastFigure: FigureSlide | undefined;
 
-  const pushAppendixTable = (node: TableNode, from: number) => {
+  // Tables, and widget figures' rows
+  const pushAppendixTable = (node: { id: string; title: string; data: TableData }, from: number) => {
     const rest = node.data.rows.length - from;
     if (rest <= 0) return;
     const total = totalRowsOf(node.data);
@@ -161,6 +162,9 @@ export function planSlides(doc: ExportDocument, settings: ExportSettings): Expor
             if (tableLayout === "split") pushAppendixTable(node, shown);
           }
         }
+        // Widget figures: the picture stays on the slide, its rows go to the appendix
+        const figureData = node.type === "figure" && node.tableData?.rows.length ? node.tableData : undefined;
+        if (figureData) pushAppendixTable({ id: node.id, title: node.title, data: figureData }, 0);
         const slide: FigureSlide = {
           kind: "figureSlide",
           id: `slide-figure-${node.id}`,
@@ -170,6 +174,7 @@ export function planSlides(doc: ExportDocument, settings: ExportSettings): Expor
           title: node.takeaway?.trim() || node.title,
           figureN,
           caption: node.caption,
+          dataNote: figureData ? "Data in appendix" : undefined,
           asset: node.type === "figure" ? node.asset : undefined,
           table,
           provenance: node.provenance,

@@ -113,7 +113,7 @@ export const widgetProvenance = (
     entity: entityId
       ? { type: section.definition.entity, id: entityId, label: section.entityLabel }
       : undefined,
-    filters: formatComponentState(section.componentState),
+    filters: formatComponentState(section.componentState, section.definition),
     dataRelease: opts.dataRelease,
     sourceLabel: `Open Targets Platform · ${section.definition.name}`,
     retrievedAt: section.stateCapturedAt ?? section.addedAt,

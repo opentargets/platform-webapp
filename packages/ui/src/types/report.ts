@@ -109,6 +109,9 @@ export interface ReportSection {
 
   // Report-unique slug, assigned when the widget is first linked as a notebook input
   ref?: string;
+
+  // Props the Body was mounted with on its page (see SectionBodyPropsContext), replayed on rebuild
+  bodyProps?: Record<string, unknown>;
 }
 
 export interface TextBlock extends BlockBase {

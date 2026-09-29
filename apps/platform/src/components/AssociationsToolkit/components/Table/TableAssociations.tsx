@@ -264,7 +264,10 @@ function TableAssociations() {
                   <Typography data-testid="table-header-name" variant="assoc_header">
                     {label}
                   </Typography>
-                  <NameFilter />
+                  {/* Interactive search box: not part of an exported figure */}
+                  <Box data-export-exclude>
+                    <NameFilter />
+                  </Box>
                 </Box>
               );
             },

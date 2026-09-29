@@ -187,11 +187,14 @@ function OtTable({
     filterFns: {
       searchFilterFn: searchFilter,
     },
+    // Placeholder rows are empty objects: running filters or sorting over them calls the
+    // columns' filterValue/comparator on missing fields (a report restoring a saved search
+    // or sort mounts that way). The saved state applies once the rows arrive.
     state: {
-      columnFilters,
-      globalFilter,
+      columnFilters: loading ? [] : columnFilters,
+      globalFilter: loading ? "" : globalFilter,
       rowSelection,
-      sorting,
+      sorting: loading ? [] : sorting,
       pagination,
     },
     onColumnFiltersChange: setColumnFilters,

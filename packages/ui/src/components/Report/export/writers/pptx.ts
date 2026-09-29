@@ -429,7 +429,7 @@ function chapterSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { 
 async function figureSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "figureSlide" }>) {
   const fullBleed = unit.layout === "fullBleed";
   const slide = pptx.addSlide({ masterName: fullBleed ? PLAIN_MASTER(frame) : CONTENT_MASTER(frame) });
-  const footer = figureFooter(unit.figureN, unit.caption);
+  const footer = figureFooter(unit.figureN, [unit.caption, unit.dataNote].filter(Boolean).join(" · "));
 
   if (fullBleed) {
     const box = { x: 0, y: 0, w: frame.W, h: frame.H };

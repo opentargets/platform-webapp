@@ -7,6 +7,7 @@ import {
   SummaryRenderer,
   SectionsRenderer,
   SectionLoader,
+  SectionBody,
 } from "ui";
 
 import ProfileHeader from "./ProfileHeader";
@@ -71,7 +72,12 @@ function Profile({ studyLocusId, variantId }: ProfileProps) {
       <SectionContainer>
         {/* TODO: remove this once we have a proper variants section. look at the parent prop */}
         <Suspense fallback={<SectionLoader />}>
-          <VariantsSection id={studyLocusId} leadVariantId={variantId} entity={CREDIBLE_SET} />
+          <SectionBody
+            Body={VariantsSection}
+            id={studyLocusId}
+            leadVariantId={variantId}
+            entity={CREDIBLE_SET}
+          />
         </Suspense>
         <SectionsRenderer
           id={studyLocusId}

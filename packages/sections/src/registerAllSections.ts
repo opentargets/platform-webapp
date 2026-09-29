@@ -7,7 +7,7 @@
  * Called during app initialization to populate the component registry.
  */
 
-import { registerSectionComponent } from "ui";
+import { getSectionComponent, registerSectionComponent } from "ui";
 
 // Disease sections
 import * as DiseaseOntology from "./disease/Ontology";
@@ -45,6 +45,7 @@ import * as TargetGeneticConstraint from "./target/GeneticConstraint";
 import * as TargetMolecularStructure from "./target/MolecularStructure";
 import * as TargetMousePhenotypes from "./target/MousePhenotypes";
 import * as TargetBibliography from "./target/Bibliography";
+import * as TargetOverlappingVariants from "./target/OverlappingVariants";
 
 // Variant sections
 import * as VariantEnhancerToGenePredictions from "./variant/EnhancerToGenePredictions";
@@ -92,6 +93,7 @@ import * as EvidenceGeneBurden from "./evidence/GeneBurden";
 import * as EvidenceGene2Phenotype from "./evidence/Gene2Phenotype";
 import * as EvidenceIntOgen from "./evidence/IntOgen";
 import * as EvidenceReactome from "./evidence/Reactome";
+import * as EvidenceClinicalPrecedence from "./evidence/ClinicalPrecedence";
 
 
 /**
@@ -105,9 +107,9 @@ export const registerAllSections = () => {
     { entity: "disease", definition: DiseasePhenotypes.definition, getBodyComponent: DiseasePhenotypes.getBodyComponent },
     { entity: "disease", definition: DiseaseBibliography.definition, getBodyComponent: DiseaseBibliography.getBodyComponent, exportAdapter: DiseaseBibliography.exportAdapter },
     { entity: "disease", definition: DiseaseDrugs.definition, getBodyComponent: DiseaseDrugs.getBodyComponent },
-    { entity: "disease", definition: DiseaseGWASStudies.definition, getBodyComponent: DiseaseGWASStudies.getBodyComponent },
+    // Its SectionItem uses entity "studies" (its data is `data.studies`), so that's the key it's saved under
+    { entity: "studies", definition: DiseaseGWASStudies.definition, getBodyComponent: DiseaseGWASStudies.getBodyComponent },
     { entity: "disease", definition: DiseaseOTProjects.definition, getBodyComponent: DiseaseOTProjects.getBodyComponent },
-    { entity: 'disease', definition: EvidenceGeneBurden.definition, getBodyComponent: EvidenceGeneBurden.getBodyComponent },
 
 
     // Drug
@@ -137,6 +139,7 @@ export const registerAllSections = () => {
     { entity: "target", definition: TargetMolecularStructure.definition, getBodyComponent: TargetMolecularStructure.getBodyComponent },
     { entity: "target", definition: TargetMousePhenotypes.definition, getBodyComponent: TargetMousePhenotypes.getBodyComponent },
     { entity: "target", definition: TargetBibliography.definition, getBodyComponent: TargetBibliography.getBodyComponent, exportAdapter: TargetBibliography.exportAdapter },
+    { entity: "target", definition: TargetOverlappingVariants.definition, getBodyComponent: TargetOverlappingVariants.getBodyComponent },
 
     // Variant
     { entity: "variant", definition: VariantEnhancerToGenePredictions.definition, getBodyComponent: VariantEnhancerToGenePredictions.getBodyComponent },
@@ -152,7 +155,8 @@ export const registerAllSections = () => {
     // Study
     { entity: "study", definition: StudyGWASCredibleSets.definition, getBodyComponent: StudyGWASCredibleSets.getBodyComponent },
     { entity: "study", definition: StudyQTLCredibleSets.definition, getBodyComponent: StudyQTLCredibleSets.getBodyComponent },
-    { entity: "study", definition: StudySharedTraitStudies.definition, getBodyComponent: StudySharedTraitStudies.getBodyComponent },
+    // Its SectionItem uses entity "sharedTraitStudies", so that's the key it's saved under
+    { entity: "sharedTraitStudies", definition: StudySharedTraitStudies.definition, getBodyComponent: StudySharedTraitStudies.getBodyComponent },
 
     // CredibleSet
     { entity: "credibleSet", definition: CredibleSetGWASColoc.definition, getBodyComponent: CredibleSetGWASColoc.getBodyComponent },
@@ -161,29 +165,31 @@ export const registerAllSections = () => {
     { entity: "credibleSet", definition: CredibleSetEnhancerToGenePredictions.definition, getBodyComponent: CredibleSetEnhancerToGenePredictions.getBodyComponent },
     { entity: "credibleSet", definition: CredibleSetVariants.definition, getBodyComponent: CredibleSetVariants.getBodyComponent },
 
-    // Evidence
-    { entity: "evidence", definition: EvidenceCRISPR.definition, getBodyComponent: EvidenceCRISPR.getBodyComponent },
-    { entity: "evidence", definition: EvidenceCRISPRScreen.definition, getBodyComponent: EvidenceCRISPRScreen.getBodyComponent },
-    { entity: "evidence", definition: EvidenceGWASCredibleSets.definition, getBodyComponent: EvidenceGWASCredibleSets.getBodyComponent },
-    { entity: "evidence", definition: EvidenceClinGen.definition, getBodyComponent: EvidenceClinGen.getBodyComponent },
-    { entity: "evidence", definition: EvidenceOTCRISPR.definition, getBodyComponent: EvidenceOTCRISPR.getBodyComponent },
-    { entity: "evidence", definition: EvidenceImpc.definition, getBodyComponent: EvidenceImpc.getBodyComponent },
-    { entity: "evidence", definition: EvidenceEVA.definition, getBodyComponent: EvidenceEVA.getBodyComponent },
-    { entity: "evidence", definition: EvidenceUniProtVariants.definition, getBodyComponent: EvidenceUniProtVariants.getBodyComponent },
-    { entity: "evidence", definition: EvidenceCancerGeneCensus.definition, getBodyComponent: EvidenceCancerGeneCensus.getBodyComponent },
-    { entity: "evidence", definition: EvidenceCancerBiomarkers.definition, getBodyComponent: EvidenceCancerBiomarkers.getBodyComponent },
-    { entity: "evidence", definition: EvidenceOTEncore.definition, getBodyComponent: EvidenceOTEncore.getBodyComponent },
-    { entity: "evidence", definition: EvidenceOTValidation.definition, getBodyComponent: EvidenceOTValidation.getBodyComponent },
-    { entity: "evidence", definition: EvidenceGenomicsEngland.definition, getBodyComponent: EvidenceGenomicsEngland.getBodyComponent },
-    { entity: "evidence", definition: EvidenceOrphanet.definition, getBodyComponent: EvidenceOrphanet.getBodyComponent },
-    { entity: "evidence", definition: EvidenceUniProtLiterature.definition, getBodyComponent: EvidenceUniProtLiterature.getBodyComponent },
-    { entity: "evidence", definition: EvidenceExpressionAtlas.definition, getBodyComponent: EvidenceExpressionAtlas.getBodyComponent },
-    { entity: "evidence", definition: EvidenceEVASomatic.definition, getBodyComponent: EvidenceEVASomatic.getBodyComponent },
-    { entity: "evidence", definition: EvidenceEuropePmc.definition, getBodyComponent: EvidenceEuropePmc.getBodyComponent, exportAdapter: EvidenceEuropePmc.exportAdapter },
-    { entity: "evidence", definition: EvidenceGeneBurden.definition, getBodyComponent: EvidenceGeneBurden.getBodyComponent },
-    { entity: "evidence", definition: EvidenceGene2Phenotype.definition, getBodyComponent: EvidenceGene2Phenotype.getBodyComponent },
-    { entity: "evidence", definition: EvidenceIntOgen.definition, getBodyComponent: EvidenceIntOgen.getBodyComponent },
-    { entity: "evidence", definition: EvidenceReactome.definition, getBodyComponent: EvidenceReactome.getBodyComponent },
+    // Evidence: the evidence page and the associations table mount these with entity "disease",
+    // and a report section is looked up by the entity its SectionItem was given
+    { entity: "disease", definition: EvidenceCRISPR.definition, getBodyComponent: EvidenceCRISPR.getBodyComponent },
+    { entity: "disease", definition: EvidenceCRISPRScreen.definition, getBodyComponent: EvidenceCRISPRScreen.getBodyComponent },
+    { entity: "disease", definition: EvidenceGWASCredibleSets.definition, getBodyComponent: EvidenceGWASCredibleSets.getBodyComponent },
+    { entity: "disease", definition: EvidenceClinGen.definition, getBodyComponent: EvidenceClinGen.getBodyComponent },
+    { entity: "disease", definition: EvidenceOTCRISPR.definition, getBodyComponent: EvidenceOTCRISPR.getBodyComponent },
+    { entity: "disease", definition: EvidenceImpc.definition, getBodyComponent: EvidenceImpc.getBodyComponent },
+    { entity: "disease", definition: EvidenceEVA.definition, getBodyComponent: EvidenceEVA.getBodyComponent },
+    { entity: "disease", definition: EvidenceUniProtVariants.definition, getBodyComponent: EvidenceUniProtVariants.getBodyComponent },
+    { entity: "disease", definition: EvidenceCancerGeneCensus.definition, getBodyComponent: EvidenceCancerGeneCensus.getBodyComponent },
+    { entity: "disease", definition: EvidenceCancerBiomarkers.definition, getBodyComponent: EvidenceCancerBiomarkers.getBodyComponent },
+    { entity: "disease", definition: EvidenceOTEncore.definition, getBodyComponent: EvidenceOTEncore.getBodyComponent },
+    { entity: "disease", definition: EvidenceOTValidation.definition, getBodyComponent: EvidenceOTValidation.getBodyComponent },
+    { entity: "disease", definition: EvidenceGenomicsEngland.definition, getBodyComponent: EvidenceGenomicsEngland.getBodyComponent },
+    { entity: "disease", definition: EvidenceOrphanet.definition, getBodyComponent: EvidenceOrphanet.getBodyComponent },
+    { entity: "disease", definition: EvidenceUniProtLiterature.definition, getBodyComponent: EvidenceUniProtLiterature.getBodyComponent },
+    { entity: "disease", definition: EvidenceExpressionAtlas.definition, getBodyComponent: EvidenceExpressionAtlas.getBodyComponent },
+    { entity: "disease", definition: EvidenceEVASomatic.definition, getBodyComponent: EvidenceEVASomatic.getBodyComponent },
+    { entity: "disease", definition: EvidenceEuropePmc.definition, getBodyComponent: EvidenceEuropePmc.getBodyComponent, exportAdapter: EvidenceEuropePmc.exportAdapter },
+    { entity: "disease", definition: EvidenceGeneBurden.definition, getBodyComponent: EvidenceGeneBurden.getBodyComponent },
+    { entity: "disease", definition: EvidenceGene2Phenotype.definition, getBodyComponent: EvidenceGene2Phenotype.getBodyComponent },
+    { entity: "disease", definition: EvidenceIntOgen.definition, getBodyComponent: EvidenceIntOgen.getBodyComponent },
+    { entity: "disease", definition: EvidenceReactome.definition, getBodyComponent: EvidenceReactome.getBodyComponent },
+    { entity: "disease", definition: EvidenceClinicalPrecedence.definition, getBodyComponent: EvidenceClinicalPrecedence.getBodyComponent },
   ];
 
   // Register each component with the composite ID format "entity:sectionId"
@@ -191,6 +197,8 @@ export const registerAllSections = () => {
     const { entity, definition, getBodyComponent } = registration;
     const exportAdapter = "exportAdapter" in registration ? registration.exportAdapter : undefined;
     const compositeId = `${entity}:${definition.id}`;
+    // Keys are entity + section id; a second section with the same key would silently replace the first
+    if (getSectionComponent(compositeId)) console.warn(`Section "${compositeId}" is registered twice`);
     const Body = getBodyComponent();
     
     // Add entity field to definition for storage/reconstruction

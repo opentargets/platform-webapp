@@ -86,7 +86,7 @@ function TargetPage(): ReactElement {
       <Suspense fallback={<LoadingBackdrop height={800} />}>
         <Routes>
           <Route path="/" element={<Profile ensgId={ensgId} symbol={symbol} />} />
-          <Route path="/associations" element={<Associations ensgId={ensgId} />} />
+          <Route path="/associations" element={<Associations ensgId={ensgId} symbol={symbol} />} />
         </Routes>
       </Suspense>
     </>

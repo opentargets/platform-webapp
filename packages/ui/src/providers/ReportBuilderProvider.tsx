@@ -219,6 +219,7 @@ type ReportBuilderAction =
       tags?: string[];
       chipText?: string;
       componentState?: Record<string, any>;
+      bodyProps?: Record<string, unknown>;
     }
   | {
       type: "removeSectionFromReport";
@@ -383,6 +384,7 @@ export const { ScopedProvider, useScopedState, useScopedDispatch } =
           tags: action.tags,
           chipText: action.chipText,
           componentState: action.componentState,
+          bodyProps: action.bodyProps,
           stateCapturedAt:
             action.componentState && Object.keys(action.componentState).length > 0
               ? Date.now()

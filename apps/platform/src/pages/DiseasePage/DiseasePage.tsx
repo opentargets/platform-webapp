@@ -71,7 +71,7 @@ function DiseasePage(): ReactElement {
       <Suspense fallback={<LoadingBackdrop height={800} />}>
         <Routes>
           <Route path="/" element={<Profile efoId={efoId!} name={name!} />} />
-          <Route path="/associations" element={<Associations efoId={efoId!} />} />
+          <Route path="/associations" element={<Associations efoId={efoId!} name={name} />} />
         </Routes>
       </Suspense>
     </>

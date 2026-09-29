@@ -182,7 +182,15 @@ const paperRoleText = (node: IRNode, role: PaperRole): string => {
   }
 };
 
-/** Mono role line for step 2, e.g. "widget → figure slide", "table → figure slide · top 10". */
+// Widget figures' rows follow the figure into the appendix / supplementary tables
+const dataSuffix = (target: "slides" | "paper", node: IRNode, role: SlideRole | PaperRole): string =>
+  node.type === "figure" && node.tableData?.rows.length && role !== "omit"
+    ? target === "slides"
+      ? " · data in appendix"
+      : " · data in supplementary"
+    : "";
+
+/** Mono role line for step 2, e.g. "widget → figure slide · data in appendix", "table → figure slide · top 10". */
 export function roleLabel(
   target: "slides" | "paper",
   node: IRNode,
@@ -194,5 +202,5 @@ export function roleLabel(
     target === "slides"
       ? slideRoleText(node, role as SlideRole, tableLayout, topN)
       : paperRoleText(node, role as PaperRole);
-  return `${kindLabel(node)} → ${text}`;
+  return `${kindLabel(node)} → ${text}${dataSuffix(target, node, role)}`;
 }

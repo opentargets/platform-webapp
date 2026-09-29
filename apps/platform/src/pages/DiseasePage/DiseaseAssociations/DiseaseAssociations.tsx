@@ -9,6 +9,7 @@ import DISEASE_ASSOCIATIONS_QUERY from "./DiseaseAssociationsQuery.gql";
 
 type DiseaseAssociationsProps = {
   efoId: string;
+  name?: string;
 };
 
 function DiseaseAssociations(pros: DiseaseAssociationsProps): ReactElement {
@@ -18,6 +19,7 @@ function DiseaseAssociations(pros: DiseaseAssociationsProps): ReactElement {
       <AssociationsView
         key={pros.efoId}
         id={pros.efoId}
+        label={pros.name}
         entity={ENTITY.DISEASE}
         query={DISEASE_ASSOCIATIONS_QUERY}
       />

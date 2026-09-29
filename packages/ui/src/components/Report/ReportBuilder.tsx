@@ -44,7 +44,7 @@ interface ReportBuilderProps {
   drawerWidth?: number | string;
 }
 
-export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90vw" }) => {
+export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "100vw" }) => {
   const { state, dispatch, activeReport } = useReportBuilder();
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down("md"));

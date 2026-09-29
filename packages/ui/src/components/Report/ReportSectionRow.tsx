@@ -110,7 +110,7 @@ export const ReportSectionRow: React.FC<ReportSectionRowProps> = ({
           />
         )}
 
-        <CapturedStateSummaryChip state={section.componentState} />
+        <CapturedStateSummaryChip state={section.componentState} definition={definition} />
 
         {definition.isPrivate && <Chip label="Private" size="small" variant="outlined" />}
         {section.chipText && <Chip label={section.chipText} size="small" />}

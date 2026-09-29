@@ -245,7 +245,7 @@ const SectionDetails: React.FC<{ section: ReportSection; variant: InspectorVaria
 
       <Box>
         <Typography sx={labelSx}>Captured state</Typography>
-        <CapturedStateChips state={section.componentState} />
+        <CapturedStateChips state={section.componentState} definition={definition} />
         {section.stateCapturedAt && (
           <Typography variant="caption" sx={{ display: "block", color: "grey.600", mt: 0.75 }}>
             captured {formatRelativeTime(section.stateCapturedAt)}

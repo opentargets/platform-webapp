@@ -10,8 +10,9 @@ export const initialState: OtTableSSPState = {
   initialLoading: true,
 };
 
-export function createInitialState(str: string): OtTableSSPState {
-  return initialState;
+// `freeTextQuery`: a search restored from a report
+export function createInitialState(freeTextQuery: string): OtTableSSPState {
+  return { ...initialState, freeTextQuery };
 }
 
 export function otTableReducer(
