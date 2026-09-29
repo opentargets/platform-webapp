@@ -24,18 +24,21 @@ import { RenderStep } from "./RenderStep";
 import { SlidesMappingStep } from "./SlidesMappingStep";
 import { TargetStep } from "./TargetStep";
 import { flaggedNodeIds, formatDate, rowDomId } from "./nodeMeta";
-import { FlowStep, isMappedTarget, Progress, useExportFlow } from "./useExportFlow";
+import { FlowStep, hasStep2, isMappedTarget, Progress, useExportFlow } from "./useExportFlow";
+import { VideoRenderStep } from "./video/VideoRenderStep";
+import { VideoStoryboardStep } from "./video/VideoStoryboardStep";
 
-const STEPS = ["Target", "Mapping", "Render"];
+const stepsFor = (target: ExportTarget) =>
+  target === "video" ? ["Target", "Storyboard", "Render"] : ["Target", "Mapping", "Render"];
 
 const stepIndex = (step: FlowStep, target: ExportTarget): number => {
   if (step === "target" || step === "idle") return 0;
-  if (step === "collecting") return isMappedTarget(target) ? 1 : 2;
+  if (step === "collecting") return hasStep2(target) ? 1 : 2;
   if (step === "mapping") return 1;
   return 2;
 };
 
-const Stepper: React.FC<{ current: number }> = ({ current }) => (
+const Stepper: React.FC<{ current: number; steps: string[] }> = ({ current, steps }) => (
   <Box
     component="ol"
     aria-label="Export steps"
@@ -52,7 +55,7 @@ const Stepper: React.FC<{ current: number }> = ({ current }) => (
       textTransform: "uppercase",
     }}
   >
-    {STEPS.map((label, i) => (
+    {steps.map((label, i) => (
       <React.Fragment key={label}>
         {i > 0 && (
           <Box component="li" aria-hidden sx={{ color: "grey.400" }}>
@@ -128,9 +131,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
   const flow = useExportFlow({ report, open, renderWidget });
   const { step, target, plan, doc, settings } = flow;
   const [blocksOpen, setBlocksOpen] = useState(false);
+  const [videoBusy, setVideoBusy] = useState(false);
 
   useEffect(() => {
-    if (!open) setBlocksOpen(false);
+    if (!open) {
+      setBlocksOpen(false);
+      setVideoBusy(false);
+    }
   }, [open]);
 
   const warningsByNode = useMemo(() => {
@@ -168,6 +175,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
   const busy = step === "collecting" || step === "rendering";
   const current = stepIndex(step, target);
   const isMapping = step === "mapping";
+  const fullHeight = isMapping || step === "record";
   const releaseText = `Open Targets ${flow.dataRelease ?? "Platform"} · ${formatDate(Date.now())}`;
 
   const errorAlert = flow.error && (
@@ -194,6 +202,32 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
     );
   } else if (step === "collecting") {
     body = <CollectingProgress progress={flow.collectProgress} />;
+  } else if (isMapping && target === "video") {
+    body = flow.videoPlan ? (
+      <VideoStoryboardStep
+        plan={flow.videoPlan}
+        settings={flow.videoSettings}
+        dataRelease={doc?.dataRelease ?? flow.dataRelease}
+        updateVideo={flow.updateVideo}
+        updateScene={flow.updateScene}
+        reorderScenes={flow.reorderScenes}
+      />
+    ) : (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 6 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
+  } else if (step === "record" && flow.videoPlan) {
+    body = (
+      <VideoRenderStep
+        reportName={report.name}
+        plan={flow.videoPlan}
+        settings={flow.videoSettings}
+        dataRelease={doc?.dataRelease ?? flow.dataRelease}
+        updateVideo={flow.updateVideo}
+        onBusyChange={setVideoBusy}
+      />
+    );
   } else if (isMapping) {
     if (!plan || !doc) {
       body = flow.planError ? (
@@ -248,7 +282,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
   }
 
   let actions: React.ReactNode = null;
-  if (step === "target" || (step === "collecting" && !isMappedTarget(target))) {
+  if (step === "target" || (step === "collecting" && !hasStep2(target))) {
     const direct = target === "working" || target === "data";
     actions = (
       <>
@@ -264,7 +298,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
           onClick={() => (direct ? flow.startTarget(target, DIRECT_FORMAT[target]) : flow.startTarget(target))}
           sx={{ textTransform: "none" }}
         >
-          {direct ? "Export" : "Next · mapping"}
+          {direct ? "Export" : target === "video" ? "Next · storyboard" : "Next · mapping"}
         </Button>
       </>
     );
@@ -276,6 +310,31 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
         </Button>
         <Button onClick={onClose} sx={{ textTransform: "none" }}>
           Cancel
+        </Button>
+      </>
+    );
+  } else if (isMapping && target === "video") {
+    actions = (
+      <>
+        <Button onClick={flow.back} sx={{ textTransform: "none", mr: "auto" }}>
+          Back
+        </Button>
+        <Button onClick={onClose} sx={{ textTransform: "none" }}>
+          Cancel
+        </Button>
+        <Button variant="contained" disabled={!flow.videoPlan} onClick={flow.goRecord} sx={{ textTransform: "none" }}>
+          Next · render
+        </Button>
+      </>
+    );
+  } else if (step === "record") {
+    actions = (
+      <>
+        <Button onClick={flow.backToMapping} disabled={videoBusy} sx={{ textTransform: "none", mr: "auto" }}>
+          Back to storyboard
+        </Button>
+        <Button variant="contained" onClick={onClose} sx={{ textTransform: "none" }}>
+          Done
         </Button>
       </>
     );
@@ -361,7 +420,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
       aria-labelledby="report-export-dialog-title"
       slotProps={{
         paper: {
-          sx: isMapping && !fullScreen ? { height: "calc(100% - 64px)" } : undefined,
+          sx: fullHeight && !fullScreen ? { height: "calc(100% - 64px)" } : undefined,
         },
       }}
     >
@@ -372,7 +431,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
         <Typography component="span" sx={{ fontWeight: 700, fontSize: 18 }} noWrap>
           Export · {report.name}
         </Typography>
-        <Stepper current={current} />
+        <Stepper current={current} steps={stepsFor(target)} />
         <IconButton aria-label="Close export" onClick={onClose} sx={{ position: "absolute", right: 12, top: 10 }} size="small">
           <FontAwesomeIcon icon={faX} size="xs" />
         </IconButton>
@@ -380,7 +439,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
 
       <DialogContent
         dividers
-        sx={{ p: 0, display: "flex", flexDirection: "column", minHeight: isMapping ? 0 : 320, overflow: isMapping && !fullScreen ? "hidden" : "auto" }}
+        sx={{ p: 0, display: "flex", flexDirection: "column", minHeight: fullHeight ? 0 : 320, overflow: fullHeight && !fullScreen ? "hidden" : "auto" }}
       >
         {errorAlert}
         {isMapping && flow.recollecting && <CollectingProgress progress={flow.collectProgress} compact />}

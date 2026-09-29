@@ -9,6 +9,7 @@ import type { FlowDone, Progress } from "./useExportFlow";
 const UNIT_WORD: Record<ExportTarget, string> = {
   slides: "slide",
   paper: "section",
+  video: "scene",
   working: "block",
   data: "file",
 };

@@ -7,6 +7,7 @@ import { monoSx } from "../DataBlockShell";
 import type { NotebookResult } from "./notebookResultsStore";
 import type { NotebookRunner } from "./useNotebookRunner";
 import { inferColumns, type ResolvedInput } from "./resolveInputs";
+import { PANE_HEADER_HEIGHT, PANE_HEIGHT } from "./protocol";
 
 type Success = Extract<NotebookResult, { status: "success" }>;
 
@@ -106,7 +107,7 @@ export const NotebookOutput: React.FC<NotebookOutputProps> = ({
 
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75, flexWrap: "wrap" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75, flexWrap: "wrap", minHeight: PANE_HEADER_HEIGHT }}>
         <Typography sx={{ ...columnLabelSx, mb: 0, flex: 1 }}>Output</Typography>
         {shown?.outputType === "both" && (
           <ToggleButtonGroup
@@ -142,93 +143,99 @@ export const NotebookOutput: React.FC<NotebookOutputProps> = ({
         </ToggleButtonGroup>
       </Box>
 
-      {failed && (
-        <Box
-          role="alert"
-          sx={{ border: "1px solid #ff6350", bgcolor: "#ffefec", borderRadius: "2px", p: "8px 10px", mb: 1 }}
-        >
-          <Typography sx={{ ...monoSx, fontSize: 11, color: "#c0392b", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            {failed.error.kind} error
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: "#c0392b", mt: 0.25, whiteSpace: "pre-wrap" }}>
-            {failed.error.message}
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mt: 0.5, flexWrap: "wrap" }}>
-            {failed.error.line !== undefined && (
-              <Button
-                size="small"
-                onClick={() => onJumpToError(failed.error.line as number, failed.error.column)}
-                sx={{ ...monoSx, textTransform: "none", px: 0, color: "#c0392b", minWidth: 0 }}
-              >
-                line {failed.error.line}
-                {failed.error.column !== undefined ? `:${failed.error.column}` : ""}
-              </Button>
-            )}
-            {errorInput?.summary.blockId && (
-              <Button
-                size="small"
-                onClick={() => onGoToBlock(errorInput.summary.blockId as string)}
-                sx={{ textTransform: "none", px: 0, color: "#c0392b", minWidth: 0 }}
-              >
-                Go to {errorInput.ref}
-              </Button>
-            )}
-            {(lastGood || snapshot) && (
-              <Link
-                component="button"
-                type="button"
-                onClick={() => setShowLastGood((s) => !s)}
-                sx={{ fontSize: 12, color: "#c0392b" }}
-              >
-                {showLastGood ? "Hide last good output" : "Show last good output"}
-              </Link>
-            )}
-          </Box>
-        </Box>
-      )}
-
-      {showSnapshot && snapshot && (
-        <Box sx={{ border: "1px solid #eee", bgcolor: "#fff", mb: 1 }}>
-          {/* Stored SVG is only ever shown as an image, never inlined as markup */}
-          <img
-            src={snapshot}
-            alt={`${block.title} (snapshot)`}
-            style={{ display: "block", maxWidth: "100%", height: "auto" }}
-          />
-        </Box>
-      )}
-
-      {/* The sandbox lives here; hidden (not unmounted) when a data view is shown so its width stays right */}
+      {/* Fixed-height viewport, level with the code pane; taller output scrolls inside it.
+          Its border (not the frame's) stays put, so switching views never changes the frame's width. */}
       <Box
-        ref={runner.attach}
         sx={{
-          border: frameVisible ? "1px solid #eee" : "none",
+          height: block.height ?? PANE_HEIGHT,
+          overflow: "auto",
+          border: "1px solid",
+          borderColor: "grey.300",
+          borderRadius: "2px",
           bgcolor: "#fff",
-          overflow: "hidden",
-          height: frameVisible ? "auto" : 0,
         }}
-      />
+      >
+        {failed && (
+          <Box
+            role="alert"
+            sx={{ border: "1px solid #ff6350", bgcolor: "#ffefec", borderRadius: "2px", p: "8px 10px", m: 1 }}
+          >
+            <Typography sx={{ ...monoSx, fontSize: 11, color: "#c0392b", textTransform: "uppercase", letterSpacing: ".06em" }}>
+              {failed.error.kind} error
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: "#c0392b", mt: 0.25, whiteSpace: "pre-wrap" }}>
+              {failed.error.message}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mt: 0.5, flexWrap: "wrap" }}>
+              {failed.error.line !== undefined && (
+                <Button
+                  size="small"
+                  onClick={() => onJumpToError(failed.error.line as number, failed.error.column)}
+                  sx={{ ...monoSx, textTransform: "none", px: 0, color: "#c0392b", minWidth: 0 }}
+                >
+                  line {failed.error.line}
+                  {failed.error.column !== undefined ? `:${failed.error.column}` : ""}
+                </Button>
+              )}
+              {errorInput?.summary.blockId && (
+                <Button
+                  size="small"
+                  onClick={() => onGoToBlock(errorInput.summary.blockId as string)}
+                  sx={{ textTransform: "none", px: 0, color: "#c0392b", minWidth: 0 }}
+                >
+                  Go to {errorInput.ref}
+                </Button>
+              )}
+              {(lastGood || snapshot) && (
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => setShowLastGood((s) => !s)}
+                  sx={{ fontSize: 12, color: "#c0392b" }}
+                >
+                  {showLastGood ? "Hide last good output" : "Show last good output"}
+                </Link>
+              )}
+            </Box>
+          </Box>
+        )}
 
-      {shown && effective === "table" && rows && <RowsTable rows={rows} columns={columns} />}
-      {shown && effective === "value" && <ValueView value={shown.value} />}
+        {showSnapshot && snapshot && (
+          <Box>
+            {/* Stored SVG is only ever shown as an image, never inlined as markup */}
+            <img
+              src={snapshot}
+              alt={`${block.title} (snapshot)`}
+              style={{ display: "block", maxWidth: "100%", height: "auto" }}
+            />
+          </Box>
+        )}
 
-      {!shown && !showSnapshot && !failed && !running && (
-        <Box
-          sx={{
-            border: "1px dashed",
-            borderColor: "grey.300",
-            borderRadius: "2px",
-            p: 2,
-            textAlign: "center",
-            fontSize: 13,
-            color: "text.secondary",
-          }}
-        >
-          {runner.ready
-              ? "Run the notebook to see its output (Ctrl/⌘+Enter)."
-              : "Loading the sandbox…"}
-        </Box>
-      )}
+        {/* The sandbox lives here; hidden (not unmounted) when a data view is shown so its width stays right */}
+        <Box ref={runner.attach} sx={{ overflow: "hidden", height: frameVisible ? "auto" : 0 }} />
+
+        {shown && effective === "table" && rows && <RowsTable rows={rows} columns={columns} />}
+        {shown && effective === "value" && <ValueView value={shown.value} />}
+
+        {!shown && !showSnapshot && !failed && !running && (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: 2,
+              textAlign: "center",
+              fontSize: 13,
+              color: "text.secondary",
+            }}
+          >
+            {runner.ready
+                ? "Run the notebook to see its output (Ctrl/⌘+Enter)."
+                : "Loading the sandbox…"}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

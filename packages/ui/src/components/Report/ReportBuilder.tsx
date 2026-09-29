@@ -19,7 +19,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faX, faTrash, faDownload, faPen, faBroom } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faTrash, faDownload, faPen, faBroom } from "@fortawesome/free-solid-svg-icons";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -183,7 +183,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
           }
         }}
       >
-        <AppBar position="relative" elevation={1}>
+        <AppBar position="relative" elevation={0}>
           <Toolbar sx={{ gap: 1 }}>
             <Typography variant="h6" noWrap sx={{ flex: 1, fontWeight: 600 }}>
               Report Builder{activeReport ? ` · ${activeReport.name}` : ""}
@@ -200,7 +200,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
               </Button>
             )}
             <IconButton color="inherit" onClick={handleCloseBuilder} aria-label="Close report builder">
-              <FontAwesomeIcon icon={faX} />
+              <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Toolbar>
         </AppBar>

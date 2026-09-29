@@ -4,11 +4,25 @@
  */
 import type { BlockKind, RichTextDoc } from "../../../types/report";
 
-export type ExportTarget = "slides" | "paper" | "working" | "data";
-export type ExportFormat = "pptx" | "pdf" | "docx" | "md" | "latex" | "json" | "csvzip";
+export type ExportTarget = "slides" | "paper" | "video" | "working" | "data";
+export type ExportFormat =
+  | "pptx"
+  | "pdf"
+  | "docx"
+  | "md"
+  | "latex"
+  | "json"
+  | "csvzip"
+  | "mp4"
+  | "webm"
+  | "srt";
 
 export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends unknown[] ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+  [K in keyof T]?: NonNullable<T[K]> extends unknown[]
+    ? T[K]
+    : NonNullable<T[K]> extends object
+      ? DeepPartial<NonNullable<T[K]>>
+      : T[K];
 };
 
 // ---------- IR ----------
@@ -161,8 +175,74 @@ export interface ExportSettings {
   paper: PaperSettings;
   overrides: Record<string /* reportSectionId */, { slides?: BlockExportOverride; paper?: BlockExportOverride }>;
   includeImages: boolean; // data export: embed image data URLs in report.json
+  video?: VideoSettings; // filled by withVideoDefaults() on first use
   lastTarget?: ExportTarget;
   lastFormat?: ExportFormat;
+}
+
+// ---------- video (social video export) ----------
+
+export type VideoAspect = "9:16" | "16:9";
+
+export interface VideoVoiceSettings {
+  mode: "tts" | "none";
+  voiceURI?: string;
+  rate: number; // 0.8–1.3
+}
+
+export interface VideoSettings {
+  aspect: VideoAspect;
+  voice: VideoVoiceSettings;
+  captions: { burnIn: boolean; srt: boolean };
+  showSource: boolean; // "Open Targets Platform {release}" on every scene
+  endCard: boolean; // report name, source, deep link as text
+  scenes: VideoSceneOverride[]; // user edits; order = video order
+}
+
+export type VideoSceneKind = "title" | "figure" | "statement" | "end";
+
+export interface VideoSceneOverride {
+  sceneId: string; // stable
+  blockId: string | null; // null for the auto title/end scenes
+  kind: VideoSceneKind;
+  include: boolean;
+  title: string; // on-screen title; default = takeaway ‖ block title
+  narration: string; // plain text, copied from the report once
+  minDurationS?: number; // default 3
+  hotspots: Hotspot[];
+  imageHash?: string; // hash of the figure image when the hotspots were drawn
+}
+
+export type HotspotShape = "box" | "ring" | "arrow";
+
+export interface Hotspot {
+  id: string;
+  shape: HotspotShape;
+  rect: { x: number; y: number; w: number; h: number }; // 0–1, relative to the figure image
+  arrowFrom?: { x: number; y: number }; // 0–1, arrow only; tip = rect centre
+  label?: string;
+  spotlight: boolean; // dim everything outside rect while visible
+  start: { type: "word"; index: number } | { type: "time"; s: number }; // word index in narration
+  end: "scene" | { type: "time"; s: number };
+}
+
+/** A scene as planned: the override merged with what the IR says about its block. */
+export interface VideoScene extends Required<Omit<VideoSceneOverride, "imageHash">> {
+  imageHash?: string;
+  kicker?: string; // preceding heading / chapter
+  subtitle?: string; // title scene: entity · release; end scene: the deep link
+  tone?: "info" | "warning" | "finding";
+  asset?: FigureAsset; // figure scenes from figure nodes
+  table?: TableData; // figure scenes from table nodes (drawn as an image)
+  missing?: boolean; // the block is gone from the report or its figure couldn't be rendered
+}
+
+export interface VideoPlan {
+  scenes: VideoScene[]; // every scene, in video order (excluded ones too)
+  overrides: VideoSceneOverride[]; // reconciled with the report; persist when changed
+  warnings: ExportWarning[]; // plan-time only (NO_NARRATION, FIGURE_MISSING)
+  title: string;
+  dataRelease?: string;
 }
 
 // ---------- plan ----------
@@ -178,7 +258,10 @@ export interface ExportWarning {
     | "NO_TAKEAWAY"
     | "SNAPSHOT_STALE"
     | "IMAGE_NO_ALT"
-    | "SECRET_HEADERS_OMITTED";
+    | "SECRET_HEADERS_OMITTED"
+    | "NO_NARRATION"
+    | "LONG_VIDEO"
+    | "HOTSPOT_IMAGE_CHANGED";
   message: string;
   fix?: { label: string; override: BlockExportOverride }; // one-click fix offered in step 2
 }

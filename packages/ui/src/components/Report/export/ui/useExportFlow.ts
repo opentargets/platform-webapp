@@ -4,7 +4,7 @@ import { useReportBuilder } from "../../../../providers/ReportBuilderProvider";
 import type { Report } from "../../../../types/report";
 import { isWidget } from "../../../../types/report";
 import { collect } from "../collect";
-import { withExportDefaults } from "../defaults";
+import { withExportDefaults, withVideoDefaults } from "../defaults";
 import { fetchDataRelease } from "../extract/provenance";
 import {
   PAPER_PIXEL_RATIO,
@@ -13,6 +13,7 @@ import {
   SLIDE_PIXEL_RATIO,
 } from "../layout";
 import { plan as runPlan } from "../plan";
+import { planVideo, sameOverrides } from "../plan/video";
 import type {
   BlockExportOverride,
   CollectOptions,
@@ -23,6 +24,9 @@ import type {
   ExportPlan,
   ExportSettings,
   ExportTarget,
+  VideoPlan,
+  VideoSceneOverride,
+  VideoSettings,
 } from "../types";
 import { runExport, type ExportResult } from "../writers";
 import { nodeTitle } from "./nodeMeta";
@@ -32,12 +36,20 @@ import { nodeTitle } from "./nodeMeta";
  *   idle → target ─Next─► collecting ─► mapping ─Export─► rendering ─► done
  * error in collecting → target; Back from mapping → target; error in rendering → mapping.
  * Working PDF / Data skip mapping: target → collecting → rendering → done.
+ * Video: target → collecting → mapping (storyboard) ─Next─► record; recording runs inside the step.
  */
-export type FlowStep = "idle" | "target" | "collecting" | "mapping" | "rendering" | "done";
+export type FlowStep = "idle" | "target" | "collecting" | "mapping" | "rendering" | "done" | "record";
 
 export type MappedTarget = "slides" | "paper";
 
 export const isMappedTarget = (t?: ExportTarget): t is MappedTarget => t === "slides" || t === "paper";
+
+/** Targets with a step 2 (mapping, or the video storyboard). */
+export const hasStep2 = (t?: ExportTarget): t is MappedTarget | "video" => isMappedTarget(t) || t === "video";
+
+// Video figures are laid out once at the 9:16 figure width and used in both aspect ratios, so
+// switching aspect doesn't re-render widgets and hotspots stay on the same image
+export const VIDEO_WIDGET_PX = 1200;
 
 export interface Progress {
   done: number;
@@ -53,6 +65,9 @@ interface Geometry {
 
 /** Widget render geometry for a target; the key changes only when some widget's width would. */
 export const geometryFor = (target: ExportTarget, settings: ExportSettings, report: Report): Geometry => {
+  if (target === "video") {
+    return { key: "video", pixelRatio: SLIDE_PIXEL_RATIO, widthFor: () => VIDEO_WIDGET_PX };
+  }
   if (target === "slides") {
     const { aspect } = settings.slides;
     const width = SLIDE_GEOMETRY[aspect].widgetPx;
@@ -220,6 +235,56 @@ export function useExportFlow(args: {
     }
   }, [doc, target, planSettings]);
 
+  // ---------- video ----------
+
+  const videoSettings = useMemo(() => withVideoDefaults(settings.video), [settings.video]);
+  const videoPlan = useMemo((): VideoPlan | null => {
+    if (!doc || target !== "video") return null;
+    return planVideo(doc, videoSettings);
+  }, [doc, target, videoSettings]);
+  const videoPlanRef = useRef(videoPlan);
+  videoPlanRef.current = videoPlan;
+
+  // Scenes are copied from the report once: persist new scenes (and drop deleted ones) as they appear
+  useEffect(() => {
+    if (!videoPlan || sameOverrides(videoPlan.overrides, videoSettings.scenes)) return;
+    updateSettings({ video: { scenes: videoPlan.overrides } });
+  }, [videoPlan, videoSettings.scenes, updateSettings]);
+
+  const updateVideo = useCallback(
+    (patch: DeepPartial<VideoSettings>) => updateSettings({ video: patch }),
+    [updateSettings]
+  );
+
+  const updateScene = useCallback(
+    (sceneId: string, patch: Partial<VideoSceneOverride>) => {
+      const current = videoPlanRef.current?.overrides;
+      if (!current) return;
+      updateVideo({ scenes: current.map((o) => (o.sceneId === sceneId ? { ...o, ...patch } : o)) });
+    },
+    [updateVideo]
+  );
+
+  /** New order of scene ids; the title scene stays first and the end scene last. */
+  const reorderScenes = useCallback(
+    (order: string[]) => {
+      const current = videoPlanRef.current?.overrides;
+      if (!current) return;
+      const byId = new Map(current.map((o) => [o.sceneId, o]));
+      const middle = order.map((id) => byId.get(id)).filter((o): o is VideoSceneOverride => !!o && o.kind !== "title" && o.kind !== "end");
+      const rest = current.filter((o) => o.kind !== "title" && o.kind !== "end" && !order.includes(o.sceneId));
+      updateVideo({
+        scenes: [...current.filter((o) => o.kind === "title"), ...middle, ...rest, ...current.filter((o) => o.kind === "end")],
+      });
+    },
+    [updateVideo]
+  );
+
+  const goRecord = useCallback(() => {
+    setError(null);
+    setStep("record");
+  }, []);
+
   // ---------- export ----------
 
   const exportWith = useCallback(
@@ -276,7 +341,7 @@ export function useExportFlow(args: {
       }
       if (!result) return; // superseded or dialog closed
       setCollected({ key: g.key, doc: result });
-      if (isMappedTarget(next)) {
+      if (hasStep2(next)) {
         updateSettings({ lastTarget: next });
         setStep("mapping");
       } else {
@@ -348,7 +413,7 @@ export function useExportFlow(args: {
 
   const backToMapping = useCallback(() => {
     setError(null);
-    setStep(isMappedTarget(target) ? "mapping" : "target");
+    setStep(hasStep2(target) ? "mapping" : "target");
   }, [target]);
 
   const downloadAgain = useCallback(() => {
@@ -390,7 +455,7 @@ export function useExportFlow(args: {
     setError(null);
     setRenderProgress(null);
     setCollectProgress(null);
-    if (isMappedTarget(last)) {
+    if (hasStep2(last)) {
       void startTargetRef.current(last);
     } else {
       setTarget(last ?? "slides");
@@ -436,6 +501,12 @@ export function useExportFlow(args: {
     backToMapping,
     downloadAgain,
     printAgain,
+    videoSettings,
+    videoPlan,
+    updateVideo,
+    updateScene,
+    reorderScenes,
+    goRecord,
   };
 }
 

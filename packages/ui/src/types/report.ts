@@ -256,7 +256,7 @@ export interface NotebookBlock extends BlockBase {
   // Body of an async function
   code: string;
   display: NotebookDisplay;
-  // Output frame height in px; null = auto-size (max 900)
+  // Output pane height in px; null = the default pane height (taller output scrolls)
   height: number | null;
   runMode: NotebookRunMode;
   hideCodeInExport: boolean;

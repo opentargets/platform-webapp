@@ -1,4 +1,4 @@
-import type { DeepPartial, ExportSettings } from "./types";
+import type { DeepPartial, ExportSettings, VideoSettings } from "./types";
 
 export const defaultExportSettings = (): ExportSettings => ({
   slides: { aspect: "16:9", titleSlide: true, chapterDividers: true, methodsAppendix: true },
@@ -36,3 +36,16 @@ export const withExportDefaults = (settings?: Partial<ExportSettings>): ExportSe
 
 export const mergeExportSettings = (settings: ExportSettings, patch: DeepPartial<ExportSettings>): ExportSettings =>
   deepMerge(settings, patch);
+
+export const defaultVideoSettings = (): VideoSettings => ({
+  aspect: "9:16",
+  voice: { mode: "tts", rate: 1 },
+  captions: { burnIn: true, srt: true },
+  showSource: true,
+  endCard: true,
+  scenes: [],
+});
+
+/** Video settings with defaults; `exportSettings.video` stays unset until the video target is used. */
+export const withVideoDefaults = (video?: Partial<VideoSettings>): VideoSettings =>
+  deepMerge(defaultVideoSettings(), video ?? {});

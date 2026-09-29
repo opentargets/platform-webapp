@@ -1,6 +1,7 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo } from "react";
 import { Box, Checkbox, Chip, FormControlLabel, Typography } from "@mui/material";
 import type { ExportTarget } from "../types";
+import { mp4Supported } from "../video/recorder";
 
 // ---------- thumbnail sketches (plain CSS boxes) ----------
 
@@ -59,6 +60,23 @@ const DataSketch = () => (
   </Box>
 );
 
+const VideoFrameSketch: React.FC<{ width: number; aspect: string; hotspot: { left: string; top: string; w: string; h: string } }> = ({ width, aspect, hotspot }) => (
+  <Box sx={{ width, aspectRatio: aspect, border: "1px solid", borderColor: "grey.400", bgcolor: "#fff", p: "4px", display: "flex", flexDirection: "column", gap: "3px", boxSizing: "border-box", position: "relative" }}>
+    {bar("70%", 4, "#616161")}
+    <Box sx={{ flex: 1, bgcolor: "#e3f0fa", border: "1px solid #7bb3de", position: "relative" }}>
+      <Box sx={{ position: "absolute", left: hotspot.left, top: hotspot.top, width: hotspot.w, height: hotspot.h, border: "2px solid", borderColor: "secondary.main", borderRadius: "2px" }} />
+    </Box>
+    <Box sx={{ height: 6, bgcolor: "rgba(0,0,0,0.72)", borderRadius: "1px", mx: "10%" }} />
+  </Box>
+);
+
+const VideoSketch = () => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+    <VideoFrameSketch width={42} aspect="9 / 16" hotspot={{ left: "30%", top: "25%", w: "40%", h: "30%" }} />
+    <VideoFrameSketch width={112} aspect="16 / 9" hotspot={{ left: "55%", top: "20%", w: "25%", h: "45%" }} />
+  </Box>
+);
+
 // ---------- cards ----------
 
 interface TargetCardProps {
@@ -70,6 +88,8 @@ interface TargetCardProps {
   formats: string[];
   sketch: ReactNode;
   large?: boolean;
+  badge?: string; // e.g. "new"
+  sx?: object;
   children?: ReactNode;
 }
 
@@ -82,6 +102,8 @@ const TargetCard: React.FC<TargetCardProps> = ({
   formats,
   sketch,
   large,
+  badge,
+  sx,
   children,
 }) => (
   <Box
@@ -109,6 +131,7 @@ const TargetCard: React.FC<TargetCardProps> = ({
       gap: large ? 1.5 : 1.5,
       "&:hover": { borderColor: selected ? "primary.main" : "grey.500" },
       "&:focus-visible": { outline: "2px solid", outlineColor: "primary.dark", outlineOffset: 2 },
+      ...sx,
     }}
   >
     {selected && (
@@ -126,7 +149,7 @@ const TargetCard: React.FC<TargetCardProps> = ({
         justifyContent: "center",
         bgcolor: "grey.100",
         borderRadius: "2px",
-        height: large ? 100 : 56,
+        height: large ? 92 : 56,
         width: large ? "auto" : 64,
         flexShrink: 0,
       }}
@@ -134,7 +157,16 @@ const TargetCard: React.FC<TargetCardProps> = ({
       {sketch}
     </Box>
     <Box sx={{ minWidth: 0, flex: 1 }}>
-      <Typography sx={{ fontWeight: 700, fontSize: large ? 16 : 14 }}>{title}</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, pr: selected ? 9 : 0 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: large ? 16 : 14 }}>{title}</Typography>
+        {badge && (
+          <Chip
+            label={badge}
+            size="small"
+            sx={{ height: 18, fontSize: 10, bgcolor: "grey.100", border: "1px solid", borderColor: "grey.400", color: "text.secondary" }}
+          />
+        )}
+      </Box>
       <Typography sx={{ fontSize: 13, color: "text.secondary", mt: 0.25 }}>{description}</Typography>
       <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 1 }}>
         {formats.map((f) => (
@@ -159,9 +191,16 @@ interface TargetStepProps {
   onIncludeImagesChange: (value: boolean) => void;
 }
 
-export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includeImages, onIncludeImagesChange }) => (
-  <Box role="radiogroup" aria-label="Export target" sx={{ p: { xs: 2, sm: 3 }, display: "flex", flexDirection: "column", gap: 2 }}>
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includeImages, onIncludeImagesChange }) => {
+  const videoFormats = useMemo(() => (mp4Supported() ? ["MP4", "WEBM", "SRT"] : ["WEBM", "SRT"]), []);
+  const wide = { gridColumn: { xs: "auto", md: "span 2" } };
+  const half = { gridColumn: { xs: "auto", md: "span 3" } };
+  return (
+    <Box
+      role="radiogroup"
+      aria-label="Export target"
+      sx={{ p: { xs: 2, sm: 3 }, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(6, minmax(0, 1fr))" }, gap: 2 }}
+    >
       <TargetCard
         large
         target="slides"
@@ -171,6 +210,7 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         description="One slide per figure, titled with its takeaway; prose becomes speaker notes."
         formats={["PPTX", "PDF"]}
         sketch={<SlidesSketch />}
+        sx={wide}
       />
       <TargetCard
         large
@@ -181,9 +221,20 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         description="Numbered figures and tables with full captions, methods and references."
         formats={["PDF", "DOCX", "Markdown"]}
         sketch={<PaperSketch />}
+        sx={wide}
       />
-    </Box>
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+      <TargetCard
+        large
+        target="video"
+        selected={target === "video"}
+        onSelect={onSelect}
+        title="Social video"
+        badge="new"
+        description="Figures become scenes, text becomes narration, and hotspots draw the eye. 9:16 or 16:9, up to 90 s."
+        formats={videoFormats}
+        sketch={<VideoSketch />}
+        sx={wide}
+      />
       <TargetCard
         target="working"
         selected={target === "working"}
@@ -192,6 +243,7 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         description="The drawer as it is, every block expanded."
         formats={["PDF"]}
         sketch={<WorkingSketch />}
+        sx={half}
       />
       <TargetCard
         target="data"
@@ -201,6 +253,7 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         description="Report JSON plus a CSV per table."
         formats={["JSON", "CSV zip"]}
         sketch={<DataSketch />}
+        sx={half}
       >
         <FormControlLabel
           onClick={(e) => e.stopPropagation()}
@@ -216,7 +269,7 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         />
       </TargetCard>
     </Box>
-  </Box>
-);
+  );
+};
 
 export default TargetStep;

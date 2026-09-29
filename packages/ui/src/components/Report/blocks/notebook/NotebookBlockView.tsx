@@ -22,7 +22,7 @@ import {
   useNotebookResult,
   useNotebookResultsVersion,
 } from "./notebookResultsStore";
-import type { NotebookTheme } from "./protocol";
+import { PANE_HEIGHT, type NotebookTheme } from "./protocol";
 import { inputsHash, resolveInputs, type ResolvedInput } from "./resolveInputs";
 import { useNotebookRunner, type RunFinished } from "./useNotebookRunner";
 
@@ -176,6 +176,8 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
     [block.code, id, updateBlock]
   );
   const handleCodeChange = (value: string) => {
+    // Now, not on the next render: a blur in the same tick (Snippets menu closing) saves codeRef
+    codeRef.current = value;
     setCode(value);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saveCode(value), SAVE_DEBOUNCE_MS);
@@ -280,7 +282,7 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
   };
 
   const setFixedHeight = () => {
-    const input = window.prompt("Output height in px (leave empty for auto)", block.height ? String(block.height) : "");
+    const input = window.prompt(`Output height in px (leave empty for the default, ${PANE_HEIGHT})`, block.height ? String(block.height) : "");
     if (input === null) return;
     const n = Number.parseInt(input, 10);
     updateBlock(id, { height: Number.isFinite(n) && n > 0 ? Math.max(80, Math.min(2000, n)) : null });
@@ -327,16 +329,7 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
   // ---------- layout / read view ----------
   const [bodyRef, bodyWidth] = useElementWidth<HTMLDivElement>();
   const wide = bodyWidth >= WIDE_PANES_PX;
-  const [codeOpen, setCodeOpen] = useState(() => !block.lastRun?.ok);
   const [consoleOpen, setConsoleOpen] = useState(false);
-
-  const handleBodyBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    const row = event.currentTarget.closest("[data-report-section-id]");
-    const next = event.relatedTarget as Node | null;
-    if (next && row?.contains(next)) return;
-    // Read view: once it has run fine and focus leaves the block, the code folds away
-    if (result?.status === "success" && !dirty) setCodeOpen(false);
-  };
 
   const goToRef = (ref: string) => {
     const bid = graph.blockIds.get(ref);
@@ -362,74 +355,76 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
     .join(" · ");
 
   const editorPane = (
-    <Box sx={{ minWidth: 0 }}>
-      <NotebookEditor
-        value={code}
-        onChange={handleCodeChange}
-        onRun={run}
-        onBlur={() => {
-          editorFocused.current = false;
-          saveCode(codeRef.current);
-        }}
-        inputs={completionInputs}
-        onLinkRequest={(name) => openPicker(null, name)}
-        onView={(view) => {
-          editorView.current = view;
-        }}
-        snippetContext={snippetContext}
-        collapsed={!codeOpen}
-        onExpand={() => setCodeOpen(true)}
-      />
-      <Box
-        onFocusCapture={() => {
-          editorFocused.current = true;
-        }}
-        sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap", mt: 0.75, ...monoSx, fontSize: 11 }}
-      >
-        {upstream.map((ref) => (
-          <Chip key={ref} size="small" label={ref} onClick={() => goToRef(ref)} sx={{ ...monoSx, fontSize: 11, height: 20 }} />
-        ))}
-        {upstream.length > 0 && <Box component="span" sx={{ color: "grey.500" }}>→</Box>}
-        <Chip size="small" label={block.ref} sx={{ ...monoSx, fontSize: 11, height: 20, ...CHIP_TONES.ok, border: "1px solid" }} />
-        {downstream.length > 0 && <Box component="span" sx={{ color: "grey.500" }}>→</Box>}
-        {downstream.map((ref) => (
-          <Chip key={ref} size="small" label={ref} onClick={() => goToRef(ref)} sx={{ ...monoSx, fontSize: 11, height: 20 }} />
-        ))}
-      </Box>
-      <Box sx={{ mt: 1 }}>
-        <Button
-          size="small"
-          onClick={() => setConsoleOpen((o) => !o)}
-          aria-expanded={consoleOpen}
-          sx={{ textTransform: "none", px: 0, py: 0, height: 22, fontSize: 12 }}
-        >
-          {consoleOpen ? "▾" : "▸"} Console{logs.length ? ` (${logs.length})` : ""}
-        </Button>
-        {consoleOpen && (
+    <NotebookEditor
+      value={code}
+      onChange={handleCodeChange}
+      onRun={run}
+      onBlur={() => {
+        editorFocused.current = false;
+        saveCode(codeRef.current);
+      }}
+      inputs={completionInputs}
+      onLinkRequest={(name) => openPicker(null, name)}
+      onView={(view) => {
+        editorView.current = view;
+      }}
+      snippetContext={snippetContext}
+      // +2: the output viewport's border sits outside its height
+      height={(block.height ?? PANE_HEIGHT) + 2}
+      footer={
+        <>
           <Box
-            sx={{
-              ...monoSx,
-              fontSize: 11,
-              maxHeight: 160,
-              overflow: "auto",
-              border: "1px solid",
-              borderColor: "grey.300",
-              bgcolor: "grey.50",
-              p: 1,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
+            onFocusCapture={() => {
+              editorFocused.current = true;
             }}
+            sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap", ...monoSx, fontSize: 11 }}
           >
-            {logs.length === 0 && <Box sx={{ color: "grey.500" }}>Nothing logged in the last run.</Box>}
-            {logs.map((entry, i) => (
-              <Box key={i} sx={{ color: entry.level === "error" ? "#c0392b" : entry.level === "warn" ? "#b35900" : "inherit" }}>
-                {entry.args.join(" ")}
-              </Box>
+            {upstream.map((ref) => (
+              <Chip key={ref} size="small" label={ref} onClick={() => goToRef(ref)} sx={{ ...monoSx, fontSize: 11, height: 20 }} />
+            ))}
+            {upstream.length > 0 && <Box component="span" sx={{ color: "grey.500" }}>→</Box>}
+            <Chip size="small" label={block.ref} sx={{ ...monoSx, fontSize: 11, height: 20, ...CHIP_TONES.ok, border: "1px solid" }} />
+            {downstream.length > 0 && <Box component="span" sx={{ color: "grey.500" }}>→</Box>}
+            {downstream.map((ref) => (
+              <Chip key={ref} size="small" label={ref} onClick={() => goToRef(ref)} sx={{ ...monoSx, fontSize: 11, height: 20 }} />
             ))}
           </Box>
-        )}
-      </Box>
-    </Box>
+          <Box>
+            <Button
+              size="small"
+              onClick={() => setConsoleOpen((o) => !o)}
+              aria-expanded={consoleOpen}
+              sx={{ textTransform: "none", px: 0, py: 0, height: 22, fontSize: 12 }}
+            >
+              {consoleOpen ? "▾" : "▸"} Console{logs.length ? ` (${logs.length})` : ""}
+            </Button>
+            {consoleOpen && (
+              <Box
+                sx={{
+                  ...monoSx,
+                  fontSize: 11,
+                  maxHeight: 160,
+                  overflow: "auto",
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  bgcolor: "grey.50",
+                  p: 1,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {logs.length === 0 && <Box sx={{ color: "grey.500" }}>Nothing logged in the last run.</Box>}
+                {logs.map((entry, i) => (
+                  <Box key={i} sx={{ color: entry.level === "error" ? "#c0392b" : entry.level === "warn" ? "#b35900" : "inherit" }}>
+                    {entry.args.join(" ")}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </>
+      }
+    />
   );
 
   const outputPane = (
@@ -441,7 +436,6 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
       inputs={inputs}
       onDisplayChange={(display) => updateBlock(id, { display })}
       onJumpToError={(line, column) => {
-        setCodeOpen(true);
         requestAnimationFrame(() => editorView.current && jumpTo(editorView.current, line, column));
       }}
       onGoToBlock={goToBlock}
@@ -462,7 +456,7 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
           label: `Run mode: ${block.runMode} → switch to ${block.runMode === "auto" ? "manual" : "auto"}`,
           onClick: () => updateBlock(id, { runMode: block.runMode === "auto" ? "manual" : "auto" }),
         },
-        { label: `Output height: ${block.height ? `${block.height}px` : "auto"}…`, onClick: setFixedHeight },
+        { label: `Output height: ${block.height ?? PANE_HEIGHT}px${block.height ? "" : " (default)"}…`, onClick: setFixedHeight },
         {
           label: `${block.hideCodeInExport ? "✓ " : ""}Hide code in export`,
           onClick: () => updateBlock(id, { hideCodeInExport: !block.hideCodeInExport }),
@@ -500,16 +494,6 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
       }
       actions={
         <>
-          {block.lastRun?.ok && (
-            <Button
-              size="small"
-              onClick={() => setCodeOpen((o) => !o)}
-              aria-expanded={codeOpen}
-              sx={{ height: 32, textTransform: "none" }}
-            >
-              Code {codeOpen ? "▾" : "▸"}
-            </Button>
-          )}
           {runner.running ? (
             <Button
               variant="outlined"
@@ -552,7 +536,7 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
         </>
       }
     >
-      <Box ref={bodyRef} onBlur={handleBodyBlur}>
+      <Box ref={bodyRef}>
         {/* Inputs bar */}
         <Box
           sx={{

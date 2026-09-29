@@ -85,6 +85,13 @@ const widgetEntityPath = (section: ReportSection): string | undefined => {
 export const platformOrigin = (origin?: string): string =>
   origin ?? (typeof window !== "undefined" ? window.location.origin : "https://platform.opentargets.org");
 
+/** Platform URL for an entity page (the report's entity context), e.g. …/target/ENSG00000157764. */
+export const entityDeepLink = (entity: { type: string; id?: string } | undefined, origin?: string): string => {
+  const route = entity ? ENTITY_ROUTES[entity.type] : undefined;
+  const base = platformOrigin(origin);
+  return route && entity?.id ? `${base}/${route}/${encodeURIComponent(entity.id)}` : base;
+};
+
 /** Platform URL for the widget's entity page, anchored at the section (SectionItem uses definition.id). */
 export const widgetDeepLink = (section: ReportSection, origin?: string): string | undefined => {
   const path = widgetEntityPath(section);

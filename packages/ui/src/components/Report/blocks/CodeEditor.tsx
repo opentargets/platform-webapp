@@ -15,6 +15,8 @@ interface CodeEditorProps {
   placeholder?: string;
   minHeight?: number;
   maxHeight?: number;
+  // Fill the parent's height (scrolling inside) instead of growing between min/max
+  fill?: boolean;
   // Receives the view once created (e.g. to push a GraphQL schema into it)
   onView?: (view: EditorView | null) => void;
 }
@@ -32,6 +34,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   placeholder,
   minHeight = 160,
   maxHeight = 420,
+  fill = false,
   onView,
 }) => {
   const host = useRef<HTMLDivElement>(null);
@@ -72,9 +75,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           EditorView.contentAttributes.of({ "aria-label": ariaLabel }),
           ...(placeholder ? [placeholderExt(placeholder)] : []),
           EditorView.theme({
-            "&": { fontSize: "12px", minHeight: `${minHeight}px`, maxHeight: `${maxHeight}px` },
+            "&": fill
+              ? { fontSize: "12px", height: "100%" }
+              : { fontSize: "12px", minHeight: `${minHeight}px`, maxHeight: `${maxHeight}px` },
             ".cm-scroller": { fontFamily: '"Roboto Mono", monospace', overflow: "auto" },
-            ".cm-content, .cm-gutter": { minHeight: `${minHeight}px` },
+            ...(fill ? {} : { ".cm-content, .cm-gutter": { minHeight: `${minHeight}px` } }),
             "&.cm-focused": { outline: "none" },
           }),
         ],
@@ -111,6 +116,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         borderColor: "grey.300",
         borderRadius: "2px",
         overflow: "hidden",
+        ...(fill && { height: "100%", boxSizing: "border-box" }),
         "&:focus-within": { borderColor: "primary.main" },
       }}
     />

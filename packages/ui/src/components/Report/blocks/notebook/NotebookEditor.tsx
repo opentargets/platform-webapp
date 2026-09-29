@@ -7,12 +7,10 @@ import { javascript, javascriptLanguage } from "@codemirror/lang-javascript";
 import { linter, type Diagnostic } from "@codemirror/lint";
 import { CodeEditor } from "../CodeEditor";
 import { columnLabelSx } from "../ResponsePanel";
-import { monoSx } from "../DataBlockShell";
 import { makeCompletionSource, type CompletionInputs } from "./completions/columns";
 import { parseNotebookCode, unknownIdentifiers } from "./codeRefs";
 import { SNIPPETS, type SnippetContext } from "./snippets";
-
-const COLLAPSED_LINES = 3;
+import { PANE_HEADER_HEIGHT } from "./protocol";
 
 interface NotebookEditorProps {
   value: string;
@@ -25,9 +23,10 @@ interface NotebookEditorProps {
   onLinkRequest: (name: string) => void;
   onView: (view: EditorView | null) => void;
   snippetContext: SnippetContext;
-  // Read view: only the first lines, not editable
-  collapsed: boolean;
-  onExpand: () => void;
+  // Pane body height (px), matching the output pane
+  height: number;
+  // Pinned under the editor, inside the pane (refs, console)
+  footer?: React.ReactNode;
 }
 
 /** Insert `text` at the cursor (replacing any selection) and focus the editor. */
@@ -62,8 +61,8 @@ export const NotebookEditor: React.FC<NotebookEditorProps> = ({
   onLinkRequest,
   onView,
   snippetContext,
-  collapsed,
-  onExpand,
+  height,
+  footer,
 }) => {
   const inputsRef = useRef(inputs);
   inputsRef.current = inputs;
@@ -119,74 +118,46 @@ export const NotebookEditor: React.FC<NotebookEditorProps> = ({
     else onChange(`${value.trimEnd()}\n\n${code}`);
   };
 
-  const lines = value.split("\n");
-  const preview = lines.slice(0, COLLAPSED_LINES).join("\n");
-
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75, minHeight: PANE_HEADER_HEIGHT }}>
         <Typography sx={{ ...columnLabelSx, mb: 0, flex: 1 }}>Code</Typography>
-        {!collapsed && (
-          <>
-            <Button
-              size="small"
-              onClick={(e) => setSnippetAnchor(e.currentTarget)}
-              aria-haspopup="menu"
-              sx={{ textTransform: "none", py: 0, height: 24 }}
-            >
-              Snippets ▾
-            </Button>
-            <Menu open={!!snippetAnchor} anchorEl={snippetAnchor} onClose={() => setSnippetAnchor(null)}>
-              {SNIPPETS.map((snippet) => (
-                <MenuItem
-                  key={snippet.label}
-                  onClick={() => insertSnippet(snippet.code(snippetContext))}
-                  sx={{ fontSize: 13 }}
-                >
-                  {snippet.label}
-                </MenuItem>
-              ))}
-            </Menu>
-          </>
-        )}
-      </Box>
-      {collapsed ? (
-        <Box
-          role="button"
-          tabIndex={0}
-          aria-label="Show code"
-          onClick={onExpand}
-          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onExpand()}
-          sx={{
-            ...monoSx,
-            border: "1px solid",
-            borderColor: "grey.300",
-            borderRadius: "2px",
-            p: "6px 8px",
-            whiteSpace: "pre",
-            overflow: "hidden",
-            color: "grey.700",
-            cursor: "pointer",
-            bgcolor: "grey.50",
-            "&:hover": { borderColor: "primary.main" },
-          }}
+        <Button
+          size="small"
+          onClick={(e) => setSnippetAnchor(e.currentTarget)}
+          aria-haspopup="menu"
+          sx={{ textTransform: "none", py: 0, height: 24 }}
         >
-          {preview}
-          {lines.length > COLLAPSED_LINES ? `\n… ${lines.length - COLLAPSED_LINES} more lines` : ""}
+          Snippets ▾
+        </Button>
+        <Menu open={!!snippetAnchor} anchorEl={snippetAnchor} onClose={() => setSnippetAnchor(null)}>
+          {SNIPPETS.map((snippet) => (
+            <MenuItem
+              key={snippet.label}
+              onClick={() => insertSnippet(snippet.code(snippetContext))}
+              sx={{ fontSize: 13 }}
+            >
+              {snippet.label}
+            </MenuItem>
+          ))}
+        </Menu>
+      </Box>
+      {/* Same height as the output pane; the editor takes whatever the footer leaves */}
+      <Box sx={{ height, display: "flex", flexDirection: "column", gap: 0.75 }}>
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <CodeEditor
+            value={value}
+            onChange={onChange}
+            onRun={onRun}
+            onBlur={onBlur}
+            onView={handleView}
+            extensions={extensions}
+            ariaLabel="Notebook code"
+            fill
+          />
         </Box>
-      ) : (
-        <CodeEditor
-          value={value}
-          onChange={onChange}
-          onRun={onRun}
-          onBlur={onBlur}
-          onView={handleView}
-          extensions={extensions}
-          ariaLabel="Notebook code"
-          minHeight={220}
-          maxHeight={560}
-        />
-      )}
+        {footer}
+      </Box>
     </Box>
   );
 };

@@ -3,6 +3,7 @@ import type { NotebookBlock, NotebookLastRun, NotebookSnapshot } from "../../../
 import { notebookResultsStore, notebookRuntimes, type NotebookLog } from "./notebookResultsStore";
 import {
   isSandboxMessage,
+  PANE_HEIGHT,
   PROTOCOL_VERSION,
   RUNTIME_URL,
   WATCHDOG_MS,
@@ -70,6 +71,10 @@ type OutgoingHostMessage = HostMessage extends infer M
 
 const serializedKey = (runId: number, format: string) => `${runId}:${format}`;
 
+// The `width` a run hands to user code
+const runWidthOf = (hostEl: HTMLElement) =>
+  Math.max(100, Math.round(hostEl.getBoundingClientRect().width) - OUTPUT_PADDING);
+
 /**
  * Owns one notebook's sandboxed iframe: creation (lazily, when the host is in
  * view), the message protocol, run ids, the watchdog, run coalescing and
@@ -89,6 +94,7 @@ export function useNotebookRunner(options: RunnerOptions): NotebookRunner {
   const queued = useRef(false);
   const pending = useRef(false);
   const readsWidth = useRef(false);
+  const lastRunWidth = useRef(0);
   const contentHeightRef = useRef(0);
   const serializeWaiters = useRef(
     new Map<string, { resolve: (v: { data: string; width: number; height: number } | null) => void; timer: ReturnType<typeof setTimeout> }>()
@@ -261,7 +267,8 @@ export function useNotebookRunner(options: RunnerOptions): NotebookRunner {
     runId.current += 1;
     const id = runId.current;
     const { block, theme } = opts.current;
-    const width = Math.max(100, Math.round(hostEl.getBoundingClientRect().width) - OUTPUT_PADDING);
+    const width = runWidthOf(hostEl);
+    lastRunWidth.current = width;
     const run: ActiveRun = {
       id,
       startedAt: performance.now(),
@@ -294,7 +301,7 @@ export function useNotebookRunner(options: RunnerOptions): NotebookRunner {
       code: block.code,
       inputs: Object.fromEntries(inputs.map((i) => [i.ref, i.value])),
       width,
-      height: block.height ?? 400,
+      height: block.height ?? PANE_HEIGHT,
       theme,
     });
   }, [blockId, createIframe, destroyIframe, post]);
@@ -411,15 +418,15 @@ export function useNotebookRunner(options: RunnerOptions): NotebookRunner {
     const el = host.current;
     if (!el || typeof ResizeObserver === "undefined") return undefined;
     const ro = new ResizeObserver((entries) => {
-      const width = Math.round(entries[0]?.contentRect.width ?? 0);
-      setHostWidth((prev) => {
-        if (prev === width) return prev;
-        if (prev !== 0 && readsWidth.current && readyRef.current) {
-          clearTimeout(resizeTimer.current);
-          resizeTimer.current = setTimeout(() => startRun(), RESIZE_DEBOUNCE_MS);
-        }
-        return width;
-      });
+      setHostWidth(Math.round(entries[0]?.contentRect.width ?? 0));
+      // Only when the width the code would get has changed: layout jitter that
+      // doesn't move it (a border, a scrollbar settling) must not re-run
+      if (!readsWidth.current || !readyRef.current || lastRunWidth.current === 0) return;
+      if (runWidthOf(el) === lastRunWidth.current) return;
+      clearTimeout(resizeTimer.current);
+      resizeTimer.current = setTimeout(() => {
+        if (host.current && runWidthOf(host.current) !== lastRunWidth.current) startRun();
+      }, RESIZE_DEBOUNCE_MS);
     });
     ro.observe(el);
     return () => ro.disconnect();

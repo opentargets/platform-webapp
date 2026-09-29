@@ -22,3 +22,8 @@ export {
 } from "notebook-runtime/src/protocol";
 
 export const RUNTIME_URL = "/notebook-runtime/index.html";
+
+/** Height of the code and output panes (px); taller content scrolls inside them. */
+export const PANE_HEIGHT = 400;
+/** Min height of the pane header rows (Code / Output), so the two pane bodies start level. */
+export const PANE_HEADER_HEIGHT = 28;
