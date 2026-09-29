@@ -1,7 +1,9 @@
+import { getConfig } from "@ot/config";
 import { autoType, csvParse } from "d3";
 import { faHexagonNodes, faPrescriptionBottleMedical, faMapPin, faChartBar } from "@fortawesome/free-solid-svg-icons";
 import { Typography, Box, Link } from "ui";
-import metricsCsv from "./metrics.csv?raw";
+import platformMetricsCsv from "./metrics.csv?raw";
+import pppMetricsCsv from "./metrics-ppp.csv?raw";
 import MetricsCards from "./MetricsCards";
 import HierarchicalAssociationChart from "./HierarchicalAssociationChart";
 import MetricsWidget from "./MetricsWidget";
@@ -11,6 +13,7 @@ import VariantsByConsequenceImpact from "./VariantsByConsequenceImpact";
 
 export type MetricRow = { dataset: string; kind: string; metric: string; group_value: string; value: number };
 
+const metricsCsv = getConfig().profile.isPartnerPreview ? pppMetricsCsv : platformMetricsCsv;
 const data = csvParse(metricsCsv, autoType) as unknown as MetricRow[];
 
 function MetricsPage() {
