@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { Typography } from "@mui/material";
-import { SectionItem, Tooltip, Link, ScientificNotation, OtTable } from "ui";
+import { SectionItem, Tooltip, Link, ScientificNotation, OtTable, useReportQueryVariables } from "ui";
 
 import Description from "./Description";
 import { sentenceCase } from "@ot/utils";

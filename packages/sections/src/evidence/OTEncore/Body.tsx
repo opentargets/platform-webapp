@@ -12,6 +12,7 @@ import {
   ChipList,
   OtTable,
   ScientificNotation,
+  useReportQueryVariables,
 } from "ui";
 
 import { definition } from ".";

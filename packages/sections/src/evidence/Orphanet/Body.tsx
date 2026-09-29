@@ -8,6 +8,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTable,
+  useReportQueryVariables,
 } from "ui";
 
 import { definition } from ".";

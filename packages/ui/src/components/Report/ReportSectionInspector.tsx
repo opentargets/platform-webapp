@@ -1,16 +1,23 @@
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import {
+  alpha,
+  Avatar,
   Box,
   Button,
   Checkbox,
   Chip,
   FormControlLabel,
+  IconButton,
+  InputBase,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
   Typography,
+  type Theme,
 } from "@mui/material";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPen } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
 import { formatBytes, useReportBuilder } from "../../providers/ReportBuilderProvider";
 import {
@@ -39,6 +46,7 @@ import { resolveInputs } from "./blocks/notebook/resolveInputs";
 import { figureLabel, tableLabel } from "./blocks/figures";
 import { CapturedStateChips } from "./CapturedStateChips";
 import { sectionHasChart } from "./ReportSectionBody";
+import { Button as TextButton } from "../Button";
 
 const NOTE_DEBOUNCE_MS = 500;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -290,51 +298,224 @@ const SectionDetails: React.FC<{ section: ReportSection; variant: InspectorVaria
   );
 };
 
-const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = ({ report, variant }) => {
-  const widgets = report.sections.filter(isWidget);
-  const blockCount = report.sections.length - widgets.length;
-  const entities = Array.from(
-    new Map(
-      widgets.map((s) => {
-        const label = s.entityLabel ?? s.entityId ?? s.definition.entity;
-        return [`${s.definition.entity}:${label}`, { type: s.definition.entity, label }];
-      })
-    ).values()
+const DESCRIPTION_MAX_LENGTH = 280;
+
+// The theme's root override greys every button's border and text, so coloured
+// outlined buttons set them explicitly
+const outlinedSx = (color: "primary" | "error") => ({
+  color: `${color}.main`,
+  borderColor: `${color}.main`,
+  "&:hover": {
+    borderColor: `${color}.dark`,
+    bgcolor: (theme: Theme) => alpha(theme.palette[color].main, 0.04),
+  },
+});
+
+const inlineInputSx = {
+  width: "100%",
+  border: "1px solid",
+  borderColor: "primary.main",
+  borderRadius: "2px",
+  px: 0.75,
+  py: 0.25,
+} as const;
+
+/**
+ * Inline editor used by the report name and description: Enter (single line) or
+ * blur saves, Esc cancels without letting the drawer see the keypress
+ */
+const InlineEdit: React.FC<{
+  initialValue: string;
+  onSave: (value: string) => void;
+  onDone: () => void;
+  multiline?: boolean;
+  maxLength?: number;
+  ariaLabel: string;
+  sx?: object;
+}> = ({ initialValue, onSave, onDone, multiline, maxLength, ariaLabel, sx }) => {
+  const [value, setValue] = useState(initialValue);
+  const cancelled = useRef(false);
+
+  const handleBlur = () => {
+    if (!cancelled.current) onSave(value);
+    onDone();
+  };
+
+  return (
+    <InputBase
+      autoFocus
+      multiline={multiline}
+      rows={multiline ? 3 : undefined}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onFocus={(e) => e.target.select()}
+      onBlur={handleBlur}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          cancelled.current = true;
+          (e.target as HTMLElement).blur();
+        } else if (e.key === "Enter" && !multiline) {
+          (e.target as HTMLElement).blur();
+        }
+      }}
+      inputProps={{ "aria-label": ariaLabel, maxLength }}
+      sx={{ ...inlineInputSx, ...sx }}
+    />
   );
+};
+
+const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = ({ report, variant }) => {
+  const { dispatch } = useReportBuilder();
+  const [editing, setEditing] = useState<"name" | "description" | null>(null);
+  const count = report.sections.length;
+  const entityId = report.entityContext?.id;
+
+  const saveName = (value: string) => {
+    const newName = value.trim();
+    if (!newName || newName === report.name) return;
+    dispatch({ type: "renameReport", reportId: report.id, newName });
+  };
+
+  const saveDescription = (value: string) => {
+    const description = value.trim();
+    if (description === (report.description ?? "")) return;
+    dispatch({ type: "renameReport", reportId: report.id, newName: report.name, description });
+  };
+
+  const handleClearReport = () => {
+    if (window.confirm(`Clear all sections from "${report.name}"?`)) {
+      dispatch({
+        type: "clearReport",
+      });
+    }
+  };
+
+  const handleDeleteReport = () => {
+    if (window.confirm(`Delete "${report.name}" and all its sections? This cannot be undone.`)) {
+      dispatch({
+        type: "deleteReport",
+        reportId: report.id,
+      });
+    }
+  };
 
   return (
     <InspectorShell variant={variant}>
       <Box>
         <Typography sx={overlineSx}>Report</Typography>
-        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#616161", mt: 0.5, wordBreak: "break-word" }}>
-          {report.name}
-        </Typography>
-        {report.description && (
-          <Typography sx={{ ...metaSx, mt: 0.5, whiteSpace: "pre-wrap" }}>{report.description}</Typography>
-        )}
-      </Box>
-
-      <Box>
-        <Typography sx={labelSx}>
-          {widgets.length} section{widgets.length !== 1 ? "s" : ""}
-          {blockCount > 0 ? ` · ${blockCount} block${blockCount !== 1 ? "s" : ""}` : ""}
-        </Typography>
-        {entities.length > 0 && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-            {entities.map(({ type, label }) => (
-              <Chip
-                key={`${type}:${label}`}
-                size="small"
-                variant="outlined"
-                label={label === type ? type : `${type} · ${label}`}
-                sx={{ borderRadius: 10 }}
-              />
-            ))}
+        {editing === "name" ? (
+          <InlineEdit
+            initialValue={report.name}
+            onSave={saveName}
+            onDone={() => setEditing(null)}
+            ariaLabel="Report name"
+            sx={{ mt: 0.5, fontSize: 18, fontWeight: 700 }}
+          />
+        ) : (
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5, mt: 0.5 }}>
+            <Typography
+              onClick={() => setEditing("name")}
+              sx={{ fontSize: 18, fontWeight: 700, color: "#616161", wordBreak: "break-word", cursor: "text" }}
+            >
+              {report.name}
+            </Typography>
+            <IconButton
+              size="small"
+              aria-label="Rename report"
+              onClick={() => setEditing("name")}
+              sx={{ fontSize: 12, color: "grey.500", mt: "2px" }}
+            >
+              <FontAwesomeIcon icon={faPen} />
+            </IconButton>
           </Box>
         )}
+
+        {editing === "description" ? (
+          <InlineEdit
+            multiline
+            initialValue={report.description ?? ""}
+            onSave={saveDescription}
+            onDone={() => setEditing(null)}
+            maxLength={DESCRIPTION_MAX_LENGTH}
+            ariaLabel="Report description"
+            sx={{ mt: 0.75, fontSize: 13 }}
+          />
+        ) : report.description ? (
+          <Typography
+            onClick={() => setEditing("description")}
+            sx={{ fontSize: 13, mt: 0.75, whiteSpace: "pre-wrap", wordBreak: "break-word", cursor: "text" }}
+          >
+            {report.description}
+          </Typography>
+        ) : (
+          <TextButton
+            onClick={() => setEditing("description")}
+            sx={{ mt: 0.5, ml: "-12px", color: "primary.main" }}
+          >
+            + Add a description
+          </TextButton>
+        )}
       </Box>
 
-      <Typography sx={metaSx}>Click a section, image or data block to inspect it.</Typography>
+      {entityId && (
+        <Box>
+          <Typography sx={labelSx}>About</Typography>
+          <Chip
+            size="small"
+            avatar={<Avatar>{report.entityContext?.type.charAt(0).toUpperCase()}</Avatar>}
+            label={entityId}
+            sx={{
+              bgcolor: "#e3f0fa",
+              border: "1px solid #7bb3de",
+              color: "primary.dark",
+              "& .MuiChip-avatar": {
+                width: 20,
+                height: 20,
+                ml: "2px",
+                fontSize: 11,
+                bgcolor: "primary.dark",
+                color: "#fff",
+              },
+            }}
+          />
+        </Box>
+      )}
+
+      <Box sx={{ fontSize: 13, lineHeight: 1.7 }}>
+        <Box>
+          {count} section{count !== 1 ? "s" : ""}
+        </Box>
+        <Box>Created {formatRelativeTime(new Date(report.createdAt).getTime())}</Box>
+        <Box sx={{ fontStyle: "italic", color: "grey.500" }}>Saved in this browser</Box>
+      </Box>
+
+      {count > 0 && <Typography sx={metaSx}>Click a section, image or data block to inspect it.</Typography>}
+
+      <Box
+        sx={{
+          mt: "auto",
+          pt: 1.5,
+          borderTop: "1px solid",
+          borderColor: "grey.300",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1,
+        }}
+      >
+        <Button variant="outlined" onClick={() => setEditing("name")} sx={outlinedSx("primary")}>
+          Rename
+        </Button>
+        {count > 0 && <TextButton onClick={handleClearReport}>Clear sections</TextButton>}
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleDeleteReport}
+          sx={{ ...outlinedSx("error"), ml: "auto" }}
+        >
+          Delete report
+        </Button>
+      </Box>
     </InspectorShell>
   );
 };

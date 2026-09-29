@@ -15,11 +15,12 @@ import {
   Tab,
   Tabs,
   Chip,
+  Tooltip,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faTrash, faDownload, faPen, faBroom } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -28,6 +29,7 @@ import { NonWidgetBlock } from "../../types/report";
 import { ReportSectionList } from "./ReportSectionList";
 import { ReportSectionInspector } from "./ReportSectionInspector";
 import { BlockInserterMenu } from "./BlockInserterMenu";
+import { ReportEmptyState } from "./ReportEmptyState";
 import { BlockEditorProvider, InserterRequest } from "./blocks/BlockEditorContext";
 import { ExportDialog } from "./export/ui/ExportDialog";
 
@@ -46,7 +48,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
   const { state, dispatch, activeReport } = useReportBuilder();
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down("md"));
-  const [dialogMode, setDialogMode] = useState<"edit" | "create" | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   // Collapsible rows start expanded; this tracks the ones the user collapsed
@@ -95,59 +97,20 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
     });
   };
 
-  const handleOpenEditDialog = () => {
-    if (activeReport) {
-      setEditName(activeReport.name);
-      setEditDescription(activeReport.description || "");
-      setDialogMode("edit");
-    }
-  };
-
   const handleOpenCreateDialog = () => {
     setEditName("");
     setEditDescription("");
-    setDialogMode("create");
+    setCreateOpen(true);
   };
 
-  const handleSaveDialog = () => {
+  const handleCreateReport = () => {
     if (!editName.trim()) return;
-    if (dialogMode === "create") {
-      dispatch({
-        type: "createReport",
-        reportName: editName,
-        description: editDescription,
-      });
-    } else if (activeReport) {
-      dispatch({
-        type: "renameReport",
-        reportId: activeReport.id,
-        newName: editName,
-        description: editDescription,
-      });
-    }
-    setDialogMode(null);
-  };
-
-  const handleClearReport = () => {
-    if (activeReport && window.confirm(`Clear all sections from "${activeReport.name}"?`)) {
-      dispatch({
-        type: "clearReport",
-      });
-    }
-  };
-
-  const handleDeleteReport = () => {
-    if (
-      activeReport &&
-      window.confirm(
-        `Delete "${activeReport.name}" and all its sections? This cannot be undone.`
-      )
-    ) {
-      dispatch({
-        type: "deleteReport",
-        reportId: activeReport.id,
-      });
-    }
+    dispatch({
+      type: "createReport",
+      reportName: editName,
+      description: editDescription,
+    });
+    setCreateOpen(false);
   };
 
   const reports = Array.from(state.reports.values());
@@ -189,15 +152,30 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
               Report Builder{activeReport ? ` · ${activeReport.name}` : ""}
             </Typography>
             {activeReport && (
-              <Button
-                variant="outlined"
-                color="inherit"
-                startIcon={<FontAwesomeIcon icon={faDownload} />}
-                onClick={() => setExportOpen(true)}
-                sx={{ ...compactButtonSx, borderColor: "rgba(255,255,255,0.7)" }}
-              >
-                Export
-              </Button>
+              <Tooltip title={hasSections ? "" : "Add a section to export"}>
+                {/* span wrapper so the tooltip still fires on a disabled button */}
+                <span>
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={<FontAwesomeIcon icon={faDownload} />}
+                    onClick={() => setExportOpen(true)}
+                    disabled={!hasSections}
+                    sx={{
+                      ...compactButtonSx,
+                      color: "#fff",
+                      fontWeight: 600,
+                      borderColor: "rgba(255,255,255,0.7)",
+                      "&.Mui-disabled": {
+                        borderColor: "rgba(255,255,255,.45)",
+                        color: "rgba(255,255,255,.6)",
+                      },
+                    }}
+                  >
+                    Export
+                  </Button>
+                </span>
+              </Tooltip>
             )}
             <IconButton color="inherit" onClick={handleCloseBuilder} aria-label="Close report builder">
               <FontAwesomeIcon icon={faXmark} />
@@ -246,50 +224,6 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
           </Box>
         ) : (
           <>
-            {/* Report actions */}
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                flexWrap: "wrap",
-                px: "18px",
-                py: 1,
-                borderBottom: "1px solid",
-                borderColor: "grey.300",
-                flexShrink: 0,
-              }}
-            >
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FontAwesomeIcon icon={faPen} />}
-                onClick={handleOpenEditDialog}
-                sx={compactButtonSx}
-              >
-                Edit
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FontAwesomeIcon icon={faBroom} />}
-                onClick={handleClearReport}
-                disabled={activeReport.sections.length === 0}
-                sx={compactButtonSx}
-              >
-                Clear
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                color="error"
-                startIcon={<FontAwesomeIcon icon={faTrash} />}
-                onClick={handleDeleteReport}
-                sx={compactButtonSx}
-              >
-                Delete
-              </Button>
-            </Box>
-
             {/* Two-pane layout: section list + inspector */}
             <BlockEditorProvider
               report={activeReport}
@@ -306,25 +240,16 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
                 }}
               >
                 {!hasSections ? (
-                  <Box sx={{ textAlign: "center", py: 4, bgcolor: "grey.50" }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No sections added yet
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Click "Add to Report" on any widget to get started
-                    </Typography>
-                    <Box sx={{ mt: 2 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        aria-haspopup="dialog"
-                        onClick={(e) => setInserterRequest({ insertIndex: 0, anchorEl: e.currentTarget })}
-                        sx={compactButtonSx}
-                      >
-                        + Add a block
-                      </Button>
-                    </Box>
-                  </Box>
+                  <ReportEmptyState
+                    onAddBlock={(anchorEl) => setInserterRequest({ insertIndex: 0, anchorEl })}
+                    footer={
+                      isNarrow ? (
+                        <Box sx={{ border: "1px solid", borderColor: "grey.300" }}>
+                          <ReportSectionInspector report={activeReport} section={null} variant="inline" />
+                        </Box>
+                      ) : undefined
+                    }
+                  />
                 ) : (
                   <ReportSectionList
                     sections={activeReport.sections}
@@ -361,9 +286,9 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
           </>
         )}
 
-        {/* Edit / Create Dialog */}
-        <Dialog open={dialogMode !== null} onClose={() => setDialogMode(null)} maxWidth="sm" fullWidth>
-          <DialogTitle>{dialogMode === "create" ? "New Report" : "Edit Report"}</DialogTitle>
+        {/* Create Dialog */}
+        <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>New Report</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
             <TextField
               autoFocus
@@ -383,9 +308,9 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "90v
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogMode(null)}>Cancel</Button>
-            <Button onClick={handleSaveDialog} variant="contained" disabled={!editName.trim()}>
-              {dialogMode === "create" ? "Create" : "Save"}
+            <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateReport} variant="contained" disabled={!editName.trim()}>
+              Create
             </Button>
           </DialogActions>
         </Dialog>

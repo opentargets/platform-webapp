@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Link, Tooltip, OtTable, TooltipStyledLabel } from "ui";
+import { SectionItem, Link, Tooltip, OtTable, TooltipStyledLabel, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

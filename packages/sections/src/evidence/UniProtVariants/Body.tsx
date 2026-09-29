@@ -8,6 +8,7 @@ import {
   LabelChip,
   OtTable,
   DisplayVariantId,
+  useReportQueryVariables,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
