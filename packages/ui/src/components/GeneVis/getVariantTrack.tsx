@@ -11,18 +11,19 @@ import { TextStyle } from 'pixi.js';
 import YDetails from "./YDetails";
 import { useGenTrackTooltipDispatch } from "ui";
 import { PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/constants";
+import type { GeneVisVariantEmphasis, GeneVisVariantRow } from "./model";
 
-const VARIANT_TRACK_HEIGHT = 67;
+const VARIANT_TRACK_HEIGHT = 92;
 const HOVER_HIGHLIGHT_COLOR = 0x555555;
 const STUCK_HIGHLIGHT_COLOR = 0x000000;
 const STUCK_HIGHLIGHT_STROKE_PIXELS = 2;
 const STUCK_HIGHLIGHT_RADIUS_PIXELS = 7;
 
 // Calculate dynamic yMax based on posterior probabilities, rounded up to sensible intervals
-function calculateDynamicYMax(data: any): number {
-  if (!data?.locus?.rows) return 1;
+function calculateDynamicYMax(rows: GeneVisVariantRow[]): number {
+  if (rows.length === 0) return 1;
   
-  const maxPosterior = Math.max(...data.locus.rows.map((r: any) => r.posteriorProbability || 0));
+  const maxPosterior = Math.max(...rows.map((r: any) => r.posteriorProbability || 0));
   
   // Round up to nearest value in the allowed set
   const allowedValues = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0];
@@ -94,11 +95,11 @@ function VariantsYInfo({ yMax }: { yMax: number }) {
   );
 }
 
-function VariantLegend({ data, isInner }: TrackLegendProps) {
+function VariantLegend({ rows, isInner }: { rows: GeneVisVariantRow[]; isInner: boolean }) {
   const [showAll, setShowAll] = useState(false);
   if (!isInner) return null;
   const consequenceIds: string[] = [...new Set(
-    (data?.locus?.rows ?? [])
+    rows
       ?.map((row: any) => row.variant?.mostSevereConsequence?.id)
       .filter((id: string) => id && PREDICTED_CONSEQUENCE_LOOKUP[id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP])
   )];
@@ -109,7 +110,7 @@ function VariantLegend({ data, isInner }: TrackLegendProps) {
   return (
     <Box sx={{
       p: 0.75,
-      bgcolor: "rgba(255, 255, 255, 0.92)",
+      bgcolor: "rgba(255, 255, 255, 0.85)",
       border: "1px solid",
       borderColor: "grey.300",
       borderRadius: 1,
@@ -275,9 +276,10 @@ function VariantMarker({
     const genomicX = scales ? (e.global.x - scales.xOffset) / scales.xScale : variant.position;
     const hoverXY = { x: e.global.x, y: e.global.y, pointerPageY, boxTopPageY, boxBottomPageY, genomicX };
     genTrackTooltipDispatch({ type: "setDatum", value: variant });
+    genTrackTooltipDispatch({ type: "setOtherData", value: { entityType: "variant" } });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
     genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
-    genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY } });
+    genTrackTooltipDispatch({ type: "setHover", value: { datum: variant, globalXY: hoverXY, otherData: { entityType: "variant" } } });
   }, [genTrackTooltipDispatch, highlightStateRef, variant, x, y]);
 
   const handlePointerOut = useCallback(() => {
@@ -286,6 +288,7 @@ function VariantMarker({
       highlightStateRef.current.refresh?.();
     }
     genTrackTooltipDispatch({ type: "setDatum", value: null });
+    genTrackTooltipDispatch({ type: "setOtherData", value: null });
     genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
     genTrackTooltipDispatch({ type: "setHover", value: null });
   }, [genTrackTooltipDispatch, highlightStateRef, variant.id]);
@@ -308,11 +311,22 @@ function VariantMarker({
   );
 }
 
-export function getVariantTrack({ data }: { data: any }) {
+export function getVariantTrack({
+  variantTrack,
+  referencePosition,
+}: {
+  variantTrack?: { rows: GeneVisVariantRow[]; emphasis?: GeneVisVariantEmphasis };
+  referencePosition?: number;
+}) {
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value: any }) => void;
+  if (!variantTrack) return null;
+  const rows = variantTrack.rows;
+  const emphasisedVariant = variantTrack.emphasis
+    ? rows.find(row => row.variant.id === variantTrack.emphasis?.variantId)?.variant
+    : undefined;
 
   // Calculate dynamic yMax based on data
-  const dynamicYMax = calculateDynamicYMax(data);
+  const dynamicYMax = calculateDynamicYMax(rows);
 
   return {
     id: `variants`,
@@ -321,12 +335,12 @@ export function getVariantTrack({ data }: { data: any }) {
     yMin: 0,
     yMax: dynamicYMax,
     YInfo: () => <VariantsYInfo yMax={dynamicYMax} />,
-    Legend: VariantLegend,
+    Legend: ({ isInner }: TrackLegendProps) => <VariantLegend rows={rows} isInner={isInner} />,
     legendPosition: "top-right",
     Track: ({ trackId, scalesRef }: { trackId: string; scalesRef: any }) => {
       const highlightStateRef = useRef<VariantHighlightState>({ hoveredVariant: null, refresh: null });
       const variantCoordinates = new Map<string, { x: number; y: number }>(
-        (data?.locus?.rows ?? []).map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => [
+        rows.map(({ variant, posteriorProbability }: { variant: any; posteriorProbability: number }) => [
           variant.id,
           { x: variant.position, y: dynamicYMax - posteriorProbability },
         ] as [string, { x: number; y: number }]),
@@ -336,20 +350,20 @@ export function getVariantTrack({ data }: { data: any }) {
         <Container>
           <DataBackground scalesRef={scalesRef} trackId={trackId} color="#eaf4fb" alpha={1} />
 
-          {/* lead variant vertical line — confined to this track's own band so it only
+          {/* Reference line — confined to this track's own band so it only
               sits above this track's background and below this track's own sprites;
               the full-canvas segment is drawn separately via innerUnderlayGraphics */}
-          {data?.variant && (
-            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} confineToTrack />
+          {referencePosition !== undefined && (
+            <DataVLine scalesRef={scalesRef} trackId={trackId} x={referencePosition} confineToTrack />
           )}
 
           {/* all variants */}
-          {[...data?.locus.rows ?? []]
+          {[...rows]
             .sort((a: any, b: any) => {
-              const aIsLead = a.variant.position === data.variant.position;
-              const bIsLead = b.variant.position === data.variant.position;
-              if (aIsLead) return 1;
-              if (bIsLead) return -1;
+              const aIsEmphasised = a.variant.id === variantTrack.emphasis?.variantId;
+              const bIsEmphasised = b.variant.id === variantTrack.emphasis?.variantId;
+              if (aIsEmphasised) return 1;
+              if (bIsEmphasised) return -1;
               const rankA = PREDICTED_CONSEQUENCE_LOOKUP[a.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
               const rankB = PREDICTED_CONSEQUENCE_LOOKUP[b.variant.mostSevereConsequence?.id as keyof typeof PREDICTED_CONSEQUENCE_LOOKUP]?.rank ?? Infinity;
               return rankB - rankA;
@@ -377,14 +391,13 @@ export function getVariantTrack({ data }: { data: any }) {
             highlightStateRef={highlightStateRef}
           />
 
-          {/* lead variant label */}
-          {data?.variant && (
+          {emphasisedVariant && variantTrack.emphasis?.label && (
             <DataText
               scalesRef={scalesRef}
               trackId="variants"
-              x={data.variant.position}
-              y={dynamicYMax - (data.locus.rows.find((r: any) => r.variant.position === data.variant.position)?.posteriorProbability ?? 0)}
-              text="Lead"
+              x={emphasisedVariant.position}
+              y={dynamicYMax - (rows.find((r: any) => r.variant.id === emphasisedVariant.id)?.posteriorProbability ?? 0)}
+              text={variantTrack.emphasis.label}
               anchor={[0.5, 1.3]}
               style={new TextStyle({
                 align: 'center',

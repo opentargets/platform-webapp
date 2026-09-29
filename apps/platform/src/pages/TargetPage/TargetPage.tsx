@@ -1,5 +1,15 @@
 import { lazy, ReactElement, Suspense } from "react";
-import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
+import {
+  Link,
+  LoaderFunctionArgs,
+  matchPath,
+  Route,
+  Routes,
+  useLoaderData,
+  useLocation,
+  useNavigation,
+  useParams,
+} from "react-router";
 import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs, PROFILE_TABS_SENTINEL_ID } from "ui";
 import { getUniprotIds } from "@ot/utils";
 
@@ -25,11 +35,21 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 function TargetPage(): ReactElement {
   const location = useLocation();
+  const navigation = useNavigation();
   const { ensgId } = useParams<TargetURLParams>();
   const data = useLoaderData<typeof loader>();
+  const nextEnsgId = matchPath(
+    "/target/:ensgId/*",
+    navigation.location?.pathname ?? ""
+  )?.params.ensgId;
 
   if (data && !data.target) {
     return <NotFoundPage />;
+  }
+
+  // Avoid overlapping profile queries during target-to-target navigation.
+  if (navigation.state === "loading" && nextEnsgId && nextEnsgId !== ensgId) {
+    return <LoadingBackdrop height={800} />;
   }
 
   const { approvedSymbol: symbol, approvedName } = data?.target || {};

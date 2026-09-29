@@ -15,13 +15,13 @@ import { getGenesTracks } from "./getGenesTracks";
 import { getVariantTrack } from "./getVariantTrack";
 import { getVariantMinimapTrack } from "./getVariantMinimapTrack";
 import { packIntervals } from "./packIntervals";
-import UnifiedTooltip, { TOOLTIP_WIDTH } from "./UnifiedTooltip";
+import GeneVisTooltip, { TOOLTIP_WIDTH } from "./GeneVisTooltip";
+import type { GeneVisTooltipOptions } from "./model";
 import { TextMetrics } from "pixi.js";
 import {
   BIOTYPE_DISPLAY_NAMES,
   BIOTYPE_ORDER,
   geneLabelStyle,
-  L2G_LABEL_PADDING,
   getBiotypeConfig,
   getGeneLabelText,
   getGeneTrackLayout,
@@ -30,19 +30,26 @@ import {
 
 function GeneVisInner(props: {
   initialZoom?: [number, number];
+  tooltip?: GeneVisTooltipOptions;
 }) {
-  const { initialZoom } = props;
+  const { initialZoom, tooltip } = props;
 
   const genTrackState = useGenTrackState();
-  const { data, xMin, xMax } = genTrackState;
-
-  // Extract L2G prediction gene IDs for priority packing
-  const l2gGeneIds = new Set(
-    data?.l2GPredictions?.rows?.map(row => row.target.id) || []
+  const { data: model, xMin, xMax } = genTrackState;
+  const genePresentation = model?.genePresentation ?? {};
+  const priorityGeneIds = new Set(genePresentation.priorityIds ?? []);
+  const scoreByGeneId = genePresentation.scoreByGeneId ?? {};
+  const highlightStylesById = new Map();
+  for (const highlight of genePresentation.highlights ?? []) {
+    for (const targetId of highlight.targetIds) highlightStylesById.set(targetId, highlight);
+  }
+  const regionTargets = model?.genes ?? [];
+  const Tooltip = () => <GeneVisTooltip tooltip={tooltip} emphasis={model?.variantTrack?.emphasis} />;
+  const getTooltipWidth = (datum: any, otherData: any) => (
+    tooltip?.getWidth?.({ datum, entityType: otherData?.entityType, context: tooltip.context }) ?? TOOLTIP_WIDTH
   );
-  const regionTargets = data?.region?.targets?.rows ?? [];
 
-  const Y_INFO_WIDTH = 150;
+  const Y_INFO_WIDTH = 142;
   const Y_INFO_GAP = 0;
   const [widthRef, { width: totalWidth }] = useMeasure();
   const canvasWidth = (totalWidth ?? 0) - Y_INFO_WIDTH - Y_INFO_GAP;
@@ -56,10 +63,19 @@ function GeneVisInner(props: {
   const innerTrackList = [];
 
   // variant track
-  const variantMinimapTrack = getVariantMinimapTrack({ data });
-  const variantTrack = getVariantTrack({ data });
-  fixedTrackList.push(variantMinimapTrack);
-  innerTrackList.push(variantTrack);
+  const variantMinimapTrack = getVariantMinimapTrack({
+    variants: model?.overviewVariants,
+    referencePosition: model?.referencePosition,
+    emphasisVariantId: model?.variantTrack?.emphasis?.variantId,
+  });
+  if (model?.overviewVariants || model?.referencePosition !== undefined) {
+    fixedTrackList.push(variantMinimapTrack);
+  }
+  const variantTrack = getVariantTrack({
+    variantTrack: model?.variantTrack,
+    referencePosition: model?.referencePosition,
+  });
+  if (variantTrack) innerTrackList.push(variantTrack);
  
   // gene tracks
   if (hasGenes) {
@@ -91,12 +107,12 @@ function GeneVisInner(props: {
         : new Set<string>();
       const zoomableConfig = getBiotypeConfig(biotype);
       const zoomablePriorityIds = Array.from(
-        targets.filter((gene: { id: string }) => l2gGeneIds.has(gene.id)).map((gene: { id: string }) => gene.id)
+        targets.filter((gene: { id: string }) => priorityGeneIds.has(gene.id)).map((gene: { id: string }) => gene.id)
       ) as string[];
       const zoomableLabelWidths = Object.fromEntries((biotype === "protein_coding" ? targets : []).map((gene: any) => {
-        const score = data?.l2GPredictions?.rows.find((row: any) => row.target.id === gene.id)?.score;
+        const score = scoreByGeneId[gene.id];
         const textWidth = TextMetrics.measureText(getGeneLabelText(gene, score), geneLabelStyle).width;
-        return [gene.id, textWidth + (l2gGeneIds.has(gene.id) ? L2G_LABEL_PADDING : 0)];
+        return [gene.id, textWidth + (highlightStylesById.get(gene.id)?.labelPadding ?? 0)];
       }));
 
       // Compute packing for zoomable track
@@ -130,7 +146,9 @@ function GeneVisInner(props: {
         trackHeight: zoomableLayout.trackHeight,
         paddingTop: zoomableLayout.paddingTop,
         labeledIds: zoomableLabeledIds,
-        highlightIds: new Set(l2gGeneIds),
+        referencePosition: model?.referencePosition,
+        highlightStylesById,
+        scoreByGeneId,
       }));
     }
   }
@@ -153,14 +171,14 @@ function GeneVisInner(props: {
         paddingBottom={0}
         crosshairs="vertical"
         initialZoom={initialZoom}
-        Tooltip={UnifiedTooltip}
-        tooltipProps={{ xAnchor: "adapt", yAnchor: "boxTop", tooltipWidth: TOOLTIP_WIDTH }}
-        InnerTooltip={UnifiedTooltip}
+        Tooltip={Tooltip}
+        tooltipProps={{ xAnchor: "adapt", yAnchor: "boxTop", tooltipWidth: getTooltipWidth }}
+        InnerTooltip={Tooltip}
         innerTooltipProps={{
           xAnchor: "adapt",
           yAnchor: "anchorAdapt",
           gap: 4,
-          tooltipWidth: TOOLTIP_WIDTH,
+          tooltipWidth: getTooltipWidth,
           scalesRef: innerScalesRef,
           stickyOnClick: true,
         }}
@@ -169,8 +187,8 @@ function GeneVisInner(props: {
           <RegionBoundaryOverlay scalesRef={innerScalesRef} />
         }
         innerUnderlayGraphics={
-          data?.variant ? (
-            <DataVLine scalesRef={innerScalesRef} x={data.variant.position} lineWidth={1} />
+          model?.referencePosition !== undefined ? (
+            <DataVLine scalesRef={innerScalesRef} x={model.referencePosition} lineWidth={1} />
           ) : null
         }
       />

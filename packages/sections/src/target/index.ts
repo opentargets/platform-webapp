@@ -16,4 +16,5 @@ export * as Pharmacogenomics from "./Pharmacogenomics";
 export * as QTLCredibleSets from "./QTLCredibleSets";
 export * as Safety from "./Safety";
 export * as SubcellularLocation from "./SubcellularLocation";
+export * as TargetGenomicRegion from "./TargetGenomicRegion";
 export * as Tractability from "./Tractability";

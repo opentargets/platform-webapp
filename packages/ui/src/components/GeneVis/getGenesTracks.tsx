@@ -5,22 +5,22 @@ import { Box, Typography } from "@mui/material";
 import { DataSprite, DataText, DataBackground, DataVLine } from "../GenTrack";
 import { GeneInteractionBox } from "./GeneInteractionBox";
 import type { TrackLegendProps } from "../GenTrack";
-import { useGenTrackState, useGenTrackTooltipDispatch } from "ui";
+import { useGenTrackTooltipDispatch } from "ui";
 import type { RefObject } from "react";
 import type { ScalesRef } from "../GenTrack/ScalesContext";
 import { grey, green } from "@mui/material/colors";
 import { getCanonicalTranscript } from "./getCanonicalTranscript";
 import { getGeneLabelText } from "./helpers";
+import type { GeneVisGeneHighlight } from "./model";
 
-const L2G_GENE_COLOR = 0x138160;
-const L2G_HOVER_BOX_COLOR = Number.parseInt(green[100].slice(1), 16);
-const NON_L2G_GENE_COLOR = 0x555555;
-const NON_L2G_HOVER_BOX_COLOR = 0xe0e0e0;
+const DEFAULT_HIGHLIGHT_BOX_COLOR = Number.parseInt(green[100].slice(1), 16);
+const DEFAULT_GENE_COLOR = 0x555555;
+const DEFAULT_HOVER_BOX_COLOR = 0xe0e0e0;
 
 const DEFAULT_ROW_HEIGHT = 28;
 const DEFAULT_EXON_HEIGHT = 10;
 const GENE_BOX_VERTICAL_PADDING = 4;
-const L2G_LABEL_HORIZONTAL_PADDING = 6;
+const DEFAULT_HIGHLIGHT_LABEL_PADDING = 6;
 const geneLabelStyle = new TextStyle({
   align: "center",
   fill: "#000",
@@ -29,23 +29,22 @@ const geneLabelStyle = new TextStyle({
   wordWrap: false,
 });
 
-function GenesLegend({ data, isInner }: TrackLegendProps) {
+function GenesLegend({ highlight, isInner }: { highlight?: GeneVisGeneHighlight; isInner: boolean }) {
   if (!isInner) return null;
-  const hasL2G = (data?.l2GPredictions?.rows?.length ?? 0) > 0;
-  if (!hasL2G) return null;
+  if (!highlight?.legend) return null;
   return (
     <Box sx={{
       p: 0.75,
       display: "flex",
       alignItems: "center",
       gap: 0.75,
-      bgcolor: "rgba(255, 255, 255, 0.92)",
+      bgcolor: "rgba(255, 255, 255, 0.85)",
       border: "1px solid",
       borderColor: "grey.300",
       borderRadius: 1,
     }}>
-      <Box sx={{ width: 12, height: 12, bgcolor: green[200], flex: "0 0 auto" }} />
-      <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>L2G score &gt; 0.05</Typography>
+      <Box sx={{ width: 12, height: 12, bgcolor: `#${(highlight.labelBackgroundColor ?? DEFAULT_HIGHLIGHT_BOX_COLOR).toString(16).padStart(6, "0")}`, flex: "0 0 auto" }} />
+      <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>{highlight.legend}</Typography>
     </Box>
   );
 }
@@ -86,10 +85,10 @@ export function getGenesTracks({
     trackHeight: explicitTrackHeight,
     paddingTop: explicitPaddingTop,
     labeledIds = new Set(),
-    highlightIds = new Set(),
+    referencePosition,
+    highlightStylesById = new Map<string, GeneVisGeneHighlight>(),
+    scoreByGeneId = {},
   }) {
-  const genTrackState = useGenTrackState();
-  const { data, xMin, xMax } = genTrackState ?? { data: null, xMin: 0, xMax: 1 };
   const genTrackTooltipDispatch = useGenTrackTooltipDispatch() as unknown as (action: { type: string; value?: any }) => void;
 
   // All gene types should have same visual appearance in zoom-level view
@@ -98,7 +97,7 @@ export function getGenesTracks({
   const baseRowHeight = rowHeightMap[0] || DEFAULT_ROW_HEIGHT;
   // Standard exon height for all biotypes - consistent visual appearance
   const exonHeight = DEFAULT_EXON_HEIGHT; // 10px for all gene types
-  // Labels only shown for L2G genes (protein_coding only)
+  // Labels are shown for protein-coding genes only.
   const hasAnyLabels = labeledIds.size > 0;
   // Reserve the box's bottom padding inside the row so labelled boxes do not
   // extend into the following row.
@@ -137,8 +136,12 @@ export function getGenesTracks({
     yMin: 0,
     yMax: trackHeight,
     YInfo,
-    // L2G scores are only meaningful for protein-coding genes
-    ...(biotype === "protein_coding" ? { Legend: GenesLegend, legendPosition: "bottom-right" as const } : {}),
+    ...(biotype === "protein_coding" ? {
+      Legend: ({ isInner }: TrackLegendProps) => (
+        <GenesLegend highlight={Array.from(highlightStylesById.values())[0]} isInner={isInner} />
+      ),
+      legendPosition: "bottom-right" as const,
+    } : {}),
     // Pass row metadata for potential use by the container
     rowHeightMap,
     rowYOffsets,
@@ -148,11 +151,8 @@ export function getGenesTracks({
         <Container>
           <DataBackground scalesRef={scalesRef} trackId={trackId} color={grey[100]} alpha={1} />
 
-          {/* lead variant vertical line — confined to this track's own band so it only
-              sits above this track's background and below this track's own gene boxes;
-              the full-canvas segment is drawn separately via innerUnderlayGraphics */}
-          {data?.variant && (
-            <DataVLine scalesRef={scalesRef} trackId={trackId} x={data.variant.position} lineWidth={1} confineToTrack />
+          {referencePosition !== undefined && (
+            <DataVLine scalesRef={scalesRef} trackId={trackId} x={referencePosition} lineWidth={1} confineToTrack />
           )}
 
           {targets.map(gene => {
@@ -162,9 +162,10 @@ export function getGenesTracks({
             // Only show label if this specific gene is in the labeledIds set
             const showGeneLabel = labeledIds.has(target.id);
 
-            const isL2G = highlightIds.has(target.id);
-            const geneColor = isL2G ? L2G_GENE_COLOR : NON_L2G_GENE_COLOR;
-            const hoverBoxColor = isL2G ? L2G_HOVER_BOX_COLOR : NON_L2G_HOVER_BOX_COLOR;
+            const highlight = highlightStylesById.get(target.id);
+            const isHighlighted = Boolean(highlight);
+            const geneColor = highlight?.geneColor ?? DEFAULT_GENE_COLOR;
+            const hoverBoxColor = highlight?.hoverBoxColor ?? DEFAULT_HOVER_BOX_COLOR;
 
             // Compute exon span for intron line and label positioning
             const canonicalTranscript = getCanonicalTranscript(target);
@@ -173,12 +174,12 @@ export function getGenesTracks({
             const intronEnd = canonicalTranscript?.end ?? target.genomicLocation.end;
 
             // Compute label text and width for gene box
-            const score = data?.l2GPredictions?.rows.find((r: any) => r.target.id === target.id)?.score;
+            const score = scoreByGeneId[target.id];
             const labelText = getGeneLabelText(target, score);
 
-            // Match the actual Pixi text footprint, including the L2G label background.
+            // Match the actual Pixi text footprint, including any highlight label background.
             const labelWidthPixels = showGeneLabel
-              ? TextMetrics.measureText(labelText, geneLabelStyle).width + (isL2G ? L2G_LABEL_HORIZONTAL_PADDING : 0)
+              ? TextMetrics.measureText(labelText, geneLabelStyle).width + (isHighlighted ? (highlight?.labelPadding ?? DEFAULT_HIGHLIGHT_LABEL_PADDING) : 0)
               : 0;
             const labelCenter = (intronStart + intronEnd) / 2;
 
@@ -224,12 +225,14 @@ export function getGenesTracks({
                     const genomicX = scales ? (e.global.x - scales.xOffset) / scales.xScale : labelCenter;
                     const hoverXY = { x: e.global.x, y: e.global.y, boxTopPageY, boxBottomPageY, genomicX };
                     genTrackTooltipDispatch({ type: "setDatum", value: target });
+                    genTrackTooltipDispatch({ type: "setOtherData", value: { entityType: "target" } });
                     genTrackTooltipDispatch({ type: "setGlobalXY", value: hoverXY });
                     genTrackTooltipDispatch({ type: "setActiveCanvas", value: "inner" });
-                    genTrackTooltipDispatch({ type: "setHover", value: { datum: target, globalXY: hoverXY, labelCenter } });
+                    genTrackTooltipDispatch({ type: "setHover", value: { datum: target, globalXY: hoverXY, labelCenter, otherData: { entityType: "target" } } });
                   }}
                   pointerout={() => {
                     genTrackTooltipDispatch({ type: "setDatum", value: null });
+                    genTrackTooltipDispatch({ type: "setOtherData", value: null });
                     genTrackTooltipDispatch({ type: "setGlobalXY", value: null });
                     genTrackTooltipDispatch({ type: "setHover", value: null });
                   }}
@@ -272,8 +275,8 @@ export function getGenesTracks({
                       intronEnd,
                       scales,
                     })}
-                    {...(isL2G ? {
-                      backgroundColor: L2G_HOVER_BOX_COLOR,
+                    {...(isHighlighted ? {
+                      backgroundColor: highlight?.labelBackgroundColor ?? DEFAULT_HIGHLIGHT_BOX_COLOR,
                       backgroundPaddingX: 3,
                       backgroundPaddingY: 0,
                     } : {})}

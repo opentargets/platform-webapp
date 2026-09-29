@@ -191,4 +191,5 @@ export * from "./providers/GenTrackTooltipProvider";
 export { default as GenTrack } from "./components/GenTrack/GenTrack";
 export { DataSprite, DataRect, DataText, DataVLine, RegionBoundaryOverlay, type ScalesRef } from "./components/GenTrack";
 export { default as GeneVis } from "./components/GeneVis/GeneVis";
+export type { GeneVisModel, GeneVisGeneHighlight, GeneVisTooltipDetailProps, GeneVisTooltipEntityType, GeneVisTooltipOptions, GeneVisVariant, GeneVisVariantEmphasis, GeneVisVariantRow } from "./components/GeneVis/model";
 export * from "./providers/ViewerProvider";

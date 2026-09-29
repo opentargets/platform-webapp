@@ -1,0 +1,7 @@
+fragment VariantGenomicRegionSummaryFragment on Variant {
+  id
+  chromosome
+  position
+  referenceAllele
+  alternateAllele
+}

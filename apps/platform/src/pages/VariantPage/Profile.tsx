@@ -17,6 +17,7 @@ import ProfileHeader from "./ProfileHeader";
 const variantProfileWidgets = new Map<string, Widget>([
   [Variant.VariantEffect.definition.id, Variant.VariantEffect],
   [Variant.MolecularStructure.definition.id, Variant.MolecularStructure],
+  [Variant.VariantGenomicRegion.definition.id, Variant.VariantGenomicRegion],
   [Variant.VariantEffectPredictor.definition.id, Variant.VariantEffectPredictor],
   [Variant.EVA.definition.id, Variant.EVA],
   [Variant.UniProtVariants.definition.id, Variant.UniProtVariants],

@@ -15,6 +15,7 @@ import { Target } from "sections";
 import ProfileHeader from "./ProfileHeader";
 
 const targetProfileWidgets = new Map<string, any>([
+  [Target.TargetGenomicRegion.definition.id, Target.TargetGenomicRegion],
   [Target.Drugs.definition.id, Target.Drugs],
   [Target.Tractability.definition.id, Target.Tractability],
   [Target.Safety.definition.id, Target.Safety],
