@@ -71,18 +71,20 @@ function MetricsPage() {
             </Typography>
           }
         >
-          <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
-          <ByStudyTypeHBar
-            data={data}
-            dataset="credible_set"
-            title="Credible sets by study type"
-          />
-          <ByStudyTypeHBar
-            data={data}
-            dataset="colocalisation"
-            metric="studyTypePair"
-            title="Colocalisation by type"
-          />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <ByStudyTypeHBar data={data} dataset="study" title="Studies by study type" />
+            <ByStudyTypeHBar
+              data={data}
+              dataset="credible_set"
+              title="Credible sets by study type"
+            />
+            <ByStudyTypeHBar
+              data={data}
+              dataset="colocalisation"
+              metric="studyTypePair"
+              title="Colocalisation by type"
+            />
+          </Box>
         </MetricsWidget>
 
         <MetricsWidget
