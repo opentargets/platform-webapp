@@ -3,7 +3,7 @@ import { Typography, List, ListItem, Box, Tabs, Tab } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
-import { Link } from "ui";
+import { Link, useReportState } from "ui";
 import { identifiersOrgLink, getUniprotIds } from "@ot/utils";
 import SwissBioVis from "./SwissbioViz";
 import membraneCodes from "./membrane-codes";
@@ -197,14 +197,20 @@ function SubcellularTabPanel({ target, source, sourcesLocations, uniprotId, valu
  * @param {*} data the target object as returned by the API
  */
 function SubcellularViz({ data: target }: { data: Target }) {
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
-  const onTabChange = (_event: unknown, newTabIndex: number) => {
-    setActiveTabIndex(newTabIndex);
-  };
+  // Selected source by id ("" = first tab), kept with the section in reports
+  const [activeSourceId, setActiveSourceId] = useReportState("tab", "");
 
   const uniprotId = getUniprotIds(target.proteinIds)[0];
   const sourcesLocations = parseLocationData(target.subcellularLocations);
   const activeSources = filterSourcesWithData(sources, sourcesLocations);
+
+  const activeTabIndex = Math.max(
+    0,
+    activeSources.findIndex((source: SourceType) => source.id === activeSourceId)
+  );
+  const onTabChange = (_event: unknown, newTabIndex: number) => {
+    setActiveSourceId(newTabIndex === 0 ? "" : activeSources[newTabIndex].id);
+  };
 
   return (
     <>

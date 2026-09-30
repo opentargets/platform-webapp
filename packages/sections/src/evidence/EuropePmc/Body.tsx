@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useLazyQuery } from "@apollo/client";
-import { SectionItem, Link, getPage, Table, useReportQueryVariables } from "ui";
+import { SectionItem, Link, getPage, Table, useReportQueryVariables, useReportState } from "ui";
 
 import Description from "./Description";
 import { europePmcLiteratureQuery } from "@ot/utils";
@@ -104,8 +104,15 @@ type Props = EvidenceBodyProps;
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
   const pagesToFetch = 10;
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  // Page and page size, kept with the section in reports
+  const [pagination, setPagination] = useReportState("pagination", { pageIndex: 0, pageSize: 5 });
+  const page = pagination.pageIndex;
+  const pageSize = pagination.pageSize;
+  // Only pages within the first fetched batch can be restored; later ones need the cursor chain
+  useEffect(() => {
+    if (page >= pagesToFetch - 1) setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [literatureData, setLiteratureData] = useState([]);
   const [newIds, setNewIds] = useState([]);
   
@@ -193,7 +200,7 @@ function Body({ id, label, entity }: Props) {
       });
     }
 
-    setPage(pageChange);
+    setPagination(prev => ({ ...prev, pageIndex: pageChange }));
   };
 
   const handleRowsPerPageChange = newPageSize => {
@@ -202,8 +209,7 @@ function Body({ id, label, entity }: Props) {
       refetch(variables);
     }
 
-    setPage(0);
-    setPageSize(newPageSize);
+    setPagination({ pageIndex: 0, pageSize: newPageSize });
   };
 
   useEffect(() => {

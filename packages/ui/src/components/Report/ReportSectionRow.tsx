@@ -2,10 +2,10 @@ import React, { ReactNode } from "react";
 import { Avatar, Box, Chip, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp, faGripVertical } from "@fortawesome/free-solid-svg-icons";
-import { useSortable } from "@dnd-kit/react/sortable";
 import { ReportSection } from "../../types/report";
 import { CapturedStateSummaryChip } from "./CapturedStateChips";
 import { ReportSectionBody } from "./ReportSectionBody";
+import { useSortableBlock } from "./SortableBlock";
 
 export const ROW_HEADER_ATTR = "data-report-row-header";
 
@@ -24,13 +24,12 @@ interface ReportSectionRowProps {
  */
 export const ReportSectionRow: React.FC<ReportSectionRowProps> = ({
   section,
-  index,
   expanded,
   onToggle,
   onHeaderKeyDown,
   children,
 }) => {
-  const { ref, handleRef, isDragging } = useSortable({ id: section.reportSectionId, index });
+  const { handleRef, isDragging } = useSortableBlock();
   const bodyId = `report-section-body-${section.reportSectionId}`;
   const { definition } = section;
 
@@ -45,7 +44,6 @@ export const ReportSectionRow: React.FC<ReportSectionRowProps> = ({
 
   return (
     <Box
-      ref={ref}
       data-report-section-id={section.reportSectionId}
       sx={{
         bgcolor: "#fff",

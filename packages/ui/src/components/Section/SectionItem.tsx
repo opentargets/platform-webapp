@@ -173,7 +173,8 @@ function SectionItem({
                   )}
                 </Box>
               </CardHeaderContainer>
-              {!existingReportComponentState && liveEntityId && (
+              {/* Live pages only: SectionBody may provide the state bag, so check the report context */}
+              {!isInReport && liveEntityId && (
                 <LiveCaptureRegistrar
                   captureKey={getLiveCaptureKey(entity, definition.id, liveEntityId)}
                 />

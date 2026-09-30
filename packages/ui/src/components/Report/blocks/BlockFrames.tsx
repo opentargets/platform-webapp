@@ -2,9 +2,9 @@ import React, { ReactNode } from "react";
 import { Box } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp, faGripVertical } from "@fortawesome/free-solid-svg-icons";
-import { useSortable } from "@dnd-kit/react/sortable";
 import { ROW_HEADER_ATTR } from "../ReportSectionRow";
 import { BlockMenu, BlockMenuItem } from "./BlockMenu";
+import { useSortableBlock } from "../SortableBlock";
 
 const dragHandleSx = {
   display: "flex",
@@ -37,16 +37,14 @@ interface InlineBlockFrameProps {
  */
 export const InlineBlockFrame: React.FC<InlineBlockFrameProps> = ({
   reportSectionId,
-  index,
   title,
   menuItems,
   children,
 }) => {
-  const { ref, handleRef, isDragging } = useSortable({ id: reportSectionId, index });
+  const { handleRef, isDragging } = useSortableBlock();
 
   return (
     <Box
-      ref={ref}
       data-report-section-id={reportSectionId}
       sx={{
         position: "relative",
@@ -95,7 +93,6 @@ interface CollapsibleBlockRowProps {
  */
 export const CollapsibleBlockRow: React.FC<CollapsibleBlockRowProps> = ({
   reportSectionId,
-  index,
   title,
   expanded,
   onToggle,
@@ -105,7 +102,7 @@ export const CollapsibleBlockRow: React.FC<CollapsibleBlockRowProps> = ({
   menuItems,
   children,
 }) => {
-  const { ref, handleRef, isDragging } = useSortable({ id: reportSectionId, index });
+  const { handleRef, isDragging } = useSortableBlock();
   const bodyId = `report-block-body-${reportSectionId}`;
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -123,7 +120,6 @@ export const CollapsibleBlockRow: React.FC<CollapsibleBlockRowProps> = ({
 
   return (
     <Box
-      ref={ref}
       data-report-section-id={reportSectionId}
       sx={{
         ...blockChromeSx,

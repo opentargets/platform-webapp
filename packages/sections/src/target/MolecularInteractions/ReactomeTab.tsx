@@ -236,6 +236,7 @@ function ReactomeTab({ ensgId, symbol }) {
           rows={data}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-interactors`}
+          reportStateKey="reactome-interactors"
           hover
           selected
           onRowClick={r => {
@@ -278,6 +279,7 @@ function ReactomeTab({ ensgId, symbol }) {
           rows={evidence}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-evidence`}
+          reportStateKey="reactome-evidence"
           dataDownloaderColumns={evidenceColsExport}
           fixed
           noWrapHeader={false}

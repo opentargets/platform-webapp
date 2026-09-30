@@ -15,11 +15,35 @@ const literatureRows = (data: unknown): LiteratureRow[] => {
   return Array.isArray(rows) ? rows : [];
 };
 
+const DEFAULT_CATEGORIES = ["disease", "drug", "target"];
+
+const monthYear = (year?: number | null, month?: number | null) =>
+  year ? (month ? `${month}/${year}` : String(year)) : "";
+
 /**
  * Bibliography sections: one PMID reference per publication in the captured
  * result. Title/authors/journal are looked up from Europe PMC at export time.
  */
 export const literatureExportAdapter: SectionExportAdapter = {
+  // Bibliography filters, saved under "literature" by common/Literature/Body
+  describeState: (state) => {
+    const filters = state.literature;
+    if (!isObject(filters)) return [];
+    const out: string[] = [];
+    if (Array.isArray(filters.selectedEntities) && filters.selectedEntities.length) {
+      const names = filters.selectedEntities.map(
+        (e: any) => e?.object?.name || e?.object?.approvedSymbol || e?.object?.id
+      );
+      out.push(`entities = ${names.join(", ")}`);
+    }
+    if (Array.isArray(filters.category) && filters.category.join() !== DEFAULT_CATEGORIES.join()) {
+      out.push(`categories = ${filters.category.join(", ") || "none"}`);
+    }
+    const from = monthYear(filters.startYear, filters.startMonth);
+    const to = monthYear(filters.endYear, filters.endMonth);
+    if (from || to) out.push(`published = ${from || "…"} – ${to || "…"}`);
+    return out;
+  },
   references: (data) =>
     literatureRows(data)
       .filter((row) => row.pmid)

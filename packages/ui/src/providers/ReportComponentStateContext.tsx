@@ -1,4 +1,14 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  Dispatch,
+  SetStateAction,
+} from "react";
+import { isEqual } from "lodash";
 
 /**
  * Context to manage component state persistence in reports
@@ -68,11 +78,10 @@ export const ReportComponentStateProvider: React.FC<{
 }> = ({ children, initialState = {} }) => {
   const [state, setState] = useState<Record<string, any>>(initialState);
 
+  // Unchanged values keep the same state object: consumers save on mount, and a new
+  // object each time re-renders the section, which can remount them and save again
   const saveState = useCallback((key: string, value: any) => {
-    setState(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+    setState(prev => (isEqual(prev[key], value) ? prev : { ...prev, [key]: value }));
   }, []);
 
   const getAllState = useCallback(() => state, [state]);
@@ -104,3 +113,26 @@ export const ReportComponentStateProvider: React.FC<{
 export const useReportComponentState = () => {
   return useContext(ReportComponentStateContext);
 };
+
+/**
+ * useState that a report captures and restores, for UI state kept in a section
+ * Body or its widgets (selected tab, filters, page). On a live page it starts at
+ * `initial` and saves each change into the section's state bag, so "Add to Report"
+ * captures it; in a report it starts from the saved value. The default isn't saved,
+ * so it adds no captured-state chip. `key` is also the chip's label.
+ */
+export function useReportState<T>(key: string, initial: T): [T, Dispatch<SetStateAction<T>>] {
+  const context = useContext(ReportComponentStateContext);
+  const [value, setValue] = useState<T>(() => {
+    const saved = context?.getState(key);
+    return saved === undefined ? initial : (saved as T);
+  });
+  const initialRef = useRef(initial);
+  const saveState = context?.saveState;
+
+  useEffect(() => {
+    saveState?.(key, isEqual(value, initialRef.current) ? undefined : value);
+  }, [saveState, key, value]);
+
+  return [value, setValue];
+}

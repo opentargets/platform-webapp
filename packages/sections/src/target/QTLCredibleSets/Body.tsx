@@ -213,6 +213,7 @@ type BodyProps = {
 function Body({ id, entity }: BodyProps) {
   const savedVariables = useReportQueryVariables();
   const variables = savedVariables || {
+		ensemblId: id,
 		size: table5HChunkSize,
 		index: 0,
 	};

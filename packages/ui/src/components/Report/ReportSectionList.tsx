@@ -3,6 +3,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { ReportBlock, ReportSection, isWidget } from "../../types/report";
 import { ReportSectionRow, ROW_HEADER_ATTR } from "./ReportSectionRow";
 import { BlockInsertSlot } from "./BlockInsertSlot";
+import { SortableBlock } from "./SortableBlock";
 import { BlockRenderer, blockTitle, COLLAPSIBLE_KINDS } from "./blocks/BlockRenderer";
 
 interface ReportSectionListProps {
@@ -113,7 +114,8 @@ export const ReportSectionList: React.FC<ReportSectionListProps> = ({
         const expanded = !collapsedIds.has(id);
         const selected = id === selectedSectionId;
         return (
-          <React.Fragment key={id}>
+          // The block, its inline inspector and the insert slot under it move as one sortable item
+          <SortableBlock key={id} id={id} index={index}>
             <Box
               onMouseDownCapture={() => !selected && onSelect(id)}
               onFocusCapture={() => !selected && onSelect(id)}
@@ -145,7 +147,7 @@ export const ReportSectionList: React.FC<ReportSectionListProps> = ({
               hidden={isDragging}
               alwaysVisible={index === sections.length - 1}
             />
-          </React.Fragment>
+          </SortableBlock>
         );
       })}
 

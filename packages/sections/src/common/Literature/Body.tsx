@@ -1,8 +1,38 @@
 import { useEffect, useState } from "react";
-import { LiteratureProvider, useLiterature, useLiteratureDispatch } from "./LiteratureContext";
+import {
+  LiteratureProvider,
+  getInitialLiteratureState,
+  useLiterature,
+  useLiteratureDispatch,
+} from "./LiteratureContext";
+
+// Report state key for the filters (see exportAdapter's describeState)
+export const LITERATURE_STATE_KEY = "literature";
+const FILTER_KEYS = [
+  "category",
+  "selectedEntities",
+  "startYear",
+  "startMonth",
+  "endYear",
+  "endMonth",
+  "pageSize",
+] as const;
+
+/** The filters that differ from the defaults, or undefined when none do */
+function changedFilters(literature) {
+  const defaults = getInitialLiteratureState();
+  const changed = Object.fromEntries(
+    FILTER_KEYS.filter(key => !isEqual(literature[key], defaults[key])).map(key => [
+      key,
+      literature[key],
+    ])
+  );
+  return Object.keys(changed).length ? changed : undefined;
+}
 import { fetchSimilarEntities } from "./requests";
 import { Box } from "@mui/material";
-import { SectionItem, useApolloClient, useReportSectionContext } from "ui";
+import { SectionItem, useApolloClient, useReportComponentState } from "ui";
+import isEqual from "lodash/isEqual";
 import PublicationsList from "./PublicationsList";
 import Description from "./Description";
 import Entities from "./Entities";
@@ -14,9 +44,17 @@ import { definition } from ".";
 function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
   const [requestObj, setRequestObj] = useState({});
   const literature = useLiterature();
-  const { category, startYear, startMonth, endYear, endMonth } = literature;
+  const { category, startYear, startMonth, endYear, endMonth, selectedEntities, pageSize } =
+    literature;
   const literatureDispatch = useLiteratureDispatch();
   const client = useApolloClient();
+
+  // Keep the filters with the section in reports
+  const saveReportState = useReportComponentState()?.saveState;
+  useEffect(() => {
+    saveReportState?.(LITERATURE_STATE_KEY, changedFilters(literature));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveReportState, category, startYear, startMonth, endYear, endMonth, selectedEntities, pageSize]);
 
   useEffect(() => {
     async function startRequest() {
@@ -25,6 +63,8 @@ function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
         id,
         query: BODY_QUERY,
         category,
+        // Non-empty when restored from a report
+        entities: selectedEntities,
         startYear,
         startMonth,
         endYear,
@@ -72,9 +112,12 @@ function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
 }
 
 function Body({ definition, name, id, entity, BODY_QUERY }) {
+  // Filters saved in a report (read once, at mount)
+  const reportState = useReportComponentState();
+  const [savedFilters] = useState(() => reportState?.getState(LITERATURE_STATE_KEY));
 
   return (
-    <LiteratureProvider>
+    <LiteratureProvider initialState={savedFilters}>
       <LiteratureList
         id={id}
         name={name}

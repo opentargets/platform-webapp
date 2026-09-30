@@ -103,7 +103,8 @@ function RecordsCards({
                     <Typography variant="caption">Source:</Typography>
                     <Typography variant="caption" sx={{ fontSize: 13 }}>
                       {source}
-                      {sourceInfo?.name !== source && (
+                      {/* Sources missing from the info map just show their id */}
+                      {sourceInfo && sourceInfo.name !== source && (
                         <Tooltip
                           showHelpIcon
                           title={
