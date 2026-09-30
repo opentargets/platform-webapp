@@ -1,6 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, useReportQueryVariables } from "ui";
-import { Box, GridLegacy } from "@mui/material";
+import { SectionItem, Box, GridLegacy, useReportQueryVariables } from "ui";
 import Description from "./Description";
 import { definition } from ".";
 import { getUniprotIds } from "@ot/utils";

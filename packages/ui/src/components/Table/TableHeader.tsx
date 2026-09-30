@@ -1,11 +1,11 @@
 /* eslint-disable */
-import _ from "lodash";
+
 import { TableHead, TableRow, TableSortLabel, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-
-import { StyledHeaderCell, StyledHeaderLabelSpan } from "./tableStyles";
-import Tooltip from "../Tooltip";
+import _ from "lodash";
 import useDynamicColspan from "../../hooks/useDynamicColspans";
+import Tooltip from "../Tooltip";
+import { StyledHeaderCell, StyledHeaderLabelSpan } from "./tableStyles";
 
 function HeaderCell({
   classes = {},
@@ -66,10 +66,10 @@ function HeaderCell({
 function TableHeader({ columns, headerGroups, noWrapHeader, order, onRequestSort, sortBy }) {
   // workaround for the old withWidth hook
   const theme = useTheme();
-  const width = theme.breakpoints.keys.filter(k => useMediaQuery(theme.breakpoints.only(k)));
+  const width = theme.breakpoints.keys.filter((k) => useMediaQuery(theme.breakpoints.only(k)));
 
   const colspans = useDynamicColspan(headerGroups, columns, width);
-  const createSortHandler = property => event => {
+  const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
 

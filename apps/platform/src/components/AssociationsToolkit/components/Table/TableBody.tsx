@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { flexRender } from "@tanstack/react-table";
-import { Fade, Box, Typography } from "@mui/material";
+import { Fade, Box, Typography } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilterCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { grey } from "@mui/material/colors";

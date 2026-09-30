@@ -9,9 +9,10 @@ import {
   L2GScoreIndicator,
   useBatchQuery,
   Navigate,
+  Box,
+  Chip,
   useReportQueryVariables,
 } from "ui";
-import { Box, Chip } from "@mui/material";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";
@@ -58,7 +59,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
-              <Chip label="self" variant="outlined" size="small" />
+              <Chip label="self" />
             </Box>
           );
         }

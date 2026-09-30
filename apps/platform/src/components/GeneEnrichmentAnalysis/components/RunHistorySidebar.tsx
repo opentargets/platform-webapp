@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import {
   Box,
-  Button,
-  Chip,
   CircularProgress,
-  Divider,
   IconButton,
   List,
   ListItem,
-  ListItemButton,
   ListItemText,
-  Tooltip,
   Typography,
-} from "@mui/material";
+  Button,
+  Chip,
+  MuiTooltip as Tooltip,
+  Divider,
+  ListItemButton,
+} from "ui";
 import {
   faPlus,
   faChevronLeft,
@@ -41,6 +41,10 @@ interface RunHistorySidebarProps {
 
 /** Check if the current AOTF state differs from the run's snapshot */
 function isRunStale(run: AnalysisRun, currentState: AssociationsState): boolean {
+  // Standalone runs have genes provided directly by the user, not derived
+  // from AOTF association filters — there's no "current state" for them to
+  // go stale against.
+  if (run.efoId === "standalone") return false;
   // Compare key fields that affect the gene list
   if (run.efoId !== currentState.efoId) return true;
   if (run.inputs.geneSetSource === "uploaded" || run.inputs.geneSetSource === "pinned") {
@@ -293,6 +297,7 @@ function RunHistorySidebar({
                             {isComplete && (
                               <Chip
                                 label={`${run.results.length} pathways`}
+                                variant="filled"
                                 size="small"
                                 sx={{ height: 18, fontSize: "0.65rem" }}
                               />

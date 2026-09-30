@@ -1,7 +1,10 @@
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
@@ -14,6 +17,7 @@ import ProfileHeader from "./ProfileHeader";
 const variantProfileWidgets = new Map<string, Widget>([
   [Variant.VariantEffect.definition.id, Variant.VariantEffect],
   [Variant.MolecularStructure.definition.id, Variant.MolecularStructure],
+  [Variant.VariantGenomicRegion.definition.id, Variant.VariantGenomicRegion],
   [Variant.VariantEffectPredictor.definition.id, Variant.VariantEffectPredictor],
   [Variant.EVA.definition.id, Variant.EVA],
   [Variant.UniProtVariants.definition.id, Variant.UniProtVariants],
@@ -48,9 +52,11 @@ const VARIANT_PROFILE_QUERY = gql`
 
 type ProfileProps = {
   varId: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
 };
 
-function Profile({ varId }: ProfileProps) {
+function Profile({ varId, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={VARIANT}
@@ -58,6 +64,12 @@ function Profile({ varId }: ProfileProps) {
       variables={{ variantId: varId }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={varId}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={VARIANT_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={VARIANT_WIDGETS} />
       </SummaryContainer>

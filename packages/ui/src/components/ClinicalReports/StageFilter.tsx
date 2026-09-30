@@ -6,15 +6,20 @@ const emptyCircleWidth = 17;
 const lineWidth = 1;
 
 function StageFilter({ records, selectedStage, setSelectedStage, maxStage }: any) {
-  const entries = Object.keys(clinicalStageCategories).map(k => [k, (clinicalStageCategories as any)[k]] as any);
+  const entries = Object.keys(clinicalStageCategories).map(
+    (k) => [k, (clinicalStageCategories as any)[k]] as any
+  );
   const totalStages = entries.length;
   const phase4SlotIndex = (clinicalStageCategories as any).PHASE_4.index;
 
   if (!maxStage) return null;
 
   // fade everything after this
-  const lastStageToColor =
-    records.WITHDRAWAL ? "WITHDRAWAL" : records.PHASE_4 ? "PHASE_4" : maxStage;
+  const lastStageToColor = records.WITHDRAWAL
+    ? "WITHDRAWAL"
+    : records.PHASE_4
+      ? "PHASE_4"
+      : maxStage;
   const lastStageToColorIndex = (clinicalStageCategories as any)[lastStageToColor].index;
 
   const firstSlotCenterPct = (0.5 / totalStages) * 100;
@@ -38,8 +43,6 @@ function StageFilter({ records, selectedStage, setSelectedStage, maxStage }: any
         mb: "3rem",
       }}
     >
-
-
       {/* single absolute line behind all circles – stops at Phase IV */}
       <Box
         sx={{
@@ -48,7 +51,7 @@ function StageFilter({ records, selectedStage, setSelectedStage, maxStage }: any
           left: `${lineLeftPct}%`,
           width: `${lineWidthPct}%`,
           height: `${lineWidth}px`,
-          background: theme => {
+          background: (theme) => {
             return `linear-gradient(
               to right,
               ${theme.palette.primary.main} 0%,
@@ -112,9 +115,19 @@ function StageFilter({ records, selectedStage, setSelectedStage, maxStage }: any
                 cursor: hasRecords && stage !== selectedStage ? "pointer" : "auto",
                 my: hasRecords ? 0 : `${(usedCircleWidth - emptyCircleWidth) / 2}px`,
                 color: stage === selectedStage ? "#fff" : "primary.main",
-                bgcolor: stage === selectedStage ? "primary.main" : hasRecords ? "#ecf7ff" : "background.paper",
+                bgcolor:
+                  stage === selectedStage
+                    ? "primary.main"
+                    : hasRecords
+                      ? "#ecf7ff"
+                      : "background.paper",
                 "&:hover": {
-                  bgcolor: stage === selectedStage ? "primary.main" : hasRecords ? "#e1eff9" : "background.paper",
+                  bgcolor:
+                    stage === selectedStage
+                      ? "primary.main"
+                      : hasRecords
+                        ? "#e1eff9"
+                        : "background.paper",
                 },
               }}
               onClick={hasRecords ? () => setSelectedStage(stage) : undefined}

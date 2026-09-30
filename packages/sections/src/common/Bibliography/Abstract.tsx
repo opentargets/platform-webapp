@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Typography } from "ui";
 
 import BibliographyHtmlText from "./BibliographyHtmlText";
 

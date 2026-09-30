@@ -1,26 +1,26 @@
-import _ from "lodash";
-import { useState } from "react";
-import FileSaver from "file-saver";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faFileArrowDown, faTable } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  Box,
   Button,
   CircularProgress,
-  Snackbar,
-  Slide,
-  Menu,
-  MenuItem,
   ListItemIcon,
   ListItemText,
+  Menu,
+  MenuItem,
+  Slide,
+  Snackbar,
   Typography,
-  Box,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import FileSaver from "file-saver";
+import _ from "lodash";
+import { useState } from "react";
 import "graphiql/graphiql.min.css";
 import ApiPlaygroundDrawer from "./ApiPlaygroundDrawer";
 
 const asJSON = (columns, rows) => {
-  const rowStrings = rows.map(row =>
+  const rowStrings = rows.map((row) =>
     columns.reduce((accumulator, newKey) => {
       if (newKey.exportValue === false) return accumulator;
 
@@ -39,7 +39,7 @@ const asJSON = (columns, rows) => {
 };
 
 const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
-  const quoteString = d => {
+  const quoteString = (d) => {
     let result = d;
     // converts arrays to strings
     if (Array.isArray(d)) {
@@ -61,7 +61,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
     .join(separator);
 
   const rowStrings = rows
-    .map(row =>
+    .map((row) =>
       columns
         .reduce((rowString, column) => {
           if (column.exportValue === false) return rowString;
@@ -81,7 +81,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
   return [headerString, rowStrings].join(lineSeparator);
 };
 
-const createBlob = format =>
+const createBlob = (format) =>
   ({
     json: (columns, rows) =>
       new Blob([asJSON(columns, rows)], {
@@ -95,7 +95,7 @@ const createBlob = format =>
       new Blob([asDSV(columns, rows, "\t", false)], {
         type: "text/tab-separated-values;charset=utf-8",
       }),
-  }[format]);
+  })[format];
 
 const StyledSnackbar = styled(Snackbar)({
   "& .MuiSnackbarContent-root": {
@@ -116,7 +116,7 @@ function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = 
 
   const open = Boolean(anchorEl);
 
-  const handleClickExportButton = event => {
+  const handleClickExportButton = (event) => {
     setAnchorEl(event.currentTarget);
   };
 

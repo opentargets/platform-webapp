@@ -1,5 +1,5 @@
+import type { Widget } from "sections";
 import { v1 } from "uuid";
-import { Widget } from "sections";
 import usePermissions from "../../hooks/usePermissions";
 
 type SummaryRendererProps = {

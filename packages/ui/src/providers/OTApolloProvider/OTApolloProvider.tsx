@@ -1,6 +1,6 @@
-import { ApolloProvider, ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import { type ApolloClient, ApolloProvider, type NormalizedCacheObject } from "@apollo/client";
+import type { Config } from "@ot/config";
 import { createContext, useContext } from "react";
-import { Config } from "@ot/config";
 import { createApolloClient } from "./apollo";
 
 const ApolloClientContext = createContext<ApolloClient<NormalizedCacheObject> | undefined>(

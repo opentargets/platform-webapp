@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Box } from "@mui/material";
+import { useState } from "react";
 
 import Link from "../Link";
 
@@ -19,7 +19,7 @@ function XRefLinks({ label, urlBuilder, urlStem, ids, names, limit }: XRefLinksP
   };
 
   return (
-    <span data-testid={`header-external-links-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+    <span data-testid={`header-external-links-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       {label}:{" "}
       {ids.map((id, i) => (
         <span key={id} style={i > limit - 1 && !showMore ? displayNone : {}}>

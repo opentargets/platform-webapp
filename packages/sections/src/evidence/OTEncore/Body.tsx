@@ -2,7 +2,6 @@ import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material/styles";
 import { faArrowAltCircleUp, faArrowAltCircleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Chip } from "@mui/material";
 import { v1 } from "uuid";
 import {
   Link,
@@ -12,6 +11,8 @@ import {
   ChipList,
   OtTable,
   ScientificNotation,
+  Box,
+  Chip,
   useReportQueryVariables,
 } from "ui";
 
@@ -171,6 +172,7 @@ const getColumns = theme => [
               <Tooltip title={`Screen: ${screen}`}>
                 <Chip
                   label={methodDisplayNameMapping[readoutMethodName]}
+                  variant="filled"
                   size="small"
                   color={isValidated ? "primary" : "default"}
                 />

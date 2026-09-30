@@ -1,4 +1,3 @@
-import { Box, Collapse, GridLegacy, Typography } from "@mui/material";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -10,7 +9,7 @@ import { GridContainer, MetricsSpacerCol } from "../../layout";
 
 import { useAotfQueryState, useAotfQueryDispatch } from "../../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../../context/AssociationsURLContext";
-import { Tooltip } from "ui";
+import { Tooltip, Box, Collapse, GridLegacy, Typography } from "ui";
 import { ReactNode } from "react";
 
 const CloseContainer = styled("div")({

@@ -1,8 +1,17 @@
 import { useQuery } from "@apollo/client";
-import { Box, List, ListItem, Typography } from "@mui/material";
 import { v1 } from "uuid";
 
-import { ChipList, Link, SectionItem, PublicationsDrawer, OtTable } from "ui";
+import {
+  ChipList,
+  Link,
+  SectionItem,
+  PublicationsDrawer,
+  OtTable,
+  Box,
+  List,
+  ListItem,
+  Typography,
+} from "ui";
 
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";

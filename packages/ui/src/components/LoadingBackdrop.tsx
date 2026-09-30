@@ -11,7 +11,7 @@ function LoadingBackdrop({ height }: LoadingBackdropProps) {
       <Box
         sx={{
           color: "primary.main",
-          background: theme => theme.palette.grey["50"],
+          background: (theme) => theme.palette.grey["50"],
           width: "100%",
           justifyContent: "center",
           alignItems: "center",

@@ -1,8 +1,10 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   SectionLoader,
   SectionBody,
@@ -16,6 +18,9 @@ const GWASCredibleSetsSection = Study.GWASCredibleSets.getBodyComponent();
 const QTLCredibleSetsSection = Study.QTLCredibleSets.getBodyComponent();
 
 const summaries = [Study.GWASCredibleSets.Summary, Study.QTLCredibleSets.Summary];
+
+const GWAS_STUDY_WIDGETS = [Study.GWASCredibleSets, Study.SharedTraitStudies];
+const QTL_STUDY_WIDGETS = [Study.QTLCredibleSets];
 
 const STUDY = "study";
 const STUDY_PROFILE_SUMMARY_FRAGMENT = summaryUtils.createSummaryFragment(
@@ -46,9 +51,11 @@ type ProfileProps = {
     id: string;
     name: string;
   }[];
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
 };
 
-function Profile({ studyId, studyType, diseases }: ProfileProps) {
+function Profile({ studyId, studyType, diseases, Icon, externalLinks }: ProfileProps) {
   const diseaseIds = diseases?.map(d => d.id) || [];
 
   return (
@@ -61,6 +68,12 @@ function Profile({ studyId, studyType, diseases }: ProfileProps) {
       }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={studyId}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={studyType === "gwas" ? GWAS_STUDY_WIDGETS : QTL_STUDY_WIDGETS}
+      />
 
       <SummaryContainer>
         {/* TODO: remove this, check the studyType property */}

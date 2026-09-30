@@ -1,5 +1,5 @@
-import _ from "lodash";
 import { downloaderChunkSize } from "@ot/constants";
+import _ from "lodash";
 import { useApolloClient } from "../providers/OTApolloProvider/OTApolloProvider";
 
 const getRows = (chunk, dataPath) => _.get(chunk, dataPath, []);

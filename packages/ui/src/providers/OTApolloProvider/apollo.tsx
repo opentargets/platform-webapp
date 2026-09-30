@@ -1,5 +1,5 @@
-import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, from } from "@apollo/client";
-import { Config } from "@ot/config";
+import { ApolloClient, ApolloLink, from, HttpLink, InMemoryCache } from "@apollo/client";
+import type { Config } from "@ot/config";
 
 export const createApolloClient = (config: Config) => {
   const httpLink = new HttpLink({
@@ -7,9 +7,9 @@ export const createApolloClient = (config: Config) => {
   });
 
   const errorLink = new ApolloLink((operation, forward) => {
-    return forward(operation).map(response => {
+    return forward(operation).map((response) => {
       if (response.errors) {
-        response.errors.forEach(error => {
+        response.errors.forEach((error) => {
           console.error(`GraphQL Error: ${error.message}`);
         });
       }

@@ -1,9 +1,8 @@
-import { CardContent, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDna } from "@fortawesome/free-solid-svg-icons";
 
-import { Link } from "ui";
+import { Link, CardContent, Typography } from "ui";
 import TargetDescription from "../TargetPage/TargetDescription";
 import { getUniprotIds, clearDescriptionCodes } from "@ot/utils";
 

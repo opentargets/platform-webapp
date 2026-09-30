@@ -1,68 +1,80 @@
-import React from "react";
 import { Box } from "@mui/material";
-import { GenomicLocationPresentationType, getGenomicLocation, IGeneomicLocation } from "@ot/constants";
-import {  Tooltip } from "ui"
-
-
+import { grey } from "@mui/material/colors";
+import {
+  GenomicLocationPresentationType,
+  getGenomicLocation,
+  type IGeneomicLocation,
+} from "@ot/constants";
+import type React from "react";
+import { Chip, Tooltip } from "ui";
 
 interface GenomicLocationProps {
   geneLoc: IGeneomicLocation;
   type?: GenomicLocationPresentationType;
+  label?: string;
 }
 
-const GenomicLocation: React.FC<GenomicLocationProps> = ({ geneLoc, type = GenomicLocationPresentationType.CHIP }) => {
-    const [build, location] = getGenomicLocation(geneLoc);
+const GenomicLocation: React.FC<GenomicLocationProps> = ({
+  geneLoc,
+  type = GenomicLocationPresentationType.CHIP,
+  label,
+}) => {
+  const [build, location] = getGenomicLocation(geneLoc);
+  const tooltipTitle = label
+    ? `${label}: build | chromosome:start-end,strand`
+    : "build | chromosome:start-end,strand";
 
-    if(type === GenomicLocationPresentationType.PLAIN) {
-        return (
-            <Box sx={{ mt: 1, typography: "body2" }} component="span">
-                 <Tooltip title="build | chromosome:start-end,strand">
-                     <Box
-                        component="span"
-                        sx={{
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: theme => theme.palette.grey[600],
-                        }}
-                    >
-                        {build} | {location}
-                    </Box>
-                 </Tooltip>
-              
-            </Box>
-        );
-    }   
-
+  if (type === GenomicLocationPresentationType.PLAIN) {
     return (
-        <Box sx={{ mt: 1, typography: "body2" }} component="span">
-            <Tooltip title="build | chromosome:start-end,strand">
-              <Box
-                component="span"
-                sx={{
-                  whiteSpace: "nowrap",
-                  background: theme => theme.palette.grey[600],
-                  border: theme => `1px solid ${theme.palette.grey[600]}`,
-                  p: "1px 5px",
-                  color: "white",
-                  borderRadius: "5px 0 0 5px",
-                }}
-              >
-                {build}
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  whiteSpace: "nowrap",
-                  p: "1px 5px",
-                  color: theme => theme.palette.grey[600],
-                  border: theme => `1px solid ${theme.palette.grey[600]}`,
-                  borderRadius: "0 5px 5px 0",
-                }}
-              >
-                {location}
-              </Box>
-            </Tooltip>
+      <Box sx={{ mt: 1, typography: "body2" }} component="span">
+        <Tooltip title={tooltipTitle}>
+          <Box
+            component="span"
+            sx={{
+              fontSize: "0.75rem",
+              fontWeight: "bold",
+              color: (theme) => theme.palette.grey[600],
+            }}
+          >
+            {build} | {location}
+          </Box>
+        </Tooltip>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ mt: 1, typography: "body2", display: "flex", flexDirection: "column", gap: 1 }} component="span" >
+      {label && (
+        <Box
+          component="span"
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: "bold",
+            color: (theme) => theme.palette.grey[600],
+            mr: "5px",
+          }}
+        >
+          {label}:
         </Box>
+      )}
+      <Tooltip title={tooltipTitle}>
+        <Box component="span" sx={{ display: "inline-flex", whiteSpace: "nowrap" }}>
+          <Chip
+            variant="filled"
+            size="small"
+            label={build}
+            sx={{ borderRadius: "4px 0 0 4px", backgroundColor: grey[400], color: grey[900] }}
+          />
+          <Chip
+            variant="filled"
+            size="small"
+            label={location}
+            sx={{ borderRadius: "0 4px 4px 0", ml: "1px" }}
+          />
+        </Box>
+      </Tooltip>
+    </Box>
   );
 };
 

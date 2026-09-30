@@ -17,4 +17,4 @@ function usePermissions(): Permissions {
   };
 }
 
-export default usePermissions; 
+export default usePermissions;

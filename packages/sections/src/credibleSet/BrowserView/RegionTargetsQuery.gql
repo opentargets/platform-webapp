@@ -1,0 +1,40 @@
+query RegionTargetsQuery(
+  $chromosome: ChromosomeEnum!
+  $positionStart: Int!
+  $positionEnd: Int!
+) {
+  region(
+    chromosome: $chromosome
+    positionStart: $positionStart
+    positionEnd: $positionEnd
+  ) {
+    targets(page: { index: 0, size: 1000 }) {
+      count
+      rows {
+        id
+        approvedSymbol
+        biotype
+        genomicLocation {
+          chromosome
+          start
+          end
+          strand
+        }
+        transcripts(canonical: true) {
+          count
+          rows {
+            chromosome
+            start
+            end
+            isEnsemblCanonical
+            transcriptId
+            exons {
+              start
+              end
+            }
+          }
+        }
+      }
+    }
+  }
+}

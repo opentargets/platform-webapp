@@ -1,6 +1,7 @@
 import { faChartPie } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ListItemIcon, ListItemText, MenuItem, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import { ListItemIcon, ListItemText, MenuItem } from "ui";
 import {
   setAssociationsState,
   setModalOpen,

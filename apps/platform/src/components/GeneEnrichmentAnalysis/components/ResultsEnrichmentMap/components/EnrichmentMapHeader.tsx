@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from "ui";
 import type { Core as CytoscapeCore } from "cytoscape";
 import type { ComputedStats } from "../utils";
 import { ExportButtons } from "./ExportButtons";

@@ -1,5 +1,4 @@
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -8,6 +7,7 @@ import {
   LabelChip,
   OtTable,
   DisplayVariantId,
+  Typography,
   useReportQueryVariables,
 } from "ui";
 import { definition } from ".";
@@ -84,7 +84,7 @@ function getColumns(label) {
       renderCell: ({ variantRsId }) => (
         <Link
           external
-          to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+          to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
         >
           {variantRsId}
         </Link>

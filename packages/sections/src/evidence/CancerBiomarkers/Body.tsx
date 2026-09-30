@@ -1,6 +1,14 @@
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
-import { Link, Tooltip, SectionItem, PublicationsDrawer, OtTable, TableDrawer, useReportQueryVariables } from "ui";
+import {
+  Link,
+  Tooltip,
+  SectionItem,
+  PublicationsDrawer,
+  OtTable,
+  TableDrawer,
+  Typography,
+  useReportQueryVariables,
+} from "ui";
 
 import { defaultRowsPerPageOptions, sectionsBaseSizeQuery, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import { epmcUrl } from "@ot/utils";

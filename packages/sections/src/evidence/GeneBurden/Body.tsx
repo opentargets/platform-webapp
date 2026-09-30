@@ -1,5 +1,4 @@
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
 import {
   Link,
   Tooltip,
@@ -9,6 +8,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTable,
+  Typography,
   useReportQueryVariables,
 } from "ui";
 
@@ -91,6 +91,7 @@ const getColumns = label => [
     label: "Ancestry",
     renderCell: ({ ancestry, ancestryId }) => {
       if (!ancestry) return naLabel;
+      if (!ancestryId) return ancestry;
       return (
         <Link to={`http://purl.obolibrary.org/obo/${ancestryId}`} external>
           {ancestry}

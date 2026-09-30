@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { List, FormControlLabel, Checkbox, Box } from "@mui/material";
+import { List, FormControlLabel, Checkbox, Box } from "ui";
 
 interface Hit {
   id: string;

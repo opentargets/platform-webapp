@@ -1,4 +1,4 @@
-import { Box, Checkbox, Chip, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, FormGroup, Paper, Typography, Chip } from "ui";
 import { v1 } from "uuid";
 import DownloadsSearchInput from "./DownloadsSearchInput";
 import { DownloadsContext } from "./context/DownloadsContext";
@@ -49,6 +49,7 @@ function DownloadsFilter() {
                 clear
               </Box>
             }
+            variant="filled"
             size="small"
             clickable
             sx={{ fontWeight: "normal", typography: "caption" }}

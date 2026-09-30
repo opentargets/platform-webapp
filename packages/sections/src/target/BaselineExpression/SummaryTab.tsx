@@ -1,5 +1,4 @@
-import { Alert, AlertTitle, GridLegacy, Typography } from "@mui/material";
-import { DataDownloader } from "ui";
+import { DataDownloader, Alert, AlertTitle, GridLegacy, Typography } from "ui";
 import BaselineExpressionTable from "./BaselineExpressionTable";
 import EXPRESSION_QUERY from "./ExpressionQuery.gql";
 import { processData } from "./processData";

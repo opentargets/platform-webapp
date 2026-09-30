@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { TablePagination } from "@mui/material";
+import { TablePagination } from "ui";
 import { styled } from "@mui/material/styles";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";

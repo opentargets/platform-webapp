@@ -1,4 +1,5 @@
-import { Skeleton, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import { Skeleton } from "ui";
 import Tooltip from "./AssocTooltip";
 import { cellHasValue, getColumAndSection, TABLE_PREFIX } from "../../associationsUtils";
 import {

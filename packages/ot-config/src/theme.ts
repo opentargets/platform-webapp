@@ -165,6 +165,13 @@ const themeOptions: ThemeOptions = {
       },
     },
     MuiTooltip: {
+      styleOverrides: {
+        tooltip: ({ theme }) => ({
+          backgroundColor: `${theme.palette.background.paper} !important`,
+          border: `1px solid ${theme.palette.grey[300]}`,
+          color: `${theme.palette.text.primary} !important`,
+        }),
+      },
       variants: [
         {
           props: { variant: "aotf" },

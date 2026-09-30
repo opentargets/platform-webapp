@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from "ui";
 import { gql, useQuery } from "@apollo/client";
 import * as Plot from "@observablehq/plot";
 import dataSourcesAssoc from "../../static_datasets/dataSourcesAssoc";

@@ -1,9 +1,9 @@
-import { PropsWithChildren, createContext, useContext } from "react";
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
-import { Config, theme } from "@ot/config";
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import { type Config, theme } from "@ot/config";
+import { createContext, type PropsWithChildren, useContext } from "react";
+import { APIMetadataProvider } from "./APIMetadataProvider";
 import { OTApolloProvider } from "./OTApolloProvider/OTApolloProvider";
 import ThemeProvider from "./ThemeProvider/ThemeProvider";
-import { APIMetadataProvider } from "./APIMetadataProvider";
 
 type ContextType = {
   config: Config | null;

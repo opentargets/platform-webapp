@@ -1,7 +1,7 @@
-import { useTheme } from "@mui/material/styles";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar as faStarSolid } from "@fortawesome/free-solid-svg-icons";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
+import { faStar as faStarSolid } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useTheme } from "@mui/material/styles";
 
 type ClinvarStarsProps = {
   num: number;

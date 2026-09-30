@@ -1,21 +1,21 @@
-import { ReactNode, useState } from "react";
+import { faClipboard } from "@fortawesome/free-regular-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
-  Typography,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
+  Typography,
 } from "@mui/material";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { faClipboard } from "@fortawesome/free-regular-svg-icons";
-import { Tooltip } from "ui";
-import { lighten } from "polished";
 import { processVariantId } from "@ot/utils";
+import { lighten } from "polished";
+import { type ReactNode, useState } from "react";
+import { Tooltip } from "ui";
 
-const highlightBackground = theme => lighten(0.4, theme.palette.primary.main);
+const highlightBackground = (theme) => lighten(0.4, theme.palette.primary.main);
 
 type DisplayVariantIdProps = {
   variantId: string;
@@ -186,7 +186,7 @@ function CopyPanel({ label, text, tooltipText, copyToClipboard }: CopyPanelProps
       <Box
         sx={{
           marginTop: "0.1em",
-          backgroundColor: theme => theme.palette.grey[300],
+          backgroundColor: (theme) => theme.palette.grey[300],
           position: "relative",
         }}
       >

@@ -1,33 +1,29 @@
-import { Avatar, Card, Typography, styled } from "@mui/material";
+import { Avatar, Card, styled, Typography } from "@mui/material";
 
 export const StyledAvatar = styled(Avatar, {
-  shouldForwardProp: prop => prop !== "hasData" && prop !== "error",
-})<{ hasData?: boolean; error?: boolean }>(
-  ({ theme, hasData, error }) => ({
-    color: "white",
-    backgroundColor: error
-      ? theme.palette.secondary.main
-      : hasData
-        ? theme.palette.primary.dark
-        : theme.palette.grey[300],
-  })
-);
+  shouldForwardProp: (prop) => prop !== "hasData" && prop !== "error",
+})<{ hasData?: boolean; error?: boolean }>(({ theme, hasData, error }) => ({
+  color: "white",
+  backgroundColor: error
+    ? theme.palette.secondary.main
+    : hasData
+      ? theme.palette.primary.dark
+      : theme.palette.grey[300],
+}));
 
 export const StyledTitle = styled(Typography, {
-  shouldForwardProp: prop => prop !== "hasData" && prop !== "error",
-})<{ hasData?: boolean; error?: boolean }>(
-  ({ theme, hasData, error }) => ({
-    wordBreak: "break-word",
-    color: error
-      ? theme.palette.secondary.main
-      : hasData
-        ? theme.palette.text.primary
-        : theme.palette.grey[500],
-  })
-);
+  shouldForwardProp: (prop) => prop !== "hasData" && prop !== "error",
+})<{ hasData?: boolean; error?: boolean }>(({ theme, hasData, error }) => ({
+  wordBreak: "break-word",
+  color: error
+    ? theme.palette.secondary.main
+    : hasData
+      ? theme.palette.text.primary
+      : theme.palette.grey[500],
+}));
 
 export const StyledSubtitle = styled(Typography, {
-  shouldForwardProp: prop => prop !== "hasData",
+  shouldForwardProp: (prop) => prop !== "hasData",
 })<{ hasData?: boolean }>(({ theme, hasData }) => ({
   color: hasData ? theme.palette.text.primary : theme.palette.grey[500],
 }));
@@ -49,7 +45,7 @@ export const StyledSubheader = styled(Typography)(({ theme }) => ({
 // but never existed in makeStyles, so it was always a no-op (JSS silently applied
 // no class). No `error` prop is carried here for the same reason.
 export const StyledCard = styled(Card, {
-  shouldForwardProp: prop => prop !== "hasData",
+  shouldForwardProp: (prop) => prop !== "hasData",
 })<{ hasData?: boolean }>(({ theme, hasData }) => ({
   height: "100%",
   display: "flex",

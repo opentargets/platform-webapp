@@ -1,14 +1,18 @@
-import { useContext } from "react";
 import { filter } from "graphql-anywhere";
+import { useContext } from "react";
 
-import { PlatformApiContext, PlatformApiContextValue } from "../providers/PlatformApiProvider";
+import { PlatformApiContext, type PlatformApiContextValue } from "../providers/PlatformApiProvider";
 
 // Overload signatures
 function usePlatformApi(): PlatformApiContextValue;
-function usePlatformApi<FD = any>(fragment: unknown): Omit<PlatformApiContextValue, 'data'> & { data: FD };
+function usePlatformApi<FD = any>(
+  fragment: unknown
+): Omit<PlatformApiContextValue, "data"> & { data: FD };
 
 // Implementation
-function usePlatformApi<FD = any>(fragment?: unknown): PlatformApiContextValue | (Omit<PlatformApiContextValue, 'data'> & { data: FD }) {
+function usePlatformApi<FD = any>(
+  fragment?: unknown
+): PlatformApiContextValue | (Omit<PlatformApiContextValue, "data"> & { data: FD }) {
   const context = useContext(PlatformApiContext);
 
   if (context === undefined) {

@@ -1,11 +1,12 @@
-import { Box, Typography } from "@mui/material";
 import {
   Viewer,
   ViewerRadios,
   ViewerDropdown,
   ViewerLegend,
   useViewerState,
-  useViewerDispatch
+  useViewerDispatch,
+  Box,
+  Typography,
 } from "ui";
 import {
   alphaFoldCifUrl,

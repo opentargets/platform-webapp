@@ -14,7 +14,7 @@ function NavigationProgress() {
         left: 0,
         right: 0,
         height: 3,
-        zIndex: theme => theme.zIndex.appBar + 1,
+        zIndex: (theme) => theme.zIndex.appBar + 1,
         pointerEvents: "none",
       }}
     />

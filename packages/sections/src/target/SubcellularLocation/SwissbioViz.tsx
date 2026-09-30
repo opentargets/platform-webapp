@@ -1,6 +1,5 @@
-import { Box, Typography } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
-import { useConfigContext } from "ui";
+import { useConfigContext, Box, Typography } from "ui";
 import { safeFetch } from "@ot/utils";
 
 function Message({ text }: { text: string }) {

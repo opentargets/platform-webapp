@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box } from "ui";
 
 function BibliographyDetailPanel({ children }) {
   return (

@@ -1,9 +1,9 @@
 import * as d3 from "d3";
 import { useRef, useEffect } from "react";
 import { useMeasure } from "@uidotdev/usehooks";
-import { Box, Skeleton, Typography, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { Link, DataDownloader } from "ui";
+import { Link, DataDownloader, Box, Skeleton, Typography } from "ui";
 
 const content = {
   mouseOrthologMaxIdentityPercentage:

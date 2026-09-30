@@ -1,5 +1,4 @@
-import { CardContent, Typography } from "@mui/material";
-import { ProfileChipList } from "ui";
+import { ProfileChipList, CardContent, Typography } from "ui";
 import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrescriptionBottleAlt } from "@fortawesome/free-solid-svg-icons";

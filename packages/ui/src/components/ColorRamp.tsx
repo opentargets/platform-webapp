@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-function ColorRamp({ interpolator, n = 256, width = 100, height= 11 }) {
+function ColorRamp({ interpolator, n = 256, width = 100, height = 11 }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {

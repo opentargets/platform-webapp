@@ -1,8 +1,7 @@
-import { Box, Typography } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { nullishComparator } from "@ot/utils";
 import { max, min } from "d3";
-import { ObsPlot } from "ui";
+import { ObsPlot, Box, Typography } from "ui";
 import MedianTooltipTable from "./MedianTooltipTable";
 
 function DetailPlot({

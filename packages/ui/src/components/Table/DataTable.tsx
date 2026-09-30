@@ -1,10 +1,9 @@
 /* eslint-disable */
+import { getComparator, globalFilter } from "./sortingAndFiltering";
 import { useReportState } from "../../providers/ReportComponentStateContext";
-
 import Table from "./Table";
-import { getPage } from "./utils";
-import { globalFilter, getComparator } from "./sortingAndFiltering";
 import { PaginationActionsComplete } from "./TablePaginationActions";
+import { getPage } from "./utils";
 
 interface DataTableState {
   globalFilter: string;
@@ -75,7 +74,7 @@ function DataTable({
     onPagination(page, pageSize);
   };
 
-  const handleRowsPerPageChange = newPageSize => {
+  const handleRowsPerPageChange = (newPageSize) => {
     const newPageSizeNumber = Number(newPageSize);
     setTableState(prev => ({ ...prev, pagination: { pageIndex: 0, pageSize: newPageSizeNumber } }));
   };
@@ -83,7 +82,7 @@ function DataTable({
   let processedRows = [...rows];
 
   if (globalFilterVal) {
-    processedRows = processedRows.filter(row => globalFilter(row, columns, globalFilterVal));
+    processedRows = processedRows.filter((row) => globalFilter(row, columns, globalFilterVal));
   }
 
   if (sortColumn) {

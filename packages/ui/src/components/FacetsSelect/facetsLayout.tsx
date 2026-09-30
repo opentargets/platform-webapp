@@ -1,4 +1,4 @@
-import { Autocomplete, Popper, Select as MuiSlect, styled } from "@mui/material";
+import { Autocomplete, Select as MuiSlect, Popper, styled } from "@mui/material";
 
 export const Select = styled(MuiSlect)(({ theme }) => ({
   minWidth: "150px",
@@ -18,7 +18,7 @@ export const Select = styled(MuiSlect)(({ theme }) => ({
   },
 }));
 
-export const FacetsPopper = props => {
+export const FacetsPopper = (props) => {
   return <Popper {...props} style={{ width: "360px" }} placement="bottom-start" />;
 };
 

@@ -6,7 +6,8 @@ import {
   OtTable,
   Tooltip,
   useBatchQuery,
-  Navigate, 
+  Navigate,
+  Chip,
   useReportQueryVariables,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
@@ -14,7 +15,6 @@ import { definition } from ".";
 import Description from "./Description";
 import MOLQTL_COLOC_QUERY from "./MolQTLColocQuery.gql";
 import { mantissaExponentComparator, variantComparator } from "@ot/utils";
-import { Chip } from "@mui/material";
 
 const columns = [
   {
@@ -48,7 +48,7 @@ const columns = [
       return (
         <>
           {studyType}{" "}
-          {otherStudyLocus.isTransQtl && <Chip label="trans" variant="outlined" size="small" />}
+          {otherStudyLocus.isTransQtl && <Chip label="trans" />}
         </>
       );
     },

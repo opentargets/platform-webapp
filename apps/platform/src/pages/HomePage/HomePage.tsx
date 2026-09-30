@@ -1,7 +1,16 @@
-import { GridLegacy, Typography, Box, Theme } from "@mui/material";
+import { Theme } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
-import { Footer, GlobalSearch, Link, NavBar, usePermissions } from "ui";
+import {
+  Footer,
+  GlobalSearch,
+  Link,
+  NavBar,
+  usePermissions,
+  GridLegacy,
+  Typography,
+  Box,
+} from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,6 +30,7 @@ import {
   appCanonicalUrl,
   externalLinks,
   mainMenuItems,
+  toolsMenuItems,
 } from "@ot/constants";
 import HomeBox from "./HomeBox";
 import Splash from "./Splash";
@@ -134,7 +144,12 @@ function HomePage(): JSX.Element {
       </Helmet>
       <GridLegacy container justifyContent="center" alignItems="center">
         <Splash />
-        <NavBar name="platform" homepage items={mainMenuItems} placement="bottom-end" />
+        <NavBar
+          name="platform"
+          homepage
+          items={mainMenuItems}
+          placement="bottom-end"
+        />
         <HomeBox>
           <GlobalSearch isHomePage />
           {/* Search examples */}

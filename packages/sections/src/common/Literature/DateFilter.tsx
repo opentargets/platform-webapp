@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { FormControl, FormGroup, InputLabel, Slider } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
 import { fetchSimilarEntities } from "./requests";
-import { useApolloClient } from "ui";
+import { useApolloClient, FormControl, FormGroup, InputLabel, Slider } from "ui";
 
 const OTSlider = styled(Slider)({
   root: {

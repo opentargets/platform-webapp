@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Drawer, IconButton, Paper, Typography, Link as MUILink, ButtonBase } from "@mui/material";
+import { Drawer, IconButton, Paper, Typography, ButtonBase } from "ui";
 import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,7 +13,7 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     opacity: "0 !important",
   },
   "& .MuiDrawer-paper": {
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: theme.palette.common.white,
   },
 }));
 

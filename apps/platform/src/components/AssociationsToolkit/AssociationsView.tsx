@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box } from "ui";
 import type { ReactNode } from "react";
 import type { DocumentNode } from "graphql";
 import ActiveFiltersPanel from "./components/controls/ActiveFiltersPanel";

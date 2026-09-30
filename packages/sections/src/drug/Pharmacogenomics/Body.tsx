@@ -8,6 +8,7 @@ import {
   PublicationsDrawer,
   OtTable,
   DirectionalityDrawer,
+  DisplayVariantId,
   useReportQueryVariables,
 } from "ui";
 
@@ -80,7 +81,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         variantRsId ? (
           <Link
             external
-            to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+            to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
           >
             {variantRsId}
           </Link>
@@ -117,7 +118,23 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }: Pharmacogenomics) => genotypeId || naLabel,
+      renderCell: ({ genotypeId }: Pharmacogenomics) => {
+        if (!genotypeId) return naLabel;
+        const [chr, pos, ref, alt] = genotypeId.split(",")[0].split("_");
+        if (!chr || !pos || !ref || !alt) return genotypeId;
+        const variantId = `${chr}_${pos}_${ref}_${alt}`;
+        return (
+          <Link asyncTooltip to={`/variant/${variantId}`}>
+            <DisplayVariantId
+              variantId={variantId}
+              referenceAllele={ref}
+              alternateAllele={alt}
+              expand={false}
+            />
+            {genotypeId.includes(",") ? `,${genotypeId.split(",")[1]}` : ""}
+          </Link>
+        );
+      },
     },
     {
       id: "variantConsequence",

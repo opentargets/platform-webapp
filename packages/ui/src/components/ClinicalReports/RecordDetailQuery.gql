@@ -16,7 +16,6 @@ query RecordDetailQuery($clinicalReportId: String!) {
         name
       }
     }
-    hasExpertReview
     id
     phaseFromSource
     sideEffects {
@@ -27,15 +26,23 @@ query RecordDetailQuery($clinicalReportId: String!) {
     }
     source
     trialDescription
-    trialLiterature
+    trialLiterature {
+      id
+      type
+    }
     title
     trialOverallStatus
     trialPrimaryPurpose
+    trialSponsor {
+      agencyClass
+      name
+    }
     trialStartDate
     trialWhyStopped
     trialStopReasonCategories
     type
     trialStudyType
     url
+    year
   }
 }

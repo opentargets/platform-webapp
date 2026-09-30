@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Box, Typography } from "@mui/material";
 import {
   SectionItem,
   ChipList,
@@ -11,6 +10,8 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableSSP,
+  Box,
+  Typography,
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
@@ -84,7 +85,7 @@ const getColumns = label => [
       variantRsId ? (
         <Link
           external
-          to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+          to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
         >
           {variantRsId}
         </Link>

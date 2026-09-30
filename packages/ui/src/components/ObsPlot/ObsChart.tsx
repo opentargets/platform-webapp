@@ -1,5 +1,5 @@
-import { useRef, useEffect, Dispatch, SetStateAction } from "react";
 import { Box } from "@mui/material";
+import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 
 type ObsChartProps = {
   data: any;
@@ -19,6 +19,7 @@ type ObsChartProps = {
   setChart: Dispatch<SetStateAction<SVGSVGElement>>;
   setDatum: Dispatch<SetStateAction<any>>;
   renderSVGOverlay: (chart: SVGSVGElement) => SVGElement | null;
+  onChartMounted?: (chart: SVGSVGElement) => void;
 };
 
 function ObsChart({
@@ -34,6 +35,7 @@ function ObsChart({
   setChart,
   setDatum,
   renderSVGOverlay,
+  onChartMounted,
 }: ObsChartProps) {
   const headerRef = useRef();
 
@@ -64,7 +66,7 @@ function ObsChart({
           }
         };
         elmt.setAttribute("data-index", dataIndex);
-        elmt.addEventListener("click", event => {
+        elmt.addEventListener("click", (event) => {
           if (clicked && selectedDatum === elmtDatum) {
             clicked = false;
             selectedDatum = null;
@@ -102,6 +104,7 @@ function ObsChart({
       });
     }
     headerRef.current.append(chart);
+    onChartMounted?.(chart);
     return () => {
       setDatum(null);
       chart.remove();
@@ -118,6 +121,7 @@ function ObsChart({
     resetElement,
     setChart,
     setDatum,
+    onChartMounted,
   ]);
 
   return <Box ref={headerRef}></Box>;

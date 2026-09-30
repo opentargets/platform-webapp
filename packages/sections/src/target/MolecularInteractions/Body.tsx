@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
-import { Tab, Tabs, Typography } from "@mui/material";
-import { SectionItem, useApolloClient, usePlatformApi, useReportState } from "ui";
+import {
+  SectionItem,
+  useApolloClient,
+  usePlatformApi,
+  Tab,
+  Tabs,
+  Typography,
+  useReportState,
+} from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

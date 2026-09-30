@@ -1,8 +1,8 @@
-import { scaleLinear, scaleDiverging, extent, mean, interpolateRgbBasis } from "d3";
-import { groupNames, featureToGroup, DIVERGING_COLORS } from "./constants";
+import { extent, interpolateRgbBasis, mean, scaleDiverging, scaleLinear } from "d3";
+import { DIVERGING_COLORS, featureToGroup, groupNames } from "./constants";
 
 export function getGroupResults(data) {
-  const rows = data.map(d => {
+  const rows = data.map((d) => {
     const row = {
       targetId: d.target.id,
       targetSymbol: d.target.approvedSymbol,
@@ -34,7 +34,7 @@ export function computeWaterfall(originalRow, fullXDomain, zeroBase) {
     feature._start = features[index - 1]?._end ?? (zeroBase ? 0 : row.shapBaseValue);
     feature._end = feature._start + feature.shapValue;
   }
-  const xExtent = extent(features.map(d => [d._start, d._end]).flat());
+  const xExtent = extent(features.flatMap((d) => [d._start, d._end]));
   if (fullXDomain) {
     const relativeSize = (xExtent[1] - xExtent[0]) / (fullXDomain[1] - fullXDomain[0]);
     if (relativeSize < 0.25) {

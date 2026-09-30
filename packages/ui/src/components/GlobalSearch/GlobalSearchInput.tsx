@@ -1,5 +1,5 @@
-import { useContext, memo, FocusEvent, ChangeEvent, ReactElement } from "react";
 import { styled } from "@mui/material";
+import { type ChangeEvent, type FocusEvent, memo, type ReactElement, useContext } from "react";
 
 import { SearchContext, SearchInputContext } from "./SearchContext";
 

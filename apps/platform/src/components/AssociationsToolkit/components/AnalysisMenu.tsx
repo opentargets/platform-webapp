@@ -1,8 +1,7 @@
 import { faChartPie } from "@fortawesome/free-solid-svg-icons";
-import { MenuList, Popover } from "@mui/material";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { PopoverButton, usePermissions } from "ui";
+import { PopoverButton, usePermissions, MenuList, Popover } from "ui";
 import { ENTITIES } from "../associationsUtils";
 import { useAotfQueryState } from "../context/AssociationsQueryContext";
 import GeneEnrichmentAnalysis from "./GeneEnrichmentAnalysis";
@@ -42,7 +41,7 @@ function AnalysisMenu() {
         ariaLabel="Advanced options"
         disableElevation
         iconSize="lg"
-        sx={{ height: 1, maxHeight: "45px" }}
+        sx={{ height: 1, maxHeight: "45px", border: "none" }}
       />
 
       <Popover

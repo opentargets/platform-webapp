@@ -30,8 +30,7 @@ function changedFilters(literature) {
   return Object.keys(changed).length ? changed : undefined;
 }
 import { fetchSimilarEntities } from "./requests";
-import { Box } from "@mui/material";
-import { SectionItem, useApolloClient, useReportComponentState } from "ui";
+import { SectionItem, useApolloClient, Box, useReportComponentState } from "ui";
 import isEqual from "lodash/isEqual";
 import PublicationsList from "./PublicationsList";
 import Description from "./Description";

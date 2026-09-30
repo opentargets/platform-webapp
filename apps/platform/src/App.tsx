@@ -5,6 +5,7 @@ import { ReportBuilderProvider } from "ui/src/providers/ReportBuilderProvider";
 import { createBrowserRouter, RouterProvider } from "react-router";
 
 import { getConfig } from "@ot/config";
+import { GeneEnrichmentProvider } from "./components/GeneEnrichmentAnalysis";
 
 import SEARCH_QUERY from "./components/Search/SearchQuery.gql";
 
@@ -32,6 +33,13 @@ const router = createBrowserRouter([
           {
             path: "/api",
             lazy: () => import("./pages/APIPage/APIPage").then(m => ({ Component: m.default })),
+          },
+          {
+            path: "/metrics",
+            lazy: () =>
+              import("./pages/MetricsPage/MetricsPageWrapper").then(m => ({
+                Component: m.default,
+              })),
           },
           {
             path: "/search",
@@ -142,7 +150,9 @@ function App(): ReactElement {
         searchQuery={SEARCH_QUERY}
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."
       >
-        <RouterProvider router={router} />
+        <GeneEnrichmentProvider>
+          <RouterProvider router={router} />
+        </GeneEnrichmentProvider>
       </SearchProvider>
     </OTConfigurationProvider>
     </ReportBuilderProvider>

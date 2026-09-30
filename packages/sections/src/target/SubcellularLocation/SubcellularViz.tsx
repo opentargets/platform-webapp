@@ -1,9 +1,8 @@
 import { useState, useMemo } from "react";
-import { Typography, List, ListItem, Box, Tabs, Tab } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
-import { Link, useReportState } from "ui";
+import { Link, Typography, List, ListItem, Box, Tabs, Tab, useReportState } from "ui";
 import { identifiersOrgLink, getUniprotIds } from "@ot/utils";
 import SwissBioVis from "./SwissbioViz";
 import membraneCodes from "./membrane-codes";

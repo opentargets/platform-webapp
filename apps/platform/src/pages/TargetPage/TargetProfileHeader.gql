@@ -11,4 +11,10 @@ fragment TargetProfileHeaderFragment on Target {
     end
     strand
   }
+  canonicalTranscript {
+    chromosome
+    start
+    end
+    strand
+  }
 }

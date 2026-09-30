@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { styled, GridLegacy } from "@mui/material";
+import { styled } from "@mui/material";
+import { GridLegacy } from "ui";
 
 import AggregationsTooltip from "./AssocTooltip";
 import associationsColumns from "../../static_datasets/dataSourcesAssoc";

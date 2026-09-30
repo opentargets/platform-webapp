@@ -1,8 +1,7 @@
 import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { v1 } from "uuid";
-import { SectionItem, EllsWrapper } from "ui";
+import { SectionItem, EllsWrapper, GridLegacy, Typography } from "ui";
 import { useQuery } from "@apollo/client";
-import { GridLegacy, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Box, Chip, CircularProgress, Typography } from "@mui/material";
+import { Alert, Box, CircularProgress, Typography, Chip } from "ui";
 import { useTheme } from "@mui/material/styles";
 import { grey } from "@mui/material/colors";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -144,6 +144,7 @@ export function NoveltyInlinePanel({ rowId }: NoveltyInlinePanelProps) {
                     <Chip
                       key={label}
                       label={label}
+                      variant="filled"
                       size="small"
                       onClick={() => toggleLabel(label)}
                       sx={{

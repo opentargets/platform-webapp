@@ -1,9 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
-import { Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import _ from "lodash";
-import { Link, SectionItem, PaginationActionsComplete, Table, useBatchDownloader, useReportSectionContext, useReportQueryVariables, useReportState } from "ui";
+import {
+  Link,
+  SectionItem,
+  PaginationActionsComplete,
+  Table,
+  useBatchDownloader,
+  Typography,
+  useReportSectionContext,
+  useReportQueryVariables,
+  useReportState,
+} from "ui";
 
 import { definition } from ".";
 import Description from "./Description";

@@ -1,7 +1,7 @@
 import { faCaretDown, faCaretUp, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button as MuiButton, type SxProps, styled, type Theme } from "@mui/material";
-import type { MouseEventHandler } from "react";
+import type { ComponentType, MouseEventHandler } from "react";
 
 type PopoverButtonProps = {
   popoverId?: string;
@@ -28,14 +28,13 @@ type PopoverButtonProps = {
     | "9x"
     | "10x";
   sx?: SxProps<Theme>;
+  as?: ComponentType<React.ComponentProps<typeof MuiButton>>;
 };
 
-const Button = styled(MuiButton)({
-  border: "none",
-  "& .MuiButton-startIcon": {
-    fontSize: "14px !important",
-  },
-});
+// Swap point for a future design-system migration — currently a no-op wrapper
+// around MuiButton (previously forced startIcon to a fixed 14px regardless of
+// size="small"/"large", which only happened to match the "medium" default).
+const Button = styled(MuiButton)({});
 
 const ButtonPrimary = styled(Button)(({ theme }) => ({
   border: theme.palette.primary.dark,
@@ -44,10 +43,18 @@ const ButtonPrimary = styled(Button)(({ theme }) => ({
   "&:hover": {
     backgroundColor: theme.palette.secondary.main,
   },
-  "& .MuiButton-startIcon": {
-    fontSize: "14px !important",
-  },
 }));
+
+// The app theme forces a 1px grey border onto every MuiButton root by default
+// (see ot-config's theme.ts). This variant hides that border until hover, for
+// toolbar-style trigger buttons where a permanent border doesn't read as
+// intentional but a hover affordance still should.
+const ButtonNoBorder = styled(Button)({
+  border: "1px solid transparent",
+  "&:hover": {
+    border: "1px solid rgb(196,196,196)",
+  },
+});
 
 const PopoverButton: React.FC<PopoverButtonProps> = ({
   popoverId,
@@ -60,9 +67,10 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
   iconSize,
   sx,
   testId,
+  as: ButtonComponent = Button,
 }) => {
   return (
-    <Button
+    <ButtonComponent
       aria-describedby={popoverId}
       aria-label={ariaLabel}
       data-testid={testId}
@@ -78,8 +86,8 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
       <Box component="span" sx={{ ml: 1 }}>
         {open ? <FontAwesomeIcon icon={faCaretUp} /> : <FontAwesomeIcon icon={faCaretDown} />}
       </Box>
-    </Button>
+    </ButtonComponent>
   );
 };
 
-export { PopoverButton, ButtonPrimary, Button };
+export { PopoverButton, ButtonPrimary, Button, ButtonNoBorder };

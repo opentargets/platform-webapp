@@ -1,7 +1,7 @@
-import { ReactElement } from "react";
+import { ReactNode } from "react";
 
 type TooltipTableProps = {
-  children: ReactElement;
+  children: ReactNode;
 };
 
 function TooltipTable({ children }: TooltipTableProps) {

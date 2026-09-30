@@ -1,8 +1,7 @@
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
 import { type ReactNode, useEffect } from "react";
-import { Link } from "ui";
+import { Link, Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "ui";
 import { setModalOpen } from "./actions";
 import AnalysisContainer from "./components/AnalysisContainer";
 import { useGeneEnrichment } from "./Provider";

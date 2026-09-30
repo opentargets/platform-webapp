@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { Link, OtTable } from "ui";
-import { Box, Typography } from "@mui/material";
+import { Link, OtTable, Box, Typography } from "ui";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { clinicalStageCategories } from "@ot/constants";

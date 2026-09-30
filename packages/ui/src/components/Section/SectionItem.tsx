@@ -1,7 +1,10 @@
 import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
+import { VIEW } from "@ot/constants";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Element } from "react-scroll";
-
 import ErrorBoundary from "../ErrorBoundary";
+import PartnerLockIcon from "../PartnerLockIcon";
+import { createShortName } from "../Summary/utils";
 import SectionError from "./SectionError";
 import {
   CardHeaderContainer,
@@ -12,12 +15,8 @@ import {
   StyledDescription,
   StyledTitle,
 } from "./SectionItem.styles";
-import { createShortName } from "../Summary/utils";
-import PartnerLockIcon from "../PartnerLockIcon";
 import SectionViewToggle from "./SectionViewToggle";
 import { AddToReportButton } from "../Report";
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { VIEW } from "@ot/constants";
 import {
   ReportComponentStateProvider,
   useReportComponentState,
@@ -129,8 +128,11 @@ function SectionItem({
 
   const sectionContent = (
     <GridLegacy item xs={12}>
-      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}`}>
-        <div id={definition.id}>
+      <section
+        id={definition.id}
+        data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}
+      >
+        <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>
               <CardHeaderContainer>
@@ -139,14 +141,12 @@ function SectionItem({
                 {/* HEADER, SUB-HEADER & CHIP */}
                 <Box sx={{ flex: 1 }}>
                   <StyledTitle
-                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, '-')}-header`}
+                    data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}-header`}
                     error={!!error}
                   >
                     {definition.name}
                     {definition.isPrivate && <PartnerLockIcon />}
-                    {chipText && (
-                      <StyledChip sx={{ typography: "caption" }}>{chipText}</StyledChip>
-                    )}
+                    {chipText && <StyledChip sx={{ typography: "caption" }}>{chipText}</StyledChip>}
                   </StyledTitle>
                   <StyledDescription data-testid="section-description" variant="body2">
                     {renderDescription()}
@@ -183,7 +183,7 @@ function SectionItem({
               <StyledCardContent>{getSelectedView()}</StyledCardContent>
             </ErrorBoundary>
           </Card>
-        </div>
+        </Element>
       </section>
     </GridLegacy>
   );

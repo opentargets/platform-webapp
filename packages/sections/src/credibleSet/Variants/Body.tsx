@@ -1,4 +1,3 @@
-import { Box, Chip } from "@mui/material";
 import {
   Link,
   SectionItem,
@@ -7,6 +6,8 @@ import {
   OtTable,
   useBatchQuery,
   SectionLoader,
+  Box,
+  Chip,
   useReportQueryVariables,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
@@ -50,7 +51,7 @@ function getColumns({ leadVariantId }: getColumnsType) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
-              <Chip label="lead" variant="outlined" size="small" />
+              <Chip label="lead" />
             </Box>
           );
         }

@@ -1,7 +1,5 @@
-import { ReactElement, useState } from "react";
-import { Column } from "@tanstack/react-table";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Badge,
   ClickAwayListener,
@@ -12,8 +10,10 @@ import {
   ListItemButton,
   TextField,
 } from "@mui/material";
+import type { Column } from "@tanstack/react-table";
+import { type ReactElement, useState } from "react";
 import { v1 } from "uuid";
-import OtPopper from "../OtPopper";
+import Popper from "../Popper";
 
 function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): ReactElement {
   /*****************************************
@@ -64,17 +64,17 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
       </IconButton>
 
       {/* FILTER POPOVER */}
-      <OtPopper id={id} open={open} anchorEl={anchorEl}>
+      <Popper id={id} open={open} anchorEl={anchorEl}>
         <ClickAwayListener onClickAway={handleClose}>
           <GridLegacy container direction="column" spacing={2}>
             {/* INPUT FOR COLUMN FILTER */}
             <GridLegacy sx={{ width: 1 }} item>
               <TextField
-                sx={{ width: 1, padding: theme => `${theme.spacing(1)} ${theme.spacing(1.5)}` }}
+                sx={{ width: 1, padding: (theme) => `${theme.spacing(1)} ${theme.spacing(1.5)}` }}
                 autoFocus
                 variant="standard"
                 value={columnFilterInputValue}
-                onChange={e => setColumnFilterInputValue(e.target.value)}
+                onChange={(e) => setColumnFilterInputValue(e.target.value)}
                 placeholder={`Search..`}
                 InputProps={{
                   endAdornment: (
@@ -91,7 +91,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
             <GridLegacy item>
               <List aria-label="filter-list">
                 {Object.keys(sortedUniqueValues).map(
-                  keyName =>
+                  (keyName) =>
                     /****************************************************
                      *  STRING.SEARCH FUNCTION FILTERS THE LIST OF  *
                      * UNIQUE VALUES WITHOUT HAVING TO MODIFY ANY STATE *
@@ -118,7 +118,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
             </GridLegacy>
           </GridLegacy>
         </ClickAwayListener>
-      </OtPopper>
+      </Popper>
 
       <div className="h-1" />
     </>
