@@ -10,7 +10,7 @@ import {
   tooltipClasses,
 } from "@mui/material";
 import { GenomicLocationPresentationType, type IGeneomicLocation, naLabel } from "@ot/constants";
-import { type ReactElement, useEffect, useMemo, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 import { GenomicLocation } from "../..";
 
 import StudyPublication from "../StudyPublication";
@@ -196,7 +196,16 @@ function AsyncTooltipDataView({
           >
             {getLabel()}
           </Box>
-          <Box sx={{ typography: "body2", color: (theme) => theme.palette.grey[800] }}>
+          <Box
+            sx={{
+              typography: "body2",
+              color: (theme) => theme.palette.grey[800],
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 3,
+              overflow: "hidden",
+            }}
+          >
             {getEntityDescription(entity, data as Record<string, unknown>)}
           </Box>
         </Box>
