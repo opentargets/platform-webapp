@@ -79,11 +79,21 @@ function ByStudyTypeHBar({
     const chartWidth = width ?? 0;
     const totalCount = data.reduce((total, item) => total + item.count, 0);
     const labels = calculateLabelLayout(data, chartWidth, totalCount);
+    const hasLeftExternalLabel = labels.some(
+      (label) => label.isExternal && label.center < chartWidth / 2
+    );
     const externalLabels = labels
       .filter((label) => label.isExternal)
       .map((label, index) => ({
         ...label,
-        position: index % 2 === 0 ? "above" : "below",
+        position:
+          index % 2 === 0
+            ? hasLeftExternalLabel
+              ? "below"
+              : "above"
+            : hasLeftExternalLabel
+              ? "above"
+              : "below",
         lane: Math.floor(index / 2) + 1,
       }));
     const aboveLanes = Math.ceil(
