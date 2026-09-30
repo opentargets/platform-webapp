@@ -83,7 +83,7 @@ function ByStudyTypeHBar({
       .filter((label) => label.isExternal)
       .map((label, index) => ({
         ...label,
-        position: index % 2 === 0 ? "above" : "below",
+        position: index % 2 === 0 ? "below" : "above",
         lane: Math.floor(index / 2) + 1,
       }));
     const aboveLanes = Math.ceil(
