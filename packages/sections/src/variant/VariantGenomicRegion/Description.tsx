@@ -9,15 +9,15 @@ type DescriptionProps = {
 function Description({ variantId, referenceAllele, alternateAllele }: DescriptionProps) {
   return (
     <>
-      Genes in the region of{" "}
+      Genes (canonical transcripts) in the region of{" "}
       <strong>
         <DisplayVariantId
           variantId={variantId}
           referenceAllele={referenceAllele}
           alternateAllele={alternateAllele}
         />
-      </strong>{" "}
-      (build: GRCh38).
+      </strong>
+      . Build: GRCh38.
     </>
   );
 }

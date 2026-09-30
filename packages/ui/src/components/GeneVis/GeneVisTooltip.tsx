@@ -72,7 +72,16 @@ function GeneVisTooltip({
               <Box sx={{ typography: "subtitle2", color: theme => theme.palette.grey[900], textTransform: "capitalize", fontWeight: "bold" }}>
                 {entity.name || entity.id || naLabel}
               </Box>
-              <Box sx={{ typography: "body2", color: theme => theme.palette.grey[800] }}>
+              <Box
+                sx={{
+                  typography: "body2",
+                  color: theme => theme.palette.grey[800],
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 3,
+                  overflow: "hidden",
+                }}
+              >
                 {getEntityDescription(entityType, entity as Record<string, unknown>)}
               </Box>
             </Box>
