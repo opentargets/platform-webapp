@@ -1,14 +1,23 @@
-import React, { ReactNode, Suspense } from "react";
-import { createRegistry } from "report-core";
-import { ReportSectionDefinition, ReportRequest } from "../types/report";
-import { ReportSectionContext } from "./ReportSectionContext";
-import { ReportQueryVariablesProvider } from "./ReportQueryVariablesProvider";
-import { ReportComponentStateProvider } from "./ReportComponentStateContext";
-import { SectionBodyPropsProvider } from "./SectionBodyPropsContext";
+/**
+ * Open Targets adapter for the report widget registry. A platform section is
+ * registered as a render function over the stored section: the function mounts
+ * the section's Body under the OT-specific contexts (entity, query variables,
+ * page-level API data, mount props). The registry itself lives in report-builder.
+ */
+import React from "react";
+import {
+  type ReportSectionDefinition,
+  type Reference,
+  type ReportSection,
+  type TableData,
+  type WidgetContext,
+  defaultWidgetRegistry,
+  type ReactWidgetDefinition,
+} from "report-builder";
 import { PlatformApiContext } from "./PlatformApiProvider";
-import ErrorBoundary from "../components/ErrorBoundary";
-
-import type { Reference, TableData } from "../components/Report/export/types";
+import { ReportQueryVariablesProvider } from "./ReportQueryVariablesProvider";
+import { ReportSectionContext } from "./ReportSectionContext";
+import { SectionBodyPropsProvider } from "./SectionBodyPropsContext";
 
 const noopAsync = async () => undefined;
 
@@ -26,129 +35,67 @@ export interface SectionExportAdapter {
   describeState?(state: Record<string, any>): string[];
 }
 
-/**
- * What the Open Targets host registers per section. Step 2 of LIBRARY_DESIGN.md
- * turns this into a core `WidgetDefinition` (render function over stored props).
- */
-export interface SectionComponentConstructor {
-  Body: React.ComponentType<any>;
-  definition?: ReportSectionDefinition;
-  exportAdapter?: SectionExportAdapter;
-}
+/** The registry platform sections register into; the report provider reads the same one. */
+export const sectionRegistry = defaultWidgetRegistry;
+
+const entityOf = (section: ReportSection) => {
+  const { definition, request, entityId, entityLabel } = section;
+  const data = request?.data?.[definition.entity] as { id?: string; name?: string; symbol?: string } | undefined;
+  return { id: entityId || data?.id, label: entityLabel || data?.name || data?.symbol };
+};
 
 /**
- * Registry of section components, keyed by composite id "entity:sectionId", so a
- * stored section can be rebuilt after a reload. Backed by report-core's registry.
+ * Mount a section Body off its page: the saved mount props win (the entity id alone
+ * doesn't rebuild every Body), the saved request stands in for the page-level query
+ * (`usePlatformApi`), and the saved variables let it re-issue the same query.
  */
-export const sectionRegistry = createRegistry<SectionComponentConstructor>();
+const renderSection =
+  (Body: React.ComponentType<any>) =>
+  (section: ReportSection, _ctx: WidgetContext) => {
+    const { definition, request, bodyProps } = section;
+    const entity = entityOf(section);
+    const platformApi = {
+      entity: definition.entity,
+      loading: false,
+      error: request?.error,
+      data: request?.data,
+      refetch: noopAsync,
+      fetchMore: noopAsync,
+    };
+    return (
+      <ReportQueryVariablesProvider variables={request?.variables}>
+        <ReportSectionContext.Provider
+          value={{ entityId: entity.id, entityLabel: entity.label, entityType: definition.entity }}
+        >
+          <PlatformApiContext.Provider value={platformApi}>
+            <SectionBodyPropsProvider value={bodyProps ?? null}>
+              <Body id={entity.id} label={entity.label} entity={definition.entity} {...bodyProps} request={request} />
+            </SectionBodyPropsProvider>
+          </PlatformApiContext.Provider>
+        </ReportSectionContext.Provider>
+      </ReportQueryVariablesProvider>
+    );
+  };
 
 /**
- * Register a section component so it can be reconstructed from storage
+ * Register a section component so a stored section can be rebuilt after a reload.
+ * `sectionId` is the composite "entity:sectionId" (see registerAllSections).
  */
 export const registerSectionComponent = (
   sectionId: string,
   Body: React.ComponentType<any>,
-  definition?: ReportSectionDefinition,
+  _definition?: ReportSectionDefinition,
   exportAdapter?: SectionExportAdapter
 ) => {
-  // sectionId should be in composite format "entity:sectionId" from registerAllSections
-  return sectionRegistry.register(sectionId, { Body, definition, exportAdapter });
+  const def: ReactWidgetDefinition = {
+    render: renderSection(Body),
+    describeState: exportAdapter?.describeState?.bind(exportAdapter),
+    toTable: exportAdapter?.toTable ? (section, state) => exportAdapter.toTable?.(section.request?.data, state) : undefined,
+    toSvg: exportAdapter?.toSvg?.bind(exportAdapter),
+    references: exportAdapter?.references ? (section) => exportAdapter.references?.(section.request?.data) ?? [] : undefined,
+  };
+  return sectionRegistry.register(sectionId, def);
 };
 
-/**
- * Get a registered section component
- */
+/** The registered widget definition, if any (registerAllSections uses it to spot duplicate keys). */
 export const getSectionComponent = (sectionId: string) => sectionRegistry.get(sectionId);
-
-/**
- * Export adapter for a widget's definition, if its section registered one
- */
-export const getSectionExportAdapter = (definition: {
-  entity: string;
-  id: string;
-}): SectionExportAdapter | undefined =>
-  sectionRegistry.get(`${definition.entity}:${definition.id}`)?.exportAdapter;
-
-/** Renderers for one stored section. `renderChart` is unset until a section registers one. */
-export interface SectionRenderFunctions {
-  renderBody: () => ReactNode;
-  renderChart?: () => ReactNode;
-  renderDescription: () => ReactNode;
-}
-
-/**
- * Create render functions from stored request data
- * The request object includes:
- * - data: The fetched GraphQL data
- * - variables: The variables used in the GraphQL query (essential for reconstructing requests)
- * - loading/error: Current state flags
- */
-export const createRenderFunctionsFromMetadata = (
-  definition: ReportSectionDefinition,
-  request: ReportRequest,
-  entityId?: string,
-  entityLabel?: string,
-  sectionComponentData?: SectionComponentConstructor,
-  componentState?: Record<string, any>,
-  bodyProps?: Record<string, unknown>
-): SectionRenderFunctions | undefined => {
-  const entityData = request?.data?.[definition.entity] as
-    | { id?: string; name?: string; symbol?: string }
-    | undefined;
-  const entityIdToUse = entityId || entityData?.id;
-  const entityLabelToUse = entityLabel || entityData?.name || entityData?.symbol;
-
-  // Use composite ID format "entity:sectionId" to match registerAllSections format
-  const compositeId = `${definition.entity}:${definition.id}`;
-  const component = sectionComponentData || getSectionComponent(compositeId);
-  if (!component) return undefined;
-
-  const { Body } = component;
-
-  // A few Bodies read the page-level query (usePlatformApi) rather than running their own;
-  // off-page, the section's saved request stands in for it
-  const platformApi = {
-    entity: definition.entity,
-    loading: false,
-    error: request?.error,
-    data: request?.data,
-    refetch: noopAsync,
-    fetchMore: noopAsync,
-  };
-
-  return {
-    renderBody: () => (
-      <Suspense fallback={<div style={{ padding: "16px", textAlign: "center" }}>Loading section...</div>}>
-        <ReportComponentStateProvider initialState={componentState}>
-          <ReportQueryVariablesProvider variables={request?.variables}>
-            <ReportSectionContext.Provider
-              value={{
-                entityId: entityIdToUse,
-                entityLabel: entityLabelToUse,
-                entityType: definition.entity
-              }}
-            >
-              {/* One section failing must not take the rest of the report down with it */}
-              <ErrorBoundary>
-                <PlatformApiContext.Provider value={platformApi}>
-                  {/* Saved mount props win: the entity id alone doesn't rebuild every Body */}
-                  <SectionBodyPropsProvider value={bodyProps ?? null}>
-                    <Body
-                      id={entityIdToUse}
-                      label={entityLabelToUse}
-                      entity={definition.entity}
-                      {...bodyProps}
-                      request={request}
-                    />
-                  </SectionBodyPropsProvider>
-                </PlatformApiContext.Provider>
-              </ErrorBoundary>
-            </ReportSectionContext.Provider>
-          </ReportQueryVariablesProvider>
-        </ReportComponentStateProvider>
-      </Suspense>
-    ),
-    renderChart: undefined,
-    renderDescription: () => <div>Section: {definition.name}</div>,
-  };
-};

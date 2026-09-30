@@ -11334,6 +11334,7 @@ __metadata:
     react-helmet: "npm:^6.0.0"
     react-router: "npm:^7.18.1"
     react-tsparticles: "npm:^2.0.6"
+    report-builder: "npm:*"
     rollup-plugin-visualizer: "npm:^5.14.0"
     sass: "npm:^1.49.10"
     sections: "npm:*"
@@ -12034,15 +12035,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"report-core@npm:*, report-core@workspace:packages/report-core":
+"report-builder@npm:*, report-builder@workspace:packages/report-builder":
   version: 0.0.0-use.local
-  resolution: "report-core@workspace:packages/report-core"
+  resolution: "report-builder@workspace:packages/report-builder"
   dependencies:
+    "@codemirror/autocomplete": "npm:^6.20.3"
+    "@codemirror/lang-javascript": "npm:^6.2.5"
+    "@codemirror/lang-json": "npm:^6.0.2"
+    "@codemirror/language": "npm:^6.12.4"
+    "@codemirror/lint": "npm:^6.9.7"
+    "@codemirror/state": "npm:^6.7.6"
+    "@codemirror/view": "npm:^6.43.13"
+    "@dnd-kit/react": "npm:^0.4.0"
+    "@dnd-kit/sortable": "npm:^10.0.0"
+    "@fortawesome/fontawesome-svg-core": "npm:^6.1.1"
+    "@fortawesome/free-solid-svg-icons": "npm:^6.4.2"
+    "@fortawesome/react-fontawesome": "npm:^0.2.0"
+    "@mui/material": "npm:^7.3.9"
+    "@tiptap/core": "npm:^3.31.3"
+    "@tiptap/extension-superscript": "npm:^3.31.3"
+    "@tiptap/extensions": "npm:^3.31.3"
+    "@tiptap/pm": "npm:^3.31.3"
+    "@tiptap/react": "npm:^3.31.3"
+    "@tiptap/starter-kit": "npm:^3.31.3"
+    "@types/papaparse": "npm:^5.5.2"
+    "@types/react": "npm:^18.0.28"
+    "@types/react-dom": "npm:^18.0.11"
     acorn: "npm:^8.18.0"
     acorn-walk: "npm:^8.3.5"
+    cm6-graphql: "npm:^0.2.2"
+    codemirror: "npm:^6.0.2"
+    docx: "npm:^9.8.0"
+    graphql: "npm:^16.12.0"
     notebook-runtime: "npm:*"
+    papaparse: "npm:^5.7.0"
+    pptxgenjs: "npm:^4.0.1"
+    react: "npm:^18.2.0"
+    react-dom: "npm:^18.2.0"
     tsconfig: "npm:*"
     typescript: "npm:^5.2.2"
+    uuid: "npm:^11.1.1"
   languageName: unknown
   linkType: soft
 
@@ -13729,7 +13761,7 @@ __metadata:
     react-helmet: "npm:^6.1.0"
     react-router: "npm:^7.18.1"
     react-scroll: "npm:^1.8.9"
-    report-core: "npm:*"
+    report-builder: "npm:*"
     storybook: "npm:^10.0.6"
     tsconfig: "npm:*"
     typescript: "npm:^5.2.2"

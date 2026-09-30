@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 
 import { SearchProvider, PrivateRoute, OTConfigurationProvider,  LoadingBackdrop, FromGeneticsModal } from "ui";
-import { ReportBuilderProvider } from "ui/src/providers/ReportBuilderProvider";
+import { ReportBuilderProvider } from "ui";
 import { createBrowserRouter, RouterProvider } from "react-router";
 
 import { getConfig } from "@ot/config";
@@ -144,18 +144,19 @@ const router = createBrowserRouter([
 
 function App(): ReactElement {
   return (
-    <ReportBuilderProvider>
     <OTConfigurationProvider config={config} client={apolloClient}>
-      <SearchProvider
-        searchQuery={SEARCH_QUERY}
-        searchPlaceholder="Search for a target, drug, disease, or phenotype..."
-      >
-        <GeneEnrichmentProvider>
-          <RouterProvider router={router} />
-        </GeneEnrichmentProvider>
-      </SearchProvider>
+      {/* Inside the configuration provider: the report builder routes queries through the app's Apollo client */}
+      <ReportBuilderProvider>
+        <SearchProvider
+          searchQuery={SEARCH_QUERY}
+          searchPlaceholder="Search for a target, drug, disease, or phenotype..."
+        >
+          <GeneEnrichmentProvider>
+            <RouterProvider router={router} />
+          </GeneEnrichmentProvider>
+        </SearchProvider>
+      </ReportBuilderProvider>
     </OTConfigurationProvider>
-    </ReportBuilderProvider>
   );
 }
 

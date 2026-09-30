@@ -16,7 +16,7 @@ import {
   StyledTitle,
 } from "./SectionItem.styles";
 import SectionViewToggle from "./SectionViewToggle";
-import { AddToReportButton } from "../Report";
+import { AddToReportButton } from "../AddToReportButton";
 import {
   ReportComponentStateProvider,
   useReportComponentState,

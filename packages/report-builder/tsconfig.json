@@ -1,0 +1,5 @@
+{
+  "exclude": ["dist", "build", "node_modules"],
+  "extends": "tsconfig/vite.json",
+  "include": ["src"]
+}

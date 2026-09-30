@@ -1,7 +1,6 @@
 import { Outlet } from "react-router";
+import { ReportBuilder, ReportToggleButton } from "report-builder";
 import { FromGeneticsModal, NavigationProgress } from "ui";
-import ReportBuilder from "ui/src/components/Report/ReportBuilder";
-import ReportToggleButton from "ui/src/components/Report/ReportToggleButton";
 
 function RootLayout() {
   return (
