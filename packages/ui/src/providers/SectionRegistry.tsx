@@ -1,4 +1,5 @@
-import React, { Suspense } from "react";
+import React, { ReactNode, Suspense } from "react";
+import { createRegistry } from "report-core";
 import { ReportSectionDefinition, ReportRequest } from "../types/report";
 import { ReportSectionContext } from "./ReportSectionContext";
 import { ReportQueryVariablesProvider } from "./ReportQueryVariablesProvider";
@@ -7,8 +8,9 @@ import { SectionBodyPropsProvider } from "./SectionBodyPropsContext";
 import { PlatformApiContext } from "./PlatformApiProvider";
 import ErrorBoundary from "../components/ErrorBoundary";
 
-const noopAsync = async () => undefined;
 import type { Reference, TableData } from "../components/Report/export/types";
+
+const noopAsync = async () => undefined;
 
 /**
  * Optional per-section hooks used by the report export (collect/RenderHost).
@@ -25,8 +27,8 @@ export interface SectionExportAdapter {
 }
 
 /**
- * Section Component Constructor
- * Used to dynamically create render functions from stored metadata
+ * What the Open Targets host registers per section. Step 2 of LIBRARY_DESIGN.md
+ * turns this into a core `WidgetDefinition` (render function over stored props).
  */
 export interface SectionComponentConstructor {
   Body: React.ComponentType<any>;
@@ -35,10 +37,10 @@ export interface SectionComponentConstructor {
 }
 
 /**
- * Global registry to map section IDs to their component constructors
- * Allows reconstruction of render functions from stored section data
+ * Registry of section components, keyed by composite id "entity:sectionId", so a
+ * stored section can be rebuilt after a reload. Backed by report-core's registry.
  */
-const sectionComponentRegistry = new Map<string, SectionComponentConstructor>();
+export const sectionRegistry = createRegistry<SectionComponentConstructor>();
 
 /**
  * Register a section component so it can be reconstructed from storage
@@ -50,15 +52,13 @@ export const registerSectionComponent = (
   exportAdapter?: SectionExportAdapter
 ) => {
   // sectionId should be in composite format "entity:sectionId" from registerAllSections
-  sectionComponentRegistry.set(sectionId, { Body, definition, exportAdapter });
+  return sectionRegistry.register(sectionId, { Body, definition, exportAdapter });
 };
 
 /**
  * Get a registered section component
  */
-export const getSectionComponent = (sectionId: string) => {
-  return sectionComponentRegistry.get(sectionId);
-};
+export const getSectionComponent = (sectionId: string) => sectionRegistry.get(sectionId);
 
 /**
  * Export adapter for a widget's definition, if its section registered one
@@ -67,7 +67,14 @@ export const getSectionExportAdapter = (definition: {
   entity: string;
   id: string;
 }): SectionExportAdapter | undefined =>
-  sectionComponentRegistry.get(`${definition.entity}:${definition.id}`)?.exportAdapter;
+  sectionRegistry.get(`${definition.entity}:${definition.id}`)?.exportAdapter;
+
+/** Renderers for one stored section. `renderChart` is unset until a section registers one. */
+export interface SectionRenderFunctions {
+  renderBody: () => ReactNode;
+  renderChart?: () => ReactNode;
+  renderDescription: () => ReactNode;
+}
 
 /**
  * Create render functions from stored request data
@@ -84,13 +91,17 @@ export const createRenderFunctionsFromMetadata = (
   sectionComponentData?: SectionComponentConstructor,
   componentState?: Record<string, any>,
   bodyProps?: Record<string, unknown>
-) => {
-  const entityIdToUse = entityId || request?.data?.[definition.entity]?.id;
-  const entityLabelToUse = entityLabel || request?.data?.[definition.entity]?.name || request?.data?.[definition.entity]?.symbol;
+): SectionRenderFunctions | undefined => {
+  const entityData = request?.data?.[definition.entity] as
+    | { id?: string; name?: string; symbol?: string }
+    | undefined;
+  const entityIdToUse = entityId || entityData?.id;
+  const entityLabelToUse = entityLabel || entityData?.name || entityData?.symbol;
 
   // Use composite ID format "entity:sectionId" to match registerAllSections format
   const compositeId = `${definition.entity}:${definition.id}`;
   const component = sectionComponentData || getSectionComponent(compositeId);
+  if (!component) return undefined;
 
   const { Body } = component;
 

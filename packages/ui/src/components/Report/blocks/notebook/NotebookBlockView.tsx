@@ -13,7 +13,7 @@ import { dataResultsStore } from "../dataResultsStore";
 import { downloadCsv, downloadJson } from "../dataPaths";
 import { CaptionField } from "../ImageBlockView";
 import { BlockViewProps } from "../types";
-import { buildGraph, downstreamOf, upstreamOf } from "./graph";
+import { buildGraph, downstreamOf, upstreamOf } from "report-core";
 import { InputPicker } from "./InputPicker";
 import { insertAtCursor, jumpTo, NotebookEditor } from "./NotebookEditor";
 import { NotebookOutput } from "./NotebookOutput";
@@ -276,7 +276,7 @@ export const NotebookBlockView: React.FC<BlockViewProps<NotebookBlock>> = (props
   };
 
   const renameRef = () => {
-    const input = window.prompt("Ref (a JavaScript identifier; unique in this report)", block.ref);
+    const input = window.prompt("Ref (a JavaScript identifier; unique in this narrative)", block.ref);
     if (input === null) return;
     dispatch({ type: "renameBlockRef", reportSectionId: id, ref: input });
   };

@@ -1,4 +1,4 @@
-import { isNotebook, refOf, ReportBlock } from "../../../../types/report";
+import { isNotebook, type ReportBlock, refOf } from "./types";
 
 /**
  * Dependency graph over refs. There's an edge `input → notebook` for every
@@ -67,7 +67,11 @@ export const upstreamOf = (graph: RefGraph, ref: string): string[] => {
  * The path `notebookRef → … → inputRef` that linking `inputRef` into
  * `notebookRef` would close into a loop, or null when the link is fine.
  */
-export const cyclePath = (graph: RefGraph, notebookRef: string, inputRef: string): string[] | null => {
+export const cyclePath = (
+  graph: RefGraph,
+  notebookRef: string,
+  inputRef: string
+): string[] | null => {
   if (notebookRef === inputRef) return [notebookRef, notebookRef];
   // BFS from the notebook along downstream edges looking for the input
   const parent = new Map<string, string>();
@@ -95,8 +99,11 @@ export const cyclePath = (graph: RefGraph, notebookRef: string, inputRef: string
   return null;
 };
 
-export const wouldCreateCycle = (blocks: ReportBlock[], notebookRef: string, inputRef: string): boolean =>
-  cyclePath(buildGraph(blocks), notebookRef, inputRef) !== null;
+export const wouldCreateCycle = (
+  blocks: ReportBlock[],
+  notebookRef: string,
+  inputRef: string
+): boolean => cyclePath(buildGraph(blocks), notebookRef, inputRef) !== null;
 
 /** Refs in an order where every notebook comes after all of its inputs. */
 export const topoOrder = (graph: RefGraph): string[] => {

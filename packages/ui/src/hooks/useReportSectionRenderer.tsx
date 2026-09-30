@@ -1,29 +1,17 @@
 import { ReportSection } from "../types/report";
-import { createRenderFunctionsFromMetadata, getSectionComponent } from "../providers/SectionRegistry";
+import {
+  createRenderFunctionsFromMetadata,
+  getSectionComponent,
+  type SectionRenderFunctions,
+} from "../providers/SectionRegistry";
 
 /**
- * Get render functions for a section definition + request
- * Tries multiple strategies to get content:
- * 1. Cached renders from when section was added
- * 2. Metadata-based reconstruction (if component registered in global registry)
- * 3. Fallback placeholder
+ * Get render functions for a stored section: remount its registered Body with the
+ * saved request, entity, props and state. Same path on first add and after a
+ * reload, so a report never depends on nodes captured from the page.
  */
-export const getRenderFunctions = (section: ReportSection) => {
-  // Strategy 1: If we have meaningful cached renderers (from initial add), use them
-  const hasCachedContent = 
-    section.renderedContent?.body !== null && 
-    section.renderedContent?.body !== undefined;
-
-  if (hasCachedContent && section.renderedContent?.description) {
-    return {
-      renderBody: () => section.renderedContent.body,
-      renderChart: () => section.renderedContent.chart,
-      renderDescription: () => section.renderedContent.description,
-    };
-  }
-
-  // Strategy 2: Try to reconstruct from registered component metadata
-  // Use composite ID format "entity:sectionId" to match registerAllSections format
+export const getRenderFunctions = (section: ReportSection): SectionRenderFunctions => {
+  // Composite ID format "entity:sectionId" matches registerAllSections
   const compositeId = `${section.definition.entity}:${section.definition.id}`;
   const componentData = getSectionComponent(compositeId);
   if (componentData) {
@@ -41,16 +29,13 @@ export const getRenderFunctions = (section: ReportSection) => {
     }
   }
 
-  // Fallback if no method works
+  // Fallback if the section isn't registered
   return {
-    renderBody: () => {
-      console.log('section.definition', section.definition);
-      return (
-
+    renderBody: () => (
       <div style={{ padding: "16px", textAlign: "center", color: "#999" }}>
         Section not available - no renderer found for {section.definition.name}
       </div>
-    )},
+    ),
     renderChart: undefined,
     renderDescription: () => <div>Section not loaded</div>,
   };
@@ -58,7 +43,6 @@ export const getRenderFunctions = (section: ReportSection) => {
 
 /**
  * Hook to get displayable content for a report section
- * Handles both cached and fresh renders
  */
 export const useReportSectionContent = (section: ReportSection) => {
   const renderers = getRenderFunctions(section);

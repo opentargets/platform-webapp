@@ -1,69 +1,35 @@
 import React, {
   createContext,
   useContext,
-  useState,
-  useCallback,
   useEffect,
+  useMemo,
   useRef,
+  useState,
+  useSyncExternalStore,
   Dispatch,
   SetStateAction,
 } from "react";
-import { isEqual } from "lodash";
+import { createStateBag, deepEqual, type StateBag } from "report-core";
 
 /**
- * Context to manage component state persistence in reports
- * 
- * USAGE:
- * 
- * // In your Body component:
- * import { useReportComponentState } from "ui";
- * 
- * function Body({ id, label }) {
- *   const { saveState, getState } = useReportComponentState();
- *   const [selectedRow, setSelectedRow] = useState(null);
- *   const [filters, setFilters] = useState({});
- *   
- *   // Restore state if in a report
- *   useEffect(() => {
- *     const saved = getState('selectedRow');
- *     if (saved) setSelectedRow(saved);
- *   }, []);
- *   
- *   // Save state whenever it changes
- *   const handleSelectRow = (row) => {
- *     setSelectedRow(row);
- *     saveState('selectedRow', row);
- *   };
- *   
- *   // When user updates filters
- *   const handleFilterChange = (newFilters) => {
- *     setFilters(newFilters);
- *     saveState('filters', newFilters);
- *   };
- *   
- *   return (
- *     <MyTable
- *       selectedRow={selectedRow}
- *       onSelectRow={handleSelectRow}
- *       filters={filters}
- *       onFilterChange={handleFilterChange}
- *     />
- *   );
- * }
+ * React binding for a widget's state bag (report-core `StateBag`): the Memento a
+ * report captures from a widget on a live page (filters, selected rows, sort, tab)
+ * and seeds it with when the widget is rebuilt inside a report.
+ *
+ * Widget code uses `useReportState(key, initial)` (a `useState` the report captures)
+ * or, for state it already owns, `useReportComponentState()?.saveState(key, value)`.
  */
-
 export interface ReportComponentStateContextValue {
   // Save a state value (can be called multiple times to build state object)
   saveState: (key: string, value: any) => void;
-  
   // Retrieve all accumulated state
   getAllState: () => Record<string, any>;
-  
   // Retrieve a specific state value
   getState: (key: string) => any;
-  
   // Clear state (called when component unmounts or section is removed)
   clearState: () => void;
+  // The underlying bag, for code that wants to subscribe directly
+  bag: StateBag;
 }
 
 export const ReportComponentStateContext = createContext<ReportComponentStateContextValue | null>(null);
@@ -75,35 +41,23 @@ export const ReportComponentStateContext = createContext<ReportComponentStateCon
 export const ReportComponentStateProvider: React.FC<{
   children: React.ReactNode;
   initialState?: Record<string, any>;
-}> = ({ children, initialState = {} }) => {
-  const [state, setState] = useState<Record<string, any>>(initialState);
+}> = ({ children, initialState }) => {
+  const [bag] = useState(() => createStateBag(initialState ?? {}));
+  // Subscribing here re-renders consumers when the bag changes, as the old useState did
+  const snapshot = useSyncExternalStore(bag.subscribe, bag.getAll, bag.getAll);
 
-  // Unchanged values keep the same state object: consumers save on mount, and a new
-  // object each time re-renders the section, which can remount them and save again
-  const saveState = useCallback((key: string, value: any) => {
-    setState(prev => (isEqual(prev[key], value) ? prev : { ...prev, [key]: value }));
-  }, []);
-
-  const getAllState = useCallback(() => state, [state]);
-
-  const getState = useCallback((key: string) => state[key], [state]);
-
-  const clearState = useCallback(() => {
-    setState({});
-  }, []);
-
-  return (
-    <ReportComponentStateContext.Provider
-      value={{
-        saveState,
-        getAllState,
-        getState,
-        clearState,
-      }}
-    >
-      {children}
-    </ReportComponentStateContext.Provider>
+  const value = useMemo<ReportComponentStateContextValue>(
+    () => ({
+      saveState: bag.set,
+      getAllState: () => snapshot,
+      getState: (key) => snapshot[key],
+      clearState: bag.clear,
+      bag,
+    }),
+    [bag, snapshot]
   );
+
+  return <ReportComponentStateContext.Provider value={value}>{children}</ReportComponentStateContext.Provider>;
 };
 
 /**
@@ -131,7 +85,7 @@ export function useReportState<T>(key: string, initial: T): [T, Dispatch<SetStat
   const saveState = context?.saveState;
 
   useEffect(() => {
-    saveState?.(key, isEqual(value, initialRef.current) ? undefined : value);
+    saveState?.(key, deepEqual(value, initialRef.current) ? undefined : value);
   }, [saveState, key, value]);
 
   return [value, setValue];

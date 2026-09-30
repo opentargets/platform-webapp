@@ -1,7 +1,9 @@
 # Report Builder — Architecture & Design Reference
 
 **Status:** early/in-progress feature (branch `do-platform-reports-poc`)
-**Scope:** `packages/ui/src/components/Report/`, `packages/ui/src/providers/Report*`, `packages/ui/src/hooks/useReportSectionRenderer.tsx`, `packages/sections/src/registerAllSections.ts`
+**Scope:** `packages/report-core/` (framework-free core), `packages/ui/src/components/Report/`, `packages/ui/src/providers/Report*`, `packages/ui/src/hooks/useReportSectionRenderer.tsx`, `packages/sections/src/registerAllSections.ts`
+
+> **2026-09-30:** the extraction described in `LIBRARY_DESIGN.md` has started. Types, reducer, store, storage, registry, state bag, live capture and the ref/graph utilities now live in `packages/report-core` (no React); the `ui` modules below are React bindings over it. Sections marked *(updated)* reflect that.
 
 This document describes what exists **today**, verified against the code (not the aspirational docs at the repo root, which describe some not-yet-wired features — called out explicitly below). It's written to be handed to a design tool for wireframing, so it front-loads the mental model before getting into gaps and roadmap.
 
@@ -82,15 +84,17 @@ Report
      └─ addedAt, tags?, chipText?
 ```
 
-Key design decision: a section stores **both** the raw GraphQL `request` (data + variables) **and** a captured `renderedContent` (actual JSX). The former is serializable and is what survives a page reload; the latter is a live snapshot used only while it's still in memory in the same session.
+Key design decision *(updated)*: a section stores only serializable data: the raw GraphQL `request` (data + variables), the entity, the Body's mount props and the captured `componentState`. The earlier same-session cache of rendered JSX (`renderedContent`) is gone; a section is always rebuilt from the registry (§6), so what you see right after "Add" is exactly what you see after a reload.
 
 ---
 
 ## 4. State container
 
-`packages/ui/src/providers/ReportBuilderProvider.tsx`
+`packages/report-core/src/reducer.ts`, `store.ts`, `storage.ts`; React binding in `packages/ui/src/providers/ReportBuilderProvider.tsx` *(updated)*
 
-Built on an in-house factory, `createScopedContext` (`packages/ot-utils/src/createScopedContext.tsx`) — a small Context + `useReducer` wrapper where each action type maps to its own reducer function (`extraActions: { [actionType]: (state, action) => newState }`). This is functionally a hand-rolled version of Redux Toolkit's slice-reducer convention, scoped locally instead of a global store.
+The reducer is a pure action map in `report-core` (`reportReducer`), wrapped by `createReportStore({ storage })`: a tiny external store with `getState / dispatch / subscribe / load / getSaveStatus`. The `ui` provider creates one, calls `load()` on mount and exposes it through `useSyncExternalStore` (`useReportBuilderState`, `useReportBuilderDispatch`, `useReportSaveStatus`, `useReportBuilder`). The store persists on every change to `reports` through the injected `ReportStorage` adapter (default `localStorageAdapter()`, key `ot-reports`; `memoryStorageAdapter()` for tests) and never before the first load has finished. Save failures surface as a status the UI renders (`SaveStatusSnackbar`), not from inside the state layer.
+
+Previously it was built on an in-house factory, `createScopedContext` (`packages/ot-utils/src/createScopedContext.tsx`) — a small Context + `useReducer` wrapper where each action type maps to its own reducer function (`extraActions: { [actionType]: (state, action) => newState }`). This is functionally a hand-rolled version of Redux Toolkit's slice-reducer convention, scoped locally instead of a global store.
 
 Actions: `createReport`, `addSectionToReport`, `removeSectionFromReport`, `reorderSections`, `updateSectionView`, `setActiveReport`, `toggleBuilderOpen`, `deleteReport`, `renameReport`, `clearReport`, `initializeFromStorage`.
 
@@ -102,7 +106,7 @@ Actions: `createReport`, `addSectionToReport`, `removeSectionFromReport`, `reord
 
 ## 5. Registry — how a section is discovered and (re)rendered
 
-`SectionRegistry.tsx` is a plain `Map<string, { Body, definition }>` keyed by a composite id `"<entity>:<definitionId>"`. Populated **eagerly and synchronously** by `packages/sections/src/registerAllSections.ts`, which is called once at app bootstrap (`apps/platform/src/index.tsx`). It imports every section's `Body` component up front and registers all ~80 of them. This is the registry that `createRenderFunctionsFromMetadata` reads from, and it's what makes report reconstruction after reload work today.
+`SectionRegistry.tsx` *(updated)* is `createRegistry<SectionComponentConstructor>()` from `report-core` (a keyed registry with change notification and an optional async `resolve`), holding `{ Body, definition, exportAdapter }` under a composite id `"<entity>:<definitionId>"`. `registerSectionComponent` / `getSectionComponent` are thin wrappers over it and are the OT host adapter; LIBRARY_DESIGN.md step 2 replaces the entry shape with a core `WidgetDefinition`. Populated **eagerly and synchronously** by `packages/sections/src/registerAllSections.ts`, which is called once at app bootstrap (`apps/platform/src/index.tsx`). It imports every section's `Body` component up front and registers all ~80 of them. This is the registry that `createRenderFunctionsFromMetadata` reads from, and it's what makes report reconstruction after reload work today.
 
 **Key rule:** a saved section is looked up by the `entity` its `SectionItem` was given on the page, not by the folder it lives in. Evidence sections are mounted with `entity="disease"` (evidence page and the associations table's inline sections), so they register as `disease:<id>`; `disease/GWASStudies` and `study/SharedTraitStudies` pass `"studies"` / `"sharedTraitStudies"` and register under those. A section registered under any other key can't be rebuilt after a reload ("Section not available"). `registerAllSections` warns on duplicate keys. The associations-on-the-fly widgets register separately, from the app (`AssociationsToolkit/report/registerAotfSections.tsx`).
 
@@ -114,16 +118,15 @@ Actions: `createReport`, `addSectionToReport`, `removeSectionFromReport`, `reord
 
 `packages/ui/src/hooks/useReportSectionRenderer.tsx`
 
-This is a **Strategy pattern with ordered fallback**, tried per section on every render of `DraggableReportSection`:
+*(updated)* There is one render path, used both right after "Add" and after a reload:
 
-1. **Cached render** — if `section.renderedContent.body` is a real node (the common case: report open in the same session it was built in), use it directly. Fastest, but not what survives reload.
-2. **Metadata reconstruction** — look up the Body component in `SectionRegistry` by composite id and call `createRenderFunctionsFromMetadata`, which re-mounts the live `Body` component wrapped in `ReportQueryVariablesProvider` (so it can re-run its GraphQL query with the original `variables`) and `ReportSectionContext.Provider` (so it knows which entity it's describing). **This is the path that actually runs after a page reload.** It also:
+1. **Registry reconstruction** — look up the Body component in `SectionRegistry` by composite id and call `createRenderFunctionsFromMetadata`, which re-mounts the live `Body` component wrapped in `ReportQueryVariablesProvider` (so it can re-run its GraphQL query with the original `variables`) and `ReportSectionContext.Provider` (so it knows which entity it's describing). It also:
    - replays the Body's **saved mount props** (`section.bodyProps`). Every page mounts Bodies through `SectionBody` (`SectionBodyPropsContext.tsx`), which exposes their props to `SectionItem`, and "Add to Report" stores a plain-data copy. The entity id alone isn't enough: evidence Bodies take `id = { ensgId, efoId }` / `label = { symbol, name }`, study and credible-set pages pass extras (`studyId`, `diseaseIds`, `leadVariantId`), and many tables key their saved state on these props (`dataDownloaderFileStem`), so a wrong prop silently loses the saved filters;
    - provides `PlatformApiContext` from the section's saved request, for the few Bodies that read the page-level query (`usePlatformApi`, e.g. target Molecular Interactions);
    - wraps the Body in an `ErrorBoundary`, so one section failing to rebuild can't blank the rest of the report.
-3. **Fallback placeholder** — "Section not available."
+2. **Fallback placeholder** — "Section not available" when nothing is registered under that key.
 
-So on first add, a section shows its literal captured JSX; after a reload, it's a live remount of the real Body component, re-fetching the same query variables, on an entity it may never have been visited on the page for.
+The same-session cached-JSX path was removed on 2026-09-30 (LIBRARY_DESIGN.md step 1): keeping React nodes in state made it non-serializable and meant a report looked different before and after a reload. Apollo's cache makes the re-mount's refetch free in the common case.
 
 ---
 
@@ -135,7 +138,7 @@ Three React Contexts exist specifically so a `Body` component can behave correct
 |---|---|---|
 | `ReportSectionContext` | Gives `entityId`/`entityLabel`/`entityType`, so a Body can prefer this over `useParams()` when reconstructed off-page. | ~11 of 74 `Body` components read it today (rollout tracked in root `BODY_FILE_UPDATES.md` — partially applied, not finished). |
 | `ReportQueryVariablesProvider` | Gives the original GraphQL `variables` used at add-time, so a reconstructed Body can re-issue the same query rather than default params. | 2 confirmed usages (`target/Safety`, `evidence/EuropePmc`). |
-| `ReportComponentStateContext` | A generic `saveState(key, value)` / `getState(key)` / `getAllState()` bag: the Memento used to capture a widget's local UI state (filters, sort, selection, pagination) at add-time and restore it on reconstruction. | **Wired up** (see below) — one consumer today (`OtTable`), covering 50 of 74 sections. |
+| `ReportComponentStateContext` | A generic `saveState(key, value)` / `getState(key)` / `getAllState()` bag: the Memento used to capture a widget's local UI state (filters, sort, selection, pagination) at add-time and restore it on reconstruction. *(updated)* The bag itself is `report-core`'s `createStateBag()`; this context is its React binding, and `LiveSectionStateRegistry` is likewise a binding over core's `createLiveCaptureRegistry()`. | **Wired up** (see below) — one consumer today (`OtTable`), covering 50 of 74 sections. |
 
 **How filter-state capture actually works now:**
 
@@ -172,7 +175,9 @@ Verified end-to-end in a real browser session (target BRAF page, Safety section)
 
 ## 9. What's blocking "extract this as a standalone library"
 
-The current code is functionally correct only because it lives inside this monorepo:
+> *(updated)* Superseded by `LIBRARY_DESIGN.md`. Items 1 (eager-only registry; core's registry now has an async `resolve`), 4 (hard-coded localStorage; now an injected `ReportStorage`) and the non-serializable state are addressed. Items 2 and 3 remain and are LIBRARY_DESIGN.md steps 2, 5 and 6.
+
+The original analysis, kept for context:
 
 1. **`SectionRegistry` requires eager, synchronous registration.** `registerAllSections()` imports every section's `Body` component up front at app boot (§5). That's the only registration path left after removing the dormant lazy-loading system, but it also means a host app must import and register everything it might ever show in a report before render — there's no way today to register "this section exists, here's how to fetch it when needed" without eagerly pulling in the component. A standalone library would need an async registration/resolution contract (`resolveComponent(id): Promise<ComponentType>`, supplied by the host) rather than requiring whole-app eager imports — this is a real gap now, not just a dormant one, since the lazy-loading attempt was removed rather than fixed. Any reintroduction should be a host-injected resolver function, not a second in-package registry.
 2. **MUI + FontAwesome + `@dnd-kit/react` are load-bearing, not swappable.** `ReportBuilder.tsx` and `AddToReportButton.tsx` import MUI components directly; there's no headless/presentational split. A platform using a different design system couldn't adopt the state/logic without also adopting these UI deps.

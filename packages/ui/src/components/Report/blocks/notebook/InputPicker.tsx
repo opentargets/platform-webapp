@@ -3,8 +3,7 @@ import { Avatar, Box, InputBase, Popover, Tooltip, Typography } from "@mui/mater
 import { isNotebook, isWidget, refOf, type NotebookBlock, type ReportBlock } from "../../../../types/report";
 import { useBlockEditor } from "../BlockEditorContext";
 import { monoSx } from "../DataBlockShell";
-import { uniqueRef } from "../refs";
-import { buildGraph, cyclePath } from "./graph";
+import { buildGraph, cyclePath, uniqueRef } from "report-core";
 import { linkableBlocks, resolveInput } from "./resolveInputs";
 
 interface Candidate {

@@ -1,51 +1,28 @@
 import { useSyncExternalStore } from "react";
+import { createLiveCaptureRegistry, liveCaptureKey } from "report-core";
 
 /**
- * In-memory registry of "live" state capture functions.
- *
- * A section mounted on its native entity page registers a function that returns
- * its current ReportComponentState bag. The report builder's inspector uses it to
- * offer "Update from live page" for a report section with the same key.
+ * Default live-capture registry for this app (the framework-free registry is in
+ * report-core). A section mounted on its native entity page registers a function
+ * that returns its current ReportComponentState bag; the report inspector uses it
+ * to offer "Update from live page" for a report section with the same key.
  */
+export const liveCaptures = createLiveCaptureRegistry();
 
 type Key = string; // `${entity}:${definitionId}:${entityId}`
 type CaptureFn = () => Record<string, any>;
 
-const captures = new Map<Key, CaptureFn>();
-const listeners = new Set<() => void>();
-
-const notify = () => listeners.forEach((listener) => listener());
-
 export const getLiveCaptureKey = (entity: string, definitionId: string, entityId?: string): Key =>
-  `${entity}:${definitionId}:${entityId ?? ""}`;
+  liveCaptureKey(`${entity}:${definitionId}`, entityId);
 
-export const registerLiveCapture = (key: Key, fn: CaptureFn) => {
-  captures.set(key, fn);
-  notify();
-  return () => {
-    // Only remove our own registration — a newer mount may have replaced it
-    if (captures.get(key) === fn) {
-      captures.delete(key);
-      notify();
-    }
-  };
-};
+export const registerLiveCapture = (key: Key, fn: CaptureFn) => liveCaptures.register(key, fn);
 
-export const getLiveCapture = (key: Key) => captures.get(key);
+export const getLiveCapture = (key: Key) => liveCaptures.get(key);
 
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-};
-
-/**
- * Re-renders whenever a capture for `key` is registered or unregistered
- */
+/** Re-renders whenever a capture for `key` is registered or unregistered */
 export const useLiveCaptureAvailable = (key: Key) =>
   useSyncExternalStore(
-    subscribe,
-    () => captures.has(key),
+    liveCaptures.subscribe,
+    () => liveCaptures.has(key),
     () => false
   );

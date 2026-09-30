@@ -161,9 +161,6 @@ function SectionItem({
                     <AddToReportButton
                       definition={{ ...definition, entity } as unknown as any}
                       request={{ loading, error, data, variables } as unknown as any}
-                      renderedBody={renderBody}
-                      renderedChart={renderChart}
-                      description={renderDescription}
                       entity={entity}
                       selectedView={selectedView === VIEW.chart ? "chart" : "table"}
                       tags={tags}

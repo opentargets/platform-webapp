@@ -311,7 +311,7 @@ export const GraphqlBlockView: React.FC<BlockViewProps<GraphqlBlock>> = (props) 
           onChange={(e) => toggleBinding(e.target.checked)}
         />
       }
-      label={<Typography sx={{ fontSize: 13 }}>Use this report's entity</Typography>}
+      label={<Typography sx={{ fontSize: 13 }}>Use this narrative's entity</Typography>}
     />
   );
 
@@ -414,7 +414,7 @@ export const GraphqlBlockView: React.FC<BlockViewProps<GraphqlBlock>> = (props) 
             {entityId ? (
               bindCheckbox
             ) : (
-              <Tooltip title="This report has no entity to bind to">
+              <Tooltip title="This narrative has no entity to bind to">
                 <span>{bindCheckbox}</span>
               </Tooltip>
             )}
@@ -451,7 +451,7 @@ export const GraphqlBlockView: React.FC<BlockViewProps<GraphqlBlock>> = (props) 
           </Box>
 
           <Box>
-            <Typography sx={columnLabelSx}>On report open</Typography>
+            <Typography sx={columnLabelSx}>On narrative open</Typography>
             <RadioGroup
               value={block.onOpen}
               onChange={(e) => updateBlock(block.reportSectionId, { onOpen: e.target.value as OnOpenMode })}

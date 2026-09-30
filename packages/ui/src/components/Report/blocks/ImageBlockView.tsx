@@ -75,7 +75,7 @@ export const ImageBlockView: React.FC<BlockViewProps<ImageBlock>> = ({
       // Check the storage budget before writing; fail at the block, not globally
       if (!fitsStorageBudget(state.reports, src.length - block.src.length)) {
         setError(
-          "This image won't fit in the browser's report storage. Try a smaller image or remove other large blocks."
+          "This image won't fit in the browser's narrative storage. Try a smaller image or remove other large blocks."
         );
         return;
       }

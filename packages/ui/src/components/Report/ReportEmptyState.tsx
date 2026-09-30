@@ -35,12 +35,12 @@ export const ReportEmptyState: React.FC<ReportEmptyStateProps> = ({ onAddBlock, 
       }}
     >
       <Typography component="h2" sx={{ fontSize: 22, fontWeight: 700, color: "#616161" }}>
-        This report is empty
+        This narrative is empty
       </Typography>
       <Typography sx={{ fontSize: 14, lineHeight: 1.6 }}>
         Go to any section on a target, disease or drug page and click{" "}
         <Box component="span" sx={pillSx}>
-          + Add to report
+          + Add to narrative
         </Box>
         . It appears here with the filters you had set.
       </Typography>

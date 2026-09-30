@@ -146,7 +146,7 @@ export const DataBlockShell: React.FC<DataBlockShellProps> = ({
   };
 
   const renameRef = () => {
-    const input = window.prompt("Ref (lowercase letters, numbers and _; unique in this report)", block.ref);
+    const input = window.prompt("Ref (lowercase letters, numbers and _; unique in this narrative)", block.ref);
     if (input === null) return;
     // The reducer makes it unique and rewrites any notebook that reads the old ref
     dispatch({ type: "renameBlockRef", reportSectionId: block.reportSectionId, ref: input });

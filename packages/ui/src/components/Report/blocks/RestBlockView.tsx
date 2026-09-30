@@ -226,6 +226,8 @@ export const RestBlockView: React.FC<BlockViewProps<RestBlock>> = (props) => {
     }
   }, []);
 
+  // Todo: revisit host mechanisms, what is the implication of this for security ? 
+
   /**
    * Run after the checks: valid URL, host confirmed, secrets supplied
    */
@@ -243,7 +245,7 @@ export const RestBlockView: React.FC<BlockViewProps<RestBlock>> = (props) => {
       }
       if (!isTrustedHost(host) && !current.confirmedHost?.includes(host)) {
         if (!options.interactive) return;
-        if (!window.confirm(`Send a request to ${host}? The report will store this URL.`)) return;
+        if (!window.confirm(`Send a request to ${host}? The narrative will store this URL.`)) return;
         updateBlock(current.reportSectionId, { confirmedHost: [...(current.confirmedHost ?? []), host] });
       }
       const missingSecrets = current.headers
@@ -402,7 +404,7 @@ export const RestBlockView: React.FC<BlockViewProps<RestBlock>> = (props) => {
           )}
 
           <Box>
-            <Typography sx={columnLabelSx}>On report open</Typography>
+            <Typography sx={columnLabelSx}>On narrative open</Typography>
             <RadioGroup
               value={block.onOpen}
               onChange={(e) => updateBlock(block.reportSectionId, { onOpen: e.target.value as OnOpenMode })}

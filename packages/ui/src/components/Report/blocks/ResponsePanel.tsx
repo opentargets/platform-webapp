@@ -58,7 +58,7 @@ export const ResponsePanel: React.FC<ResponsePanelProps> = ({ block, result, onR
     };
     const addedBytes = JSON.stringify(snapshot).length - JSON.stringify(block.snapshot ?? null).length;
     if (!fitsStorageBudget(state.reports, addedBytes)) {
-      setSnapshotError("This snapshot won't fit in the browser's report storage.");
+      setSnapshotError("This snapshot won't fit in the browser's narrative storage.");
       return;
     }
     dispatch({ type: "setBlockSnapshot", reportSectionId: block.reportSectionId, snapshot });

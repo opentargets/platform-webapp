@@ -69,6 +69,7 @@
     "react-helmet": "^6.1.0",
     "react-router": "^7.18.1",
     "react-scroll": "^1.8.9",
+    "report-core": "*",
     "uuid": "^11.1.1"
   },
   "devDependencies": {

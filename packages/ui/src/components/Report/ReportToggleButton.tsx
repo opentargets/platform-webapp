@@ -25,11 +25,11 @@ export const ReportToggleButton: React.FC = () => {
   };
 
   return (
-    <Tooltip title={`Reports (${totalSections} sections)`}>
-      <Badge badgeContent={totalSections} color="primary">
+    <Tooltip title={`Narratives (${totalSections} sections)`}>
+      
         <Fab
           color="primary"
-          aria-label="view reports"
+          aria-label="view narratives"
           onClick={handleToggle}
           sx={{
             position: "fixed",
@@ -40,7 +40,8 @@ export const ReportToggleButton: React.FC = () => {
         >
           <FontAwesomeIcon icon={faClipboardList} />
         </Fab>
-      </Badge>
+        {/* <Badge badgeContent={totalSections} color="primary">
+      </Badge> */}
     </Tooltip>
   );
 };

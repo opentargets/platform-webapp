@@ -46,6 +46,7 @@ import * as TargetMolecularStructure from "./target/MolecularStructure";
 import * as TargetMousePhenotypes from "./target/MousePhenotypes";
 import * as TargetBibliography from "./target/Bibliography";
 import * as TargetOverlappingVariants from "./target/OverlappingVariants";
+import * as TargetGenomicRegion from "./target/TargetGenomicRegion";
 
 // Variant sections
 import * as VariantEnhancerToGenePredictions from "./variant/EnhancerToGenePredictions";
@@ -57,6 +58,7 @@ import * as VariantPharmacogenomics from "./variant/Pharmacogenomics";
 import * as VariantUniProtVariants from "./variant/UniProtVariants";
 import * as VariantVariantEffect from "./variant/VariantEffect";
 import * as VariantVariantEffectPredictor from "./variant/VariantEffectPredictor";
+import * as VariantGenomicRegion from "./variant/VariantGenomicRegion";
 
 // Study sections
 import * as StudyGWASCredibleSets from "./study/GWASCredibleSets";
@@ -69,6 +71,7 @@ import * as CredibleSetMolQTLColoc from "./credibleSet/MolQTLColoc";
 import * as CredibleSetLocus2Gene from "./credibleSet/Locus2Gene";
 import * as CredibleSetEnhancerToGenePredictions from "./credibleSet/EnhancerToGenePredictions";
 import * as CredibleSetVariants from "./credibleSet/Variants";
+import * as CredibleSetGenomicRegion from "./credibleSet/CredibleSetGenomicRegion";
 
 // Evidence sections
 import * as EvidenceCRISPR from "./evidence/CRISPR";
@@ -140,6 +143,7 @@ export const registerAllSections = () => {
     { entity: "target", definition: TargetMousePhenotypes.definition, getBodyComponent: TargetMousePhenotypes.getBodyComponent },
     { entity: "target", definition: TargetBibliography.definition, getBodyComponent: TargetBibliography.getBodyComponent, exportAdapter: TargetBibliography.exportAdapter },
     { entity: "target", definition: TargetOverlappingVariants.definition, getBodyComponent: TargetOverlappingVariants.getBodyComponent },
+    { entity: "target", definition: TargetGenomicRegion.definition, getBodyComponent: TargetGenomicRegion.getBodyComponent },
 
     // Variant
     { entity: "variant", definition: VariantEnhancerToGenePredictions.definition, getBodyComponent: VariantEnhancerToGenePredictions.getBodyComponent },
@@ -151,6 +155,7 @@ export const registerAllSections = () => {
     { entity: "variant", definition: VariantUniProtVariants.definition, getBodyComponent: VariantUniProtVariants.getBodyComponent },
     { entity: "variant", definition: VariantVariantEffect.definition, getBodyComponent: VariantVariantEffect.getBodyComponent },
     { entity: "variant", definition: VariantVariantEffectPredictor.definition, getBodyComponent: VariantVariantEffectPredictor.getBodyComponent },
+    { entity: "variant", definition: VariantGenomicRegion.definition, getBodyComponent: VariantGenomicRegion.getBodyComponent },
 
     // Study
     { entity: "study", definition: StudyGWASCredibleSets.definition, getBodyComponent: StudyGWASCredibleSets.getBodyComponent },
@@ -164,6 +169,7 @@ export const registerAllSections = () => {
     { entity: "credibleSet", definition: CredibleSetLocus2Gene.definition, getBodyComponent: CredibleSetLocus2Gene.getBodyComponent },
     { entity: "credibleSet", definition: CredibleSetEnhancerToGenePredictions.definition, getBodyComponent: CredibleSetEnhancerToGenePredictions.getBodyComponent },
     { entity: "credibleSet", definition: CredibleSetVariants.definition, getBodyComponent: CredibleSetVariants.getBodyComponent },
+    { entity: "credibleSet", definition: CredibleSetGenomicRegion.definition, getBodyComponent: CredibleSetGenomicRegion.getBodyComponent },
 
     // Evidence: the evidence page and the associations table mount these with entity "disease",
     // and a report section is looked up by the entity its SectionItem was given

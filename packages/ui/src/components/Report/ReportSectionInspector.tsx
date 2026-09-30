@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router";
 import { formatBytes, useReportBuilder } from "../../providers/ReportBuilderProvider";
 import {
   getLiveCapture,
@@ -40,7 +39,7 @@ import { useBlockEditor } from "./blocks/BlockEditorContext";
 import { COLLAPSIBLE_KINDS } from "./blocks/BlockRenderer";
 import { useDataBlockResult } from "./blocks/dataResultsStore";
 import { imageAlt } from "./blocks/ImageBlockView";
-import { slugifyRef } from "./blocks/refs";
+import { slugifyRef } from "report-core";
 import { useNotebookResult } from "./blocks/notebook/notebookResultsStore";
 import { resolveInputs } from "./blocks/notebook/resolveInputs";
 import { figureLabel, tableLabel } from "./blocks/figures";
@@ -51,15 +50,6 @@ import { Button as TextButton } from "../Button";
 const NOTE_DEBOUNCE_MS = 500;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// Entity → route prefix for entities whose page is addressed by a single id
-const ENTITY_ROUTES: Record<string, string> = {
-  target: "target",
-  disease: "disease",
-  drug: "drug",
-  variant: "variant",
-  study: "study",
-  credibleSet: "credible-set",
-};
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
@@ -182,13 +172,11 @@ const SectionDetails: React.FC<{ section: ReportSection; variant: InspectorVaria
   variant,
 }) => {
   const { dispatch } = useReportBuilder();
-  const navigate = useNavigate();
   const { definition } = section;
 
   const liveKey = getLiveCaptureKey(definition.entity, definition.id, section.entityId);
   const liveAvailable = useLiveCaptureAvailable(liveKey);
   const hasChart = sectionHasChart(section);
-  const route = ENTITY_ROUTES[definition.entity];
 
   const handleUpdateFromLive = () => {
     const capture = getLiveCapture(liveKey);
@@ -206,15 +194,9 @@ const SectionDetails: React.FC<{ section: ReportSection; variant: InspectorVaria
   };
 
   const handleRemove = () => {
-    if (window.confirm(`Remove "${definition.name}" from this report?`)) {
+    if (window.confirm(`Remove "${definition.name}" from this narrative?`)) {
       dispatch({ type: "removeSectionFromReport", reportSectionId: section.reportSectionId });
     }
-  };
-
-  const handleOpenSourcePage = () => {
-    if (!route || !section.entityId) return;
-    dispatch({ type: "toggleBuilderOpen", isOpen: false });
-    navigate(`/${route}/${section.entityId}`);
   };
 
   const updateButton = (
@@ -282,17 +264,15 @@ const SectionDetails: React.FC<{ section: ReportSection; variant: InspectorVaria
 
       <CommentaryField key={section.reportSectionId} section={section} />
 
-      <Box sx={{ mt: "auto", display: "flex", justifyContent: "space-between", gap: 1 }}>
-        <Button color="error" onClick={handleRemove} sx={{ textTransform: "none", px: 0.5 }}>
-          Remove from report
-        </Button>
-        <Button
-          onClick={handleOpenSourcePage}
-          disabled={!route || !section.entityId}
-          sx={{ textTransform: "none", px: 0.5 }}
+      <Box sx={{ mt: "auto", pt: 2 }}>
+        <TextButton
+          variant="outlined"
+          fullWidth
+          onClick={handleRemove}
+          sx={{ ...outlinedSx("error"), textTransform: "none", px: 2, py: 0.75 }}
         >
-          Open source page
-        </Button>
+          Remove from narrative
+        </TextButton>
       </Box>
     </InspectorShell>
   );
@@ -403,13 +383,13 @@ const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = (
   return (
     <InspectorShell variant={variant}>
       <Box>
-        <Typography sx={overlineSx}>Report</Typography>
+        <Typography sx={overlineSx}>Narrative</Typography>
         {editing === "name" ? (
           <InlineEdit
             initialValue={report.name}
             onSave={saveName}
             onDone={() => setEditing(null)}
-            ariaLabel="Report name"
+            ariaLabel="Narrative name"
             sx={{ mt: 0.5, fontSize: 18, fontWeight: 700 }}
           />
         ) : (
@@ -422,7 +402,7 @@ const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = (
             </Typography>
             <IconButton
               size="small"
-              aria-label="Rename report"
+              aria-label="Rename narrative"
               onClick={() => setEditing("name")}
               sx={{ fontSize: 12, color: "grey.500", mt: "2px" }}
             >
@@ -438,7 +418,7 @@ const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = (
             onSave={saveDescription}
             onDone={() => setEditing(null)}
             maxLength={DESCRIPTION_MAX_LENGTH}
-            ariaLabel="Report description"
+            ariaLabel="Narrative description"
             sx={{ mt: 0.75, fontSize: 13 }}
           />
         ) : report.description ? (
@@ -503,18 +483,25 @@ const ReportSummary: React.FC<{ report: Report; variant: InspectorVariant }> = (
           gap: 1,
         }}
       >
-        <Button variant="outlined" onClick={() => setEditing("name")} sx={outlinedSx("primary")}>
-          Rename
-        </Button>
-        {count > 0 && <TextButton onClick={handleClearReport}>Clear sections</TextButton>}
-        <Button
+        {/* Renaming is via the pencil next to the title */}
+        {count > 0 && (
+          <TextButton
+            variant="outlined"
+            fullWidth
+            onClick={handleClearReport}
+            sx={{ ...outlinedSx("primary"), textTransform: "none", py: 0.75 }}
+          >
+            Clear sections
+          </TextButton>
+        )}
+        <TextButton
           variant="outlined"
-          color="error"
+          fullWidth
           onClick={handleDeleteReport}
-          sx={{ ...outlinedSx("error"), ml: "auto" }}
+          sx={{ ...outlinedSx("error"), textTransform: "none", py: 0.75 }}
         >
-          Delete report
-        </Button>
+          Delete narrative
+        </TextButton>
       </Box>
     </InspectorShell>
   );
@@ -564,7 +551,7 @@ const RefField: React.FC<{ block: DataBlock | NotebookBlock }> = ({ block }) => 
         onChange={(e) => setValue(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))}
         onBlur={save}
         onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-        helperText="Unique in this report; how notebooks refer to this block"
+        helperText="Unique in this narrative; how notebooks refer to this block"
         slotProps={{ htmlInput: { style: { fontFamily: '"Roboto Mono", monospace', fontSize: 12 } } }}
         sx={{ mt: 0.75 }}
       />

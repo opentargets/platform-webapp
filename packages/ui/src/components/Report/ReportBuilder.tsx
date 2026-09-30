@@ -149,7 +149,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "100
         <AppBar position="relative" elevation={0}>
           <Toolbar sx={{ gap: 1 }}>
             <Typography variant="h6" noWrap sx={{ flex: 1, fontWeight: 600 }}>
-              Report Builder{activeReport ? ` · ${activeReport.name}` : ""}
+              Narrative Builder{activeReport ? ` · ${activeReport.name}` : ""}
             </Typography>
             {activeReport && (
               <Tooltip title={hasSections ? "" : "Add a section to export"}>
@@ -177,7 +177,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "100
                 </span>
               </Tooltip>
             )}
-            <IconButton color="inherit" onClick={handleCloseBuilder} aria-label="Close report builder">
+            <IconButton color="inherit" onClick={handleCloseBuilder} aria-label="Close narrative builder">
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Toolbar>
@@ -210,7 +210,7 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "100
               }
             />
           ))}
-          <Tab value={NEW_REPORT_TAB} label="+ New report" sx={{ textTransform: "none" }} />
+          <Tab value={NEW_REPORT_TAB} label="+ New narrative" sx={{ textTransform: "none" }} />
         </Tabs>
 
         {!activeReport ? (
@@ -288,11 +288,11 @@ export const ReportBuilder: React.FC<ReportBuilderProps> = ({ drawerWidth = "100
 
         {/* Create Dialog */}
         <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>New Report</DialogTitle>
+          <DialogTitle>New Narrative</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
             <TextField
               autoFocus
-              label="Report Name"
+              label="Narrative Name"
               fullWidth
               value={editName}
               onChange={(e) => setEditName(e.target.value)}

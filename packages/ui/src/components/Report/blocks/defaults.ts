@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { NonWidgetBlock, ReportBlock } from "../../../types/report";
-import { uniqueRef } from "./refs";
+import { uniqueRef } from "report-core";
 
 export const PLATFORM_GRAPHQL_ENDPOINT = "https://api.platform.opentargets.org/api/v4/graphql";
 

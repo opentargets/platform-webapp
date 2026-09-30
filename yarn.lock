@@ -12034,6 +12034,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"report-core@npm:*, report-core@workspace:packages/report-core":
+  version: 0.0.0-use.local
+  resolution: "report-core@workspace:packages/report-core"
+  dependencies:
+    acorn: "npm:^8.18.0"
+    acorn-walk: "npm:^8.3.5"
+    notebook-runtime: "npm:*"
+    tsconfig: "npm:*"
+    typescript: "npm:^5.2.2"
+  languageName: unknown
+  linkType: soft
+
 "require-directory@npm:^2.1.1":
   version: 2.1.1
   resolution: "require-directory@npm:2.1.1"
@@ -13717,6 +13729,7 @@ __metadata:
     react-helmet: "npm:^6.1.0"
     react-router: "npm:^7.18.1"
     react-scroll: "npm:^1.8.9"
+    report-core: "npm:*"
     storybook: "npm:^10.0.6"
     tsconfig: "npm:*"
     typescript: "npm:^5.2.2"

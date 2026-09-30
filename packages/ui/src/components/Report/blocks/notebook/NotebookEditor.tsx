@@ -8,7 +8,7 @@ import { linter, type Diagnostic } from "@codemirror/lint";
 import { CodeEditor } from "../CodeEditor";
 import { columnLabelSx } from "../ResponsePanel";
 import { makeCompletionSource, type CompletionInputs } from "./completions/columns";
-import { parseNotebookCode, unknownIdentifiers } from "./codeRefs";
+import { parseNotebookCode, unknownIdentifiers } from "report-core";
 import { SNIPPETS, type SnippetContext } from "./snippets";
 import { PANE_HEADER_HEIGHT } from "./protocol";
 

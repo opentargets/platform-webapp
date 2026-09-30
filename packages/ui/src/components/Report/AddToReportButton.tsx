@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { useState } from "react";
 import {
   Button,
   Menu,
@@ -9,21 +9,22 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Box,
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import { useReportBuilder } from "../../providers/ReportBuilderProvider";
 import { useReportComponentState } from "../../providers/ReportComponentStateContext";
-import { ReportSectionDefinition, ReportRequest, ReportSectionViewType } from "../../types/report";
+import {
+  ReportBuilderAction,
+  ReportSectionDefinition,
+  ReportRequest,
+  ReportSectionViewType,
+} from "../../types/report";
 import { toStorableBodyProps } from "../../providers/SectionBodyPropsContext";
 
 interface AddToReportButtonProps {
   definition: ReportSectionDefinition;
   request: ReportRequest;
-  renderedBody: () => ReactNode;
-  renderedChart?: () => ReactNode;
-  description: () => ReactNode;
   entity: string;
   selectedView: ReportSectionViewType;
   tags?: string[];
@@ -44,9 +45,6 @@ interface AddToReportButtonProps {
 export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
   definition,
   request,
-  renderedBody,
-  renderedChart,
-  description,
   selectedView,
   entity,
   tags,
@@ -72,32 +70,35 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
     setAnchorEl(null);
   };
 
+  /**
+   * The stored section: the request (data + variables), the entity it describes, the
+   * widget's captured state and the props its Body was mounted with. No rendered
+   * nodes: the report rebuilds the Body from the registry (see useReportSectionRenderer).
+   */
+  const buildAddAction = (): Extract<ReportBuilderAction, { type: "addSectionToReport" }> => {
+    // The entity ID is the identifier for the current entity (disease ID, gene ID, etc.)
+    // The entity label is the name/symbol (used in descriptions and visualizations)
+    const entityData = request?.data?.[entity] as { id?: string; name?: string; symbol?: string } | undefined;
+    const entityId = entityData?.id;
+    const entityLabel = entityData?.name || entityData?.symbol;
+    const componentState = onCaptureState?.() || reportComponentState?.getAllState() || {};
+    return {
+      type: "addSectionToReport",
+      definition,
+      request,
+      entityId,
+      entityLabel,
+      selectedView,
+      tags,
+      chipText,
+      componentState,
+      bodyProps: toStorableBodyProps(bodyProps),
+    };
+  };
+
   const handleAddToActiveReport = () => {
     if (activeReport) {
-      // Extract entity ID and label from the request data
-      // The entity ID is the identifier for the current entity (disease ID, gene ID, etc.)
-      // The entity label is the name/symbol (used in descriptions and visualizations)
-      const entityId = request?.data?.[entity]?.id;
-      const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
-      const componentState = onCaptureState?.() || reportComponentState?.getAllState() || {};
-
-      dispatch({
-        type: "addSectionToReport",
-        definition,
-        request,
-        entityId,
-        entityLabel,
-        renderedContent: {
-          body: renderedBody(),
-          chart: renderedChart?.(),
-          description: description(),
-        },
-        selectedView,
-        tags,
-        chipText,
-        componentState,
-        bodyProps: toStorableBodyProps(bodyProps),
-      });
+      dispatch(buildAddAction());
       handleMenuClose();
     }
   };
@@ -105,38 +106,14 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
   const handleCreateNewReport = () => {
     dispatch({
       type: "createReport",
-      reportName: newReportName || "Untitled Report",
+      reportName: newReportName || "Untitled Narrative",
       description: newReportDescription,
       entityContext: {
         type: entity,
       },
     });
-
-    // After creating report, add the section
-    setTimeout(() => {
-      // Extract entity ID and label from the request data
-      const entityId = request?.data?.[entity]?.id;
-      const entityLabel = request?.data?.[entity]?.name || request?.data?.[entity]?.symbol;
-      const componentState = onCaptureState?.() || reportComponentState?.getAllState() || {};
-
-      dispatch({
-        type: "addSectionToReport",
-        definition,
-        request,
-        entityId,
-        entityLabel,
-        renderedContent: {
-          body: renderedBody(),
-          chart: renderedChart?.(),
-          description: description(),
-        },
-        selectedView,
-        tags,
-        chipText,
-        componentState,
-        bodyProps: toStorableBodyProps(bodyProps),
-      });
-    }, 0);
+    // The store applies createReport synchronously, so the new report is already active
+    dispatch(buildAddAction());
 
     setCreateDialogOpen(false);
     setNewReportName("");
@@ -170,7 +147,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
             whiteSpace: "nowrap",
           }}
         >
-          {showLabel && "Add to Report"}
+          {showLabel && "Add to Narrative"}
         </Button>
       </Badge>
 
@@ -219,7 +196,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
 
         <div style={{ borderBottom: "1px solid #e0e0e0" }} />
         <MenuItem onClick={handleOpenCreateDialog} sx={{ color: "primary.main" }}>
-          + Create New Report
+          + Create New Narrative
         </MenuItem>
       </Menu>
 
@@ -230,15 +207,15 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Create New Report</DialogTitle>
+        <DialogTitle>Create New Narrative</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
           <TextField
             autoFocus
-            label="Report Name"
+            label="Narrative Name"
             fullWidth
             value={newReportName}
             onChange={(e) => setNewReportName(e.target.value)}
-            placeholder="e.g., Disease Analysis Report"
+            placeholder="e.g., Disease Analysis Narrative"
           />
           <TextField
             label="Description (Optional)"
@@ -247,7 +224,7 @@ export const AddToReportButton: React.FC<AddToReportButtonProps> = ({
             rows={3}
             value={newReportDescription}
             onChange={(e) => setNewReportDescription(e.target.value)}
-            placeholder="Add notes about this report..."
+            placeholder="Add notes about this narrative..."
           />
         </DialogContent>
         <DialogActions>

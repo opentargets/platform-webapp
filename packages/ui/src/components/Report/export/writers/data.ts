@@ -71,7 +71,7 @@ const loadLiveResult = async (): Promise<((id: string) => unknown) | null> => {
   }
 };
 
-/** Same semantics as serializeBlock (ReportBuilderProvider): no rendered React, secret header values blanked. */
+/** Same semantics as serializeBlock (report-core): secret header values blanked. */
 const serializeForExport = (
   block: ReportBlock,
   report: Report,
@@ -79,8 +79,7 @@ const serializeForExport = (
   html: HtmlRenderer | null
 ): Record<string, unknown> => {
   if (isWidget(block)) {
-    const { renderedContent, ...section } = block as ReportSection;
-    void renderedContent;
+    const section = block as ReportSection;
     return {
       ...section,
       kind: "widget",

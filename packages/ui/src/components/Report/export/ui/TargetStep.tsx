@@ -250,7 +250,7 @@ export const TargetStep: React.FC<TargetStepProps> = ({ target, onSelect, includ
         selected={target === "data"}
         onSelect={onSelect}
         title="Data & provenance"
-        description="Report JSON plus a CSV per table."
+        description="Narrative JSON plus a CSV per table."
         formats={["JSON", "CSV zip"]}
         sketch={<DataSketch />}
         sx={half}

@@ -4,7 +4,7 @@ import { useReportBuilder } from "../../../../providers/ReportBuilderProvider";
 import type { Report } from "../../../../types/report";
 import { isWidget } from "../../../../types/report";
 import { collect } from "../collect";
-import { withExportDefaults, withVideoDefaults } from "../defaults";
+import { withExportDefaults, withVideoDefaults } from "report-core";
 import { fetchDataRelease } from "../extract/provenance";
 import {
   PAPER_PIXEL_RATIO,
@@ -434,9 +434,6 @@ export function useExportFlow(args: {
 
   // ---------- open / close ----------
 
-  const startTargetRef = useRef(startTarget);
-  startTargetRef.current = startTarget;
-
   useEffect(() => {
     if (!open) return undefined;
     const session = new AbortController();
@@ -449,18 +446,14 @@ export function useExportFlow(args: {
       if (!session.signal.aborted) setDataRelease(r);
     });
 
-    const last = settingsRef.current.lastTarget;
     setCollected(null);
     setDone(null);
     setError(null);
     setRenderProgress(null);
     setCollectProgress(null);
-    if (hasStep2(last)) {
-      void startTargetRef.current(last);
-    } else {
-      setTarget(last ?? "slides");
-      setStep("target");
-    }
+    // Always open on the target step; the last-used target is just the preselected card
+    setTarget(settingsRef.current.lastTarget ?? "slides");
+    setStep("target");
 
     return () => {
       // Discard everything collected for this session (spec §8)

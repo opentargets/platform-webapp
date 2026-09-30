@@ -1,4 +1,4 @@
-import type { DeepPartial, ExportSettings, VideoSettings } from "./types";
+import type { DeepPartial, ExportSettings, VideoSettings } from "./exportTypes";
 
 export const defaultExportSettings = (): ExportSettings => ({
   slides: { aspect: "16:9", titleSlide: true, chapterDividers: true, methodsAppendix: true },
@@ -20,7 +20,8 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
 const deepMerge = <T>(base: T, patch: unknown): T => {
-  if (!isPlainObject(base) || !isPlainObject(patch)) return (patch === undefined ? base : patch) as T;
+  if (!isPlainObject(base) || !isPlainObject(patch))
+    return (patch === undefined ? base : patch) as T;
   const out: Record<string, unknown> = { ...base };
   Object.entries(patch).forEach(([key, value]) => {
     // Explicit undefined clears a key (e.g. removing a per-block override)
@@ -34,8 +35,10 @@ const deepMerge = <T>(base: T, patch: unknown): T => {
 export const withExportDefaults = (settings?: Partial<ExportSettings>): ExportSettings =>
   deepMerge(defaultExportSettings(), settings ?? {});
 
-export const mergeExportSettings = (settings: ExportSettings, patch: DeepPartial<ExportSettings>): ExportSettings =>
-  deepMerge(settings, patch);
+export const mergeExportSettings = (
+  settings: ExportSettings,
+  patch: DeepPartial<ExportSettings>
+): ExportSettings => deepMerge(settings, patch);
 
 export const defaultVideoSettings = (): VideoSettings => ({
   aspect: "9:16",

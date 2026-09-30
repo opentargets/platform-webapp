@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { AddToReportButton, getLiveCaptureKey, registerLiveCapture } from "ui";
 import { useAotfQueryState } from "../context/AssociationsQueryContext";
 import { useAotfURLState } from "../context/AssociationsURLContext";
-import AotfReportBody from "./AotfReportBody";
 import { AOTF_STATE_KEY, getAotfDefinition, useCaptureAotfSnapshot } from "./aotfReportSection";
 
 /**
@@ -11,7 +10,7 @@ import { AOTF_STATE_KEY, getAotfDefinition, useCaptureAotfSnapshot } from "./aot
  * weights, sorting and pinned rows. Must render inside the toolkit's providers.
  */
 function AotfAddToReport({ label }: { label?: string }) {
-  const { id, entity, query } = useAotfQueryState();
+  const { id, entity } = useAotfQueryState();
   const { displayedTable } = useAotfURLState();
   const captureSnapshot = useCaptureAotfSnapshot();
   const definition = getAotfDefinition(displayedTable, entity);
@@ -33,8 +32,6 @@ function AotfAddToReport({ label }: { label?: string }) {
       definition={definition}
       // Just enough for AddToReportButton to read entityId/entityLabel; rows are refetched
       request={{ loading: false, error: null, data: { [entity]: { id, name: label } }, variables: { id } }}
-      renderedBody={() => <AotfReportBody id={id} entity={entity} query={query} label={label} />}
-      description={() => (label ? `${definition.name} for ${label}` : definition.name)}
       entity={entity}
       selectedView="table"
       onCaptureState={() => ({ [AOTF_STATE_KEY]: captureSnapshot() })}

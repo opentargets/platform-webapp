@@ -81,7 +81,7 @@ export const TableBlockView: React.FC<BlockViewProps<TableBlock>> = (props) => {
     const addedBytes = JSON.stringify(patch.rows).length - JSON.stringify(block.rows).length;
     if (!fitsStorageBudget(state.reports, addedBytes)) {
       setError(
-        "This table won't fit in the browser's report storage. Try fewer rows, or remove other large blocks."
+        "This table won't fit in the browser's narrative storage. Try fewer rows, or remove other large blocks."
       );
       return;
     }

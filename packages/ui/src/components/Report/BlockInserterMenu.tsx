@@ -284,7 +284,7 @@ export const BlockInserterMenu: React.FC<BlockInserterMenuProps> = ({ request, o
           }}
         >
           <Typography sx={{ fontSize: 12, fontStyle: "italic", color: "text.secondary", flex: 1 }}>
-            Platform widgets are added from the page — use "Add to report" on any section.
+            Platform widgets are added from the page — use "Add to narrative" on any section.
           </Typography>
           <Button
             size="small"
