@@ -5,7 +5,7 @@ type DescriptionProps = {
 function Description({ targetSymbol }: DescriptionProps) {
   return (
     <>
-      Genes in the region of <strong>{targetSymbol}</strong> (build: GRCh38).
+      Genes (canonical transcripts) in the region of <strong>{targetSymbol}</strong>. Build: GRCh38.
     </>
   );
 }
