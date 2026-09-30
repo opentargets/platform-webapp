@@ -16,7 +16,7 @@ function Description({ variantId, referenceAllele, alternateAllele }: Descriptio
           referenceAllele={referenceAllele}
           alternateAllele={alternateAllele}
         />
-      </strong>{" "}
+      </strong>
       . Build: GRCh38.
     </>
   );
