@@ -47,7 +47,7 @@ export class AotfActions {
 
   // Data Uploader within Facets
   getDataUploaderButton(): Locator {
-    return this.page.locator("[data-testid='data-uploader-button']");
+    return this.page.locator("[aria-label='Upload list of entities']");
   }
 
   async uploadData(filePath: string): Promise<void> {
@@ -56,12 +56,12 @@ export class AotfActions {
   }
 
   // Facet filter selections
-  getFacetFilterOption(facetName: string): Locator {
-    return this.page.locator(`[data-testid='facet-filter-${facetName}']`);
+  getFacetFilterOption(): Locator {
+    return this.page.getByRole("combobox", { name: "Facet filter" });
   }
 
-  async selectFacetFilter(facetName: string, optionValue: string): Promise<void> {
-    await this.getFacetFilterOption(facetName).click();
+  async selectFacetFilter(optionValue: string): Promise<void> {
+    await this.getFacetFilterOption().click();
     await this.page.locator(`[data-value='${optionValue}']`).click();
   }
 
@@ -91,7 +91,7 @@ export class AotfActions {
 
   async closeColumnOptions(): Promise<void> {
     const closeButton = this.page.locator(
-      ".weights-controlls [data-testid='close-weights-button']"
+      "[data-testid='weights-controls-container'] [data-testid='close-weights-button']"
     );
     await closeButton.click();
   }
@@ -119,14 +119,6 @@ export class AotfActions {
     return await this.getRequiredCheckbox(columnId).isChecked();
   }
 
-  getColumnToggle(columnName: string): Locator {
-    return this.page.locator(`[data-testid='column-toggle-${columnName}']`);
-  }
-
-  async toggleColumn(columnName: string): Promise<void> {
-    await this.getColumnToggle(columnName).click();
-  }
-
   // ==================
   // Export Menu
   // ==================
@@ -148,11 +140,11 @@ export class AotfActions {
 
   // Export options
   getDownloadDataOption(): Locator {
-    return this.page.locator("[data-testid='download-data-option']");
+    return this.page.getByText("Download data", { exact: true });
   }
 
   getApiPlaygroundOption(): Locator {
-    return this.page.locator("[data-testid='api-playground-option']");
+    return this.page.getByText("API query", { exact: true });
   }
 
   async clickDownloadData(): Promise<void> {
@@ -209,7 +201,7 @@ export class AotfActions {
 
   async removeActiveFilter(filterName: string): Promise<void> {
     const chip = this.getActiveFilterChip(filterName);
-    const deleteButton = chip.locator("[data-testid='CancelIcon']");
+    const deleteButton = chip.locator("[data-icon='circle-xmark']");
     await deleteButton.click();
   }
 
@@ -238,14 +230,14 @@ export class AotfActions {
   // ==================
   async applyNameFilterAndWaitForResults(name: string): Promise<void> {
     await this.searchByName(name);
-    // Wait for table to update
-    await this.page.waitForTimeout(500); // Adjust based on debounce time
+    // NameFilter debounces input by 300ms before triggering the search query
+    await this.page.waitForTimeout(300);
   }
 
   async openAndConfigureFacets(facetConfig: Record<string, string>): Promise<void> {
     await this.openFacetsSearch();
-    for (const [facetName, optionValue] of Object.entries(facetConfig)) {
-      await this.selectFacetFilter(facetName, optionValue);
+    for (const optionValue of Object.values(facetConfig)) {
+      await this.selectFacetFilter(optionValue);
     }
   }
 }

@@ -71,7 +71,7 @@ export class EVASection {
   // Get clinical significance
   async getClinicalSignificance(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(1);
+    const cell = row.locator("td").nth(2);
     return await cell.textContent();
   }
 

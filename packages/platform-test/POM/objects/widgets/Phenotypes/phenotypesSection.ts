@@ -64,11 +64,11 @@ export class PhenotypesSection {
 
   // Pagination
   getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='next-page-button']");
+    return this.getSection().locator("[data-testid='pagination-next-button']");
   }
 
   getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='previous-page-button']");
+    return this.getSection().locator("[data-testid='pagination-previous-button']");
   }
 
   async clickNextPage(): Promise<void> {

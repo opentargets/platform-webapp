@@ -22,6 +22,12 @@ const formatRoundedCount = (value: number) => {
   return format(".2~s")(value);
 };
 
+const slugify = (label: string) =>
+  label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 function MetricsCards({ data }: { data: MetricRow[] }) {
   const metrics = [
     ["Targets", faDna, count(data, "target")],
@@ -38,6 +44,7 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
 
   return (
     <Box
+      data-testid="metrics-cards"
       sx={{
         mt: 4,
         display: "grid",
@@ -52,16 +59,22 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
       }}
     >
       {metrics.map(([label, icon, value]) => (
-        <Card key={label} sx={{ width: "100%" }} elevation={0} variant="outlined">
+        <Card
+          key={label}
+          data-testid={`metrics-card-${slugify(label)}`}
+          sx={{ width: "100%" }}
+          elevation={0}
+          variant="outlined"
+        >
           <CardContent sx={{ display: "flex", alignItems: "start", gap: 1, flexDirection: "column", justifyContent: "space-between", px: 3 }}>
             <Box >
-                <Typography color="secondary" variant="h4" fontWeight="800" fontSize={29} >{formatRoundedCount(value)}</Typography>
+                <Typography color="secondary" variant="h4" fontWeight="800" fontSize={29} data-testid="metrics-card-value">{formatRoundedCount(value)}</Typography>
             </Box>
             <Box sx={{ textAlign: "left", display: "flex", alignItems: "center", justifyContent: "start", columnGap: "4px" }}>
               <Box sx={{ color: "secondary.main", fontSize: "1.4rem", flex: "0 0 35px", width: "35px" }}>
                 <FontAwesomeIcon icon={icon as IconDefinition} />
               </Box>
-              <Typography color="secondary" variant="body2" sx={{ fontWeight: 400, fontSize: 14.5 }}>{label}</Typography>
+              <Typography color="secondary" variant="body2" sx={{ fontWeight: 400, fontSize: 14.5 }} data-testid="metrics-card-label">{label}</Typography>
             </Box>
           </CardContent>
         </Card>
