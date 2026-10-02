@@ -3,7 +3,7 @@
  * hotspot editor preview and the recorder, so what is previewed is what gets recorded.
  * Everything is drawn in frame coordinates (1080×1920 or 1920×1080); callers scale the context.
  */
-import { FONT_FAMILY, MONO_FAMILY, OT_COLORS } from "../layout";
+import { type BrandFonts, type DocumentColors, type ExportBranding, platformLabel } from "../../../core";
 import type { Hotspot, VideoAspect, VideoScene, VideoSettings } from "../types";
 import { type Box, fitContain } from "../writers/shared";
 import type { SceneImage } from "./images";
@@ -68,22 +68,30 @@ export function layoutFor(aspect: VideoAspect): Layout {
   };
 }
 
-const font = (weight: number, size: number, family = FONT_FAMILY) => `${weight} ${size}px ${family}`;
+/** The branding's document palette and fonts, as the compositor draws with them. */
+interface Style {
+  fonts: BrandFonts;
+  colors: DocumentColors;
+}
+const styleOf = (branding: ExportBranding): Style => ({ fonts: branding.document.fonts, colors: branding.document.colors });
 
-const FONT_SPECS = [
-  font(700, 88),
-  font(700, 64),
-  font(700, 56),
-  font(600, 30),
-  font(500, 40),
-  font(400, 24),
-  font(400, 30, MONO_FAMILY),
+const font = (st: Style, weight: number, size: number, mono = false) =>
+  `${weight} ${size}px ${mono ? st.fonts.monoStack : st.fonts.bodyStack}`;
+
+const fontSpecs = (st: Style) => [
+  font(st, 700, 88),
+  font(st, 700, 64),
+  font(st, 700, 56),
+  font(st, 600, 30),
+  font(st, 500, 40),
+  font(st, 400, 24),
+  font(st, 400, 30, true),
 ];
 
 /** Waits for the fonts the compositor uses (resolves even when a face isn't available). */
-export async function ensureFonts(): Promise<void> {
+export async function ensureFonts(branding: ExportBranding): Promise<void> {
   if (typeof document === "undefined" || !document.fonts) return;
-  await Promise.all(FONT_SPECS.map((f) => document.fonts.load(f).catch(() => [])));
+  await Promise.all(fontSpecs(styleOf(branding)).map((f) => document.fonts.load(f).catch(() => [])));
 }
 
 // ---------- text ----------
@@ -153,14 +161,14 @@ const cueLayoutCache = new Map<string, { lines: string[]; fromWord: number; toWo
 
 const captionMaxWidth = (layout: Layout) => layout.captionBand.w - 64;
 
-function cueLayout(ctx: CanvasRenderingContext2D, narration: string, layout: Layout) {
-  const key = `${layout.aspect}\u0000${narration}`;
+function cueLayout(ctx: CanvasRenderingContext2D, narration: string, layout: Layout, st: Style) {
+  const key = `${layout.aspect}\u0000${st.fonts.bodyStack}\u0000${narration}`;
   const hit = cueLayoutCache.get(key);
   if (hit) return hit;
   const words = tokenize(narration);
   const out: { lines: string[]; fromWord: number; toWord: number }[] = [];
   ctx.save();
-  ctx.font = font(500, layout.captionSize);
+  ctx.font = font(st, 500, layout.captionSize);
   const maxWidth = captionMaxWidth(layout);
   sentenceRanges(words).forEach(([from, to]) => {
     // Greedy lines over word indices, then chunks of two lines
@@ -198,9 +206,10 @@ export function captionCues(
   ctx: CanvasRenderingContext2D,
   narration: string,
   timing: Pick<SceneTiming, "wordTimes" | "speechS">,
-  layout: Layout
+  layout: Layout,
+  branding: ExportBranding
 ): CaptionCue[] {
-  const chunks = cueLayout(ctx, narration, layout);
+  const chunks = cueLayout(ctx, narration, layout, styleOf(branding));
   const at = (i: number) => timing.wordTimes[Math.min(i, timing.wordTimes.length - 1)] ?? 0;
   return chunks.map((c, i) => ({
     ...c,
@@ -216,13 +225,13 @@ export const measuringContext = (): CanvasRenderingContext2D => {
   return measureCtx;
 };
 
-function drawCaptions(ctx: CanvasRenderingContext2D, cue: CaptionCue, layout: Layout) {
+function drawCaptions(ctx: CanvasRenderingContext2D, cue: CaptionCue, layout: Layout, st: Style) {
   const band = layout.captionBand;
   const size = layout.captionSize;
   const lineH = Math.round(size * 1.3);
   const padY = 22;
   ctx.save();
-  ctx.font = font(500, size);
+  ctx.font = font(st, 500, size);
   const textW = Math.max(...cue.lines.map((l) => ctx.measureText(l).width));
   const boxW = Math.min(band.w, textW + 64);
   const boxH = cue.lines.length * lineH + padY * 2;
@@ -308,8 +317,8 @@ function drawSpotlight(ctx: CanvasRenderingContext2D, holes: Box[], alpha: numbe
   ctx.restore();
 }
 
-function drawLabel(ctx: CanvasRenderingContext2D, label: string, r: Box, bounds: Box) {
-  ctx.font = font(600, 30);
+function drawLabel(ctx: CanvasRenderingContext2D, label: string, r: Box, bounds: Box, st: Style) {
+  ctx.font = font(st, 600, 30);
   const text = ellipsize(ctx, label, bounds.w - 40);
   const w = ctx.measureText(text).width + 32;
   const h = 48;
@@ -375,7 +384,8 @@ function drawHotspots(
   fit: Box,
   layout: Layout,
   wordTimes: number[],
-  durationS: number
+  durationS: number,
+  st: Style
 ) {
   const visible = hotspots
     .map((h) => {
@@ -396,7 +406,7 @@ function drawHotspots(
     ctx.save();
     ctx.globalAlpha = base * p;
     drawHotspotShape(ctx, h, r, fit);
-    if (h.label?.trim()) drawLabel(ctx, h.label.trim(), r, layout.imageBox);
+    if (h.label?.trim()) drawLabel(ctx, h.label.trim(), r, layout.imageBox, st);
     ctx.restore();
   });
 }
@@ -413,28 +423,38 @@ export interface FrameEnv {
   index: number;
   count: number;
   dataRelease?: string;
+  branding: ExportBranding; // palette, fonts and the platform name in the footer
   hotspots?: Hotspot[]; // editor drafts; defaults to scene.hotspots
 }
 
-const releaseLine = (release?: string) => (release ? `Open Targets Platform ${release}` : "Open Targets Platform");
-
 function drawFooter(ctx: CanvasRenderingContext2D, layout: Layout, env: FrameEnv) {
+  const st = styleOf(env.branding);
   const f = layout.footer;
   ctx.save();
-  ctx.font = font(400, f.size);
-  ctx.fillStyle = OT_COLORS.muted;
+  ctx.font = font(st, 400, f.size);
+  ctx.fillStyle = st.colors.muted;
   ctx.textBaseline = "alphabetic";
-  if (env.settings.showSource) {
+  const source = env.settings.showSource ? platformLabel(env.branding, env.dataRelease) : "";
+  if (source) {
     ctx.textAlign = "left";
-    ctx.fillText(ellipsize(ctx, releaseLine(env.dataRelease), f.right - f.left - 160), f.left, f.baseline);
+    ctx.fillText(ellipsize(ctx, source, f.right - f.left - 160), f.left, f.baseline);
   }
   ctx.textAlign = "right";
   ctx.fillText(`${env.index + 1} / ${env.count}`, f.right, f.baseline);
   ctx.restore();
 }
 
-function drawKicker(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, w: number, color = OT_COLORS.primary, align: CanvasTextAlign = "left") {
-  ctx.font = font(400, 30, MONO_FAMILY);
+function drawKicker(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  w: number,
+  st: Style,
+  color = st.colors.primary,
+  align: CanvasTextAlign = "left"
+) {
+  ctx.font = font(st, 400, 30, true);
   ctx.fillStyle = color;
   ctx.textAlign = align;
   ctx.textBaseline = "top";
@@ -442,13 +462,14 @@ function drawKicker(ctx: CanvasRenderingContext2D, text: string, x: number, y: n
 }
 
 function drawFigureScene(ctx: CanvasRenderingContext2D, scene: VideoScene, t: number, layout: Layout, env: FrameEnv) {
+  const st = styleOf(env.branding);
   const { kicker, title, imageBox } = layout;
   let y = kicker.y;
   if (scene.kicker) {
-    drawKicker(ctx, scene.kicker, kicker.x, kicker.y, kicker.w);
+    drawKicker(ctx, scene.kicker, kicker.x, kicker.y, kicker.w, st);
     y = title.y;
   }
-  ctx.font = font(700, title.size);
+  ctx.font = font(st, 700, title.size);
   ctx.fillStyle = TITLE_COLOR;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
@@ -459,12 +480,12 @@ function drawFigureScene(ctx: CanvasRenderingContext2D, scene: VideoScene, t: nu
   if (env.image) {
     const fit = fitContain(env.image.width, env.image.height, imageBox);
     ctx.drawImage(env.image.source, fit.x, fit.y, fit.w, fit.h);
-    drawHotspots(ctx, env.hotspots ?? scene.hotspots, t, fit, layout, env.wordTimes, env.durationS);
+    drawHotspots(ctx, env.hotspots ?? scene.hotspots, t, fit, layout, env.wordTimes, env.durationS, st);
   } else {
     ctx.fillStyle = "#f5f5f5";
     ctx.fillRect(imageBox.x, imageBox.y, imageBox.w, imageBox.h);
-    ctx.font = font(400, 32);
-    ctx.fillStyle = OT_COLORS.muted;
+    ctx.font = font(st, 400, 32);
+    ctx.fillStyle = st.colors.muted;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
@@ -479,6 +500,7 @@ function drawFigureScene(ctx: CanvasRenderingContext2D, scene: VideoScene, t: nu
 function drawTextScene(
   ctx: CanvasRenderingContext2D,
   layout: Layout,
+  st: Style,
   opts: { kicker?: string; kickerColor?: string; text: string; size: number; maxLines: number; subtitle?: string; subtitleColor?: string; accent?: string; center: boolean }
 ) {
   const box = layout.text;
@@ -488,9 +510,9 @@ function drawTextScene(
   const textW = box.w - (opts.center ? 0 : accentW + (accentW ? 36 : 0));
   const align: CanvasTextAlign = opts.center ? "center" : "left";
 
-  ctx.font = font(700, opts.size);
+  ctx.font = font(st, 700, opts.size);
   const lines = wrapLines(ctx, opts.text, textW, opts.maxLines);
-  ctx.font = font(500, layout.display.subtitle);
+  ctx.font = font(st, 500, layout.display.subtitle);
   const subLines = opts.subtitle ? wrapLines(ctx, opts.subtitle, textW, 3) : [];
   const subLineH = Math.round(layout.display.subtitle * 1.3);
 
@@ -500,14 +522,14 @@ function drawTextScene(
   let y = box.y + Math.max(0, (box.h - kickerH - textH - subH) / 2);
 
   if (opts.kicker) {
-    drawKicker(ctx, opts.kicker, textX, y, textW, opts.kickerColor, align);
+    drawKicker(ctx, opts.kicker, textX, y, textW, st, opts.kickerColor, align);
     y += kickerH;
   }
   if (opts.accent) {
     ctx.fillStyle = opts.accent;
     ctx.fillRect(box.x, y, accentW, textH);
   }
-  ctx.font = font(700, opts.size);
+  ctx.font = font(st, 700, opts.size);
   ctx.fillStyle = TITLE_COLOR;
   ctx.textAlign = align;
   ctx.textBaseline = "top";
@@ -515,8 +537,8 @@ function drawTextScene(
   y += textH;
   if (subLines.length) {
     y += 48;
-    ctx.font = font(500, layout.display.subtitle);
-    ctx.fillStyle = opts.subtitleColor ?? OT_COLORS.muted;
+    ctx.font = font(st, 500, layout.display.subtitle);
+    ctx.fillStyle = opts.subtitleColor ?? st.colors.muted;
     subLines.forEach((line, i) => ctx.fillText(line, textX, y + i * subLineH));
   }
 }
@@ -529,6 +551,7 @@ export function drawFrame(
   layout: Layout,
   env: FrameEnv
 ): void {
+  const st = styleOf(env.branding);
   ctx.save();
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -536,31 +559,31 @@ export function drawFrame(
   if (scene.kind === "figure") {
     drawFigureScene(ctx, scene, tInScene, layout, env);
   } else if (scene.kind === "statement") {
-    drawTextScene(ctx, layout, {
+    drawTextScene(ctx, layout, st, {
       kicker: scene.kicker,
-      kickerColor: scene.tone === "finding" ? OT_COLORS.finding : OT_COLORS.primary,
+      kickerColor: scene.tone === "finding" ? st.colors.finding : st.colors.primary,
       text: scene.title,
       size: layout.display.statement,
       maxLines: layout.aspect === "9:16" ? 12 : 8,
-      accent: scene.tone === "finding" ? OT_COLORS.finding : OT_COLORS.primary,
+      accent: scene.tone === "finding" ? st.colors.finding : st.colors.primary,
       center: false,
     });
   } else {
-    drawTextScene(ctx, layout, {
+    drawTextScene(ctx, layout, st, {
       kicker: scene.kicker,
       text: scene.title,
       size: layout.display.title,
       maxLines: layout.aspect === "9:16" ? 6 : 4,
       subtitle: scene.subtitle,
-      subtitleColor: scene.kind === "end" ? OT_COLORS.primary : undefined,
+      subtitleColor: scene.kind === "end" ? st.colors.primary : undefined,
       center: true,
     });
   }
 
   if (env.settings.captions.burnIn && scene.narration.trim()) {
-    const cues = captionCues(ctx, scene.narration, env, layout);
+    const cues = captionCues(ctx, scene.narration, env, layout, env.branding);
     const cue = cues.find((c) => tInScene >= c.start && tInScene < c.end);
-    if (cue) drawCaptions(ctx, cue, layout);
+    if (cue) drawCaptions(ctx, cue, layout, st);
   }
   drawFooter(ctx, layout, env);
   ctx.restore();
@@ -599,16 +622,23 @@ export const entryIndexAt = (timeline: Timeline, t: number): number => {
   return i < 0 ? timeline.entries.length - 1 : i;
 };
 
+/** What every frame needs besides the timeline: the display settings, branding and release. */
+export interface FrameSetup {
+  settings: FrameEnv["settings"];
+  branding: ExportBranding;
+  dataRelease?: string;
+}
+
 export const frameEnv = (
   timeline: Timeline,
   index: number,
-  settings: FrameEnv["settings"],
-  dataRelease?: string,
+  { settings, branding, dataRelease }: FrameSetup,
   live?: { wordTimes: number[]; speechS: number }
 ): FrameEnv => {
   const e = timeline.entries[index];
   return {
     settings,
+    branding,
     wordTimes: live?.wordTimes ?? e.timing.wordTimes,
     speechS: live?.speechS ?? e.timing.speechS,
     durationS: e.duration,

@@ -10,7 +10,7 @@ import type { Hotspot } from "../types";
 import {
   drawCrossfade,
   drawFrame,
-  type FrameEnv,
+  type FrameSetup,
   frameContext,
   frameEnv,
   type Layout,
@@ -39,12 +39,10 @@ export interface PlaybackHandle {
   done: Promise<PlaybackResult>;
 }
 
-export interface PlaybackOptions {
+export interface PlaybackOptions extends FrameSetup {
   canvas: HTMLCanvasElement;
   timeline: Timeline;
   layout: Layout;
-  settings: FrameEnv["settings"];
-  dataRelease?: string;
   fromIndex: number;
   toIndex: number; // inclusive
   startOffsetS?: number; // start the first scene part-way through (hotspot preview)
@@ -60,7 +58,7 @@ export interface PlaybackOptions {
 const MAX_OVERRUN_S = 10;
 
 export function play(opts: PlaybackOptions): PlaybackHandle {
-  const { canvas, timeline, layout, settings, dataRelease, voice } = opts;
+  const { canvas, timeline, layout, settings, branding, dataRelease, voice } = opts;
   const log: PlaybackLogEntry[] = [];
   const t0 = performance.now();
   let stopped = false;
@@ -164,7 +162,7 @@ export function play(opts: PlaybackOptions): PlaybackHandle {
     const ctx = frameContext(canvas, layout);
     if (!ctx) return;
     const envFor = (index: number, live: SceneState["live"]) => {
-      const env = frameEnv(timeline, index, settings, dataRelease, live);
+      const env = frameEnv(timeline, index, { settings, branding, dataRelease }, live);
       const drafts = opts.hotspots?.[timeline.entries[index].scene.sceneId];
       return drafts ? { ...env, hotspots: drafts } : env;
     };
@@ -234,13 +232,12 @@ export function drawStill(
   index: number,
   t: number,
   layout: Layout,
-  settings: FrameEnv["settings"],
-  dataRelease?: string,
+  setup: FrameSetup,
   hotspots?: Hotspot[]
 ): void {
   const ctx = frameContext(canvas, layout);
   const entry = timeline.entries[index];
   if (!ctx || !entry) return;
-  const env = frameEnv(timeline, index, settings, dataRelease);
+  const env = frameEnv(timeline, index, setup);
   drawFrame(ctx, entry.scene, t, layout, hotspots ? { ...env, hotspots } : env);
 }

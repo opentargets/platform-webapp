@@ -1,3 +1,4 @@
+import { type ExportBranding, releaseLabel } from "../../../core";
 import type { DataSourceRequest, IRNode, MethodsEntry, Provenance, TableData } from "../types";
 
 export type FigureNode = Extract<IRNode, { type: "figure" }>;
@@ -9,7 +10,7 @@ export const safeRequest = (request: DataSourceRequest): DataSourceRequest =>
     ? { ...request, headers: request.headers.map((h) => (h.secret ? { ...h, value: "" } : h)) }
     : request;
 
-// User uploads and arbitrary REST hosts aren't Open Targets data, so they don't inherit the release
+// User uploads and arbitrary REST hosts aren't the platform's data, so they don't inherit the release
 const isExternal = (source: string): boolean => source === "image" || source === "table" || source === "rest";
 
 const methodsKind = (node: FigureNode | TableNode | DataSourceNode): MethodsEntry["kind"] => {
@@ -74,12 +75,13 @@ const sentence = (s: string | undefined): string => {
 /** "takeaway. caption. Filters: a, b. Source: sourceLabel · Open Targets {release}." */
 export function buildCaption(
   node: { takeaway?: string; caption?: string; source: string; provenance: Provenance },
-  dataRelease: string | undefined
+  dataRelease: string | undefined,
+  branding: Pick<ExportBranding, "organisation" | "platform">
 ): string {
   const p = node.provenance;
   const external = isExternal(node.source);
   const release = external ? p.dataRelease : p.dataRelease ?? dataRelease;
-  const source = [p.sourceLabel, release ? `Open Targets ${release}` : undefined].filter(Boolean).join(" · ");
+  const source = [p.sourceLabel, release ? releaseLabel(branding, release) : undefined].filter(Boolean).join(" · ");
   return [
     sentence(node.takeaway),
     node.caption && node.caption.trim() !== node.takeaway?.trim() ? sentence(node.caption) : "",

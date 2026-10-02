@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { styled } from "@mui/material/styles";
+import { useReportConfig } from "../../../../react";
 import { runtimeVideoWarnings } from "../../plan/video";
 import type { ExportWarning, VideoScene, VideoSettings } from "../../types";
 import { buildTimeline, type Timeline } from "../../video/compositor";
@@ -58,6 +59,7 @@ const objectId = (o: object | undefined): number => {
 
 /** Decoded figure images per scene id (undefined while loading or when there is none). */
 export function useSceneImages(scenes: VideoScene[]) {
+  const { branding } = useReportConfig();
   const [images, setImages] = useState<Record<string, SceneImage | undefined>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const scenesRef = useRef(scenes);
@@ -75,7 +77,7 @@ export function useSceneImages(scenes: VideoScene[]) {
       .forEach((scene) => {
         setLoading((l) => (l[scene.sceneId] ? l : { ...l, [scene.sceneId]: true }));
         // sceneImage() caches per block and asset, so re-runs are cheap
-        sceneImage(scene).then((img) => {
+        sceneImage(scene, branding).then((img) => {
           if (cancelled) return;
           setImages((m) => (m[scene.sceneId] === img ? m : { ...m, [scene.sceneId]: img }));
           setLoading((l) => ({ ...l, [scene.sceneId]: false }));
@@ -84,7 +86,7 @@ export function useSceneImages(scenes: VideoScene[]) {
     return () => {
       cancelled = true;
     };
-  }, [assetKey]);
+  }, [assetKey, branding]);
 
   return { images, loading };
 }

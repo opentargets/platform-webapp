@@ -1,7 +1,8 @@
 import React, { memo, ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import { formatReference, orderReferences } from "../citations";
-import { MONO_FAMILY, OT_COLORS, PAGE_SIZES, PAPER_MARGIN_MM } from "../layout";
+import { useReportConfig } from "../../../react";
+import { PAGE_SIZES, PAPER_MARGIN_MM } from "../layout";
 import type { PaperSettings, PaperUnit } from "../types";
 import { docHtml, formatDate } from "./nodeMeta";
 import { FigureView, PX_PER_MM, PX_PER_PT, RichHtml, ScaledBox, TableView } from "./previewParts";
@@ -62,7 +63,6 @@ const withFigRefs = (html: string, figRefs: string[]) => {
   return i >= 0 ? `${html.slice(0, i)}${suffix}${html.slice(i)}` : `${html}<p>${suffix}</p>`;
 };
 
-const TONE_COLORS = { info: OT_COLORS.info, warning: OT_COLORS.warning, finding: OT_COLORS.finding };
 const TONE_LABELS = { info: "Note", warning: "Caution", finding: "Finding" };
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
@@ -73,12 +73,13 @@ const captionSx = { fontSize: pt(8.5), lineHeight: 1.35, color: "#424242", mt: `
 
 /** One paper flow item, at print size. */
 export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
+  const { colors, fonts } = useReportConfig().branding.document;
   switch (unit.kind) {
     case "paperTitle":
       return (
-        <Box sx={{ pb: `${pt(6)}px`, borderBottom: `1px solid ${OT_COLORS.border}` }}>
+        <Box sx={{ pb: `${pt(6)}px`, borderBottom: `1px solid ${colors.border}` }}>
           <Box sx={{ fontSize: pt(20), fontWeight: 700, lineHeight: 1.2 }}>{unit.title}</Box>
-          <Box sx={{ fontSize: pt(9), fontStyle: "italic", color: OT_COLORS.muted, mt: `${pt(4)}px` }}>
+          <Box sx={{ fontSize: pt(9), fontStyle: "italic", color: colors.muted, mt: `${pt(4)}px` }}>
             {unit.byline}
           </Box>
           {unit.abstract && (
@@ -100,7 +101,7 @@ export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
             fontSize: pt(size),
             fontWeight: 700,
             fontStyle: unit.level === 3 ? "italic" : "normal",
-            color: unit.level === 1 ? OT_COLORS.primaryDark : OT_COLORS.text,
+            color: unit.level === 1 ? colors.primaryDark : colors.text,
             pt: unit.level === 1 ? `${pt(4)}px` : 0,
           }}
         >
@@ -120,7 +121,7 @@ export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
             textAlign: "justify",
             "& h2": { fontSize: pt(11), m: 0, mb: "0.3em" },
             "& h3": { fontSize: pt(10), fontStyle: "italic", m: 0, mb: "0.3em" },
-            "& a": { color: OT_COLORS.primaryDark },
+            "& a": { color: colors.primaryDark },
           }}
         />
       );
@@ -128,13 +129,13 @@ export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
       return (
         <Box
           sx={{
-            border: `1px solid ${OT_COLORS.border}`,
-            borderLeft: `3px solid ${TONE_COLORS[unit.tone]}`,
+            border: `1px solid ${colors.border}`,
+            borderLeft: `3px solid ${colors[unit.tone]}`,
             p: `${pt(5)}px ${pt(7)}px`,
             bgcolor: "#fafafa",
           }}
         >
-          <Box sx={{ fontSize: pt(8), fontWeight: 700, textTransform: "uppercase", color: TONE_COLORS[unit.tone] }}>
+          <Box sx={{ fontSize: pt(8), fontWeight: 700, textTransform: "uppercase", color: colors[unit.tone] }}>
             {TONE_LABELS[unit.tone]}
           </Box>
           {body}
@@ -187,7 +188,7 @@ export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
               {e.dataRelease && `Release ${e.dataRelease}. `}
               Retrieved {formatDate(e.retrievedAt)}.{e.note ? ` ${e.note}.` : ""}
               {e.request && (
-                <Box sx={{ fontFamily: MONO_FAMILY, fontSize: pt(7.5), color: OT_COLORS.primaryDark, overflowWrap: "anywhere" }}>
+                <Box sx={{ fontFamily: fonts.monoStack, fontSize: pt(7.5), color: colors.primaryDark, overflowWrap: "anywhere" }}>
                   {e.request.method ? `${e.request.method} ` : ""}
                   {e.request.endpoint}
                 </Box>
@@ -202,7 +203,7 @@ export const PaperUnitView: React.FC<{ unit: PaperUnit }> = memo(({ unit }) => {
           <SectionTitle>Data availability</SectionTitle>
           <Box>{unit.text}</Box>
           {unit.links.map((l) => (
-            <Box key={l.url} sx={{ overflowWrap: "anywhere", color: OT_COLORS.primaryDark, fontSize: pt(8) }}>
+            <Box key={l.url} sx={{ overflowWrap: "anywhere", color: colors.primaryDark, fontSize: pt(8) }}>
               {l.label}: {l.url}
             </Box>
           ))}
@@ -271,6 +272,7 @@ export const paginate = (
 
 /** Measures every unit at its laid-out width (hidden), then paginates. */
 export const usePaperPages = (units: PaperUnit[], geometry: PageGeometry) => {
+  const { colors } = useReportConfig().branding.document;
   const measureRef = useRef<HTMLDivElement>(null);
   const [heights, setHeights] = useState<Map<string, number>>(() => new Map());
 
@@ -300,7 +302,7 @@ export const usePaperPages = (units: PaperUnit[], geometry: PageGeometry) => {
         visibility: "hidden",
         pointerEvents: "none",
         fontFamily: PAPER_FONT,
-        color: OT_COLORS.text,
+        color: colors.text,
       }}
     >
       {units.map((u) => (
@@ -330,6 +332,7 @@ interface PagePreviewProps {
 
 /** One paginated page: span units full width, runs of column units in CSS columns. */
 export const PagePreview: React.FC<PagePreviewProps> = memo(({ units, geometry, pageNumber, pageCount, scale }) => {
+  const { colors } = useReportConfig().branding.document;
   const segments: { span: boolean; units: PaperUnit[] }[] = [];
   units.forEach((u) => {
     const span = unitSpans(u, geometry.columns);
@@ -351,7 +354,7 @@ export const PagePreview: React.FC<PagePreviewProps> = memo(({ units, geometry, 
           height: geometry.height,
           bgcolor: "#fff",
           fontFamily: PAPER_FONT,
-          color: OT_COLORS.text,
+          color: colors.text,
           position: "relative",
           boxSizing: "border-box",
         }}
@@ -393,7 +396,7 @@ export const PagePreview: React.FC<PagePreviewProps> = memo(({ units, geometry, 
             right: 0,
             textAlign: "center",
             fontSize: pt(8),
-            color: OT_COLORS.muted,
+            color: colors.muted,
           }}
         >
           {pageNumber} / {pageCount}

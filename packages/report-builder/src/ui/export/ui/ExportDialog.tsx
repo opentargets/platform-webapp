@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTriangleExclamation, faX } from "@fortawesome/free-solid-svg-icons";
-import type { Report } from "../../../core";
+import { type Report, releaseLabel } from "../../../core";
+import { useReportConfig } from "../../../react";
 import { useRenderHost } from "../RenderHost";
 import type { ExportFormat, ExportTarget, ExportWarning } from "../types";
 import { PaperMappingStep } from "./PaperMappingStep";
@@ -176,7 +177,8 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ report, open, onClos
   const current = stepIndex(step, target);
   const isMapping = step === "mapping";
   const fullHeight = isMapping || step === "record";
-  const releaseText = `Open Targets ${flow.dataRelease ?? "Platform"} · ${formatDate(Date.now())}`;
+  const { branding } = useReportConfig();
+  const releaseText = [releaseLabel(branding, flow.dataRelease), formatDate(Date.now())].filter(Boolean).join(" · ");
 
   const errorAlert = flow.error && (
     <Alert severity="error" onClose={flow.clearError} sx={{ borderRadius: 0 }}>

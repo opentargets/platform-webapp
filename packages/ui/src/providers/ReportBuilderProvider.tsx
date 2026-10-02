@@ -1,7 +1,7 @@
 /**
  * Open Targets report provider: report-builder's ReportProvider with the platform's
- * config (API endpoint and client, data release, deep links, provenance labels)
- * and its table component. Mount it inside OTConfigurationProvider.
+ * config (API endpoint and client, data release, deep links, provenance labels, export
+ * branding) and its table component. Mount it inside OTConfigurationProvider.
  */
 import { type ReactNode, useMemo, useState } from "react";
 import {
@@ -11,7 +11,7 @@ import {
   type ReportStore,
   type ReactWidgetRegistry,
   type ReportComponents,
-  type ReportConfig,
+  type ReportConfigInput,
   ReportProvider,
   useReportSaveStatus,
 } from "report-builder";
@@ -19,6 +19,9 @@ import { Snackbar } from "@mui/material";
 import { type ApolloClient, gql, useApolloClient } from "@apollo/client";
 import ReportRowsTable from "../components/OtTable/ReportRowsTable";
 import { useConfigContext } from "./ConfigurationProvider";
+import { openTargetsBranding } from "./openTargetsBranding";
+
+export { openTargetsBranding } from "./openTargetsBranding";
 
 // Kept for existing importers; the implementations live in report-builder
 export { STORAGE_BUDGET_BYTES, fitsStorageBudget, formatBytes, serializeBlock } from "report-builder";
@@ -146,11 +149,11 @@ export async function fetchDataRelease(client: ApolloClient<unknown>): Promise<s
 }
 
 /** The platform's ReportConfig over its Apollo client and API endpoint. */
-export const usePlatformReportConfig = (): Partial<ReportConfig> => {
+export const usePlatformReportConfig = (): ReportConfigInput => {
   const client = useApolloClient();
   const { config } = useConfigContext();
   const appEndpoint = config?.urlApi;
-  return useMemo<Partial<ReportConfig>>(
+  return useMemo<ReportConfigInput>(
     () => ({
       graphql: {
         defaultEndpoint: PLATFORM_GRAPHQL_ENDPOINT,
@@ -193,6 +196,7 @@ export const usePlatformReportConfig = (): Partial<ReportConfig> => {
       entityDeepLink,
       endpointLabel,
       isFirstPartyEndpoint: (endpoint) => endpointLabel(endpoint) === "Open Targets Platform API",
+      branding: openTargetsBranding,
     }),
     [client, appEndpoint]
   );

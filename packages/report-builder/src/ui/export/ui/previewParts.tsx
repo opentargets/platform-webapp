@@ -1,6 +1,6 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
-import { FONT_FAMILY, MONO_FAMILY, OT_COLORS, SLIDE_BRAND, SLIDE_FONTS } from "../layout";
+import { useReportConfig } from "../../../react";
 import { formatCell } from "../richText/toHtml";
 import type { FigureAsset, PlacedTable } from "../types";
 import { assetSrc } from "./nodeMeta";
@@ -78,6 +78,7 @@ export const FigureView: React.FC<{
   fill?: boolean;
   scale?: number; // type scale for the placeholder
 }> = ({ asset, title, caption, alt, fill, scale = 1 }) => {
+  const { colors, fonts } = useReportConfig().branding.document;
   const src = asset ? assetSrc(asset) : undefined;
   if (!asset || asset.kind === "missing" || !src) {
     return (
@@ -86,7 +87,7 @@ export const FigureView: React.FC<{
           width: "100%",
           height: fill ? "100%" : undefined,
           aspectRatio: fill ? undefined : "16 / 9",
-          border: `${2 * scale}px dashed ${OT_COLORS.border}`,
+          border: `${2 * scale}px dashed ${colors.border}`,
           bgcolor: "#fafafa",
           display: "flex",
           flexDirection: "column",
@@ -96,13 +97,13 @@ export const FigureView: React.FC<{
           gap: `${6 * scale}px`,
           p: `${12 * scale}px`,
           boxSizing: "border-box",
-          color: OT_COLORS.muted,
-          fontFamily: FONT_FAMILY,
+          color: colors.muted,
+          fontFamily: fonts.bodyStack,
         }}
       >
-        <Box sx={{ fontSize: 16 * scale, fontWeight: 700, color: OT_COLORS.text }}>{title}</Box>
+        <Box sx={{ fontSize: 16 * scale, fontWeight: 700, color: colors.text }}>{title}</Box>
         {caption && <Box sx={{ fontSize: 12 * scale }}>{caption}</Box>}
-        <Box sx={{ fontSize: 11 * scale, fontFamily: MONO_FAMILY }}>figure not available</Box>
+        <Box sx={{ fontSize: 11 * scale, fontFamily: fonts.monoStack }}>figure not available</Box>
       </Box>
     );
   }
@@ -126,8 +127,8 @@ export const FigureView: React.FC<{
 };
 
 /**
- * Native HTML table: paper style (header #e3f0fa / #1e6ba8), or the slides template style
- * (navy header, white cells, grey text).
+ * Native HTML table: paper style (tinted header in the document palette), or the slides template
+ * style (heading-colour header, surface cells, body text).
  */
 export const TableView: React.FC<{
   table: PlacedTable;
@@ -135,6 +136,9 @@ export const TableView: React.FC<{
   maxCellChars?: number;
   variant?: "paper" | "slides";
 }> = ({ table, fontPx, maxCellChars = 60, variant = "paper" }) => {
+  const { branding } = useReportConfig();
+  const S = branding.slides.colors;
+  const D = branding.document.colors;
   // Slides: the planner's column layout (content-sized columns, rotated long headers)
   const layout = variant === "slides" ? table.layout : undefined;
   const font = layout ? layout.fontPt * PX_PER_PT : fontPx;
@@ -146,21 +150,21 @@ export const TableView: React.FC<{
         width: widthPx ?? "100%",
         tableLayout: layout ? "fixed" : "auto",
         borderCollapse: "collapse",
-        fontFamily: variant === "slides" ? SLIDE_FONTS.bodyStack : FONT_FAMILY,
+        fontFamily: variant === "slides" ? branding.slides.fonts.bodyStack : branding.document.fonts.bodyStack,
         fontSize: font,
-        color: variant === "slides" ? SLIDE_BRAND.grey : OT_COLORS.text,
+        color: variant === "slides" ? S.text : D.text,
         "& th, & td": {
-          border: `1px solid ${variant === "slides" ? SLIDE_BRAND.grey30 : OT_COLORS.border}`,
+          border: `1px solid ${variant === "slides" ? S.line : D.border}`,
           padding: `${font * 0.3}px ${font * 0.5}px`,
           textAlign: "left",
           verticalAlign: "top",
           overflowWrap: "anywhere",
         },
-        "& td": variant === "slides" ? { bgcolor: "#fff" } : {},
+        "& td": variant === "slides" ? { bgcolor: S.surface } : {},
         "& th":
           variant === "slides"
-            ? { bgcolor: SLIDE_BRAND.navy, color: "#fff", fontWeight: 700 }
-            : { bgcolor: OT_COLORS.primaryLight, color: OT_COLORS.primaryDark, fontWeight: 700 },
+            ? { bgcolor: S.heading, color: S.surface, fontWeight: 700 }
+            : { bgcolor: D.primaryLight, color: D.primaryDark, fontWeight: 700 },
         "& th.rot": { verticalAlign: "bottom", padding: `${font * 0.3}px ${font * 0.15}px` },
         "& th.rot span": {
           writingMode: "vertical-rl",

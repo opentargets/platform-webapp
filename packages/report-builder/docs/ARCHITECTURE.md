@@ -270,20 +270,25 @@ slides.
 ## Slides export (`export/slideTheme.ts`, `export/writers/pptx.ts`)
 
 The PPTX writer, the print HTML (`writers/pdf-print.ts` → `slidesToHtml`) and the step-2 preview
-(`ui/SlidePreview.tsx`) draw the same slide, in the Open Targets presentation template's style, from
-one source of truth:
+(`ui/SlidePreview.tsx`) draw the same slide, in the host's branding, from one source of truth:
 
-- `layout.ts` — `SLIDE_BRAND` (navy headings `#1c4a6d`, OT blue / red / grey with 50% and 30% tints),
-  `SLIDE_FONTS` (Trebuchet MS headings, Roboto body), `SLIDE_TYPE` sizes and `SLIDE_PIXEL_RATIO`
-  (3× widget captures).
-- `writers/shared.ts` — `slideFrame(aspect)`: every box in slide inches (kicker, title, content, figure
-  + provenance rail, footer text, slide number, logo bottom-right).
-- `slideTheme.ts` — the logo SVG (colour and white), the diagonal blue/navy polygons on title and
-  section ("PART n") slides, and `titleSlideLayout()` which sizes the title column, steps the title
-  font down until it fits, and lays out the meta columns.
+- `core/branding.ts` — `ExportBranding`: organisation and platform names, the logo (SVG or data
+  URL, light and dark variants), the slide palette (`heading`, `accent`, `alert`, `text` and their
+  derived tints), the document palette, fonts (web stacks plus `office` names for PPTX/DOCX) and
+  wording. `resolveBranding()` completes a host's `BrandingInput`; hosts pass it as
+  `ReportConfig.branding` and the writers receive it on `WriterContext.branding`. The default is
+  neutral; the Open Targets look (navy headings in Trebuchet MS, OT blue / red / grey, the OT
+  logo) is `openTargetsBranding` in the `ui` package's `ReportBuilderProvider`.
+- `layout.ts` — `SLIDE_TYPE` sizes, slide geometry and `SLIDE_PIXEL_RATIO` (3× widget captures).
+- `writers/shared.ts` — `slideFrame(aspect, logoAspect)`: every box in slide inches (kicker, title,
+  content, figure + provenance rail, footer text, slide number, logo bottom-right).
+- `slideTheme.ts` — the logo helpers, the diagonal accent / heading-colour polygons on title and
+  section ("PART n") slides (off with `slides.decor: false`), and `titleSlideLayout()` which sizes
+  the title column, steps the title font down until it fits, and lays out the meta columns.
 
-Statement slides are navy with white text and the white logo; data slides (appendix tables, data
-sources, methods) are white with navy table headers.
+Statement slides use the heading colour as background with light text and the dark-background
+logo; data slides (appendix tables, data sources, methods) are plain with heading-colour table
+headers.
 
 **Tables on slides** (`plan/tableLayout.ts`). The planner decides each table's column geometry
 once and stores it on the `PlacedTable` (`layout`), so PPTX, print HTML and the preview agree:

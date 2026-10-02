@@ -1,5 +1,8 @@
 import {
+  type ExportBranding,
   isWidget,
+  releaseLabel,
+  resolveBranding,
   type GraphqlBlock,
   type ImageBlock,
   type NotebookBlock,
@@ -176,6 +179,7 @@ const renderWidgetSafely = async (
 /** Walks report.sections in order and resolves each block to an IR node (node.id === reportSectionId). */
 export async function collect(report: Report, opts: CollectOptions): Promise<ExportDocument> {
   const { signal, dataRelease } = opts;
+  const branding = opts.branding ?? resolveBranding();
   const blocks = report.sections;
   const nodes: IRNode[] = [];
   const warnings: ExportWarning[] = [];
@@ -284,7 +288,9 @@ export async function collect(report: Report, opts: CollectOptions): Promise<Exp
         break;
       case "graphql":
       case "rest":
-        nodes.push(collectDataSource(block, report, { dataRelease, releaseStart, warnings, hooks: opts.hooks }));
+        nodes.push(
+          collectDataSource(block, report, { dataRelease, releaseStart, warnings, hooks: opts.hooks, branding })
+        );
         break;
       case "notebook":
         nodes.push(await collectNotebook(block, report, { warnings, pixelRatio: opts.pixelRatio }));
@@ -458,7 +464,13 @@ const collectNotebook = async (
 const collectDataSource = (
   block: GraphqlBlock | RestBlock,
   report: Report,
-  ctx: { dataRelease?: string; releaseStart?: number; warnings: ExportWarning[]; hooks?: CollectHooks }
+  ctx: {
+    dataRelease?: string;
+    releaseStart?: number;
+    warnings: ExportWarning[];
+    hooks?: CollectHooks;
+    branding: ExportBranding;
+  }
 ): IRNode => {
   const id = block.reportSectionId;
   const request = block.kind === "graphql" ? graphqlRequest(block, report) : restRequest(block);
@@ -471,7 +483,7 @@ const collectDataSource = (
   const isOT = ctx.hooks?.isFirstPartyEndpoint?.(request.endpoint) ?? false;
 
   // Stale = the snapshot was taken before the current release started (only
-  // meaningful for Open Targets endpoints; other APIs don't follow its releases)
+  // meaningful for first-party endpoints; other APIs don't follow the host's releases)
   const stale =
     !!snapshotData && isOT && ctx.releaseStart !== undefined && snapshotData.at < ctx.releaseStart;
   if (stale) {
@@ -479,7 +491,7 @@ const collectDataSource = (
       nodeId: id,
       severity: "warn",
       code: "SNAPSHOT_STALE",
-      message: `${block.title}: snapshot from ${new Date(snapshotData.at).toISOString().slice(0, 10)} predates Open Targets ${ctx.dataRelease}`,
+      message: `${block.title}: snapshot from ${new Date(snapshotData.at).toISOString().slice(0, 10)} predates ${releaseLabel(ctx.branding, ctx.dataRelease)}`,
     });
   }
   if (block.kind === "rest" && block.headers.some((h) => h.secret && h.key)) {

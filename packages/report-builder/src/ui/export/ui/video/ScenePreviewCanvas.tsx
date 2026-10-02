@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Box, Button, Typography } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
+import { useReportConfig } from "../../../../react";
 import type { Hotspot, VideoSettings } from "../../types";
 import { ensureFonts, FRAME_SIZE, type Layout, posterTime, type Timeline } from "../../video/compositor";
 import { drawStill, play, type PlaybackHandle } from "../../video/player";
@@ -53,6 +54,7 @@ export const ScenePreviewCanvas = forwardRef<PreviewHandle, ScenePreviewCanvasPr
   },
   ref
 ) {
+  const { branding } = useReportConfig();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playbackRef = useRef<PlaybackHandle | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -69,11 +71,11 @@ export const ScenePreviewCanvas = forwardRef<PreviewHandle, ScenePreviewCanvasPr
 
   useEffect(() => {
     let cancelled = false;
-    ensureFonts().then(() => !cancelled && setFontsReady(true));
+    ensureFonts(branding).then(() => !cancelled && setFontsReady(true));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [branding]);
 
   // Latest props for the playback callbacks
   const latest = useRef({ onMeasured, onTime, onPlayingChange });
@@ -94,6 +96,7 @@ export const ScenePreviewCanvas = forwardRef<PreviewHandle, ScenePreviewCanvasPr
         timeline,
         layout,
         settings,
+        branding,
         dataRelease,
         fromIndex: from,
         toIndex: to,
@@ -121,7 +124,7 @@ export const ScenePreviewCanvas = forwardRef<PreviewHandle, ScenePreviewCanvasPr
         latest.current.onPlayingChange?.(false);
       });
     },
-    [timeline, layout, settings, dataRelease, voice, hotspots]
+    [timeline, layout, settings, branding, dataRelease, voice, hotspots]
   );
 
   useImperativeHandle(
@@ -151,8 +154,8 @@ export const ScenePreviewCanvas = forwardRef<PreviewHandle, ScenePreviewCanvasPr
       ctx?.clearRect(0, 0, canvas.width, canvas.height);
       return;
     }
-    drawStill(canvas, timeline, safeIndex, still, layout, settings, dataRelease, drafts);
-  }, [playing, timeline, safeIndex, still, layout, settings, dataRelease, drafts, entry, fontsReady, pxW, pxH]);
+    drawStill(canvas, timeline, safeIndex, still, layout, { settings, branding, dataRelease }, drafts);
+  }, [playing, timeline, safeIndex, still, layout, settings, branding, dataRelease, drafts, entry, fontsReady, pxW, pxH]);
 
   const total = timeline.total;
   const shownTime = time ?? (entry ? entry.start + still : 0);

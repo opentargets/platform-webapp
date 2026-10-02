@@ -1,3 +1,4 @@
+import { type ExportBranding, bylineText, dataAvailabilityText, resolveBranding } from "../../../core";
 import { PAPER_SPAN_FIGURE_ASPECT, PAPER_SPAN_TABLE_COLS } from "../layout";
 import type { ExportDocument, ExportPlan, ExportSettings, FigureAsset, MethodsEntry, PaperUnit } from "../types";
 import { orderReferences } from "../citations";
@@ -13,7 +14,8 @@ type TableUnit = Extract<PaperUnit, { kind: "paperTable" }>;
 const assetAspect = (asset: FigureAsset): number =>
   asset.kind !== "missing" && asset.height > 0 ? asset.width / asset.height : 0;
 
-export function planPaper(doc: ExportDocument, settings: ExportSettings): ExportPlan {
+export function planPaper(doc: ExportDocument, settings: ExportSettings, branding?: ExportBranding): ExportPlan {
+  const b = branding ?? resolveBranding();
   const p = settings.paper;
   const roles: ExportPlan["roles"] = {};
   doc.nodes.forEach((node) => {
@@ -66,7 +68,8 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
           source: node.source,
           provenance: node.provenance,
         },
-        release
+        release,
+        b
       ),
       table: {
         data: sliceTable(data, 0, data.rows.length),
@@ -89,7 +92,7 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
       kind: "paperTitle",
       id: "paper-title",
       title: doc.title,
-      byline: `Assembled from Open Targets Platform${release ? ` ${release}` : ""}${date ? ` · ${date}` : ""}`,
+      byline: bylineText(b, release, date),
       abstract: p.abstract && doc.description?.trim() ? doc.description.trim() : undefined,
     });
   }
@@ -146,7 +149,7 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
         // Widget figures: the picture stays in the body, its rows go to the supplementary tables
         const hasData = !!node.tableData?.rows.length;
         const dataLabel = hasData ? placeTable(node, true, label ?? node.title) : undefined;
-        const caption = buildCaption(node, release);
+        const caption = buildCaption(node, release, b);
         units.push({
           kind: "paperFigure",
           id: `paper-figure-${node.id}`,
@@ -191,9 +194,7 @@ export function planPaper(doc: ExportDocument, settings: ExportSettings): Export
     units.push({
       kind: "paperDataAvailability",
       id: "paper-data-availability",
-      text:
-        `All data were retrieved from the Open Targets Platform${release ? ` (release ${release})` : ""}` +
-        `${date ? ` on ${date}` : ""}. Each figure and table can be reproduced from the platform pages below.`,
+      text: dataAvailabilityText(b, release, date),
       links,
     });
   }

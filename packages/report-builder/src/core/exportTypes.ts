@@ -2,6 +2,7 @@
  * Export pipeline types: Report ──collect──► ExportDocument (IR) ──plan──► ExportPlan ──render──► Blob
  * No React here, so collect/plan/writers stay unit-testable and portable.
  */
+import type { ExportBranding } from "./branding";
 import type { BlockKind, ReportSection, RichTextDoc } from "./types";
 
 export type ExportTarget = "slides" | "paper" | "video" | "working" | "data";
@@ -492,6 +493,8 @@ export interface CollectOptions {
   renderHints?: ExportRenderHints;
   pixelRatio: number; // 2 for slides, 300/96 for paper
   dataRelease?: string;
+  // Names used in warnings ("predates Open Targets 26.06"); neutral wording when omitted
+  branding?: ExportBranding;
   platformOrigin?: string; // defaults to window.location.origin
   onProgress?: (done: number, total: number, label: string) => void;
   signal?: AbortSignal;
@@ -502,6 +505,8 @@ export interface CollectOptions {
 export interface WriterContext {
   doc: ExportDocument;
   settings: ExportSettings;
+  // Logo, colours, fonts and wording; `resolveBranding()` defaults apply when omitted
+  branding?: ExportBranding;
   onProgress?: (done: number, total: number, label: string) => void;
 }
 

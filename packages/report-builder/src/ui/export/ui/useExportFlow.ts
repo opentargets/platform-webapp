@@ -154,6 +154,9 @@ export function useExportFlow(args: {
   const hooks = useCollectHooks();
   const hooksRef = useRef(hooks);
   hooksRef.current = hooks;
+  const { branding } = config;
+  const brandingRef = useRef(branding);
+  brandingRef.current = branding;
 
   const [step, setStep] = useState<FlowStep>("idle");
   const [target, setTarget] = useState<ExportTarget>("slides");
@@ -225,6 +228,7 @@ export function useExportFlow(args: {
           renderHints: geometry.hints,
           pixelRatio: geometry.pixelRatio,
           dataRelease: release,
+          branding: brandingRef.current,
           signal: controller.signal,
           onProgress: (d, total, label) => {
             if (!controller.signal.aborted) setCollectProgress({ done: d, total, label });
@@ -255,19 +259,19 @@ export function useExportFlow(args: {
   const { plan, planError } = useMemo((): { plan: ExportPlan | null; planError?: string } => {
     if (!doc || !isMappedTarget(target)) return { plan: null };
     try {
-      return { plan: runPlan(doc, target, planSettings) };
+      return { plan: runPlan(doc, target, planSettings, branding) };
     } catch (e) {
       return { plan: null, planError: e instanceof Error ? e.message : String(e) };
     }
-  }, [doc, target, planSettings]);
+  }, [doc, target, planSettings, branding]);
 
   // ---------- video ----------
 
   const videoSettings = useMemo(() => withVideoDefaults(settings.video), [settings.video]);
   const videoPlan = useMemo((): VideoPlan | null => {
     if (!doc || target !== "video") return null;
-    return planVideo(doc, videoSettings, { hooks: hooksRef.current });
-  }, [doc, target, videoSettings]);
+    return planVideo(doc, videoSettings, { hooks: hooksRef.current, branding });
+  }, [doc, target, videoSettings, branding]);
   const videoPlanRef = useRef(videoPlan);
   videoPlanRef.current = videoPlan;
 
@@ -329,6 +333,7 @@ export function useExportFlow(args: {
           ctx: {
             doc: exportDoc,
             settings: settingsRef.current,
+            branding: brandingRef.current,
             onProgress: (d, total, label) => {
               if (!signal?.aborted) setRenderProgress({ done: d, total, label });
             },

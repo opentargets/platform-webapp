@@ -2,7 +2,7 @@
  * Figure images for video scenes (spec §4): the IR asset as a decoded PNG plus its hash.
  * Hotspots are stored relative to this image, so the same PNG serves both aspect ratios.
  */
-import { FONT_FAMILY, OT_COLORS } from "../layout";
+import type { ExportBranding } from "../../../core";
 import type { FigureAsset, TableData, VideoScene } from "../types";
 import { dataUrlToBytes, fitContain, isSafeImageDataUrl, svgToPngDataUrl } from "../writers/shared";
 
@@ -64,9 +64,11 @@ const clip = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): st
   return `${text.slice(0, lo)}…`;
 };
 
-/** Table nodes have no picture: draw the first rows as one. */
-export function tableToPngDataUrl(data: TableData): string | undefined {
+/** Table nodes have no picture: draw the first rows as one, in the document palette and font. */
+export function tableToPngDataUrl(data: TableData, branding: ExportBranding): string | undefined {
   if (typeof document === "undefined") return undefined;
+  const colors = branding.document.colors;
+  const font = branding.document.fonts.bodyStack;
   const cols = data.columns.slice(0, TABLE_MAX_COLS);
   const rows = data.rows.slice(0, TABLE_MAX_ROWS);
   const total = Math.max(data.totalRows, data.rows.length);
@@ -85,23 +87,23 @@ export function tableToPngDataUrl(data: TableData): string | undefined {
   const colW = (width - pad * 2) / Math.max(1, cols.length);
   ctx.textBaseline = "middle";
 
-  ctx.fillStyle = OT_COLORS.primaryLight;
+  ctx.fillStyle = colors.primaryLight;
   ctx.fillRect(pad, pad, width - pad * 2, rowH);
-  ctx.font = `700 30px ${FONT_FAMILY}`;
-  ctx.fillStyle = OT_COLORS.text;
+  ctx.font = `700 30px ${font}`;
+  ctx.fillStyle = colors.text;
   cols.forEach((c, i) => ctx.fillText(clip(ctx, c.label, colW - 28), pad + i * colW + 14, pad + rowH / 2));
 
-  ctx.font = `400 30px ${FONT_FAMILY}`;
+  ctx.font = `400 30px ${font}`;
   rows.forEach((row, r) => {
     const y = pad + (r + 1) * rowH;
-    ctx.fillStyle = OT_COLORS.border;
+    ctx.fillStyle = colors.border;
     ctx.fillRect(pad, y, width - pad * 2, 2);
-    ctx.fillStyle = OT_COLORS.text;
+    ctx.fillStyle = colors.text;
     cols.forEach((c, i) => ctx.fillText(clip(ctx, cellText(row[c.key]), colW - 28), pad + i * colW + 14, y + rowH / 2));
   });
   if (footer) {
-    ctx.font = `400 26px ${FONT_FAMILY}`;
-    ctx.fillStyle = OT_COLORS.muted;
+    ctx.font = `400 26px ${font}`;
+    ctx.fillStyle = colors.muted;
     const parts = [
       total > rows.length ? `Showing ${rows.length} of ${total} rows` : "",
       data.columns.length > cols.length ? `${cols.length} of ${data.columns.length} columns` : "",
@@ -128,8 +130,12 @@ async function decode(dataUrl: string): Promise<HTMLImageElement> {
   return img;
 }
 
-async function build(source: FigureAsset | TableData, isTable: boolean): Promise<SceneImage | undefined> {
-  const dataUrl = isTable ? tableToPngDataUrl(source as TableData) : await assetDataUrl(source as FigureAsset);
+async function build(
+  source: FigureAsset | TableData,
+  isTable: boolean,
+  branding: ExportBranding
+): Promise<SceneImage | undefined> {
+  const dataUrl = isTable ? tableToPngDataUrl(source as TableData, branding) : await assetDataUrl(source as FigureAsset);
   if (!dataUrl) return undefined;
   const [img, hash] = await Promise.all([decode(dataUrl), hashBytes(dataUrlToBytes(dataUrl))]);
   return { source: img, width: img.naturalWidth, height: img.naturalHeight, dataUrl, hash };
@@ -139,12 +145,15 @@ async function build(source: FigureAsset | TableData, isTable: boolean): Promise
 const cache = new Map<string, { key: object; image: Promise<SceneImage | undefined> }>();
 
 /** The scene's figure image, or undefined for scenes without one (or a figure that failed). */
-export function sceneImage(scene: Pick<VideoScene, "blockId" | "asset" | "table">): Promise<SceneImage | undefined> {
+export function sceneImage(
+  scene: Pick<VideoScene, "blockId" | "asset" | "table">,
+  branding: ExportBranding
+): Promise<SceneImage | undefined> {
   const key = scene.asset ?? scene.table;
   if (!scene.blockId || !key || (scene.asset && scene.asset.kind === "missing")) return Promise.resolve(undefined);
   const hit = cache.get(scene.blockId);
   if (hit && hit.key === key) return hit.image;
-  const image = build(key, !scene.asset).catch(() => undefined);
+  const image = build(key, !scene.asset, branding).catch(() => undefined);
   cache.set(scene.blockId, { key, image });
   return image;
 }

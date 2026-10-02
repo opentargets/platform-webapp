@@ -1,3 +1,4 @@
+import { releaseLabel, resolveBranding } from "../../../core";
 import { formatReference } from "../citations";
 import { formatDate } from "../plan/numbering";
 import { toMarkdown } from "../richText/toMarkdown";
@@ -69,14 +70,15 @@ const requestMarkdown = (entry: MethodsEntry): string[] => {
   return out;
 };
 
-const methodsMarkdown = (entries: MethodsEntry[]): string => {
+const methodsMarkdown = (entries: MethodsEntry[], ctx: WriterContext): string => {
+  const branding = resolveBranding(ctx.branding);
   const parts = ["## Methods"];
   entries.forEach((e) => {
     const lines = [`### ${escapeInline(e.title)}${e.figureLabel ? ` (${e.figureLabel})` : ""}`, ""];
     if (e.sourceLabel) lines.push(`- Source: ${escapeInline(e.sourceLabel)}`);
     if (e.entity) lines.push(`- Entity: ${escapeInline(e.entity.label ?? e.entity.id)} (${e.entity.type} \`${e.entity.id}\`)`);
     if (e.filters.length) lines.push(`- Filters: ${e.filters.map(escapeInline).join("; ")}`);
-    if (e.dataRelease) lines.push(`- Data release: Open Targets ${e.dataRelease}`);
+    if (e.dataRelease) lines.push(`- Data release: ${escapeInline(releaseLabel(branding, e.dataRelease))}`);
     if (e.retrievedAt) lines.push(`- Retrieved: ${formatDate(e.retrievedAt)}`);
     if (e.deepLink) lines.push(`- Link: <${e.deepLink}>`);
     lines.push(...requestMarkdown(e));
@@ -149,7 +151,7 @@ export async function writeMarkdown(plan: ExportPlan, ctx: WriterContext): Promi
         return;
       }
       case "paperMethods":
-        parts.push(methodsMarkdown(unit.entries));
+        parts.push(methodsMarkdown(unit.entries, ctx));
         return;
       case "paperDataAvailability":
         parts.push("## Data availability", escapeInline(unit.text));

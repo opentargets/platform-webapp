@@ -2,6 +2,7 @@
  * Captions file (spec §8.4), built from the same cues as the burned-in captions and the
  * scene start / word times that were actually recorded, so both agree.
  */
+import type { ExportBranding } from "../../../core";
 import { captionCues, type Layout, measuringContext } from "./compositor";
 import type { PlaybackLogEntry } from "./player";
 
@@ -16,12 +17,12 @@ export const srtTime = (seconds: number): string => {
   return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms % 1000, 3)}`;
 };
 
-export function buildSrt(log: PlaybackLogEntry[], layout: Layout): string {
+export function buildSrt(log: PlaybackLogEntry[], layout: Layout, branding: ExportBranding): string {
   const ctx = measuringContext();
   const blocks: string[] = [];
   log.forEach((entry) => {
     if (!entry.narration.trim()) return;
-    captionCues(ctx, entry.narration, entry, layout).forEach((cue) => {
+    captionCues(ctx, entry.narration, entry, layout, branding).forEach((cue) => {
       const end = Math.min(cue.end, entry.durationS);
       if (end <= cue.start) return;
       blocks.push(

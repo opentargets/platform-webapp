@@ -1,6 +1,7 @@
 import type { ISectionOptions, Paragraph, ParagraphChild, Table } from "docx";
+import { type ExportBranding, publisherLabel, releaseLabel, resolveBranding } from "../../../core";
 import { formatReference, orderReferences } from "../citations";
-import { OT_COLORS, PAPER_MARGIN_MM, PAPER_PIXEL_RATIO } from "../layout";
+import { PAPER_MARGIN_MM, PAPER_PIXEL_RATIO } from "../layout";
 import { formatCell } from "../richText/toHtml";
 import { DOCX_BULLET_REF, DOCX_ORDERED_REF, richTextToDocxParagraphs } from "../richText/toDocxRuns";
 import type { ExportPlan, FigureAsset, MethodsEntry, PaperUnit, PlacedTable, WriterContext } from "../types";
@@ -11,7 +12,6 @@ import {
   dataUrlToBytes,
   formatDate,
   headerLines,
-  releaseLabel,
   stringifyVariables,
   unitError,
   yieldFrame,
@@ -20,14 +20,7 @@ import {
 type Docx = typeof import("docx");
 type Block = Paragraph | Table;
 
-const FONT = "Arial";
-const MONO = "Courier New";
 const hex = (c: string) => c.replace("#", "").toUpperCase();
-const TONE_COLOR: Record<string, string> = {
-  finding: hex(OT_COLORS.finding),
-  warning: hex(OT_COLORS.warning),
-  info: hex(OT_COLORS.info),
-};
 const REFS_REF = "ot-references";
 
 const PAGE_TWIPS = { A4: { width: 11906, height: 16838 }, Letter: { width: 12240, height: 15840 } } as const;
@@ -64,6 +57,16 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
     WidthType,
   } = docx;
 
+  const branding: ExportBranding = resolveBranding(ctx.branding);
+  const { colors } = branding.document;
+  const FONT = branding.document.fonts.office.body;
+  const HEADING_FONT = branding.document.fonts.office.heading;
+  const MONO = branding.document.fonts.office.mono;
+  const TONE_COLOR: Record<string, string> = {
+    finding: hex(colors.finding),
+    warning: hex(colors.warning),
+    info: hex(colors.info),
+  };
   const paper = ctx.settings.paper;
   const page = PAGE_TWIPS[paper.pageSize] ?? PAGE_TWIPS.A4;
   const contentTwips = page.width - 2 * MARGIN_TWIPS;
@@ -100,7 +103,7 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
       children: [...(label ? [text(`${label}. `, { bold: true })] : []), text(value)],
     });
 
-  const cellBorder = { style: BorderStyle.SINGLE, size: 4, color: hex(OT_COLORS.border) };
+  const cellBorder = { style: BorderStyle.SINGLE, size: 4, color: hex(colors.border) };
   const table = (placed: PlacedTable): Table => {
     const cols = placed.data.columns;
     const width = Math.floor(100 / Math.max(cols.length, 1));
@@ -111,14 +114,14 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
             children: [
               text(value, {
                 bold: header || undefined,
-                color: header ? hex(OT_COLORS.primaryDark) : undefined,
+                color: header ? hex(colors.primaryDark) : undefined,
                 size: SMALL_SIZE,
               }),
             ],
             spacing: { after: 0 },
           }),
         ],
-        shading: header ? { type: ShadingType.CLEAR, fill: hex(OT_COLORS.primaryLight), color: "auto" } : undefined,
+        shading: header ? { type: ShadingType.CLEAR, fill: hex(colors.primaryLight), color: "auto" } : undefined,
         width: { size: width, type: WidthType.PERCENTAGE },
         margins: { top: 40, bottom: 40, left: 80, right: 80 },
       });
@@ -158,10 +161,10 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
       {
         alignment: AlignmentType.CENTER,
         border: {
-          top: { style: BorderStyle.DASHED, size: 6, color: hex(OT_COLORS.muted) },
-          bottom: { style: BorderStyle.DASHED, size: 6, color: hex(OT_COLORS.muted) },
-          left: { style: BorderStyle.DASHED, size: 6, color: hex(OT_COLORS.muted) },
-          right: { style: BorderStyle.DASHED, size: 6, color: hex(OT_COLORS.muted) },
+          top: { style: BorderStyle.DASHED, size: 6, color: hex(colors.muted) },
+          bottom: { style: BorderStyle.DASHED, size: 6, color: hex(colors.muted) },
+          left: { style: BorderStyle.DASHED, size: 6, color: hex(colors.muted) },
+          right: { style: BorderStyle.DASHED, size: 6, color: hex(colors.muted) },
         },
         shading: { type: ShadingType.CLEAR, fill: "F5F5F5", color: "auto" },
         spacing: { before: 120, after: 60 },
@@ -288,7 +291,7 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
       if (e.entity) line("Entity", [e.entity.label, e.entity.id].filter(Boolean).join(" · "));
       line(
         "Data",
-        [e.dataRelease ? releaseLabel(e.dataRelease) : "", `retrieved ${formatDate(e.retrievedAt)}`]
+        [e.dataRelease ? releaseLabel(branding, e.dataRelease) : "", `retrieved ${formatDate(e.retrievedAt)}`]
           .filter(Boolean)
           .join(", "),
       );
@@ -318,7 +321,7 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
       case "paperTitle":
         front.push(new P({ heading: HeadingLevel.TITLE, children: [text(unit.title)] }));
         front.push(
-          para([text(unit.byline, { italics: true, color: hex(OT_COLORS.muted) })], { spacing: { after: 240 } }),
+          para([text(unit.byline, { italics: true, color: hex(colors.muted) })], { spacing: { after: 240 } }),
         );
         if (unit.abstract) {
           front.push(para([text("Abstract", { bold: true })], { spacing: { after: 60 } }));
@@ -429,11 +432,11 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
       new P({
         alignment: AlignmentType.CENTER,
         children: [
-          text(`${releaseLabel(plan.dataRelease ?? ctx.doc.dataRelease)}  ·  `, {
+          text(`${releaseLabel(branding, plan.dataRelease ?? ctx.doc.dataRelease)}  ·  `, {
             size: 16,
-            color: hex(OT_COLORS.muted),
+            color: hex(colors.muted),
           }),
-          new TextRun({ children: [PageNumber.CURRENT], size: 16, color: hex(OT_COLORS.muted) }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 16, color: hex(colors.muted) }),
         ],
       }),
     ],
@@ -471,29 +474,30 @@ export async function writeDocx(plan: ExportPlan, ctx: WriterContext): Promise<B
     style: { paragraph: { indent: { left: 720 * (level + 1), hanging: 360 } } },
   }));
 
-  const headingStyle = (size: number, outlineLevel: number, color = hex(OT_COLORS.primaryDark)) => ({
-    run: { font: FONT, size, bold: true, color },
+  const headingStyle = (size: number, outlineLevel: number, color = hex(colors.primaryDark)) => ({
+    run: { font: HEADING_FONT, size, bold: true, color },
     paragraph: { spacing: { before: 240, after: 120 }, keepNext: true, keepLines: true, outlineLevel },
   });
 
+  const release = releaseLabel(branding, plan.dataRelease);
   const document = new Document({
-    creator: "Open Targets Platform",
+    creator: publisherLabel(branding) || " ", // the library writes "Un-named" for an empty creator
     title: plan.title,
-    description: `Assembled from ${releaseLabel(plan.dataRelease)}`,
+    description: release ? `Assembled from ${release}` : undefined,
     styles: {
       default: {
         document: {
-          run: { font: FONT, size: BODY_SIZE, color: hex(OT_COLORS.text) },
+          run: { font: FONT, size: BODY_SIZE, color: hex(colors.text) },
           paragraph: { spacing: { after: 120, line: 276 } },
         },
         title: {
-          run: { font: FONT, size: 40, bold: true, color: hex(OT_COLORS.text) },
+          run: { font: HEADING_FONT, size: 40, bold: true, color: hex(colors.text) },
           paragraph: { spacing: { after: 120 } },
         },
         heading1: headingStyle(28, 0),
         heading2: headingStyle(24, 1),
-        heading3: headingStyle(21, 2, hex(OT_COLORS.text)),
-        hyperlink: { run: { color: hex(OT_COLORS.primaryDark), underline: {} } },
+        heading3: headingStyle(21, 2, hex(colors.text)),
+        hyperlink: { run: { color: hex(colors.primaryDark), underline: {} } },
       },
       paragraphStyles: [
         {

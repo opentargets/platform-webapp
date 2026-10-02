@@ -1,4 +1,5 @@
 import type { ReportSection } from "../core";
+import { type BrandingInput, type ExportBranding, resolveBranding } from "../core";
 
 /** Result of running a GraphQL query for a data block. */
 export interface GraphqlExecution {
@@ -46,7 +47,16 @@ export interface ReportConfig {
   endpointLabel: (endpoint: string) => string;
   /** Data blocks pointed at the host's own API are dated with the data release. */
   isFirstPartyEndpoint: (endpoint: string) => boolean;
+  /**
+   * Export branding: organisation and platform names, logo, slide and document palettes, fonts
+   * and wording. Resolved from the host's `BrandingInput` (see `resolveBranding`); the default is
+   * neutral (no logo, no organisation).
+   */
+  branding: ExportBranding;
 }
+
+/** What a host passes to `ReportProvider`: every field optional, branding as a partial. */
+export type ReportConfigInput = Partial<Omit<ReportConfig, "branding">> & { branding?: BrandingInput };
 
 const hostOf = (endpoint: string): string => {
   try {
@@ -63,11 +73,17 @@ export const defaultReportConfig = (): ReportConfig => ({
   sourceLabel: (section) => section.definition.name,
   endpointLabel: hostOf,
   isFirstPartyEndpoint: () => false,
+  branding: resolveBranding(),
 });
 
-export const withConfigDefaults = (config?: Partial<ReportConfig>): ReportConfig => {
+export const withConfigDefaults = (config?: ReportConfigInput): ReportConfig => {
   const base = defaultReportConfig();
-  return { ...base, ...config, graphql: { ...base.graphql, ...config?.graphql } };
+  return {
+    ...base,
+    ...config,
+    graphql: { ...base.graphql, ...config?.graphql },
+    branding: config?.branding ? resolveBranding(config.branding) : base.branding,
+  };
 };
 
 /** Same host and path, ignoring scheme case and a trailing slash. */

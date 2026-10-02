@@ -15,7 +15,7 @@ import {
   type ReportStore,
   type SaveStatus,
 } from "../core";
-import { type ReportConfig, withConfigDefaults } from "./config";
+import { type ReportConfig, type ReportConfigInput, withConfigDefaults } from "./config";
 import { defaultWidgetRegistry, type ReactWidgetRegistry } from "./registry";
 
 /** Presentational pieces a host may swap; the UI layer supplies defaults. */
@@ -44,7 +44,7 @@ export interface ReportProviderProps {
   store?: ReportStore;
   /** Widget registry; defaults to the module-level one hosts populate at boot. */
   registry?: ReactWidgetRegistry;
-  config?: Partial<ReportConfig>;
+  config?: ReportConfigInput;
   components?: ReportComponents;
 }
 

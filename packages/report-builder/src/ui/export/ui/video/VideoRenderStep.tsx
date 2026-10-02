@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircle, faCircleCheck, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { useReportConfig } from "../../../../react";
 import type { DeepPartial, VideoAspect, VideoPlan, VideoSettings } from "../../types";
 import { ensureFonts, FRAME_SIZE, layoutFor, posterTime } from "../../video/compositor";
 import { drawStill } from "../../video/player";
@@ -113,6 +114,7 @@ export const VideoRenderStep: React.FC<VideoRenderStepProps> = ({ reportName, pl
   const voices = useVoices();
   const { images, loading } = useSceneImages(plan.scenes);
   const runtime = useVideoTimeline(plan.scenes, settings, voices, images, loading);
+  const { branding } = useReportConfig();
   const layout = useMemo(() => layoutFor(settings.aspect), [settings.aspect]);
   const [state, setState] = useState<RecState>({ kind: "idle" });
   const [warnings, setWarnings] = useState<RecordWarning[]>([]);
@@ -146,9 +148,11 @@ export const VideoRenderStep: React.FC<VideoRenderStepProps> = ({ reportName, pl
     (canvas: HTMLCanvasElement, aspect: VideoAspect) => {
       const entry = timeline.entries[thumbIndex];
       if (!entry) return;
-      ensureFonts().then(() => drawStill(canvas, timeline, thumbIndex, posterTime(entry), layoutFor(aspect), settings, dataRelease));
+      ensureFonts(branding).then(() =>
+        drawStill(canvas, timeline, thumbIndex, posterTime(entry), layoutFor(aspect), { settings, branding, dataRelease })
+      );
     },
-    [timeline, thumbIndex, settings, dataRelease]
+    [timeline, thumbIndex, settings, branding, dataRelease]
   );
 
   const record = async (withAudio: boolean) => {
@@ -169,7 +173,7 @@ export const VideoRenderStep: React.FC<VideoRenderStepProps> = ({ reportName, pl
         return;
       }
     }
-    await ensureFonts();
+    await ensureFonts(branding);
     const canvas = recordCanvasRef.current;
     if (!canvas) return;
     let lastProgress = 0;
@@ -178,6 +182,7 @@ export const VideoRenderStep: React.FC<VideoRenderStepProps> = ({ reportName, pl
       timeline,
       layout,
       settings,
+      branding,
       dataRelease,
       voice: withAudio ? runtime.voice : null,
       audioTrack,
@@ -211,7 +216,7 @@ export const VideoRenderStep: React.FC<VideoRenderStepProps> = ({ reportName, pl
       download(videoUrl, fileName);
       let srt: { blob: Blob; fileName: string; url: string } | undefined;
       if (settings.captions.srt) {
-        const text = buildSrt(result.log, layout);
+        const text = buildSrt(result.log, layout, branding);
         if (text) {
           const blob = new Blob([text], { type: "application/x-subrip" });
           const url = URL.createObjectURL(blob);

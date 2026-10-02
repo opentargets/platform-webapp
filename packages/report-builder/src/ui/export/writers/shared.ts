@@ -2,7 +2,7 @@
  * Helpers shared by the pptx / docx / print writers (no library imports, so they stay in
  * whichever chunk uses them).
  */
-import { OT_LOGO_ASPECT, SLIDE_GEOMETRY, SLIDE_MARGIN_IN, SLIDE_RAIL_FRACTION } from "../layout";
+import { SLIDE_GEOMETRY, SLIDE_MARGIN_IN, SLIDE_RAIL_FRACTION } from "../layout";
 import type { DataSourceRequest, FigureAsset, SlidesSettings } from "../types";
 
 /** Lets the UI paint progress between units; setTimeout fallback so hidden tabs don't stall. */
@@ -21,9 +21,6 @@ export const formatDate = (ms: number): string => new Date(ms).toISOString().sli
 /** "9 November 2022", as on the template's title slide. */
 export const formatLongDate = (ms: number): string =>
   new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-export const releaseLabel = (release?: string): string =>
-  release ? `Open Targets ${release}` : "Open Targets Platform";
 
 export const SECRET_PLACEHOLDER = "••• omitted";
 
@@ -126,12 +123,17 @@ export const fitContain = (width: number, height: number, area: Box): Box => {
   return { x: area.x + (area.w - w) / 2, y: area.y + (area.h - h) / 2, w, h };
 };
 
+/** Footer logo width in inches. */
+const FOOTER_LOGO_W = 1.2;
+
 /**
- * Slide frame in inches (PPTX units), following the Open Targets template: title top-left,
- * content below, footer text bottom-left and the logo
- * bottom-right. The print HTML and the preview use the same boxes, so all three agree.
+ * Slide frame in inches (PPTX units): title top-left, content below, footer text bottom-left
+ * and the logo bottom-right. `logoAspect` (width / height) sizes the logo box; without one the
+ * footer closes up over its space. The content boxes don't depend on it, so the planner can
+ * call this without branding. The print HTML and the preview use the same boxes, so all three
+ * agree.
  */
-export function slideFrame(aspect: SlidesSettings["aspect"]) {
+export function slideFrame(aspect: SlidesSettings["aspect"], logoAspect?: number) {
   const geom = SLIDE_GEOMETRY[aspect];
   const W = geom.widthIn;
   const H = geom.heightIn;
@@ -142,8 +144,9 @@ export function slideFrame(aspect: SlidesSettings["aspect"]) {
   const footerH = 0.3;
   const contentY = 1.5;
   const contentH = footerY - 0.2 - contentY;
-  const logoW = 1.2;
-  const logoH = logoW / OT_LOGO_ASPECT;
+  const logoW = logoAspect ? FOOTER_LOGO_W : 0;
+  const logoH = logoAspect ? logoW / Math.max(0.2, logoAspect) : 0;
+  const logoGap = logoAspect ? 0.1 : 0;
   const numberW = 0.45;
   const releaseW = 2.1;
   const logoX = W - m - logoW;
@@ -159,8 +162,8 @@ export function slideFrame(aspect: SlidesSettings["aspect"]) {
     rail: { x: W - m - railW, y: contentY, w: railW, h: contentH },
     footer: { x: m, y: footerY, w: W - 2 * m, h: footerH },
     logo: { x: logoX, y: footerY + footerH / 2 - logoH / 2, w: logoW, h: logoH },
-    slideNumber: { x: logoX - 0.1 - numberW, y: footerY, w: numberW, h: footerH },
-    footerRight: { x: logoX - 0.1 - numberW - releaseW, y: footerY, w: releaseW, h: footerH },
+    slideNumber: { x: logoX - logoGap - numberW, y: footerY, w: numberW, h: footerH },
+    footerRight: { x: logoX - logoGap - numberW - releaseW, y: footerY, w: releaseW, h: footerH },
     footerLeft: { x: m, y: footerY, w: W - 2 * m - logoW - numberW - releaseW - 0.4, h: footerH },
   };
 }

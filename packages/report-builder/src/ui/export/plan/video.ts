@@ -1,4 +1,4 @@
-import type { RichTextDoc } from "../../../core";
+import { type ExportBranding, platformLabel, type RichTextDoc, resolveBranding } from "../../../core";
 import type {
   CollectHooks,
   ExportDocument,
@@ -14,7 +14,6 @@ import type {
 
 export const DEFAULT_MIN_DURATION_S = 3;
 export const MAX_VIDEO_S = 90;
-export const END_NARRATION = "Explore the data on the Open Targets Platform.";
 
 // ---------- TipTap → narration text ----------
 
@@ -91,17 +90,18 @@ const newOverride = (
 /** "platform.opentargets.org/target/ENSG…" — the deep link as it reads on screen. */
 export const displayLink = (url: string): string => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-export const releaseText = (release?: string): string =>
-  release ? `Open Targets Platform ${release}` : "Open Targets Platform";
-
-function candidatesFor(doc: ExportDocument, entityDeepLink?: CollectHooks["entityDeepLink"]): Candidate[] {
+function candidatesFor(
+  doc: ExportDocument,
+  branding: ExportBranding,
+  entityDeepLink?: CollectHooks["entityDeepLink"]
+): Candidate[] {
   const out: Candidate[] = [];
   const entityLabel = doc.entity?.label ?? doc.entity?.id;
 
   out.push({
     override: newOverride(null, "title", doc.title, doc.description?.trim() ?? ""),
     kicker: doc.entity?.type ? `${doc.entity.type} report` : "Report",
-    subtitle: [entityLabel, releaseText(doc.dataRelease)].filter(Boolean).join(" · "),
+    subtitle: [entityLabel, platformLabel(branding, doc.dataRelease)].filter(Boolean).join(" · "),
   });
 
   let kicker: string | undefined;
@@ -155,7 +155,7 @@ function candidatesFor(doc: ExportDocument, entityDeepLink?: CollectHooks["entit
 
   const link = entityDeepLink?.(doc.entity) ?? "";
   out.push({
-    override: newOverride(null, "end", "Explore the data", END_NARRATION),
+    override: newOverride(null, "end", "Explore the data", branding.wording.endNarration),
     kicker: doc.title,
     subtitle: displayLink(link),
   });
@@ -167,8 +167,12 @@ function candidatesFor(doc: ExportDocument, entityDeepLink?: CollectHooks["entit
  * appended in report order, deleted blocks drop theirs. The title scene stays first and the end
  * scene last. Pure: the caller persists `overrides` when they differ from the stored ones.
  */
-export function planVideo(doc: ExportDocument, settings: VideoSettings, opts: { hooks?: CollectHooks } = {}): VideoPlan {
-  const candidates = candidatesFor(doc, opts.hooks?.entityDeepLink);
+export function planVideo(
+  doc: ExportDocument,
+  settings: VideoSettings,
+  opts: { hooks?: CollectHooks; branding?: ExportBranding } = {}
+): VideoPlan {
+  const candidates = candidatesFor(doc, opts.branding ?? resolveBranding(), opts.hooks?.entityDeepLink);
   const byKey = new Map(candidates.map((c) => [overrideKey(c.override), c]));
 
   const kept: VideoSceneOverride[] = [];

@@ -3,22 +3,14 @@
  * document (print CSS, inline images, all text escaped); print*() loads it into a hidden
  * iframe, waits for fonts and images, and calls print().
  */
-import {
-  FONT_FAMILY,
-  MONO_FAMILY,
-  OT_COLORS,
-  PAGE_SIZES,
-  PAPER_MARGIN_MM,
-  SLIDE_BRAND,
-  SLIDE_FONTS,
-  SLIDE_TONE,
-  SLIDE_TYPE,
-} from "../layout";
+import { type ExportBranding, logoAspect, releaseLabel, resolveBranding, slideTone } from "../../../core";
+import { PAGE_SIZES, PAPER_MARGIN_MM, SLIDE_TYPE } from "../layout";
 import {
   type LogoVariant,
   decorSvgHtml,
   decorTextWidth,
-  otLogoDataUrl,
+  logoAlt,
+  logoSrc,
   titleMetaColumns,
   titleSlideLayout,
 } from "../slideTheme";
@@ -44,31 +36,40 @@ import {
   formatDate,
   headerLines,
   isSafeImageDataUrl,
-  releaseLabel,
   slideFrame,
   stringifyVariables,
   svgDataUrl,
   yieldFrame,
 } from "./shared";
 
-const FONT_LINK =
-  '<link rel="preconnect" href="https://fonts.googleapis.com">' +
-  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap">';
+/** The branding's web-font stylesheets (https only), with a preconnect per origin. */
+const fontLinks = (branding: ExportBranding): string => {
+  const hrefs = branding.fontStylesheets.filter((u) => /^https:\/\//i.test(u));
+  const origins = [...new Set(hrefs.map((u) => new URL(u).origin))];
+  return (
+    origins.map((o) => `<link rel="preconnect" href="${esc(o)}">`).join("") +
+    hrefs.map((u) => `<link rel="stylesheet" href="${esc(u)}">`).join("")
+  );
+};
 
 const WORKING_TABLE_ROWS = 200;
 const WORKING_DATA_PREVIEW_ROWS = 20;
 
-const BASE_CSS = `
+const baseCss = (branding: ExportBranding) => {
+  const c = branding.document.colors;
+  const f = branding.document.fonts;
+  return `
 :root {
-  --primary: ${OT_COLORS.primary}; --primary-dark: ${OT_COLORS.primaryDark}; --primary-light: ${OT_COLORS.primaryLight};
-  --text: ${OT_COLORS.text}; --muted: ${OT_COLORS.muted}; --border: ${OT_COLORS.border};
-  --finding: ${OT_COLORS.finding}; --warning: ${OT_COLORS.warning}; --info: ${OT_COLORS.info};
+  --primary: ${c.primary}; --primary-dark: ${c.primaryDark}; --primary-light: ${c.primaryLight};
+  --text: ${c.text}; --muted: ${c.muted}; --border: ${c.border};
+  --finding: ${c.finding}; --warning: ${c.warning}; --info: ${c.info};
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #fff; color: var(--text); }
-body { font-family: ${FONT_FAMILY}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: ${f.bodyStack}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+h1, h2, h3, h4, h5, .paper-title { font-family: ${f.headingStack}; }
 a { color: var(--primary-dark); text-decoration: underline; }
-code, pre, .mono { font-family: ${MONO_FAMILY}; }
+code, pre, .mono { font-family: ${f.monoStack}; }
 pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
 img { max-width: 100%; }
 table.data { border-collapse: collapse; width: 100%; }
@@ -86,10 +87,11 @@ table.data thead { display: table-header-group; }
 .tone-finding { --tone: var(--finding); } .tone-warning { --tone: var(--warning); } .tone-info { --tone: var(--info); }
 .muted { color: var(--muted); }
 `;
+};
 
-const doc = (title: string, css: string, body: string) =>
-  `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title>${FONT_LINK}` +
-  `<style>${BASE_CSS}${css}</style></head><body>${body}</body></html>`;
+const doc = (branding: ExportBranding, title: string, css: string, body: string) =>
+  `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title>${fontLinks(branding)}` +
+  `<style>${baseCss(branding)}${css}</style></head><body>${body}</body></html>`;
 
 const safeLink = (url?: string) => (url && /^https?:\/\//i.test(url.trim()) ? url.trim() : undefined);
 const linkHtml = (label: string, url?: string) => {
@@ -164,77 +166,81 @@ const headingLabel = (number: string | undefined, text: string, level: number) =
 
 const SLIDE_PAGE = { "16:9": { w: 16, h: 9 }, "4:3": { w: 12, h: 9 } } as const;
 
-/** Slides in the Open Targets template style (same frame, colours and type as the PPTX writer). */
+/** Slides in the branding's template style (same frame, colours and type as the PPTX writer). */
 export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
+  const branding = resolveBranding(ctx.branding);
   const aspect = ctx.settings.slides.aspect;
-  const frame = slideFrame(aspect);
+  const frame = slideFrame(aspect, logoAspect(branding));
   const pageSize = SLIDE_PAGE[aspect];
   const k = pageSize.w / frame.W; // inches in the PPTX frame → inches on the printed page
-  const release = releaseLabel(plan.dataRelease ?? ctx.doc.dataRelease);
+  const release = releaseLabel(branding, plan.dataRelease ?? ctx.doc.dataRelease);
   const inch = (v: number) => `${(v * k).toFixed(3)}in`;
   const pt = (v: number) => `${(v * k).toFixed(2)}pt`;
   const at = (b: Box, extra = "") =>
     `left:${inch(b.x)};top:${inch(b.y)};width:${inch(b.w)};height:${inch(b.h)};${extra}`;
-  const B = SLIDE_BRAND;
+  const B = branding.slides.colors;
+  const F = branding.slides.fonts;
 
   const css = `
 @page { size: ${pageSize.w}in ${pageSize.h}in; margin: 0; }
 .slide { position: relative; width: ${pageSize.w}in; height: ${pageSize.h}in; overflow: hidden; break-after: page; page-break-after: always;
-  background: #fff; color: ${B.grey}; font-family: ${SLIDE_FONTS.bodyStack}; }
+  background: ${B.surface}; color: ${B.text}; font-family: ${F.bodyStack}; }
 .slide:last-child { break-after: auto; page-break-after: auto; }
-.slide.dark { background: ${B.navy}; color: #fff; }
+.slide.dark { background: ${B.heading}; color: #fff; }
 .abs { position: absolute; }
-.head { font-family: ${SLIDE_FONTS.headingStack}; font-weight: 700; color: ${B.navy}; }
-.kicker { font-size: ${pt(SLIDE_TYPE.kickerPt)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${B.blue};
+.head { font-family: ${F.headingStack}; font-weight: 700; color: ${B.heading}; }
+.kicker { font-size: ${pt(SLIDE_TYPE.kickerPt)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${B.accent};
   display: flex; align-items: flex-end; }
 .title { font-size: ${pt(SLIDE_TYPE.titlePt)}; line-height: 1.1; display: flex; align-items: center; overflow: hidden; }
 .logo { display: block; object-fit: contain; }
-.footer { font-size: ${pt(SLIDE_TYPE.footerPt)}; color: ${B.grey50}; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.footer { font-size: ${pt(SLIDE_TYPE.footerPt)}; color: ${B.textMuted}; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .footer.right { justify-content: flex-end; }
-.dark .footer { color: ${B.blue30}; }
-.dark .rule { background: ${B.blue50}; height: 0.75pt; }
+.dark .footer { color: ${B.accentTint}; }
+.dark .rule { background: ${B.accentSoft}; height: 0.75pt; }
 .fig img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .rail { display: flex; flex-direction: column; gap: ${pt(5)}; overflow: hidden; }
-.rail-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.grey50}; margin-top: ${pt(8)}; }
+.rail-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.textMuted}; margin-top: ${pt(8)}; }
 .rail-label:first-child { margin-top: 0; }
-.chip { font-size: ${pt(11)}; background: #fff; border: 0.75pt solid ${B.grey30}; border-radius: ${pt(6)}; padding: ${pt(3)} ${pt(6)}; color: ${B.grey}; }
-.chip.strong { background: ${B.blue30}; border-color: ${B.blue30}; color: ${B.navy}; }
-.rail .source { font-size: ${pt(10)}; color: ${B.grey}; }
-.slide table.data th { background: ${B.navy}; color: #fff; font-weight: 700; border-color: ${B.grey30}; }
-.slide table.data td { background: #fff; border-color: ${B.grey30}; color: ${B.grey}; }
+.chip { font-size: ${pt(11)}; background: ${B.surface}; border: 0.75pt solid ${B.line}; border-radius: ${pt(6)}; padding: ${pt(3)} ${pt(6)}; color: ${B.text}; }
+.chip.strong { background: ${B.accentTint}; border-color: ${B.accentTint}; color: ${B.heading}; }
+.rail .source { font-size: ${pt(10)}; color: ${B.text}; }
+.slide table.data th { background: ${B.heading}; color: #fff; font-weight: 700; border-color: ${B.line}; }
+.slide table.data td { background: ${B.surface}; border-color: ${B.line}; color: ${B.text}; }
 .slide table.data th.rot { vertical-align: bottom; padding: ${pt(4)} ${pt(2)}; }
 .slide table.data th.rot span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; line-height: 1.1; }
 .tbl table.data { font-size: ${pt(SLIDE_TYPE.tablePt)}; }
 .tbl.narrow table.data { font-size: ${pt(9)}; }
-.note { font-size: ${pt(11)}; font-style: italic; color: ${B.grey}; margin-top: ${pt(6)}; }
-.moved { display: flex; align-items: center; justify-content: center; font-size: ${pt(18)}; font-style: italic; color: ${B.grey50}; }
+.note { font-size: ${pt(11)}; font-style: italic; color: ${B.text}; margin-top: ${pt(6)}; }
+.moved { display: flex; align-items: center; justify-content: center; font-size: ${pt(18)}; font-style: italic; color: ${B.textMuted}; }
 .statement { font-size: ${pt(SLIDE_TYPE.statementPt)}; line-height: 1.2; color: #fff; display: flex; flex-direction: column; justify-content: center; }
 .statement p { margin: 0 0 0.35em; }
-.statement a { color: ${B.blue30}; }
+.statement a { color: ${B.accentTint}; }
 .tone-label { font-size: ${pt(12)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-.slide .placeholder { font-size: ${pt(14)}; background: ${B.panel}; border-color: ${B.grey50}; color: ${B.grey}; }
+.slide .placeholder { font-size: ${pt(14)}; background: ${B.panel}; border-color: ${B.textMuted}; color: ${B.text}; }
 .slide .placeholder strong { font-size: ${pt(16)}; }
-.slide .placeholder .ph-title { color: ${B.navy}; }
+.slide .placeholder .ph-title { color: ${B.heading}; }
 .decktitle { font-size: ${pt(SLIDE_TYPE.deckTitlePt)}; line-height: 1.05; display: flex; align-items: flex-end; overflow: hidden; }
 .clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
-.subtitle { font-size: ${pt(14)}; color: ${B.grey}; }
+.subtitle { font-size: ${pt(14)}; color: ${B.text}; }
 .meta { display: flex; }
-.meta .soft { font-size: ${pt(11)}; color: ${B.grey}; }
-.meta .strong { font-size: ${pt(13)}; font-weight: 700; color: ${B.navy}; }
-.part { font-size: ${pt(14)}; font-weight: 700; color: ${B.navy}; display: flex; align-items: flex-end; }
-.part-rule { height: 0.75pt; background: ${B.grey50}; }
+.meta .soft { font-size: ${pt(11)}; color: ${B.text}; }
+.meta .strong { font-size: ${pt(13)}; font-weight: 700; color: ${B.heading}; }
+.part { font-size: ${pt(14)}; font-weight: 700; color: ${B.heading}; display: flex; align-items: flex-end; }
+.part-rule { height: 0.75pt; background: ${B.textMuted}; }
 .chapter { font-size: ${pt(SLIDE_TYPE.chapterPt)}; line-height: 1.05; }
 .band { background: rgba(255,255,255,0.9); }
 .ds { font-size: ${pt(10)}; display: grid; grid-template-columns: 58% 1fr; grid-template-rows: auto 1fr; gap: ${pt(14)}; align-content: start; }
 .ds .req-line { grid-column: 1 / -1; font-size: ${pt(14)}; }
-.ds .req-line strong { color: ${B.navy}; }
-.ds pre.code { background: #fff; border: 0.75pt solid ${B.grey30}; padding: ${pt(6)}; font-size: ${pt(10)}; max-height: 100%; overflow: hidden; }
-.ds .req-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.grey50}; margin: ${pt(6)} 0 ${pt(3)}; }
+.ds .req-line strong { color: ${B.heading}; }
+.ds pre.code { background: #fff; border: 0.75pt solid ${B.line}; padding: ${pt(6)}; font-size: ${pt(10)}; max-height: 100%; overflow: hidden; }
+.ds .req-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.textMuted}; margin: ${pt(6)} 0 ${pt(3)}; }
 .methods table.data { font-size: ${pt(10)}; }
 `;
 
-  const logo = (box: Box, variant: LogoVariant) =>
-    `<img class="abs logo" src="${otLogoDataUrl(variant)}" alt="Open Targets" style="${at(box)}">`;
+  const logo = (box: Box | undefined, variant: LogoVariant) => {
+    const src = box ? logoSrc(branding, variant) : undefined;
+    return src ? `<img class="abs logo" src="${src}" alt="${esc(logoAlt(branding))}" style="${at(box as Box)}">` : "";
+  };
 
   const titleBlock = (title: string, kicker?: string) =>
     (kicker ? `<div class="abs kicker" style="${at(frame.kicker)}">${esc(kicker)}</div>` : "") +
@@ -246,7 +252,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
     (left ? `<div class="abs footer" style="${at(frame.footerLeft)}">${esc(left)}</div>` : "") +
     `<div class="abs footer right" style="${at(frame.footerRight)}">${esc(release)}</div>` +
     `<div class="abs footer right" style="${at(frame.slideNumber)}">${n}</div>` +
-    logo(frame.logo, dark ? "white" : "colour");
+    logo(frame.logo, dark ? "dark" : "light");
 
   const rail = (prov: Provenance) => {
     const parts: string[] = [];
@@ -287,12 +293,12 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
     let cls = "slide";
     switch (unit.kind) {
       case "titleSlide": {
-        const layout = titleSlideLayout(frame, unit.title, unit.description);
-        const columns = titleMetaColumns(unit);
+        const layout = titleSlideLayout(frame, unit.title, unit.description, branding);
+        const columns = titleMetaColumns(unit, branding);
         const colW = layout.metaColumnWidth(columns.length);
         inner =
-          decorSvgHtml(frame, "title") +
-          logo(layout.logo, "colour") +
+          decorSvgHtml(frame, "title", branding) +
+          logo(layout.logo, "light") +
           `<div class="abs decktitle" style="${at(layout.title)}"><div class="head clamp" style="-webkit-line-clamp:${layout.titleMaxLines};font-size:${pt(layout.titleFontPt)}">${esc(unit.title)}</div></div>` +
           (layout.description && unit.description
             ? `<div class="abs subtitle" style="${at(layout.description, "overflow:hidden;")}"><div class="clamp" style="-webkit-line-clamp:${layout.descriptionLines}">${esc(unit.description.trim())}</div></div>`
@@ -310,7 +316,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         const w = decorTextWidth(frame) + 0.4;
         const y = frame.H * 0.33;
         inner =
-          decorSvgHtml(frame, "chapter") +
+          decorSvgHtml(frame, "chapter", branding) +
           `<div class="abs part" style="${at({ x, y, w, h: 0.4 })}">PART ${unit.n}</div>` +
           `<div class="abs part-rule" style="left:${inch(x)};top:${inch(y + 0.55)};width:${inch(w)}"></div>` +
           `<div class="abs head chapter" style="${at({ x, y: y + 0.7, w, h: frame.H - (y + 0.7) - 0.8 }, "overflow:hidden;")}">${esc(unit.title)}</div>`;
@@ -332,7 +338,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
             `<div class="abs band" style="left:0;top:${inch(frame.footer.y - 0.15)};width:100%;height:${inch(frame.H - frame.footer.y + 0.15)}"></div>` +
             titleBlock(unit.title, unit.kicker) +
             (left ? `<div class="abs footer" style="${at(frame.footerLeft)}">${esc(left)}</div>` : "") +
-            logo(frame.logo, "colour");
+            logo(frame.logo, "light");
         } else {
           const body = unit.table
             ? placedTable(unit.table, frame.figure)
@@ -346,7 +352,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
       case "statementSlide": {
         // Label and tone colour only for callouts; plain prose keeps the default accent
         const tone = unit.tone ?? toneOf(unit.nodeId);
-        const toneColor = (SLIDE_TONE[(tone ?? "finding") as keyof typeof SLIDE_TONE] ?? SLIDE_TONE.finding).dark;
+        const toneColor = slideTone(B, tone, "dark");
         const x = frame.margin + 0.4;
         const box = { x, y: frame.H * 0.2, w: frame.W - 2 * x, h: frame.H * 0.55 };
         cls = "slide dark";
@@ -382,7 +388,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
       case "methodsSlide":
         inner =
           titleBlock("Methods", "Appendix") +
-          `<div class="abs methods" style="${at(frame.content, "overflow:hidden;")}">${methodsTableHtml(unit.entries)}</div>` +
+          `<div class="abs methods" style="${at(frame.content, "overflow:hidden;")}">${methodsTableHtml(unit.entries, branding)}</div>` +
           footer(n);
         break;
       default:
@@ -390,7 +396,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
     return `<section class="${cls}">${inner}</section>`;
   });
 
-  return doc(plan.title, css, slides.join(""));
+  return doc(branding, plan.title, css, slides.join(""));
 }
 
 function dataSourceGrid(request: DataSourceRequest) {
@@ -417,7 +423,7 @@ function dataSourceGrid(request: DataSourceRequest) {
   );
 }
 
-const methodsTableHtml = (entries: MethodsEntry[]) => {
+const methodsTableHtml = (entries: MethodsEntry[], branding: ExportBranding) => {
   if (!entries.length) return '<p class="muted"><em>No data sources in this report.</em></p>';
   const rows = entries.map((e) => {
     const req = e.request ? `${e.request.method ?? (e.request.query ? "POST" : "GET")} ${e.request.endpoint}` : "";
@@ -426,7 +432,7 @@ const methodsTableHtml = (entries: MethodsEntry[]) => {
       `<td>${[e.sourceLabel, req, e.note].filter(Boolean).map(esc).join("<br>")}</td>` +
       `<td>${esc(e.filters.join("; "))}</td>` +
       `<td>${esc(e.entity ? e.entity.label || e.entity.id : "")}</td>` +
-      `<td>${[e.dataRelease ? releaseLabel(e.dataRelease) : "", formatDate(e.retrievedAt)].filter(Boolean).map(esc).join("<br>")}</td></tr>`
+      `<td>${[e.dataRelease ? releaseLabel(branding, e.dataRelease) : "", formatDate(e.retrievedAt)].filter(Boolean).map(esc).join("<br>")}</td></tr>`
     );
   });
   return (
@@ -473,6 +479,7 @@ ul.links { font-size: 9pt; overflow-wrap: anywhere; }
 `;
 
 export function paperToHtml(plan: ExportPlan, ctx: WriterContext): string {
+  const branding = resolveBranding(ctx.branding);
   const paper = ctx.settings.paper;
   const size = PAGE_SIZES[paper.pageSize] ? paper.pageSize : "A4";
   const twoColumn = paper.columns === 2;
@@ -531,7 +538,7 @@ export function paperToHtml(plan: ExportPlan, ctx: WriterContext): string {
         flow.push("<h1>Methods</h1>");
         flow.push(
           unit.entries.length
-            ? unit.entries.map(methodHtml).join("")
+            ? unit.entries.map((e) => methodHtml(e, branding)).join("")
             : '<p class="muted"><em>No data sources were used in this report.</em></p>',
         );
         break;
@@ -558,13 +565,14 @@ export function paperToHtml(plan: ExportPlan, ctx: WriterContext): string {
   });
 
   return doc(
+    branding,
     plan.title,
     PAPER_CSS(size, twoColumn),
     `<header>${front.join("")}</header><main class="flow">${flow.join("")}</main>`,
   );
 }
 
-const methodHtml = (e: MethodsEntry) => {
+const methodHtml = (e: MethodsEntry, branding: ExportBranding) => {
   const line = (label: string, value: string) => (value ? `<div><strong>${esc(label)}:</strong> ${value}</div>` : "");
   return (
     `<div class="method"><div class="m-title">${esc([e.figureLabel, e.title].filter(Boolean).join(" · "))}</div>` +
@@ -575,7 +583,7 @@ const methodHtml = (e: MethodsEntry) => {
     line(
       "Data",
       esc(
-        [e.dataRelease ? releaseLabel(e.dataRelease) : "", `retrieved ${formatDate(e.retrievedAt)}`]
+        [e.dataRelease ? releaseLabel(branding, e.dataRelease) : "", `retrieved ${formatDate(e.retrievedAt)}`]
           .filter(Boolean)
           .join(", "),
       ),
@@ -604,11 +612,11 @@ const WORKING_CSS = `
 .doc-meta { color: var(--muted); font-style: italic; margin-bottom: 1.4em; }
 `;
 
-const provenanceHtml = (p: Provenance) => {
+const provenanceHtml = (p: Provenance, branding: ExportBranding) => {
   const bits = [
     p.entity ? `Entity: ${[p.entity.label, p.entity.id].filter(Boolean).join(" · ")}` : "",
     p.sourceLabel ? `Source: ${p.sourceLabel}` : "",
-    p.dataRelease ? releaseLabel(p.dataRelease) : "",
+    p.dataRelease ? releaseLabel(branding, p.dataRelease) : "",
     p.retrievedAt ? `Retrieved ${formatDate(p.retrievedAt)}` : "",
   ].filter(Boolean);
   const chips = p.filters?.length
@@ -619,10 +627,10 @@ const provenanceHtml = (p: Provenance) => {
 };
 
 export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string {
-  void ctx;
+  const branding = resolveBranding(ctx.branding);
   const meta = [
     irDoc.entity ? [irDoc.entity.label, irDoc.entity.id].filter(Boolean).join(" · ") : "",
-    releaseLabel(irDoc.dataRelease),
+    releaseLabel(branding, irDoc.dataRelease),
     formatDate(irDoc.generatedAt),
   ].filter(Boolean);
 
@@ -672,7 +680,7 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
           img +
           (node.caption ? `<figcaption>${esc(node.caption)}</figcaption>` : "") +
           dataRef +
-          provenanceHtml(node.provenance) +
+          provenanceHtml(node.provenance, branding) +
           "</figure>"
         );
       }
@@ -681,7 +689,8 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
           node.title,
           node.data,
           node.takeaway ? `<div class="takeaway">${esc(node.takeaway)}</div>` : "",
-          (node.caption ? `<div class="caption">${esc(node.caption)}</div>` : "") + provenanceHtml(node.provenance)
+          (node.caption ? `<div class="caption">${esc(node.caption)}</div>` : "") +
+            provenanceHtml(node.provenance, branding)
         );
       }
       case "dataSource": {
@@ -700,7 +709,7 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
           `<div class="req">${requestHtml(node.request)}</div>` +
           (node.stale ? '<p class="muted"><em>Snapshot predates the current data release.</em></p>' : "") +
           preview +
-          provenanceHtml(node.provenance) +
+          provenanceHtml(node.provenance, branding) +
           "</div>"
         );
       }
@@ -710,6 +719,7 @@ export function workingToHtml(irDoc: ExportDocument, ctx: WriterContext): string
   });
 
   return doc(
+    branding,
     irDoc.title,
     PAPER_CSS("A4", false) + WORKING_CSS,
     `<div class="working"><h1 class="paper-title">${esc(irDoc.title)}</h1>` +
