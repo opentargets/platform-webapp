@@ -450,17 +450,31 @@ export interface CollectHooks {
   isFirstPartyEndpoint?: (endpoint: string) => boolean;
 }
 
+/**
+ * What the export is for, so a widget can render a figure that suits it: e.g. the slides
+ * target asks tables to show only their top rows (the full page still goes to the appendix).
+ */
+export interface ExportRenderHints {
+  target: ExportTarget;
+  // Rows a tall table should draw in the figure; undefined = all rows of its current page
+  maxRows?: number;
+}
+
 export interface CollectOptions {
   // Host hooks: widget export adapters, provenance labels and deep links
   hooks?: CollectHooks;
-  // Pixel width the widget is laid out at (slides 1600/1200, paper 1050/510)
+  // Pixel width of the widget's column (slides 1516/1200, paper 1050/510) inside the export
+  // viewport, an off-screen 1728 × 1117 iframe (see EXPORT_VIEWPORT)
   widgetWidth: (reportSectionId: string) => number;
   // Off-screen render of one widget; supplied by RenderHost. Omit to skip widgets (asset: missing).
   renderWidget?: (
     section: ReportSection,
     width: number,
-    pixelRatio: number
+    pixelRatio: number,
+    hints?: ExportRenderHints
   ) => Promise<WidgetCapture>;
+  // Passed to renderWidget; widgets read it through useExportRenderHints()
+  renderHints?: ExportRenderHints;
   pixelRatio: number; // 2 for slides, 300/96 for paper
   dataRelease?: string;
   platformOrigin?: string; // defaults to window.location.origin

@@ -6,6 +6,7 @@ import { isWidget } from "../../../core";
 import { collect } from "../collect";
 import { withExportDefaults, withVideoDefaults } from "../../../core";
 import {
+  DEFAULT_TOP_N,
   PAPER_PIXEL_RATIO,
   PAPER_WIDGET_PX,
   SLIDE_GEOMETRY,
@@ -21,6 +22,7 @@ import type {
   ExportFile,
   ExportFormat,
   ExportPlan,
+  ExportRenderHints,
   ExportSettings,
   ExportTarget,
   VideoPlan,
@@ -60,17 +62,30 @@ interface Geometry {
   key: string;
   pixelRatio: number;
   widthFor: (reportSectionId: string) => number;
+  hints: ExportRenderHints;
 }
 
 /** Widget render geometry for a target; the key changes only when some widget's width would. */
 export const geometryFor = (target: ExportTarget, settings: ExportSettings, report: Report): Geometry => {
+  // Slides and video frames are short: tall tables draw only their top rows (the full page
+  // still goes to the appendix)
   if (target === "video") {
-    return { key: "video", pixelRatio: SLIDE_PIXEL_RATIO, widthFor: () => VIDEO_WIDGET_PX };
+    return {
+      key: "video",
+      pixelRatio: SLIDE_PIXEL_RATIO,
+      widthFor: () => VIDEO_WIDGET_PX,
+      hints: { target, maxRows: DEFAULT_TOP_N },
+    };
   }
   if (target === "slides") {
     const { aspect } = settings.slides;
     const width = SLIDE_GEOMETRY[aspect].widgetPx;
-    return { key: `slides:${aspect}`, pixelRatio: SLIDE_PIXEL_RATIO, widthFor: () => width };
+    return {
+      key: `slides:${aspect}`,
+      pixelRatio: SLIDE_PIXEL_RATIO,
+      widthFor: () => width,
+      hints: { target, maxRows: DEFAULT_TOP_N },
+    };
   }
   if (target === "paper" && settings.paper.columns === 2) {
     // Only an explicit per-block spanColumns override changes a widget's width at collect time
@@ -83,10 +98,16 @@ export const geometryFor = (target: ExportTarget, settings: ExportSettings, repo
       key: `paper:2:${spanning.join(",")}`,
       pixelRatio: PAPER_PIXEL_RATIO,
       widthFor: (id) => (spanSet.has(id) ? PAPER_WIDGET_PX.fullWidth : PAPER_WIDGET_PX.halfColumn),
+      hints: { target },
     };
   }
   // One-column paper, working PDF and data export all lay widgets out at full width
-  return { key: "full", pixelRatio: PAPER_PIXEL_RATIO, widthFor: () => PAPER_WIDGET_PX.fullWidth };
+  return {
+    key: "full",
+    pixelRatio: PAPER_PIXEL_RATIO,
+    widthFor: () => PAPER_WIDGET_PX.fullWidth,
+    hints: { target },
+  };
 };
 
 export interface FlowError {
@@ -200,6 +221,7 @@ export function useExportFlow(args: {
           hooks: hooksRef.current,
           widgetWidth: geometry.widthFor,
           renderWidget: (...a) => renderWidgetRef.current(...a),
+          renderHints: geometry.hints,
           pixelRatio: geometry.pixelRatio,
           dataRelease: release,
           signal: controller.signal,

@@ -3,7 +3,25 @@
  * document (print CSS, inline images, all text escaped); print*() loads it into a hidden
  * iframe, waits for fonts and images, and calls print().
  */
-import { FONT_FAMILY, MONO_FAMILY, OT_COLORS, PAGE_SIZES, PAPER_MARGIN_MM, SLIDE_TYPE } from "../layout";
+import {
+  FONT_FAMILY,
+  MONO_FAMILY,
+  OT_COLORS,
+  PAGE_SIZES,
+  PAPER_MARGIN_MM,
+  SLIDE_BRAND,
+  SLIDE_FONTS,
+  SLIDE_TONE,
+  SLIDE_TYPE,
+} from "../layout";
+import {
+  type LogoVariant,
+  decorSvgHtml,
+  decorTextWidth,
+  otLogoDataUrl,
+  titleMetaColumns,
+  titleSlideLayout,
+} from "../slideTheme";
 import { formatReference, orderReferences } from "../citations";
 import { escapeHtml as esc, formatCell, richTextToHtml } from "../richText/toHtml";
 import type {
@@ -34,7 +52,7 @@ import {
 
 const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.googleapis.com">' +
-  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap">';
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap">';
 
 const WORKING_TABLE_ROWS = 200;
 const WORKING_DATA_PREVIEW_ROWS = 20;
@@ -129,6 +147,7 @@ const headingLabel = (number: string | undefined, text: string, level: number) =
 
 const SLIDE_PAGE = { "16:9": { w: 16, h: 9 }, "4:3": { w: 12, h: 9 } } as const;
 
+/** Slides in the Open Targets template style (same frame, colours and type as the PPTX writer). */
 export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
   const aspect = ctx.settings.slides.aspect;
   const frame = slideFrame(aspect);
@@ -139,56 +158,79 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
   const pt = (v: number) => `${(v * k).toFixed(2)}pt`;
   const at = (b: Box, extra = "") =>
     `left:${inch(b.x)};top:${inch(b.y)};width:${inch(b.w)};height:${inch(b.h)};${extra}`;
+  const B = SLIDE_BRAND;
 
   const css = `
 @page { size: ${pageSize.w}in ${pageSize.h}in; margin: 0; }
-.slide { position: relative; width: ${pageSize.w}in; height: ${pageSize.h}in; overflow: hidden; break-after: page; page-break-after: always; }
+.slide { position: relative; width: ${pageSize.w}in; height: ${pageSize.h}in; overflow: hidden; break-after: page; page-break-after: always;
+  background: #fff; color: ${B.grey}; font-family: ${SLIDE_FONTS.bodyStack}; }
 .slide:last-child { break-after: auto; page-break-after: auto; }
+.slide.dark { background: ${B.navy}; color: #fff; }
 .abs { position: absolute; }
-.kicker { font-size: ${pt(11)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary-dark);
+.head { font-family: ${SLIDE_FONTS.headingStack}; font-weight: 700; color: ${B.navy}; }
+.kicker { font-size: ${pt(SLIDE_TYPE.kickerPt)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${B.blue};
   display: flex; align-items: flex-end; }
-.title { font-size: ${pt(SLIDE_TYPE.titlePt)}; font-weight: 700; line-height: 1.1; display: flex; align-items: center; overflow: hidden; }
-.rule { height: 2px; background: var(--primary); }
-.footer { font-size: ${pt(SLIDE_TYPE.footerPt)}; color: var(--muted); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.footer.right { justify-content: flex-end; gap: ${pt(12)}; }
+.title { font-size: ${pt(SLIDE_TYPE.titlePt)}; line-height: 1.1; display: flex; align-items: center; overflow: hidden; }
+.panel { background: ${B.panel}; }
+.logo { display: block; object-fit: contain; }
+.footer { font-size: ${pt(SLIDE_TYPE.footerPt)}; color: ${B.grey50}; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.footer.right { justify-content: flex-end; }
+.dark .footer { color: ${B.blue30}; }
+.dark .rule { background: ${B.blue50}; height: 0.75pt; }
 .fig img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .rail { display: flex; flex-direction: column; gap: ${pt(5)}; overflow: hidden; }
-.rail-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: ${pt(8)}; }
+.rail-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.grey50}; margin-top: ${pt(8)}; }
 .rail-label:first-child { margin-top: 0; }
-.chip { font-size: ${pt(11)}; border: 0.75pt solid var(--border); border-radius: ${pt(6)}; padding: ${pt(3)} ${pt(6)}; }
-.chip.strong { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-dark); }
-.rail .source { font-size: ${pt(10)}; color: var(--muted); }
+.chip { font-size: ${pt(11)}; background: #fff; border: 0.75pt solid ${B.grey30}; border-radius: ${pt(6)}; padding: ${pt(3)} ${pt(6)}; color: ${B.grey}; }
+.chip.strong { background: ${B.blue30}; border-color: ${B.blue30}; color: ${B.navy}; }
+.rail .source { font-size: ${pt(10)}; color: ${B.grey}; }
+.slide table.data th { background: ${B.navy}; color: #fff; font-weight: 700; border-color: ${B.grey30}; }
+.slide table.data td { background: #fff; border-color: ${B.grey30}; color: ${B.grey}; }
 .tbl table.data { font-size: ${pt(SLIDE_TYPE.tablePt)}; }
 .tbl.narrow table.data { font-size: ${pt(9)}; }
-.note { font-size: ${pt(11)}; font-style: italic; color: var(--muted); margin-top: ${pt(6)}; }
-.moved { display: flex; align-items: center; justify-content: center; font-size: ${pt(18)}; font-style: italic; color: var(--muted); }
-.statement { font-size: ${pt(SLIDE_TYPE.statementPt)}; line-height: 1.15; display: flex; flex-direction: column; justify-content: center; }
-.slide .placeholder { font-size: ${pt(14)}; }
-.slide .placeholder strong { font-size: ${pt(16)}; }
+.note { font-size: ${pt(11)}; font-style: italic; color: ${B.grey}; margin-top: ${pt(6)}; }
+.moved { display: flex; align-items: center; justify-content: center; font-size: ${pt(18)}; font-style: italic; color: ${B.grey50}; }
+.statement { font-size: ${pt(SLIDE_TYPE.statementPt)}; line-height: 1.2; color: #fff; display: flex; flex-direction: column; justify-content: center; }
 .statement p { margin: 0 0 0.35em; }
-.accent { background: var(--tone, var(--finding)); }
-.tone-label { font-size: ${pt(12)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tone, var(--finding)); }
-.bigtitle { font-size: ${pt(40)}; font-weight: 700; line-height: 1.1; }
-.subtitle { font-size: ${pt(18)}; color: var(--muted); }
-.meta { font-size: ${pt(14)}; color: var(--primary-dark); }
-.chapter-n { font-size: ${pt(32)}; font-weight: 700; color: var(--primary); }
-.ds { font-size: ${pt(10)}; display: grid; grid-template-columns: 58% 1fr; gap: ${pt(14)}; }
+.statement a { color: ${B.blue30}; }
+.tone-label { font-size: ${pt(12)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.slide .placeholder { font-size: ${pt(14)}; background: ${B.panel}; border-color: ${B.grey50}; color: ${B.grey}; }
+.slide .placeholder strong { font-size: ${pt(16)}; }
+.slide .placeholder .ph-title { color: ${B.navy}; }
+.decktitle { font-size: ${pt(SLIDE_TYPE.deckTitlePt)}; line-height: 1.05; display: flex; align-items: flex-end; overflow: hidden; }
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.subtitle { font-size: ${pt(14)}; color: ${B.grey}; }
+.meta { display: flex; }
+.meta .soft { font-size: ${pt(11)}; color: ${B.grey}; }
+.meta .strong { font-size: ${pt(13)}; font-weight: 700; color: ${B.navy}; }
+.part { font-size: ${pt(14)}; font-weight: 700; color: ${B.navy}; display: flex; align-items: flex-end; }
+.part-rule { height: 0.75pt; background: ${B.grey50}; }
+.chapter { font-size: ${pt(SLIDE_TYPE.chapterPt)}; line-height: 1.05; }
+.band { background: rgba(255,255,255,0.9); }
+.ds { font-size: ${pt(10)}; display: grid; grid-template-columns: 58% 1fr; grid-template-rows: auto 1fr; gap: ${pt(14)}; align-content: start; }
 .ds .req-line { grid-column: 1 / -1; font-size: ${pt(14)}; }
-.ds pre.code { background: #f7f9fb; border: 0.75pt solid var(--border); padding: ${pt(6)}; font-size: ${pt(10)}; max-height: 100%; overflow: hidden; }
-.ds .req-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: ${pt(6)} 0 ${pt(3)}; }
+.ds .req-line strong { color: ${B.navy}; }
+.ds pre.code { background: #fff; border: 0.75pt solid ${B.grey30}; padding: ${pt(6)}; font-size: ${pt(10)}; max-height: 100%; overflow: hidden; }
+.ds .req-label { font-size: ${pt(9)}; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${B.grey50}; margin: ${pt(6)} 0 ${pt(3)}; }
 .methods table.data { font-size: ${pt(10)}; }
 `;
 
-  const titleBlock = (title: string, kicker?: string, rule = true) =>
-    (kicker ? `<div class="abs kicker" style="${at(frame.kicker)}">${esc(kicker)}</div>` : "") +
-    `<div class="abs title" style="${at(frame.title)}">${esc(title)}</div>` +
-    (rule
-      ? `<div class="abs rule" style="left:${inch(frame.margin)};top:${inch(frame.ruleY)};width:${inch(frame.W - 2 * frame.margin)}"></div>`
-      : "");
+  const logo = (box: Box, variant: LogoVariant) =>
+    `<img class="abs logo" src="${otLogoDataUrl(variant)}" alt="Open Targets" style="${at(box)}">`;
 
-  const footer = (n: number, left?: string) =>
+  const titleBlock = (title: string, kicker?: string) =>
+    (kicker ? `<div class="abs kicker" style="${at(frame.kicker)}">${esc(kicker)}</div>` : "") +
+    `<div class="abs head title" style="${at(frame.title)}">${esc(title)}</div>`;
+
+  const panel = `<div class="abs panel" style="${at(frame.panel)}"></div>`;
+
+  // Footer text left, release and slide number, then the logo (white on dark slides)
+  const footer = (n: number, left?: string, dark = false) =>
+    (dark ? `<div class="abs rule" style="left:${inch(frame.margin)};top:${inch(frame.footer.y - 0.12)};width:${inch(frame.W - 2 * frame.margin)}"></div>` : "") +
     (left ? `<div class="abs footer" style="${at(frame.footerLeft)}">${esc(left)}</div>` : "") +
-    `<div class="abs footer right" style="${at(frame.footerRight)}"><span>${esc(release)}</span><span>${n}</span></div>`;
+    `<div class="abs footer right" style="${at(frame.footerRight)}">${esc(release)}</div>` +
+    `<div class="abs footer right" style="${at(frame.slideNumber)}">${n}</div>` +
+    logo(frame.logo, dark ? "white" : "colour");
 
   const rail = (prov: Provenance) => {
     const parts: string[] = [];
@@ -226,30 +268,36 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
   const slides = units.map((unit, i) => {
     const n = i + 1;
     let inner = "";
+    let cls = "slide";
     switch (unit.kind) {
       case "titleSlide": {
-        const x = frame.margin + 0.3;
-        const meta = [unit.entityLabel, releaseLabel(unit.dataRelease), formatDate(unit.date)]
-          .filter(Boolean)
-          .join("  ·  ");
+        const layout = titleSlideLayout(frame, unit.title, unit.description);
+        const columns = titleMetaColumns(unit);
+        const colW = layout.metaColumnWidth(columns.length);
         inner =
-          `<div class="abs" style="left:0;top:0;width:${inch(0.18)};height:100%;background:var(--primary)"></div>` +
-          `<div class="abs bigtitle" style="${at({ x, y: frame.H * 0.28 - 0.3, w: frame.W - 2 * x, h: 1.6 }, "display:flex;align-items:flex-end;")}">${esc(unit.title)}</div>` +
-          (unit.description
-            ? `<div class="abs subtitle" style="${at({ x, y: frame.H * 0.28 + 1.45, w: frame.W - 2 * x, h: 1.2 })}">${esc(unit.description)}</div>`
+          decorSvgHtml(frame, "title") +
+          logo(layout.logo, "colour") +
+          `<div class="abs decktitle" style="${at(layout.title)}"><div class="head clamp" style="-webkit-line-clamp:${layout.titleMaxLines};font-size:${pt(layout.titleFontPt)}">${esc(unit.title)}</div></div>` +
+          (layout.description && unit.description
+            ? `<div class="abs subtitle" style="${at(layout.description, "overflow:hidden;")}"><div class="clamp" style="-webkit-line-clamp:${layout.descriptionLines}">${esc(unit.description.trim())}</div></div>`
             : "") +
-          `<div class="abs meta" style="${at({ x, y: frame.H - 1.5, w: frame.W - 2 * x, h: 0.4 })}">${esc(meta)}</div>` +
-          footer(n);
+          `<div class="abs meta" style="${at(layout.meta)}">${columns
+            .map(
+              (c) =>
+                `<div style="width:${inch(colW - 0.15)};margin-right:${inch(0.15)}"><div class="soft">${esc(c.soft)}</div><div class="strong">${esc(c.strong)}</div></div>`,
+            )
+            .join("")}</div>`;
         break;
       }
       case "chapterSlide": {
-        const x = frame.margin + 0.3;
-        const y = frame.H * 0.3;
+        const x = frame.margin;
+        const w = decorTextWidth(frame) + 0.4;
+        const y = frame.H * 0.33;
         inner =
-          `<div class="abs chapter-n" style="${at({ x, y, w: 3, h: 0.8 })}">${String(unit.n).padStart(2, "0")}</div>` +
-          `<div class="abs rule" style="left:${inch(x)};top:${inch(y + 0.95)};width:${inch(1.2)}"></div>` +
-          `<div class="abs bigtitle" style="${at({ x, y: y + 1.1, w: frame.W - 2 * x, h: 1.6 })}">${esc(unit.title)}</div>` +
-          footer(n);
+          decorSvgHtml(frame, "chapter") +
+          `<div class="abs part" style="${at({ x, y, w, h: 0.4 })}">PART ${unit.n}</div>` +
+          `<div class="abs part-rule" style="left:${inch(x)};top:${inch(y + 0.55)};width:${inch(w)}"></div>` +
+          `<div class="abs head chapter" style="${at({ x, y: y + 0.7, w, h: frame.H - (y + 0.7) - 0.8 }, "overflow:hidden;")}">${esc(unit.title)}</div>`;
         break;
       }
       case "figureSlide": {
@@ -264,9 +312,11 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
               : placeholderHtml(unit.title, unit.caption, reason, `position:absolute;${at(frame.content)}`);
           inner =
             body +
-            `<div class="abs" style="left:0;top:0;width:100%;height:${inch(1.15)};background:rgba(255,255,255,0.88)"></div>` +
-            titleBlock(unit.title, unit.kicker, false) +
-            footer(n, left);
+            `<div class="abs band" style="left:0;top:0;width:100%;height:${inch(1.4)}"></div>` +
+            `<div class="abs band" style="left:0;top:${inch(frame.footer.y - 0.15)};width:100%;height:${inch(frame.H - frame.footer.y + 0.15)}"></div>` +
+            titleBlock(unit.title, unit.kicker) +
+            (left ? `<div class="abs footer" style="${at(frame.footerLeft)}">${esc(left)}</div>` : "") +
+            logo(frame.logo, "colour");
         } else {
           const body = unit.table
             ? placedTable(unit.table, frame.figure)
@@ -280,17 +330,18 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
       case "statementSlide": {
         // Label and tone colour only for callouts; plain prose keeps the default accent
         const tone = unit.tone ?? toneOf(unit.nodeId);
-        const x = frame.margin + 0.6;
+        const toneColor = (SLIDE_TONE[(tone ?? "finding") as keyof typeof SLIDE_TONE] ?? SLIDE_TONE.finding).dark;
+        const x = frame.margin + 0.4;
         const box = { x, y: frame.H * 0.2, w: frame.W - 2 * x, h: frame.H * 0.55 };
+        cls = "slide dark";
         inner =
-          `<div class="abs accent${tone ? ` tone-${esc(tone)}` : ""}" style="${at({ x: x - 0.35, y: box.y, w: 0.08, h: box.h })}"></div>` +
           (tone
-            ? `<div class="abs tone-label tone-${esc(tone)}" style="${at({ x, y: box.y - 0.45, w: box.w, h: 0.35 })}">${esc(
+            ? `<div class="abs tone-label" style="${at({ x, y: box.y - 0.45, w: box.w, h: 0.35 }, `color:${toneColor};`)}">${esc(
                 CALLOUT_LABEL[tone] ?? tone,
               )}</div>`
             : "") +
-          `<div class="abs statement" style="${at(box)}">${richTextToHtml(unit.doc)}</div>` +
-          footer(n);
+          `<div class="abs statement" style="${at(box, "overflow:hidden;")}">${richTextToHtml(unit.doc)}</div>` +
+          footer(n, undefined, true);
         break;
       }
       case "appendixTableSlide": {
@@ -298,6 +349,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         const to = unit.table.shownFrom + unit.table.data.rows.length;
         const note = unit.table.note ?? `Rows ${from}–${to} of ${unit.table.totalRows}`;
         inner =
+          panel +
           titleBlock(unit.title, unit.pages > 1 ? `Appendix · ${unit.page} / ${unit.pages}` : "Appendix") +
           placedTable({ ...unit.table, note }, frame.content) +
           footer(n);
@@ -305,7 +357,8 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
       }
       case "dataSourceSlide":
         inner =
-          titleBlock(unit.title, "Data source") +
+          panel +
+          titleBlock(unit.title, "Appendix · data source") +
           `<div class="abs ds" style="${at({ ...frame.content, h: frame.content.h - 0.35 }, "overflow:hidden;")}">${dataSourceGrid(unit.request)}</div>` +
           `<div class="abs note" style="${at({ ...frame.content, y: frame.content.y + frame.content.h - 0.3, h: 0.3 })}">Retrieved ${esc(
             formatDate(unit.retrievedAt),
@@ -314,13 +367,14 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         break;
       case "methodsSlide":
         inner =
+          panel +
           titleBlock("Methods", "Appendix") +
           `<div class="abs methods" style="${at(frame.content, "overflow:hidden;")}">${methodsTableHtml(unit.entries)}</div>` +
           footer(n);
         break;
       default:
     }
-    return `<section class="slide">${inner}</section>`;
+    return `<section class="${cls}">${inner}</section>`;
   });
 
   return doc(plan.title, css, slides.join(""));

@@ -48,7 +48,8 @@ export const findChartSvg = (root: HTMLElement, minCoverage = 0.4): SVGSVGElemen
 };
 
 const inlineStyles = (source: Element, target: Element) => {
-  const computed = window.getComputedStyle(source);
+  // The source may live in the export iframe: ask its own window
+  const computed = (source.ownerDocument.defaultView ?? window).getComputedStyle(source);
   if (computed.display === "none") {
     target.setAttribute("display", "none");
     return;

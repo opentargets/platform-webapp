@@ -2,7 +2,7 @@
  * Helpers shared by the pptx / docx / print writers (no library imports, so they stay in
  * whichever chunk uses them).
  */
-import { SLIDE_GEOMETRY, SLIDE_MARGIN_IN, SLIDE_RAIL_FRACTION } from "../layout";
+import { OT_LOGO_ASPECT, SLIDE_GEOMETRY, SLIDE_MARGIN_IN, SLIDE_RAIL_FRACTION } from "../layout";
 import type { DataSourceRequest, FigureAsset, SlidesSettings } from "../types";
 
 /** Lets the UI paint progress between units; setTimeout fallback so hidden tabs don't stall. */
@@ -17,6 +17,10 @@ export const yieldFrame = (): Promise<void> =>
   });
 
 export const formatDate = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
+
+/** "9 November 2022", as on the template's title slide. */
+export const formatLongDate = (ms: number): string =>
+  new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 export const releaseLabel = (release?: string): string =>
   release ? `Open Targets ${release}` : "Open Targets Platform";
@@ -69,6 +73,7 @@ export async function svgToPngDataUrl(
   width: number,
   height: number,
   scale = 2,
+  transparent = false,
 ): Promise<string | undefined> {
   if (typeof document === "undefined" || typeof Image === "undefined") return undefined;
   try {
@@ -83,8 +88,10 @@ export async function svgToPngDataUrl(
     canvas.height = h;
     const context = canvas.getContext("2d");
     if (!context) return undefined;
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, w, h);
+    if (!transparent) {
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, w, h);
+    }
     context.drawImage(img, 0, 0, w, h);
     return canvas.toDataURL("image/png");
   } catch {
@@ -120,8 +127,9 @@ export const fitContain = (width: number, height: number, area: Box): Box => {
 };
 
 /**
- * Slide frame in inches (PPTX units). The print HTML uses the same boxes scaled to the
- * page, so PPTX and PDF slides agree.
+ * Slide frame in inches (PPTX units), following the Open Targets template: title top-left,
+ * content below, a grey panel band for data slides, footer text bottom-left and the logo
+ * bottom-right. The print HTML and the preview use the same boxes, so all three agree.
  */
 export function slideFrame(aspect: SlidesSettings["aspect"]) {
   const geom = SLIDE_GEOMETRY[aspect];
@@ -131,22 +139,31 @@ export function slideFrame(aspect: SlidesSettings["aspect"]) {
   const railW = W * SLIDE_RAIL_FRACTION;
   const gap = 0.3;
   const footerY = H - 0.45;
-  const contentY = 1.6;
-  const contentH = footerY - 0.15 - contentY;
+  const footerH = 0.3;
+  const contentY = 1.5;
+  const contentH = footerY - 0.2 - contentY;
+  const logoW = 1.2;
+  const logoH = logoW / OT_LOGO_ASPECT;
+  const numberW = 0.45;
+  const releaseW = 2.1;
+  const logoX = W - m - logoW;
   return {
     geom,
     W,
     H,
     margin: m,
-    kicker: { x: m, y: 0.3, w: W - 2 * m, h: 0.3 },
-    title: { x: m, y: 0.58, w: W - 2 * m, h: 0.72 },
-    ruleY: 1.38,
+    kicker: { x: m, y: 0.26, w: W - 2 * m, h: 0.26 },
+    title: { x: m, y: 0.5, w: W - 2 * m, h: 0.85 },
+    // Grey content box (template "slide with grey box"), full width behind data slides
+    panel: { x: 0, y: contentY - 0.2, w: W, h: footerY - 0.15 - (contentY - 0.2) },
     content: { x: m, y: contentY, w: W - 2 * m, h: contentH },
     figure: { x: m, y: contentY, w: W - 2 * m - railW - gap, h: contentH },
     rail: { x: W - m - railW, y: contentY, w: railW, h: contentH },
-    footer: { x: m, y: footerY, w: W - 2 * m, h: 0.3 },
-    footerRight: { x: W - m - 3.2, y: footerY, w: 3.2, h: 0.3 },
-    footerLeft: { x: m, y: footerY, w: W - 2 * m - 3.4, h: 0.3 },
+    footer: { x: m, y: footerY, w: W - 2 * m, h: footerH },
+    logo: { x: logoX, y: footerY + footerH / 2 - logoH / 2, w: logoW, h: logoH },
+    slideNumber: { x: logoX - 0.1 - numberW, y: footerY, w: numberW, h: footerH },
+    footerRight: { x: logoX - 0.1 - numberW - releaseW, y: footerY, w: releaseW, h: footerH },
+    footerLeft: { x: m, y: footerY, w: W - 2 * m - logoW - numberW - releaseW - 0.4, h: footerH },
   };
 }
 

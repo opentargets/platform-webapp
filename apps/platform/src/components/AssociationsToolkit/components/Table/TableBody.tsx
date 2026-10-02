@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { flexRender } from "@tanstack/react-table";
-import { Fade, Box, Typography } from "ui";
+import { Fade, Box, Typography, useExportRenderHints } from "ui";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilterCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { grey } from "@mui/material/colors";
@@ -137,9 +137,14 @@ function TableBody({ core, cols, noInteractors }: TableBodyProps) {
   const { displayedTable } = useAotfURLState();
 
   const focusState = useAssociationsFocus();
+  const exportHints = useExportRenderHints();
 
-  const { rows } = core.getRowModel();
+  const { rows: allRows } = core.getRowModel();
   const { prefix, parentTable, parentRow } = core.getState();
+  // Exporting to a slide: draw only the top rows of the main table so the figure stays legible
+  // (the full page still reaches the appendix through AotfExportTable)
+  const maxRows = prefix === TABLE_PREFIX.CORE ? exportHints?.maxRows : undefined;
+  const rows = maxRows && allRows.length > maxRows ? allRows.slice(0, maxRows) : allRows;
 
   if (prefix === TABLE_PREFIX.PINNING && rows.length < 1) return <></>;
 

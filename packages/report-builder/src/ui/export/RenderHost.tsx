@@ -1,8 +1,12 @@
+import createCache, { type EmotionCache } from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
+import { type Theme, ThemeProvider, useTheme } from "@mui/material/styles";
 import React, {
   Component,
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -10,6 +14,7 @@ import React, {
 import { createPortal } from "react-dom";
 import type { ReportSection } from "../../core";
 import {
+  ExportRenderHintsContext,
   ExportTableSinkContext,
   type ExportTableSink,
   type ExportTableSnapshot,
@@ -21,8 +26,9 @@ import {
 import { useCollectHooks } from "../hooks";
 import { captureSvg, findChartSvg, svgToPng } from "./extract/svg";
 import { rasterize } from "./extract/raster";
-import { WIDGET_TIMEOUT_MS } from "./layout";
-import type { CollectOptions, TableData, WidgetCapture } from "./types";
+import { EXPORT_VIEWPORT, WIDGET_TIMEOUT_MS } from "./layout";
+import { installCrossDocumentResizeObserver } from "./screenObservers";
+import type { CollectOptions, ExportRenderHints, TableData, WidgetCapture } from "./types";
 
 type RenderWidget = NonNullable<CollectOptions["renderWidget"]>;
 
@@ -31,6 +37,7 @@ interface Job {
   section: ReportSection;
   width: number;
   pixelRatio: number;
+  hints?: ExportRenderHints;
   resolve: (capture: WidgetCapture) => void;
 }
 
@@ -53,13 +60,14 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 const frame = () =>
   Promise.race([new Promise<void>((resolve) => requestAnimationFrame(() => resolve())), sleep(50)]);
 
-const cacheKey = (section: ReportSection, width: number, pixelRatio: number) =>
+const cacheKey = (section: ReportSection, width: number, pixelRatio: number, hints?: ExportRenderHints) =>
   [
     section.reportSectionId,
     width,
     section.stateCapturedAt ?? section.addedAt,
     pixelRatio,
     section.selectedView,
+    hints?.maxRows ?? "",
   ].join("|");
 
 const domBusy = (root: HTMLElement) => {
@@ -98,6 +106,133 @@ const firstTable = (tables: Map<string, ExportTableSnapshot>): TableData | undef
   return undefined;
 };
 
+// ---------- the screen: an off-screen iframe the size of a desktop display ----------
+
+interface Screen {
+  frame: HTMLIFrameElement;
+  win: Window;
+  doc: Document;
+  mount: HTMLDivElement;
+  cache: EmotionCache;
+}
+
+/**
+ * Copies the page's stylesheets into `to`: global CSS, @font-face rules and the emotion styles
+ * already inserted for the app. Sheets whose rules can't be read (cross-origin, e.g. Google
+ * Fonts) are linked again instead.
+ */
+function copyStyles(from: Document, to: Document) {
+  for (const sheet of Array.from(from.styleSheets)) {
+    let rules: CSSRuleList | undefined;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      rules = undefined;
+    }
+    if (rules) {
+      const style = to.createElement("style");
+      style.textContent = Array.from(rules)
+        .map((rule) => rule.cssText)
+        .join("\n");
+      to.head.appendChild(style);
+    } else if (sheet.href) {
+      const link = to.createElement("link");
+      link.rel = "stylesheet";
+      link.href = sheet.href;
+      to.head.appendChild(link);
+    }
+  }
+}
+
+type GlClass = { prototype: object };
+type WindowWithGl = Window & {
+  HTMLCanvasElement: typeof HTMLCanvasElement;
+  WebGLRenderingContext?: GlClass;
+  WebGL2RenderingContext?: GlClass;
+};
+
+/**
+ * WebGL in the screen, for canvas libraries (Pixi genome tracks) that run in the app's realm:
+ * - `gl instanceof WebGL2RenderingContext` is tested against the app window's class, which a
+ *   context created in the screen fails; Pixi then drives a WebGL2 context as WebGL1 and draws
+ *   nothing. Chaining the screen's prototypes to the app's makes those checks pass (own methods
+ *   still resolve first).
+ * - Contexts keep their drawing buffer, otherwise the canvas reads back blank after the frame
+ *   is composited (html-to-image copies canvases with toDataURL).
+ * Patching the screen's own globals scopes both to widgets rendered for export.
+ */
+function prepareWebGl(win: Window) {
+  const screen = win as WindowWithGl;
+  const app = window as WindowWithGl;
+  for (const name of ["WebGLRenderingContext", "WebGL2RenderingContext"] as const) {
+    const own = screen[name];
+    const main = app[name];
+    if (own && main && own !== main) Object.setPrototypeOf(own.prototype, main.prototype);
+  }
+  const proto = screen.HTMLCanvasElement.prototype;
+  const original = proto.getContext;
+  proto.getContext = function patchedGetContext(this: HTMLCanvasElement, type: string, options?: unknown) {
+    const webgl = type === "webgl" || type === "webgl2" || type === "experimental-webgl";
+    const attrs = webgl ? { ...((options as object | undefined) ?? {}), preserveDrawingBuffer: true } : options;
+    return (original as (this: HTMLCanvasElement, t: string, o?: unknown) => RenderingContext | null).call(
+      this,
+      type,
+      attrs,
+    );
+  } as typeof proto.getContext;
+}
+
+/**
+ * Widgets are laid out inside an iframe the size of a 16-inch MacBook Pro display, so MUI
+ * media queries, `vh`/`vw` units, `window.innerWidth` and ResizeObservers see a real desktop
+ * viewport instead of whatever window the user happens to be exporting from. The widget's
+ * column (`width`) sits at the top-left of that screen.
+ */
+function openScreen(section: ReportSection, width: number): Screen | null {
+  // Widgets measure themselves with the app window's ResizeObserver; make it see the screen
+  installCrossDocumentResizeObserver();
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.tabIndex = -1;
+  frame.title = "Export render host";
+  frame.dataset.reportExportHost = section.reportSectionId;
+  // In the viewport (behind the page, fully transparent) rather than off-screen: browsers skip
+  // or delay rendering steps for off-screen frames, so size observers, rAF-driven canvases and
+  // lazy content would wait indefinitely or fire too late for the capture
+  Object.assign(frame.style, {
+    position: "fixed",
+    left: "0",
+    top: "0",
+    width: `${EXPORT_VIEWPORT.width}px`,
+    height: `${EXPORT_VIEWPORT.height}px`,
+    border: "0",
+    background: "#ffffff",
+    opacity: "0",
+    pointerEvents: "none",
+    zIndex: "-1",
+  });
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  const win = frame.contentWindow;
+  if (!doc || !win) {
+    frame.remove();
+    return null;
+  }
+  // about:blank inherits the parent's origin and base URL, so relative asset URLs still resolve
+  doc.open();
+  doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body></body></html>');
+  doc.close();
+  copyStyles(document, doc);
+  prepareWebGl(win);
+  Object.assign(doc.body.style, { margin: "0", background: "#ffffff", overflow: "hidden" });
+  const mount = doc.createElement("div");
+  mount.style.width = `${Math.min(width, EXPORT_VIEWPORT.width)}px`;
+  doc.body.appendChild(mount);
+  // Styles for components rendered inside the screen go to its own <head>
+  const cache = createCache({ key: "ot-export", container: doc.head });
+  return { frame, win, doc, mount, cache };
+}
+
 class CaptureErrorBoundary extends Component<
   { onError: (error: Error) => void; children: ReactNode },
   { failed: boolean }
@@ -121,26 +256,13 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
   job,
   onDone,
 }) => {
-  const { section, width, pixelRatio } = job;
+  const { section, width, pixelRatio, hints = null } = job;
   const config = useReportConfig();
   const hooks = useCollectHooks();
+  const outerTheme = useTheme();
   // The host's probe reports fetches started since the widget mounted (earlier ones don't gate readiness)
   const [busyProbe] = useState(() => config.createBusyProbe?.());
-  const [container] = useState(() => {
-    const el = document.createElement("div");
-    el.setAttribute("aria-hidden", "true");
-    el.dataset.reportExportHost = section.reportSectionId;
-    Object.assign(el.style, {
-      position: "fixed",
-      left: "-10000px",
-      top: "0",
-      width: `${width}px`,
-      background: "#ffffff",
-      pointerEvents: "none",
-      zIndex: "-1",
-    });
-    return el;
-  });
+  const [screen, setScreen] = useState<Screen | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const tables = useRef(new Map<string, ExportTableSnapshot>());
   const failure = useRef<string | null>(null);
@@ -150,13 +272,33 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
     else tables.current.delete(key);
   }, []);
 
-
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one screen per mounted job (the host keys frames by job id)
   useLayoutEffect(() => {
-    document.body.appendChild(container);
-    return () => container.remove();
-  }, [container]);
+    const opened = openScreen(section, width);
+    if (!opened) {
+      onDone(job, missing("Could not create the export viewport"));
+      return undefined;
+    }
+    setScreen(opened);
+    return () => opened.frame.remove();
+  }, []);
 
+  // MUI's useMediaQuery evaluates against the screen's window, not the user's
+  const screenTheme = useMemo<Theme | null>(() => {
+    if (!screen) return null;
+    const matchMedia = screen.win.matchMedia.bind(screen.win);
+    return {
+      ...outerTheme,
+      components: {
+        ...outerTheme.components,
+        MuiUseMediaQuery: { defaultProps: { matchMedia, noSsr: true } },
+      },
+    };
+  }, [screen, outerTheme]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one capture per screen (the host keys frames by job id)
   useEffect(() => {
+    if (!screen) return undefined;
     let cancelled = false;
 
     const waitUntilReady = async (root: HTMLElement): Promise<string | null> => {
@@ -194,6 +336,7 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
       await frame();
       await frame();
       await document.fonts?.ready;
+      await screen.doc.fonts?.ready;
 
       const target = captureTarget(root);
       if ((root.textContent ?? "").includes(NO_RENDERER_TEXT)) {
@@ -257,32 +400,38 @@ const RenderFrame: React.FC<{ job: Job; onDone: (job: Job, capture: WidgetCaptur
     return () => {
       cancelled = true;
     };
-    // One capture per mounted job (the host keys frames by job id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [screen]);
 
+  if (!screen || !screenTheme) return null;
   return createPortal(
-    <ExportTableSinkContext.Provider value={sink}>
-      <CaptureErrorBoundary
-        onError={(error) => {
-          failure.current = `Widget failed to render: ${error.message}`;
-        }}
-      >
-        {/* Same tree ReportSectionBody mounts */}
-        <div ref={rootRef} style={{ width: "100%", padding: 14, boxSizing: "border-box" }}>
-          <WidgetRenderer section={section} view={section.selectedView} />
-        </div>
-      </CaptureErrorBoundary>
-    </ExportTableSinkContext.Provider>,
-    container
+    <CacheProvider value={screen.cache}>
+      <ThemeProvider theme={screenTheme}>
+        <ExportTableSinkContext.Provider value={sink}>
+          <ExportRenderHintsContext.Provider value={hints}>
+          <CaptureErrorBoundary
+            onError={(error) => {
+              failure.current = `Widget failed to render: ${error.message}`;
+            }}
+          >
+            {/* Same tree ReportSectionBody mounts */}
+            <div ref={rootRef} style={{ width: "100%", padding: 14, boxSizing: "border-box" }}>
+              <WidgetRenderer section={section} view={section.selectedView} />
+            </div>
+          </CaptureErrorBoundary>
+          </ExportRenderHintsContext.Provider>
+        </ExportTableSinkContext.Provider>
+      </ThemeProvider>
+    </CacheProvider>,
+    screen.mount
   );
 };
 
 /**
  * Off-screen widget renderer. Mount `host` somewhere inside the app providers (the export
- * dialog does); `renderWidget` renders one widget at a time and resolves with its capture.
- * Successful captures are cached per (reportSectionId, width, stateCapturedAt, pixelRatio, view)
- * for the hook's lifetime; failures aren't, so a retry re-renders.
+ * dialog does); `renderWidget` renders one widget at a time, inside a desktop-sized iframe,
+ * and resolves with its capture. Successful captures are cached per (reportSectionId, width,
+ * stateCapturedAt, pixelRatio, view, hints) for the hook's lifetime; failures aren't, so a retry
+ * re-renders.
  */
 export function useRenderHost(): { host: ReactNode; renderWidget: RenderWidget } {
   const [job, setJob] = useState<Job | null>(null);
@@ -307,8 +456,8 @@ export function useRenderHost(): { host: ReactNode; renderWidget: RenderWidget }
     };
   }, []);
 
-  const renderWidget = useCallback<RenderWidget>((section, width, pixelRatio) => {
-    const key = cacheKey(section, width, pixelRatio);
+  const renderWidget = useCallback<RenderWidget>((section, width, pixelRatio, hints) => {
+    const key = cacheKey(section, width, pixelRatio, hints);
     const cached = cache.current.get(key);
     if (cached) return Promise.resolve(cached);
 
@@ -323,6 +472,7 @@ export function useRenderHost(): { host: ReactNode; renderWidget: RenderWidget }
             section,
             width,
             pixelRatio,
+            hints,
             resolve: (capture) => {
               if (settled) return;
               settled = true;

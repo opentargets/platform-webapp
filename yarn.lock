@@ -12048,6 +12048,8 @@ __metadata:
     "@codemirror/view": "npm:^6.43.13"
     "@dnd-kit/react": "npm:^0.4.0"
     "@dnd-kit/sortable": "npm:^10.0.0"
+    "@emotion/cache": "npm:^11.14.0"
+    "@emotion/react": "npm:^11.11.1"
     "@fortawesome/fontawesome-svg-core": "npm:^6.1.1"
     "@fortawesome/free-solid-svg-icons": "npm:^6.4.2"
     "@fortawesome/react-fontawesome": "npm:^0.2.0"

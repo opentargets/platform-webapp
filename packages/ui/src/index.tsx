@@ -191,7 +191,7 @@ export * from "./providers/ReportSectionContext";
 export * from "./providers/ReportComponentStateContext";
 export * from "./providers/ReportQueryVariablesProvider";
 export { getLiveCaptureKey, registerLiveCapture } from "./providers/LiveSectionStateRegistry";
-export { useExportTableSink } from "./providers/ExportTableSinkContext";
+export { useExportTableSink, useExportRenderHints } from "./providers/ExportTableSinkContext";
 export { SectionBody, useSectionBodyProps } from "./providers/SectionBodyPropsContext";
 export { AddToReportButton } from "./components/AddToReportButton";
 

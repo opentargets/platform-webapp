@@ -1,6 +1,6 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
-import { FONT_FAMILY, MONO_FAMILY, OT_COLORS } from "../layout";
+import { FONT_FAMILY, MONO_FAMILY, OT_COLORS, SLIDE_BRAND, SLIDE_FONTS } from "../layout";
 import type { FigureAsset, PlacedTable } from "../types";
 import { assetSrc } from "./nodeMeta";
 
@@ -130,29 +130,37 @@ const cellText = (value: unknown): string => {
   return String(value);
 };
 
-/** Native HTML table in the OT export style (header #e3f0fa / #1e6ba8). */
-export const TableView: React.FC<{ table: PlacedTable; fontPx: number; maxCellChars?: number }> = ({
-  table,
-  fontPx,
-  maxCellChars = 60,
-}) => (
+/**
+ * Native HTML table: paper style (header #e3f0fa / #1e6ba8), or the slides template style
+ * (navy header, white cells, grey text).
+ */
+export const TableView: React.FC<{
+  table: PlacedTable;
+  fontPx: number;
+  maxCellChars?: number;
+  variant?: "paper" | "slides";
+}> = ({ table, fontPx, maxCellChars = 60, variant = "paper" }) => (
   <Box
     component="table"
     sx={{
       width: "100%",
       borderCollapse: "collapse",
-      fontFamily: FONT_FAMILY,
+      fontFamily: variant === "slides" ? SLIDE_FONTS.bodyStack : FONT_FAMILY,
       fontSize: fontPx,
-      color: OT_COLORS.text,
+      color: variant === "slides" ? SLIDE_BRAND.grey : OT_COLORS.text,
       tableLayout: "auto",
       "& th, & td": {
-        border: `1px solid ${OT_COLORS.border}`,
+        border: `1px solid ${variant === "slides" ? SLIDE_BRAND.grey30 : OT_COLORS.border}`,
         padding: `${fontPx * 0.3}px ${fontPx * 0.5}px`,
         textAlign: "left",
         verticalAlign: "top",
         overflowWrap: "anywhere",
       },
-      "& th": { bgcolor: OT_COLORS.primaryLight, color: OT_COLORS.primaryDark, fontWeight: 700 },
+      "& td": variant === "slides" ? { bgcolor: "#fff" } : {},
+      "& th":
+        variant === "slides"
+          ? { bgcolor: SLIDE_BRAND.navy, color: "#fff", fontWeight: 700 }
+          : { bgcolor: OT_COLORS.primaryLight, color: OT_COLORS.primaryDark, fontWeight: 700 },
     }}
   >
     <thead>

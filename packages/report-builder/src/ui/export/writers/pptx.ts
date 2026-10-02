@@ -1,9 +1,17 @@
 import type PptxGenJS from "pptxgenjs";
 import type { RichTextDoc } from "../../../core";
-import { OT_COLORS, SLIDE_TYPE } from "../layout";
+import { OT_LOGO_ASPECT, SLIDE_BRAND, SLIDE_FONTS, SLIDE_TONE, SLIDE_TYPE } from "../layout";
 import { formatCell } from "../richText/toHtml";
 import { toPlainText } from "../richText/toPlainText";
 import { richTextToPptxRuns } from "../richText/toPptxRuns";
+import {
+  type LogoVariant,
+  decorTextWidth,
+  otLogoSvg,
+  slideDecor,
+  titleMetaColumns,
+  titleSlideLayout,
+} from "../slideTheme";
 import type {
   ExportPlan,
   FigureAsset,
@@ -34,136 +42,197 @@ import {
 type Pres = PptxGenJS;
 type Slide = PptxGenJS.Slide;
 
-const FONT = "Inter";
+const HEAD = SLIDE_FONTS.heading;
+const BODY = SLIDE_FONTS.body;
 const MONO = "Courier New";
 const hex = (c: string) => c.replace("#", "").toUpperCase();
 const C = {
-  primary: hex(OT_COLORS.primary),
-  primaryDark: hex(OT_COLORS.primaryDark),
-  primaryLight: hex(OT_COLORS.primaryLight),
-  text: hex(OT_COLORS.text),
-  muted: hex(OT_COLORS.muted),
-  border: hex(OT_COLORS.border),
-  finding: hex(OT_COLORS.finding),
-  warning: hex(OT_COLORS.warning),
-  info: hex(OT_COLORS.info),
-  placeholder: "F5F5F5",
+  navy: hex(SLIDE_BRAND.navy),
+  blue: hex(SLIDE_BRAND.blue),
+  blue50: hex(SLIDE_BRAND.blue50),
+  blue30: hex(SLIDE_BRAND.blue30),
+  red: hex(SLIDE_BRAND.red),
+  grey: hex(SLIDE_BRAND.grey),
+  grey50: hex(SLIDE_BRAND.grey50),
+  grey30: hex(SLIDE_BRAND.grey30),
+  panel: hex(SLIDE_BRAND.panel),
+  white: "FFFFFF",
 };
-const TONE_COLOR: Record<string, string> = { finding: C.finding, warning: C.warning, info: C.info };
+const toneColor = (tone: string | undefined, on: "light" | "dark") =>
+  hex((SLIDE_TONE[(tone ?? "finding") as keyof typeof SLIDE_TONE] ?? SLIDE_TONE.finding)[on]);
 
 const METHODS_ROWS_PER_SLIDE = 8;
 const CELL_MAX_CHARS = 140;
 
 const truncate = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
 
-/** Number of wrapped lines a string takes in a box `w` inches wide at `pt` points (rough Inter metrics). */
+/** Number of wrapped lines a string takes in a box `w` inches wide at `pt` points (rough sans metrics). */
 const lineCount = (text: string, w: number, pt: number) => {
   const perLine = Math.max(8, Math.floor((w * 72) / (pt * 0.52)));
   return text.split("\n").reduce((n, line) => n + Math.max(1, Math.ceil(line.length / perLine)), 0);
 };
 
+const noLine = (color: string) => ({ color, width: 0 });
+// pptxgenjs 4 writes custom geometry for "custGeom" but its SHAPE_NAME union doesn't list it
+const CUSTOM_GEOMETRY = "custGeom" as PptxGenJS.SHAPE_NAME;
+
 // ---------- masters ----------
 
 const CONTENT_MASTER = (frame: SlideFrame) => frame.geom.layoutName;
 const PLAIN_MASTER = (frame: SlideFrame) => `${frame.geom.layoutName}_PLAIN`;
+const DARK_MASTER = (frame: SlideFrame) => `${frame.geom.layoutName}_DARK`;
 
 function defineMasters(pptx: Pres, frame: SlideFrame, release?: string) {
   pptx.defineLayout({ name: frame.geom.layoutName, width: frame.W, height: frame.H });
   pptx.layout = frame.geom.layoutName;
-  pptx.theme = { headFontFace: FONT, bodyFontFace: FONT };
+  pptx.theme = { headFontFace: HEAD, bodyFontFace: BODY };
 
-  const footer = [
-    {
-      text: {
-        text: releaseLabel(release),
-        options: {
-          ...frame.footerRight,
-          w: frame.footerRight.w - 0.55,
-          align: "right" as const,
-          fontFace: FONT,
-          fontSize: SLIDE_TYPE.footerPt,
-          color: C.muted,
-          valign: "middle" as const,
-          margin: 0,
-        },
+  const footerText = (color: string) => ({
+    text: {
+      text: releaseLabel(release),
+      options: {
+        ...frame.footerRight,
+        align: "right" as const,
+        fontFace: BODY,
+        fontSize: SLIDE_TYPE.footerPt,
+        color,
+        valign: "middle" as const,
+        margin: 0,
       },
     },
-  ];
-  const slideNumber = {
-    x: frame.W - frame.margin - 0.5,
-    y: frame.footer.y,
-    w: 0.5,
-    h: frame.footer.h,
-    fontFace: FONT,
+  });
+  const slideNumber = (color: string) => ({
+    ...frame.slideNumber,
+    fontFace: BODY,
     fontSize: SLIDE_TYPE.footerPt,
-    color: C.muted,
+    color,
     align: "right" as const,
     valign: "middle" as const,
     margin: 0,
-  };
+  });
 
   pptx.defineSlideMaster({
     title: CONTENT_MASTER(frame),
-    background: { color: "FFFFFF" },
+    background: { color: C.white },
+    objects: [footerText(C.grey50)],
+    slideNumber: slideNumber(C.grey50),
+  });
+  // Title and section slides: the diagonal panels are drawn per slide
+  pptx.defineSlideMaster({ title: PLAIN_MASTER(frame), background: { color: C.white }, objects: [] });
+  // Statement slides: navy, a thin rule above the footer (template "80-90%" slide)
+  pptx.defineSlideMaster({
+    title: DARK_MASTER(frame),
+    background: { color: C.navy },
     objects: [
       {
         line: {
           x: frame.margin,
-          y: frame.ruleY,
+          y: frame.footer.y - 0.12,
           w: frame.W - 2 * frame.margin,
           h: 0,
-          line: { color: C.primary, width: 1.5 }, // 2px
+          line: { color: C.blue50, width: 0.75 },
         },
       },
-      ...footer,
+      footerText(C.blue30),
     ],
-    slideNumber,
-  });
-  pptx.defineSlideMaster({
-    title: PLAIN_MASTER(frame),
-    background: { color: "FFFFFF" },
-    objects: footer,
-    slideNumber,
+    slideNumber: slideNumber(C.blue30),
   });
 }
 
 // ---------- building blocks ----------
 
+const logoPngCache = new Map<LogoVariant, Promise<string | undefined>>();
+
+const logoPng = (variant: LogoVariant) => {
+  let png = logoPngCache.get(variant);
+  if (!png) {
+    const svg = otLogoSvg(variant);
+    png = svgToPngDataUrl(svg, 720, 720 / OT_LOGO_ASPECT, 1, true);
+    logoPngCache.set(variant, png);
+  }
+  return png;
+};
+
+/**
+ * SVG + PNG preview: pptxgenjs registers two media rels for an SVG (png preview + svg); we
+ * fill the preview ourselves so it isn't re-rasterized at 1× (or left broken outside the browser).
+ */
+function placeSvg(slide: Slide, svg: string, png: string | undefined, box: Box, altText?: string) {
+  slide.addImage({ data: svgDataUrl(svg), ...box, altText });
+  if (png) {
+    const rels = (slide as unknown as { _relsMedia?: { isSvgPng?: boolean; data?: string }[] })._relsMedia ?? [];
+    const preview = [...rels].reverse().find((r) => r.isSvgPng);
+    if (preview) {
+      preview.data = png;
+      preview.isSvgPng = false;
+    }
+  }
+}
+
+async function addLogo(slide: Slide, box: Box, variant: LogoVariant) {
+  placeSvg(slide, otLogoSvg(variant), await logoPng(variant), box, "Open Targets");
+}
+
+function addDecor(slide: Slide, frame: SlideFrame, kind: "title" | "chapter") {
+  slideDecor(frame, kind).forEach((poly) => {
+    const xs = poly.points.map((p) => p[0]);
+    const ys = poly.points.map((p) => p[1]);
+    const x = Math.min(...xs);
+    const y = Math.min(...ys);
+    slide.addShape(CUSTOM_GEOMETRY, {
+      x,
+      y,
+      w: Math.max(...xs) - x,
+      h: Math.max(...ys) - y,
+      fill: { color: hex(poly.color) },
+      line: noLine(hex(poly.color)),
+      points: [
+        ...poly.points.map(([px, py], i) => ({ x: px - x, y: py - y, moveTo: i === 0 })),
+        { close: true as const },
+      ],
+    });
+  });
+}
+
 function addTitle(slide: Slide, frame: SlideFrame, title: string, kicker?: string) {
   if (kicker) {
     slide.addText(kicker.toUpperCase(), {
       ...frame.kicker,
-      fontFace: FONT,
-      fontSize: 11,
+      fontFace: BODY,
+      fontSize: SLIDE_TYPE.kickerPt,
       bold: true,
       charSpacing: 1.5,
-      color: C.primaryDark,
+      color: C.blue,
       valign: "bottom",
       margin: 0,
     });
   }
   slide.addText(title, {
     ...frame.title,
-    fontFace: FONT,
+    fontFace: HEAD,
     fontSize: SLIDE_TYPE.titlePt,
     bold: true,
-    color: C.text,
+    color: C.navy,
     valign: "middle",
     fit: "shrink",
     margin: 0,
   });
 }
 
-function addFooterLeft(slide: Slide, frame: SlideFrame, text?: string) {
+function addFooterLeft(slide: Slide, frame: SlideFrame, text?: string, color = C.grey50) {
   if (!text) return;
   slide.addText(truncate(text, 180), {
     ...frame.footerLeft,
-    fontFace: FONT,
+    fontFace: BODY,
     fontSize: SLIDE_TYPE.footerPt,
-    color: C.muted,
+    color,
     valign: "middle",
     margin: 0,
   });
+}
+
+function addPanel(slide: Slide, pptx: Pres, frame: SlideFrame) {
+  slide.addShape(pptx.ShapeType.rect, { ...frame.panel, fill: { color: C.panel }, line: noLine(C.panel) });
 }
 
 const figureFooter = (n?: number, caption?: string) => [n ? `Fig ${n}` : "", caption ?? ""].filter(Boolean).join(" · ");
@@ -176,7 +245,7 @@ function addNotes(slide: Slide, docs: RichTextDoc[] | undefined) {
   if (text) slide.addNotes(text);
 }
 
-/** SVG + PNG fallback, or a raster; the PNG pptxgenjs would generate is replaced by ours. */
+/** SVG + PNG fallback, or a raster. */
 async function addAsset(slide: Slide, asset: FigureAsset, box: Box, altText?: string): Promise<boolean> {
   if (asset.kind === "raster") {
     if (!isSafeImageDataUrl(asset.dataUrl)) return false;
@@ -184,37 +253,26 @@ async function addAsset(slide: Slide, asset: FigureAsset, box: Box, altText?: st
     return true;
   }
   if (asset.kind !== "svg") return false;
-  const fit = fitContain(asset.width, asset.height, box);
   const png = isSafeImageDataUrl(asset.pngDataUrl)
     ? asset.pngDataUrl
     : await svgToPngDataUrl(asset.svg, asset.width, asset.height, 2);
-  slide.addImage({ data: svgDataUrl(asset.svg), ...fit, altText });
-  if (png) {
-    // pptxgenjs registers two media rels for an SVG (png preview + svg); fill the preview so it
-    // isn't re-rasterized at 1× (or left broken outside the browser)
-    const rels = (slide as unknown as { _relsMedia?: { isSvgPng?: boolean; data?: string }[] })._relsMedia ?? [];
-    const preview = [...rels].reverse().find((r) => r.isSvgPng);
-    if (preview) {
-      preview.data = png;
-      preview.isSvgPng = false;
-    }
-  }
+  placeSvg(slide, asset.svg, png, fitContain(asset.width, asset.height, box), altText);
   return true;
 }
 
 function addPlaceholder(slide: Slide, pptx: Pres, box: Box, title: string, caption?: string, reason?: string) {
   slide.addShape(pptx.ShapeType.rect, {
     ...box,
-    fill: { color: C.placeholder },
-    line: { color: C.muted, width: 1, dashType: "dash" },
+    fill: { color: C.panel },
+    line: { color: C.grey50, width: 1, dashType: "dash" },
   });
   const runs: PptxGenJS.TextProps[] = [
-    { text: "Figure unavailable", options: { bold: true, fontSize: 16, color: C.muted, breakLine: true } },
-    { text: title, options: { fontSize: 14, color: C.text, breakLine: !!(caption || reason) } },
+    { text: "Figure unavailable", options: { bold: true, fontSize: 16, color: C.grey, breakLine: true } },
+    { text: title, options: { fontSize: 14, color: C.navy, breakLine: !!(caption || reason) } },
   ];
-  if (caption) runs.push({ text: caption, options: { fontSize: 12, color: C.muted, breakLine: !!reason } });
-  if (reason) runs.push({ text: reason, options: { fontSize: 10, italic: true, color: C.muted } });
-  slide.addText(runs, { ...box, fontFace: FONT, align: "center", valign: "middle", margin: 12 });
+  if (caption) runs.push({ text: caption, options: { fontSize: 12, color: C.grey, breakLine: !!reason } });
+  if (reason) runs.push({ text: reason, options: { fontSize: 10, italic: true, color: C.grey } });
+  slide.addText(runs, { ...box, fontFace: BODY, align: "center", valign: "middle", margin: 12 });
 }
 
 function chip(slide: Slide, pptx: Pres, text: string, x: number, y: number, w: number, strong = false): number {
@@ -227,11 +285,11 @@ function chip(slide: Slide, pptx: Pres, text: string, x: number, y: number, w: n
     y,
     w,
     h,
-    fill: { color: strong ? C.primaryLight : "FFFFFF" },
-    line: { color: strong ? C.primaryLight : C.border, width: 0.75 },
-    fontFace: FONT,
+    fill: { color: strong ? C.blue30 : C.white },
+    line: { color: strong ? C.blue30 : C.grey30, width: 0.75 },
+    fontFace: BODY,
     fontSize: pt,
-    color: strong ? C.primaryDark : C.text,
+    color: strong ? C.navy : C.grey,
     valign: "middle",
     margin: 5,
   });
@@ -244,11 +302,11 @@ function railLabel(slide: Slide, text: string, x: number, y: number, w: number) 
     y,
     w,
     h: 0.26,
-    fontFace: FONT,
+    fontFace: BODY,
     fontSize: 9,
     bold: true,
     charSpacing: 1,
-    color: C.muted,
+    color: C.grey50,
     margin: 0,
     valign: "bottom",
   });
@@ -291,22 +349,24 @@ function addRail(slide: Slide, pptx: Pres, rail: Box, provenance: Provenance) {
       y,
       w,
       h: Math.min(bottom - y, 0.2 + lineCount(provenance.sourceLabel, w, 10) * 0.18),
-      fontFace: FONT,
+      fontFace: BODY,
       fontSize: 10,
-      color: C.muted,
+      color: C.grey,
       valign: "top",
       margin: 0,
     });
   }
 }
 
-function tableRows(table: PlacedTable, headerFill = true): PptxGenJS.TableRow[] {
-  const header: PptxGenJS.TableRow = table.data.columns.map((col) => ({
-    text: col.label,
-    options: headerFill ? { bold: true, color: C.primaryDark, fill: { color: C.primaryLight } } : { bold: true },
-  }));
+const HEADER_CELL = { bold: true, color: C.white, fill: { color: C.navy } };
+
+function tableRows(table: PlacedTable): PptxGenJS.TableRow[] {
+  const header: PptxGenJS.TableRow = table.data.columns.map((col) => ({ text: col.label, options: HEADER_CELL }));
   const body = table.data.rows.map((row) =>
-    table.data.columns.map((col) => ({ text: truncate(formatCell(row[col.key]), CELL_MAX_CHARS) })),
+    table.data.columns.map((col) => ({
+      text: truncate(formatCell(row[col.key]), CELL_MAX_CHARS),
+      options: { fill: { color: C.white } },
+    })),
   );
   return [header, ...body];
 }
@@ -322,106 +382,103 @@ function addNativeTable(slide: Slide, table: PlacedTable, box: Box, fontSize: nu
     w: box.w,
     colW: Array(cols).fill(box.w / cols),
     rowH,
-    fontFace: FONT,
+    fontFace: BODY,
     fontSize,
-    color: C.text,
+    color: C.grey,
     valign: "middle",
-    border: { type: "solid", pt: 0.5, color: C.border },
+    border: { type: "solid", pt: 0.5, color: C.grey30 },
     autoPage: false,
   });
   return box.y + rowH * rows.length;
 }
 
 function addTableNote(slide: Slide, text: string, x: number, y: number, w: number) {
-  slide.addText(text, { x, y, w, h: 0.3, fontFace: FONT, fontSize: 11, italic: true, color: C.muted, margin: 0 });
+  slide.addText(text, { x, y, w, h: 0.3, fontFace: BODY, fontSize: 11, italic: true, color: C.grey, margin: 0 });
 }
 
 // ---------- units ----------
 
-function titleSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "titleSlide" }>) {
+/** Template title slide: logo top-left, navy title and meta row on the left, diagonal panels right. */
+async function titleSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "titleSlide" }>) {
   const slide = pptx.addSlide({ masterName: PLAIN_MASTER(frame) });
-  const x = frame.margin + 0.3;
-  const w = frame.W - 2 * x;
-  slide.addShape(pptx.ShapeType.rect, {
-    x: 0,
-    y: 0,
-    w: 0.18,
-    h: frame.H,
-    fill: { color: C.primary },
-    line: { color: C.primary, width: 0 },
-  });
+  addDecor(slide, frame, "title");
+  const layout = titleSlideLayout(frame, unit.title, unit.description);
+  await addLogo(slide, layout.logo, "colour");
   slide.addText(unit.title, {
-    x,
-    y: frame.H * 0.28,
-    w,
-    h: 1.3,
-    fontFace: FONT,
-    fontSize: 40,
+    ...layout.title,
+    fontFace: HEAD,
+    fontSize: layout.titleFontPt,
     bold: true,
-    color: C.text,
+    color: C.navy,
     valign: "bottom",
     fit: "shrink",
+    lineSpacingMultiple: 1.05,
     margin: 0,
   });
-  if (unit.description) {
-    slide.addText(unit.description, {
-      x,
-      y: frame.H * 0.28 + 1.45,
-      w,
-      h: 1.2,
-      fontFace: FONT,
-      fontSize: 18,
-      color: C.muted,
+  if (layout.description && unit.description) {
+    slide.addText(unit.description.trim(), {
+      ...layout.description,
+      fontFace: BODY,
+      fontSize: 14,
+      color: C.grey,
       valign: "top",
       fit: "shrink",
       margin: 0,
     });
   }
-  const meta = [unit.entityLabel, releaseLabel(unit.dataRelease), formatDate(unit.date)].filter(Boolean).join("  ·  ");
-  slide.addText(meta, {
-    x,
-    y: frame.H - 1.5,
-    w,
-    h: 0.4,
-    fontFace: FONT,
-    fontSize: 14,
-    color: C.primaryDark,
-    margin: 0,
+  const columns = titleMetaColumns(unit);
+  const colW = layout.metaColumnWidth(columns.length);
+  columns.forEach((col, i) => {
+    slide.addText(
+      [
+        { text: col.soft, options: { fontSize: 11, color: C.grey, breakLine: true } },
+        { text: col.strong, options: { fontSize: 13, bold: true, color: C.navy } },
+      ],
+      {
+        x: layout.meta.x + i * colW,
+        y: layout.meta.y,
+        w: colW - 0.15,
+        h: layout.meta.h,
+        fontFace: BODY,
+        valign: "top",
+        margin: 0,
+      },
+    );
   });
 }
 
+/** Template section slide: "PART n", a thin rule, the navy title; blue and navy triangles right. */
 function chapterSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "chapterSlide" }>) {
   const slide = pptx.addSlide({ masterName: PLAIN_MASTER(frame) });
-  const x = frame.margin + 0.3;
-  slide.addText(String(unit.n).padStart(2, "0"), {
+  addDecor(slide, frame, "chapter");
+  const x = frame.margin;
+  const w = decorTextWidth(frame) + 0.4;
+  const y = frame.H * 0.33;
+  slide.addText(`PART ${unit.n}`, {
     x,
-    y: frame.H * 0.3,
-    w: 3,
-    h: 0.8,
-    fontFace: FONT,
-    fontSize: 32,
+    y,
+    w,
+    h: 0.4,
+    fontFace: BODY,
+    fontSize: 14,
     bold: true,
-    color: C.primary,
+    color: C.navy,
+    valign: "bottom",
     margin: 0,
   });
-  slide.addShape(pptx.ShapeType.line, {
-    x,
-    y: frame.H * 0.3 + 0.95,
-    w: 1.2,
-    h: 0,
-    line: { color: C.primary, width: 1.5 },
-  });
+  slide.addShape(pptx.ShapeType.line, { x, y: y + 0.55, w, h: 0, line: { color: C.grey50, width: 0.75 } });
   slide.addText(unit.title, {
     x,
-    y: frame.H * 0.3 + 1.1,
-    w: frame.W - 2 * x,
-    h: 1.6,
-    fontFace: FONT,
-    fontSize: 40,
+    y: y + 0.7,
+    w,
+    h: frame.H - (y + 0.7) - 0.8,
+    fontFace: HEAD,
+    fontSize: SLIDE_TYPE.chapterPt,
     bold: true,
-    color: C.text,
+    color: C.navy,
     valign: "top",
     fit: "shrink",
+    lineSpacingMultiple: 1.05,
     margin: 0,
   });
 }
@@ -437,16 +494,24 @@ async function figureSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUni
     if (!placed && unit.table?.data.columns.length)
       addNativeTable(slide, unit.table, { ...frame.content, y: 1.3, h: frame.content.h });
     else if (!placed) addPlaceholder(slide, pptx, frame.content, unit.title, unit.caption, missingReason(unit.asset));
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0,
-      y: 0,
-      w: frame.W,
-      h: 1.15,
-      fill: { color: "FFFFFF", transparency: 12 },
-      line: { color: "FFFFFF", width: 0 },
-    });
+    // Translucent white bands keep the title and footer legible over the image
+    const bandY = frame.footer.y - 0.15;
+    for (const band of [
+      { y: 0, h: 1.4 },
+      { y: bandY, h: frame.H - bandY },
+    ]) {
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0,
+        y: band.y,
+        w: frame.W,
+        h: band.h,
+        fill: { color: C.white, transparency: 10 },
+        line: noLine(C.white),
+      });
+    }
     addTitle(slide, frame, unit.title, unit.kicker);
     addFooterLeft(slide, frame, footer);
+    await addLogo(slide, frame.logo, "colour");
     addNotes(slide, unit.notes);
     return;
   }
@@ -457,10 +522,10 @@ async function figureSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUni
     // Rows moved to the appendix: the takeaway slide keeps only the pointer
     slide.addText(unit.table.note ?? "Full table in appendix", {
       ...area,
-      fontFace: FONT,
+      fontFace: BODY,
       fontSize: 18,
       italic: true,
-      color: C.muted,
+      color: C.grey50,
       align: "center",
       valign: "middle",
     });
@@ -476,67 +541,68 @@ async function figureSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUni
   }
   addRail(slide, pptx, frame.rail, unit.provenance);
   addFooterLeft(slide, frame, footer);
+  await addLogo(slide, frame.logo, "colour");
   addNotes(slide, unit.notes);
 }
 
 const missingReason = (asset?: FigureAsset) =>
   asset?.kind === "missing" ? asset.reason : asset ? "Image could not be embedded" : undefined;
 
-function statementSlide(
+/** Template statement slide: navy background, white text, white logo. */
+async function statementSlide(
   pptx: Pres,
   frame: SlideFrame,
   unit: Extract<SlideUnit, { kind: "statementSlide" }>,
   tone?: string,
 ) {
-  const slide = pptx.addSlide({ masterName: PLAIN_MASTER(frame) });
-  const x = frame.margin + 0.6;
+  const slide = pptx.addSlide({ masterName: DARK_MASTER(frame) });
+  const x = frame.margin + 0.4;
   const w = frame.W - 2 * x;
-  const accent = TONE_COLOR[tone ?? "finding"] ?? C.finding;
-  slide.addShape(pptx.ShapeType.rect, {
-    x: x - 0.35,
-    y: frame.H * 0.2,
-    w: 0.08,
-    h: frame.H * 0.55,
-    fill: { color: accent },
-    line: { color: accent, width: 0 },
-  });
+  const y = frame.H * 0.2;
+  const h = frame.H * 0.55;
   if (tone) {
     slide.addText((CALLOUT_LABEL[tone] ?? tone).toUpperCase(), {
       x,
-      y: frame.H * 0.2 - 0.45,
+      y: y - 0.45,
       w,
       h: 0.35,
-      fontFace: FONT,
+      fontFace: BODY,
       fontSize: 12,
       bold: true,
       charSpacing: 1.5,
-      color: accent,
+      color: toneColor(tone, "dark"),
       margin: 0,
     });
   }
   const runs = richTextToPptxRuns(unit.doc, {
     fontSize: SLIDE_TYPE.statementPt,
     monoFace: MONO,
-    linkColor: C.primaryDark,
+    linkColor: C.blue30,
   });
   slide.addText(runs.length ? runs : [{ text: "" }], {
     x,
-    y: frame.H * 0.2,
+    y,
     w,
-    h: frame.H * 0.55,
-    fontFace: FONT,
+    h,
+    fontFace: BODY,
     fontSize: SLIDE_TYPE.statementPt,
-    color: C.text,
+    color: C.white,
     valign: "middle",
     fit: "shrink",
-    lineSpacingMultiple: 1.1,
+    lineSpacingMultiple: 1.15,
     margin: 0,
   });
+  await addLogo(slide, frame.logo, "white");
   addNotes(slide, unit.notes);
 }
 
-function appendixTableSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "appendixTableSlide" }>) {
+async function appendixTableSlide(
+  pptx: Pres,
+  frame: SlideFrame,
+  unit: Extract<SlideUnit, { kind: "appendixTableSlide" }>,
+) {
   const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
+  addPanel(slide, pptx, frame);
   addTitle(slide, frame, unit.title, unit.pages > 1 ? `Appendix · ${unit.page} / ${unit.pages}` : "Appendix");
   const area = frame.content;
   const tooWide = unit.table.data.columns.length > frame.geom.maxTableCols;
@@ -545,6 +611,7 @@ function appendixTableSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUn
   const to = unit.table.shownFrom + unit.table.data.rows.length;
   const note = unit.table.note ?? `Rows ${from}–${to} of ${unit.table.totalRows}`;
   addTableNote(slide, note, area.x, Math.min(bottom + 0.08, area.y + area.h - 0.3), area.w);
+  await addLogo(slide, frame.logo, "colour");
 }
 
 const MONO_PAD = 0.14;
@@ -558,27 +625,28 @@ function monoBox(slide: Slide, pptx: Pres, text: string, box: Box, pt = 10) {
     lines.length > maxLines
       ? [...lines.slice(0, maxLines - 1), "… (truncated — full request in the data export)"]
       : lines;
-  slide.addShape(pptx.ShapeType.rect, { ...box, fill: { color: "F7F9FB" }, line: { color: C.border, width: 0.75 } });
+  slide.addShape(pptx.ShapeType.rect, { ...box, fill: { color: C.white }, line: { color: C.grey30, width: 0.75 } });
   slide.addText(shown.join("\n"), {
     ...box,
     fontFace: MONO,
     fontSize: pt,
-    color: C.text,
+    color: C.grey,
     valign: "top",
     margin: 6,
   });
 }
 
-function dataSourceSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "dataSourceSlide" }>) {
+async function dataSourceSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "dataSourceSlide" }>) {
   const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
+  addPanel(slide, pptx, frame);
   const { request } = unit;
-  addTitle(slide, frame, unit.title, "Data source");
+  addTitle(slide, frame, unit.title, "Appendix · data source");
   const area = frame.content;
   slide.addText(
     [
       {
         text: `${request.method ?? (request.query ? "POST" : "GET")}  `,
-        options: { bold: true, color: C.primaryDark },
+        options: { bold: true, color: C.navy },
       },
       { text: request.endpoint, options: { fontFace: MONO } },
     ],
@@ -587,9 +655,9 @@ function dataSourceSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit,
       y: area.y,
       w: area.w,
       h: 0.4,
-      fontFace: FONT,
+      fontFace: BODY,
       fontSize: 14,
-      color: C.text,
+      color: C.grey,
       margin: 0,
       valign: "middle",
     },
@@ -622,12 +690,13 @@ function dataSourceSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit,
     y: area.y + area.h - 0.3,
     w: area.w,
     h: 0.3,
-    fontFace: FONT,
+    fontFace: BODY,
     fontSize: 11,
     italic: true,
-    color: C.muted,
+    color: C.grey,
     margin: 0,
   });
+  await addLogo(slide, frame.logo, "colour");
 }
 
 const methodsRow = (entry: MethodsEntry): string[] => [
@@ -647,7 +716,7 @@ const methodsRow = (entry: MethodsEntry): string[] => [
 ];
 
 // The plan already splits methods into units of ≤ 8 entries; `page`/`pages` count those units
-function methodsSlides(
+async function methodsSlides(
   pptx: Pres,
   frame: SlideFrame,
   unit: Extract<SlideUnit, { kind: "methodsSlide" }>,
@@ -655,8 +724,10 @@ function methodsSlides(
   pageCount: number,
 ) {
   const pages = paginate(unit.entries, METHODS_ROWS_PER_SLIDE);
-  pages.forEach((entries, i) => {
+  for (let i = 0; i < pages.length; i += 1) {
+    const entries = pages[i];
     const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
+    addPanel(slide, pptx, frame);
     const n = pageCount + pages.length - 1;
     const kicker = n > 1 ? `Appendix · ${page + i} / ${n}` : "Appendix";
     addTitle(slide, frame, "Methods", kicker);
@@ -664,24 +735,29 @@ function methodsSlides(
     const header = ["Block", "Source / request", "Filters", "Entity", "Release · retrieved"];
     const widths = [0.22, 0.3, 0.24, 0.1, 0.14].map((f) => f * area.w);
     const rows: PptxGenJS.TableRow[] = [
-      header.map((text) => ({ text, options: { bold: true, color: C.primaryDark, fill: { color: C.primaryLight } } })),
-      ...entries.map((e) => methodsRow(e).map((text) => ({ text: truncate(text, 260) }))),
+      header.map((text) => ({ text, options: HEADER_CELL })),
+      ...entries.map((e) =>
+        methodsRow(e).map((text) => ({ text: truncate(text, 260), options: { fill: { color: C.white } } })),
+      ),
     ];
     if (!entries.length)
-      rows.push([{ text: "No data sources in this report.", options: { colspan: 5, italic: true } }]);
+      rows.push([
+        { text: "No data sources in this report.", options: { colspan: 5, italic: true, fill: { color: C.white } } },
+      ]);
     slide.addTable(rows, {
       x: area.x,
       y: area.y,
       w: area.w,
       colW: widths,
-      fontFace: FONT,
+      fontFace: BODY,
       fontSize: 10,
-      color: C.text,
+      color: C.grey,
       valign: "top",
-      border: { type: "solid", pt: 0.5, color: C.border },
+      border: { type: "solid", pt: 0.5, color: C.grey30 },
       autoPage: false,
     });
-  });
+    await addLogo(slide, frame.logo, "colour");
+  }
   return pages.length;
 }
 
@@ -711,7 +787,7 @@ export async function writePptx(plan: ExportPlan, ctx: WriterContext): Promise<B
   const renderUnit = async (unit: SlideUnit) => {
     switch (unit.kind) {
       case "titleSlide":
-        titleSlide(pptx, frame, unit);
+        await titleSlide(pptx, frame, unit);
         break;
       case "chapterSlide":
         chapterSlide(pptx, frame, unit);
@@ -720,17 +796,17 @@ export async function writePptx(plan: ExportPlan, ctx: WriterContext): Promise<B
         await figureSlide(pptx, frame, unit);
         break;
       case "statementSlide":
-        statementSlide(pptx, frame, unit, toneOf(unit.nodeId));
+        await statementSlide(pptx, frame, unit, unit.tone ?? toneOf(unit.nodeId));
         break;
       case "appendixTableSlide":
-        appendixTableSlide(pptx, frame, unit);
+        await appendixTableSlide(pptx, frame, unit);
         break;
       case "dataSourceSlide":
-        dataSourceSlide(pptx, frame, unit);
+        await dataSourceSlide(pptx, frame, unit);
         break;
       case "methodsSlide":
         methodsPage += 1;
-        methodsSlides(pptx, frame, unit, methodsPage, methodsCount);
+        await methodsSlides(pptx, frame, unit, methodsPage, methodsCount);
         break;
       default:
     }

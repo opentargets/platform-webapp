@@ -159,7 +159,12 @@ const renderWidgetSafely = async (
     return { asset: { kind: "missing", reason: "Widget rendering unavailable" } };
   }
   try {
-    return await opts.renderWidget(section, opts.widgetWidth(section.reportSectionId), opts.pixelRatio);
+    return await opts.renderWidget(
+      section,
+      opts.widgetWidth(section.reportSectionId),
+      opts.pixelRatio,
+      opts.renderHints
+    );
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return { asset: { kind: "missing", reason }, error: reason };

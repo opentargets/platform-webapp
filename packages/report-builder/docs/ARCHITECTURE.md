@@ -266,3 +266,48 @@ the code once a notebook has run and lost focus.
 a `table` (data returns). The code and input refs travel on the IR node's `notebook` field and
 into the methods entry unless `hideCodeInExport` is on. Notebook figures default to full-bleed
 slides.
+
+## Slides export (`export/slideTheme.ts`, `export/writers/pptx.ts`)
+
+The PPTX writer, the print HTML (`writers/pdf-print.ts` → `slidesToHtml`) and the step-2 preview
+(`ui/SlidePreview.tsx`) draw the same slide, in the Open Targets presentation template's style, from
+one source of truth:
+
+- `layout.ts` — `SLIDE_BRAND` (navy headings `#1c4a6d`, OT blue / red / grey with 50% and 30% tints,
+  grey content box `#eeeeee`), `SLIDE_FONTS` (Trebuchet MS headings, Roboto body) and `SLIDE_TYPE`
+  sizes.
+- `writers/shared.ts` — `slideFrame(aspect)`: every box in slide inches (kicker, title, content, figure
+  + provenance rail, grey panel band, footer text, slide number, logo bottom-right).
+- `slideTheme.ts` — the logo SVG (colour and white), the diagonal blue/navy polygons on title and
+  section ("PART n") slides, and `titleSlideLayout()` which sizes the title column, steps the title
+  font down until it fits, and lays out the meta columns.
+
+Statement slides are navy with white text and the white logo; data slides (appendix tables, data
+sources, methods) sit on the grey panel with navy table headers. Change geometry or colours in those
+three files, not in a renderer.
+
+## Export render viewport (`export/RenderHost.tsx`)
+
+Widgets are re-rendered for export inside an off-screen `<iframe>` the size of a 16-inch MacBook
+Pro display (`EXPORT_VIEWPORT`, 1728 × 1117 CSS px), not in a div of the user's own window. The
+iframe is a real viewport: MUI `useMediaQuery` (pointed at the iframe's `matchMedia` through
+`MuiUseMediaQuery.defaultProps`), `vh`/`vw`, `window.innerWidth` and ResizeObservers all see a
+desktop screen, so tables no longer collapse to mobile column widths when someone exports from a
+narrow browser. The page's stylesheets (global CSS, `@font-face`, existing emotion rules) are
+serialised into the iframe once; new emotion styles go to an emotion cache whose container is the
+iframe's `<head>`. The widget column (`widgetWidth`: 1516 px for 16:9 slides, the section width on
+that screen) sits top-left; capture (`captureSvg`, `html-to-image`) works on the iframe's elements.
+
+Three realm quirks the host papers over, each scoped to the screen: the app window's
+`ResizeObserver` is wrapped so targets inside the iframe are observed from their own window
+(`screenObservers.ts`; Chromium delivers cross-document observations anyway, the spec does not
+promise it); the screen's WebGL context prototypes are chained to the app's so
+`gl instanceof WebGL2RenderingContext` holds for canvas libraries running in the app realm (Pixi
+otherwise drives WebGL2 as WebGL1 and draws nothing); and contexts are created with
+`preserveDrawingBuffer` so `toDataURL` reads back the last frame. The iframe sits in the viewport,
+transparent, rather than off-screen, so its rendering lifecycle is not deferred.
+
+`ExportRenderHints` (`react/exportRenderHints.ts`, re-exported from `ui`) tells a widget what the
+export is for: the slides and video targets pass `maxRows: 10`, and the associations table draws
+only that many rows in the figure while `AotfExportTable` still publishes the full page for the
+appendix.

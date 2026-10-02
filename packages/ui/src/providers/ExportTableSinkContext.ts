@@ -5,6 +5,8 @@ import type { TableData } from "report-builder";
 export {
   ExportTableSinkContext,
   useExportTableSink,
+  useExportRenderHints,
+  type ExportRenderHints,
   type ExportTableSink,
   type ExportTableSnapshot,
 } from "report-builder";
