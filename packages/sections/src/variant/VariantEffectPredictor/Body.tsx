@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, OtTable, Box, Chip } from "ui";
+import { Link, SectionItem, Tooltip, OtTable, Box, Chip, useReportQueryVariables } from "ui";
 import { Fragment } from "react";
 import { definition } from "../VariantEffectPredictor";
 import Description from "../VariantEffectPredictor/Description";
@@ -165,7 +165,8 @@ type BodyProps = {
 };
 
 export function Body({ id, entity }: BodyProps) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     variantId: id,
   };
 

@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, OtTable, Tooltip } from "ui";
+import { Link, SectionItem, OtTable, Tooltip, useReportSectionContext } from "ui";
 import { naLabel } from "@ot/constants";
 import { definition } from ".";
 
@@ -243,6 +243,9 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
+  const reportContext = useReportSectionContext();
+  id = reportContext?.entityId || id;
+  
   const variables = {
     variantId: id,
   };

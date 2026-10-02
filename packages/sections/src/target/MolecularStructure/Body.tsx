@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Box, GridLegacy } from "ui";
+import { SectionItem, Box, GridLegacy, useReportQueryVariables } from "ui";
 import Description from "./Description";
 import { definition } from ".";
 import { getUniprotIds } from "@ot/utils";
@@ -20,7 +20,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const [segments, setSegments] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const variables = { ensemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId };
   const request = useQuery(MOLECULAR_STRUCTURE_QUERY, {
     variables,
   });

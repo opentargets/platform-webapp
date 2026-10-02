@@ -274,6 +274,7 @@ function IntactTab({ ensgId, symbol }) {
           rows={data}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-interactors`}
+          reportStateKey="intact-interactors"
           hover
           selected
           onRowClick={r => {
@@ -316,6 +317,7 @@ function IntactTab({ ensgId, symbol }) {
           rows={evidence}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-evidence`}
+          reportStateKey="intact-evidence"
           dataDownloaderColumns={evidenceColsExport}
           fixed
           noWrapHeader={false}

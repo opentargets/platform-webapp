@@ -11,6 +11,7 @@ import {
   Navigate,
   Box,
   Chip,
+  useReportSectionContext,
 } from "ui";
 
 import { definition } from ".";
@@ -250,6 +251,9 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactNode {
+  const reportContext = useReportSectionContext();
+  id = reportContext?.entityId || id;
+  
   const variables = {
     variantId: id,
     size: table5HChunkSize,

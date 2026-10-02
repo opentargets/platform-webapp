@@ -2,7 +2,15 @@ import { useQuery } from "@apollo/client";
 import { faCheckSquare, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { v1 } from "uuid";
-import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTable, Typography } from "ui";
+import {
+  Tooltip,
+  SectionItem,
+  Link,
+  PublicationsDrawer,
+  OtTable,
+  Typography,
+  useReportQueryVariables,
+} from "ui";
 
 import { definition } from ".";
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
@@ -160,7 +168,8 @@ const getColumns = label => [
 type Props = EvidenceBodyProps;
 export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

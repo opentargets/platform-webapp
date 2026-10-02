@@ -4,6 +4,7 @@ import {
   useClinicalReportsMasterDetail,
   RecordsCards,
   ClinicalReportsMasterDetailFrame,
+  useReportQueryVariables,
 } from "ui";
 import { useCallback } from "react";
 import Description from "./Description";
@@ -15,7 +16,8 @@ import IndicationsTable from "./IndicationsTable";
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const request = useQuery(INDICATIONS_QUERY, { variables });
 
   const getClinicalReportsIds = useCallback(

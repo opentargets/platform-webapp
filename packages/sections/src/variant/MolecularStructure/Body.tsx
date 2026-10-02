@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
-import { SectionItem, ViewerProvider, ViewerInteractionProvider} from "ui";
+import { SectionItem, ViewerProvider, ViewerInteractionProvider, useReportQueryVariables } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import MOLECULAR_STRUCTURE_QUERY from "./MolecularStructureQuery.gql";
@@ -13,7 +13,8 @@ type BodyProps = {
 };
 
 export function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     variantId: id,
   };
   const request = useQuery(MOLECULAR_STRUCTURE_QUERY, {

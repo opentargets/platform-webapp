@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTS capture spike</title>
+<!--
+  Social video export, build step 1 (spec §7.3, §11): does tab-audio capture record browser TTS?
+  Open in Chrome / Edge on macOS and Windows (http://localhost or file:// both count as secure),
+  try a local voice and a "Google …" voice, and note the results table at the bottom.
+-->
+<style>
+  :root { color-scheme: light; }
+  body { font: 14px/1.45 system-ui, sans-serif; margin: 24px; max-width: 980px; color: #212121; background: #fff; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.lead { color: #616161; margin: 0 0 16px; }
+  fieldset { border: 1px solid #e0e0e0; border-radius: 4px; margin: 0 0 12px; padding: 12px; }
+  legend { font: 600 11px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; color: #616161; }
+  label { display: block; margin: 6px 0; }
+  select, textarea { width: 100%; font: inherit; }
+  button { font: inherit; padding: 6px 12px; margin-right: 8px; cursor: pointer; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  canvas, video { border: 1px solid #e0e0e0; background: #fff; max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border-bottom: 1px solid #eee; padding: 4px 6px; text-align: left; vertical-align: top; }
+  .ok { color: #2e7d32; font-weight: 600; } .bad { color: #c62828; font-weight: 600; }
+  #log { font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; background: #fafafa; border: 1px solid #eee; padding: 8px; max-height: 200px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>TTS + tab audio capture spike</h1>
+<p class="lead">Speaks a sentence with <code>speechSynthesis</code>, records <code>canvas.captureStream()</code> + tab audio from <code>getDisplayMedia</code>, and plays the result back.</p>
+
+<fieldset>
+  <legend>Voice</legend>
+  <label>Voice <select id="voice"></select></label>
+  <label>Rate <input id="rate" type="range" min="0.8" max="1.3" step="0.05" value="1"> <span id="rateOut">1.00</span></label>
+  <label>Sentence <textarea id="text" rows="2">BRAF is the most strongly associated target. Its known drugs cluster in melanoma, where vemurafenib leads.</textarea></label>
+  <button id="speak">Speak only (check boundaries)</button>
+  <button id="record">Record canvas + tab audio</button>
+</fieldset>
+
+<div class="row">
+  <div><div>Canvas (recorded)</div><canvas id="canvas" width="640" height="360"></canvas></div>
+  <div><div>Result</div><video id="result" width="640" height="360" controls></video><div id="download"></div></div>
+</div>
+
+<fieldset>
+  <legend>Results</legend>
+  <table><tbody id="results"></tbody></table>
+</fieldset>
+<div id="log"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const log = (...a) => { $("log").textContent += a.join(" ") + "\n"; $("log").scrollTop = 1e9; };
+const results = {};
+const setResult = (k, v, ok) => {
+  results[k] = { v, ok };
+  $("results").innerHTML = Object.entries(results)
+    .map(([key, r]) => `<tr><th>${key}</th><td class="${r.ok === undefined ? "" : r.ok ? "ok" : "bad"}">${r.v}</td></tr>`).join("");
+};
+
+setResult("Browser", navigator.userAgentData ? navigator.userAgentData.brands.map((b) => `${b.brand} ${b.version}`).join(", ") : navigator.userAgent);
+setResult("Platform", navigator.userAgentData?.platform ?? navigator.platform);
+const types = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+const mimeType = typeof MediaRecorder !== "undefined" ? types.find((t) => MediaRecorder.isTypeSupported(t)) : undefined;
+setResult("MediaRecorder type", mimeType ?? "none", !!mimeType);
+setResult("getDisplayMedia", navigator.mediaDevices?.getDisplayMedia ? "available" : "missing", !!navigator.mediaDevices?.getDisplayMedia);
+
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("en"))
+    .sort((a, b) => Number(b.localService) - Number(a.localService));
+  $("voice").innerHTML = voices.map((v, i) => `<option value="${i}">${v.name} · ${v.lang} · ${v.localService ? "local" : "online"}</option>`).join("");
+  setResult("English voices", String(voices.length), voices.length > 0);
+}
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.addEventListener("voiceschanged", loadVoices); }
+else setResult("speechSynthesis", "missing", false);
+$("rate").oninput = () => { $("rateOut").textContent = Number($("rate").value).toFixed(2); };
+
+function speak() {
+  return new Promise((resolve) => {
+    const v = voices[Number($("voice").value)];
+    const u = new SpeechSynthesisUtterance($("text").value);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = Number($("rate").value);
+    let t0, boundaries = 0;
+    u.onstart = () => { t0 = performance.now(); log("start", v?.name); };
+    u.onboundary = (e) => { if (!e.name || e.name === "word") { boundaries++; log(`word @${((performance.now() - t0) / 1000).toFixed(2)}s char ${e.charIndex}`); } };
+    u.onend = () => resolve({ boundaries, duration: (performance.now() - t0) / 1000, voice: v });
+    u.onerror = (e) => { log("error", e.error); resolve({ boundaries, duration: 0, voice: v, error: e.error }); };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  });
+}
+
+$("speak").onclick = async () => {
+  const r = await speak();
+  setResult("Voice", `${r.voice?.name} (${r.voice?.localService ? "local" : "online"})`);
+  setResult("Word boundary events", `${r.boundaries} in ${r.duration.toFixed(2)} s`, r.boundaries > 0);
+};
+
+function drawLoop(stopAt, analyser) {
+  const ctx = $("canvas").getContext("2d");
+  const buf = new Float32Array(2048);
+  let maxRms = 0;
+  return new Promise((resolve) => {
+    const frame = (now) => {
+      let rms = 0;
+      if (analyser) { analyser.getFloatTimeDomainData(buf); rms = Math.sqrt(buf.reduce((s, x) => s + x * x, 0) / buf.length); maxRms = Math.max(maxRms, rms); }
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 640, 360);
+      ctx.fillStyle = "#3489ca"; ctx.fillRect(40, 300, 560 * Math.min(1, rms * 20), 16);
+      ctx.fillStyle = "#616161"; ctx.font = "700 28px system-ui"; ctx.fillText("Tab audio capture spike", 40, 70);
+      ctx.font = "20px system-ui"; ctx.fillText(new Date().toLocaleTimeString() + "  rms " + rms.toFixed(4), 40, 120);
+      ctx.strokeStyle = "#ff6350"; ctx.lineWidth = 6; const x = 40 + ((now / 5) % 480); ctx.strokeRect(x, 160, 80, 80);
+      if (now < stopAt) requestAnimationFrame(frame); else resolve(maxRms);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+$("record").onclick = async () => {
+  if (!mimeType) return log("MediaRecorder unsupported");
+  let display;
+  try {
+    display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, preferCurrentTab: true, selfBrowserSurface: "include", systemAudio: "include" });
+  } catch (e) { setResult("Tab audio track", "sharing refused: " + e.message, false); return; }
+  display.getVideoTracks().forEach((t) => t.stop());
+  const audio = display.getAudioTracks()[0];
+  setResult("Tab audio track", audio ? `yes (${audio.label || "tab"})` : "no — tick “Share tab audio”", !!audio);
+  const ac = new AudioContext();
+  let analyser;
+  if (audio) { analyser = ac.createAnalyser(); ac.createMediaStreamSource(new MediaStream([audio])).connect(analyser); }
+  const canvasStream = $("canvas").captureStream(30);
+  const stream = new MediaStream([...canvasStream.getVideoTracks(), ...(audio ? [audio] : [])]);
+  const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+  const chunks = [];
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const stopped = new Promise((r) => (rec.onstop = r));
+  rec.start(1000);
+  const speech = speak();
+  const maxRms = await drawLoop(performance.now() + 9000, analyser);
+  const r = await speech;
+  rec.stop(); await stopped;
+  audio?.stop(); ac.close();
+  const blob = new Blob(chunks, { type: mimeType.split(";")[0] });
+  const url = URL.createObjectURL(blob);
+  $("result").src = url;
+  $("download").innerHTML = `<a href="${url}" download="spike.${mimeType.includes("mp4") ? "mp4" : "webm"}">Download (${(blob.size / 1024).toFixed(0)} KB)</a>`;
+  setResult("Voice", `${r.voice?.name} (${r.voice?.localService ? "local" : "online"})`);
+  setResult("Word boundary events", String(r.boundaries), r.boundaries > 0);
+  setResult("Max RMS on tab audio", maxRms.toFixed(4) + (maxRms > 0.004 ? " — TTS reached the tab audio" : " — silent: voice plays outside the tab"), maxRms > 0.004);
+  log("done", blob.size, "bytes");
+};
+</script>
+</body>
+</html>

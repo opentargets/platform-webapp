@@ -1,7 +1,12 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
-import { useStateParams } from "ui";
 import { DISPLAY_MODE } from "../associationsUtils";
+import { useAotfParam } from "./AotfParamsContext";
+
+const NO_ENTRIES: string[] = [];
+const splitEntries = (str: string) => str.split(",");
+const joinEntries = (arr: string[]) => arr.join(",");
+const identity = (v: string) => v;
 
 export interface URLContextState {
   displayedTable: string;
@@ -19,40 +24,35 @@ export interface URLContextState {
 const AssociationsURLContext = createContext<URLContextState | null>(null);
 
 export function AssociationsURLProvider({ children }: { children: ReactNode }) {
-  const [displayedTable, setDisplayedTable] = useStateParams(
-    DISPLAY_MODE.ASSOCIATIONS,
+  const [displayedTable, setDisplayedTable] = useAotfParam<string>(
     "table",
-    (v: string) => v,
-    (v: string) => v
+    DISPLAY_MODE.ASSOCIATIONS,
+    identity,
+    identity
   );
 
-  const [pinnedEntries, setPinnedEntries] = useStateParams(
-    [],
+  const [pinnedEntries, setPinnedEntries] = useAotfParam(
     "pinned",
-    (arr: string[]) => arr.join(","),
-    (str: string) => str.split(",")
+    NO_ENTRIES,
+    joinEntries,
+    splitEntries
   );
 
-  const [uploadedEntries, setUploadedEntries] = useStateParams(
-    [],
+  const [uploadedEntries, setUploadedEntries] = useAotfParam(
     "uploaded",
-    (arr: string[]) => arr.join(","),
-    (str: string) => str.split(",")
+    NO_ENTRIES,
+    joinEntries,
+    splitEntries
   );
 
-  const [activeHeadersControlls, setActiveHeadersControlls] = useStateParams(
-    false,
+  const [activeHeadersControlls, setActiveHeadersControlls] = useAotfParam(
     "weights",
+    false,
     (v: boolean) => (v ? "1" : ""),
     (s: string) => s === "1"
   );
 
-  const [focusParam, setFocusParam] = useStateParams(
-    "",
-    "focus",
-    (v: string) => v,
-    (v: string) => v
-  );
+  const [focusParam, setFocusParam] = useAotfParam("focus", "", identity, identity);
 
   const value = useMemo<URLContextState>(
     () => ({

@@ -1,7 +1,7 @@
 import { v1 } from "uuid";
 import { Fragment } from "react";
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, TableDrawer, OtTable, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -62,7 +62,8 @@ const columns = [
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const variables = { chemblId };
+    const savedVariables = useReportQueryVariables();
+    const variables = savedVariables || { chemblId };
   const request = useQuery(MECHANISMS_OF_ACTION_QUERY, {
     variables,
   });

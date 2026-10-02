@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { type MouseEvent, type ReactElement, useState } from "react";
 import Popper from "../Popper";
-import type { OtTableColumnVisibilityProps } from "./table.types";
+import type { OtTableColumnVisibilityProps } from "./types/tableTypes";
 
 function OtTableColumnVisibility({ table }: OtTableColumnVisibilityProps): ReactElement {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>();

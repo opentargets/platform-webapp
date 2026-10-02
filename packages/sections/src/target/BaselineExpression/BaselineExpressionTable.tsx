@@ -42,6 +42,7 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  useReportState,
 } from "ui";
 import MedianTooltipTable from "./MedianTooltipTable";
 import SpecificityTooltipTable from "./SpecificityTooltipTable";
@@ -387,7 +388,9 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
     pageSize: 50,
   });
   const [expanded, setExpanded] = useState<ExpandedState>({});
-  const [groupByTissue, setGroupByTissue] = useState(viewMode === 'tissue');
+  // Tissue / cell type view, kept with the section in reports
+  const [view, setView] = useReportState<string>("view", viewMode);
+  const groupByTissue = view === "tissue";
   // const [searchTerm, setSearchTerm] = useState("");
 
   const handleExpandedChange = useCallback(
@@ -827,7 +830,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
               exclusive
               onChange={(_, newValue) => {
                 if (newValue == null) return;
-                setGroupByTissue(newValue === "tissue");
+                setView(newValue);
               }}
             >
               <ViewToggleButton

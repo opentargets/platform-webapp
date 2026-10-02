@@ -1,9 +1,15 @@
 /* eslint-disable */
-import { useState } from "react";
 import { getComparator, globalFilter } from "./sortingAndFiltering";
+import { useReportState } from "../../providers/ReportComponentStateContext";
 import Table from "./Table";
 import { PaginationActionsComplete } from "./TablePaginationActions";
 import { getPage } from "./utils";
+
+interface DataTableState {
+  globalFilter: string;
+  sorting: { id: string; desc: boolean }[];
+  pagination: { pageIndex: number; pageSize: number };
+}
 
 function DataTable({
   noWrap,
@@ -27,33 +33,50 @@ function DataTable({
   loading,
   query,
   variables,
+  // Report state key, for tables that share a file stem (e.g. the same table in several tabs)
+  reportStateKey,
 }) {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(initialPageSize);
-  const [globalFilterVal, setGlobalFilterVal] = useState("");
-  const [sortColumn, setSortColumn] = useState(sortBy);
-  const [sortOrder, setSortOrder] = useState(order);
+  // Search, sort and page, kept with the section in reports (same shape as OtTable's, so
+  // the captured-state chips read the same). Keyed per table: a section can hold several.
+  const tableKey = `dataTable:${
+    reportStateKey || dataDownloaderFileStem || columns.map((c: { id: string }) => c.id).join(",")
+  }`;
+  const [tableState, setTableState] = useReportState<DataTableState>(tableKey, {
+    globalFilter: "",
+    sorting: sortBy ? [{ id: sortBy, desc: order === "desc" }] : [],
+    pagination: { pageIndex: 0, pageSize: initialPageSize },
+  });
+  const page = tableState.pagination.pageIndex;
+  const pageSize = tableState.pagination.pageSize;
+  const globalFilterVal = tableState.globalFilter;
+  // A saved sort on a column this table doesn't have (stale state) is ignored
+  const savedSortId = tableState.sorting[0]?.id;
+  const sortColumn =
+    savedSortId && columns.some((c: { id: string }) => c.id === savedSortId) ? savedSortId : sortBy;
+  const sortOrder = tableState.sorting[0] ? (tableState.sorting[0].desc ? "desc" : "asc") : order;
   const showPagination = rows.length > [...rowsPerPageOptions, initialPageSize].sort()[0];
 
-  const handleGlobalFilterChange = (globalFilter) => {
-    setGlobalFilterVal(globalFilter);
-    setPage(0);
+  const handleGlobalFilterChange = globalFilter => {
+    setTableState(prev => ({
+      ...prev,
+      globalFilter,
+      pagination: { ...prev.pagination, pageIndex: 0 },
+    }));
   };
 
-  const handleSortBy = (sortBy) => {
-    setSortColumn(sortBy);
-    setSortOrder(sortColumn === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+  const handleSortBy = sortBy => {
+    const nextOrder = sortColumn === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc";
+    setTableState(prev => ({ ...prev, sorting: [{ id: sortBy, desc: nextOrder === "desc" }] }));
   };
 
-  const handlePageChange = (page) => {
-    setPage(page);
+  const handlePageChange = page => {
+    setTableState(prev => ({ ...prev, pagination: { ...prev.pagination, pageIndex: page } }));
     onPagination(page, pageSize);
   };
 
   const handleRowsPerPageChange = (newPageSize) => {
     const newPageSizeNumber = Number(newPageSize);
-    setPageSize(newPageSizeNumber);
-    setPage(0);
+    setTableState(prev => ({ ...prev, pagination: { pageIndex: 0, pageSize: newPageSizeNumber } }));
   };
 
   let processedRows = [...rows];
