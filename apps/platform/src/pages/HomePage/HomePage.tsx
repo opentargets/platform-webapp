@@ -127,7 +127,7 @@ function HelpBoxPanel({ fai, url, label, external = false }: HelpBoxPanelProps):
 function HomePage(): JSX.Element {
   const { isPartnerPreview } = usePermissions();
   const releaseNotesURL = isPartnerPreview
-    ? "http://home.opentargets.org/ppp-release-notes"
+    ? "https://home.opentargets.org/ppp-documentation"
     : "https://platform-docs.opentargets.org/release-notes";
 
   const handleScrollDown = (): void => {

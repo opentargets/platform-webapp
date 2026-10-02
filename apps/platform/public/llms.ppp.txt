@@ -28,7 +28,7 @@ The Platform is organised around entity pages — target, disease, drug, variant
 
 - [GitHub organisation](https://github.com/opentargets)
 - [Release software versions](https://github.com/opentargets/ot-snapshot)
-- [Release notes](https://home.opentargets.org/ppp-release-notes)
+- [PPP documentation](https://home.opentargets.org/ppp-documentation)
 - [How to cite](https://platform-docs.opentargets.org/citation#latest-publication)
 
 ## Community
