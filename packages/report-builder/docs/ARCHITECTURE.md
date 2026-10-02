@@ -273,17 +273,25 @@ The PPTX writer, the print HTML (`writers/pdf-print.ts` → `slidesToHtml`) and 
 (`ui/SlidePreview.tsx`) draw the same slide, in the Open Targets presentation template's style, from
 one source of truth:
 
-- `layout.ts` — `SLIDE_BRAND` (navy headings `#1c4a6d`, OT blue / red / grey with 50% and 30% tints,
-  grey content box `#eeeeee`), `SLIDE_FONTS` (Trebuchet MS headings, Roboto body) and `SLIDE_TYPE`
-  sizes.
+- `layout.ts` — `SLIDE_BRAND` (navy headings `#1c4a6d`, OT blue / red / grey with 50% and 30% tints),
+  `SLIDE_FONTS` (Trebuchet MS headings, Roboto body), `SLIDE_TYPE` sizes and `SLIDE_PIXEL_RATIO`
+  (3× widget captures).
 - `writers/shared.ts` — `slideFrame(aspect)`: every box in slide inches (kicker, title, content, figure
-  + provenance rail, grey panel band, footer text, slide number, logo bottom-right).
+  + provenance rail, footer text, slide number, logo bottom-right).
 - `slideTheme.ts` — the logo SVG (colour and white), the diagonal blue/navy polygons on title and
   section ("PART n") slides, and `titleSlideLayout()` which sizes the title column, steps the title
   font down until it fits, and lays out the meta columns.
 
 Statement slides are navy with white text and the white logo; data slides (appendix tables, data
-sources, methods) sit on the grey panel with navy table headers. Change geometry or colours in those
+sources, methods) are white with navy table headers.
+
+**Tables on slides** (`plan/tableLayout.ts`). The planner decides each table's column geometry
+once and stores it on the `PlacedTable` (`layout`), so PPTX, print HTML and the preview agree:
+columns are sized from their formatted content (4 significant digits for numbers), a long label over
+a narrow column is drawn vertically (as the platform's own wide tables do), and a table wider than
+the slide is split into balanced column chunks that each repeat the first column ("columns 13–24 of
+28"). Rows per appendix slide shrink to fit under a tall header. A takeaway slide shows only the
+first chunk and sends the whole table to the appendix when columns were cut, so nothing is dropped. Change geometry or colours in those
 three files, not in a renderer.
 
 ## Export render viewport (`export/RenderHost.tsx`)

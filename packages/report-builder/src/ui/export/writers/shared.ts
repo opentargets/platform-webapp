@@ -128,7 +128,7 @@ export const fitContain = (width: number, height: number, area: Box): Box => {
 
 /**
  * Slide frame in inches (PPTX units), following the Open Targets template: title top-left,
- * content below, a grey panel band for data slides, footer text bottom-left and the logo
+ * content below, footer text bottom-left and the logo
  * bottom-right. The print HTML and the preview use the same boxes, so all three agree.
  */
 export function slideFrame(aspect: SlidesSettings["aspect"]) {
@@ -154,8 +154,6 @@ export function slideFrame(aspect: SlidesSettings["aspect"]) {
     margin: m,
     kicker: { x: m, y: 0.26, w: W - 2 * m, h: 0.26 },
     title: { x: m, y: 0.5, w: W - 2 * m, h: 0.85 },
-    // Grey content box (template "slide with grey box"), full width behind data slides
-    panel: { x: 0, y: contentY - 0.2, w: W, h: footerY - 0.15 - (contentY - 0.2) },
     content: { x: m, y: contentY, w: W - 2 * m, h: contentH },
     figure: { x: m, y: contentY, w: W - 2 * m - railW - gap, h: contentH },
     rail: { x: W - m - railW, y: contentY, w: railW, h: contentH },

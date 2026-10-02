@@ -1,6 +1,7 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import { FONT_FAMILY, MONO_FAMILY, OT_COLORS, SLIDE_BRAND, SLIDE_FONTS } from "../layout";
+import { formatCell } from "../richText/toHtml";
 import type { FigureAsset, PlacedTable } from "../types";
 import { assetSrc } from "./nodeMeta";
 
@@ -124,12 +125,6 @@ export const FigureView: React.FC<{
   );
 };
 
-const cellText = (value: unknown): string => {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
-};
-
 /**
  * Native HTML table: paper style (header #e3f0fa / #1e6ba8), or the slides template style
  * (navy header, white cells, grey text).
@@ -139,51 +134,82 @@ export const TableView: React.FC<{
   fontPx: number;
   maxCellChars?: number;
   variant?: "paper" | "slides";
-}> = ({ table, fontPx, maxCellChars = 60, variant = "paper" }) => (
-  <Box
-    component="table"
-    sx={{
-      width: "100%",
-      borderCollapse: "collapse",
-      fontFamily: variant === "slides" ? SLIDE_FONTS.bodyStack : FONT_FAMILY,
-      fontSize: fontPx,
-      color: variant === "slides" ? SLIDE_BRAND.grey : OT_COLORS.text,
-      tableLayout: "auto",
-      "& th, & td": {
-        border: `1px solid ${variant === "slides" ? SLIDE_BRAND.grey30 : OT_COLORS.border}`,
-        padding: `${fontPx * 0.3}px ${fontPx * 0.5}px`,
-        textAlign: "left",
-        verticalAlign: "top",
-        overflowWrap: "anywhere",
-      },
-      "& td": variant === "slides" ? { bgcolor: "#fff" } : {},
-      "& th":
-        variant === "slides"
-          ? { bgcolor: SLIDE_BRAND.navy, color: "#fff", fontWeight: 700 }
-          : { bgcolor: OT_COLORS.primaryLight, color: OT_COLORS.primaryDark, fontWeight: 700 },
-    }}
-  >
-    <thead>
-      <tr>
-        {table.data.columns.map((c) => (
-          <th key={c.key}>{c.label}</th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {table.data.rows.map((row, i) => (
-        <tr key={i}>
-          {table.data.columns.map((c) => {
-            const text = cellText(row[c.key]);
-            return (
-              <td key={c.key}>{text.length > maxCellChars ? `${text.slice(0, maxCellChars - 1)}…` : text}</td>
-            );
-          })}
+}> = ({ table, fontPx, maxCellChars = 60, variant = "paper" }) => {
+  // Slides: the planner's column layout (content-sized columns, rotated long headers)
+  const layout = variant === "slides" ? table.layout : undefined;
+  const font = layout ? layout.fontPt * PX_PER_PT : fontPx;
+  const widthPx = layout ? layout.widthsIn.reduce((a, b) => a + b, 0) * PX_PER_IN : undefined;
+  return (
+    <Box
+      component="table"
+      sx={{
+        width: widthPx ?? "100%",
+        tableLayout: layout ? "fixed" : "auto",
+        borderCollapse: "collapse",
+        fontFamily: variant === "slides" ? SLIDE_FONTS.bodyStack : FONT_FAMILY,
+        fontSize: font,
+        color: variant === "slides" ? SLIDE_BRAND.grey : OT_COLORS.text,
+        "& th, & td": {
+          border: `1px solid ${variant === "slides" ? SLIDE_BRAND.grey30 : OT_COLORS.border}`,
+          padding: `${font * 0.3}px ${font * 0.5}px`,
+          textAlign: "left",
+          verticalAlign: "top",
+          overflowWrap: "anywhere",
+        },
+        "& td": variant === "slides" ? { bgcolor: "#fff" } : {},
+        "& th":
+          variant === "slides"
+            ? { bgcolor: SLIDE_BRAND.navy, color: "#fff", fontWeight: 700 }
+            : { bgcolor: OT_COLORS.primaryLight, color: OT_COLORS.primaryDark, fontWeight: 700 },
+        "& th.rot": { verticalAlign: "bottom", padding: `${font * 0.3}px ${font * 0.15}px` },
+        "& th.rot span": {
+          writingMode: "vertical-rl",
+          transform: "rotate(180deg)",
+          display: "inline-block",
+          whiteSpace: "nowrap",
+          lineHeight: 1.1,
+        },
+      }}
+    >
+      {layout && (
+        <colgroup>
+          {layout.widthsIn.map((w, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: columns are positional
+            <col key={i} style={{ width: w * PX_PER_IN }} />
+          ))}
+        </colgroup>
+      )}
+      <thead>
+        <tr>
+          {table.data.columns.map((c, i) =>
+            layout?.rotatedHeader[i] ? (
+              <th key={c.key} className="rot" style={{ height: layout.headerHeightIn * PX_PER_IN }}>
+                <span>
+                  {c.label.length > layout.maxHeaderChars ? `${c.label.slice(0, layout.maxHeaderChars - 1)}…` : c.label}
+                </span>
+              </th>
+            ) : (
+              <th key={c.key}>{c.label}</th>
+            ),
+          )}
         </tr>
-      ))}
-    </tbody>
-  </Box>
-);
+      </thead>
+      <tbody>
+        {table.data.rows.map((row, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: rows have no stable id
+          <tr key={i}>
+            {table.data.columns.map((c) => {
+              const text = formatCell(row[c.key]);
+              return (
+                <td key={c.key}>{text.length > maxCellChars ? `${text.slice(0, maxCellChars - 1)}…` : text}</td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </Box>
+  );
+};
 
 /** Rich-text HTML from renderRichTextHTML (schema-sanitised). */
 export const RichHtml: React.FC<{ html: string; sx?: object }> = ({ html, sx }) => (

@@ -1,6 +1,13 @@
 import type PptxGenJS from "pptxgenjs";
 import type { RichTextDoc } from "../../../core";
-import { OT_LOGO_ASPECT, SLIDE_BRAND, SLIDE_FONTS, SLIDE_TONE, SLIDE_TYPE } from "../layout";
+import {
+  OT_LOGO_ASPECT,
+  SLIDE_BRAND,
+  SLIDE_FONTS,
+  SLIDE_PIXEL_RATIO,
+  SLIDE_TONE,
+  SLIDE_TYPE,
+} from "../layout";
 import { formatCell } from "../richText/toHtml";
 import { toPlainText } from "../richText/toPlainText";
 import { richTextToPptxRuns } from "../richText/toPptxRuns";
@@ -17,6 +24,7 @@ import type {
   FigureAsset,
   MethodsEntry,
   PlacedTable,
+  PlacedTableLayout,
   Provenance,
   SlideUnit,
   WriterContext,
@@ -231,10 +239,6 @@ function addFooterLeft(slide: Slide, frame: SlideFrame, text?: string, color = C
   });
 }
 
-function addPanel(slide: Slide, pptx: Pres, frame: SlideFrame) {
-  slide.addShape(pptx.ShapeType.rect, { ...frame.panel, fill: { color: C.panel }, line: noLine(C.panel) });
-}
-
 const figureFooter = (n?: number, caption?: string) => [n ? `Fig ${n}` : "", caption ?? ""].filter(Boolean).join(" · ");
 
 function addNotes(slide: Slide, docs: RichTextDoc[] | undefined) {
@@ -255,7 +259,7 @@ async function addAsset(slide: Slide, asset: FigureAsset, box: Box, altText?: st
   if (asset.kind !== "svg") return false;
   const png = isSafeImageDataUrl(asset.pngDataUrl)
     ? asset.pngDataUrl
-    : await svgToPngDataUrl(asset.svg, asset.width, asset.height, 2);
+    : await svgToPngDataUrl(asset.svg, asset.width, asset.height, SLIDE_PIXEL_RATIO);
   placeSvg(slide, asset.svg, png, fitContain(asset.width, asset.height, box), altText);
   return true;
 }
@@ -359,9 +363,21 @@ function addRail(slide: Slide, pptx: Pres, rail: Box, provenance: Provenance) {
 }
 
 const HEADER_CELL = { bold: true, color: C.white, fill: { color: C.navy } };
+// Long label over a narrow column: vertical text reading upwards, anchored at the bottom
+const ROTATED_HEADER_CELL: PptxGenJS.TableCellProps = {
+  ...HEADER_CELL,
+  textDirection: "vert270",
+  align: "left",
+  valign: "middle",
+  margin: 3,
+};
 
-function tableRows(table: PlacedTable): PptxGenJS.TableRow[] {
-  const header: PptxGenJS.TableRow = table.data.columns.map((col) => ({ text: col.label, options: HEADER_CELL }));
+function tableRows(table: PlacedTable, layout?: PlacedTableLayout): PptxGenJS.TableRow[] {
+  const header: PptxGenJS.TableRow = table.data.columns.map((col, i) =>
+    layout?.rotatedHeader[i]
+      ? { text: truncate(col.label, layout.maxHeaderChars), options: ROTATED_HEADER_CELL }
+      : { text: col.label, options: HEADER_CELL },
+  );
   const body = table.data.rows.map((row) =>
     table.data.columns.map((col) => ({
       text: truncate(formatCell(row[col.key]), CELL_MAX_CHARS),
@@ -371,25 +387,32 @@ function tableRows(table: PlacedTable): PptxGenJS.TableRow[] {
   return [header, ...body];
 }
 
-/** Native table in `box`; returns the bottom y it (roughly) reaches. */
+/**
+ * Native table in `box`, using the planner's column layout when it has one (content-sized
+ * columns, rotated headers); returns the bottom y it (roughly) reaches.
+ */
 function addNativeTable(slide: Slide, table: PlacedTable, box: Box, fontSize: number = SLIDE_TYPE.tablePt): number {
+  const { layout } = table;
   const cols = Math.max(1, table.data.columns.length);
-  const rows = tableRows(table);
-  const rowH = Math.min(0.36, Math.max(0.24, box.h / Math.max(rows.length, 1)));
+  const rows = tableRows(table, layout);
+  const bodyH = layout ? layout.rowHeightIn : Math.min(0.36, Math.max(0.24, box.h / Math.max(rows.length, 1)));
+  const headerH = layout ? layout.headerHeightIn : bodyH;
+  const colW = layout ? layout.widthsIn : Array(cols).fill(box.w / cols);
+  const w = Math.min(box.w, colW.reduce((a, b) => a + b, 0));
   slide.addTable(rows, {
     x: box.x,
     y: box.y,
-    w: box.w,
-    colW: Array(cols).fill(box.w / cols),
-    rowH,
+    w,
+    colW,
+    rowH: [headerH, ...Array(Math.max(0, rows.length - 1)).fill(bodyH)],
     fontFace: BODY,
-    fontSize,
+    fontSize: layout?.fontPt ?? fontSize,
     color: C.grey,
     valign: "middle",
     border: { type: "solid", pt: 0.5, color: C.grey30 },
     autoPage: false,
   });
-  return box.y + rowH * rows.length;
+  return box.y + headerH + bodyH * (rows.length - 1);
 }
 
 function addTableNote(slide: Slide, text: string, x: number, y: number, w: number) {
@@ -602,7 +625,6 @@ async function appendixTableSlide(
   unit: Extract<SlideUnit, { kind: "appendixTableSlide" }>,
 ) {
   const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
-  addPanel(slide, pptx, frame);
   addTitle(slide, frame, unit.title, unit.pages > 1 ? `Appendix · ${unit.page} / ${unit.pages}` : "Appendix");
   const area = frame.content;
   const tooWide = unit.table.data.columns.length > frame.geom.maxTableCols;
@@ -638,7 +660,6 @@ function monoBox(slide: Slide, pptx: Pres, text: string, box: Box, pt = 10) {
 
 async function dataSourceSlide(pptx: Pres, frame: SlideFrame, unit: Extract<SlideUnit, { kind: "dataSourceSlide" }>) {
   const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
-  addPanel(slide, pptx, frame);
   const { request } = unit;
   addTitle(slide, frame, unit.title, "Appendix · data source");
   const area = frame.content;
@@ -727,7 +748,6 @@ async function methodsSlides(
   for (let i = 0; i < pages.length; i += 1) {
     const entries = pages[i];
     const slide = pptx.addSlide({ masterName: CONTENT_MASTER(frame) });
-    addPanel(slide, pptx, frame);
     const n = pageCount + pages.length - 1;
     const kicker = n > 1 ? `Appendix · ${page + i} / ${n}` : "Appendix";
     addTitle(slide, frame, "Methods", kicker);

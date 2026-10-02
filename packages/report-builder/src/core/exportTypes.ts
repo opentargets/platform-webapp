@@ -288,11 +288,26 @@ export interface MethodsEntry {
 }
 
 /** A table as placed by the plan: already cut to the rows that unit shows. */
+/** Column geometry for a table on a slide, decided once by the planner so every renderer agrees. */
+export interface PlacedTableLayout {
+  fontPt: number;
+  widthsIn: number[]; // one per shown column, slide inches
+  rotatedHeader: boolean[]; // long label over a narrow column: drawn vertically
+  headerHeightIn: number;
+  rowHeightIn: number;
+  maxHeaderChars: number; // rotated labels longer than this are truncated
+}
+
 export interface PlacedTable {
-  data: TableData; // rows actually shown in this unit
+  data: TableData; // rows (and columns) actually shown in this unit
   shownFrom: number; // 0-based index of the first row shown
   totalRows: number;
   note?: string; // "Showing 10 of 240 — full table in appendix"
+  layout?: PlacedTableLayout;
+  // Wide tables are split into column chunks (the first column repeats on each)
+  columnPage?: number; // 1-based
+  columnPages?: number;
+  totalColumns?: number;
 }
 
 export type SlideUnit =

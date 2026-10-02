@@ -80,8 +80,6 @@ const Surface: React.FC<{ frame: SlideFrame; dark?: boolean; children: ReactNode
   </Box>
 );
 
-const Panel: React.FC<{ frame: SlideFrame }> = ({ frame }) => <Box sx={{ ...abs(frame.panel), bgcolor: B.panel }} />;
-
 const footerTextSx = {
   fontSize: pt(SLIDE_TYPE.footerPt),
   display: "flex",
@@ -109,7 +107,7 @@ const Footer: React.FC<{ frame: SlideFrame; n: number; release: string; left?: s
             left: px(frame.margin),
             top: px(frame.footer.y - 0.12),
             width: px(frame.W - 2 * frame.margin),
-            height: 1,
+            height: "1px",
             bgcolor: B.blue50,
           }}
         />
@@ -296,7 +294,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = memo(({ unit, aspect, i
           >
             PART {unit.n}
           </Box>
-          <Box sx={{ position: "absolute", left: px(x), top: px(y + 0.55), width: px(w), height: 1, bgcolor: B.grey50 }} />
+          <Box sx={{ position: "absolute", left: px(x), top: px(y + 0.55), width: px(w), height: "1px", bgcolor: B.grey50 }} />
           <Box
             sx={{
               ...abs({ x, y: y + 0.7, w, h: frame.H - (y + 0.7) - 0.8 }),
@@ -424,7 +422,6 @@ export const SlidePreview: React.FC<SlidePreviewProps> = memo(({ unit, aspect, i
       const note = unit.table.note ?? `Rows ${from}–${to} of ${unit.table.totalRows}`;
       content = (
         <Surface frame={frame}>
-          <Panel frame={frame} />
           <Title
             frame={frame}
             kicker={unit.pages > 1 ? `Appendix · ${unit.page} / ${unit.pages}` : "Appendix"}
@@ -443,7 +440,6 @@ export const SlidePreview: React.FC<SlidePreviewProps> = memo(({ unit, aspect, i
       const area = frame.content;
       content = (
         <Surface frame={frame}>
-          <Panel frame={frame} />
           <Title frame={frame} kicker="Appendix · data source" title={unit.title} />
           <Box
             sx={{
@@ -511,7 +507,6 @@ export const SlidePreview: React.FC<SlidePreviewProps> = memo(({ unit, aspect, i
     case "methodsSlide":
       content = (
         <Surface frame={frame}>
-          <Panel frame={frame} />
           <Title frame={frame} kicker="Appendix" title="Methods" />
           <Box sx={{ ...abs(frame.content), overflow: "hidden" }}>
             <TableView

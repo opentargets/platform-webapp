@@ -40,7 +40,7 @@ export const SLIDE_GEOMETRY = {
 /**
  * Open Targets presentation template (Google Slides "Open Targets Presentation Template"):
  * navy headings in Trebuchet MS, Roboto body, OT Blue / Red / Grey with 50% and 30% tints,
- * diagonal blue and navy panels on the title and section slides, a grey content box, and the
+ * diagonal blue and navy panels on the title and section slides, and the
  * small logo bottom-right of every content slide.
  */
 export const SLIDE_BRAND = {
@@ -54,7 +54,7 @@ export const SLIDE_BRAND = {
   grey: "#5a5f5f", // Open Targets Grey: body text
   grey50: "#acafaf",
   grey30: "#cdcfcf",
-  panel: "#eeeeee", // the template's grey content box
+  panel: "#eeeeee", // grey of the template's content box; used for figure placeholders
   white: "#ffffff",
 } as const;
 
@@ -105,7 +105,11 @@ export const PAPER_MAX_TABLE = { cols: 8, rows: 25 };
 export const PAPER_SPAN_TABLE_COLS = 5;
 export const PAPER_SPAN_FIGURE_ASPECT = 1.6;
 
-export const SLIDE_PIXEL_RATIO = 2;
+// Widget captures are bitmaps placed on a ~9.6in figure area: 3× the CSS size keeps text crisp
+// when the deck is shown full screen on a Retina display (and is what Google Slides shows for
+// SVG figures, which fall back to the PNG preview). Video frames are 1080p, 2× is plenty.
+export const SLIDE_PIXEL_RATIO = 3;
+export const VIDEO_PIXEL_RATIO = 2;
 export const PAPER_PIXEL_RATIO = 300 / 96;
 
 export const WIDGET_TIMEOUT_MS = 15000;

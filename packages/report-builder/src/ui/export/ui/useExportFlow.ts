@@ -11,6 +11,7 @@ import {
   PAPER_WIDGET_PX,
   SLIDE_GEOMETRY,
   SLIDE_PIXEL_RATIO,
+  VIDEO_PIXEL_RATIO,
 } from "../layout";
 import { plan as runPlan } from "../plan";
 import { planVideo, sameOverrides } from "../plan/video";
@@ -72,7 +73,7 @@ export const geometryFor = (target: ExportTarget, settings: ExportSettings, repo
   if (target === "video") {
     return {
       key: "video",
-      pixelRatio: SLIDE_PIXEL_RATIO,
+      pixelRatio: VIDEO_PIXEL_RATIO,
       widthFor: () => VIDEO_WIDGET_PX,
       hints: { target, maxRows: DEFAULT_TOP_N },
     };

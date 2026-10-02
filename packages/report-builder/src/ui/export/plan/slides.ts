@@ -9,8 +9,10 @@ import type {
   SlideUnit,
   TableData,
 } from "../types";
+import { slideFrame } from "../writers/shared";
 import { chunk, methodsEntry, safeRequest, sliceTable, totalRowsOf } from "./common";
 import { effectiveRole } from "./roles";
+import { chunkColumns, columnRangeNote, measureColumns, pickColumns, rowsThatFit, tableFontPt } from "./tableLayout";
 import { WarningSink, nodeWarnings, slideTableWarnings } from "./warnings";
 
 export const METHODS_ENTRIES_PER_SLIDE = 8;
@@ -40,31 +42,52 @@ export function planSlides(doc: ExportDocument, settings: ExportSettings): Expor
   let pendingNotes: RichTextDoc[] = [];
   let lastFigure: FigureSlide | undefined;
 
-  // Tables, and widget figures' rows
+  const frame = slideFrame(settings.slides.aspect);
+  const maxTableCols = frame.geom.maxTableCols;
+
+  // Tables, and widget figures' rows: paginated by rows, and by column chunks when wider than the slide
   const pushAppendixTable = (node: { id: string; title: string; data: TableData }, from: number) => {
     const rest = node.data.rows.length - from;
     if (rest <= 0) return;
     const total = totalRowsOf(node.data);
-    const pages = Math.ceil(rest / APPENDIX_ROWS_PER_SLIDE);
-    for (let page = 1; page <= pages; page += 1) {
-      const start = from + (page - 1) * APPENDIX_ROWS_PER_SLIDE;
-      const end = Math.min(start + APPENDIX_ROWS_PER_SLIDE, node.data.rows.length);
-      const last = page === pages && total > node.data.rows.length;
-      appendix.push({
-        kind: "appendixTableSlide",
-        id: `slide-appendix-${node.id}-${page}`,
-        nodeId: node.id,
-        title: node.title,
-        table: {
-          data: sliceTable(node.data, start, end),
-          shownFrom: start,
-          totalRows: total,
-          note: last
-            ? `Rows ${start + 1}–${end} of ${total}; rows beyond ${node.data.rows.length} were not collected`
-            : `Rows ${start + 1}–${end} of ${total}`,
-        },
-        page,
-        pages,
+    const totalColumns = node.data.columns.length;
+    const fontPt = tableFontPt(totalColumns, maxTableCols);
+    const chunks = chunkColumns(node.data, measureColumns(node.data, fontPt), frame.content.w, fontPt);
+    const headerH = Math.max(...chunks.map((c) => c.layout.headerHeightIn));
+    const perSlide = Math.min(
+      APPENDIX_ROWS_PER_SLIDE,
+      rowsThatFit(frame.content.h, headerH, chunks[0].layout.rowHeightIn)
+    );
+    const rowPages = Math.ceil(rest / perSlide);
+    const pages = rowPages * chunks.length;
+    let page = 0;
+    for (let rp = 0; rp < rowPages; rp += 1) {
+      const start = from + rp * perSlide;
+      const end = Math.min(start + perSlide, node.data.rows.length);
+      const last = rp === rowPages - 1 && total > node.data.rows.length;
+      chunks.forEach((columnChunk, ci) => {
+        page += 1;
+        const parts = [`Rows ${start + 1}–${end} of ${total}`];
+        if (chunks.length > 1) parts.push(columnRangeNote(columnChunk, totalColumns));
+        if (last) parts.push(`rows beyond ${node.data.rows.length} were not collected`);
+        appendix.push({
+          kind: "appendixTableSlide",
+          id: `slide-appendix-${node.id}-${page}`,
+          nodeId: node.id,
+          title: node.title,
+          table: {
+            data: pickColumns(sliceTable(node.data, start, end), columnChunk.indices),
+            shownFrom: start,
+            totalRows: total,
+            note: parts.join(" · "),
+            layout: columnChunk.layout,
+            columnPage: ci + 1,
+            columnPages: chunks.length,
+            totalColumns,
+          },
+          page,
+          pages,
+        });
       });
     }
   };
@@ -151,15 +174,27 @@ export function planSlides(doc: ExportDocument, settings: ExportSettings): Expor
           } else {
             const shown = Math.min(topN, node.data.rows.length);
             const more = total > shown;
+            // Columns beyond the figure width stay in the appendix (the whole table, so nothing is lost)
+            const data = sliceTable(node.data, 0, shown);
+            const fontPt = tableFontPt(node.data.columns.length, maxTableCols);
+            const [first, ...others] = chunkColumns(data, measureColumns(data, fontPt), frame.figure.w, fontPt);
+            const cut = others.length > 0;
+            const toAppendix = tableLayout === "split" || cut;
+            const parts: string[] = [];
+            if (more) parts.push(`Showing ${shown} of ${total}`);
+            if (cut) parts.push(`${node.data.columns.length - first.indices.length} more columns`);
             table = {
-              data: sliceTable(node.data, 0, shown),
+              data: pickColumns(data, first.indices),
               shownFrom: 0,
               totalRows: total,
-              note: more
-                ? `Showing ${shown} of ${total}${tableLayout === "split" ? " — full table in appendix" : ""}`
-                : undefined,
+              note: parts.length ? `${parts.join(" · ")}${toAppendix ? " — full table in appendix" : ""}` : undefined,
+              layout: first.layout,
+              columnPage: 1,
+              columnPages: others.length + 1,
+              totalColumns: node.data.columns.length,
             };
-            if (tableLayout === "split") pushAppendixTable(node, shown);
+            if (tableLayout === "split") pushAppendixTable(node, cut ? 0 : shown);
+            else if (cut) pushAppendixTable(node, 0);
           }
         }
         // Widget figures: the picture stays on the slide, its rows go to the appendix

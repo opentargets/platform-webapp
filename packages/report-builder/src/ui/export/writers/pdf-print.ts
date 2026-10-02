@@ -32,6 +32,7 @@ import type {
   MethodsEntry,
   PaperUnit,
   PlacedTable,
+  PlacedTableLayout,
   Provenance,
   SlideUnit,
   TableData,
@@ -110,10 +111,26 @@ const placeholderHtml = (title: string, caption?: string, reason?: string, style
   (reason ? `<div><em>${esc(reason)}</em></div>` : "") +
   "</div>";
 
-const tableHtml = (data: TableData, maxRows = Infinity) => {
+type Units = { inch: (v: number) => string; pt: (v: number) => string };
+
+const truncateText = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
+
+/** Data table; with a slide `layout` (+ units) columns are fixed-width and long headers rotated. */
+const tableHtml = (data: TableData, maxRows = Infinity, layout?: PlacedTableLayout, units?: Units) => {
   const rows = data.rows.slice(0, maxRows);
+  const sized = layout && units;
+  const colgroup = sized
+    ? `<colgroup>${layout.widthsIn.map((w) => `<col style="width:${units.inch(w)}">`).join("")}</colgroup>`
+    : "";
+  const style = sized
+    ? ` style="table-layout:fixed;width:${units.inch(layout.widthsIn.reduce((a, b) => a + b, 0))};font-size:${units.pt(layout.fontPt)}"`
+    : "";
+  const th = (c: TableData["columns"][number], i: number) =>
+    sized && layout.rotatedHeader[i]
+      ? `<th class="rot" style="height:${units.inch(layout.headerHeightIn)}"><span>${esc(truncateText(c.label, layout.maxHeaderChars))}</span></th>`
+      : `<th>${esc(c.label)}</th>`;
   return (
-    `<table class="data"><thead><tr>${data.columns.map((c) => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>` +
+    `<table class="data"${style}>${colgroup}<thead><tr>${data.columns.map(th).join("")}</tr></thead><tbody>` +
     rows.map((r) => `<tr>${data.columns.map((c) => `<td>${esc(formatCell(r[c.key]))}</td>`).join("")}</tr>`).join("") +
     "</tbody></table>"
   );
@@ -171,7 +188,6 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
 .kicker { font-size: ${pt(SLIDE_TYPE.kickerPt)}; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${B.blue};
   display: flex; align-items: flex-end; }
 .title { font-size: ${pt(SLIDE_TYPE.titlePt)}; line-height: 1.1; display: flex; align-items: center; overflow: hidden; }
-.panel { background: ${B.panel}; }
 .logo { display: block; object-fit: contain; }
 .footer { font-size: ${pt(SLIDE_TYPE.footerPt)}; color: ${B.grey50}; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .footer.right { justify-content: flex-end; }
@@ -186,6 +202,8 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
 .rail .source { font-size: ${pt(10)}; color: ${B.grey}; }
 .slide table.data th { background: ${B.navy}; color: #fff; font-weight: 700; border-color: ${B.grey30}; }
 .slide table.data td { background: #fff; border-color: ${B.grey30}; color: ${B.grey}; }
+.slide table.data th.rot { vertical-align: bottom; padding: ${pt(4)} ${pt(2)}; }
+.slide table.data th.rot span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; line-height: 1.1; }
 .tbl table.data { font-size: ${pt(SLIDE_TYPE.tablePt)}; }
 .tbl.narrow table.data { font-size: ${pt(9)}; }
 .note { font-size: ${pt(11)}; font-style: italic; color: ${B.grey}; margin-top: ${pt(6)}; }
@@ -222,8 +240,6 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
     (kicker ? `<div class="abs kicker" style="${at(frame.kicker)}">${esc(kicker)}</div>` : "") +
     `<div class="abs head title" style="${at(frame.title)}">${esc(title)}</div>`;
 
-  const panel = `<div class="abs panel" style="${at(frame.panel)}"></div>`;
-
   // Footer text left, release and slide number, then the logo (white on dark slides)
   const footer = (n: number, left?: string, dark = false) =>
     (dark ? `<div class="abs rule" style="left:${inch(frame.margin)};top:${inch(frame.footer.y - 0.12)};width:${inch(frame.W - 2 * frame.margin)}"></div>` : "") +
@@ -254,7 +270,7 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
     if (!t.data.columns.length)
       return `<div class="abs moved" style="${at(box)}">${esc(t.note ?? "Full table in appendix")}</div>`;
     const narrow = t.data.columns.length > frame.geom.maxTableCols ? " narrow" : "";
-    return `<div class="abs tbl${narrow}" style="${at(box, "overflow:hidden;")}">${tableHtml(t.data)}${
+    return `<div class="abs tbl${narrow}" style="${at(box, "overflow:hidden;")}">${tableHtml(t.data, Infinity, t.layout, { inch, pt })}${
       t.note ? `<div class="note">${esc(t.note)}</div>` : ""
     }</div>`;
   };
@@ -349,7 +365,6 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         const to = unit.table.shownFrom + unit.table.data.rows.length;
         const note = unit.table.note ?? `Rows ${from}–${to} of ${unit.table.totalRows}`;
         inner =
-          panel +
           titleBlock(unit.title, unit.pages > 1 ? `Appendix · ${unit.page} / ${unit.pages}` : "Appendix") +
           placedTable({ ...unit.table, note }, frame.content) +
           footer(n);
@@ -357,7 +372,6 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
       }
       case "dataSourceSlide":
         inner =
-          panel +
           titleBlock(unit.title, "Appendix · data source") +
           `<div class="abs ds" style="${at({ ...frame.content, h: frame.content.h - 0.35 }, "overflow:hidden;")}">${dataSourceGrid(unit.request)}</div>` +
           `<div class="abs note" style="${at({ ...frame.content, y: frame.content.y + frame.content.h - 0.3, h: 0.3 })}">Retrieved ${esc(
@@ -367,7 +381,6 @@ export function slidesToHtml(plan: ExportPlan, ctx: WriterContext): string {
         break;
       case "methodsSlide":
         inner =
-          panel +
           titleBlock("Methods", "Appendix") +
           `<div class="abs methods" style="${at(frame.content, "overflow:hidden;")}">${methodsTableHtml(unit.entries)}</div>` +
           footer(n);
