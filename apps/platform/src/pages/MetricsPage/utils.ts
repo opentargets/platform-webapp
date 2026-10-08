@@ -3,10 +3,13 @@ import { CATEGORICAL_SCHEME_BASE } from "@ot/constants";
 
 export type StudyTypeCount = { name: string; category: string; count: number };
 
+export const getScalarCount = (rows: MetricRow[], dataset: string) =>
+  rows.find((row) => row.dataset === dataset && row.kind === "scalar" && row.metric === "count")?.value ?? 0;
+
 const studyTypeColors = CATEGORICAL_SCHEME_BASE;
 
 export function formatStudyType(name: string) {
-  return name.replaceAll(/(gwas|qtl)/gi, (match) => match.toUpperCase());
+  return name.replace(/(gwas|qtl)/gi, (match: string) => match.toUpperCase());
 }
 
 export function getStudyTypeOrder(data: MetricRow[]) {
