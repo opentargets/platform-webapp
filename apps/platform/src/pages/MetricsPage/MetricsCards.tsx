@@ -26,10 +26,10 @@ function MetricsCards({ data }: { data: MetricRow[] }) {
     ["Diseases", faStethoscope, getScalarCount(data, "disease")],
     ["Drugs and Clinical Candidates", faPrescriptionBottleMedical, getScalarCount(data, "drug_molecule")],
     ["Clinical Reports", faChartBar, getScalarCount(data, "clinical_report")],
-    ["Studies", faChartBar, getScalarCount(data, "study")],
+    ["GWAS/molQTL Studies", faChartBar, getScalarCount(data, "study")],
     ["Target-Disease Evidence", faHexagonNodes, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
     ["Direct Target-Disease Associations", faHexagonNodes, getScalarCount(data, "association_overall_direct")],
-    ["Indirect Target-Disease associations", faHexagonNodes, getScalarCount(data, "association_overall_indirect")],
+    ["Indirect Target-Disease Associations", faHexagonNodes, getScalarCount(data, "association_overall_indirect")],
     ["Credible Sets", faProjectDiagram, getScalarCount(data, "credible_set")],
     ["Variants", faMapPin, getScalarCount(data, "variant")],
   ] as const;
