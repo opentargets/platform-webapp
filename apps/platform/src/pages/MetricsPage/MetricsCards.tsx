@@ -10,11 +10,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { Tooltip, Box, Card, CardContent, Typography } from "ui";
+import { Box, Card, CardContent, Typography } from "ui";
 import type { MetricRow } from "./MetricsPage";
-
-const count = (rows: MetricRow[], dataset: string) =>
-  rows.find((row) => row.dataset === dataset && row.kind === "scalar" && row.metric === "count")?.value ?? 0;
+import { getScalarCount } from "./utils";
 
 const formatRoundedCount = (value: number) => {
   if (value === 0) return "0";
@@ -24,16 +22,16 @@ const formatRoundedCount = (value: number) => {
 
 function MetricsCards({ data }: { data: MetricRow[] }) {
   const metrics = [
-    ["Targets", faDna, count(data, "target")],
-    ["Diseases", faStethoscope, count(data, "disease")],
-    ["Drugs and Clinical Candidates", faPrescriptionBottleMedical, count(data, "drug_molecule")],
-    ["Clinical Reports", faChartBar, count(data, "clinical_report")],
-    ["GWAS", faChartBar, count(data, "study")],
+    ["Targets", faDna, getScalarCount(data, "target")],
+    ["Diseases", faStethoscope, getScalarCount(data, "disease")],
+    ["Drugs and Clinical Candidates", faPrescriptionBottleMedical, getScalarCount(data, "drug_molecule")],
+    ["Clinical Reports", faChartBar, getScalarCount(data, "clinical_report")],
+    ["GWAS/molQTL Studies", faChartBar, getScalarCount(data, "study")],
     ["Target-Disease Evidence", faHexagonNodes, data.filter((row) => row.dataset.startsWith("evidence_") && row.metric === "count").reduce((sum, row) => sum + row.value, 0)],
-    ["Direct Target-Disease Associations", faHexagonNodes, count(data, "association_overall_direct")],
-    ["Indirect Target-Disease associations", faHexagonNodes, count(data, "association_overall_indirect")],
-    ["Credible Sets", faProjectDiagram, count(data, "credible_set")],
-    ["Variants", faMapPin, count(data, "variant")],
+    ["Direct Target-Disease Associations", faHexagonNodes, getScalarCount(data, "association_overall_direct")],
+    ["Indirect Target-Disease Associations", faHexagonNodes, getScalarCount(data, "association_overall_indirect")],
+    ["Credible Sets", faProjectDiagram, getScalarCount(data, "credible_set")],
+    ["Variants", faMapPin, getScalarCount(data, "variant")],
   ] as const;
 
   return (

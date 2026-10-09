@@ -4,12 +4,13 @@ import { ObsPlot } from "ui";
 import type { MetricRow } from "./MetricsPage";
 import {
   formatStudyType,
+  getScalarCount,
   getStudyTypeCategory,
   getStudyTypeColor,
   getStudyTypeOrder,
   getStudyTypeRank,
   type StudyTypeCount,
-} from "./studyTypeUtils";
+} from "./utils";
 
 type LabelLayout = {
   item: StudyTypeCount;
@@ -57,12 +58,17 @@ function ByStudyTypeHBar({
         getStudyTypeRank(a.category, studyTypeOrder) - getStudyTypeRank(b.category, studyTypeOrder)
     );
 
+  const totalCount = getScalarCount(data, dataset);
+
   if (chartData.length === 0) return null;
 
   return (
     <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" sx={{ m: 0, position: "absolute", fontSize: 13, fontWeight: 700 }}>
           {title}
+          <Box component="span" sx={{ ml: 0.5, fontWeight: 400 }}>
+            (total: {totalCount.toLocaleString()})
+          </Box>
         </Typography>
         <ObsPlot
           data={chartData}
@@ -77,7 +83,6 @@ function ByStudyTypeHBar({
 
   function renderChart({ data, width }: { data: StudyTypeCount[]; width?: number }) {
     const chartWidth = width ?? 0;
-    const totalCount = data.reduce((total, item) => total + item.count, 0);
     const labels = calculateLabelLayout(data, chartWidth, totalCount);
     const hasLeftExternalLabel = labels.some(
       (label) => label.isExternal && label.center < chartWidth / 2
