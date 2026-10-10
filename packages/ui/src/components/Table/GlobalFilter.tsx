@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import useDebounce from "../../hooks/useDebounce";
 import { StyledGlobalFilterInput } from "./tableStyles";
 
-function GlobalFilter({ onGlobalFilterChange }) {
-  const [inputValue, setInputValue] = useState("");
+// `initialValue`: the table's current filter (e.g. restored in a report), so the box shows it
+function GlobalFilter({ onGlobalFilterChange, initialValue = "" }) {
+  const [inputValue, setInputValue] = useState(initialValue);
   const debouncedInputValue = useDebounce(inputValue, 300);
 
   const handleInputChange = (e) => {

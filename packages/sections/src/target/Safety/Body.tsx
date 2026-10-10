@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client";
 
-import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable } from "ui";
+import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable, useReportQueryVariables } from "ui";
+
 import { useTheme } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
@@ -144,7 +145,8 @@ type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const theme = useTheme();
-  const variables = { ensemblId };
+    const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId };
   const request = useQuery(SAFETY_QUERY, { variables });
   return (
     <SectionItem

@@ -2,6 +2,7 @@ import { Suspense, useMemo } from "react";
 import type { Widget } from "sections";
 import usePermissions from "../../hooks/usePermissions";
 import SectionLoader from "./SectionLoader";
+import { SectionBody } from "../../providers/SectionBodyPropsContext";
 
 type SectionsRendererProps = {
   id: string | { ensgId: string; efoId: string };
@@ -33,7 +34,7 @@ function SectionsRenderer({ id, label, entity, widgets }: SectionsRendererProps)
         }
         return (
           <Suspense key={widget.definition.id} fallback={<SectionLoader />}>
-            <Body id={id} label={label} entity={entity} />
+            <SectionBody Body={Body} id={id} label={label} entity={entity} />
           </Suspense>
         );
       })}

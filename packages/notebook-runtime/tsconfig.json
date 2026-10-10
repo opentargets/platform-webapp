@@ -1,0 +1,10 @@
+{
+  "extends": "tsconfig/vite.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": [],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": ["src", "vite.config.ts"]
+}

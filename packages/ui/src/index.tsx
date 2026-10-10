@@ -185,6 +185,15 @@ export * from "./providers/OTApolloProvider/OTApolloProvider";
 export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";
 export { default as ThemeProvider } from "./providers/ThemeProvider/ThemeProvider";
 export * from "./providers/ViewerInteractionProvider";
+export * from "./providers/SectionRegistry";
+export * from "./providers/ReportBuilderProvider";
+export * from "./providers/ReportSectionContext";
+export * from "./providers/ReportComponentStateContext";
+export * from "./providers/ReportQueryVariablesProvider";
+export { getLiveCaptureKey, registerLiveCapture } from "./providers/LiveSectionStateRegistry";
+export { useExportTableSink, useExportRenderHints } from "./providers/ExportTableSinkContext";
+export { SectionBody, useSectionBodyProps } from "./providers/SectionBodyPropsContext";
+export { AddToReportButton } from "./components/AddToReportButton";
 
 export * from "./providers/GenTrackProvider";
 export * from "./providers/GenTrackTooltipProvider";

@@ -3,7 +3,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { grey } from "@mui/material/colors";
 import { sentenceCase } from "@ot/utils";
 import { Fragment, useEffect, useState } from "react";
-import { SectionItem, useApolloClient, Alert, Collapse, Tab, Tabs, Typography } from "ui";
+import {
+  SectionItem,
+  useApolloClient,
+  Alert,
+  Collapse,
+  Tab,
+  Tabs,
+  Typography,
+  useReportState,
+} from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -19,7 +28,8 @@ type Props = TargetBodyProps & {
 function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificity }: Props) {
   const defaultTab = "summary";
   const [showAlert, setShowAlert] = useState(true);
-  const [tab, setTab] = useState(defaultTab);
+  // Selected tab, kept with the section in reports
+  const [tab, setTab] = useReportState("tab", defaultTab);
   const [requestSummary, setRequestSummary] = useState({ loading: true });
   const [requestGtex, setRequestGtex] = useState({ loading: true });
   const client = useApolloClient();

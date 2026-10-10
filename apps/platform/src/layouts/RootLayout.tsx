@@ -1,4 +1,5 @@
 import { Outlet } from "react-router";
+import { ReportBuilder, ReportToggleButton } from "report-builder";
 import { FromGeneticsModal, NavigationProgress } from "ui";
 
 function RootLayout() {
@@ -6,6 +7,8 @@ function RootLayout() {
     <>
       <NavigationProgress />
       <FromGeneticsModal />
+      <ReportBuilder />
+      <ReportToggleButton />
       <Outlet />
     </>
   );

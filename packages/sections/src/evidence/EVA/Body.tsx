@@ -11,6 +11,7 @@ import {
   DisplayVariantId,
   OtTableSSP,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 import { epmcUrl, sentenceCase, identifiersOrgLink } from "@ot/utils";
 import { dataTypesMap, clinvarStarMap, naLabel, variantConsequenceSource, type EvidenceBodyProps} from "@ot/constants";
@@ -290,6 +291,7 @@ type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;
+  const savedVariables = useReportQueryVariables();
   const [request, setRequest] = useState({ loading: true, data: null, error: false });
   const columns = getColumns(label);
 

@@ -82,7 +82,12 @@ const Table = ({
     <GridLegacy container direction="column">
       <GridLegacy item container>
         <StyledFilterGrid item xs={12} md={4} lg={4}>
-          {showGlobalFilter && <GlobalFilter onGlobalFilterChange={handleGlobalFilterChange} />}
+          {showGlobalFilter && (
+            <GlobalFilter
+              onGlobalFilterChange={handleGlobalFilterChange}
+              initialValue={globalFilter ?? ""}
+            />
+          )}
         </StyledFilterGrid>
         <StyledDownloaderGrid
           item

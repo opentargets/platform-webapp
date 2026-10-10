@@ -1,4 +1,4 @@
-import { Link, SectionItem, OtTable } from "ui";
+import { Link, SectionItem, OtTable, useReportSectionContext } from "ui";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
@@ -39,7 +39,11 @@ const getColumns = primaryColor => [
 
 type Props = DiseaseBodyProps;
 
-function Body({ label, id: efoId, entity }: Props) {
+function Body({ label, id: efoId, entity }) {
+  const reportContext = useReportSectionContext();
+  efoId = reportContext?.entityId || efoId;
+  label = reportContext?.entityLabel || label;
+  
   const theme = useTheme();
   const request = useQuery(OT_PROJECTS_QUERY, {
     variables: { efoId },

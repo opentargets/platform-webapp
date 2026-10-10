@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTable, useReportQueryVariables } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -75,7 +75,8 @@ const columns = [
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const variables = { chemblId };
+    const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const request = useQuery(DRUG_WARNINGS_QUERY, {
     variables,
   });

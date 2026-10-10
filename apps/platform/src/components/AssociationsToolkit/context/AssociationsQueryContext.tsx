@@ -9,7 +9,6 @@ import {
 } from "react";
 import type { Dispatch, ReactNode } from "react";
 import type { DocumentNode } from "graphql";
-import { useLocation, useNavigate } from "react-router";
 import type { Facet } from "../../Facets/facetsTypes";
 import {
   DEFAULT_TABLE_SORTING_STATE,
@@ -19,6 +18,7 @@ import {
   deserializeSorting,
 } from "../associationsUtils";
 import { aotfReducer, createInitialState } from "./aotfReducer";
+import { useAotfParams } from "./AotfParamsContext";
 import {
   aggregationClick,
   resetDataSourceControl,
@@ -96,6 +96,8 @@ interface AssociationsQueryProviderProps {
   id: string;
   entity: ENTITY;
   query: DocumentNode;
+  // Reducer state to start from instead of the defaults (a report snapshot)
+  initialQueryState?: Partial<QueryState>;
 }
 
 export function AssociationsQueryProvider({
@@ -103,24 +105,25 @@ export function AssociationsQueryProvider({
   id,
   entity,
   query,
+  initialQueryState,
 }: AssociationsQueryProviderProps) {
-  const [state, dispatch] = useReducer(aotfReducer, { entity }, createInitialState);
+  const [state, dispatch] = useReducer(
+    aotfReducer,
+    { entity, override: initialQueryState },
+    createInitialState
+  );
   const hasRendered = useRef(false);
 
-  const location = useLocation();
-  const navigate = useNavigate();
+  // URL on an entity page, in-memory inside a report (see AotfParamsContext)
+  const { search, getLatest, set: updateUrlParams } = useAotfParams();
 
-  // Always-current location ref — avoids stale closures in callbacks
-  const locationRef = useRef(location);
-  locationRef.current = location;
-
-  // --- URL state (read from location on every render) ---
+  // --- URL state (read from the params store on every render) ---
 
   // Parse URL params once per location change, then extract raw strings.
   // Using raw primitive strings as memo deps (not the URLSearchParams object) means
   // memos that return arrays/objects only recompute when *their* specific param changed —
   // not when an unrelated param (e.g. `focus`) changes.
-  const sp = new URLSearchParams(location.search);
+  const sp = new URLSearchParams(search);
   const pageRaw      = sp.get("page")     ?? "";
   const pageSizeRaw  = sp.get("pageSize") ?? "";
   const sortRaw      = sp.get("sort")     ?? "";
@@ -151,23 +154,6 @@ export function AssociationsQueryProvider({
   const facetFiltersIds = useMemo(() => facetFilters.map(f => f.id), [facetFilters]);
   const pagination: Pagination = useMemo(() => ({ pageIndex, pageSize }), [pageIndex, pageSize]);
 
-  // --- Single batched URL writer — always reads from ref, always single navigate call ---
-
-  const updateUrlParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(locationRef.current.search);
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === null || value === "") {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-      navigate({ pathname: locationRef.current.pathname, search: params.toString() });
-    },
-    [navigate]
-  );
-
   // Reset all URL-backed state + reducer when entity ID changes
   useEffect(() => {
     if (hasRendered.current) {
@@ -186,7 +172,7 @@ export function AssociationsQueryProvider({
 
   const handlePaginationChange = useCallback(
     (updater: (prev: Pagination) => Pagination) => {
-      const params = new URLSearchParams(locationRef.current.search);
+      const params = getLatest();
       const currentPag: Pagination = {
         pageIndex:
           parseInt(params.get("page") ?? "", 10) || DEFAULT_TABLE_PAGE_INDEX,
@@ -206,7 +192,7 @@ export function AssociationsQueryProvider({
   const handleSortingChange = useCallback(
     (fn: () => Sorting) => {
       const newSorting = fn();
-      const params = new URLSearchParams(locationRef.current.search);
+      const params = getLatest();
       const currentSort = deserializeSorting(
         params.get("sort") ?? serializeSorting(DEFAULT_TABLE_SORTING_STATE)
       );

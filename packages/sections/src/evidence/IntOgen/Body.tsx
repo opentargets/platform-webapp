@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 
 import { definition } from ".";
@@ -146,7 +147,8 @@ type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

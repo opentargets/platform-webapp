@@ -7,6 +7,7 @@ import {
   OtTable,
   TableDrawer,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 
 import { defaultRowsPerPageOptions, sectionsBaseSizeQuery, naLabel, type EvidenceBodyProps} from "@ot/constants";
@@ -89,7 +90,7 @@ const getColumns = label => [
           }))
         : [];
 
-      return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
+      return <PublicationsDrawer entries={entries} symbol={label?.symbol} name={label.name} />;
     },
   },
 ];
@@ -98,8 +99,8 @@ type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,

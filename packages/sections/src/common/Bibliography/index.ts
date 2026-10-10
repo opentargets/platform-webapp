@@ -7,4 +7,4 @@ export const definition = {
 };
 
 export { default as Summary } from "./Summary";
-export { default as Body } from "./Body";
+export { default as Body } from "./Body.tsx";

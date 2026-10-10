@@ -9,6 +9,7 @@ import {
   DirectionOfEffectTooltip,
   OtTable,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 
 import { definition } from ".";
@@ -223,7 +224,7 @@ const getColumns = label => [
           }))
         : [];
 
-      return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
+      return <PublicationsDrawer entries={entries} symbol={label?.symbol} name={label.name} />;
     },
   },
 ];
@@ -231,7 +232,8 @@ const getColumns = label => [
 type Props = EvidenceBodyProps;
 export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,
@@ -248,7 +250,7 @@ export function Body({ id, label, entity }: Props) {
       entity={entity}
       request={request}
       renderDescription={() => (
-        <Description symbol={label.symbol} diseaseName={label.name} data={request.data} />
+        <Description symbol={label?.symbol} diseaseName={label?.name} data={request?.data} />
       )}
       renderBody={() => {
         return (

@@ -41,6 +41,8 @@ import {
   isNestedColumns,
   mapTableColumnToTanstackColumns,
 } from "./utils/tableUtils";
+import { toExportTable, useExportTableSink } from "../../providers/ExportTableSinkContext";
+import { useReportComponentState } from "../../providers/ReportComponentStateContext";
 
 function OtTableSSP({
   showGlobalFilter = true,
@@ -59,13 +61,32 @@ function OtTableSSP({
   getSelectedRows,
 }: OtTableSSPProps): ReactElement {
   const client = useApolloClient();
-  const [state, dispatch] = useReducer(otTableReducer, "", createInitialState);
+  // Report state (same shape as OtTable's): the search and page size are restored; the page
+  // itself isn't, since rows are fetched by cursor, so a report reopens on the first page
+  const tableStateKey = `otTableSSP:${sectionName || dataDownloaderFileStem || "default"}`;
+  const reportComponentState = useReportComponentState();
+  const [initialSavedState] = useState<
+    { globalFilter?: string; pagination?: PaginationState } | undefined
+  >(() => reportComponentState?.getState(tableStateKey));
+  const [state, dispatch] = useReducer(
+    otTableReducer,
+    initialSavedState?.globalFilter ?? "",
+    createInitialState
+  );
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
   const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: INIT_PAGE_SIZE,
+    pageSize: initialSavedState?.pagination?.pageSize ?? INIT_PAGE_SIZE,
   });
+
+  const saveReportState = reportComponentState?.saveState;
+  useEffect(() => {
+    saveReportState?.(tableStateKey, {
+      globalFilter: state.freeTextQuery ?? "",
+      pagination: { pageIndex: 0, pageSize: pagination.pageSize },
+    });
+  }, [saveReportState, tableStateKey, state.freeTextQuery, pagination.pageSize]);
 
   const enableRowSelection = !!getSelectedRows || enableMultipleRowSelection;
   const mappedColumns = mapTableColumnToTanstackColumns(columns);
@@ -241,6 +262,22 @@ function OtTableSSP({
     enableRowSelection && getSelectedRows(table.getSelectedRowModel().rows);
   }, [table.getSelectedRowModel()]);
 
+  // Export RenderHost only: publish the rows fetched so far (totalRows = server count)
+  const exportTableSink = useExportTableSink();
+  const exportKey = tableStateKey;
+  useEffect(() => {
+    if (!exportTableSink) return;
+    if (state.loading || state.initialLoading) {
+      exportTableSink(exportKey, { loading: true });
+      return;
+    }
+    exportTableSink(exportKey, {
+      loading: false,
+      table: toExportTable(columns, state.rows as Record<string, unknown>[], { totalRows: state.count }),
+    });
+  }, [exportTableSink, exportKey, state.loading, state.initialLoading, state.rows, state.count, columns]);
+  useEffect(() => () => exportTableSink?.(exportKey, null), [exportTableSink, exportKey]);
+
   function getCellData(cell: Record<string, unknown>): ReactNode {
     return <>{flexRender(cell.column.columnDef.cell, cell.getContext())}</>;
   }
@@ -257,7 +294,8 @@ function OtTableSSP({
         <GridLegacy item sm={12} md={4}>
           {showGlobalFilter && (
             <OtTableSearch
-              setGlobalSearchTerm={(freeTextQuery) => {
+              initialValue={state.freeTextQuery ?? ""}
+              setGlobalSearchTerm={freeTextQuery => {
                 dispatch(textSearch(freeTextQuery));
               }}
             />

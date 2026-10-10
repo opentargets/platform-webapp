@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Input, InputAdornment } from "@mui/material";
 import { type ReactElement, useEffect, useState } from "react";
 import useDebounce from "../../hooks/useDebounce";
-import type { OtTableSearchProps } from "./table.types";
+import type { OtTableSearchProps } from "./types/tableTypes";
 
 /****************************************
  *      OT TABLE SEARCH COMPONENT       *
@@ -14,8 +14,9 @@ import type { OtTableSearchProps } from "./table.types";
 function OtTableSearch({
   setGlobalSearchTerm,
   placeholderText = "Search all columns...",
+  initialValue,
 }: OtTableSearchProps): ReactElement {
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState(initialValue ?? "");
 
   const debouncedTableSearchValue = useDebounce(globalFilter, 300);
 

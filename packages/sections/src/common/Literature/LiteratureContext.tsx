@@ -1,5 +1,5 @@
 import isEmpty from "lodash/isEmpty";
-import { createContext, useContext, useReducer, Dispatch } from "react";
+import { createContext, useContext, useReducer, Dispatch, ReactNode } from "react";
 import type {
   LiteratureStateType,
   DetailsStateType,
@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import { getPage } from "ui";
 
-function getInitialLiteratureState(): LiteratureStateType {
+export function getInitialLiteratureState(): LiteratureStateType {
   return {
     id: "",
     cursor: "",
@@ -87,11 +87,18 @@ function detailsReducer(detailsState: DetailsStateType, action: DetailsActionTyp
   }
 }
 
-export function LiteratureProvider({ children }) {
-  const [literature, literatureDispatch] = useReducer(
-    literatureReducer,
-    getInitialLiteratureState()
-  );
+// `initialState`: filters restored from a report
+export function LiteratureProvider({
+  children,
+  initialState,
+}: {
+  children: ReactNode;
+  initialState?: Partial<LiteratureStateType>;
+}) {
+  const [literature, literatureDispatch] = useReducer(literatureReducer, undefined, () => ({
+    ...getInitialLiteratureState(),
+    ...initialState,
+  }));
   const [details, detailsDispatch] = useReducer(detailsReducer, {});
 
   return (

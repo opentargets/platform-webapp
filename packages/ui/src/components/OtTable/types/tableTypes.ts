@@ -40,6 +40,10 @@ export type OtTableProps = {
   getSelectedRows: (r: Row<any>[]) => void;
   getFilteredRows: any;
   wrapControls: any;
+  // Disambiguates this table's saved report state from any sibling OtTable
+  // rendered in the same section (e.g. a master/detail pair). Falls back to
+  // dataDownloaderFileStem, then a fixed default, when omitted.
+  reportStateKey?: string;
 };
 
 export type loadingTableRows = {
@@ -53,6 +57,7 @@ export type loadingTableRows = {
 export type OtTableSearchProps = {
   setGlobalSearchTerm: React.Dispatch<React.SetStateAction<string>>;
   placeholderText?: string;
+  initialValue?: string;
 };
 
 export type OtTableColumnVisibilityProps = {

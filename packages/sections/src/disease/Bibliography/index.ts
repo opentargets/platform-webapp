@@ -10,3 +10,5 @@ export const definition = {
 // Components
 export { default as Summary } from "./Summary";
 export const getBodyComponent = () => lazy(() => import("./Body"));
+
+export { literatureExportAdapter as exportAdapter } from "../../common/Literature/exportAdapter";

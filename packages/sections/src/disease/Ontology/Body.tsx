@@ -1,4 +1,4 @@
-import { SectionItem } from "ui";
+import { SectionItem, useReportSectionContext } from "ui";
 
 import Description from "./Description";
 import ONTOLOGY_QUERY from "./OntologyQuery.gql";
@@ -11,6 +11,10 @@ import type { DiseaseBodyProps } from "@ot/constants";
 type Props = DiseaseBodyProps;
 
 function Body({ id: efoId, label, entity }: Props) {
+  const reportContext = useReportSectionContext();
+  efoId = reportContext?.entityId || efoId;
+  label = reportContext?.entityLabel || label;
+  
   const request = useQuery(ONTOLOGY_QUERY, {
     variables: { efoId },
   });

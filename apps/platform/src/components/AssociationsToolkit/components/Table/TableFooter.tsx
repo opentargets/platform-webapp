@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { TablePagination } from "ui";
+import { TablePagination, useExportRenderHints, useExportTableSink } from "ui";
 import { styled } from "@mui/material/styles";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";
@@ -34,6 +34,14 @@ function TableFooter({ table, coreOpen }: TableFooterProps) {
   const { pagination } = useAotfQueryState();
   const { displayedTable } = useAotfURLState();
   const { count, loading } = useAotfData();
+  // Exported figure: pagination controls are interactive chrome; say what the picture shows instead
+  const exporting = !!useExportTableSink();
+  const exportHints = useExportRenderHints();
+  const shownRows = Math.min(
+    table.getState().pagination.pageSize,
+    exportHints?.maxRows ?? Number.POSITIVE_INFINITY,
+    count ?? Number.POSITIVE_INFINITY
+  );
 
   useEffect(() => {
     const legend = getLegend(displayedTable === "associations");
@@ -70,7 +78,12 @@ function TableFooter({ table, coreOpen }: TableFooterProps) {
         </div>
       </div>
       <div style={{ display: "flex" }}>
-        {coreOpen && (
+        {coreOpen && exporting && (
+          <span style={{ alignSelf: "center", fontSize: "12px", color: "#5a5f5f" }}>
+            {Number.isFinite(shownRows) && count ? `Top ${shownRows} of ${count} associations` : ""}
+          </span>
+        )}
+        {coreOpen && !exporting && (
           <TablePagination
             rowsPerPageOptions={[10, 25, 50, 200, 500]}
             component="div"

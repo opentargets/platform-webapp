@@ -11,6 +11,7 @@ import {
   Tooltip,
   useBatchQuery,
   Chip,
+  useReportQueryVariables,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
@@ -210,7 +211,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-	const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
 		ensemblId: id,
 		size: table5HChunkSize,
 		index: 0,

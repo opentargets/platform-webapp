@@ -8,6 +8,7 @@ import {
   useBatchQuery,
   Box,
   Typography,
+  useReportSectionContext,
 } from "ui";
 import { naLabel, table5HChunkSize } from "@ot/constants";
 import { epmcUrl, getStudyCategory } from "@ot/utils";

@@ -1,12 +1,12 @@
 import { useQuery } from "@apollo/client";
 import _ from "lodash";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTable, useReportSectionContext, useReportQueryVariables } from "ui";
+import { definition } from "."
 
 import Description from "./Description";
 import { naLabel, type DiseaseBodyProps} from "@ot/constants";
 
 import PHENOTYPES_BODY_QUERY from "./PhenotypesQuery.gql";
-import { definition } from ".";
 
 const evidenceTypeDescription = {
   IEA: "Inferred from Electronic Annotations (IEA) are extracted by parsing the Clinical Features sections of the Online Mendelian Inheritance in Man resource",
@@ -181,7 +181,8 @@ const columns = [
 type Props = DiseaseBodyProps;
 
 function Body({ label: name, id: efoId, entity }: Props) {
-  const variables = {
+    const savedVariables = useReportQueryVariables();
+    const variables = savedVariables || {
     efoId,
     index: 0,
     size: 1000,

@@ -238,6 +238,7 @@ function SignorTab({ ensgId, symbol }) {
           rows={data}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-interactors`}
+          reportStateKey="signor-interactors"
           hover
           selected
           onRowClick={r => {
@@ -280,6 +281,7 @@ function SignorTab({ ensgId, symbol }) {
           rows={evidence}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-evidence`}
+          reportStateKey="signor-evidence"
           dataDownloaderColumns={evidenceColsExport}
           fixed
           noWrapHeader={false}

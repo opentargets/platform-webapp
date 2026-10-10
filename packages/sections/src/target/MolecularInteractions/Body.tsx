@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { SectionItem, useApolloClient, usePlatformApi, Tab, Tabs, Typography } from "ui";
+import {
+  SectionItem,
+  useApolloClient,
+  usePlatformApi,
+  Tab,
+  Tabs,
+  Typography,
+  useReportState,
+} from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
@@ -47,13 +55,17 @@ type Props = TargetBodyProps;
 
 function Body({ label: symbol, id, entity }: Props) {
   const request = usePlatformApi();
-  const [source, setSource] = useState(sources[0].id); // must initialize to valid value for tabs to work
+  // The tab the user picked ("" = none), kept with the section in reports; until then,
+  // the first source with data once counts load
+  const [chosenSource, setChosenSource] = useReportState("source", "");
+  const [autoSource, setAutoSource] = useState(sources[0].id); // must initialize to valid value for tabs to work
+  const source = chosenSource || autoSource;
   const [counts, setCounts] = useState({});
   const [versions, setVersions] = useState({});
   const client = useApolloClient();
 
   const onTabChange = (event, tabId) => {
-    setSource(tabId);
+    setChosenSource(tabId === autoSource ? "" : tabId);
   };
 
   // load tabs summary counts
@@ -82,7 +94,7 @@ function Body({ label: symbol, id, entity }: Props) {
           s => res.data.target[s.id] && res.data.target[s.id].count > 0
         );
         if (initialTab) {
-          setSource(initialTab.id);
+          setAutoSource(initialTab.id);
         }
       })
       .catch(error => {

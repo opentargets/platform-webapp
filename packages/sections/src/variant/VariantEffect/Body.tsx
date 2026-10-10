@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { useQuery } from "@apollo/client";
-import { SectionItem, Tooltip, OtTable, Link, Typography } from "ui";
+import { SectionItem, Tooltip, OtTable, Link, Typography, useReportQueryVariables } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import { naLabel, VARIANT_EFFECT_METHODS, VIEW } from "@ot/constants";
@@ -80,7 +80,8 @@ function getSortedRows(request) {
 }
 
 export function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     variantId: id,
   };
   const request = useQuery(VARIANT_EFFECT_QUERY, {

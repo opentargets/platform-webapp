@@ -7,6 +7,7 @@ import {
   ClinvarStars,
   OtTable,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 import { clinvarStarMap, naLabel } from "@ot/constants";
 import { definition } from ".";
@@ -165,7 +166,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     variantId: id,
   };
 

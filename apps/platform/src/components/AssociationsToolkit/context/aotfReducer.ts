@@ -9,8 +9,14 @@ export const initialState: QueryState = {
   includeMeasurements: false,
 };
 
-export function createInitialState({ entity }: { entity: ENTITY }): QueryState {
-  return { ...initialState, enableIndirect: entity !== ENTITY.TARGET };
+export function createInitialState({
+  entity,
+  override,
+}: {
+  entity: ENTITY;
+  override?: Partial<QueryState>;
+}): QueryState {
+  return { ...initialState, enableIndirect: entity !== ENTITY.TARGET, ...override };
 }
 
 export function aotfReducer(state: QueryState = initialState, action: Action): QueryState {

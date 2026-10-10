@@ -116,7 +116,7 @@ function TargetPage(): ReactElement {
               />
             }
           />
-          <Route path="/associations" element={<Associations ensgId={ensgId} />} />
+          <Route path="/associations" element={<Associations ensgId={ensgId} symbol={symbol} />} />
         </Routes>
       </Suspense>
     </>

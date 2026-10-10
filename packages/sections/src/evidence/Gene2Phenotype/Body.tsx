@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   Typography,
+  useReportQueryVariables,
 } from "ui";
 
 import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
@@ -139,7 +140,7 @@ const getColumns = label => [
             group: "literature",
           }))
         : [];
-      return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
+      return <PublicationsDrawer entries={entries} symbol={label?.symbol} name={label.name} />;
     },
   },
 ];
@@ -147,7 +148,8 @@ const getColumns = label => [
 type Props = EvidenceBodyProps;
 
 function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props) {
-  const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
 
   const request = useQuery(OPEN_TARGETS_GENETICS_QUERY, {
     variables,

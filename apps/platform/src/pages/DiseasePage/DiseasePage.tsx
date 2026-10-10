@@ -81,7 +81,7 @@ function DiseasePage(): ReactElement {
               />
             }
           />
-          <Route path="/associations" element={<Associations efoId={efoId!} />} />
+          <Route path="/associations" element={<Associations efoId={efoId!} name={name} />} />
         </Routes>
       </Suspense>
     </>

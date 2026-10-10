@@ -2,14 +2,21 @@
   "$schema": "https://turborepo.org/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["bundle-platform/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "bundle-platform/**"
+      ]
     },
     "lint": {
       "outputs": []
     },
     "generateAPITypes": {
-      "outputs": ["src/types/**", "graphql.schema.json"],
+      "outputs": [
+        "src/types/**",
+        "graphql.schema.json"
+      ],
       "cache": false
     },
     "dev-test": {
@@ -19,10 +26,14 @@
       "cache": false
     },
     "test:platform:e2e": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test:platform:e2e:smoke": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "prettier:all": {
       "outputs": []
@@ -31,16 +42,26 @@
       "outputs": []
     },
     "dev": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     },
     "dev-ppp": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     },
     "build-ppp": {
-      "dependsOn": ["^build"],
-      "outputs": ["bundle-platform/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "bundle-platform/**"
+      ]
     }
   }
 }

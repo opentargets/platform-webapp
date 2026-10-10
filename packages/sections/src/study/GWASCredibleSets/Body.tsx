@@ -213,7 +213,7 @@ function Body({ id, entity }: BodyProps): ReactElement {
       loadingMessage="Loading data. This may take some time..."
       renderDescription={() => <Description studyId={request.data?.study.id} />}
       renderBody={() => (
-        <>
+        <div>
           <Box my={3} ml={2}>
             <ManhattanPlot loading={request.loading} data={request.data?.study.credibleSets.rows} />
           </Box>
@@ -228,7 +228,7 @@ function Body({ id, entity }: BodyProps): ReactElement {
             query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
             variables={variables}
           />
-        </>
+        </div>
       )}
     />
   );

@@ -9,6 +9,7 @@ import {
   OtTable,
   DirectionalityDrawer,
   DisplayVariantId,
+  useReportQueryVariables,
 } from "ui";
 
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
@@ -46,7 +47,8 @@ const getLevelElementClassName = (level: string) => {
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const variables = { chemblId };
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
   const theme = useTheme();
   const levelColors: Record<string, string> = {
     green: PHARM_GKB_COLOR.green,

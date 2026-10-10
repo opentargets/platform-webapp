@@ -9,6 +9,9 @@ import {
   Table,
   useBatchDownloader,
   Typography,
+  useReportSectionContext,
+  useReportQueryVariables,
+  useReportState,
 } from "ui";
 
 import { definition } from ".";
@@ -70,11 +73,15 @@ type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
   const theme = useTheme();
-  const variables = { chemblId };
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || { chemblId };
+  // Page and page size, kept with the section in reports; a restored page is the first one fetched
+  const [pagination, setPagination] = useReportState("pagination", { pageIndex: 0, pageSize: 10 });
+  const page = pagination.pageIndex;
+  const pageSize = pagination.pageSize;
+  const [firstPage] = useState(pagination);
   const { loading, error, data, fetchMore } = useQuery(ADVERSE_EVENTS_QUERY, {
-    variables,
+    variables: { ...variables, index: firstPage.pageIndex, size: firstPage.pageSize },
   });
 
   // TODO: fetchMore doesn't seem to use gql/apollo caching
@@ -90,13 +97,12 @@ function Body({ id: chemblId, label: name, entity }: Props) {
   }
 
   const handlePageChange = newPage => {
-    setPage(newPage);
+    setPagination({ pageIndex: newPage, pageSize });
     getData(newPage, pageSize);
   };
 
   function handleRowsPerPageChange(newSize) {
-    setPageSize(newSize);
-    setPage(0);
+    setPagination({ pageIndex: 0, pageSize: newSize });
     getData(0, newSize);
   }
 

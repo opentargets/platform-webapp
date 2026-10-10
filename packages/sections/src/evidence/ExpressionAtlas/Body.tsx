@@ -1,5 +1,13 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Tooltip, Link, ScientificNotation, OtTable, Typography } from "ui";
+import {
+  SectionItem,
+  Tooltip,
+  Link,
+  ScientificNotation,
+  OtTable,
+  Typography,
+  useReportQueryVariables,
+} from "ui";
 
 import Description from "./Description";
 import { sentenceCase } from "@ot/utils";
@@ -102,7 +110,8 @@ type Props = EvidenceBodyProps;
 
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
+  const savedVariables = useReportQueryVariables();
+  const variables = savedVariables || {
     ensemblId: ensgId,
     efoId,
     size: sectionsBaseSizeQuery,
