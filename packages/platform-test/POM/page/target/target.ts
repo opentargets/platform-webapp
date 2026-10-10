@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Target Page Object Model
@@ -73,6 +73,7 @@ export class TargetPage {
   async clickProfileTab(): Promise<void> {
     await this.getProfileTab().click();
     await this.page.waitForURL(/\/target\/[^/]+$/);
+    await expect(this.getProfileTab()).toHaveAttribute("aria-selected", "true");
   }
 
   /**
@@ -81,6 +82,7 @@ export class TargetPage {
   async clickAssociationsTab(): Promise<void> {
     await this.getAssociationsTab().click();
     await this.page.waitForURL(/\/target\/[^/]+\/associations/);
+    await expect(this.getAssociationsTab()).toHaveAttribute("aria-selected", "true");
   }
 
   /**
@@ -141,7 +143,7 @@ export class TargetPage {
    * Get the GeneCards external link
    */
   getGeneCardsLink(): Locator {
-    return this.page.locator('a[href*="identifiers.org/genecards"]');
+    return this.page.locator('a[href*="genecards.org"]');
   }
 
   /**

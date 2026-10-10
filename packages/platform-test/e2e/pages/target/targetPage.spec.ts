@@ -60,7 +60,7 @@ test.describe("Target Page - Header and Navigation", () => {
       await expect(geneCardsLink).toBeVisible();
 
       const href = await targetPage.getGeneCardsLinkHref();
-      expect(href).toContain("identifiers.org/genecards");
+      expect(href).toContain("genecards.org");
     });
 
     test("HGNC link is present and correct", async ({ page }) => {
@@ -190,6 +190,8 @@ test.describe("Target Page - Header and Navigation", () => {
     test("Associations page has correct title", async ({ page, baseURL, testConfig }) => {
       const targetId = testConfig.target?.primary || "ENSG00000157764";
       await page.goto(`${baseURL}/target/${targetId}/associations`);
+      const targetPage = new TargetPage(page);
+      await targetPage.waitForPageLoad();
 
       const title = await page.title();
       expect(title).toContain("Diseases associated with");

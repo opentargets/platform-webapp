@@ -76,6 +76,7 @@ export class CredibleSetEnhancerToGenePredictionsSection {
   async clickTargetGeneLink(rowIndex: number): Promise<void> {
     const link = await this.getTargetGeneLink(rowIndex);
     await link.click();
+    await this.page.waitForURL(/\/target\//);
   }
 
   async getTargetGeneName(rowIndex: number): Promise<string | null> {
@@ -91,8 +92,8 @@ export class CredibleSetEnhancerToGenePredictionsSection {
   // E2G Score
   async getE2GScore(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    // Score is typically in a specific column
-    const cell = row.locator("td").nth(2);
+    // Score is the last column
+    const cell = row.locator("td").nth(7);
     return await cell.textContent();
   }
 

@@ -90,6 +90,7 @@ export class GWASColocSection {
   async clickStudyLink(rowIndex: number): Promise<void> {
     const link = await this.getStudyLink(rowIndex);
     await link.click();
+    await this.page.waitForURL(/\/study\//);
   }
 
   async getStudyId(rowIndex: number): Promise<string | null> {
@@ -111,6 +112,7 @@ export class GWASColocSection {
   async clickLeadVariantLink(rowIndex: number): Promise<void> {
     const link = await this.getLeadVariantLink(rowIndex);
     await link.click();
+    await this.page.waitForURL(/\/variant\//);
   }
 
   async hasLeadVariantLink(rowIndex: number): Promise<boolean> {
@@ -159,28 +161,28 @@ export class GWASColocSection {
   // Directionality
   async getDirectionality(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(8);
+    const cell = row.locator("td").nth(7);
     return await cell.textContent();
   }
 
   // H3 value
   async getH3(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(9);
+    const cell = row.locator("td").nth(8);
     return await cell.textContent();
   }
 
   // H4 value
   async getH4(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(10);
+    const cell = row.locator("td").nth(9);
     return await cell.textContent();
   }
 
   // CLPP value
   async getCLPP(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(11);
+    const cell = row.locator("td").nth(10);
     return await cell.textContent();
   }
 
@@ -235,7 +237,7 @@ export class GWASColocSection {
 
   // Data downloader
   getDataDownloaderButton(): Locator {
-    return this.getSection().locator("button[aria-label*='download']");
+    return this.getSection().locator("button:has-text('Export')");
   }
 
   async clickDataDownloader(): Promise<void> {
