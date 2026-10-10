@@ -26,7 +26,7 @@ type WidgetDefinition = {
 };
 
 type StickyProfileHeaderProps = {
-  title: string;
+  title: ReactNode;
   Icon?: IconProp;
   externalLinks?: ReactNode;
   widgets: { definition: WidgetDefinition }[];
