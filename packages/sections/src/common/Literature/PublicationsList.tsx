@@ -18,7 +18,7 @@ import {
   useDetails,
   useDetailsDispatch,
 } from "./LiteratureContext";
-import { fetchSimilarEntities, literaturesEuropePMCQuery } from "./requests";
+import { fetchSimilarEntities, literatureStateFromResponse, literaturesEuropePMCQuery } from "./requests";
 import { grey } from "@mui/material/colors";
 import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -98,7 +98,7 @@ function TimedOutRow({ id }) {
 
 function PublicationsList({ hideSearch = false }) {
   const literature = useLiterature();
-  const { loadingEntities, litsCount: count, cursor, page, pageSize, litsIds } = literature;
+  const { loadingEntities, litsCount: count, page, pageSize, litsIds } = literature;
   const details = useDetails();
   const displayedPubs = useDisplayedPublications();
   const literatureDispatch = useLiteratureDispatch();
@@ -137,97 +137,47 @@ function PublicationsList({ hideSearch = false }) {
     fetchFunction().catch(console.error);
   }, [literature]);
 
-  const handleRowsPerPageChange = async (newPageSize: string): Promise<void> => {
-    const pageSizeInt = Number(newPageSize);
-    const expected = pageSizeInt * page + pageSizeInt;
-    if (expected > litsIds.length && cursor !== null) {
-      const {
-        query,
-        id,
-        category,
-        selectedEntities,
-        cursor: newCursor,
-        globalEntity,
-        endYear,
-        endMonth,
-        startYear,
-        startMonth,
-      } = literature;
-      literatureDispatch({ type: "loadingEntities", value: true });
-      const request = await fetchSimilarEntities({
-        client,
-        query,
-        id,
-        category,
-        entities: selectedEntities,
-        cursor: newCursor,
-        endYear,
-        endMonth,
-        startYear,
-        startMonth,
-      });
-      literatureDispatch({ type: "loadingEntities", value: false });
-      const data = request.data[globalEntity];
-      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid, pmcid }) => pmid ? pmid : pmcid) ?? [];
-      const update = {
-        litsIds: [...litsIds, ...newLitsIds],
-        cursor: data.literatureOcurrences?.cursor,
-        page: 0,
-        pageSize: pageSizeInt,
-      };
-      literatureDispatch({ type: "stateUpdate", value: update });
-    } else {
-      literatureDispatch({
-        type: "stateUpdate",
-        value: { page: 0, pageSize: pageSizeInt },
-      });
-    }
+  // fetch one page of publications for the current filters
+  const fetchPage = async (newPage: number, newPageSize: number): Promise<void> => {
+    const {
+      query,
+      id,
+      category,
+      selectedEntities,
+      globalEntity,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    } = literature;
+    literatureDispatch({ type: "loadingEntities", value: true });
+    const request = await fetchSimilarEntities({
+      client,
+      query,
+      id,
+      category,
+      entities: selectedEntities,
+      page: newPage,
+      pageSize: newPageSize,
+      endYear,
+      endMonth,
+      startYear,
+      startMonth,
+    });
+    const { litsIds: newLitsIds, litsCount } = literatureStateFromResponse(
+      request.data[globalEntity ?? ""],
+      newPage
+    );
+    literatureDispatch({
+      type: "stateUpdate",
+      value: { litsIds: newLitsIds, litsCount, page: newPage, pageSize: newPageSize, loadingEntities: false },
+    });
   };
 
-  const handlePageChange = async (newPage: string): Promise<void> => {
-    const newPageInt = Number(newPage);
-    if (pageSize * newPageInt + pageSize > litsIds.length && cursor !== null) {
-      const {
-        query,
-        id,
-        category,
-        selectedEntities,
-        cursor: newCursor,
-        globalEntity,
-        endYear,
-        endMonth,
-        startYear,
-        startMonth,
-      } = literature;
-      literatureDispatch({ type: "loadingEntities", value: true });
-      const request = await fetchSimilarEntities({
-        client,
-        query,
-        id,
-        category,
-        entities: selectedEntities,
-        cursor: newCursor,
-        endYear,
-        endMonth,
-        startYear,
-        startMonth,
-      });
-      literatureDispatch({ type: "loadingEntities", value: false });
-      const data = request.data[globalEntity];
-      const newLitsIds = data.literatureOcurrences?.rows?.map(({ pmid, pmcid }) => pmid ? pmid : pmcid) ?? [];
-      const update = {
-        litsIds: [...litsIds, ...newLitsIds],
-        cursor: data.literatureOcurrences?.cursor,
-        page: newPageInt,
-      };
-      literatureDispatch({ type: "stateUpdate", value: update });
-    } else {
-      literatureDispatch({
-        type: "stateUpdate",
-        value: { page: newPageInt },
-      });
-    }
-  };
+  const handleRowsPerPageChange = (newPageSize: string): Promise<void> =>
+    fetchPage(0, Number(newPageSize));
+
+  const handlePageChange = (newPage: string): Promise<void> => fetchPage(Number(newPage), pageSize);
 
   const columns = [
     {

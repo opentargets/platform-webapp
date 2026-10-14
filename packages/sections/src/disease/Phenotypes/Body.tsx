@@ -1,20 +1,35 @@
 import { useQuery } from "@apollo/client";
 import _ from "lodash";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTableServer, type OtTableColumn } from "ui";
 
 import Description from "./Description";
-import { naLabel, type DiseaseBodyProps} from "@ot/constants";
+import {
+  naLabel,
+  type DiseaseBodyProps,
+  type PhenotypesQuery,
+  type PhenotypesQueryVariables,
+} from "@ot/constants";
 
-import PHENOTYPES_BODY_QUERY from "./PhenotypesQuery.gql";
+import PHENOTYPES_BODY_QUERY_DOCUMENT from "./PhenotypesQuery.gql";
 import { definition } from ".";
+import { typedDocument } from "../../utils/typedDocument";
 
-const evidenceTypeDescription = {
+const PHENOTYPES_BODY_QUERY = typedDocument<PhenotypesQuery, PhenotypesQueryVariables>(
+  PHENOTYPES_BODY_QUERY_DOCUMENT
+);
+
+type PhenotypeServerRow = NonNullable<PhenotypesQuery["disease"]>["phenotypes"]["rows"][number];
+type PhenotypeEvidence = PhenotypeServerRow["evidence"][number];
+/** one table row per (phenotype, evidence) pair */
+type PhenotypeRow = Omit<PhenotypeServerRow, "evidence"> & { evidence: PhenotypeEvidence };
+
+const evidenceTypeDescription: Record<string, string> = {
   IEA: "Inferred from Electronic Annotations (IEA) are extracted by parsing the Clinical Features sections of the Online Mendelian Inheritance in Man resource",
   PCS: "Published Clinical Study (PCS) are annotations extracted from articles in the medical literature with the PubMed ID of the published study (if available)",
   TAS: "Traceable Author Statement (TAS) is used for information gleaned from knowledge bases such as OMIM or Orphanet that have derived the information from a published source",
 };
 
-const aspectDescription = {
+const aspectDescription: Record<string, string> = {
   P: "Phenotypic abnormality",
   I: "Inheritance",
   C: "Onset and clinical course",
@@ -22,7 +37,7 @@ const aspectDescription = {
   H: "Past medical history",
 };
 
-const columns = [
+const columns: OtTableColumn<PhenotypeRow>[] = [
   {
     id: "qualifierNot",
     label: "Qualifier",
@@ -54,8 +69,8 @@ const columns = [
         content
       );
     },
-    filterValue: ({phenotypeEFO,phenotypeHPO}) => phenotypeHPO && phenotypeHPO?.name ? phenotypeHPO.name : naLabel,
-    exportValue: ({phenotypeEFO,phenotypeHPO}) => phenotypeHPO && phenotypeHPO?.name ? phenotypeHPO.name : naLabel,
+    filterValue: ({ phenotypeHPO }) => phenotypeHPO?.name || naLabel,
+    exportValue: ({ phenotypeHPO }) => phenotypeHPO?.name || naLabel,
   },
   {
     id: "aspect",
@@ -77,21 +92,9 @@ const columns = [
   {
     id: "frequency",
     label: "Frequency",
-    renderCell: ({ evidence }) => {
-      if (evidence.frequencyHPO && evidence.frequencyHPO.id && evidence.frequencyHPO.name)
-        return (
-          <Link
-            external
-            to={`https://identifiers.org/ols/${evidence.frequencyHPO.id.replace("_", ":")}`}
-          >
-            {evidence.frequencyHPO.name}
-          </Link>
-        );
-      if (evidence.frequencyHPO && evidence.frequencyHPO.name) return evidence.frequencyHPO.name;
-      return naLabel;
-    },
-    filterValue: row => row.evidence.frequencyHPO?.name || naLabel,
-    exportValue: row => row.evidence.frequencyHPO?.name || naLabel,
+    renderCell: ({ evidence }) => evidence.frequency || naLabel,
+    filterValue: row => row.evidence.frequency || naLabel,
+    exportValue: row => row.evidence.frequency || naLabel,
   },
   {
     id: "onset",
@@ -130,7 +133,7 @@ const columns = [
   {
     id: "sex",
     label: "Sex",
-    renderCell: ({ evidence }) => _.capitalize(evidence.sex) || naLabel,
+    renderCell: ({ evidence }) => _.capitalize(evidence.sex ?? "") || naLabel,
     filterValue: row => row.evidence.sex || naLabel,
   },
   {
@@ -138,7 +141,7 @@ const columns = [
     label: "Evidence",
     renderCell: ({ evidence }) =>
       evidence.evidenceType ? (
-        <Tooltip title={evidenceTypeDescription[evidence.evidenceType?.toUpperCase()]} showHelpIcon>
+        <Tooltip title={evidenceTypeDescription[evidence.evidenceType.toUpperCase()]} showHelpIcon>
           {evidence.evidenceType}
         </Tooltip>
       ) : (
@@ -170,7 +173,7 @@ const columns = [
         name: r,
         group: "References",
       }));
-      return <TableDrawer entries={refs} />;
+      return <TableDrawer entries={refs} message={`${refs.length} references`} />;
     },
     filterValue: row => row.evidence.references?.map(r => r).join() || naLabel,
     exportValue: row => row.evidence.references?.map(r => r).join() || naLabel,
@@ -180,15 +183,21 @@ const columns = [
 
 type Props = DiseaseBodyProps;
 
-function Body({ label: name, id: efoId, entity }: Props) {
-  const variables = {
-    efoId,
-    index: 0,
-    size: 1000,
-  };
+const PAGE_SIZE = 10;
 
+function flattenEvidence(rows: PhenotypeServerRow[]): PhenotypeRow[] {
+  return rows.flatMap(phenotype =>
+    phenotype.evidence.map(evidence => ({ ...phenotype, evidence }))
+  );
+}
+
+function Body({ label: name, id: efoId, entity }: Props) {
+  const variables = { efoId };
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(PHENOTYPES_BODY_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -197,30 +206,18 @@ function Body({ label: name, id: efoId, entity }: Props) {
       entity={entity}
       request={request}
       renderDescription={() => <Description name={name} />}
-      renderBody={() => {
-        // process the data
-        const rows = [];
-        request.data?.disease.phenotypes.rows.forEach(p =>
-          p.evidence.forEach(e => {
-            const p1 = { ...p };
-            p1.evidence = e;
-            rows.push(p1);
-          })
-        );
-
-        return (
-          <OtTable
-            columns={columns}
-            rows={rows}
-            dataDownloader
-            dataDownloaderFileStem={`${efoId}-phenotypes`}
-            showGlobalFilter
-            query={PHENOTYPES_BODY_QUERY.loc.source.body}
-            variables={variables}
-            loading={request.loading}
-          />
-        );
-      }}
+      renderBody={() => (
+        <OtTableServer<PhenotypeRow, PhenotypeServerRow>
+          columns={columns}
+          query={PHENOTYPES_BODY_QUERY}
+          variables={variables}
+          dataPath="disease.phenotypes"
+          transformRows={flattenEvidence}
+          pageSize={PAGE_SIZE}
+          dataDownloader
+          dataDownloaderFileStem={`${efoId}-phenotypes`}
+        />
+      )}
     />
   );
 }

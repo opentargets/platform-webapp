@@ -5,7 +5,7 @@
 export interface TargetData {
   // Bibliography
   literatureOcurrences?: {
-    filteredCount: number;
+    count: number;
   };
 
   // Cancer Hallmarks

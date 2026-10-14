@@ -5,6 +5,7 @@ import {
   getInteractorIds,
   getInitialLoadingData,
   INTERACTORS_SOURCES,
+  toDatasourcePolicyOverrides,
 } from "../../../associationsUtils";
 import { columnAdvanceControl } from "../../../types";
 
@@ -118,16 +119,9 @@ function useRowInteractors({
           size: interactorsIds.length,
           filter,
           sortBy,
-          enableIndirect,
-          isDirect: !enableIndirect,
           rowsFilter: interactorsIds,
           entitySearch,
-          datasources: datasources.map(el => ({
-            id: el.id,
-            weight: el.weight,
-            propagate: el.propagate,
-            required: el.required,
-          })),
+          datasources: toDatasourcePolicyOverrides(datasources),
         },
       });
 

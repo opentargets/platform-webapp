@@ -2,18 +2,21 @@ import { type ApolloError, gql, useQuery } from "@apollo/client";
 import { createContext, type PropsWithChildren, useContext, useEffect, useState } from "react";
 
 // QUERY
+// both versions are `Version { year month revision }`; the data release revision
+// is exposed as `iteration` and the API version as `x.y.z` (year.month.revision)
+// so that the consumers keep their shape
 const DATA_VERSION_QUERY = gql`
   query DataVersion {
     meta {
       dataVersion {
         month
         year
-        iteration
+        iteration: revision
       }
       apiVersion {
-        x
-        y
-        z
+        x: year
+        y: month
+        z: revision
       }
     }
   }

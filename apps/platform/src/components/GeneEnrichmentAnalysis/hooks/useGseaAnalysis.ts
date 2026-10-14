@@ -61,7 +61,6 @@ export function useGseaAnalysis({ client, state, dispatch }: UseGseaAnalysisPara
             index: 0,
             size: 3000,
             sortBy: associationsState.sortBy,
-            enableIndirect: associationsState.enableIndirect,
             datasources: associationsState.datasources,
             rowsFilter: associationsState.rowsFilter,
             facetFilters: associationsState.facetFilters,

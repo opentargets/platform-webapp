@@ -1,21 +1,5 @@
-import { gql } from "@apollo/client";
 import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
-
-/**
- * Query to map gene symbols to target IDs using the mapIds endpoint
- */
-const MAP_IDS_QUERY = gql`
-  query MapIdsToTargets($queryTerms: [String!]!) {
-    mapIds(queryTerms: $queryTerms, entityNames: "target") {
-      mappings {
-        hits {
-          id
-        }
-        term
-      }
-    }
-  }
-`;
+import { mapIdsViaSearch } from "../../../../AssociationsToolkit/associationsUtils/mapIdsViaSearch";
 
 /**
  * Build a mapping from gene symbols to target IDs
@@ -33,14 +17,9 @@ export async function buildGeneToTargetIdMapping(
   }
 
   try {
-    const result = await client.query({
-      query: MAP_IDS_QUERY,
-      variables: { queryTerms: uniqueSymbols },
-    });
+    const { mappings } = await mapIdsViaSearch(client, uniqueSymbols, ["target"], 1);
 
-    const mappings = result.data?.mapIds?.mappings || [];
-
-    mappings.forEach((mapping_item: any) => {
+    mappings.forEach(mapping_item => {
       const term = mapping_item.term;
       if (mapping_item.hits && mapping_item.hits.length > 0) {
         const targetId = mapping_item.hits[0].id;

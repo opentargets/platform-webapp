@@ -12,7 +12,7 @@ import {
 import { styled } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
 import { europePmcSearchPOSTQuery } from "@ot/utils";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import OtTable from "../OtTable/OtTable";
 import PublicationWrapper from "./PublicationWrapper";
 
@@ -168,6 +168,15 @@ export function PublicationsList({
   );
 }
 
+type PublicationsDrawerProps = {
+  entries: Array<{ name: string; url?: string; group?: string }>;
+  customLabel?: ReactNode;
+  caption?: string;
+  singleEntryId?: boolean;
+  symbol?: string;
+  name?: string;
+};
+
 function PublicationsDrawer({
   entries,
   customLabel,
@@ -175,7 +184,7 @@ function PublicationsDrawer({
   singleEntryId = true,
   symbol,
   name,
-}) {
+}: PublicationsDrawerProps) {
   const [open, setOpen] = useState(false);
 
   const entriesIds = entries.map((entry) => entry.name);

@@ -5,8 +5,8 @@ import { WidgetDefinition } from "../../types/widget";
 
 const SIMILARENTTIES_SUMMARY_FRAGMENT = gql`
   fragment SimilarEntitiesDisease on Disease {
-    similarEntities(threshold: 0.5, size: 20) {
-      score
+    similarEntities(threshold: 0.5, page: { index: 0, size: 20 }) {
+      count
     }
   }
 `;
@@ -21,7 +21,7 @@ function Summary({ definition }: Props) {
       definition={definition}
       request={request}
       renderSummary={data =>
-        data.similarEntities?.length > 0 ? <>Data available</> : <>no data</>
+        data.similarEntities?.count > 0 ? <>Data available</> : <>no data</>
       }
     />
   );

@@ -1,5 +1,16 @@
-query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
-  studies(diseaseIds: $diseaseIds, page: { size: $size, index: $index }) {
+query GWASStudiesQuery(
+  $diseaseIds: [String!]!
+  $size: Int!
+  $index: Int!
+  $sort: [StudySort!]! = []
+  $search: String
+) {
+  studies(
+    diseaseIds: $diseaseIds
+    page: { size: $size, index: $index }
+    sort: $sort
+    search: $search
+  ) {
     count
     rows {
       id
@@ -15,7 +26,7 @@ query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
         ldPopulation
         relativeSampleSize
       }
-      credibleSets{
+      credibleSets {
         count
       }
     }

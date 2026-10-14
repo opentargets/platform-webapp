@@ -1,8 +1,13 @@
 import { Body as Bibliography } from "../../common/Literature";
 import { definition } from ".";
 
-import DISEASE_LITERATURE_OCURRENCES from "./BibliographyQuery.gql";
+import DISEASE_LITERATURE_OCURRENCES_DOCUMENT from "./BibliographyQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import type { DiseaseBibliographyQuery, DiseaseBibliographyQueryVariables } from "@ot/constants";
+
 import type { DiseaseBodyProps } from "@ot/constants";
+
+const DISEASE_LITERATURE_OCURRENCES = typedDocument<DiseaseBibliographyQuery, DiseaseBibliographyQueryVariables>(DISEASE_LITERATURE_OCURRENCES_DOCUMENT);
 
 type Props = DiseaseBodyProps;
 

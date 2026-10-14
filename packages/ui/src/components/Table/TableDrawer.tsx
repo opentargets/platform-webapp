@@ -17,7 +17,7 @@ import {
 import { styled } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
 import _ from "lodash";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { v1 } from "uuid";
 
 import Link from "../Link";
@@ -78,7 +78,16 @@ const StyledAccordionSubtitle = styled(Typography)(({ theme }) => ({
   fontStyle: "italic",
 }));
 
-function TableDrawer({ entries, message, caption = "Records", showSingle = true }) {
+type TableDrawerEntry = { name?: string; url?: string; group?: string };
+
+type TableDrawerProps = {
+  entries: TableDrawerEntry[];
+  message?: ReactNode;
+  caption?: string;
+  showSingle?: boolean;
+};
+
+function TableDrawer({ entries, message, caption = "Records", showSingle = true }: TableDrawerProps) {
   const [open, setOpen] = useState(false);
 
   if (entries.length === 0 && message) {

@@ -1,8 +1,13 @@
 import { definition } from ".";
 import { Body as Bibliography } from "../../common/Literature";
 
-import DRUGS_LITERATURE_OCURRENCES from "./BibliographyQuery.gql";
+import DRUGS_LITERATURE_OCURRENCES_DOCUMENT from "./BibliographyQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import type { DrugBibliographyQuery, DrugBibliographyQueryVariables } from "@ot/constants";
+
 import type { DrugBodyProps } from "@ot/constants";
+
+const DRUGS_LITERATURE_OCURRENCES = typedDocument<DrugBibliographyQuery, DrugBibliographyQueryVariables>(DRUGS_LITERATURE_OCURRENCES_DOCUMENT);
 
 type Props = DrugBodyProps;
 

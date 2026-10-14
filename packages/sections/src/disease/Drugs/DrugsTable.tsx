@@ -1,45 +1,43 @@
-import { useMemo } from "react";
-import { Link, OtTable, Box, Typography } from "ui";
+import type { Row } from "@tanstack/react-table";
+import type { MouseEvent } from "react";
+import { Link, OtTableServer, Box, Typography, type OtTableColumn } from "ui";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { clinicalStageCategories } from "@ot/constants";
+import { clinicalStageCategories, type DrugsQuery } from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faArrowDown } from "@fortawesome/free-solid-svg-icons";
-import DRUGS_QUERY from "./DrugsQuery.gql";
+import DRUGS_QUERY_DOCUMENT from "./DrugsQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import type { DrugsQueryVariables } from "@ot/constants";
 
-const onLinkClick = (e) => {
+export const DRUGS_QUERY = typedDocument<DrugsQuery, DrugsQueryVariables>(DRUGS_QUERY_DOCUMENT);
+
+export type DrugRow = NonNullable<DrugsQuery["disease"]>["drugAndClinicalCandidates"]["rows"][number];
+
+type StageCategory = { index: number; label: string };
+const stageCategories: Record<string, StageCategory | undefined> = clinicalStageCategories;
+
+const onLinkClick = (e: MouseEvent) => {
   e.stopPropagation();
 };
 
-function stageAndRecordCountComparator(a, b) {
-  if (a.maxClinicalStage === b.maxClinicalStage) {
-    return a.clinicalReports?.length - b.clinicalReports?.length;
-  }
-  return (
-    (clinicalStageCategories)[a.maxClinicalStage]?.index -
-    (clinicalStageCategories)[b.maxClinicalStage]?.index
-  );
-}
+export const DRUGS_PAGE_SIZE = 10;
 
-function DrugsTable({
-  efoId,
-  rows,
-  selectedRow,
-  selectRow,
-  loading,
-}) {
+type DrugsTableProps = {
+  efoId: string;
+  selectedRow: DrugRow | null;
+  selectRow: (row: DrugRow | null) => void;
+};
+
+function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
-  const sortedRows = useMemo(() => {
-    return structuredClone(rows).sort(stageAndRecordCountComparator).reverse();
-  }, [rows]);
-
-  const columns = [
+  const columns: OtTableColumn<DrugRow>[] = [
     {
       id: "drugCard",
       label: "",
-      renderCell: (row) => {
+      renderCell: row => {
         const { drug, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
 
@@ -93,7 +91,7 @@ function DrugsTable({
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
                 <Typography variant="caption">Max stage:</Typography>
                 <Typography variant="caption" sx={{ fontSize: 13 }}>
-                  {(clinicalStageCategories)[maxClinicalStage].label}
+                  {stageCategories[maxClinicalStage]?.label ?? maxClinicalStage}
                 </Typography>
               </Box>
 
@@ -122,30 +120,16 @@ function DrugsTable({
           </Box>
         );
       },
-      sortable: true,
-      comparator: stageAndRecordCountComparator,
-      filterValue: (row) => {
-        return `${row.drug?.name ?? ""} ${(clinicalStageCategories)[row.maxClinicalStage]?.label}`;
-      },
+      filterValue: row =>
+        `${row.drug?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
-  const dataDownloaderColoumns = [
-    {
-      id: "drugName",
-      exportValue: (row) => row.drug?.name,
-    },
-    {
-      id: "drugId",
-      exportValue: (row) => row.drug?.id,
-    },
-    {
-      id: "maxClinicalStage",
-    },
-    {
-      id: "reportCount",
-      exportValue: (row) => row.clinicalReports?.length,
-    },
+  const dataDownloaderColumns: OtTableColumn<DrugRow>[] = [
+    { id: "drugName", label: "Drug name", exportValue: row => row.drug?.name },
+    { id: "drugId", label: "Drug id", exportValue: row => row.drug?.id },
+    { id: "maxClinicalStage", label: "Max clinical stage" },
+    { id: "reportCount", label: "Report count", exportValue: row => row.clinicalReports?.length },
   ];
 
   return (
@@ -185,18 +169,18 @@ function DrugsTable({
         }),
       }}
     >
-      <OtTable
-        showGlobalFilter
-        globalFilterPlaceholderText="Search..."
+      <OtTableServer<DrugRow>
         columns={columns}
-        rows={sortedRows}
-        query={DRUGS_QUERY.loc?.source?.body}
+        query={DRUGS_QUERY}
         variables={{ efoId }}
+        dataPath="disease.drugAndClinicalCandidates"
+        pageSize={DRUGS_PAGE_SIZE}
         dataDownloader
         dataDownloaderFileStem="drugs-and-clinical-candidates"
-        dataDownloaderColumns={dataDownloaderColoumns}
+        dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        getSelectedRows={(rowsInfo) => {
+        globalFilterPlaceholderText="Search..."
+        getSelectedRows={(rowsInfo: Row<DrugRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
           const selectedOriginalRows = rowsInfo.map(r => r.original).filter(Boolean);
@@ -210,11 +194,7 @@ function DrugsTable({
             selectRow(nextRow);
           }
         }}
-        loading={loading}
-        sortBy="drugCard"
-        order="desc"
         showRowsPerPageControl={false}
-        showPaginationAlways={false}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

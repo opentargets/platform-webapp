@@ -26,9 +26,16 @@ type definitionType = {
   isPrivate?: boolean;
 };
 
+/** the loading/error/data triple of a query (an Apollo QueryResult or an equivalent object) */
+export type SectionRequest = {
+  loading?: unknown;
+  error?: unknown;
+  data?: unknown;
+};
+
 type SectionItemProps = {
   definition: definitionType;
-  request: Record<string, unknown>;
+  request: SectionRequest;
   renderDescription: () => ReactNode;
   renderChart?: () => ReactNode;
   renderBody: () => ReactNode;

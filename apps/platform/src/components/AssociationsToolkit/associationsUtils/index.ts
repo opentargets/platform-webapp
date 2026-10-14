@@ -1,3 +1,4 @@
+import { Datasource, type DatasourcePolicyOverride } from "@ot/constants";
 import { scaleQuantize, rgb, RGBColor } from "d3";
 import Legend from "./Legend";
 import dataSources, { DataSourceDef } from "../static_datasets/dataSourcesAssoc";
@@ -100,14 +101,26 @@ export const getColumAndSection = (
 export const cellHasValue = (score: unknown): boolean => typeof score === "number";
 
 export const defaulDatasourcesWeigths: columnAdvanceControl[] = dataSources.map(
-  ({ id, weight, required, aggregation }) => {
-    const sharedWeightConfig = { id, weight, required, aggregation };
-    if (id === "expression_atlas") {
-      return { ...sharedWeightConfig, propagate: false };
-    }
-    return { ...sharedWeightConfig, propagate: true };
-  }
+  ({ id, weight, required, aggregation }) => ({ id, weight, required, aggregation })
 );
+
+/**
+ * Maps the datasource controls to the `datasourcePolicyOverrides` input of the
+ * `associatedTargets` / `associatedDiseases` fields.
+ */
+const API_DATASOURCE_IDS = new Set<string>(Object.values(Datasource));
+
+/**
+ * Maps the datasource controls to the `datasourcePolicyOverrides` input of the
+ * `associatedTargets` / `associatedDiseases` fields.
+ */
+export const toDatasourcePolicyOverrides = (
+  controls: Pick<columnAdvanceControl, "id" | "weight" | "required">[]
+): DatasourcePolicyOverride[] =>
+  controls
+    // datasources unknown to the API (e.g. partner-preview only ones) are rejected by the enum
+    .filter(({ id }) => API_DATASOURCE_IDS.has(id))
+    .map(({ id, weight, required }) => ({ id: id as Datasource, policy: { weight, required } }));
 
 export const getWightSourceDefault = (source: string): number => {
   const sourcesDetails = defaulDatasourcesWeigths.find(src => src.id === source);

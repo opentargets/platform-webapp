@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { ApolloClient, DocumentNode } from "@apollo/client";
-import { getInitialLoadingData, getAssociationsData, getAllDataCount } from "../associationsUtils";
+import {
+  getInitialLoadingData,
+  getAssociationsData,
+  getAllDataCount,
+  toDatasourcePolicyOverrides,
+} from "../associationsUtils";
 import { columnAdvanceControl } from "../types";
 import { Facet } from "../Facets/facetsTypes";
 
@@ -79,14 +84,7 @@ function useAssociationsData({
           size,
           filter,
           sortBy,
-          enableIndirect,
-          isDirect: !enableIndirect,
-          datasources: datasources.map(el => ({
-            id: el.id,
-            weight: el.weight,
-            propagate: el.propagate,
-            required: el.required,
-          })),
+          datasources: toDatasourcePolicyOverrides(datasources),
           rowsFilter,
           facetFilters,
           entitySearch,

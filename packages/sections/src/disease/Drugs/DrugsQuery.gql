@@ -1,7 +1,7 @@
-query drugsQuery($efoId: String!) {
+query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     name
-    drugAndClinicalCandidates {
+    drugAndClinicalCandidates(page: { index: $index, size: $size }) {
       count
       rows {
         id

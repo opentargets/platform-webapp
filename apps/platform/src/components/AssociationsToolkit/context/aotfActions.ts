@@ -6,16 +6,9 @@ export function setDataSourceControl(
   required: boolean,
   aggregation: string
 ): Action {
-  const sharedWeightConfig = { id, weight, required, aggregation };
-  if (id === "expression_atlas") {
-    return {
-      type: ActionType.DATA_SOURCE_CONTROL,
-      payload: { ...sharedWeightConfig, propagate: false },
-    };
-  }
   return {
     type: ActionType.DATA_SOURCE_CONTROL,
-    payload: { ...sharedWeightConfig, propagate: true },
+    payload: { id, weight, required, aggregation },
   };
 }
 

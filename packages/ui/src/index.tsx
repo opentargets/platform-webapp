@@ -132,6 +132,8 @@ export { default as ObsTooltip } from "./components/ObsPlot/ObsTooltip";
 export { default as OtAsyncTooltip } from "./components/OtAsyncTooltip/OtAsyncTooltip";
 export { default as OtTable } from "./components/OtTable/OtTable";
 export { default as OtTableSSP } from "./components/OtTable/OtTableSSP";
+export { default as OtTableServer } from "./components/OtTable/OtTableServer";
+export type { OtTableColumn, OtTableServerProps } from "./components/OtTable/types/tableTypes";
 export { default as PageMeta } from "./components/PageMeta";
 export { default as PartnerLockIcon } from "./components/PartnerLockIcon";
 export { default as Popper } from "./components/Popper";

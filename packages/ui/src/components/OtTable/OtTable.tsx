@@ -58,7 +58,7 @@ declare module "@tanstack/table-core" {
   }
 }
 
-const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+export const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value);
   const allRowValuesInString = getFilterValueFromObject(row.original);

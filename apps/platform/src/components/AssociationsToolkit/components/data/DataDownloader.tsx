@@ -34,6 +34,7 @@ import {
   Slide,
 } from "ui";
 import { getConfig } from "@ot/config";
+import { toDatasourcePolicyOverrides } from "../../associationsUtils";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";
 import { useAotfData } from "../../context/AssociationsDataContext";
@@ -148,7 +149,6 @@ function DataDownloader() {
     id,
     query,
     sorting,
-    enableIndirect,
     entity,
     entityToGet,
     modifiedSourcesDataControls,
@@ -197,15 +197,8 @@ function DataDownloader() {
   const allAssociationsVariable = {
     id,
     sortBy: sorting[0].id,
-    enableIndirect,
     entitySearch,
-    isDirect: !enableIndirect,
-    datasources: dataSourcesWeights.map(el => ({
-      id: el.id,
-      weight: el.weight,
-      propagate: el.propagate,
-      required: el.required,
-    })),
+    datasources: toDatasourcePolicyOverrides(dataSourcesWeights),
   };
 
   const pinnedAssociationsVariable = {

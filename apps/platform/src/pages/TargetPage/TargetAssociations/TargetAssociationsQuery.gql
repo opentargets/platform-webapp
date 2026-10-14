@@ -3,22 +3,19 @@ query TargetAssociationsQuery(
   $index: Int!
   $size: Int!
   $sortBy: String!
-  $enableIndirect: Boolean!
-  $isDirect: Boolean!
-  $datasources: [DatasourceSettingsInput!]
-  $rowsFilter: [String!]
-  $facetFilters: [String!]
+  $datasources: [DatasourcePolicyOverride!]! = []
+  $rowsFilter: [String!]! = []
+  $facetFilters: [String!]! = []
   $entitySearch: String!
-  $includeMeasurements: Boolean
+  $includeMeasurements: Boolean! = false
 ) {
   target(ensemblId: $id) {
     id
     approvedSymbol
     associatedDiseases(
       page: { index: $index, size: $size }
-      orderByScore: $sortBy
-      enableIndirect: $enableIndirect
-      datasources: $datasources
+      sort: { key: $sortBy, direction: DESCENDING }
+      datasourcePolicyOverrides: $datasources
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -26,16 +23,9 @@ query TargetAssociationsQuery(
     ) {
       count
       rows {
-        novelty
         disease {
           id
           name
-          associationTimeSeries(ensemblId: $id, aggregationTypes: [overall], isDirect: $isDirect, page: { index: 0, size: 500 }) {
-            rows {
-              novelty
-              year
-            }
-          }
         }
         score
         datasourceScores {

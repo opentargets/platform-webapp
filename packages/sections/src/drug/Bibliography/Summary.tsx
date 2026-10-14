@@ -11,10 +11,10 @@ function Summary() {
       definition={definition}
       request={request}
       renderSummary={data =>
-        data.literatureOcurrences?.filteredCount > 0 ? (
+        data.literatureOcurrences?.count > 0 ? (
           <>
-            {data.literatureOcurrences.filteredCount.toLocaleString()} publication
-            {data.literatureOcurrences.filteredCount === 1 ? "" : "s"}
+            {data.literatureOcurrences.count.toLocaleString()} publication
+            {data.literatureOcurrences.count === 1 ? "" : "s"}
           </>
         ) : (
           <>no data</>

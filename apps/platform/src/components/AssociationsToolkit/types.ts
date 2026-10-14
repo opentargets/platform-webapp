@@ -34,7 +34,6 @@ export type columnAdvanceControl = {
   id: string;
   weight: number;
   required: boolean;
-  propagate: boolean;
   aggregation: string;
 };
 

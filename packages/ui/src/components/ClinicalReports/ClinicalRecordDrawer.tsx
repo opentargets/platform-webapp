@@ -21,6 +21,9 @@ import LongText from "../LongText";
 import { PublicationsList } from "../PublicationsDrawer";
 import Tooltip from "../Tooltip";
 import RECORD_DETAIL_QUERY from "./RecordDetailQuery.gql";
+import type { RecordDetailQuery } from "@ot/constants";
+
+type ClinicalReportDrug = NonNullable<RecordDetailQuery["clinicalReport"]>["drugs"][number];
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
   color: `${theme.palette.primary.main} !important`,
@@ -169,7 +172,14 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
   const sourceInfo = clinicalReportsSourcesInfo[source];
   const dedupedDiseases: any = dedupOnId(diseases, "disease");
-  const dedupedDrugs: any = dedupOnId(drugs, "drug");
+  // the API no longer resolves a drug entity on the report, only its source name
+  const dedupedDrugs: ClinicalReportDrug[] = [
+    ...new Map<string, ClinicalReportDrug>(
+      ((drugs ?? []) as ClinicalReportDrug[])
+        .filter(d => d.drugFromSource)
+        .map(d => [d.drugFromSource, d])
+    ).values(),
+  ];
 
   return (
     <>
@@ -324,26 +334,9 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
           <LongText variant="body2" lineLimit={3} displayText="...show more">
             <Box component="span" sx={{ fontSize: 14 }}>
               {dedupedDrugs.map((d, index) => (
-                <span key={index}>
+                <span key={d.drugFromSource}>
                   {index > 0 ? ", " : ""}
-                  {d.drug?.id ? (
-                    <Tooltip
-                      showHelpIcon
-                      style={tooltipStyle}
-                      slotProps={tooltipSlotProps}
-                      title={
-                        <Typography variant="caption" sx={{ whiteSpace: "pre-wrap", tabSize: 4 }}>
-                          Drug from source: {d.drugFromSource}
-                        </Typography>
-                      }
-                    >
-                      <Link asyncTooltip to={`/drug/${d.drug.id}`}>
-                        {d.drug.name}
-                      </Link>
-                    </Tooltip>
-                  ) : (
-                    d.drugFromSource
-                  )}
+                  {d.drugFromSource}
                 </span>
               ))}
             </Box>

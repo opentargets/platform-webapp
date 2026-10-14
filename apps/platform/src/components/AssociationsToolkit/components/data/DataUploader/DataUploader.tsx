@@ -42,7 +42,7 @@ import * as XLSX from "xlsx";
 import { useAotfQueryState } from "../../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../../context/AssociationsURLContext";
 import NestedItem from "./NestedItem";
-import ValidationQuery from "./ValidationQuery.gql";
+import { mapIdsViaSearch } from "../../../associationsUtils/mapIdsViaSearch";
 
 const BorderAccordion = styled(Accordion)(({ theme }) => ({
   boxShadow: "none",
@@ -107,10 +107,7 @@ const getEntityToUploadLabel: Record<string, string> = {
 };
 
 const getValidationResults = async (entity: string[], queryTerms: string[], client: any) =>
-  client.query({
-    query: ValidationQuery,
-    variables: { entity, queryTerms },
-  });
+  mapIdsViaSearch(client, queryTerms, entity);
 
 interface Hit {
   id: string;
@@ -124,7 +121,7 @@ interface QueryTermResult {
 }
 
 function formatQueryTermsResults(queryResult: any): QueryTermResult[] {
-  const sortedResult = [...queryResult.data.mapIds.mappings].sort(
+  const sortedResult = [...queryResult.mappings].sort(
     (a: any, b: any) => (a.hits.length < b.hits.length ? 1 : -1)
   );
   return sortedResult.map((qT: any) => ({

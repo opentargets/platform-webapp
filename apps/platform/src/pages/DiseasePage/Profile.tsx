@@ -14,11 +14,11 @@ import { Disease, Widget } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
+// OTProjects is not in this map: the API no longer exposes `otarProjects`
 const diseaseProfileWidgets = new Map<string, Widget>([
   [Disease.Ontology.definition.id, Disease.Ontology],
   [Disease.Drugs.definition.id, Disease.Drugs],
   [Disease.Phenotypes.definition.id, Disease.Phenotypes],
-  [Disease.OTProjects.definition.id, Disease.OTProjects],
   [Disease.GWASStudies.definition.id, Disease.GWASStudies],
   [Disease.Bibliography.definition.id, Disease.Bibliography],
 ]);
@@ -42,7 +42,7 @@ const DISEASE_PROFILE_QUERY = gql`
       ...DiseaseProfileHeaderFragment
       ...DiseaseProfileSummaryFragment
     }
-    studies(diseaseIds: [$efoId], page: { size: 1, index: 0 }) {
+    studies(diseaseIds: [$efoId], page: { size: 1, index: 0 }, sort: []) {
       count
     }
   }

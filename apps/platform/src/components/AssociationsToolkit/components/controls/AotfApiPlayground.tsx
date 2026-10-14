@@ -1,4 +1,5 @@
 import { ApiPlaygroundDrawer } from "ui";
+import { toDatasourcePolicyOverrides } from "../../associationsUtils";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 
 function AotfApiPlayground() {
@@ -6,7 +7,6 @@ function AotfApiPlayground() {
     id,
     pagination,
     sorting,
-    enableIndirect,
     dataSourceControls,
     entity,
     query,
@@ -18,14 +18,7 @@ function AotfApiPlayground() {
     index: pagination.pageIndex,
     size: pagination.pageSize,
     sortBy: sorting[0].id,
-    enableIndirect,
-    isDirect: !enableIndirect,
-    datasources: dataSourceControls.map(el => ({
-      id: el.id,
-      weight: el.weight,
-      propagate: el.propagate,
-      required: el.required,
-    })),
+    datasources: toDatasourcePolicyOverrides(dataSourceControls),
     entity,
     entitySearch,
   };

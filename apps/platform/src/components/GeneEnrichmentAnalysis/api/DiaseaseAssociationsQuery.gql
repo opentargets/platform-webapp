@@ -3,10 +3,9 @@ query GeneEnrichmentAnalysisDiseaseAssociationsQuery(
   $index: Int!
   $size: Int!
   $sortBy: String!
-  $enableIndirect: Boolean!
-  $datasources: [DatasourceSettingsInput!]
-  $rowsFilter: [String!]
-  $facetFilters: [String!]
+  $datasources: [DatasourcePolicyOverride!]! = []
+  $rowsFilter: [String!]! = []
+  $facetFilters: [String!]! = []
   $entitySearch: String!
 ) {
   disease(efoId: $efoId) {
@@ -14,9 +13,8 @@ query GeneEnrichmentAnalysisDiseaseAssociationsQuery(
     name
     associatedTargets(
       page: { index: $index, size: $size }
-      orderByScore: $sortBy
-      enableIndirect: $enableIndirect
-      datasources: $datasources
+      sort: { key: $sortBy, direction: DESCENDING }
+      datasourcePolicyOverrides: $datasources
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch

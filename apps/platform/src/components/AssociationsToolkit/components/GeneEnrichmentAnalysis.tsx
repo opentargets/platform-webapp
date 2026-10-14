@@ -11,6 +11,7 @@ import { useAotfQueryState } from "../context/AssociationsQueryContext";
 import { useAotfURLState } from "../context/AssociationsURLContext";
 import { useAotfData } from "../context/AssociationsDataContext";
 import { ENTITY } from "../types";
+import { toDatasourcePolicyOverrides } from "../associationsUtils";
 import type { AssociationsState } from "../../GeneEnrichmentAnalysis/types";
 
 const StyledMenuItem = styled(MenuItem)({
@@ -24,7 +25,7 @@ function buildAssociationsState(params: {
   entitySearch: string;
   sorting: Array<{ id: string }>;
   enableIndirect: boolean;
-  dataSourceControls: Array<{ id: string; weight: number; propagate: boolean; required: boolean }>;
+  dataSourceControls: Array<{ id: string; weight: number; required: boolean }>;
   pinnedEntries: string[];
   uploadedEntries: string[];
   facetFiltersIds: string[];
@@ -38,12 +39,7 @@ function buildAssociationsState(params: {
     enableIndirect: params.enableIndirect,
     pinnedEntities: params.pinnedEntries,
     uploadedEntities: params.uploadedEntries,
-    datasources: params.dataSourceControls.map(el => ({
-      id: el.id,
-      weight: el.weight,
-      propagate: el.propagate,
-      required: el.required,
-    })),
+    datasources: toDatasourcePolicyOverrides(params.dataSourceControls),
     rowsFilter: params.pinnedEntries.toSorted(),
     facetFilters: params.facetFiltersIds,
     entitySearch: params.entitySearch,

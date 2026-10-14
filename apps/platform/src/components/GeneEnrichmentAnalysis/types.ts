@@ -28,7 +28,7 @@ export interface AssociationsState {
   filter: string;
   sortBy: string;
   enableIndirect: boolean;
-  datasources: Array<{ id: string; weight: number; propagate: boolean; required: boolean }>;
+  datasources: Array<{ id: string; policy: { weight: number; required: boolean } }>;
   rowsFilter: string[];
   facetFilters: string[];
   entitySearch: string;

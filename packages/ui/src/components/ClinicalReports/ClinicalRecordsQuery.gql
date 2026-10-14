@@ -6,7 +6,7 @@ query ClinicalRecordsQuery($clinicalReportsIds: [String!]!) {
     title
     trialOverallStatus
     trialStartDate
-    type
+    type: evidenceType
     year
   }
 }
