@@ -11,6 +11,7 @@ export const { isPartnerPreview } = config.profile;
 
 export * from "./associations";
 export * from "./interactors";
+export * from "./queryVariables";
 
 const ASSOCIATION_LEGEND_LABEL = "Association score";
 const PRIORITISATION_LEGEND_LABEL = "Prioritisation indicator";

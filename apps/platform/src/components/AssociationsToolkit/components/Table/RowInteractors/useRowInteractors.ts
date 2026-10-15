@@ -5,6 +5,7 @@ import {
   getInteractorIds,
   getInitialLoadingData,
   INTERACTORS_SOURCES,
+  getAssociationsQueryVariables,
 } from "../../../associationsUtils";
 import { columnAdvanceControl } from "../../../types";
 
@@ -35,9 +36,7 @@ interface UseRowInteractorsOptions {
   id?: string;
   index?: number;
   size?: number;
-  filter?: string;
   source?: string;
-  enableIndirect?: boolean;
   datasources?: columnAdvanceControl[];
   rowsFilter?: string[];
   entityInteractors?: string | null;
@@ -56,9 +55,7 @@ function useRowInteractors({
     id = "",
     index = 0,
     size = 50,
-    filter = "",
     source = INTERACTORS_SOURCES.INTACT,
-    enableIndirect = false,
     datasources = [],
     rowsFilter = [],
     entityInteractors = null,
@@ -112,23 +109,15 @@ function useRowInteractors({
 
       const interactorsAssociationsRequest = await client.query({
         query: associationsQuery,
-        variables: {
-          id: diseaseId,
+        variables: getAssociationsQueryVariables({
+          id: diseaseId!,
           index,
           size: interactorsIds.length,
-          filter,
           sortBy,
-          enableIndirect,
-          isDirect: !enableIndirect,
-          rowsFilter: interactorsIds,
+          rowsFilter: interactorsIds as string[],
           entitySearch,
-          datasources: datasources.map(el => ({
-            id: el.id,
-            weight: el.weight,
-            propagate: el.propagate,
-            required: el.required,
-          })),
-        },
+          datasources,
+        }),
       });
 
       const interactorsAssociations = getAssociationsData(

@@ -1,3 +1,5 @@
+# TODO(ng-api): Query.mapIds does not exist on the new API and nothing replaces it, so
+# uploading a list of entities fails. docs/new-api-migration/PAIN_POINTS.md #15.
 query EntityValidationQuery($entity: [String!], $queryTerms: [String!]!) {
   mapIds(queryTerms: $queryTerms, entityNames: $entity) {
     total
