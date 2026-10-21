@@ -1,53 +1,67 @@
-import { Link, OtTableServer, Box, Typography } from "ui";
+import { faArrowDown, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { clinicalStageCategories } from "@ot/constants";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faArrowDown } from "@fortawesome/free-solid-svg-icons";
-import INDICATIONS_QUERY from "./IndicationsQuery.gql";
+import {
+  clinicalStageCategories,
+  type IndicationsQuery,
+  type IndicationsQueryVariables,
+} from "@ot/constants";
+import type { Row } from "@tanstack/react-table";
+import type { MouseEvent } from "react";
+import { Box, Link, type OtTableColumn, OtTableServer, Typography } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import INDICATIONS_QUERY_DOCUMENT from "./IndicationsQuery.gql";
 
-const onLinkClick = (e: any) => {
+export const INDICATIONS_QUERY = typedDocument<IndicationsQuery, IndicationsQueryVariables>(
+  INDICATIONS_QUERY_DOCUMENT
+);
+
+export type IndicationRow = NonNullable<IndicationsQuery["drug"]>["indications"]["rows"][number];
+
+type StageCategory = { index: number; label: string };
+const stageCategories: Record<string, StageCategory | undefined> = clinicalStageCategories;
+
+const onLinkClick = (e: MouseEvent<HTMLAnchorElement>) => {
   e.stopPropagation();
 };
 
 export const INDICATIONS_PAGE_SIZE = 10;
 
-function IndicationsTable({
-  chemblId,
-  selectedRow,
-  selectRow,
-}: any) {
+type IndicationsTableProps = {
+  chemblId: string;
+  selectedRow: IndicationRow | null;
+  selectRow: (row: IndicationRow | null) => void;
+};
+
+function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
-  const columns = [
+  const columns: OtTableColumn<IndicationRow>[] = [
     {
       id: "indicationCard",
       label: "",
-      renderCell: (row: any) => {
-        const {
-          disease,
-          maxClinicalStage,
-          clinicalReports,
-        } = row;
-        const isSelected = selectedRow?.id && row.id === selectedRow.id;       
+      renderCell: (row) => {
+        const { disease, maxClinicalStage, clinicalReports } = row;
+        const isSelected = selectedRow?.id && row.id === selectedRow.id;
         return (
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
               borderStyle: "solid",
               borderRadius: 1,
               borderColor: isSelected ? "primary.main" : "background.paper",
-              bgcolor: isSelected ? '#e1eff9' : 'background.paper',
-              cursor: 'pointer',
-              '&:hover': {
-                bgcolor: isSelected ? '#e1eff9' : 'grey.100',
+              bgcolor: isSelected ? "#e1eff9" : "background.paper",
+              cursor: "pointer",
+              "&:hover": {
+                bgcolor: isSelected ? "#e1eff9" : "grey.100",
                 borderColor: isSelected ? "primary.main" : "grey.300",
                 "& .arrow-icon": {
                   visibility: "visible",
                 },
-              }
+              },
             }}
           >
             {/* Top: Indication link as title */}
@@ -57,7 +71,7 @@ function IndicationsTable({
                 fontSize: "14px",
                 fontWeight: 600,
                 mb: 0,
-                color: 'primary.main',
+                color: "primary.main",
                 minWidth: 0,
                 pr: 1,
                 overflow: "hidden",
@@ -71,14 +85,12 @@ function IndicationsTable({
             </Typography>
 
             {/* Bottom section with max phase and record count */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               {/* Bottom left: Max clinical stage */}
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
-                <Typography variant="caption">
-                  Max stage:
-                </Typography>
+                <Typography variant="caption">Max stage:</Typography>
                 <Typography variant="caption" sx={{ fontSize: 13 }}>
-                  {(clinicalStageCategories as any)[maxClinicalStage]?.label ?? maxClinicalStage}
+                  {stageCategories[maxClinicalStage]?.label ?? maxClinicalStage}
                 </Typography>
               </Box>
 
@@ -88,7 +100,7 @@ function IndicationsTable({
                   variant="caption"
                   sx={{
                     fontSize: 12,
-                    color: 'text.secondary'
+                    color: "text.secondary",
                   }}
                 >
                   {clinicalReports.length} {clinicalReports.length > 1 ? "reports" : "report"}
@@ -108,37 +120,37 @@ function IndicationsTable({
           </Box>
         );
       },
-      filterValue: (row: any) => {
-        return `${row.disease?.name ?? ""} ${(clinicalStageCategories as any)[row.maxClinicalStage]?.label ?? ""}`
-      }
+      filterValue: (row) =>
+        `${row.disease?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
-  const dataDownloaderColumns = [
-    { id: "diseaseName", label: "Disease name", exportValue: (row: any) => row.disease?.name },
-    { id: "diseaseId", label: "Disease id", exportValue: (row: any) => row.disease?.id },
+  const dataDownloaderColumns: OtTableColumn<IndicationRow>[] = [
+    { id: "diseaseName", label: "Disease name", exportValue: (row) => row.disease?.name },
+    { id: "diseaseId", label: "Disease id", exportValue: (row) => row.disease?.id },
     { id: "maxClinicalStage", label: "Max clinical stage" },
-    { id: "reportCount", label: "Report count", exportValue: (row: any) => row.clinicalReports?.length },
+    { id: "reportCount", label: "Report count", exportValue: (row) => row.clinicalReports?.length },
   ];
 
   return (
     <Box
       sx={{
         px: { sm: 0, md: 1 },
-        py: 0,  
-        position: 'relative',
+        py: 0,
+        position: "relative",
         height: "100%",
-        "&::after": {  // vertical line full height of section
+        "&::after": {
+          // vertical line full height of section
           content: '""',
-          position: 'absolute',
+          position: "absolute",
           right: 0,
-          top: -16,  
-          bottom: -24,  
-          width: { sm: 0, md: '1px' },
-          backgroundColor: 'divider',  
-          opacity: 0.8,  
+          top: -16,
+          bottom: -24,
+          width: { sm: 0, md: "1px" },
+          backgroundColor: "divider",
+          opacity: 0.8,
         },
-        "& thead": { display: 'none' },
+        "& thead": { display: "none" },
         "& tr": {
           padding: "0.15rem 0 !important",
           borderBottom: "none !important",
@@ -146,19 +158,19 @@ function IndicationsTable({
         },
         "& td": {
           padding: "0 !important",
-          maxWidth: 0,  
+          maxWidth: 0,
           borderBottom: "none !important",
-          ":hover": {bgcolor: "transparent"}
+          ":hover": { bgcolor: "transparent" },
         },
-        "& > div > :nth-of-type(2)": theme => ({
+        "& > div > :nth-of-type(2)": (theme) => ({
           paddingTop: "0.5rem",
-          marginLeft: { sm: 0, md: "-1.5rem" },  // to reach left edge
-          marginRight: { sm: 0, md: "-0.5rem" },  // to not overshoot right border
+          marginLeft: { sm: 0, md: "-1.5rem" }, // to reach left edge
+          marginRight: { sm: 0, md: "-0.5rem" }, // to not overshoot right border
           width: { sm: "100%", md: `calc(100% + ${theme.spacing(4)})` },
         }),
       }}
     >
-      <OtTableServer
+      <OtTableServer<IndicationRow>
         columns={columns}
         query={INDICATIONS_QUERY}
         variables={{ chemblId }}
@@ -169,14 +181,13 @@ function IndicationsTable({
         dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
         globalFilterPlaceholderText="Search..."
-        getSelectedRows={(rowsInfo: any[]) => {
+        getSelectedRows={(rowsInfo: Row<IndicationRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
-          const selectedOriginalRows = rowsInfo.map(r => r.original).filter(Boolean);
+          const selectedOriginalRows = rowsInfo.map((r) => r.original).filter(Boolean);
           if (!selectedOriginalRows.length) return;
           const nextRow =
-            selectedOriginalRows.find(r => r.id !== selectedRow?.id) ??
-            selectedOriginalRows[0];
+            selectedOriginalRows.find((r) => r.id !== selectedRow?.id) ?? selectedOriginalRows[0];
 
           if (!nextRow?.id) return;
 
