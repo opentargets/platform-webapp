@@ -10,13 +10,16 @@ import Description from "./Description";
 import INDICATIONS_QUERY from "./IndicationsQuery.gql";
 import { type DrugBodyProps } from "@ot/constants";
 import { definition } from ".";
-import IndicationsTable from "./IndicationsTable";
+import IndicationsTable, { INDICATIONS_PAGE_SIZE } from "./IndicationsTable";
 
 type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
-  const variables = { chemblId };
-  const request = useQuery(INDICATIONS_QUERY, { variables });
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(INDICATIONS_QUERY, {
+    variables: { chemblId, index: 0, size: INDICATIONS_PAGE_SIZE },
+  });
 
   const getClinicalReportsIds = useCallback(
     (row: any) => row?.clinicalReports?.map((report: any) => report.id),
@@ -48,7 +51,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     getSelectedEntity,
   });
 
-  const rows = request.data?.drug.indications.rows;
+  const count = request.data?.drug?.indications?.count ?? 0;
 
   return (
     <SectionItem
@@ -60,13 +63,11 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         return (
           <ClinicalReportsMasterDetailFrame
             master={
-              rows?.length > 0 && (
+              count > 0 && (
                 <IndicationsTable
                   chemblId={chemblId}
-                  rows={rows}
                   selectedRow={selectedRow}
                   selectRow={selectRow}
-                  loading={request.loading}
                 />
               )
             }
