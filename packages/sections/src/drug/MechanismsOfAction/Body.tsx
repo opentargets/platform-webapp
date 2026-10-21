@@ -1,15 +1,27 @@
-import { v1 } from "uuid";
-import { Fragment } from "react";
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, TableDrawer, OtTable } from "ui";
-
+import type {
+  DrugBodyProps,
+  MechanismsOfActionSectionQuery,
+  MechanismsOfActionSectionQueryVariables,
+} from "@ot/constants";
+import { Fragment } from "react";
+import { Link, OtTable, type OtTableColumn, SectionItem, TableDrawer } from "ui";
+import { v1 } from "uuid";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
+import MECHANISMS_OF_ACTION_QUERY_DOCUMENT from "./MechanismsOfActionQuery.gql";
 
-import MECHANISMS_OF_ACTION_QUERY from "./MechanismsOfActionQuery.gql";
-import type { DrugBodyProps, MechanismOfActionRow } from "@ot/constants";
+const MECHANISMS_OF_ACTION_QUERY = typedDocument<
+  MechanismsOfActionSectionQuery,
+  MechanismsOfActionSectionQueryVariables
+>(MECHANISMS_OF_ACTION_QUERY_DOCUMENT);
 
-const columns = [
+type MechanismOfActionRow = NonNullable<
+  NonNullable<MechanismsOfActionSectionQuery["drug"]>["mechanismsOfAction"]
+>["rows"][number];
+
+const columns: OtTableColumn<MechanismOfActionRow>[] = [
   {
     id: "mechanismOfAction",
     label: "Mechanism of Action",
@@ -22,12 +34,12 @@ const columns = [
   {
     id: "targets",
     label: "Human targets",
-    filterValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(" "),
-    exportValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(),
-    renderCell: ({ targets }: MechanismOfActionRow) => {
+    filterValue: (row) => row.targets.map((target) => target.approvedSymbol).join(" "),
+    exportValue: (row) => row.targets.map((target) => target.approvedSymbol).join(),
+    renderCell: ({ targets }) => {
       if (targets.length === 0) return "non-human";
 
-      const targetList = targets.map(target => ({
+      const targetList = targets.map((target) => ({
         name: target.approvedSymbol,
         url: `/target/${target.id}`,
         group: "Human targets",
@@ -39,9 +51,9 @@ const columns = [
   {
     id: "references",
     label: "References",
-    filterValue: (row: MechanismOfActionRow) => row.references.map(r => r.source).join(" "),
-    exportValue: (row: MechanismOfActionRow) => row.references.map(r => r.source).join(),
-    renderCell: (row: MechanismOfActionRow) =>
+    filterValue: (row) => row.references.map((r) => r.source).join(" "),
+    exportValue: (row) => row.references.map((r) => r.source).join(),
+    renderCell: (row) =>
       row.references.length === 0
         ? "n/a"
         : row.references.map((r, i) => (
@@ -87,7 +99,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
             rows={request.data?.drug?.mechanismsOfAction?.rows ?? []}
             dataDownloader
             dataDownloaderFileStem={`${chemblId}-mechanisms-of-action`}
-            query={MECHANISMS_OF_ACTION_QUERY.loc.source.body}
+            query={MECHANISMS_OF_ACTION_QUERY.loc?.source.body}
             variables={variables}
             loading={request.loading}
           />
