@@ -1,21 +1,15 @@
-import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material/styles";
 import _ from "lodash";
-import {
-  Link,
-  SectionItem,
-  PaginationActionsComplete,
-  Table,
-  useBatchDownloader,
-  Typography,
-} from "ui";
+import { Link, SectionItem, OtTableServer, Typography } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
 
 import ADVERSE_EVENTS_QUERY from "./AdverseEventsQuery.gql";
 import type { DrugBodyProps, AdverseEvent } from "@ot/constants";
+
+const PAGE_SIZE = 10;
 
 const levelBarContainerStyle = { display: "flex", alignItems: "center" };
 
@@ -61,7 +55,7 @@ const getColumns = (critVal: number, maxLlr: number, primaryColor: string) => [
         </div>
       );
     },
-    exportValue: d => d.logLR.toFixed(2),
+    exportValue: (d: AdverseEvent) => d.logLR.toFixed(2),
     width: "45%",
   },
 ];
@@ -71,45 +65,17 @@ type Props = DrugBodyProps;
 function Body({ id: chemblId, label: name, entity }: Props) {
   const theme = useTheme();
   const variables = { chemblId };
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const { loading, error, data, fetchMore } = useQuery(ADVERSE_EVENTS_QUERY, {
-    variables,
+  // first page only: drives the section loading/error state and provides the
+  // critical value and the largest LLR, the table fetches the same page from the
+  // Apollo cache and then paginates on its own
+  const request = useQuery(ADVERSE_EVENTS_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
-
-  // TODO: fetchMore doesn't seem to use gql/apollo caching
-  // but a new query causes flickering when rendering the table
-  function getData(newPage, size) {
-    fetchMore({
-      variables: {
-        index: newPage,
-        size,
-      },
-      updateQuery: (prev, { fetchMoreResult }) => fetchMoreResult,
-    });
-  }
-
-  const handlePageChange = newPage => {
-    setPage(newPage);
-    getData(newPage, pageSize);
-  };
-
-  function handleRowsPerPageChange(newSize) {
-    setPageSize(newSize);
-    setPage(0);
-    getData(0, newSize);
-  }
-
-  const getAllAdverseEvents = useBatchDownloader(
-    ADVERSE_EVENTS_QUERY,
-    variables,
-    "data.drug.adverseEvents"
-  );
 
   return (
     <SectionItem
       definition={definition}
-      request={{ loading, error, data }}
+      request={request}
       entity={entity}
       showContentLoading={true}
       renderDescription={() => <Description name={name} />}
@@ -117,28 +83,19 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         // TODO: Change GraphQL schema to have a maxLlr field instead of having
         // to get the first item of adverse events to get the largest llr since
         // items are sorted in decreasing llr order.
-        const maxLlr = data?.drug.maxLlr.rows[0].logLR;
-        const { stats, rows, count } = data?.drug.adverseEvents;
-        const criticalValue = stats?.criticalValue;
+        const maxLlr = request.data?.drug?.maxLlr?.rows[0]?.logLR ?? 0;
+        const criticalValue = request.data?.drug?.adverseEvents?.stats.criticalValue ?? 0;
 
         return (
-          <Table
-            dataDownloader
-            dataDownloaderRows={getAllAdverseEvents}
-            dataDownloaderFileStem={`${name}-adverse-events`}
-            loading={loading}
+          <OtTableServer
             columns={getColumns(criticalValue, maxLlr, theme.palette.primary.main)}
-            rows={rows}
-            rowCount={count}
-            page={page}
-            onPageChange={handlePageChange}
-            ActionsComponent={PaginationActionsComplete}
-            fixed
-            pageSize={pageSize}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            onRowsPerPageChange={newSize => handleRowsPerPageChange(newSize)}
-            query={ADVERSE_EVENTS_QUERY.loc.source.body}
+            query={ADVERSE_EVENTS_QUERY}
             variables={variables}
+            dataPath="drug.adverseEvents"
+            pageSize={PAGE_SIZE}
+            pageSizeOptions={[10, 25, 50, 100]}
+            dataDownloader
+            dataDownloaderFileStem={`${name}-adverse-events`}
           />
         );
       }}
