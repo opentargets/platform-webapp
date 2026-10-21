@@ -25,7 +25,7 @@ const columns = [
     filterValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(" "),
     exportValue: (row: MechanismOfActionRow) => row.targets.map(target => target.approvedSymbol).join(),
     renderCell: ({ targets }: MechanismOfActionRow) => {
-      if (!targets) return "non-human";
+      if (targets.length === 0) return "non-human";
 
       const targetList = targets.map(target => ({
         name: target.approvedSymbol,
@@ -39,15 +39,15 @@ const columns = [
   {
     id: "references",
     label: "References",
-    filterValue: (row: MechanismOfActionRow) => row.references?.map(r => r.source).join(" "),
-    exportValue: (row: MechanismOfActionRow) => row.references?.map(r => r.source).join(),
+    filterValue: (row: MechanismOfActionRow) => row.references.map(r => r.source).join(" "),
+    exportValue: (row: MechanismOfActionRow) => row.references.map(r => r.source).join(),
     renderCell: (row: MechanismOfActionRow) =>
-      !row.references
+      row.references.length === 0
         ? "n/a"
         : row.references.map((r, i) => (
             <Fragment key={v1()}>
               {i > 0 ? ", " : null}
-              {r.urls ? (
+              {r.urls.length > 0 ? (
                 <Link external to={r.urls[0]}>
                   {r.source}
                 </Link>
@@ -75,8 +75,8 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       renderDescription={() => (
         <Description
           name={name}
-          parentMolecule={request.data?.drug.parentMolecule || []}
-          childMolecules={request.data?.drug.childMolecules || []}
+          parentMolecule={request.data?.drug?.parentMolecule ?? []}
+          childMolecules={request.data?.drug?.childMolecules ?? []}
         />
       )}
       renderBody={() => {
@@ -84,7 +84,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           <OtTable
             showGlobalFilter
             columns={columns}
-            rows={request.data?.drug.mechanismsOfAction?.rows}
+            rows={request.data?.drug?.mechanismsOfAction?.rows ?? []}
             dataDownloader
             dataDownloaderFileStem={`${chemblId}-mechanisms-of-action`}
             query={MECHANISMS_OF_ACTION_QUERY.loc.source.body}
