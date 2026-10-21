@@ -1,16 +1,27 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTableServer } from "ui";
-
+import {
+  type DrugBodyProps,
+  type DrugWarningsQuery,
+  type DrugWarningsQueryVariables,
+  naLabel,
+} from "@ot/constants";
+import { Link, type OtTableColumn, OtTableServer, SectionItem, TableDrawer, Tooltip } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import DRUG_WARNINGS_QUERY from "./DrugWarningsQuery.gql";
-import { naLabel, type DrugBodyProps, type DrugWarning } from "@ot/constants";
+import DRUG_WARNINGS_QUERY_DOCUMENT from "./DrugWarningsQuery.gql";
+
+const DRUG_WARNINGS_QUERY = typedDocument<DrugWarningsQuery, DrugWarningsQueryVariables>(
+  DRUG_WARNINGS_QUERY_DOCUMENT
+);
+
+type DrugWarningRow = NonNullable<DrugWarningsQuery["drug"]>["drugWarnings"]["rows"][number];
 
 const PAGE_SIZE = 10;
 
 const replaceSemicolonWithUnderscore = (id: string) => id.replace(":", "_");
 
-const columns = [
+const columns: OtTableColumn<DrugWarningRow>[] = [
   {
     id: "warningType",
     label: "Warning type",
@@ -18,7 +29,7 @@ const columns = [
   {
     id: "efoTerm",
     label: "Adverse event",
-    renderCell: ({ efoTerm, efoId, description }: DrugWarning) => {
+    renderCell: ({ efoTerm, efoId, description }) => {
       if (efoId)
         return (
           <Tooltip title={`Description: ${description}`} showHelpIcon>
@@ -34,7 +45,7 @@ const columns = [
     id: "toxicityClass",
     label: "ChEMBL warning class",
     enableHiding: false,
-    renderCell: ({ toxicityClass, efoIdForWarningClass, description }: DrugWarning) => {
+    renderCell: ({ toxicityClass, efoIdForWarningClass, description }) => {
       if (efoIdForWarningClass)
         return (
           <Link external to={`/disease/${replaceSemicolonWithUnderscore(efoIdForWarningClass)}`}>
@@ -47,15 +58,15 @@ const columns = [
   {
     id: "country",
     label: "Country / region",
-    renderCell: ({ country }: DrugWarning) => country ?? naLabel,
+    renderCell: ({ country }) => country ?? naLabel,
   },
-  { id: "year", label: "Year", renderCell: ({ year }: DrugWarning) => year ?? naLabel },
+  { id: "year", label: "Year", renderCell: ({ year }) => year ?? naLabel },
   {
     id: "references",
     label: "References",
-    renderCell: ({ references }: DrugWarning) => {
-      const sources = new Set(references.map(ref => ref.source)); // unique sources
-      const refs = references.map(ref => ({
+    renderCell: ({ references }) => {
+      const sources = new Set(references.map((ref) => ref.source)); // unique sources
+      const refs = references.map((ref) => ({
         name: ref.id,
         url: ref.url,
         group: ref.source,
@@ -85,7 +96,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description name={name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<DrugWarningRow>
           columns={columns}
           query={DRUG_WARNINGS_QUERY}
           variables={variables}
