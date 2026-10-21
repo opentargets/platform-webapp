@@ -1,10 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material/styles";
-import type {
-  AdverseEventsQuery,
-  AdverseEventsQueryVariables,
-  DrugBodyProps,
-} from "@ot/constants";
+import type { AdverseEventsQuery, AdverseEventsQueryVariables, DrugBodyProps } from "@ot/constants";
 import _ from "lodash";
 import { Link, type OtTableColumn, OtTableServer, SectionItem, Typography } from "ui";
 import { typedDocument } from "../../utils/typedDocument";
