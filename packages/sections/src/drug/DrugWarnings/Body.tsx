@@ -1,10 +1,12 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, TableDrawer, OtTable } from "ui";
+import { Link, SectionItem, Tooltip, TableDrawer, OtTableServer } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
 import DRUG_WARNINGS_QUERY from "./DrugWarningsQuery.gql";
 import { naLabel, type DrugBodyProps, type DrugWarning } from "@ot/constants";
+
+const PAGE_SIZE = 10;
 
 const replaceSemicolonWithUnderscore = (id: string) => id.replace(":", "_");
 
@@ -52,18 +54,12 @@ const columns = [
     id: "references",
     label: "References",
     renderCell: ({ references }: DrugWarning) => {
-      const sources = new Set(); // used to collect unique sources
-      const refs = [];
-
-      references.forEach(ref => {
-        sources.add(ref.source); // add source to set
-        refs.push({
-          // create new entry object
-          name: ref.id,
-          url: ref.url,
-          group: ref.source,
-        });
-      });
+      const sources = new Set(references.map(ref => ref.source)); // unique sources
+      const refs = references.map(ref => ({
+        name: ref.id,
+        url: ref.url,
+        group: ref.source,
+      }));
 
       const message = Array.from(sources).join(", ");
 
@@ -76,8 +72,10 @@ type Props = DrugBodyProps;
 
 function Body({ id: chemblId, label: name, entity }: Props) {
   const variables = { chemblId };
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(DRUG_WARNINGS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -87,15 +85,14 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description name={name} />}
       renderBody={() => (
-        <OtTable
-          showGlobalFilter
+        <OtTableServer
+          columns={columns}
+          query={DRUG_WARNINGS_QUERY}
+          variables={variables}
+          dataPath="drug.drugWarnings"
+          pageSize={PAGE_SIZE}
           dataDownloader
           dataDownloaderFileStem={`${chemblId}-drug-warning`}
-          columns={columns}
-          rows={request.data?.drug.drugWarnings?.rows}
-          query={DRUG_WARNINGS_QUERY.loc.source.body}
-          variables={variables}
-          loading={request.loading}
         />
       )}
     />
