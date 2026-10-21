@@ -1,23 +1,38 @@
 import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material/styles";
+import type {
+  AdverseEventsQuery,
+  AdverseEventsQueryVariables,
+  DrugBodyProps,
+} from "@ot/constants";
 import _ from "lodash";
-import { Link, SectionItem, OtTableServer, Typography } from "ui";
-
+import { Link, type OtTableColumn, OtTableServer, SectionItem, Typography } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
+import ADVERSE_EVENTS_QUERY_DOCUMENT from "./AdverseEventsQuery.gql";
 import Description from "./Description";
 
-import ADVERSE_EVENTS_QUERY from "./AdverseEventsQuery.gql";
-import type { DrugBodyProps, AdverseEvent } from "@ot/constants";
+const ADVERSE_EVENTS_QUERY = typedDocument<AdverseEventsQuery, AdverseEventsQueryVariables>(
+  ADVERSE_EVENTS_QUERY_DOCUMENT
+);
+
+type AdverseEventRow = NonNullable<
+  NonNullable<AdverseEventsQuery["drug"]>["adverseEvents"]
+>["rows"][number];
 
 const PAGE_SIZE = 10;
 
 const levelBarContainerStyle = { display: "flex", alignItems: "center" };
 
-const getColumns = (critVal: number, maxLlr: number, primaryColor: string) => [
+const getColumns = (
+  critVal: number,
+  maxLlr: number,
+  primaryColor: string
+): OtTableColumn<AdverseEventRow>[] => [
   {
     id: "name",
     label: "Adverse event (MedDRA)",
-    renderCell: (d: AdverseEvent) =>
+    renderCell: (d) =>
       d.meddraCode ? (
         <Link to={`https://identifiers.org/meddra:${d.meddraCode}`} external>
           <Typography variant="body2" noWrap display="block" title={_.upperFirst(d.name)}>
@@ -38,7 +53,7 @@ const getColumns = (critVal: number, maxLlr: number, primaryColor: string) => [
   {
     id: "llr",
     label: `Log likelihood ratio (CV = ${critVal.toFixed(2)})`,
-    renderCell: (d: AdverseEvent) => {
+    renderCell: (d) => {
       const w = ((d.logLR / maxLlr) * 85).toFixed(2); // scale to max 85% of the width to allows space for label
       return (
         <div style={levelBarContainerStyle}>
@@ -55,7 +70,8 @@ const getColumns = (critVal: number, maxLlr: number, primaryColor: string) => [
         </div>
       );
     },
-    exportValue: (d: AdverseEvent) => d.logLR.toFixed(2),
+    filterValue: (d) => d.logLR.toFixed(2),
+    exportValue: (d) => d.logLR.toFixed(2),
     width: "45%",
   },
 ];
@@ -87,7 +103,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         const criticalValue = request.data?.drug?.adverseEvents?.stats.criticalValue ?? 0;
 
         return (
-          <OtTableServer
+          <OtTableServer<AdverseEventRow>
             columns={getColumns(criticalValue, maxLlr, theme.palette.primary.main)}
             query={ADVERSE_EVENTS_QUERY}
             variables={variables}
