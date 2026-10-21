@@ -1,3 +1,4 @@
+import type { MechanismsOfActionSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,17 +11,17 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => (
-        <>
-          {data.mechanismsOfAction.uniqueActionTypes.length > 0
-            ? data.mechanismsOfAction.uniqueActionTypes.join(" • ")
-            : null}
-          <br />
-          {data.mechanismsOfAction.uniqueTargetTypes.length > 0
-            ? data.mechanismsOfAction.uniqueTargetTypes.join(" • ")
-            : null}
-        </>
-      )}
+      renderSummary={(data: MechanismsOfActionSummaryFragment) => {
+        const actionTypes = data.mechanismsOfAction?.uniqueActionTypes ?? [];
+        const targetTypes = data.mechanismsOfAction?.uniqueTargetTypes ?? [];
+        return (
+          <>
+            {actionTypes.length > 0 ? actionTypes.join(" • ") : null}
+            <br />
+            {targetTypes.length > 0 ? targetTypes.join(" • ") : null}
+          </>
+        );
+      }}
     />
   );
 }
