@@ -1,16 +1,19 @@
 import { useQuery } from "@apollo/client";
+import type { DrugBodyProps } from "@ot/constants";
+import { useCallback } from "react";
 import {
+  ClinicalReportsMasterDetailFrame,
+  RecordsCards,
   SectionItem,
   useClinicalReportsMasterDetail,
-  RecordsCards,
-  ClinicalReportsMasterDetailFrame,
 } from "ui";
-import { useCallback } from "react";
-import Description from "./Description";
-import INDICATIONS_QUERY from "./IndicationsQuery.gql";
-import { type DrugBodyProps } from "@ot/constants";
 import { definition } from ".";
-import IndicationsTable, { INDICATIONS_PAGE_SIZE } from "./IndicationsTable";
+import Description from "./Description";
+import IndicationsTable, {
+  INDICATIONS_PAGE_SIZE,
+  INDICATIONS_QUERY,
+  type IndicationRow,
+} from "./IndicationsTable";
 
 type Props = DrugBodyProps;
 
@@ -22,21 +25,18 @@ function Body({ id: chemblId, label: name, entity }: Props) {
   });
 
   const getClinicalReportsIds = useCallback(
-    (row: any) => row?.clinicalReports?.map((report: any) => report.id),
+    (row: IndicationRow) => row?.clinicalReports?.map((report) => report.id),
     []
   );
 
-  const getMaxClinicalStage = useCallback((row: any) => row?.maxClinicalStage, []);
+  const getMaxClinicalStage = useCallback((row: IndicationRow) => row?.maxClinicalStage, []);
 
-  const getSelectedEntity = useCallback(
-    (row: any) => {
-      const id = row?.disease?.id;
-      const selectedName = row?.disease?.name;
-      if (!id || !selectedName) return null;
-      return { entityType: "disease", id, name: selectedName };
-    },
-    []
-  );
+  const getSelectedEntity = useCallback((row: IndicationRow) => {
+    const id = row?.disease?.id;
+    const selectedName = row?.disease?.name;
+    if (!id || !selectedName) return null;
+    return { entityType: "disease", id, name: selectedName };
+  }, []);
 
   const {
     selectedRow,
@@ -45,7 +45,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     recordsByStage,
     maxClinicalStage,
     loadingRecords,
-  } = useClinicalReportsMasterDetail({
+  } = useClinicalReportsMasterDetail<IndicationRow>({
     getClinicalReportsIds,
     getMaxClinicalStage,
     getSelectedEntity,
