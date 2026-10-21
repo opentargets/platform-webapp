@@ -6,7 +6,7 @@ import {
   Tooltip,
   LabelChip,
   PublicationsDrawer,
-  OtTable,
+  OtTableServer,
   DirectionalityDrawer,
   DisplayVariantId,
 } from "ui";
@@ -19,6 +19,8 @@ import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type DrugBodyProps,
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
+
+const PAGE_SIZE = 10;
 
 const getLevelElementClassName = (level: string) => {
   switch (level) {
@@ -217,7 +219,6 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "evidenceLevel",
       label: "Confidence Level",
-      sortable: true,
       tooltip: (
         <>
           As defined by
@@ -282,8 +283,10 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     },
   ];
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(PHARMACOGENOMICS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -293,16 +296,14 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description name={name} />}
       renderBody={() => (
-        <OtTable
-          sortBy="evidenceLevel"
-          showGlobalFilter
+        <OtTableServer
+          columns={columns}
+          query={PHARMACOGENOMICS_QUERY}
+          variables={variables}
+          dataPath="drug.pharmacogenomics"
+          pageSize={PAGE_SIZE}
           dataDownloader
           dataDownloaderFileStem={`${chemblId}-pharmacogenomics`}
-          columns={columns}
-          rows={request.data?.drug.pharmacogenomics?.rows}
-          query={PHARMACOGENOMICS_QUERY.loc.source.body}
-          variables={variables}
-          loading={request.loading}
         />
       )}
     />
