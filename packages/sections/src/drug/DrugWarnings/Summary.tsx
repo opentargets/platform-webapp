@@ -6,12 +6,7 @@ import DRUG_WARNINGS_SUMMARY_FRAGMENT from "./DrugWarningsSummaryFragment.gql";
 function Summary() {
   const request = usePlatformApi(DRUG_WARNINGS_SUMMARY_FRAGMENT);
 
-  return (
-    <SummaryItem
-      definition={definition}
-      request={request}
-    />
-  );
+  return <SummaryItem definition={definition} request={request} />;
 }
 
 Summary.fragments = {
