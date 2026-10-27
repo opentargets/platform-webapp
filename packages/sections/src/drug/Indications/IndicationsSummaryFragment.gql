@@ -1,5 +1,5 @@
 fragment IndicationsSummaryFragment on Drug {
-  indications {
+  indications(page: { index: 0, size: 1 }) {
     count
   }
 }
