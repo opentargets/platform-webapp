@@ -1,21 +1,23 @@
-import type { CSSProperties } from "react";
-import { useState, useEffect } from "react";
+import {
+  colorRange,
+  InteractionSourceDatabase,
+  type TargetInteractionsStringQuery,
+  type TargetInteractionsStringQueryVariables,
+} from "@ot/constants";
 import { scaleQuantize } from "d3";
-import { Link, Legend, OtTable, useApolloClient, GridLegacy } from "ui";
-import { colorRange } from "@ot/constants";
+import type { CSSProperties } from "react";
+import { GridLegacy, Legend, Link, type OtTableColumn, OtTableServer } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import INTERACTIONS_QUERY_DOCUMENT from "./InteractionsStringQuery.gql";
 
-import INTERACTIONS_QUERY from "./InteractionsStringQuery.gql";
+const INTERACTIONS_QUERY = typedDocument<
+  TargetInteractionsStringQuery,
+  TargetInteractionsStringQueryVariables
+>(INTERACTIONS_QUERY_DOCUMENT);
 
-const getData = (query, ensgId, sourceDatabase, index, size, client) =>
-  client.query({
-    query,
-    variables: {
-      ensgId,
-      sourceDatabase,
-      index,
-      size,
-    },
-  });
+type StringInteractionRow = NonNullable<
+  TargetInteractionsStringQuery["target"]
+>["interactions"]["rows"][number];
 
 // NOTE: OtTable doesn't read a `classes` prop at all (checked its full
 // implementation - no such prop, at the table level or per-column), so most of
@@ -36,25 +38,29 @@ const nameContainerStyle: CSSProperties = {
   overflow: "hidden",
 };
 
-const id = "string";
-const index = 0;
-const size = 3000;
-const color = scaleQuantize().domain([0, 1]).range(colorRange);
+const id = InteractionSourceDatabase.String;
+const PAGE_SIZE = 10;
+const color = scaleQuantize<string>().domain([0, 1]).range(colorRange);
 
-const getScoreForColumn = (evidences, evidencesId) =>
+type StringEvidence = StringInteractionRow["evidences"][number];
+
+const getScoreForColumn = (evidences: StringEvidence[], evidencesId: string) =>
   evidences
-    .filter(e => e.interactionDetectionMethodShortName === evidencesId)
-    .map(e => e.evidenceScore)[0]; // TODO: the [0] is to catch a data error: remove when fixed.
-const getHeatmapCell = score => (
-  <span title={score || "No data"} style={{ ...colorSpanStyle, backgroundColor: color(score) }} />
+    .filter((e) => e.interactionDetectionMethodShortName === evidencesId)
+    .map((e) => e.evidenceScore)[0]; // TODO: the [0] is to catch a data error: remove when fixed.
+const getHeatmapCell = (score: number | null | undefined) => (
+  <span
+    title={score == null ? "No data" : String(score)}
+    style={{ ...colorSpanStyle, backgroundColor: score == null ? undefined : color(score) }}
+  />
 );
 
-function getColumns() {
+function getColumns(): OtTableColumn<StringInteractionRow>[] {
   return [
     {
       id: "partner",
       label: <>Interactor B</>,
-      renderCell: row => (
+      renderCell: (row) => (
         <span style={nameContainerStyle}>
           {row.targetB ? (
             <Link asyncTooltip to={`/target/${row.targetB.id}`}>
@@ -67,8 +73,8 @@ function getColumns() {
           )}
         </span>
       ),
-      exportValue: row => row.targetB?.approvedSymbol || row.intB,
-      filterValue: row => `${row.targetB?.approvedSymbol} ${row.intB}`,
+      exportValue: (row) => row.targetB?.approvedSymbol || row.intB,
+      filterValue: (row) => `${row.targetB?.approvedSymbol} ${row.intB}`,
     },
     {
       id: "overallScore",
@@ -79,97 +85,84 @@ function getColumns() {
           interaction score
         </>
       ),
-      renderCell: row => row.score.toFixed(3),
-      exportValue: row => row.score.toFixed(3),
-      filterValue: row => row.score.toFixed(3),
+      renderCell: (row) => row.score?.toFixed(3) ?? "",
+      exportValue: (row) => row.score?.toFixed(3) ?? "",
+      filterValue: (row) => row.score?.toFixed(3) ?? "",
     },
     {
       id: "neighbourhood",
       label: "Neighbourhood",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "neighborhood")),
-      exportValue: row => getScoreForColumn(row.evidences, "neighborhood")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "neighborhood")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "neighborhood")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "neighborhood")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "neighborhood")?.toFixed(3),
     },
     {
       id: "geneFusion",
       label: "Gene fusion",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "fusion")),
-      exportValue: row => getScoreForColumn(row.evidences, "fusion")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "fusion")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "fusion")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "fusion")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "fusion")?.toFixed(3),
     },
     {
       id: "occurance",
       label: "Co-occurrance",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "cooccurence")),
-      exportValue: row => getScoreForColumn(row.evidences, "cooccurence")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "cooccurence")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "cooccurence")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "cooccurence")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "cooccurence")?.toFixed(3),
     },
     {
       id: "expression",
       label: "Co-expression",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "coexpression")),
-      exportValue: row => getScoreForColumn(row.evidences, "coexpression")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "coexpression")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "coexpression")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "coexpression")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "coexpression")?.toFixed(3),
     },
     {
       id: "experiments",
       label: "Experiments",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "experimental")),
-      exportValue: row => getScoreForColumn(row.evidences, "experimental")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "experimental")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "experimental")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "experimental")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "experimental")?.toFixed(3),
     },
     {
       id: "databases",
       label: "Databases",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "database")),
-      exportValue: row => getScoreForColumn(row.evidences, "database")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "database")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "database")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "database")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "database")?.toFixed(3),
     },
     {
       id: "textMining",
       label: "Text mining",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "textmining")),
-      exportValue: row => getScoreForColumn(row.evidences, "textmining")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "textmining")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "textmining")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "textmining")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "textmining")?.toFixed(3),
     },
     {
       id: "homology",
       label: "Homology",
-      renderCell: row => getHeatmapCell(getScoreForColumn(row.evidences, "homology")),
-      exportValue: row => getScoreForColumn(row.evidences, "homology")?.toFixed(3),
-      filterValue: row => getScoreForColumn(row.evidences, "homology")?.toFixed(3),
+      renderCell: (row) => getHeatmapCell(getScoreForColumn(row.evidences, "homology")),
+      exportValue: (row) => getScoreForColumn(row.evidences, "homology")?.toFixed(3),
+      filterValue: (row) => getScoreForColumn(row.evidences, "homology")?.toFixed(3),
     },
   ];
 }
 
-function StringTab({ ensgId, symbol }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
+function StringTab({ ensgId, symbol }: { ensgId: string; symbol: string }) {
   const columns = getColumns();
-  const client = useApolloClient();
-  // load tab data when new tab selected (also on first load)
-  useEffect(() => {
-    setLoading(true);
-    getData(INTERACTIONS_QUERY, ensgId, id, index, size, client).then(res => {
-      if (res.data.target.interactions) {
-        setLoading(false);
-        setData(res.data.target.interactions.rows);
-      }
-    });
-  }, [ensgId]);
 
   return (
     <GridLegacy container spacing={4}>
       <GridLegacy item xs={12}>
         {/* table 1: this is the only table and will need to be a HEATMAP */}
-        <OtTable
-          showGlobalFilter
+        <OtTableServer<StringInteractionRow>
           columns={columns}
-          rows={data}
+          query={INTERACTIONS_QUERY}
+          variables={{ ensgId, sourceDatabase: id }}
+          dataPath="target.interactions"
+          pageSize={PAGE_SIZE}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-string`}
-          fixed
-          loading={loading}
         />
         <Legend url="https://string-db.org/cgi/info" />
       </GridLegacy>
