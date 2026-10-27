@@ -136,7 +136,13 @@ export function DirectionalityList({ variantAnnotation }) {
   return <OtTable columns={columns} rows={variantAnnotation} showColumnVisibilityControl={false} />;
 }
 
-function DirectionalityDrawer({ variantAnnotation, customLabel, caption }) {
+type DirectionalityDrawerProps = {
+  variantAnnotation?: object[] | null;
+  customLabel?: string;
+  caption?: string;
+};
+
+function DirectionalityDrawer({ variantAnnotation, customLabel, caption }: DirectionalityDrawerProps) {
   const [open, setOpen] = useState(false);
 
   if (!variantAnnotation || !variantAnnotation.length) {
