@@ -207,6 +207,7 @@ function Body({ id, entity }: Props) {
           variables={variables}
           dataPath="target.credibleSets"
           pageSize={PAGE_SIZE}
+          sortBy="pValue"
           dataDownloader
           dataDownloaderFileStem={`${id}-qtl-credible-sets-target`}
         />
