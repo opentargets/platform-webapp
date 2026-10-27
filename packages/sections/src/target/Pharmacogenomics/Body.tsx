@@ -189,8 +189,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           return el.drugFromSource || el.drugId;
         });
       },
-      filterValue: ({ drugs }) =>
-        drugs.map((el) => `${el.drugFromSource} ${el.drugId}`).join(" "),
+      filterValue: ({ drugs }) => drugs.map((el) => `${el.drugFromSource} ${el.drugId}`).join(" "),
     },
     {
       id: "drugResponse",
@@ -238,6 +237,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "evidenceLevel",
       label: "Confidence Level",
+      sortable: true,
+      comparator: (a, b) => a.evidenceLevel.localeCompare(b.evidenceLevel),
       tooltip: (
         <>
           As defined by
