@@ -1,4 +1,4 @@
-query Safety($ensemblId: String!) {
+query TargetSafetyQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     safetyLiabilities {

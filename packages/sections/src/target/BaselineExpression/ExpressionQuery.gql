@@ -1,4 +1,4 @@
-query ExpressionQuery($ensemblId: String!) {
+query TargetExpressionQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     baselineExpression(page: { index: 0, size: 1500 }) {

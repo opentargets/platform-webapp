@@ -1,4 +1,4 @@
-query ProtVistaQuery($ensemblId: String!) {
+query TargetMolecularStructureQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     proteinIds {
       id
