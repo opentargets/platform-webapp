@@ -1,21 +1,34 @@
-import { useEffect, useReducer, useMemo, useCallback, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { gql, useQuery } from "@apollo/client";
-import { Link, InvalidResultFilters, Alert, Box, Typography } from "ui";
+import { Link, Alert, Box, Snackbar, Typography, Button } from "ui";
 import { getConfig } from "@ot/config";
-import DownloadsCard from "./DownloadsCard";
-import DownloadsFilter from "./DownloadsFilter";
+import { Route, Routes, useSearchParams } from "react-router";
 import DownloadsLoading from "./DownloadsLoading";
 import { createInitialState, downloadsReducer, initialState } from "./context/downloadsReducer";
-import { setDownloadsData, setError, setLoading } from "./context/downloadsActions";
+import {
+  addToBasket,
+  setActiveFilter,
+  setDownloadsData,
+  setError,
+  setLoading,
+  setView,
+  textSearch,
+} from "./context/downloadsActions";
 import { DownloadsContext } from "./context/DownloadsContext";
+import { getDatasetId, rowsMatchingQuery } from "./context/downloadsSelectors";
+import { hasSeenBasketCoachMark, markBasketCoachMarkSeen, writeStoredBasket } from "./context/basketStorage";
+import { DownloadsView } from "./types/downloadTypes";
 import DownloadsTags from "./DownloadsTags";
-import { Route, Routes, useMatch } from "react-router";
 import DownloadsDialog from "./DownloadsDialog";
-import DownloadsSchemaDiagram from "./DownloadsSchemaDiagram";
-import { GraphVisualization, transformRecordSetToGraph } from "./graph";
-import { useGridRowsHeight } from "./hooks/useGridRowsHeight";
-import { useResizableSplit } from "./hooks/useResizableSplit";
-import DownloadsSplitDivider from "./DownloadsSplitDivider";
+import DatasetsToolbar from "./components/DatasetsToolbar";
+import DatasetCard from "./components/DatasetCard";
+import ResultsBar from "./components/ResultsBar";
+import EmptyState from "./components/EmptyState";
+import BasketDrawer from "./components/BasketDrawer";
+import BasketCoachMark from "./components/BasketCoachMark";
+import LiveRegion from "./components/LiveRegion";
+import NetworkView from "./components/network/NetworkView";
+import useBasket from "./components/useBasket";
 
 const config = getConfig();
 
@@ -31,118 +44,6 @@ const DOWNLOADS_QUERY = gql`
 function DownloadsPage() {
   const { data, loading, error } = useQuery(DOWNLOADS_QUERY);
   const [state, dispatch] = useReducer(downloadsReducer, initialState, createInitialState);
-  const isSchemaDiagramRoute = Boolean(useMatch("/downloads/schema-diagram"));
-
-  // The connection-filter (clicked graph node) - plain local state, since the
-  // graph and card list are now a single page rather than separate views to
-  // deep-link between.
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-
-  // Cross-pane hover: hovering a card raises its node, hovering a node raises
-  // its card's border. One id, since only one pane can be hovered at a time.
-  // `hoveredSource` tracks which pane started the hover so the graph's own
-  // connection-highlight only reacts to a card hover, not to a canvas hover
-  // echoing back through this same state.
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoveredSource, setHoveredSource] = useState<"card" | "node" | null>(null);
-
-  const handleCardHoverChange = useCallback((hovering: boolean, id: string) => {
-    setHoveredId(hovering ? id : null);
-    setHoveredSource(hovering ? "card" : null);
-  }, []);
-
-  const handleNodeHoverChange = useCallback((id: string | null) => {
-    setHoveredId(id);
-    setHoveredSource(id ? "node" : null);
-  }, []);
-
-  // Size the graph panel to match two rows of the cards grid, rather than
-  // pinning it to the viewport - measured off the grid's actual rendered
-  // children since card height isn't fixed (it grows with description length).
-  const { containerRef: cardsGridRef, height: twoRowsHeight } = useGridRowsHeight(2);
-
-  // Draggable split between the cards grid and the graph panel - dragging
-  // (or the divider's own expand buttons) all the way to either edge
-  // collapses that pane so the other fills the whole row.
-  const {
-    containerRef: splitContainerRef,
-    ratio: splitRatio,
-    isDragging: isSplitDragging,
-    cardsVisible,
-    graphVisible,
-    handlePointerDown: handleSplitPointerDown,
-    handleKeyDown: handleSplitKeyDown,
-  } = useResizableSplit();
-
-  const handleViewConnections = useCallback((id: string) => {
-    setSelectedNodeId(id);
-  }, []);
-
-  const handleClearConnectionFilter = useCallback(() => {
-    setSelectedNodeId(null);
-  }, []);
-
-  // Graph derived from the schema: degree (for the "N connections" chip) and
-  // each node's neighbour set (dataset + everything it references or is
-  // referenced by), used to build the connection-filter chip and to narrow
-  // the card column when a graph node is clicked.
-  const { degreeById, labelById, neighborsById } = useMemo(() => {
-    const recordSets = (state.schemaRows || []).filter(
-      (rs: any) => rs["@type"] === "cr:RecordSet"
-    ) as any[];
-    const { nodes, edges } = transformRecordSetToGraph(recordSets);
-    const degreeById = new Map(nodes.map(n => [n.data.id, n.data.degree || 0]));
-    const labelById = new Map(nodes.map(n => [n.data.id, n.data.label]));
-    const neighborsById = new Map(nodes.map(n => [n.data.id, new Set([n.data.id])]));
-    edges.forEach(e => {
-      neighborsById.get(e.data.source)?.add(e.data.target);
-      neighborsById.get(e.data.target)?.add(e.data.source);
-    });
-    return { degreeById, labelById, neighborsById };
-  }, [state.schemaRows]);
-
-  const connectionFilter = useMemo(() => {
-    if (!selectedNodeId) return null;
-    const neighbors = neighborsById.get(selectedNodeId);
-    if (!neighbors) return null;
-    return {
-      id: selectedNodeId,
-      label: labelById.get(selectedNodeId) ?? selectedNodeId,
-      count: neighbors.size - 1,
-    };
-  }, [selectedNodeId, neighborsById, labelById]);
-
-  // Cards to display: the usual search/category filters, further narrowed to
-  // the clicked node + its neighbours when a connection filter is active - with
-  // the clicked node's own card moved to the front so it's the top-left item.
-  const cardsToShow = useMemo(() => {
-    if (!connectionFilter) return state.filteredRows;
-    const neighbors = neighborsById.get(connectionFilter.id);
-    const filtered = state.filteredRows.filter(row => {
-      const id = String(row["@id"]).replace("-fileset", "");
-      return neighbors?.has(id) ?? false;
-    });
-    const selectedIndex = filtered.findIndex(
-      row => String(row["@id"]).replace("-fileset", "") === connectionFilter.id
-    );
-    if (selectedIndex <= 0) return filtered;
-    const [selectedRow] = filtered.splice(selectedIndex, 1);
-    return [selectedRow, ...filtered];
-  }, [state.filteredRows, connectionFilter, neighborsById]);
-
-  // Everything else that still matches the search/category filters but isn't
-  // the selected node or one of its neighbours - shown as its own section
-  // below the connection-filtered cards, rather than just dropped, so
-  // narrowing to a node's connections doesn't also hide unrelated datasets
-  // the user was filtering for.
-  const remainderRows = useMemo(() => {
-    if (!connectionFilter) return [];
-    const neighbors = neighborsById.get(connectionFilter.id);
-    return state.filteredRows.filter(row => {
-      const id = String(row["@id"]).replace("-fileset", "");
-      return !(neighbors?.has(id) ?? false);
-    });
-  }, [state.filteredRows, connectionFilter, neighborsById]);
 
   useEffect(() => {
     if (loading) {
@@ -158,176 +59,214 @@ function DownloadsPage() {
 
   return (
     <DownloadsContext.Provider value={{ state, dispatch }}>
-      {isSchemaDiagramRoute ? (
-        <DownloadsSchemaDiagram />
-      ) : (
-        <>
-          <Typography variant="h4" component="h1" paragraph>
-            {state.downloadsData?.name}
-          </Typography>
-          <Typography paragraph>{state.downloadsData?.description}</Typography>
-
-          {config.profile.isPartnerPreview ? (
-            <Alert severity="info" sx={{ marginBottom: 2 }}>
-              This table provides data file paths that have been integrated into the Open Targets
-              Partner Preview Platform. This includes pre-publication data generated by the consortium
-              combined with{" "}
-              <Link
-                external
-                to="https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/latest/output/"
-              >
-                {" "}
-                publicly available datasets
-              </Link>
-              . Please contact{" "}
-              <Link to={`mailto: ${config.profile.helpdeskEmail}`} external>
-                {config.profile.helpdeskEmail}
-              </Link>{" "}
-              to access the following datasets.
-            </Alert>
-          ) : null}
-
-          <DownloadsTags />
-
-          <DownloadsFilter
-            connectionFilter={connectionFilter}
-            onClearConnectionFilter={handleClearConnectionFilter}
-            resultCount={cardsToShow.length}
-          />
-
-          <Box
-            ref={splitContainerRef}
-            sx={{
-              display: "grid",
-              // Below md there's no divider to drag, so fall back to a fixed
-              // split; from md up, the divider drives the column widths
-              // (including collapsing either pane to fill the whole row).
-              gridTemplateColumns: {
-                xs: "minmax(0, 7fr) minmax(0, 3fr)",
-                md: !graphVisible
-                  ? "1fr 0px 0px"
-                  : !cardsVisible
-                    ? "0px 0px 1fr"
-                    : `${splitRatio}fr 28px ${1 - splitRatio}fr`,
-              },
-              gap: { xs: 3, md: 0 },
-              alignItems: "start",
-            }}
-          >
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
-              <Box
-                ref={cardsVisible ? cardsGridRef : undefined}
-                sx={{
-                  display: "grid",
-                  // Column count tracks the pane's actual pixel width (which the
-                  // split divider controls directly), not the viewport breakpoint -
-                  // a fixed column count per breakpoint would ignore how wide the
-                  // user has actually dragged this pane to be.
-                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                  gap: 2,
-                  alignContent: "start",
-                  minWidth: 0,
-                  overflow: "hidden",
-                }}
-              >
-                {cardsToShow.length > 0 ? (
-                  cardsToShow.map(e => {
-                    const id = String(e["@id"]).replace("-fileset", "");
-                    return (
-                      <DownloadsCard
-                        key={String(e["@id"])}
-                        data={e}
-                        connections={degreeById.get(id)}
-                        onViewConnections={handleViewConnections}
-                        highlighted={hoveredId === id || connectionFilter?.id === id}
-                        onHoverChange={hovering => handleCardHoverChange(hovering, id)}
-                      />
-                    );
-                  })
-                ) : (
-                  <InvalidResultFilters />
-                )}
-              </Box>
-
-              {remainderRows.length > 0 && (
-                <Box>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: "bold", color: "text.secondary", mb: 2 }}
-                  >
-                    Remainder datasets
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                      gap: 2,
-                      alignContent: "start",
-                      minWidth: 0,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {remainderRows.map(e => {
-                      const id = String(e["@id"]).replace("-fileset", "");
-                      return (
-                        <DownloadsCard
-                          key={String(e["@id"])}
-                          data={e}
-                          connections={degreeById.get(id)}
-                          onViewConnections={handleViewConnections}
-                          highlighted={hoveredId === id}
-                          onHoverChange={hovering => handleCardHoverChange(hovering, id)}
-                        />
-                      );
-                    })}
-                  </Box>
-                </Box>
-              )}
-            </Box>
-
-            <DownloadsSplitDivider
-              isDragging={isSplitDragging}
-              onPointerDown={handleSplitPointerDown}
-              onKeyDown={handleSplitKeyDown}
-            />
-
-            <Box
-              sx={{
-                position: { lg: "sticky" },
-                top: { lg: 72 },
-                // Sticky positioning always creates a new stacking context, so
-                // without an explicit z-index here this panel's own z-index:auto
-                // context loses to DownloadsFilter's sticky bar (z-index: 100)
-                // above it - trapping the graph's tooltip (z-index: 1300) behind
-                // it no matter how high the tooltip's own z-index is set.
-                zIndex: { lg: 101 },
-                minWidth: 0,
-                overflow: "hidden",
-                height: {
-                  xs: 420,
-                  md: !cardsVisible ? "calc(100vh - 220px)" : (twoRowsHeight ?? 420),
-                },
-              }}
-            >
-              <GraphVisualization
-                // While a node's connection filter is active the graph already
-                // shows that selection, so hovering other cards shouldn't
-                // re-highlight it.
-                externalHighlightId={hoveredSource === "card" && !connectionFilter ? hoveredId : null}
-                onNodeHoverChange={handleNodeHoverChange}
-                selectedNodeId={selectedNodeId}
-                onNodeSelect={setSelectedNodeId}
-                onNodeDeselect={handleClearConnectionFilter}
-              />
-            </Box>
-          </Box>
-        </>
-      )}
+      <DatasetsPage />
       <Routes>
         <Route path="/:downloadsRow/:downloadsView" element={<DownloadsDialog />} />
       </Routes>
     </DownloadsContext.Provider>
   );
 }
+
+/** Everything under the page header: toolbar, the active view, the basket drawer and its helpers. */
+function DatasetsPage() {
+  const { state, dispatch } = useDownloads();
+  const basket = useBasket();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const basketButtonRef = useRef<HTMLButtonElement>(null);
+
+  // `?view=network` is the view's source of truth so it can be linked; the
+  // reducer mirrors it for the components.
+  const urlView: DownloadsView = searchParams.get("view") === "network" ? "network" : "cards";
+  useEffect(() => {
+    if (state.view !== urlView) dispatch(setView(urlView));
+  }, [urlView, state.view, dispatch]);
+
+  const handleViewChange = useCallback(
+    (view: DownloadsView) => {
+      const next = new URLSearchParams(searchParams);
+      if (view === "network") next.set("view", "network");
+      else next.delete("view");
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  // Persist the basket (the ids only, never in the URL)
+  useEffect(() => {
+    writeStoredBasket(state.basket);
+  }, [state.basket]);
+
+  // Coach mark: once, on the very first add
+  const [coachOpen, setCoachOpen] = useState(false);
+  const previousCount = useRef(state.basket.length);
+  useEffect(() => {
+    const wasEmpty = previousCount.current === 0;
+    previousCount.current = state.basket.length;
+    if (wasEmpty && state.basket.length > 0 && !hasSeenBasketCoachMark()) {
+      markBasketCoachMarkSeen();
+      setCoachOpen(true);
+    }
+  }, [state.basket.length]);
+  const dismissCoach = () => setCoachOpen(false);
+
+  // "Empty basket" clears at once and offers an undo for a few seconds
+  const [undoIds, setUndoIds] = useState<string[] | null>(null);
+  const handleEmptyBasket = () => {
+    setUndoIds(state.basket);
+    basket.clear();
+  };
+  const handleUndoEmpty = () => {
+    if (undoIds?.length) dispatch(addToBasket(undoIds));
+    setUndoIds(null);
+  };
+
+  return (
+    <>
+      <Typography variant="h4" component="h1" paragraph>
+        {state.downloadsData?.name as string}
+      </Typography>
+      <Typography paragraph>{state.downloadsData?.description as string}</Typography>
+
+      {config.profile.isPartnerPreview ? (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          This table provides data file paths that have been integrated into the Open Targets Partner
+          Preview Platform. This includes pre-publication data generated by the consortium combined with{" "}
+          <Link external to="https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/latest/output/">
+            {" "}
+            publicly available datasets
+          </Link>
+          . Please contact{" "}
+          <Link to={`mailto: ${config.profile.helpdeskEmail}`} external>
+            {config.profile.helpdeskEmail}
+          </Link>{" "}
+          to access the following datasets.
+        </Alert>
+      ) : null}
+
+      <DownloadsTags />
+
+      <DatasetsToolbar
+        view={urlView}
+        onViewChange={handleViewChange}
+        basketCount={basket.count}
+        basketOpen={basket.open}
+        onBasketClick={() => {
+          dismissCoach();
+          basket.setOpen(!basket.open);
+        }}
+        resultCount={state.filteredRows.length}
+        totalCount={state.rows.length}
+        basketButtonRef={basketButtonRef}
+        basketHighlighted={coachOpen}
+      />
+
+      {urlView === "network" ? <NetworkView /> : <CardsView />}
+
+      <LiveRegion />
+
+      <BasketDrawer
+        open={basket.open}
+        onClose={() => basket.setOpen(false)}
+        rows={basket.basketRows}
+        locationURLs={state.locationURLs}
+        onRemove={basket.remove}
+        onEmpty={handleEmptyBasket}
+      />
+
+      <BasketCoachMark
+        open={coachOpen}
+        anchorRef={basketButtonRef}
+        onOpenBasket={() => {
+          dismissCoach();
+          basket.setOpen(true);
+        }}
+        onDismiss={dismissCoach}
+      />
+
+      <Snackbar
+        open={undoIds !== null}
+        autoHideDuration={6000}
+        onClose={(_, reason) => {
+          if (reason !== "clickaway") setUndoIds(null);
+        }}
+        message="Basket emptied"
+        action={
+          <Button size="small" onClick={handleUndoEmpty} sx={{ color: "#fff", border: 0 }}>
+            Undo
+          </Button>
+        }
+      />
+    </>
+  );
+}
+
+/** The Cards view: results summary, the card grid, or an empty state explaining why it's empty. */
+function CardsView() {
+  const { state, dispatch } = useDownloads();
+  const basket = useBasket();
+
+  const rows = state.filteredRows;
+  const query = state.freeTextQuery;
+  const categories = state.selectedFilters;
+
+  const shownIds = useMemo(() => rows.map(getDatasetId), [rows]);
+  const missingIds = useMemo(() => shownIds.filter(id => !basket.inBasket(id)), [shownIds, basket]);
+
+  // How many datasets the search matches outside the selected categories -
+  // what the "no matches in category" empty state offers to reveal
+  const otherMatches = useMemo(() => {
+    if (!categories.length) return 0;
+    return rowsMatchingQuery(state.rows, query).filter(
+      row => !(row.categories ?? []).some(c => categories.includes(c))
+    ).length;
+  }, [state.rows, query, categories]);
+
+  if (rows.length === 0) {
+    if (categories.length) {
+      return (
+        <EmptyState
+          type="no-matches-in-category"
+          query={query}
+          categories={categories}
+          otherMatches={otherMatches}
+          onRemoveFilters={() => dispatch(setActiveFilter([]))}
+        />
+      );
+    }
+    return <EmptyState type="no-results" query={query} onClearSearch={() => dispatch(textSearch(""))} />;
+  }
+
+  return (
+    <>
+      {categories.length > 0 && (
+        <ResultsBar
+          count={rows.length}
+          categories={categories}
+          query={query}
+          missingCount={missingIds.length}
+          onAddAll={() => basket.add(missingIds)}
+        />
+      )}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: 2,
+          alignItems: "stretch",
+          minWidth: 0,
+        }}
+      >
+        {rows.map(row => {
+          const id = getDatasetId(row);
+          return (
+            <DatasetCard key={row["@id"]} dataset={row} inBasket={basket.inBasket(id)} onToggleBasket={basket.toggle} />
+          );
+        })}
+      </Box>
+    </>
+  );
+}
+
+const useDownloads = () => useContext(DownloadsContext);
 
 export default DownloadsPage;
