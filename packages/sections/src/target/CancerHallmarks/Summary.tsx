@@ -1,3 +1,4 @@
+import type { CancerHallmarksSummaryFragment } from "@ot/constants";
 import _ from "lodash";
 import { SummaryItem, usePlatformApi } from "ui";
 
@@ -11,14 +12,14 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => {
+      renderSummary={(data: CancerHallmarksSummaryFragment) => {
         const hallmarks = _.uniqBy(data.hallmarks.cancerHallmarks, "label");
         const promote = _.uniqBy(
-          data.hallmarks.cancerHallmarks.filter(d => d.impact === "promotes"),
+          data.hallmarks.cancerHallmarks.filter((d) => d.impact === "promotes"),
           "label"
         );
         const suppress = _.uniqBy(
-          data.hallmarks.cancerHallmarks.filter(d => d.impact === "suppresses"),
+          data.hallmarks.cancerHallmarks.filter((d) => d.impact === "suppresses"),
           "label"
         );
 
