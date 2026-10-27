@@ -43,7 +43,8 @@ import {
   Typography,
 } from "@mui/material";
 import { getConfig } from "@ot/config";
-import type { ReactNode } from "react";
+import { PlatformApiContext } from "@ot/ui/providers/PlatformApiProvider";
+import { type ReactNode, useContext } from "react";
 
 /**
  * MUI primitives passthrough: refactor/ui-package-mui-facade migrated
@@ -280,10 +281,15 @@ export { default as useClinicalReportsMasterDetail } from "@ot/ui/hooks/useClini
  * all-disabled-tabs section instead of no section at all — a minor degradation, not
  * a correctness bug for the vast majority of targets that do have some data.
  *
- * If usePlatformApi() ever gets a second caller with a different `hasData` shape,
- * this hardcoded shape will need revisiting — it's tailored to this one call site.
+ * Sections that need real profile data (the genome browser sections) declare `platformApi`
+ * in the registry; the generated widget entry then wraps Body in the real
+ * PlatformApiProvider, running a query built from the section's own Summary fragment, and
+ * this hook returns that context instead. The hardcoded shape is only the fallback for
+ * MolecularInteractions.
  */
 export function usePlatformApi() {
+  const context = useContext(PlatformApiContext);
+  if (context) return context;
   return {
     loading: false,
     error: undefined,
@@ -293,7 +299,6 @@ export function usePlatformApi() {
 
 /** useApolloClient: standard Apollo client from the widget's ApolloProvider */
 export { useApolloClient } from "@apollo/client";
-
 // ── Real components (direct paths, bypass barrel) ────────────────────────────
 export { default as ChipList } from "@ot/ui/components/ChipList";
 export { default as DirectionalityDrawer } from "@ot/ui/components/DirectionalityDrawer";
@@ -301,12 +306,27 @@ export { default as DirectionOfEffectIcon } from "@ot/ui/components/DirectionOfE
 export { default as DirectionOfEffectTooltip } from "@ot/ui/components/DirectionOfEffectTooltip";
 export { default as EllsWrapper } from "@ot/ui/components/EllsWrapper";
 export { default as ErrorBoundary } from "@ot/ui/components/ErrorBoundary";
+/** GeneVis genome browser + the GenTrack pieces it imports through the "ui" barrel */
+export { default as GeneVis } from "@ot/ui/components/GeneVis/GeneVis";
 export { default as GenomicLocation } from "@ot/ui/components/GenomicLocation";
+export { DataVLine, RegionBoundaryOverlay } from "@ot/ui/components/GenTrack";
+export { default as GenTrack } from "@ot/ui/components/GenTrack/GenTrack";
 export { default as OtTableSSP } from "@ot/ui/components/OtTable/OtTableSSP";
 export { default as SectionLoader } from "@ot/ui/components/Section/SectionLoader";
 export { default as DataTable } from "@ot/ui/components/Table/DataTable";
 export { default as Table } from "@ot/ui/components/Table/Table";
 export { default as TableDrawer } from "@ot/ui/components/Table/TableDrawer";
+export {
+  GenTrackProvider,
+  useGenTrackDispatch,
+  useGenTrackState,
+} from "@ot/ui/providers/GenTrackProvider";
+export {
+  GenTrackTooltipProvider,
+  useGenTrackTooltipDispatch,
+  useGenTrackTooltipState,
+} from "@ot/ui/providers/GenTrackTooltipProvider";
+export { default as PlatformApiProvider } from "@ot/ui/providers/PlatformApiProvider";
 /** FacetsSelect: no-op stub (only used in excluded sections) */
 export function FacetsSelect() {
   return null;

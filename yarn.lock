@@ -3928,6 +3928,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pixi/unsafe-eval@npm:7.4.3":
+  version: 7.4.3
+  resolution: "@pixi/unsafe-eval@npm:7.4.3"
+  peerDependencies:
+    "@pixi/core": 7.4.3
+  checksum: 10c0/b20b6e7309f3b078c4373a56c73a9a155872ba45ac3181931f38d39224c1a73a702af1b565ed25e3831943be54957b8d5863ae76d0ab8762b7fe17084b153232
+  languageName: node
+  linkType: hard
+
 "@pixi/utils@npm:7.4.3":
   version: 7.4.3
   resolution: "@pixi/utils@npm:7.4.3"
@@ -9698,6 +9707,7 @@ __metadata:
     "@apollo/client": "npm:3.10.8"
     "@modelcontextprotocol/ext-apps": "npm:^1.7.5"
     "@modelcontextprotocol/sdk": "npm:^1.26.0"
+    "@pixi/unsafe-eval": "npm:7.4.3"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
     "@types/node": "npm:^20.0.0"

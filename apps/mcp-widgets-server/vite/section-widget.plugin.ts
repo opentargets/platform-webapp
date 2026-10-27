@@ -40,11 +40,49 @@ function generateEntryCode(def: SectionDef): string {
 
   const sectionId = sectionPathToId(def.sectionPath);
 
+  const entryImports = (def.entryImports ?? [])
+    .map((m) => `import ${JSON.stringify(m)};`)
+    .join("\n");
+
+  // Sections reading profile data via usePlatformApi() get a PlatformApiProvider running the
+  // section's Summary fragment against the entity root field (the ui stub's usePlatformApi
+  // returns this context when present).
+  const platformApiSetup = def.platformApi
+    ? `
+import { gql } from "@apollo/client";
+import PlatformApiProvider from "@ot/ui/providers/PlatformApiProvider";
+import PLATFORM_API_FRAGMENT from "@ot/sections/${def.platformApi.fragmentPath}";
+
+const platformApiQueryBase = gql(
+  "query WidgetPlatformApiQuery($id: String!) { " +
+    ${JSON.stringify(def.platformApi.rootField)} +
+    " { ..." + PLATFORM_API_FRAGMENT.definitions[0].name.value + " } }"
+);
+const PLATFORM_API_QUERY = {
+  ...platformApiQueryBase,
+  definitions: [...platformApiQueryBase.definitions, ...PLATFORM_API_FRAGMENT.definitions],
+};
+`
+    : "";
+  const bodyElement = `React.createElement(Body, {
+      id: ${bodyId},
+      label: ${bodyLabel},
+      entity: ${JSON.stringify(def.entity === "evidence" ? "disease" : def.entity)}
+    })`;
+  const widgetElement = def.platformApi
+    ? `React.createElement(
+      PlatformApiProvider,
+      { entity: ${JSON.stringify(def.entity)}, query: PLATFORM_API_QUERY, variables: { id: ${bodyId} } },
+      ${bodyElement}
+    )`
+    : bodyElement;
+
   return `
+${entryImports}
 import React from "react";
 import Body from "@ot/sections/${def.sectionPath}/Body";
 import { mountWidget } from "@widget-shared/createWidgetEntry";
-
+${platformApiSetup}
 mountWidget({
   appName: ${JSON.stringify(`ot-section-${sectionId}`)},
   cacheKey: ${JSON.stringify(`ot-${sectionId}`)},
@@ -54,11 +92,7 @@ mountWidget({
     return ${extractReturn};
   },
   component: function WidgetBody(props) {
-    return React.createElement(Body, {
-      id: ${bodyId},
-      label: ${bodyLabel},
-      entity: ${JSON.stringify(def.entity === "evidence" ? "disease" : def.entity)}
-    });
+    return ${widgetElement};
   }
 });
 `.trim();

@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@apollo/client": "3.10.8",
+    "@pixi/unsafe-eval": "7.4.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",

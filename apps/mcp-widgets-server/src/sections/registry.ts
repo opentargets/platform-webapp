@@ -32,6 +32,23 @@ export type SectionDef = {
    * (e.g. "3dmol", which the manual molecular-structure widget already requires this for).
    */
   extraDedupe?: string[];
+  /**
+   * Side-effect modules imported at the top of the generated widget entry, before the
+   * section Body (e.g. "@pixi/unsafe-eval", which patches Pixi to run under a CSP
+   * without 'unsafe-eval').
+   */
+  entryImports?: string[];
+  /**
+   * For sections whose Body reads profile data via usePlatformApi() (normally fetched by
+   * the platform's page-level query). The widget entry wraps Body in PlatformApiProvider,
+   * querying `rootField` (which must use `$id`) with the section's Summary fragment.
+   */
+  platformApi?: {
+    /** Root query field, e.g. "variant(variantId: $id)" */
+    rootField: string;
+    /** Summary fragment .gql, relative to packages/sections/src */
+    fragmentPath: string;
+  };
 };
 
 const EUROPE_PMC_DOMAIN = ["https://www.ebi.ac.uk"];
@@ -41,6 +58,16 @@ const MOLECULAR_STRUCTURE_DOMAINS = [
   "https://alphafold.ebi.ac.uk",
   "https://www.ebi.ac.uk",
 ];
+
+/**
+ * Genome browser (GeneVis/GenTrack) sections render with PixiJS v7: its shader code paths
+ * use `new Function`, so the CSP-safe polyfill is imported, and Pixi is deduped so the
+ * polyfill patches the same @pixi/core instance the components render with.
+ */
+const GENOME_BROWSER_BUILD = {
+  entryImports: ["@pixi/unsafe-eval"],
+  extraDedupe: ["pixi.js", "@pixi/core", "@pixi/react", "@pixi/unsafe-eval"],
+};
 
 const TARGET_INPUT = [
   { name: "ensemblId", description: "Ensembl gene ID (e.g. ENSG00000157764 for BRAF)" },
@@ -245,6 +272,19 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows tractability assessment for a target gene — small molecule, antibody, PROTAC, " +
       "and other drug modality predictions with supporting evidence buckets.",
     inputParams: TARGET_INPUT,
+  },
+  {
+    entity: "target",
+    sectionPath: "target/TargetGenomicRegion",
+    toolName: "get_target_genomic_region_widget",
+    description:
+      "Shows an interactive genome browser for the region around a target gene — neighbouring genes and their transcripts, with pan and zoom.",
+    inputParams: TARGET_INPUT,
+    platformApi: {
+      rootField: "target(ensemblId: $id)",
+      fragmentPath: "target/TargetGenomicRegion/TargetGenomicRegionSummary.gql",
+    },
+    ...GENOME_BROWSER_BUILD,
   },
 
   // ── DISEASE ─────────────────────────────────────────────────────────────────
@@ -611,6 +651,15 @@ export const SECTION_REGISTRY: SectionDef[] = [
       "Shows enhancer-to-gene (E2G) predictions for a credible set — regulatory links between non-coding variants and target genes from Activity-by-Contact and other models.",
     inputParams: CREDIBLE_SET_INPUT,
   },
+  {
+    entity: "credibleSet",
+    sectionPath: "credibleSet/CredibleSetGenomicRegion",
+    toolName: "get_credible_set_genomic_region_widget",
+    description:
+      "Shows an interactive genome browser for a credible set — the locus variants by posterior probability alongside nearby genes and their L2G scores, with pan and zoom.",
+    inputParams: CREDIBLE_SET_INPUT,
+    ...GENOME_BROWSER_BUILD,
+  },
 
   // ── STUDY ────────────────────────────────────────────────────────────────────
   {
@@ -702,5 +751,18 @@ export const SECTION_REGISTRY: SectionDef[] = [
     description:
       "Shows Ensembl Variant Effect Predictor (VEP) annotations for a variant — transcript consequences, amino acid changes, and regulatory feature impacts across all overlapping genes.",
     inputParams: VARIANT_INPUT,
+  },
+  {
+    entity: "variant",
+    sectionPath: "variant/VariantGenomicRegion",
+    toolName: "get_variant_genomic_region_widget",
+    description:
+      "Shows an interactive genome browser for the region around a variant — its position relative to nearby genes and their transcripts, with pan and zoom.",
+    inputParams: VARIANT_INPUT,
+    platformApi: {
+      rootField: "variant(variantId: $id)",
+      fragmentPath: "variant/VariantGenomicRegion/VariantGenomicRegionSummary.gql",
+    },
+    ...GENOME_BROWSER_BUILD,
   },
 ];
