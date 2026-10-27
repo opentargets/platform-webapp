@@ -1,13 +1,28 @@
-import { useTheme } from "@mui/material/styles";
 import { useQuery } from "@apollo/client";
-import { SectionItem, Link, Tooltip, OtTable } from "ui";
-
-import { definition } from ".";
-import { naLabel, type TargetBodyProps} from "@ot/constants";
+import { useTheme } from "@mui/material/styles";
+import {
+  naLabel,
+  type TargetBodyProps,
+  type TargetGeneticConstraintQuery,
+  type TargetGeneticConstraintQueryVariables,
+} from "@ot/constants";
 import { formatSignificantDigits } from "@ot/utils";
+import type { ReactNode } from "react";
+import { Link, OtTable, type OtTableColumn, SectionItem, Tooltip } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import { definition } from ".";
 import Description from "./Description";
+import GENETIC_CONSTRAINT_DOCUMENT from "./GeneticConstraint.gql";
 import upperBin6Map from "./upperBin6Map";
-import GENETIC_CONSTRAINT from "./GeneticConstraint.gql";
+
+const GENETIC_CONSTRAINT = typedDocument<
+  TargetGeneticConstraintQuery,
+  TargetGeneticConstraintQueryVariables
+>(GENETIC_CONSTRAINT_DOCUMENT);
+
+type ConstraintRow = NonNullable<
+  TargetGeneticConstraintQuery["target"]
+>["geneticConstraint"][number];
 
 const notFilledStyle = {
   display: "inline-block",
@@ -19,17 +34,18 @@ const notFilledStyle = {
 };
 const titleStyle = { display: "inline-block", marginTop: "11px" };
 
-const constraintTypeMap = {
+const constraintTypeMap: Record<string, string> = {
   syn: "Synonymous",
   mis: "Missense",
   lof: "pLoF",
 };
 
+type ConstraintAssessmentProps = { ensemblId: string; symbol: string; upperBin6: number };
 
-function ConstraintAssessment({ ensemblId, symbol, upperBin6 }) {
+function ConstraintAssessment({ ensemblId, symbol, upperBin6 }: ConstraintAssessmentProps) {
   const theme = useTheme();
   const filledStyle = { ...notFilledStyle, backgroundColor: theme.palette.primary.main };
-  const circles = [];
+  const circles: ReactNode[] = [];
 
   for (let i = 0; i < 5; i++) {
     circles.push(<span key={i} style={5 - upperBin6 > i ? filledStyle : notFilledStyle} />);
@@ -52,24 +68,26 @@ function ConstraintAssessment({ ensemblId, symbol, upperBin6 }) {
   );
 }
 
-function getColumns(ensemblId, symbol) {
+function getColumns(ensemblId: string, symbol: string): OtTableColumn<ConstraintRow>[] {
   return [
     {
       id: "constraintType",
       label: "Category",
       enableHiding: false,
-      renderCell: ({ constraintType }) => constraintTypeMap[constraintType],
+      renderCell: ({ constraintType }) => constraintTypeMap[constraintType] ?? constraintType,
     },
     {
       id: "exp",
       label: "Expected SNVs",
-      renderCell: ({ exp }) => exp == null ? naLabel : Math.round(exp),
-      tooltip: "Expected variant counts were predicted using a depth corrected probability of mutation for each gene. More details can be found in the gnomAD flagship paper. Note that the expected variant counts for bases with a median depth <1 were removed from the totals.",
+      renderCell: ({ exp }) => (exp == null ? naLabel : Math.round(exp)),
+      tooltip:
+        "Expected variant counts were predicted using a depth corrected probability of mutation for each gene. More details can be found in the gnomAD flagship paper. Note that the expected variant counts for bases with a median depth <1 were removed from the totals.",
     },
     {
       id: "obs",
       label: "Observed SNVs",
-      tooltip: "Includes single nucleotide changes that occurred in the canonical transcript that were found at a frequency of <0.1%, passed all filters, and at sites with a median depth ≥1. The counts represent the number of unique variants and not the allele count of these variants.",
+      tooltip:
+        "Includes single nucleotide changes that occurred in the canonical transcript that were found at a frequency of <0.1%, passed all filters, and at sites with a median depth ≥1. The counts represent the number of unique variants and not the allele count of these variants.",
     },
     {
       id: "metrics",
@@ -77,12 +95,13 @@ function getColumns(ensemblId, symbol) {
       renderCell: ({ score, oe, oeLower, oeUpper, upperBin6 }) => (
         <>
           <div>
-            {upperBin6 === null ? "Z" : "pLI"} = {formatSignificantDigits(score)}
+            {upperBin6 == null ? "Z" : "pLI"} = {formatSignificantDigits(score)}
           </div>
           <div>
-            o/e = {formatSignificantDigits(oe)} ({formatSignificantDigits(oeLower)} - {formatSignificantDigits(oeUpper)})
+            o/e = {formatSignificantDigits(oe)} ({formatSignificantDigits(oeLower)} -{" "}
+            {formatSignificantDigits(oeUpper)})
           </div>
-          {upperBin6 === null ? null : (
+          {upperBin6 == null ? null : (
             <ConstraintAssessment ensemblId={ensemblId} symbol={symbol} upperBin6={upperBin6} />
           )}
         </>
@@ -95,7 +114,7 @@ type Props = TargetBodyProps;
 
 function Body({ id: ensemblId, label: symbol, entity }: Props) {
   const variables = { ensemblId };
-  const request = useQuery(GENETIC_CONSTRAINT, { variables: { ensemblId } });
+  const request = useQuery(GENETIC_CONSTRAINT, { variables });
   return (
     <SectionItem
       definition={definition}
@@ -107,8 +126,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           dataDownloader
           columns={getColumns(ensemblId, symbol)}
           dataDownloaderFileStem={`${ensemblId}-genetic-constraint-${entity}`}
-          rows={request.data?.target.geneticConstraint}
-          query={GENETIC_CONSTRAINT.loc.source.body}
+          rows={request.data?.target?.geneticConstraint ?? []}
+          query={GENETIC_CONSTRAINT_DOCUMENT.loc?.source.body}
           variables={variables}
           loading={request.loading}
         />
