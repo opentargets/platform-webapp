@@ -1,4 +1,3 @@
-import type { ApolloClient } from "@apollo/client";
 import {
   colorRange,
   InteractionSourceDatabase,
@@ -7,8 +6,7 @@ import {
 } from "@ot/constants";
 import { scaleQuantize } from "d3";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
-import { GridLegacy, Legend, Link, OtTable, useApolloClient } from "ui";
+import { GridLegacy, Legend, Link, type OtTableColumn, OtTableServer } from "ui";
 import { typedDocument } from "../../utils/typedDocument";
 import INTERACTIONS_QUERY_DOCUMENT from "./InteractionsStringQuery.gql";
 
@@ -20,24 +18,6 @@ const INTERACTIONS_QUERY = typedDocument<
 type StringInteractionRow = NonNullable<
   TargetInteractionsStringQuery["target"]
 >["interactions"]["rows"][number];
-
-const getData = (
-  query: typeof INTERACTIONS_QUERY,
-  ensgId: string,
-  sourceDatabase: TargetInteractionsStringQueryVariables["sourceDatabase"],
-  index: number,
-  size: number,
-  client: ApolloClient<object>
-) =>
-  client.query({
-    query,
-    variables: {
-      ensgId,
-      sourceDatabase,
-      index,
-      size,
-    },
-  });
 
 // NOTE: OtTable doesn't read a `classes` prop at all (checked its full
 // implementation - no such prop, at the table level or per-column), so most of
@@ -59,19 +39,23 @@ const nameContainerStyle: CSSProperties = {
 };
 
 const id = InteractionSourceDatabase.String;
-const index = 0;
-const size = 3000;
-const color = scaleQuantize().domain([0, 1]).range(colorRange);
+const PAGE_SIZE = 10;
+const color = scaleQuantize<string>().domain([0, 1]).range(colorRange);
 
-const getScoreForColumn = (evidences, evidencesId) =>
+type StringEvidence = StringInteractionRow["evidences"][number];
+
+const getScoreForColumn = (evidences: StringEvidence[], evidencesId: string) =>
   evidences
     .filter((e) => e.interactionDetectionMethodShortName === evidencesId)
     .map((e) => e.evidenceScore)[0]; // TODO: the [0] is to catch a data error: remove when fixed.
-const getHeatmapCell = (score) => (
-  <span title={score || "No data"} style={{ ...colorSpanStyle, backgroundColor: color(score) }} />
+const getHeatmapCell = (score: number | null | undefined) => (
+  <span
+    title={score == null ? "No data" : String(score)}
+    style={{ ...colorSpanStyle, backgroundColor: score == null ? undefined : color(score) }}
+  />
 );
 
-function getColumns() {
+function getColumns(): OtTableColumn<StringInteractionRow>[] {
   return [
     {
       id: "partner",
@@ -101,9 +85,9 @@ function getColumns() {
           interaction score
         </>
       ),
-      renderCell: (row) => row.score.toFixed(3),
-      exportValue: (row) => row.score.toFixed(3),
-      filterValue: (row) => row.score.toFixed(3),
+      renderCell: (row) => row.score?.toFixed(3) ?? "",
+      exportValue: (row) => row.score?.toFixed(3) ?? "",
+      filterValue: (row) => row.score?.toFixed(3) ?? "",
     },
     {
       id: "neighbourhood",
@@ -164,33 +148,21 @@ function getColumns() {
   ];
 }
 
-function StringTab({ ensgId, symbol }) {
-  const [data, setData] = useState<StringInteractionRow[]>([]);
-  const [loading, setLoading] = useState(false);
+function StringTab({ ensgId, symbol }: { ensgId: string; symbol: string }) {
   const columns = getColumns();
-  const client = useApolloClient();
-  // load tab data when new tab selected (also on first load)
-  useEffect(() => {
-    setLoading(true);
-    getData(INTERACTIONS_QUERY, ensgId, id, index, size, client).then((res) => {
-      const rows = res.data.target?.interactions?.rows;
-      setLoading(false);
-      if (rows) setData(rows);
-    });
-  }, [ensgId]);
 
   return (
     <GridLegacy container spacing={4}>
       <GridLegacy item xs={12}>
         {/* table 1: this is the only table and will need to be a HEATMAP */}
-        <OtTable
-          showGlobalFilter
+        <OtTableServer<StringInteractionRow>
           columns={columns}
-          rows={data}
+          query={INTERACTIONS_QUERY}
+          variables={{ ensgId, sourceDatabase: id }}
+          dataPath="target.interactions"
+          pageSize={PAGE_SIZE}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-molecular-interactions-string`}
-          fixed
-          loading={loading}
         />
         <Legend url="https://string-db.org/cgi/info" />
       </GridLegacy>
