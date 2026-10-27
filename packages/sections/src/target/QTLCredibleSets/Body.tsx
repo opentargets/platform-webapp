@@ -6,6 +6,7 @@ import {
   type TargetQtlCredibleSetsQuery,
   type TargetQtlCredibleSetsQueryVariables,
 } from "@ot/constants";
+import { mantissaExponentComparator, variantComparator } from "@ot/utils";
 import {
   Chip,
   ClinvarStars,
@@ -33,6 +34,7 @@ type CredibleSetRow = NonNullable<
 >["credibleSets"]["rows"][number];
 
 const confidenceMap: Record<string, number | undefined> = credsetConfidenceMap;
+const compareVariants = variantComparator();
 
 const PAGE_SIZE = 10;
 
@@ -48,6 +50,8 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "leadVariant",
     label: "Lead variant",
     enableHiding: false,
+    sortable: true,
+    comparator: (a, b) => compareVariants(a.variant, b.variant),
     filterValue: ({ variant: v }) =>
       `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
     renderCell: ({ variant }) => {
@@ -106,6 +110,14 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "pValue",
     label: "P-value",
     numeric: true,
+    sortable: true,
+    comparator: (a, b) =>
+      mantissaExponentComparator(
+        a.pValueMantissa,
+        a.pValueExponent,
+        b.pValueMantissa,
+        b.pValueExponent
+      ),
     renderCell: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
@@ -119,6 +131,7 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "beta",
     label: "Beta",
     numeric: true,
+    sortable: true,
     tooltip: "Beta with respect to the ALT allele",
     renderCell: ({ beta }) => {
       if (typeof beta !== "number") return naLabel;
@@ -141,6 +154,8 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
         for more details.
       </>
     ),
+    sortable: true,
+    comparator: (a, b) => (confidenceMap[a.confidence] ?? 0) - (confidenceMap[b.confidence] ?? 0),
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
@@ -158,6 +173,8 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "credibleSetSize",
     label: "Credible set size",
     numeric: true,
+    sortable: true,
+    comparator: (a, b) => a.locus.count - b.locus.count,
     renderCell: ({ locus }) =>
       typeof locus?.count === "number" ? locus.count.toLocaleString() : naLabel,
     exportValue: ({ locus }) => locus?.count,
