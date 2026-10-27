@@ -1,13 +1,14 @@
+import type { TargetMolecularInteractionsSummaryFragment } from "@ot/constants";
 import { lazy } from "react";
-import { TargetData } from "../../types/target";
 
 export const definition = {
   id: "interactions",
   name: "Molecular Interactions",
   shortName: "MI",
-  hasData: (data: TargetData) => (data.interactions?.count || 0) > 0 || false,
+  hasData: (data: TargetMolecularInteractionsSummaryFragment) =>
+    (data.interactions?.count ?? 0) > 0,
 };
 
 // Components
 export { default as Summary } from "./Summary";
-export const getBodyComponent = () => lazy(() => import("./Body")); 
+export const getBodyComponent = () => lazy(() => import("./Body"));
