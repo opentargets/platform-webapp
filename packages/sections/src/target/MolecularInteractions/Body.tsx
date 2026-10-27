@@ -1,18 +1,29 @@
-import { useState, useEffect } from "react";
-import { SectionItem, useApolloClient, usePlatformApi, Tab, Tabs, Typography } from "ui";
-
+import type { ApolloClient } from "@apollo/client";
+import type {
+  TargetBodyProps,
+  TargetInteractionsStatsQuery,
+  TargetInteractionsStatsQueryVariables,
+} from "@ot/constants";
+import type { SyntheticEvent } from "react";
+import { useEffect, useState } from "react";
+import { SectionItem, Tab, Tabs, Typography, useApolloClient, usePlatformApi } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-
 import IntactTab from "./IntactTab";
-import SignorTab from "./SignorTab";
+import INTERACTIONS_STATS_QUERY_DOCUMENT from "./InteractionsStats.gql";
 import ReactomeTab from "./ReactomeTab";
+import SignorTab from "./SignorTab";
 import StringTab from "./StringTab";
 
-import INTERACTIONS_STATS_QUERY from "./InteractionsStats.gql";
-import type { TargetBodyProps } from "@ot/constants";
+const INTERACTIONS_STATS_QUERY = typedDocument<
+  TargetInteractionsStatsQuery,
+  TargetInteractionsStatsQueryVariables
+>(INTERACTIONS_STATS_QUERY_DOCUMENT);
 
-const getSummaryCounts = (ensgId, client) =>
+type SourceId = "intact" | "signor" | "reactome" | "string";
+
+const getSummaryCounts = (ensgId: string, client: ApolloClient<object>) =>
   client.query({
     query: INTERACTIONS_STATS_QUERY,
     variables: {
@@ -20,7 +31,7 @@ const getSummaryCounts = (ensgId, client) =>
     },
   });
 
-const sources = [
+const sources: { label: string; id: SourceId; countDescription: string }[] = [
   {
     label: "IntAct",
     id: "intact",
@@ -47,45 +58,29 @@ type Props = TargetBodyProps;
 
 function Body({ label: symbol, id, entity }: Props) {
   const request = usePlatformApi();
-  const [source, setSource] = useState(sources[0].id); // must initialize to valid value for tabs to work
-  const [counts, setCounts] = useState({});
-  const [versions, setVersions] = useState({});
+  const [source, setSource] = useState<SourceId>(sources[0].id); // must initialize to valid value for tabs to work
+  const [counts, setCounts] = useState<Partial<Record<SourceId, number>>>({});
   const client = useApolloClient();
 
-  const onTabChange = (event, tabId) => {
+  const onTabChange = (_event: SyntheticEvent, tabId: SourceId) => {
     setSource(tabId);
   };
 
   // load tabs summary counts
   useEffect(() => {
     getSummaryCounts(id, client)
-      .then(res => {
-        // when there is no data, interactions object is null, so there is no count
-        setCounts(
-          Object.assign(
-            {},
-            ...sources.map(k => ({
-              [k.id]: res.data.target[k.id] ? res.data.target[k.id].count : 0,
-            }))
-          )
-        );
-        // set the sources database versions (the API no longer exposes them)
-        setVersions(
-          (res.data.interactionResources ?? []).reduce((a, v) => {
-            const interactionResourceObj = a;
-            interactionResourceObj[v.sourceDatabase] = v.databaseVersion;
-            return a;
-          }, {})
-        );
+      .then((res) => {
+        const target = res.data.target;
+        const nextCounts: Partial<Record<SourceId, number>> = {};
+        for (const s of sources) nextCounts[s.id] = target?.[s.id]?.count ?? 0;
+        setCounts(nextCounts);
         // find first source (tab) with data and set that as the initially selected tab
-        const initialTab = sources.find(
-          s => res.data.target[s.id] && res.data.target[s.id].count > 0
-        );
+        const initialTab = sources.find((s) => (nextCounts[s.id] ?? 0) > 0);
         if (initialTab) {
           setSource(initialTab.id);
         }
       })
-      .catch(error => {
+      .catch((error: Error) => {
         console.error(error.message);
       });
   }, [id]);
@@ -100,18 +95,18 @@ function Body({ label: symbol, id, entity }: Props) {
       renderBody={() => (
         <>
           {/* Interaction Resource */}
-          <Tabs data-testid="interactions-tabs" value={source} onChange={onTabChange} aria-label="simple tabs example">
-            {sources.map(s => (
+          <Tabs
+            data-testid="interactions-tabs"
+            value={source}
+            onChange={onTabChange}
+            aria-label="simple tabs example"
+          >
+            {sources.map((s) => (
               <Tab
                 data-testid={`interactions-tab-${s.id}`}
                 label={
                   <>
                     <Typography variant="body1">{s.label}</Typography>
-                    {versions[s.id] ? (
-                      <Typography variant="caption" display="block" gutterBottom>
-                        Version: {versions[s.id]}
-                      </Typography>
-                    ) : null}
                     <Typography variant="body2" gutterBottom>
                       {counts[s.id]} {s.countDescription}
                     </Typography>
@@ -126,28 +121,28 @@ function Body({ label: symbol, id, entity }: Props) {
 
           <div style={{ marginTop: "50px" }}>
             {/* intact stuff */}
-            {source === "intact" && counts[source] > 0 && (
+            {source === "intact" && (counts[source] ?? 0) > 0 && (
               <div data-testid="interactions-content-intact">
                 <IntactTab ensgId={id} symbol={symbol} />
               </div>
             )}
 
             {/* signor stuff */}
-            {source === "signor" && counts[source] > 0 && (
+            {source === "signor" && (counts[source] ?? 0) > 0 && (
               <div data-testid="interactions-content-signor">
                 <SignorTab ensgId={id} symbol={symbol} />
               </div>
             )}
 
             {/* reactome stuff */}
-            {source === "reactome" && counts[source] > 0 && (
+            {source === "reactome" && (counts[source] ?? 0) > 0 && (
               <div data-testid="interactions-content-reactome">
                 <ReactomeTab ensgId={id} symbol={symbol} />
               </div>
             )}
 
             {/* string stuff */}
-            {source === "string" && counts[source] > 0 && (
+            {source === "string" && (counts[source] ?? 0) > 0 && (
               <div data-testid="interactions-content-string">
                 <StringTab ensgId={id} symbol={symbol} />
               </div>
