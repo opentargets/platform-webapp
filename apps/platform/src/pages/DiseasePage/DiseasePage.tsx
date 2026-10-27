@@ -1,8 +1,8 @@
 import { lazy, ReactElement, Suspense } from "react";
 import { Link, LoaderFunctionArgs, Route, Routes, useLoaderData, useLocation, useParams } from "react-router";
-import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs } from "ui";
+import { LoadingBackdrop, PageMeta, ScrollToTop, Box, Tab, Tabs, PROFILE_TABS_SENTINEL_ID } from "ui";
 
-import Header from "./Header";
+import Header, { buildHeaderMeta } from "./Header";
 import NotFoundPage from "../NotFoundPage";
 
 import DISEASE_PAGE_QUERY from "./DiseasePage.gql";
@@ -33,6 +33,7 @@ function DiseasePage(): ReactElement {
   }
 
   const { name, dbXRefs } = data?.disease || {};
+  const headerMeta = buildHeaderMeta({ efoId: efoId!, name, dbXRefs });
 
   return (
     <>
@@ -51,7 +52,7 @@ function DiseasePage(): ReactElement {
       />
       <Header loading={false} efoId={efoId} name={name} dbXRefs={dbXRefs} />
       <ScrollToTop />
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box id={PROFILE_TABS_SENTINEL_ID} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={location.pathname}>
           <Tab
             label={<Box sx={{ textTransform: "capitalize" }}>Associated targets</Box>}
@@ -69,7 +70,17 @@ function DiseasePage(): ReactElement {
       </Box>
       <Suspense fallback={<LoadingBackdrop height={800} />}>
         <Routes>
-          <Route path="/" element={<Profile efoId={efoId!} name={name!} />} />
+          <Route
+            path="/"
+            element={
+              <Profile
+                efoId={efoId!}
+                name={name!}
+                Icon={headerMeta.Icon}
+                externalLinks={headerMeta.externalLinks}
+              />
+            }
+          />
           <Route path="/associations" element={<Associations efoId={efoId!} />} />
         </Routes>
       </Suspense>

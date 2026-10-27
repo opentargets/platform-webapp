@@ -32,7 +32,7 @@ export function Body({ id, entity }: BodyProps): ReactElement {
       entity={entity}
       renderDescription={() => (
         <Description
-          variantId={variant?.id}
+          variantId={id}
           referenceAllele={variant?.referenceAllele}
           alternateAllele={variant?.alternateAllele}
           targetId={proteinCodingCoordinatesRow?.target?.id}

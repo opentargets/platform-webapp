@@ -69,9 +69,9 @@ function Body({ label: symbol, id, entity }: Props) {
             }))
           )
         );
-        // set the sources database versions
+        // set the sources database versions (the API no longer exposes them)
         setVersions(
-          res.data.interactionResources.reduce((a, v) => {
+          (res.data.interactionResources ?? []).reduce((a, v) => {
             const interactionResourceObj = a;
             interactionResourceObj[v.sourceDatabase] = v.databaseVersion;
             return a;

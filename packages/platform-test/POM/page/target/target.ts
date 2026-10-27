@@ -166,24 +166,6 @@ export class TargetPage {
   }
 
   /**
-   * Get the TEP (Target Enabling Package) link
-   */
-  getTEPLink(): Locator {
-    return this.page.locator('a[href*="thesgc.org/tep"]');
-  }
-
-  /**
-   * Get the TEP link href attribute (if available)
-   */
-  async getTEPLinkHref(): Promise<string | null> {
-    const isVisible = await this.getTEPLink()
-      .isVisible()
-      .catch(() => false);
-    if (!isVisible) return null;
-    return await this.getTEPLink().getAttribute("href");
-  }
-
-  /**
    * Get all external links in the header
    */
   getExternalLinks(): Locator {

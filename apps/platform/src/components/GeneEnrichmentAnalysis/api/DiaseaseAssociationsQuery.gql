@@ -2,21 +2,19 @@ query GeneEnrichmentAnalysisDiseaseAssociationsQuery(
   $efoId: String!
   $index: Int!
   $size: Int!
-  $sortBy: String!
-  $enableIndirect: Boolean!
-  $datasources: [DatasourceSettingsInput!]
-  $rowsFilter: [String!]
-  $facetFilters: [String!]
-  $entitySearch: String!
+  $sort: AssociationSort!
+  $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!
+  $rowsFilter: [String!]!
+  $facetFilters: [String!]!
+  $entitySearch: String
 ) {
   disease(efoId: $efoId) {
     id
     name
     associatedTargets(
       page: { index: $index, size: $size }
-      orderByScore: $sortBy
-      enableIndirect: $enableIndirect
-      datasources: $datasources
+      sort: $sort
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch

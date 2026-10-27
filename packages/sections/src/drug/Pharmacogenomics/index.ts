@@ -4,7 +4,7 @@ export const definition = {
   id: "pharmacogenetics",
   name: "Pharmacogenetics",
   shortName: "PGx",
-  hasData: (data: any) => data.pharmacogenomics.length > 0,
+  hasData: (data: any) => (data.pharmacogenomics?.count ?? 0) > 0,
 };
 
 // Components

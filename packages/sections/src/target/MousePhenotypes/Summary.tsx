@@ -11,7 +11,7 @@ function Summary() {
       definition={definition}
       request={request}
       renderSummary={({ mousePhenotypes }) =>
-        `${mousePhenotypes.length} distinct phenotype${mousePhenotypes.length > 1 ? "s" : ""}`
+        `${mousePhenotypes.count} distinct phenotype${mousePhenotypes.count > 1 ? "s" : ""}`
       }
     />
   );

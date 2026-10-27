@@ -4,11 +4,6 @@ import { Header as HeaderBase, ExternalLink, XRefLinks } from "ui";
 type HeaderProps = {
   loading: boolean;
   studyId: string;
-  backgroundTraits: {
-    id: string;
-    name: string;
-  }[];
-  targetId: string;
   diseases: {
     id: string;
     name: string;
@@ -17,15 +12,7 @@ type HeaderProps = {
   testId?: string;
 };
 
-function Header({
-  loading,
-  studyId,
-  backgroundTraits,
-  targetId,
-  diseases,
-  projectId,
-  testId,
-}: HeaderProps) {
+export function buildHeaderMeta({ studyId, diseases, projectId }) {
   let traitLinks, sourceLink;
   if (projectId === "GCST") {
     if (diseases?.length) {
@@ -40,7 +27,7 @@ function Header({
     }
     sourceLink = {
       id: "GWAS Catalog",
-      url: `https://www.ebi.ac.uk/gwas/studies/${studyId}`,
+      url: `https://www.ebi.ac.uk/gwas/studies/${studyId.replace(/_.*/, "")}`,
     };
   } else if (projectId?.startsWith("FINNGEN")) {
     if (diseases?.length) {
@@ -74,37 +61,45 @@ function Header({
     };
   } else {
     // QTL
-    if (targetId) {
-      traitLinks = (
-        <ExternalLink title="Affected gene" id={targetId} url={`../target/${targetId}`} />
-      );
-    }
     sourceLink = {
       id: "eQTL Catalog",
       url: "https://www.ebi.ac.uk/eqtl/Studies/",
     };
   }
 
+  return {
+    title: studyId,
+    subtitle: null,
+    Icon: faChartBar,
+    externalLinks: (
+      <>
+        {traitLinks}
+        <ExternalLink title="Source" id={sourceLink.id} url={sourceLink.url} />
+      </>
+    ),
+  };
+}
+
+function Header({
+  loading,
+  studyId,
+  diseases,
+  projectId,
+  testId,
+}: HeaderProps) {
+  const { title, subtitle, Icon, externalLinks } = buildHeaderMeta({
+    studyId,
+    diseases,
+    projectId,
+  });
+
   return (
     <HeaderBase
       loading={loading}
-      title={studyId}
-      subtitle={null}
-      Icon={faChartBar}
-      externalLinks={
-        <>
-          {traitLinks}
-          {projectId === "GWAS" && backgroundTraits?.length > 0 && (
-            <XRefLinks
-              label="Background traits"
-              urlStem="../disease/"
-              ids={backgroundTraits.map(t => t.id)}
-              names={backgroundTraits.map(t => t.name)}
-            />
-          )}
-          <ExternalLink title="Source" id={sourceLink.id} url={sourceLink.url} />
-        </>
-      }
+      title={title}
+      subtitle={subtitle}
+      Icon={Icon}
+      externalLinks={externalLinks}
     />
   );
 }

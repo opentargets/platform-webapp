@@ -1,0 +1,18 @@
+query GWASCredibleSetsPlotQuery($studyId: String!, $page: Page) {
+  study(studyId: $studyId) {
+    credibleSets(page: $page) {
+      rows {
+        studyLocusId
+        variant {
+          variantId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+        }
+        pValueMantissa
+        pValueExponent
+      }
+    }
+  }
+}

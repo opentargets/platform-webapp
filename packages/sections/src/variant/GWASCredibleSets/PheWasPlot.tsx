@@ -1,22 +1,14 @@
 import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
-import { credsetConfidenceMap, naLabel } from "@ot/constants";
-import { Fragment } from "react";
+import { naLabel, therapeuticPriorities } from "@ot/constants";
 import {
-  ClinvarStars,
-  DataDownloader,
   DisplayVariantId,
-  Link,
-  Navigate,
   ObsPlot,
-  ScientificNotation,
-  Tooltip,
   TooltipRow,
   TooltipTable,
   Box,
   Skeleton,
   Typography,
-  Chip,
 } from "ui";
 
 const palette = [
@@ -35,9 +27,6 @@ const palette = [
 ];
 
 function PheWasPlot({
-  columns,
-  query,
-  variables,
   loading,
   data: originalData,
   pageId,
@@ -59,41 +48,11 @@ function PheWasPlot({
   );
   if (data.length === 0) return null;
 
-  const therapeuticPriorities = {
-    EFO_0001444: { name: "measurement", rank: 1 },
-    MONDO_0045024: { name: "cancer or benign tumor", rank: 2 },
-    OTAR_0000018: { name: "genetic, familial or congenital", rank: 3 },
-    MONDO_0005550: { name: "infectious disease", rank: 4 },
-    OTAR_0000009: { name: "injury, poisoning or complication", rank: 5 },
-    OTAR_0000014: { name: "pregnancy or perinatal", rank: 6 },
-    MONDO_0024458: { name: "visual system", rank: 7 },
-    MONDO_0004995: { name: "cardiovascular", rank: 8 },
-    MONDO_0002356: { name: "pancreas", rank: 9 },
-    MONDO_0002515: { name: "liver", rank: 10 },
-    EFO_0010282: { name: "gastrointestinal", rank: 11 },
-    OTAR_0000017: { name: "reproductive system or breast", rank: 12 },
-    MONDO_0002051: { name: "integumentary system", rank: 13 },
-    MONDO_0005151: { name: "endocrine system", rank: 14 },
-    OTAR_0000010: { name: "respiratory or thoracic", rank: 15 },
-    MONDO_0002118: { name: "urinary system", rank: 16 },
-    OTAR_0000006: { name: "musculoskeletal or connective ...", rank: 17 },
-    MONDO_0021205: { name: "disorder of ear", rank: 18 },
-    MONDO_0005046: { name: "immune system", rank: 19 },
-    MONDO_0005570: { name: "hematologic", rank: 20 },
-    MONDO_0005071: { name: "nervous system", rank: 21 },
-    MONDO_0002025: { name: "psychiatric", rank: 22 },
-    OTAR_0000020: { name: "nutritional or metabolic", rank: 23 },
-    GO_0008150: { name: "biological process", rank: 24 },
-    EFO_0000651: { name: "phenotype", rank: 25 },
-    EFO_0002571: { name: "medical procedure", rank: 26 },
-    MONDO_0005583: { name: "animal disease", rank: 27 },
-  };
-
   function getTherapeuticArea(row) {
     let bestId = null;
     let bestRank = Infinity;
     const areaIds = row.study.diseases.flatMap((d) => {
-      return d.therapeuticAreas.map((area) => area.id);
+      return d.therapeuticAreas;
     });
     for (const id of areaIds) {
       const rank = therapeuticPriorities[id]?.rank;
@@ -149,7 +108,6 @@ function PheWasPlot({
 
   return (
     <div>
-      <ChartControls data={originalData} query={query} columns={columns} variables={variables} />
       <Typography variant="body2" py={1} pr={2} textAlign="right">
         <span style={{ fontSize: 10 }}>▲</span> Beta &gt; 0&emsp;&emsp;
         <span style={{ fontSize: 10 }}>▼</span> Beta &lt; 0&emsp;&emsp;
@@ -191,29 +149,6 @@ function PheWasPlot({
 }
 
 export default PheWasPlot;
-
-function ChartControls({ data, query, variables, columns }) {
-  return (
-    <Box
-      sx={{
-        borderRadius: 1,
-        display: "flex",
-        justifyContent: "flex-end",
-        gap: 1,
-        mb: 2,
-      }}
-    >
-      <DataDownloader
-        fileStem={`gwas-credible-sets-variant`}
-        btnLabel="Export"
-        rows={data}
-        query={query}
-        variables={variables}
-        columns={columns}
-      />
-    </Box>
-  );
-}
 
 function highlightElement(elmt) {
   elmt.style.fillOpacity = 1;
@@ -297,7 +232,7 @@ function renderChart({
         symbol: (d) => (d.beta == null ? "circle" : "triangle"),
         stroke: (d) => palette[xIntervals.get(d._therapeuticAreaId).index],
         fill: (d) =>
-          d.variant.id === pageId
+          d.variant.variantId === pageId
             ? palette[xIntervals.get(d._therapeuticAreaId).index]
             : background,
         strokeWidth: 1.3,
@@ -309,17 +244,6 @@ function renderChart({
 }
 
 function renderTooltip(datum) {
-  const valueMaxWidth = "200px";
-
-  const displayId = (
-    <DisplayVariantId
-      variantId={datum.variant.id}
-      referenceAllele={datum.variant.referenceAllele}
-      alternateAllele={datum.variant.alternateAllele}
-      expand={false}
-    />
-  );
-
   return (
     <Box
       sx={{
@@ -332,93 +256,17 @@ function renderTooltip(datum) {
       }}
     >
       <TooltipTable>
+        {/* Detailed tooltip content will be restored with its own request. */}
         <TooltipRow label="Credible set">
-          <Box display="flex">
-            <Navigate to={`/credible-set/${datum.studyLocusId}`} />
-          </Box>
+          {datum.studyLocusId}
         </TooltipRow>
         <TooltipRow label="Lead variant">
-          {datum.variant.id === datum._pageId ? (
-            <Box display="flex" alignItems="center" gap={0.5}>
-              {displayId}
-              <Chip label="self" />
-            </Box>
-          ) : (
-            <Link asyncTooltip to={`/variant/${datum.variant.id}`}>
-              {displayId}
-            </Link>
-          )}
-        </TooltipRow>
-        <TooltipRow label="Reported trait" valueWidth={valueMaxWidth} truncateValue>
-          {datum.study?.traitFromSource ?? naLabel}
-        </TooltipRow>
-        <TooltipRow label="Disease/phenotype" valueWidth={valueMaxWidth} truncateValue>
-          {datum.study?.diseases?.length > 0 ? (
-            <>
-              {datum.study.diseases.map((d, i) => (
-                <Fragment key={d.id}>
-                  {i > 0 && ", "}
-                  <Link asyncTooltip to={`/disease/${d.id}`}>
-                    {d.name}
-                  </Link>
-                </Fragment>
-              ))}
-            </>
-          ) : (
-            naLabel
-          )}
-        </TooltipRow>
-        <TooltipRow label="Study">
-          {datum.study ? (
-            <Link asyncTooltip to={`/study/${datum.study.id}`}>
-              {datum.study.id}
-            </Link>
-          ) : (
-            naLabel
-          )}
+          {datum.variant?.variantId ?? naLabel}
         </TooltipRow>
         <TooltipRow label="P-value">
-          <ScientificNotation number={[datum.pValueMantissa, datum.pValueExponent]} dp={2} />
+          {datum.pValueMantissa}x10{datum.pValueExponent}
         </TooltipRow>
         <TooltipRow label="Beta">{datum.beta?.toPrecision(3) ?? naLabel}</TooltipRow>
-        <TooltipRow label="Posterior probability">
-          {datum.locus?.rows?.[0].posteriorProbability.toPrecision(3) ?? naLabel}
-        </TooltipRow>
-        <TooltipRow label="Fine-mapping">
-          <Box display="flex" flexDirection="column" gap={0.25}>
-            <Box display="flex" gap={0.5}>
-              Method: {datum.finemappingMethod ?? naLabel}
-            </Box>
-            <Box display="flex" gap={0.5}>
-              Confidence:{" "}
-              {datum.confidence ? (
-                <Tooltip title={datum.confidence} style="">
-                  <ClinvarStars num={credsetConfidenceMap[datum.confidence]} />
-                </Tooltip>
-              ) : (
-                naLabel
-              )}
-            </Box>
-          </Box>
-        </TooltipRow>
-        <TooltipRow label="L2G">
-          <Box display="flex" flexDirection="column" gap={0.25}>
-            <Box display="flex" gap={0.5}>
-              Top:{" "}
-              {datum.l2GPredictions?.rows?.[0]?.target ? (
-                <Link asyncTooltip to={`/target/${datum.l2GPredictions.rows[0].target.id}`}>
-                  {datum.l2GPredictions.rows[0].target.approvedSymbol}
-                </Link>
-              ) : (
-                naLabel
-              )}
-            </Box>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              Score: {datum.l2GPredictions?.rows?.[0]?.score?.toFixed(3) ?? naLabel}
-            </Box>
-          </Box>
-        </TooltipRow>
-        <TooltipRow label="Credible set size">{datum.locusSize?.count ?? naLabel}</TooltipRow>
       </TooltipTable>
     </Box>
   );

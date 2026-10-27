@@ -1,10 +1,8 @@
-query EnhancerToGenePredictionsQuery($variantId: String!) {
+query EnhancerToGenePredictionsQuery($variantId: String!, $page: Page) {
   variant(variantId: $variantId) {
-    id
-    rsIds
     referenceAllele
     alternateAllele
-    enhancerToGenes(page: { size: 3000, index: 0 }) {
+    enhancerToGene(page: $page) {
       count
       rows {
         chromosome

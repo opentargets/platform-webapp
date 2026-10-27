@@ -1,5 +1,5 @@
-import { useQuery } from "@apollo/client";
-import { Link, SectionItem, OtTable, Tooltip } from "ui";
+import { useState } from "react";
+import { Link, SectionItem, OtTableOffsetPagination, Tooltip } from "ui";
 import { naLabel } from "@ot/constants";
 import { definition } from ".";
 
@@ -145,13 +145,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    studyLocusId: id,
-  };
-
-  const request = useQuery(ENHANCER_TO_GENE_PREDICTIONS_QUERY, {
-    variables,
-  });
+  const variables = { studyLocusId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
@@ -160,29 +155,22 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => (
         <Description
-          variantId={request.data?.credibleSet?.variant?.id || ""}
+          variantId={request.data?.credibleSet?.variant?.variantId || ""}
           referenceAllele={request.data?.credibleSet?.variant?.referenceAllele || ""}
           alternateAllele={request.data?.credibleSet?.variant?.alternateAllele || ""}
         />
       )}
       renderBody={() => (
-        <OtTable
+        <OtTableOffsetPagination
           dataDownloader
           dataDownloaderFileStem={`${id}-enhancer-to-gene-predictions`}
-          showGlobalFilter
+          dataPath="credibleSet.variant.enhancerToGene"
+          entity="credibleSet"
+          sectionName="enhancerToGene"
+          setInitialRequestData={setRequest}
           columns={columns}
-          loading={request.loading}
-          rows={request.data?.credibleSet?.variant?.enhancerToGenes?.rows || []}
-          query={ENHANCER_TO_GENE_PREDICTIONS_QUERY.loc?.source?.body}
+          query={ENHANCER_TO_GENE_PREDICTIONS_QUERY}
           variables={variables}
-          tableDataLoading={request.loading}
-          verticalHeaders={false}
-          order="desc"
-          sortBy="score"
-          defaultSortObj={{ id: "score", desc: true }}
-          showColumnVisibilityControl={true}
-          showPagination={true}
-          pageSize={10}
         />
       )}
     />

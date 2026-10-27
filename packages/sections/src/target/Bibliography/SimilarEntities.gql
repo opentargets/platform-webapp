@@ -1,4 +1,4 @@
-query SimilarEntitiesQuery(
+query TargetBibliographyQuery(
   $id: String!
   $ids: [String!] = []
   $startYear: Int = null
@@ -8,7 +8,8 @@ query SimilarEntitiesQuery(
   $threshold: Float = 0.5
   $size: Int! = 15
   $entityNames: [String!] = []
-  $cursor: String = null
+  $index: Int! = 0
+  $pageSize: Int! = 5
 ) {
   target(ensemblId: $id) {
     id
@@ -16,38 +17,41 @@ query SimilarEntitiesQuery(
     similarEntities(
       additionalIds: $ids
       threshold: $threshold
-      size: $size
+      page: { index: 0, size: $size }
       entityNames: $entityNames
     ) {
-      id
-      score
-      object {
-        ... on Target {
-          id
-          approvedSymbol
-        }
-        ... on Drug {
-          id
-          name
-        }
-        ... on Disease {
-          id
-          name
+      count
+      rows {
+        score
+        id
+        object {
+          ... on Target {
+            id
+            approvedSymbol
+          }
+          ... on Drug {
+            id
+            name
+          }
+          ... on Disease {
+            id
+            name
+          }
         }
       }
     }
     literatureOcurrences(
       additionalIds: $ids
-      cursor: $cursor
+      page: { index: $index, size: $pageSize }
       startYear: $startYear
       startMonth: $startMonth
       endYear: $endYear
       endMonth: $endMonth
     ) {
       count
-      filteredCount
-      earliestPubYear
-      cursor
+      stats {
+        earliestPubDate
+      }
       rows {
         pmid
         pmcid

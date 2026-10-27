@@ -1,5 +1,5 @@
 fragment VariantPharmacogenomicsSummaryFragment on Variant {
   pharmacogenomics {
-    isDirectTarget
+    count
   }
 }

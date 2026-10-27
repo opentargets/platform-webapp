@@ -13,7 +13,7 @@ query QTLCredibleSetsQuery($ensemblId: String!, $size: Int!, $index: Int!) {
 				confidence
 				isTransQtl
 				variant {
-					id
+					id: variantId
 					chromosome
 					position
 					referenceAllele
@@ -23,10 +23,6 @@ query QTLCredibleSetsQuery($ensemblId: String!, $size: Int!, $index: Int!) {
 					id
 					studyType
 					condition
-					biosample {
-						biosampleId
-						biosampleName
-					}
 				}
 				locus {
 					count

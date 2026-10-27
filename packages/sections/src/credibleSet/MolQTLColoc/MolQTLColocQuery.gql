@@ -1,9 +1,9 @@
-query MolQTLColocQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
+query MolQTLColocQuery($studyLocusId: String!, $page: Page) {
   credibleSet(studyLocusId: $studyLocusId) {
     studyLocusId
     molqtlcolocalisation: colocalisation(
-      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
-      page: { size: $size, index: $index }
+      filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
+      page: $page
     ) {
       count
       rows {
@@ -17,18 +17,9 @@ query MolQTLColocQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
             traitFromSource
             publicationFirstAuthor
             condition
-            target {
-              approvedSymbol
-              id
-            }
-            biosample {
-              biosampleId
-              biosampleName
-              description
-            }
           }
           variant {
-            id
+            variantId
             chromosome
             position
             referenceAllele

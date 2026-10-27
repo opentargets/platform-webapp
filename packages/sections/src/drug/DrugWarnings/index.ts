@@ -4,7 +4,7 @@ export const definition = {
   id: "drugWarnings",
   name: "Drug Warnings",
   shortName: "DW",
-   hasData: ({ drugWarnings }: { drugWarnings?: { warningType: string }[] }) => (drugWarnings?.length ?? 0) > 0,
+   hasData: ({ drugWarnings }: { drugWarnings?: { count: number } }) => (drugWarnings?.count ?? 0) > 0,
 };
 
 // Components

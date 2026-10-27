@@ -1,6 +1,5 @@
 fragment EntitiesSummaryFragment on Target {
-  literatureOcurrences {
+  literatureOcurrences(page: { index: 0, size: 1 }) {
     count
-    filteredCount
   }
 }

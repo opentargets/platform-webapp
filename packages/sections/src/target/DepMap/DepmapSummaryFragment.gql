@@ -1,5 +1,5 @@
 fragment DepmapSummaryFragment on Target {
-  depMapEssentiality{
-    tissueName
+  depMapEssentiality(page: { index: 0, size: 1 }) {
+    count
   }
 }

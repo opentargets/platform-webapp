@@ -5,7 +5,7 @@ export const definition = {
   id: "depMapEssentiality",
   name: "Cancer DepMap",
   shortName: "DM",
-  hasData: (data: TargetData) => (data.depMapEssentiality?.length || 0) > 0,
+  hasData: (data: TargetData) => (data.depMapEssentiality?.count || 0) > 0,
 };
 
 // Components

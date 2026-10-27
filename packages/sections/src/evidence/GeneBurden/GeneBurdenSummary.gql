@@ -1,9 +1,8 @@
 fragment geneBurdenSummary on Disease {
   geneBurdenSummary: evidences(
     ensemblIds: [$ensgId]
-    enableIndirect: true
-    datasourceIds: ["gene_burden"]
-    size: 1
+    datasourceIds: [gene_burden]
+    page: { index: 0, size: 1 }
   ) {
     count
   }

@@ -22,34 +22,34 @@ const dicSummary = [
     tooltip: "Standard deviation of the difference between reported and calculated log p-values",
   },
   {
-    id: "h2",
+    id: "LDSC_SNP-h2",
     label: "SNP heritability",
     tooltip: "LDSC-estimated SNP-based heritability (liability scale for case/control traits)",
   },
   {
-    id: "h2_se",
+    id: "LDSC_SNP-h2_se",
     label: "SNP heritability SE",
     tooltip: "Standard error of the LDSC SNP-heritability estimate",
   },
   {
-    id: "intercept",
+    id: "LDSC_intercept",
     label: "LDSC intercept",
     tooltip:
       "LDSC regression intercept; values above 1 indicate inflation from confounding (e.g. population stratification) rather than polygenic signal",
   },
   {
-    id: "intercept_se",
+    id: "LDSC_intercept_se",
     label: "LDSC intercept SE",
     tooltip: "Standard error of the LDSC regression intercept",
   },
   {
-    id: "mean_chisq",
+    id: "LDSC_mean_chisq",
     label: "Mean chi-squared",
     tooltip:
       "Mean chi-squared statistic across variants used in LDSC; values above 1 reflect a mix of true polygenic signal and confounding",
   },
   {
-    id: "lambda_gc",
+    id: "LDSC_gc_lambda",
     label: "GC lambda (LDSC)",
     tooltip:
       "Genomic control lambda computed from the LDSC-filtered variant set used for heritability estimation",

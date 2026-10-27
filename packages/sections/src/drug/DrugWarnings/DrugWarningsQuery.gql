@@ -1,19 +1,22 @@
 query DrugWarningsQuery($chemblId: String!) {
   drug(chemblId: $chemblId) {
     id
-    drugWarnings {
-      warningType
-      description
-      toxicityClass
-      country
-      year
-      efoTerm
-      efoId
-      efoIdForWarningClass
-      references {
-        id
-        source
-        url
+    drugWarnings(page: { index: 0, size: 10000 }) {
+      count
+      rows {
+        warningType
+        description
+        toxicityClass
+        country
+        year
+        efoTerm
+        efoId
+        efoIdForWarningClass
+        references {
+          id
+          source
+          url
+        }
       }
     }
   }

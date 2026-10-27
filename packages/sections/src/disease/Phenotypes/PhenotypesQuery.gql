@@ -21,10 +21,6 @@ query PhenotypesQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10) {
           diseaseFromSource
           evidenceType
           frequency
-          frequencyHPO {
-            name
-            id
-          }
           qualifierNot
           onset {
             name

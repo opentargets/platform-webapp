@@ -9,16 +9,12 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
     }
     hits {
       id
+      entity
+      name
+      description
+      keywords
       highlights
       object {
-        ... on Variant {
-          id
-          variantDescription
-          referenceAllele
-          alternateAllele
-          rsIds
-        }
-
         ... on Study {
           id
           hasSumstats
@@ -28,21 +24,9 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           publicationFirstAuthor
           publicationJournal
           studyType
-          biosample {
-            biosampleName
-          }
-          target {
-            approvedSymbol
-          }
           credibleSets {
             credibleSetsCount: count
           }
-        }
-
-        ... on Target {
-          id
-          approvedSymbol
-          functionDescriptions
         }
 
         ... on Disease {
@@ -50,34 +34,22 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           name
           description
         }
-
-        ... on Drug {
-          id
-          name
-          description
-        }
       }
     }
   }
+
   topHit: search(
     queryString: $queryString
     entityNames: $entityNames
     page: { index: 0, size: 1 }
   ) {
     hits {
+      id
+      entity
+      name
+      description
+      keywords
       object {
-        ... on Variant {
-          id
-          variantDescription
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-          rsIds
-          mostSevereConsequence {
-            label
-          }
-        }
         ... on Study {
           id
           hasSumstats
@@ -86,48 +58,11 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
             count
           }
         }
-        ... on Target {
-          id
-          approvedSymbol
-          approvedName
-          functionDescriptions
-          biotype
-          proteinIds {
-            id
-            source
-          }
-        }
         ... on Disease {
           id
           name
           description
-          therapeuticAreas {
-            id
-            name
-          }
-        }
-        ... on Drug {
-          id
-          description
-          name
-          drugType
-          maximumClinicalStage
-          indications {
-            rows {
-              disease {
-                id
-                name
-              }
-            }
-          }
-          synonyms {
-            label
-            source
-          }
-          tradeNames {
-            label
-            source
-          }
+          therapeuticAreas
         }
       }
     }

@@ -6,7 +6,7 @@ export const definition = {
   name: "Enhancer-to-gene predictions",
   shortName: "EG",
   hasData: (data: CredibleSet) => {
-    return (data.variant?.enhancerToGenes?.count || 0) > 0;
+    return (data.variant?.enhancerToGene?.count || 0) > 0;
   },
 };
 

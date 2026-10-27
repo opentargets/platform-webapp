@@ -1,12 +1,12 @@
-query GWASCredibleSetsQuery($studyId: String!, $size: Int!, $index: Int!) {
+query GWASCredibleSetsQuery($studyId: String!, $page: Page) {
   study(studyId: $studyId) {
     id
-    credibleSets(page: { size: $size, index: $index }) {
+    credibleSets(page: $page) {
       count
       rows {
         studyLocusId
         variant {
-          id
+          variantId
           chromosome
           position
           referenceAllele

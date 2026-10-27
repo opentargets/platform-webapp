@@ -1,5 +1,10 @@
 query FacetSearchQuery($queryString: String!, $entityNames: [String!], $category: String!) {
-  facets(queryString: $queryString, entityNames: $entityNames, category: $category) {
+  facets(
+    queryString: $queryString
+    entityNames: $entityNames
+    category: $category
+    page: { index: 0, size: 25 }
+  ) {
     hits {
       id
       highlights

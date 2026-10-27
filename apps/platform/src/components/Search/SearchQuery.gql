@@ -7,26 +7,14 @@ query SearchQuery($queryString: String!, $size: Int!) {
     hits {
       id
       entity
+      name
+      description
+      keywords
       object {
-        ... on Target {
-          id
-          approvedSymbol
-          approvedName
-          functionDescriptions
-        }
-
         ... on Disease {
           id
           name
           description
-        }
-
-        ... on Variant {
-          id
-          variantDescription
-          referenceAllele
-          alternateAllele
-          rsIds
         }
 
         ... on Study {
@@ -43,17 +31,6 @@ query SearchQuery($queryString: String!, $size: Int!) {
             credibleSetsCount: count
           }
         }
-
-        ... on Drug {
-          id
-          name
-          description
-          mechanismsOfAction {
-            rows {
-              mechanismOfAction
-            }
-          }
-        }
       }
     }
   }
@@ -66,15 +43,12 @@ query SearchQuery($queryString: String!, $size: Int!) {
     hits {
       id
       entity
-      object {
-        ... on Target {
-          id
-          approvedSymbol
-          approvedName
-        }
-      }
+      name
+      description
+      keywords
     }
   }
+
   diseases: search(
     queryString: $queryString
     entityNames: ["disease"]
@@ -83,6 +57,9 @@ query SearchQuery($queryString: String!, $size: Int!) {
     hits {
       id
       entity
+      name
+      description
+      keywords
       object {
         ... on Disease {
           id
@@ -91,6 +68,7 @@ query SearchQuery($queryString: String!, $size: Int!) {
       }
     }
   }
+
   variants: search(
     queryString: $queryString
     entityNames: ["variant"]
@@ -99,17 +77,12 @@ query SearchQuery($queryString: String!, $size: Int!) {
     hits {
       id
       entity
-      object {
-        ... on Variant {
-          id
-          variantDescription
-          referenceAllele
-          alternateAllele
-          rsIds
-        }
-      }
+      name
+      description
+      keywords
     }
   }
+
   studies: search(
     queryString: $queryString
     entityNames: ["study"]
@@ -118,6 +91,9 @@ query SearchQuery($queryString: String!, $size: Int!) {
     hits {
       id
       entity
+      name
+      description
+      keywords
       object {
         ... on Study {
           id
@@ -132,16 +108,14 @@ query SearchQuery($queryString: String!, $size: Int!) {
       }
     }
   }
+
   drugs: search(queryString: $queryString, entityNames: ["drug"], page: { index: 0, size: $size }) {
     hits {
       id
       entity
-      object {
-        ... on Drug {
-          id
-          name
-        }
-      }
+      name
+      description
+      keywords
     }
   }
 }

@@ -1,12 +1,12 @@
-query QTLCredibleSetsQuery($studyId: String!) {
+query QTLCredibleSetsQuery($studyId: String!, $page: Page) {
   study(studyId: $studyId) {
     id
-    credibleSets(page: { size: 2000, index: 0 }) {
+    credibleSets(page: $page) {
       count
       rows {
         studyLocusId
         variant {
-          id
+          variantId
           chromosome
           position
           referenceAllele

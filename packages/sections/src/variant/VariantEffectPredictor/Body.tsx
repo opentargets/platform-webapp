@@ -36,7 +36,7 @@ const columns = [
             <br />
             <Link
               external
-              to={`https://www.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=${target.id};t=${transcriptId}`}
+              to={identifiersOrgLink("ensembl", transcriptId)}
             >
               {transcriptId}
             </Link>
@@ -180,7 +180,7 @@ export function Body({ id, entity }: BodyProps) {
       entity={entity}
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={id}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
         />

@@ -33,7 +33,7 @@ export const OtTableContainer = styled("table")(({ theme }) => ({
 
 export const OtTableHeader = styled("div", {
   shouldForwardProp: (prop) => prop !== "canBeSorted" && prop !== "numeric",
-})(({ theme, canBeSorted, numeric }) =>
+})<{ canBeSorted?: boolean; numeric?: boolean }>(({ theme, canBeSorted, numeric }) =>
   theme.unstable_sx({
     display: "flex",
     flexDirection: "row",
@@ -62,7 +62,7 @@ export const FontAwesomeIconPadded = styled(FontAwesomeIcon)(({ theme }) => ({
 
 export const OtTH = styled("th", {
   shouldForwardProp: (prop) => prop !== "stickyColumn",
-})(({ theme, stickyColumn }) => ({
+})<{ stickyColumn?: boolean }>(({ theme, stickyColumn }) => ({
   ...(stickyColumn && {
     left: "0",
     position: "sticky",
@@ -73,7 +73,7 @@ export const OtTH = styled("th", {
 
 export const OtTD = styled("td", {
   shouldForwardProp: (prop) => prop !== "stickyColumn",
-})(({ theme, stickyColumn }) => ({
+})<{ stickyColumn?: boolean }>(({ theme, stickyColumn }) => ({
   ...(stickyColumn && {
     left: "0",
     position: "sticky",
@@ -84,20 +84,21 @@ export const OtTD = styled("td", {
 
 export const OtTR = styled("tr", {
   shouldForwardProp: (prop) => prop !== "enableRowSelection" && prop !== "isSelected",
-})(({ theme, enableRowSelection, isSelected }) =>
-  theme.unstable_sx({
-    ...(enableRowSelection && {
-      cursor: "pointer",
-    }),
-    ...(isSelected && {
-      backgroundColor: theme.palette.grey[100],
-    }),
-  })
+})<{ enableRowSelection?: boolean; isSelected?: boolean }>(
+  ({ theme, enableRowSelection, isSelected }) =>
+    theme.unstable_sx({
+      ...(enableRowSelection && {
+        cursor: "pointer",
+      }),
+      ...(isSelected && {
+        backgroundColor: theme.palette.grey[100],
+      }),
+    })
 );
 
 export const OtTableHeaderText = styled(Box, {
   shouldForwardProp: (prop) => prop !== "verticalHeader",
-})(({ theme, verticalHeader }) =>
+})<{ verticalHeader?: boolean }>(({ theme, verticalHeader }) =>
   theme.unstable_sx({
     typography: "subtitle2",
     ...(verticalHeader && {
@@ -111,7 +112,7 @@ export const OtTableHeaderText = styled(Box, {
 
 export const OtTableCellContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== "numeric",
-})(({ theme, numeric }) =>
+})<{ numeric?: boolean }>(({ theme, numeric }) =>
   theme.unstable_sx({
     typography: "body2",
     ...(numeric && {

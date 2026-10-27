@@ -1,10 +1,16 @@
-import { useQuery } from "@apollo/client";
+import { Fragment, useState } from "react";
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./PharmacogenomicsQuery.gql";
-import { Fragment } from "react";
 import { useTheme } from "@mui/material/styles";
-import { Link, Tooltip, PublicationsDrawer, OtTable, SectionItem, DirectionalityDrawer } from "ui";
+import {
+  DirectionalityDrawer,
+  Link,
+  OtTableOffsetPagination,
+  PublicationsDrawer,
+  SectionItem,
+  Tooltip,
+} from "ui";
 import { epmcUrl } from "@ot/utils";
 import { naLabel, PHARM_GKB_COLOR } from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -41,6 +47,7 @@ type BodyProps = {
 
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   const theme = useTheme();
   const levelColors = {
@@ -220,10 +227,6 @@ function Body({ id, entity }: BodyProps) {
     },
   ];
 
-  const request = useQuery(PHARMACOGENOMICS_QUERY, {
-    variables,
-  });
-
   return (
     <SectionItem
       definition={definition}
@@ -231,22 +234,22 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={id}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
         />
       )}
       renderBody={() => (
-        <OtTable
-          showGlobalFilter
+        <OtTableOffsetPagination
           dataDownloader
           dataDownloaderFileStem={`${id}-pharmacogenetics-variant`}
-          sortBy="evidenceLevel"
-          columns={columns}
-          rows={request.data?.variant.pharmacogenomics}
-          query={PHARMACOGENOMICS_QUERY.loc.source.body}
+          entity="variant"
+          sectionName="pharmacogenomics"
+          setInitialRequestData={setRequest}
+          showColumnVisibilityControl
           variables={variables}
-          loading={request.loading}
+          columns={columns}
+          query={PHARMACOGENOMICS_QUERY}
         />
       )}
     />

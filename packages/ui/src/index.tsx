@@ -105,10 +105,31 @@ export { default as FacetsSelect } from "./components/FacetsSelect/FacetsSelect"
 export * from "./components/Footer";
 export { default as Footer } from "./components/Footer";
 export { default as FromGeneticsModal } from "./components/FromGeneticsModal";
+export { default as GeneVis } from "./components/GeneVis/GeneVis";
+export type {
+  GeneVisGeneHighlight,
+  GeneVisModel,
+  GeneVisTooltipDetailProps,
+  GeneVisTooltipEntityType,
+  GeneVisTooltipOptions,
+  GeneVisVariant,
+  GeneVisVariantEmphasis,
+  GeneVisVariantRow,
+} from "./components/GeneVis/model";
 export { default as GenomicLocation } from "./components/GenomicLocation";
+export {
+  DataRect,
+  DataSprite,
+  DataText,
+  DataVLine,
+  RegionBoundaryOverlay,
+  type ScalesRef,
+} from "./components/GenTrack";
+export { default as GenTrack } from "./components/GenTrack/GenTrack";
 export { default as GlobalSearch } from "./components/GlobalSearch/GlobalSearch";
 /* PROVIDERS */
 export * from "./components/GlobalSearch/SearchContext";
+export { getHitObject } from "./components/GlobalSearch/utils/searchUtils";
 export { default as Header } from "./components/Header";
 export * from "./components/HeatmapTable";
 export { default as Highlights } from "./components/Highlights";
@@ -131,7 +152,10 @@ export { default as ObsPlot } from "./components/ObsPlot/ObsPlot";
 export { default as ObsTooltip } from "./components/ObsPlot/ObsTooltip";
 export { default as OtAsyncTooltip } from "./components/OtAsyncTooltip/OtAsyncTooltip";
 export { default as OtTable } from "./components/OtTable/OtTable";
+export { default as OtTableServer } from "./components/OtTable/OtTableServer";
+export { default as OtTableOffsetPagination } from "./components/OtTable/OtTableOffsetPagination";
 export { default as OtTableSSP } from "./components/OtTable/OtTableSSP";
+export type { OtTableColumn, OtTableServerProps } from "./components/OtTable/types/tableTypes";
 export { default as PageMeta } from "./components/PageMeta";
 export { default as PartnerLockIcon } from "./components/PartnerLockIcon";
 export { default as Popper } from "./components/Popper";
@@ -144,6 +168,8 @@ export { default as ScientificNotation } from "./components/ScientificNotation";
 export { default as ScoreLinearBar } from "./components/ScoreLinearBar";
 export { default as ScrollToTop } from "./components/ScrollToTop";
 export * from "./components/Section";
+export { PROFILE_TABS_SENTINEL_ID } from "./components/Section/scrollOffset";
+export { default as StickyProfileHeader } from "./components/StickyProfileHeader";
 export { default as StudyPublication } from "./components/StudyPublication";
 export { default as SummaryContainer } from "./components/Summary/SummaryContainer";
 export { default as SummaryItem } from "./components/Summary/SummaryItem";
@@ -151,7 +177,7 @@ export { default as SummaryRenderer } from "./components/Summary/SummaryRenderer
 export * as summaryUtils from "./components/Summary/utils";
 export { default as SummaryStatsTable } from "./components/SummaryStatsTable";
 export * from "./components/Table";
-export { default as Tooltip, StyledMUITooltip } from "./components/Tooltip";
+export { default as Tooltip } from "./components/Tooltip";
 export { default as TooltipRow } from "./components/TooltipRow";
 export { default as TooltipStyledLabel } from "./components/TooltipStyledLabel";
 export { default as TooltipTable } from "./components/TooltipTable";
@@ -160,6 +186,7 @@ export { default as ViewerDropdown } from "./components/Viewer/ViewerDropdown";
 export { default as ViewerLegend } from "./components/Viewer/ViewerLegend";
 export { default as ViewerRadios } from "./components/Viewer/ViewerRadios";
 export { default as ViewerTrack } from "./components/Viewer/ViewerTrack";
+export { default as useActiveSection } from "./hooks/useActiveSection";
 export { default as useBatchDownloader } from "./hooks/useBatchDownloader";
 export { default as useBatchQuery } from "./hooks/useBatchQuery";
 export { default as useClinicalReportsMasterDetail } from "./hooks/useClinicalReportsMasterDetail";
@@ -169,6 +196,7 @@ export { default as useDelayedFlag } from "./hooks/useDelayedFlag";
 export { default as usePermissions } from "./hooks/usePermissions";
 /* HOOKS */
 export { default as usePlatformApi } from "./hooks/usePlatformApi";
+export { default as useScrollToHashOnMount } from "./hooks/useScrollToHashOnMount";
 export { default as useStateParams } from "./hooks/useStateParams";
 /* SHARED PAGES  */
 export { default as EmptyPage } from "./pages/EmptyPage";
@@ -176,6 +204,8 @@ export { default as NotFoundPage } from "./pages/NotFoundPage";
 export { default as Page } from "./pages/Page";
 export * from "./providers/APIMetadataProvider";
 export * from "./providers/ConfigurationProvider";
+export * from "./providers/GenTrackProvider";
+export * from "./providers/GenTrackTooltipProvider";
 export { createApolloClient } from "./providers/OTApolloProvider/apollo";
 export * from "./providers/OTApolloProvider/OTApolloProvider";
 export { default as PlatformApiProvider } from "./providers/PlatformApiProvider";

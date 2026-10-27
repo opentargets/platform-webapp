@@ -12,7 +12,7 @@ function Summary() {
       definition={definition}
       request={request}
       renderSummary={data => {
-        return <>{data.depMapEssentiality?.length} tissues</>;
+        return <>{data.depMapEssentiality?.count} tissues</>;
       }}
     />
   );

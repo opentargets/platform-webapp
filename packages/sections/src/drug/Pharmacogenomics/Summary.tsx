@@ -11,7 +11,7 @@ function Summary() {
       definition={definition}
       request={request}
       renderSummary={({ pharmacogenomics }) =>
-        `${pharmacogenomics.length} Pharmacogenomics Records`
+        `${pharmacogenomics.count} Pharmacogenomics Records`
       }
     />
   );

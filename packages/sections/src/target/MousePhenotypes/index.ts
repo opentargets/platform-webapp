@@ -5,7 +5,7 @@ export const definition = {
   id: "mousePhenotypes",
   name: "Mouse Phenotypes",
   shortName: "MP",
-  hasData: (data: TargetData) => (data.mousePhenotypes?.length || 0) > 0,
+  hasData: (data: TargetData) => (data.mousePhenotypes?.count || 0) > 0,
 };
 
 // Components

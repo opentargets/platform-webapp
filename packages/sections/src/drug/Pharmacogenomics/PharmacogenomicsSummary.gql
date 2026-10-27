@@ -1,5 +1,5 @@
 fragment DrugPharmacogenomicsSummaryFragment on Drug {
-  pharmacogenomics {
-    targetFromSourceId
+  pharmacogenomics(page: { index: 0, size: 1 }) {
+    count
   }
 }

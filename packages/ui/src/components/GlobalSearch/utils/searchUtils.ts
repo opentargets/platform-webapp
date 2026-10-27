@@ -37,6 +37,49 @@ const flattenObj = (ob) => {
   return result;
 };
 
+// The API only returns `object` for diseases and studies: rebuild the target, drug and
+// variant shapes the search UI expects from the fields every hit carries.
+export const getHitObject = (hit) => {
+  if (hit.object) return hit.object;
+  const { id, entity, name, description, keywords = [] } = hit;
+  switch (entity) {
+    case "target":
+      return {
+        __typename: "Target",
+        id,
+        approvedSymbol: name,
+        approvedName: description,
+        functionDescriptions: [],
+        proteinIds: [],
+      };
+    case "drug":
+      return {
+        __typename: "Drug",
+        id,
+        name,
+        description,
+        indications: { rows: [] },
+        synonyms: [],
+        tradeNames: [],
+      };
+    case "variant": {
+      const [chromosome, position, referenceAllele, alternateAllele] = id.split("_");
+      return {
+        __typename: "Variant",
+        id,
+        chromosome,
+        position: Number(position),
+        referenceAllele,
+        alternateAllele,
+        variantDescription: description ?? "",
+        rsIds: keywords.filter((keyword) => /^rs\d+$/.test(keyword)),
+      };
+    }
+    default:
+      return { id, name, description };
+  }
+};
+
 const exceedsArrayLengthLimit = (array) => {
   const limitLength = 7;
   let exceedsLimit = false;
@@ -57,7 +100,7 @@ export const formatSearchData = (unformattedData) => {
       typesArray.push({
         type: key === "topHit" ? "topHit" : i.entity,
         entity: i.entity,
-        ...flattenObj(i.object),
+        ...flattenObj(getHitObject(i)),
       })
     );
 

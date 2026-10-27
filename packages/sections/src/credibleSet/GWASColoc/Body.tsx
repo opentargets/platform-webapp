@@ -3,17 +3,16 @@ import {
   SectionItem,
   DisplayVariantId,
   ScientificNotation,
-  OtTable,
+  OtTableOffsetPagination,
   Tooltip,
-  useBatchQuery,
   Navigate,
 } from "ui";
-import { naLabel, table5HChunkSize } from "@ot/constants";
+import { naLabel } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_COLOC_QUERY from "./GWASColocQuery.gql";
 import { mantissaExponentComparator, variantComparator, getStudyCategory } from "@ot/utils";
-import { ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 
 const columns = [
   {
@@ -62,7 +61,7 @@ const columns = [
     },
   },
   {
-    id: "otherStudyLocus.variant.id",
+    id: "otherStudyLocus.variant.variantId",
     label: "Lead Variant",
     comparator: variantComparator(d => d?.otherStudyLocus?.variant),
     sortable: true,
@@ -72,7 +71,7 @@ const columns = [
     },
     renderCell: ({ otherStudyLocus }) => {
       if (!otherStudyLocus?.variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+      const { variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -84,7 +83,7 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.id,
+    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.variantId,
   },
   {
     id: "pValue",
@@ -204,18 +203,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = {
-    studyLocusId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: GWAS_COLOC_QUERY,
-    variables,
-    dataPath: "credibleSet.colocalisation",
-    size: table5HChunkSize,
-  });
+  const variables = { studyLocusId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
@@ -223,20 +212,16 @@ function Body({ id, entity }: BodyProps): ReactElement {
       entity={entity}
       request={request}
       renderDescription={() => <Description />}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableOffsetPagination
             dataDownloader
-            showGlobalFilter
             dataDownloaderFileStem={`${id}-credibleSets`}
-            sortBy="h4"
-            order="desc"
+            entity="credibleSet"
+            sectionName="colocalisation"
+            setInitialRequestData={setRequest}
             columns={columns}
-            loading={request.loading}
-            rows={request.data?.credibleSet.colocalisation.rows}
-            query={GWAS_COLOC_QUERY.loc.source.body}
+            query={GWAS_COLOC_QUERY}
             variables={variables}
           />
         );

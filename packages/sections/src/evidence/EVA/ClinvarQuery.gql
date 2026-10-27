@@ -1,4 +1,4 @@
-query ClinvarQuery($ensemblId: String!, $efoId: String!, $size: Int!, $cursor: String) {
+query ClinvarQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
@@ -7,25 +7,14 @@ query ClinvarQuery($ensemblId: String!, $efoId: String!, $size: Int!, $cursor: S
     name
     eva: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["eva"]
-      size: $size
-      cursor: $cursor
+      datasourceIds: [eva]
+      page: { index: $index, size: $size }
     ) {
-      cursor
       count
       rows {
         disease {
           id
           name
-        }
-        variant {
-          id
-          hgvsId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
         }
         directionOnTarget
         directionOnTrait

@@ -1,5 +1,5 @@
 fragment MousePhenotypesSummaryFragment on Target {
-  mousePhenotypes {
-    modelPhenotypeId
+  mousePhenotypes(page: { index: 0, size: 1 }) {
+    count
   }
 }

@@ -31,6 +31,7 @@ import {
   InputLabel,
   List,
   ListItem,
+  Tooltip as MuiTooltip,
   Paper,
   Skeleton,
   Slider,
@@ -79,13 +80,13 @@ export {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  MuiTooltip,
   Typography,
 };
 
 export { Button } from "@ot/ui/components/Button";
-/** Chip/Button/StyledMUITooltip: real ui-package components (styled MUI wrappers, no heavy deps) */
+/** Chip/Button: real ui-package components (styled MUI wrappers, no heavy deps) */
 export { default as Chip } from "@ot/ui/components/Chip/Chip";
-export { StyledMUITooltip } from "@ot/ui/components/Tooltip";
 
 /**
  * Link: `@ot/ui/components/Link/Link` (the real component's own module path) is
@@ -252,6 +253,8 @@ export { default as RecordsCards } from "@ot/ui/components/ClinicalReports/Recor
 export { default as HeatmapTable } from "@ot/ui/components/HeatmapTable/HeatmapTable";
 /** OtTable: real component from @ot/ui (direct path, bypassing barrel) */
 export { default as OtTable } from "@ot/ui/components/OtTable/OtTable";
+export { default as OtTableOffsetPagination } from "@ot/ui/components/OtTable/OtTableOffsetPagination";
+export { default as OtTableServer } from "@ot/ui/components/OtTable/OtTableServer";
 /** SectionItem: real component — shows full section chrome (title, description, body) */
 export { default as SectionItem } from "@ot/ui/components/Section/SectionItem";
 /** useBatchQuery: real hook from @ot/ui (direct path, bypassing barrel) */

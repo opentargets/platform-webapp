@@ -1,18 +1,12 @@
-query VariantsQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
+query VariantsQuery($studyLocusId: String!, $page: Page) {
   credibleSet(studyLocusId: $studyLocusId) {
-    variant {
-      id
-      referenceAllele
-      alternateAllele
-    }
-    studyLocusId
-    locus(page: { size: $size, index: $index }) {
+    locus(page: $page) {
       count
       rows {
         logBF
         posteriorProbability
         variant {
-          id
+          variantId
           chromosome
           position
           referenceAllele

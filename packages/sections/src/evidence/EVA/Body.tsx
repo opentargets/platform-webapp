@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useQuery } from "@apollo/client";
 import {
   Link,
   SectionItem,
@@ -9,7 +9,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   DisplayVariantId,
-  OtTableSSP,
+  OtTableServer,
   Typography,
 } from "ui";
 import { epmcUrl, sentenceCase, identifiersOrgLink } from "@ot/utils";
@@ -123,7 +123,7 @@ function getColumns(label) {
         variantRsId ? (
           <Link
             external
-            to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+            to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
           >
             {variantRsId}
           </Link>
@@ -153,13 +153,13 @@ function getColumns(label) {
       id: "variantConsequence",
       label: "Variant Consequence",
       renderCell: ({ variantFunctionalConsequence, variant }) => {
-        if (!variant) return naLabel;
+        if (!variantFunctionalConsequence) return naLabel;
         const {
           chromosome,
           position,
           referenceAllele,
           alternateAllele
-        } = variant;
+        } = variant ?? {};
         return (
           <div style={{ display: "flex", gap: "5px" }}>
             {variantFunctionalConsequence && (
@@ -170,8 +170,9 @@ function getColumns(label) {
                 to={identifiersOrgLink("SO", variantFunctionalConsequence.id.slice(3))}
               />
             )}
-            {(variantFunctionalConsequence.id === "SO:0001583" ||
-              variantFunctionalConsequence.id === "SO:0001587") && (
+            {variant &&
+              (variantFunctionalConsequence.id === "SO:0001583" ||
+                variantFunctionalConsequence.id === "SO:0001587") && (
               <LabelChip
                 label={variantConsequenceSource.ProtVar.label}
                 to={`https://www.ebi.ac.uk/ProtVar/query?chromosome=${chromosome}&genomic_position=${position}&reference_allele=${referenceAllele}&alternative_allele=${alternateAllele}`}
@@ -182,7 +183,7 @@ function getColumns(label) {
         );
       },
       filterValue: ({ variantFunctionalConsequence }) => (
-        sentenceCase(variantFunctionalConsequence.label)
+        sentenceCase(variantFunctionalConsequence?.label ?? "")
       ),
     },
     {
@@ -288,9 +289,17 @@ function getColumns(label) {
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;
-  const [request, setRequest] = useState({ loading: true, data: null, error: false });
+  const variables = { ensemblId, efoId };
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(CLINVAR_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
   const columns = getColumns(label);
 
   return (
@@ -301,22 +310,16 @@ function Body({ id, label, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableSSP
+        <OtTableServer
           query={CLINVAR_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem="eva-evidence"
-          entity={entity}
-          sectionName="eva"
+          dataPath="disease.eva"
+          pageSize={PAGE_SIZE}
           showGlobalFilter={false}
-          setInitialRequestData={req => {
-            setRequest(req);
-          }}
-          variables={{
-            ensemblId,
-            efoId,
-          }}
+          variables={variables}
         />
       )}
     />

@@ -1,20 +1,23 @@
 query MousePhenotypes($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
-    mousePhenotypes {
-      targetInModel
-      targetInModelMgiId
-      modelPhenotypeId
-      modelPhenotypeLabel
-      modelPhenotypeClasses {
-        id
-        label
-      }
-      biologicalModels {
-        id
-        allelicComposition
-        geneticBackground
-        literature
+    mousePhenotypes(page: { index: 0, size: 10000 }) {
+      count
+      rows {
+        targetInModel
+        targetInModelMgiId
+        modelPhenotypeId
+        modelPhenotypeLabel
+        modelPhenotypeClasses {
+          id
+          label
+        }
+        biologicalModels {
+          id
+          allelicComposition
+          geneticBackground
+          literature
+        }
       }
     }
   }

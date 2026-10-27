@@ -118,7 +118,8 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         // to get the first item of adverse events to get the largest llr since
         // items are sorted in decreasing llr order.
         const maxLlr = data?.drug.maxLlr.rows[0].logLR;
-        const { criticalValue, rows, count } = data?.drug.adverseEvents;
+        const { stats, rows, count } = data?.drug.adverseEvents;
+        const criticalValue = stats?.criticalValue;
 
         return (
           <Table

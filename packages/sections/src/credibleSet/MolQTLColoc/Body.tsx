@@ -1,15 +1,15 @@
+import { useState } from "react";
 import {
   Link,
   SectionItem,
   DisplayVariantId,
   ScientificNotation,
-  OtTable,
+  OtTableOffsetPagination,
   Tooltip,
-  useBatchQuery,
   Navigate,
   Chip,
 } from "ui";
-import { naLabel, table5HChunkSize } from "@ot/constants";
+import { naLabel } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import MOLQTL_COLOC_QUERY from "./MolQTLColocQuery.gql";
@@ -60,32 +60,15 @@ const columns = [
   {
     id: "otherStudyLocus.study.target.approvedSymbol",
     label: "Affected gene",
-    renderCell: ({ otherStudyLocus }) => {
-      const target = otherStudyLocus?.study?.target;
-      if (!target) return naLabel;
-      return (
-        <Link asyncTooltip to={`/target/${target.id}`}>
-          {target.approvedSymbol}
-        </Link>
-      );
-    },
+    renderCell: () => "?API?",
+    exportValue: () => "?API?",
   },
 
   {
     id: "otherStudyLocus.study.biosample.biosampleName",
     label: "Affected tissue/cell",
-    renderCell: ({ otherStudyLocus }) => {
-      const biosample = otherStudyLocus?.study?.biosample;
-      if (!biosample) return naLabel;
-      return (
-        <Link
-          external
-          to={`https://www.ebi.ac.uk/ols4/search?q=${biosample.biosampleId}`}
-        >
-          {biosample.biosampleName}
-        </Link>
-      );
-    },
+    renderCell: () => "?API?",
+    exportValue: () => "?API?",
   },
   {
     id: "otherStudyLocus.study.condition",
@@ -93,7 +76,7 @@ const columns = [
     renderCell: ({ otherStudyLocus }) => otherStudyLocus?.study?.condition || naLabel,
   },
   {
-    id: "otherStudyLocus.variant.id",
+    id: "otherStudyLocus.variant.variantId",
     label: "Lead Variant",
     comparator: variantComparator(d => d?.otherStudyLocus?.variant),
     sortable: true,
@@ -103,7 +86,7 @@ const columns = [
     },
     renderCell: ({ otherStudyLocus }) => {
       if (!otherStudyLocus?.variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+      const { variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -115,7 +98,7 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.id,
+    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.variantId,
   },
   {
     id: "pValue",
@@ -235,39 +218,25 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    studyLocusId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: MOLQTL_COLOC_QUERY,
-    variables,
-    dataPath: "credibleSet.molqtlcolocalisation",
-    size: table5HChunkSize,
-  });
+  const variables = { studyLocusId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableOffsetPagination
             dataDownloader
-            showGlobalFilter
             dataDownloaderFileStem={`${id}-credibleSets`}
-            sortBy="h4"
-            order="desc"
+            entity="credibleSet"
+            sectionName="molqtlcolocalisation"
+            setInitialRequestData={setRequest}
             columns={columns}
-            loading={request.loading}
-            rows={request.data?.credibleSet.molqtlcolocalisation.rows}
-            query={MOLQTL_COLOC_QUERY.loc.source.body}
+            query={MOLQTL_COLOC_QUERY}
             variables={variables}
           />
         );

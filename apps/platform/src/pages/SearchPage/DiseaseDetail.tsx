@@ -24,9 +24,10 @@ function DiseaseDetail({ data }) {
           <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
             Therapeutic areas
           </Typography>
+          {/* the API returns therapeutic area ids only */}
           {therapeuticAreas.map(area => (
-            <StyledLink key={area.id} to={`/disease/${area.id}`}>
-              {area.name}
+            <StyledLink key={area} to={`/disease/${area}`}>
+              {area}
             </StyledLink>
           ))}
         </>

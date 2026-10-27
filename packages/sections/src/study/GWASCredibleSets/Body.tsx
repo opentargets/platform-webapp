@@ -1,3 +1,5 @@
+import { useQuery } from "@apollo/client";
+import { type ReactElement, useState } from "react";
 import {
   Link,
   SectionItem,
@@ -6,18 +8,17 @@ import {
   Tooltip,
   ClinvarStars,
   L2GScoreIndicator,
-  OtTable,
-  useBatchQuery,
+  OtTableOffsetPagination,
   Navigate,
   Box,
 } from "ui";
 import { mantissaExponentComparator, nullishComparator, variantComparator } from "@ot/utils";
-import { naLabel, credsetConfidenceMap, table5HChunkSize } from "@ot/constants";
+import { naLabel, credsetConfidenceMap } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";
+import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
 import ManhattanPlot from "./ManhattanPlot";
-import { ReactElement } from "react";
 
 const columns = [
   {
@@ -37,7 +38,7 @@ const columns = [
       `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
     renderCell: ({ variant }) => {
       if (!variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = variant;
+      const { variantId, referenceAllele, alternateAllele } = variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -49,7 +50,7 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ variant }) => variant?.id,
+    exportValue: ({ variant }) => variant?.variantId,
   },
   {
     id: "pValue",
@@ -192,17 +193,10 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = {
-    studyId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: GWAS_CREDIBLE_SETS_QUERY,
-    variables,
-    dataPath: "study.credibleSets",
-    size: table5HChunkSize,
+  const variables = { studyId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const plotRequest = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
+    variables: { ...variables, page: { index: 0, size: 50000 } },
   });
 
   return (
@@ -210,22 +204,23 @@ function Body({ id, entity }: BodyProps): ReactElement {
       definition={definition}
       entity={entity}
       request={request}
-      loadingMessage="Loading data. This may take some time..."
-      renderDescription={() => <Description studyId={request.data?.study.id} />}
+      renderDescription={() => <Description studyId={id} />}
       renderBody={() => (
         <>
           <Box my={3} ml={2}>
-            <ManhattanPlot loading={request.loading} data={request.data?.study.credibleSets.rows} />
+            <ManhattanPlot
+              loading={plotRequest.loading}
+              data={plotRequest.data?.study?.credibleSets?.rows}
+            />
           </Box>
-          <OtTable
+          <OtTableOffsetPagination
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-studies`}
-            showGlobalFilter
-            sortBy="pValue"
-            loading={request.loading}
+            entity="study"
+            sectionName="credibleSets"
+            setInitialRequestData={setRequest}
             columns={columns}
-            rows={request.data?.study.credibleSets.rows}
-            query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
+            query={GWAS_CREDIBLE_SETS_QUERY}
             variables={variables}
           />
         </>

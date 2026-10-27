@@ -3,22 +3,24 @@ import {
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTable,
+  OtTableOffsetPagination,
   Tooltip,
   ClinvarStars,
   L2GScoreIndicator,
-  useBatchQuery,
   Navigate,
   Box,
   Chip,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
-import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";
+import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
 import { mantissaExponentComparator, variantComparator, nullishComparator } from "@ot/utils";
 import PheWasPlot from "./PheWasPlot";
-import { credsetConfidenceMap, naLabel, table5HChunkSize } from "@ot/constants";
+import { credsetConfidenceMap, naLabel } from "@ot/constants";
+import { useState } from "react";
+import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
+import { useQuery } from "@apollo/client";
 
 type getColumnsType = {
   id: string;
@@ -45,7 +47,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
       renderCell: ({ variant }) => {
         if (!variant) return naLabel;
-        const { id: variantId, referenceAllele, alternateAllele } = variant;
+        const { variantId, referenceAllele, alternateAllele } = variant;
         const displayElement = (
           <DisplayVariantId
             variantId={variantId}
@@ -68,7 +70,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           </Link>
         );
       },
-      exportValue: ({ variant }) => variant?.id,
+      exportValue: ({ variant }) => variant?.variantId,
     },
     {
       id: "trait",
@@ -281,52 +283,25 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    variantId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    id,
-    query: GWAS_CREDIBLE_SETS_QUERY,
-    variables,
-    dataPath: "variant.gwasCredibleSets",
-    size: table5HChunkSize,
-  });
+  const variables = { variantId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={id}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
         />
       )}
       renderChart={() => {
-        const columns = getColumns({
-          id,
-          referenceAllele: request.data?.variant.referenceAllele,
-          alternateAllele: request.data?.variant.alternateAllele,
-        });
         return (
           <Box mb={1} ml={2}>
-            <PheWasPlot
-              columns={columns}
-              query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
-              variables={variables}
-              loading={request.loading}
-              data={request.data?.variant.gwasCredibleSets.rows}
-              pageId={id}
-              pageReferenceAllele={request.data?.variant.referenceAllele}
-              pageAlternateAllele={request.data?.variant.alternateAllele}
-            />
+            <Plot variantId={id} />
           </Box>
         );
       }}
@@ -337,22 +312,34 @@ function Body({ id, entity }: BodyProps) {
           alternateAllele: request.data?.variant.alternateAllele,
         });
         return (
-          <>
-            <OtTable
-              dataDownloader
-              dataDownloaderFileStem={`${id}-gwas-credible-sets-variant`}
-              showGlobalFilter
-              sortBy="l2gScore"
-              order="desc"
-              columns={columns}
-              rows={request.data?.variant.gwasCredibleSets.rows}
-              loading={request.loading}
-              query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
-              variables={variables}
-            />
-          </>
+          <OtTableOffsetPagination
+            dataDownloader
+            dataDownloaderFileStem={`${id}-gwas-credible-sets-variant`}
+            entity="variant"
+            sectionName="gwasCredibleSets"
+            setInitialRequestData={setRequest}
+            columns={columns}
+            query={GWAS_CREDIBLE_SETS_TABLE_QUERY}
+            variables={variables}
+          />
         );
       }}
+    />
+  );
+}
+
+function Plot({ variantId }: { variantId: string }) {
+  const { data, loading } = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
+    variables: { variantId },
+  });
+
+  return (
+    <PheWasPlot
+      loading={loading}
+      data={data?.variant?.gwasCredibleSets?.rows}
+      pageId={variantId}
+      pageReferenceAllele={data?.variant?.referenceAllele}
+      pageAlternateAllele={data?.variant?.alternateAllele}
     />
   );
 }

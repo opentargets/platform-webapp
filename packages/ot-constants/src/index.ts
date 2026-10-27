@@ -138,6 +138,17 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     showOnlyPartner: true,
   },
   {
+    name: "GSEA Analysis",
+    url: "/analysis",
+    showOnlyPartner: true,
+    external: false,
+  },
+  {
+    name: "Metrics",
+    url: "/metrics",
+    external: false,
+  },
+  {
     name: "Documentation",
     url: "https://platform-docs.opentargets.org/getting-started",
     external: true,
@@ -153,6 +164,7 @@ export const mainMenuItems: MenuItem[] = config.profile.mainMenuItems ?? [
     url: "/downloads",
     external: false,
   },
+
   {
     name: "API",
     url: "/api",
@@ -455,7 +467,107 @@ export const baselineUnits = {
   "mass-spectrometry proteomics": "PPB",
 };
 
+export const therapeuticPriorities = {
+  EFO_0001444: { name: "measurement", rank: 1 },
+  MONDO_0045024: { name: "cancer or benign tumor", rank: 2 },
+  OTAR_0000018: { name: "genetic, familial or congenital", rank: 3 },
+  MONDO_0005550: { name: "infectious disease", rank: 4 },
+  OTAR_0000009: { name: "injury, poisoning or complication", rank: 5 },
+  OTAR_0000014: { name: "pregnancy or perinatal", rank: 6 },
+  MONDO_0024458: { name: "visual system", rank: 7 },
+  MONDO_0004995: { name: "cardiovascular", rank: 8 },
+  MONDO_0002356: { name: "pancreas", rank: 9 },
+  MONDO_0002515: { name: "liver", rank: 10 },
+  EFO_0010282: { name: "gastrointestinal", rank: 11 },
+  OTAR_0000017: { name: "reproductive system or breast", rank: 12 },
+  MONDO_0002051: { name: "integumentary system", rank: 13 },
+  MONDO_0005151: { name: "endocrine system", rank: 14 },
+  OTAR_0000010: { name: "respiratory or thoracic", rank: 15 },
+  MONDO_0002118: { name: "urinary system", rank: 16 },
+  OTAR_0000006: { name: "musculoskeletal or connective ...", rank: 17 },
+  MONDO_0021205: { name: "disorder of ear", rank: 18 },
+  MONDO_0005046: { name: "immune system", rank: 19 },
+  MONDO_0005570: { name: "hematologic", rank: 20 },
+  MONDO_0005071: { name: "nervous system", rank: 21 },
+  MONDO_0002025: { name: "psychiatric", rank: 22 },
+  OTAR_0000020: { name: "nutritional or metabolic", rank: 23 },
+  GO_0008150: { name: "biological process", rank: 24 },
+  EFO_0000651: { name: "phenotype", rank: 25 },
+  EFO_0002571: { name: "medical procedure", rank: 26 },
+  MONDO_0005583: { name: "animal disease", rank: 27 },
+};
+
+export const therapeuticAreas: Record<string, string> = {
+  EFO_0001444: "measurement",
+  MONDO_0045024: "cancer or benign tumor",
+  OTAR_0000018: "genetic, familial or congenital",
+  MONDO_0005550: "infectious disease",
+  OTAR_0000009: "injury, poisoning or complication",
+  OTAR_0000014: "pregnancy or perinatal",
+  MONDO_0024458: "visual system",
+  MONDO_0004995: "cardiovascular",
+  MONDO_0002356: "pancreas",
+  MONDO_0002515: "liver",
+  EFO_0010282: "gastrointestinal",
+  OTAR_0000017: "reproductive system or breast",
+  MONDO_0002051: "integumentary system",
+  MONDO_0005151: "endocrine system",
+  OTAR_0000010: "respiratory or thoracic",
+  MONDO_0002118: "urinary system",
+  OTAR_0000006: "musculoskeletal or connective tissue",
+  MONDO_0021205: "disorder of ear",
+  MONDO_0005046: "immune system",
+  MONDO_0005570: "hematologic",
+  MONDO_0005071: "nervous system",
+  MONDO_0002025: "psychiatric",
+  OTAR_0000020: "nutritional or metabolic",
+  GO_0008150: "biological process",
+  EFO_0000651: "phenotype",
+  EFO_0002571: "medical procedure",
+  MONDO_0005583: "animal disease",
+  EFO_0000319: "cardiovascular",
+  EFO_0000540: "immune system",
+  EFO_0000618: "nervous system",
+  EFO_0001379: "endocrine system",
+  EFO_0005741: "infectious disease",
+  EFO_0005803: "hematologic",
+  EFO_0005932: "animal disease",
+  EFO_0009690: "urinary system",
+  EFO_0010284: "liver",
+  EFO_0010285: "integumentary system",
+};
+
+// from: https://www.ncbi.nlm.nih.gov/grc/human/data
+// (first tab: "Chromosome lengths")
+export const chromosomeInfo = [
+  { chromosome: "1", length: 248956422 },
+  { chromosome: "2", length: 242193529 },
+  { chromosome: "3", length: 198295559 },
+  { chromosome: "4", length: 190214555 },
+  { chromosome: "5", length: 181538259 },
+  { chromosome: "6", length: 170805979 },
+  { chromosome: "7", length: 159345973 },
+  { chromosome: "8", length: 145138636 },
+  { chromosome: "9", length: 138394717 },
+  { chromosome: "10", length: 133797422 },
+  { chromosome: "11", length: 135086622 },
+  { chromosome: "12", length: 133275309 },
+  { chromosome: "13", length: 114364328 },
+  { chromosome: "14", length: 107043718 },
+  { chromosome: "15", length: 101991189 },
+  { chromosome: "16", length: 90338345 },
+  { chromosome: "17", length: 83257441 },
+  { chromosome: "18", length: 80373285 },
+  { chromosome: "19", length: 58617616 },
+  { chromosome: "20", length: 64444167 },
+  { chromosome: "21", length: 46709983 },
+  { chromosome: "22", length: 50818468 },
+  { chromosome: "X", length: 156040895 },
+  { chromosome: "Y", length: 57227415 },
+];
+
 export * from "./alphaFold";
+export * from "./colorSchemas";
 export * from "./dataTypes";
 export * from "./particlesBackground";
 export * from "./partnerPreviewUtils";

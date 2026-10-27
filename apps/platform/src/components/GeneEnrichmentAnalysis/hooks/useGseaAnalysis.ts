@@ -1,6 +1,7 @@
 import type { ApolloClient } from "@apollo/client";
 import type { Dispatch } from "react";
 import { addRun, setActiveRun, updateRun } from "../actions";
+import { getAssociationsQueryVariables } from "../../AssociationsToolkit/associationsUtils";
 import DISEASE_ASSOCIATIONS_QUERY from "../api/DiaseaseAssociationsQuery.gql";
 import { analyzeGsea } from "../api/gseaApi";
 import type { Action, AnalysisInputs, AnalysisRun, AssociationsState, Gene, State } from "../types";
@@ -57,15 +58,17 @@ export function useGseaAnalysis({ client, state, dispatch }: UseGseaAnalysisPara
         const { data } = await client.query({
           query: DISEASE_ASSOCIATIONS_QUERY,
           variables: {
+            ...getAssociationsQueryVariables({
+              id: associationsState.efoId,
+              index: 0,
+              size: 3000,
+              sortBy: associationsState.sortBy,
+              datasources: associationsState.datasources,
+              rowsFilter: associationsState.rowsFilter,
+              facetFilters: associationsState.facetFilters,
+              entitySearch: associationsState.entitySearch,
+            }),
             efoId: associationsState.efoId,
-            index: 0,
-            size: 3000,
-            sortBy: associationsState.sortBy,
-            enableIndirect: associationsState.enableIndirect,
-            datasources: associationsState.datasources,
-            rowsFilter: associationsState.rowsFilter,
-            facetFilters: associationsState.facetFilters,
-            entitySearch: associationsState.entitySearch,
           },
         });
 

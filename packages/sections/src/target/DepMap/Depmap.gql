@@ -1,14 +1,17 @@
 query Depmap ($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
-    depMapEssentiality {
-      tissueName
-      screens{
-        depmapId
-        cellLineName
-        diseaseFromSource
-        geneEffect
-        expression
+    depMapEssentiality(page: { index: 0, size: 10000 }) {
+      count
+      rows {
+        tissueName
+        screens{
+          depmapId
+          cellLineName
+          diseaseFromSource
+          geneEffect
+          expression
+        }
       }
     }
   }

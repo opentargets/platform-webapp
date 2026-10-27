@@ -1,21 +1,24 @@
 import { gql } from "@apollo/client";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { ReactNode } from "react";
+import { Disease, type Widget } from "sections";
 import {
   PlatformApiProvider,
   SectionContainer,
-  SummaryContainer,
   SectionsRenderer,
+  StickyProfileHeader,
+  SummaryContainer,
   SummaryRenderer,
   summaryUtils,
 } from "ui";
-import { Disease, Widget } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
+// OTProjects is not in this map: the API no longer exposes `otarProjects`
 const diseaseProfileWidgets = new Map<string, Widget>([
   [Disease.Ontology.definition.id, Disease.Ontology],
   [Disease.Drugs.definition.id, Disease.Drugs],
   [Disease.Phenotypes.definition.id, Disease.Phenotypes],
-  [Disease.OTProjects.definition.id, Disease.OTProjects],
   [Disease.GWASStudies.definition.id, Disease.GWASStudies],
   [Disease.Bibliography.definition.id, Disease.Bibliography],
 ]);
@@ -23,7 +26,7 @@ const diseaseProfileWidgets = new Map<string, Widget>([
 const DISEASE_WIDGETS = Array.from(diseaseProfileWidgets.values());
 
 const diseaseProfileWidgetsSummaries = Array.from(diseaseProfileWidgets.values()).map(
-  widget => widget.Summary
+  (widget) => widget.Summary
 );
 
 const DISEASE = "disease";
@@ -39,7 +42,7 @@ const DISEASE_PROFILE_QUERY = gql`
       ...DiseaseProfileHeaderFragment
       ...DiseaseProfileSummaryFragment
     }
-    studies(diseaseIds: [$efoId], page: { size: 1, index: 0 }) {
+    studies(diseaseIds: [$efoId], page: { size: 1, index: 0 }, sort: []) {
       count
     }
   }
@@ -47,7 +50,14 @@ const DISEASE_PROFILE_QUERY = gql`
   ${DISEASE_PROFILE_SUMMARY_FRAGMENT}
 `;
 
-function Profile({ efoId, name }: { efoId: string; name: string }) {
+type ProfileProps = {
+  efoId: string;
+  name: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
+};
+
+function Profile({ efoId, name, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={DISEASE}
@@ -57,6 +67,12 @@ function Profile({ efoId, name }: { efoId: string; name: string }) {
       }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={name}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={DISEASE_WIDGETS}
+      />
       <SummaryContainer>
         <SummaryRenderer widgets={DISEASE_WIDGETS} />
       </SummaryContainer>

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "generateAPITypes": "graphql-codegen --config codegen.ts",
+    "apiMigrationAudit": "node scripts/apiMigrationAudit.mjs",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format .",

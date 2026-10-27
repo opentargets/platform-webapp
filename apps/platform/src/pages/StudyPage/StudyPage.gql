@@ -3,13 +3,6 @@ query StudyPageQuery($studyId: String!) {
     id
     studyType
     projectId
-    backgroundTraits {
-      id
-      name
-    }
-    target {
-      id
-    }
     diseases {
       id
       name

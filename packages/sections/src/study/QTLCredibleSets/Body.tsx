@@ -1,10 +1,10 @@
-import { useQuery } from "@apollo/client";
+import { useState } from "react";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTable,
+  OtTableOffsetPagination,
   Navigate,
   Tooltip,
   ClinvarStars,
@@ -31,7 +31,7 @@ const columns = [
       `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
     renderCell: ({ variant }) => {
       if (!variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = variant;
+      const { variantId, referenceAllele, alternateAllele } = variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -43,7 +43,7 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ variant }) => variant?.id,
+    exportValue: ({ variant }) => variant?.variantId,
   },
   {
     id: "pValue",
@@ -135,13 +135,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    studyId: id,
-  };
-
-  const request = useQuery(QTL_CREDIBLE_SETS_QUERY, {
-    variables,
-  });
+  const variables = { studyId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
@@ -150,15 +145,14 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => <Description studyId={request.data?.study.id} />}
       renderBody={() => (
-        <OtTable
+        <OtTableOffsetPagination
           dataDownloader
           dataDownloaderFileStem={`${id}-qtl-credible-sets-studies`}
-          showGlobalFilter
-          sortBy="pValue"
+          entity="study"
+          sectionName="credibleSets"
+          setInitialRequestData={setRequest}
           columns={columns}
-          loading={request.loading}
-          rows={request.data?.study.credibleSets.rows}
-          query={QTL_CREDIBLE_SETS_QUERY.loc.source.body}
+          query={QTL_CREDIBLE_SETS_QUERY}
           variables={variables}
         />
       )}

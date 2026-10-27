@@ -22,7 +22,7 @@ function Section({ id, label: symbol, entity }: Props) {
       showContentLoading={true}
       renderBody={() => (
         <DepmapPlot
-          data={request.data?.target.depMapEssentiality}
+          data={request.data?.target.depMapEssentiality?.rows}
           variables={variables}
           query={DEPMAP_QUERY.loc.source.body}
         />

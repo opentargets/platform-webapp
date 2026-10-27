@@ -6,17 +6,9 @@ fragment StudyProfileHeaderFragment on Study {
   pubmedId
   traitFromSource
   projectId
-  backgroundTraits {
-    id
-    name
-  }
   diseases {
     id
     name
-  }
-  target {
-    id
-    approvedSymbol
   }
   nSamples
   initialSampleSize
@@ -28,15 +20,11 @@ fragment StudyProfileHeaderFragment on Study {
     relativeSampleSize
   }
   hasSumstats
-  sumstatQCValues {
+  SumstatQCValues {
     QCCheckName
     QCCheckValue
   }
   qualityControls
   analysisFlags
-  biosample {
-    biosampleId
-    biosampleName
-  }
   condition
 }

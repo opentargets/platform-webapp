@@ -1,7 +1,17 @@
+import type {
+  TargetBibliographyQuery,
+  TargetBibliographyQueryVariables,
+  TargetBodyProps,
+} from "@ot/constants";
 import { Body as Bibliography } from "../../common/Literature";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
-import TARGET_LITERATURE_OCURRENCES from "./SimilarEntities.gql";
-import type { TargetBodyProps } from "@ot/constants";
+import TARGET_LITERATURE_OCURRENCES_DOCUMENT from "./SimilarEntities.gql";
+
+const TARGET_LITERATURE_OCURRENCES = typedDocument<
+  TargetBibliographyQuery,
+  TargetBibliographyQueryVariables
+>(TARGET_LITERATURE_OCURRENCES_DOCUMENT);
 
 type Props = TargetBodyProps;
 

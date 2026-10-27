@@ -1,5 +1,5 @@
 fragment TargetPharmacogenomicsSummaryFragment on Target {
-  pharmacogenomics {
-    targetFromSourceId
+  pharmacogenomics(page: { index: 0, size: 1 }) {
+    count
   }
 }

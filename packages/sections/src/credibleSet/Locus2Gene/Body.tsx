@@ -13,6 +13,7 @@ type BodyProps = {
 function Body({ id, entity }: BodyProps): ReactNode {
   const variables = {
     studyLocusId: id,
+    page: { index: 0, size: 1000 },
   };
 
   const request = useQuery(LOCUS2GENE_QUERY, {

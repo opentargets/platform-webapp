@@ -84,7 +84,7 @@ function Body({ id, label: symbol, entity }: Props) {
           dataDownloader
           dataDownloaderFileStem={`${symbol}-mouse-phenotypes`}
           columns={columns}
-          rows={request.data?.target.mousePhenotypes}
+          rows={request.data?.target.mousePhenotypes?.rows}
           query={MOUSE_PHENOTYPES_QUERY.loc.source.body}
           variables={variables}
           loading={request.loading}

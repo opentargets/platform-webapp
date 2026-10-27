@@ -1,17 +1,15 @@
 import isEmpty from "lodash/isEmpty";
-import { createContext, useContext, useReducer, Dispatch } from "react";
+import { createContext, type Dispatch, useContext, useReducer } from "react";
 import type {
-  LiteratureStateType,
+  DetailsActionType,
   DetailsStateType,
   LiteratureActionType,
-  DetailsActionType,
+  LiteratureStateType,
 } from "./types";
-import { getPage } from "ui";
 
 function getInitialLiteratureState(): LiteratureStateType {
   return {
     id: "",
-    cursor: "",
     category: ["disease", "drug", "target"],
     query: null,
     globalEntity: null,
@@ -121,8 +119,9 @@ export function useSelectedCategories() {
 }
 
 export function useDisplayedPublications() {
-  const { page, pageSize, litsIds } = useLiterature();
-  return isEmpty(litsIds) ? [] : getPage(litsIds, page, pageSize);
+  // litsIds always holds the publications of the current page
+  const { litsIds } = useLiterature();
+  return isEmpty(litsIds) ? [] : litsIds;
 }
 
 export function useDetails() {

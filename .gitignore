@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-apps/mcp-widgets-server/.env
-.claude/
+.claude
+**/.env
+
 # dependencies
 node_modules
 .pnp
@@ -60,3 +61,6 @@ test-results/
 ./packages/platform-test/playwright-report/index.html
 packages/platform-test/playwright-report/**/index.html
 packages/platform-test/playwright-report/index.html
+
+# local API migration notes and generated schema diffs
+apps/platform/migrations/

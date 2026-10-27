@@ -1,13 +1,12 @@
-import { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTable,
+  OtTableOffsetPagination,
   Tooltip,
   ClinvarStars,
-  useBatchQuery,
   Navigate,
   Box,
   Chip,
@@ -17,7 +16,7 @@ import { definition } from ".";
 import Description from "./Description";
 import QTL_CREDIBLE_SETS_QUERY from "./QTLCredibleSetsQuery.gql";
 import { mantissaExponentComparator, variantComparator } from "@ot/utils";
-import { credsetConfidenceMap, naLabel, table5HChunkSize } from "@ot/constants";
+import { credsetConfidenceMap, naLabel } from "@ot/constants";
 
 type getColumnsType = {
   id: string;
@@ -44,7 +43,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
       renderCell: ({ variant }) => {
         if (!variant) return naLabel;
-        const { id: variantId, referenceAllele, alternateAllele } = variant;
+        const { variantId, referenceAllele, alternateAllele } = variant;
         const displayElement = (
           <DisplayVariantId
             variantId={variantId}
@@ -67,7 +66,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           </Link>
         );
       },
-      exportValue: ({ variant }) => variant?.id,
+      exportValue: ({ variant }) => variant?.variantId,
     },
     {
       id: "studyId",
@@ -103,32 +102,14 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "study.target.approvedSymbol",
       label: "Affected gene",
-      renderCell: ({ study }) => {
-        if (!study?.target) return naLabel;
-        return (
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Link asyncTooltip to={`/target/${study.target.id}`}>
-              {study.target.approvedSymbol}
-            </Link>
-          </Box>
-        );
-      },
+      renderCell: () => "?API?",
+      exportValue: () => "?API?",
     },
     {
       id: "study",
       label: "Affected tissue/cell",
-      renderCell: ({ study }) => {
-        const biosampleId = study?.biosample?.biosampleId;
-        if (!biosampleId) return naLabel;
-        return (
-          <Link external to={`https://www.ebi.ac.uk/ols4/search?q=${biosampleId}`}>
-            {study?.biosample?.biosampleName}
-          </Link>
-        );
-      },
-      exportValue: ({ study }) => {
-        return `[${study?.biosample?.biosampleId}]:${study?.biosample?.biosampleName}`;
-      },
+      renderCell: () => "?API?",
+      exportValue: () => "?API?",
     },
     {
       id: "study.condition",
@@ -250,48 +231,35 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactNode {
-  const variables = {
-    variantId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: QTL_CREDIBLE_SETS_QUERY,
-    variables,
-    dataPath: "variant.qtlCredibleSets",
-    size: table5HChunkSize,
-  });
+  const variables = { variantId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant?.id}
+          variantId={id}
           referenceAllele={request.data?.variant?.referenceAllele}
           alternateAllele={request.data?.variant?.alternateAllele}
         />
       )}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableOffsetPagination
             dataDownloader
             dataDownloaderFileStem={`${id}-qtl-credible-sets-variant`}
-            showGlobalFilter
-            sortBy="pValue"
+            entity="variant"
+            sectionName="qtlCredibleSets"
+            setInitialRequestData={setRequest}
             columns={getColumns({
               id,
               referenceAllele: request.data?.variant.referenceAllele,
               alternateAllele: request.data?.variant.alternateAllele,
             })}
-            rows={request.data?.variant.qtlCredibleSets.rows}
-            loading={request.loading}
-            query={QTL_CREDIBLE_SETS_QUERY.loc.source.body}
+            query={QTL_CREDIBLE_SETS_QUERY}
             variables={variables}
           />
         );

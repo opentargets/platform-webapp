@@ -1,10 +1,9 @@
 import { Box, Card, Divider, GridLegacy, Skeleton } from "@mui/material";
 import { VIEW } from "@ot/constants";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Element } from "react-scroll";
 import ErrorBoundary from "../ErrorBoundary";
 import PartnerLockIcon from "../PartnerLockIcon";
-import { SummaryLoader } from "../PublicationsDrawer";
 import { createShortName } from "../Summary/utils";
 import SectionError from "./SectionError";
 import {
@@ -26,9 +25,16 @@ type definitionType = {
   isPrivate?: boolean;
 };
 
+/** the loading/error/data triple of a query (an Apollo QueryResult or an equivalent object) */
+export type SectionRequest = {
+  loading?: unknown;
+  error?: unknown;
+  data?: unknown;
+};
+
 type SectionItemProps = {
   definition: definitionType;
-  request: Record<string, unknown>;
+  request: SectionRequest;
   renderDescription: () => ReactNode;
   renderChart?: () => ReactNode;
   renderBody: () => ReactNode;
@@ -60,7 +66,7 @@ function SectionItem({
   const shortName = createShortName(definition);
   let hasData = false;
   const [selectedView, setSelectedView] = useState(defaultView);
-  const [showDelayLoadingMessage, setShowDelayLoadingMessage] = useState(false);
+  const [showDelayLoadingMessage] = useState(false);
 
   // TODO: refactor to avoid re-renders
 
@@ -97,7 +103,10 @@ function SectionItem({
 
   return (
     <GridLegacy item xs={12}>
-      <section data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}>
+      <section
+        id={definition.id}
+        data-testid={`section-${definition.id.toLowerCase().replace(/_/g, "-")}`}
+      >
         <Element name={definition.id}>
           <Card elevation={0} variant="outlined">
             <ErrorBoundary>

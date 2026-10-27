@@ -31,7 +31,6 @@ function ProfileHeader() {
   const beta = leadVariant.beta ?? credibleSet?.beta;
   const standardError = leadVariant.standardError ?? credibleSet?.standardError;
   const study = credibleSet?.study;
-  const target = study?.target;
 
   const { pValueMantissa, pValueExponent } =
     typeof leadVariant?.pValueMantissa === "number" &&
@@ -212,16 +211,9 @@ function ProfileHeader() {
                 ))}
               </Field>
             )}
-            {study?.backgroundTraits?.length > 0 && (
-              <Field loading={loading} title="Background trait">
-                {study.backgroundTraits.map(({ id, name }, index) => (
-                  <Fragment key={id}>
-                    {index > 0 ? ", " : null}
-                    <Link to={`../disease/${id}`}>{name}</Link>
-                  </Fragment>
-                ))}
-              </Field>
-            )}
+            <Field loading={loading} title="Background trait">
+              ?API?
+            </Field>
           </>
         )}
         {study?.studyType !== "gwas" && (
@@ -231,21 +223,12 @@ function ProfileHeader() {
                 {study?.projectId?.replace(/_/gi, " ")}
               </Field>
             )}
-            {target?.id && (
-              <Field loading={loading} title="Affected gene">
-                <Link to={`../target/${target.id}`}>{target.approvedSymbol}</Link>
-              </Field>
-            )}
-            {study?.biosample?.biosampleId && (
-              <Field loading={loading} title="Affected cell/tissue">
-                <Link
-                  external
-                  to={`https://www.ebi.ac.uk/ols4/search?q=${study.biosample.biosampleId}`}
-                >
-                  {study.biosample.biosampleName}
-                </Link>
-              </Field>
-            )}
+            <Field loading={loading} title="Affected gene">
+              ?API?
+            </Field>
+            <Field loading={loading} title="Affected cell/tissue">
+              ?API?
+            </Field>
           </>
         )}
         {study?.publicationFirstAuthor && (
@@ -270,9 +253,9 @@ function ProfileHeader() {
         <Field loading={loading} title="Summary statistics">
           {!study?.hasSumstats ? (
             "Not Available"
-          ) : study?.sumstatQCValues ? (
+          ) : study?.SumstatQCValues ? (
             <DetailPopover title="Available">
-              <SummaryStatsTable sumstatQCValues={study.sumstatQCValues} />
+              <SummaryStatsTable sumstatQCValues={study.SumstatQCValues} />
             </DetailPopover>
           ) : (
             "Available"

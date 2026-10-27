@@ -1,15 +1,11 @@
 query MolecularStructureQuery($variantId: String!) {
   variant(variantId: $variantId) {
-    id
     referenceAllele
     alternateAllele
-    proteinCodingCoordinates {
+    proteinCodingCoordinates(page: { index: 0, size: 1 }) {
       count
       rows {
         uniprotAccessions
-        variant {
-          id
-        }
         target {
           id
           approvedSymbol

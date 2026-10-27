@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import {
   PlatformApiProvider,
   SectionContainer,
+  StickyProfileHeader,
   SummaryContainer,
   summaryUtils,
   SummaryRenderer,
@@ -11,11 +12,13 @@ import {
 
 import ProfileHeader from "./ProfileHeader";
 import { CredibleSet, Widget } from "sections";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 const CREDIBLE_SET = "credibleSet";
 
 const credibleSetProfileWidgets = new Map<string, Widget>([
+  // [CredibleSet.CredibleSetGenomicRegion.definition.id, CredibleSet.CredibleSetGenomicRegion],
   [CredibleSet.Locus2Gene.definition.id, CredibleSet.Locus2Gene],
   [CredibleSet.EnhancerToGenePredictions.definition.id, CredibleSet.EnhancerToGenePredictions],
   [CredibleSet.GWASColoc.definition.id, CredibleSet.GWASColoc],
@@ -23,15 +26,18 @@ const credibleSetProfileWidgets = new Map<string, Widget>([
 ]);
 
 const CREDIBLE_SET_WIDGETS = Array.from(credibleSetProfileWidgets.values());
-
-const credibleSetProfileWidgetsSummaries = Array.from(credibleSetProfileWidgets.values()).map(
-  widget => widget.Summary
-);
+const CREDIBLE_SET_STICKY_WIDGETS = [CredibleSet.Variants, ...CREDIBLE_SET_WIDGETS];
 
 type ProfileProps = {
   studyLocusId: string;
   variantId: string;
+  Icon?: IconProp;
+  externalLinks?: ReactNode;
 };
+
+const credibleSetProfileWidgetsSummaries = Array.from(credibleSetProfileWidgets.values()).map(
+  widget => widget.Summary
+);
 
 const CREDIBLE_SET_PROFILE_SUMMARY_FRAGMENT = summaryUtils.createSummaryFragment(
   credibleSetProfileWidgetsSummaries,
@@ -53,7 +59,7 @@ const CREDIBLE_SET_PROFILE_QUERY = gql`
 
 const VariantsSection = CredibleSet.Variants.getBodyComponent();
 
-function Profile({ studyLocusId, variantId }: ProfileProps) {
+function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={CREDIBLE_SET}
@@ -61,6 +67,12 @@ function Profile({ studyLocusId, variantId }: ProfileProps) {
       variables={{ studyLocusId: studyLocusId, variantIds: [variantId] }}
     >
       <ProfileHeader />
+      <StickyProfileHeader
+        title={studyLocusId}
+        Icon={Icon}
+        externalLinks={externalLinks}
+        widgets={CREDIBLE_SET_STICKY_WIDGETS}
+      />
 
       <SummaryContainer>
         {/* TODO: remove this once we have a proper variants section. look at the parent prop */}

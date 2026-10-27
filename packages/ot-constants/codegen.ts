@@ -11,14 +11,29 @@ if (!VITE_API_URL) {
   throw new Error("VITE_API_URL environment variable is not set in .env file");
 }
 
+// Documents already migrated to the current API: each gets an exact result type
+// (`<OperationName>` / `<OperationName>Variables`) in src/types/index.ts. Add a
+// page's documents here once its queries validate against the API.
+const MIGRATED_DOCUMENTS = [
+  "apps/platform/src/pages/DiseasePage/**/*.gql",
+  "apps/platform/src/pages/TargetPage/TargetAssociations/*.gql",
+  "apps/platform/src/components/AssociationsToolkit/components/Table/RowInteractors/InteractorsQuery.gql",
+  "apps/platform/src/components/GeneEnrichmentAnalysis/api/*.gql",
+  "packages/sections/src/disease/{Bibliography,Drugs,GWASStudies,Ontology,Phenotypes}/*.gql",
+  "packages/sections/src/drug/Bibliography/*.gql",
+  "packages/sections/src/target/Bibliography/*.gql",
+  "packages/ui/src/components/ClinicalReports/*.gql",
+].map((glob) => resolve(__dirname, "../..", glob));
+
 const config: CodegenConfig = {
   overwrite: true,
   schema: `${VITE_API_URL}`,
+  documents: MIGRATED_DOCUMENTS,
   errorsOnly: false,
   generates: {
     "./src/types/index.ts": {
       plugins: ["typescript", "typescript-operations", "typescript-graphql-request"],
-      config: { gqlTagName: "gql", rawRequest: false },
+      config: { gqlTagName: "gql", rawRequest: false, omitOperationSuffix: true },
     },
   },
 };

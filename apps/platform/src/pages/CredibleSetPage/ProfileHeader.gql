@@ -5,7 +5,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
   standardError
   effectAlleleFrequencyFromSource
   qualityControls
-  locus(variantIds: $variantIds) {
+  locus(filter: { variantIds: $variantIds }) {
     count
     rows {
       posteriorProbability
@@ -19,7 +19,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
     count
   }
   variant {
-    id
+    variantId
     chromosome
     position
     rsIds
@@ -39,18 +39,6 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
       id
       name
     }
-    backgroundTraits {
-      id
-      name
-    }
-    target {
-      id
-      approvedSymbol
-    }
-    biosample {
-      biosampleId
-      biosampleName
-    }
     publicationJournal
     pubmedId
     nSamples
@@ -59,7 +47,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
     studyType
     hasSumstats
     analysisFlags
-    sumstatQCValues {
+    SumstatQCValues {
       QCCheckName
       QCCheckValue
     }

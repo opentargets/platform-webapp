@@ -165,7 +165,7 @@ function Body({ id, label, entity }: Props) {
       fetchMore({
         variables: {
           ...variables,
-          cursor: data.disease.europePmc.cursor,
+          index: Math.floor(data.disease.europePmc.rows.length / variables.size),
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
@@ -178,7 +178,6 @@ function Body({ id, label, entity }: Props) {
               ...prev.disease,
               europePmc: {
                 ...prev.disease.europePmc,
-                cursor: fetchMoreResult.disease.europePmc.cursor,
                 rows: [...prev.disease.europePmc.rows, ...fetchMoreResult.disease.europePmc.rows],
               },
             },

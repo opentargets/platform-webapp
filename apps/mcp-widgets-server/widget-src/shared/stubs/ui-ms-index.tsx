@@ -25,6 +25,7 @@ export {
 // ---- Shared widget stubs (reused from the main ui stub) ----
 export {
   Box,
+  Chip,
   DisplayVariantId,
   GenomicLocation,
   Link,

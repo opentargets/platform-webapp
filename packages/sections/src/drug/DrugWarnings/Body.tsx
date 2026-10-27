@@ -92,7 +92,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           dataDownloader
           dataDownloaderFileStem={`${chemblId}-drug-warning`}
           columns={columns}
-          rows={request.data?.drug.drugWarnings}
+          rows={request.data?.drug.drugWarnings?.rows}
           query={DRUG_WARNINGS_QUERY.loc.source.body}
           variables={variables}
           loading={request.loading}

@@ -1,6 +1,6 @@
 query InteractionsSectionQuery(
   $ensgId: String!
-  $sourceDatabase: InteractionSourceEnum
+  $sourceDatabase: InteractionSourceDatabase
   $index: Int = 0
   $size: Int = 10
 ) {

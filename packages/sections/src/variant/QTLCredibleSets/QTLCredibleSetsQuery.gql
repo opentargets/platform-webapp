@@ -1,11 +1,10 @@
-query QTLCredibleSetsQuery($variantId: String!, $size: Int!, $index: Int!) {
+query QTLCredibleSetsQuery($variantId: String!, $page: Page) {
   variant(variantId: $variantId) {
-    id
     referenceAllele
     alternateAllele
     qtlCredibleSets: credibleSets(
-      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
-      page: { size: $size, index: $index }
+      filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
+      page: $page
     ) {
       count
       rows {
@@ -17,7 +16,7 @@ query QTLCredibleSetsQuery($variantId: String!, $size: Int!, $index: Int!) {
         confidence
         isTransQtl
         variant {
-          id
+          variantId
           chromosome
           position
           referenceAllele
@@ -27,16 +26,8 @@ query QTLCredibleSetsQuery($variantId: String!, $size: Int!, $index: Int!) {
           id
           studyType
           condition
-          target {
-            id
-            approvedSymbol
-          }
-          biosample {
-            biosampleId
-            biosampleName
-          }
         }
-        locus(variantIds: [$variantId]) {
+        locus(filter: { variantIds: [$variantId] }) {
           rows {
             posteriorProbability
           }

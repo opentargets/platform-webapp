@@ -1,6 +1,5 @@
 query VariantEffectPredictorQuery($variantId: String!) {
   variant(variantId: $variantId) {
-    id
     transcriptConsequences {
       variantConsequences {
         id

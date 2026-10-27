@@ -11,7 +11,9 @@ query AdverseEventsQuery(
       }
     }
     adverseEvents(page: { index: $index, size: $size }) {
-      criticalValue
+      stats {
+        criticalValue
+      }
       count
       rows {
         name

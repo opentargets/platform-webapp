@@ -1,5 +1,9 @@
 query SharedTraitStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
-  sharedTraitStudies: studies(diseaseIds: $diseaseIds, page: { size: $size, index: $index }) {
+  sharedTraitStudies: studies(
+    diseaseIds: $diseaseIds
+    sort: [{ key: N_SAMPLES, direction: DESCENDING }]
+    page: { size: $size, index: $index }
+  ) {
     count
     rows {
       id

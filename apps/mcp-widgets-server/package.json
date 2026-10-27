@@ -21,7 +21,7 @@
     "build": "yarn build:widgets"
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "*",
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",

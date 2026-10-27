@@ -1,5 +1,5 @@
 fragment VariantEnhancerToGenePredictionsSummaryFragment on Variant {
-  enhancerToGenes {
+  enhancerToGene {
     count
   }
-} 
+}

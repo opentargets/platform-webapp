@@ -11,6 +11,9 @@ import { Evidence, Widget } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
+// OTCRISPR, OTEncore and OTValidation are not in this map: their partner-only
+// datasources are missing from the API's Datasource enum, which would fail the
+// whole profile query
 const evidenceProfileWidgets = new Map<string, Widget>([
   [Evidence.GWASCredibleSets.definition.id, Evidence.GWASCredibleSets],
   [Evidence.GeneBurden.definition.id, Evidence.GeneBurden],
@@ -32,9 +35,6 @@ const evidenceProfileWidgets = new Map<string, Widget>([
   [Evidence.EuropePmc.definition.id, Evidence.EuropePmc],
   [Evidence.ExpressionAtlas.definition.id, Evidence.ExpressionAtlas],
   [Evidence.Impc.definition.id, Evidence.Impc],
-  [Evidence.OTCRISPR.definition.id, Evidence.OTCRISPR],
-  [Evidence.OTEncore.definition.id, Evidence.OTEncore],
-  [Evidence.OTValidation.definition.id, Evidence.OTValidation],
 ]);
 
 const EVIDENCE_WIDGETS = Array.from(evidenceProfileWidgets.values());

@@ -37,6 +37,7 @@ import { getConfig } from "@ot/config";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../context/AssociationsURLContext";
 import { useAotfData } from "../../context/AssociationsDataContext";
+import { getAssociationsQueryVariables } from "../../associationsUtils";
 import OriginalDataSources from "../../static_datasets/dataSourcesAssoc";
 import prioritizationCols from "../../static_datasets/prioritisationColumns";
 import {
@@ -148,7 +149,6 @@ function DataDownloader() {
     id,
     query,
     sorting,
-    enableIndirect,
     entity,
     entityToGet,
     modifiedSourcesDataControls,
@@ -194,19 +194,13 @@ function DataDownloader() {
 
   const queryResponseSelector = useMemo(() => getRowsQuerySelector(entityToGet), [entityToGet]);
 
-  const allAssociationsVariable = {
+  // index / size are supplied per chunk by useBatchDownloader.
+  const allAssociationsVariable = getAssociationsQueryVariables({
     id,
     sortBy: sorting[0].id,
-    enableIndirect,
     entitySearch,
-    isDirect: !enableIndirect,
-    datasources: dataSourcesWeights.map(el => ({
-      id: el.id,
-      weight: el.weight,
-      propagate: el.propagate,
-      required: el.required,
-    })),
-  };
+    datasources: dataSourcesWeights,
+  });
 
   const pinnedAssociationsVariable = {
     ...allAssociationsVariable,

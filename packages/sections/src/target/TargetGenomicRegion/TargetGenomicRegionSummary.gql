@@ -1,0 +1,9 @@
+fragment TargetGenomicRegionSummaryFragment on Target {
+  id
+  approvedSymbol
+  canonicalTranscript {
+    chromosome
+    start
+    end
+  }
+}

@@ -3,16 +3,9 @@ query OntologyQuery($efoId: String!) {
     id
     name
     isTherapeuticArea
+    ancestors
     parents {
       id
-    }
-    resolvedAncestors {
-      id
-      name
-      isTherapeuticArea
-      parents {
-        id
-      }
     }
     children {
       id
