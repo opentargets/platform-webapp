@@ -106,10 +106,8 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "pValue",
     label: "P-value",
     numeric: true,
-    filterValue: false,
     renderCell: ({ pValueMantissa, pValueExponent }) => {
-      if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
-        return naLabel;
+      if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
     exportValue: ({ pValueMantissa, pValueExponent }) => {
@@ -121,7 +119,6 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "beta",
     label: "Beta",
     numeric: true,
-    filterValue: false,
     tooltip: "Beta with respect to the ALT allele",
     renderCell: ({ beta }) => {
       if (typeof beta !== "number") return naLabel;
@@ -148,11 +145,10 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
       if (!confidence) return naLabel;
       return (
         <Tooltip title={confidence} style="">
-          <ClinvarStars num={confidenceMap[confidence]} />
+          <ClinvarStars num={confidenceMap[confidence] ?? 0} />
         </Tooltip>
       );
     },
-    filterValue: false,
   },
   {
     id: "finemappingMethod",
@@ -162,7 +158,6 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     id: "credibleSetSize",
     label: "Credible set size",
     numeric: true,
-    filterValue: false,
     renderCell: ({ locus }) =>
       typeof locus?.count === "number" ? locus.count.toLocaleString() : naLabel,
     exportValue: ({ locus }) => locus?.count,
