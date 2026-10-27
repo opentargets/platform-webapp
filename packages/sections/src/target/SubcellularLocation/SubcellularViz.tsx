@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
-
-import { Link, Typography, List, ListItem, Box, Tabs, Tab } from "ui";
-import { identifiersOrgLink, getUniprotIds } from "@ot/utils";
-import SwissBioVis from "./SwissbioViz";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { TargetSubcellularLocationQuery } from "@ot/constants";
+import { getUniprotIds, identifiersOrgLink } from "@ot/utils";
+import { useMemo, useState } from "react";
+import { Box, Link, List, ListItem, Tab, Tabs, Typography } from "ui";
 import membraneCodes from "./membrane-codes";
-import { Target } from "@ot/constants";
+import SwissBioVis from "./SwissbioViz";
+
+type Target = NonNullable<TargetSubcellularLocationQuery["target"]>;
 
 const sources = [
   {
@@ -34,11 +35,13 @@ const parseLocationTerm = (term: string | undefined): string | undefined => term
 
 // Parse API response and split locations based on sources. Example:
 // { HPA_main: [], uniprot: [], }
-const parseLocationData = (subcellularLocations: Target["subcellularLocations"]): Record<string, Target["subcellularLocations"]> => {
+const parseLocationData = (
+  subcellularLocations: Target["subcellularLocations"]
+): Record<string, Target["subcellularLocations"]> => {
   const sourcesLocations: Record<string, Target["subcellularLocations"]> = {};
   subcellularLocations
-    .filter(sl => sl.termSL)
-    .forEach(sl => {
+    .filter((sl) => sl.termSL)
+    .forEach((sl) => {
       if (!sourcesLocations[sl.source]) {
         sourcesLocations[sl.source] = [];
       }
@@ -48,8 +51,10 @@ const parseLocationData = (subcellularLocations: Target["subcellularLocations"])
 };
 
 // Filter the sources array to only those with data
-const filterSourcesWithData = (sourcesArray: SourceType[], sourcesLocations: Record<string, Target["subcellularLocations"]>) =>
-  sourcesArray.filter(s => sourcesLocations[s.id]);
+const filterSourcesWithData = (
+  sourcesArray: SourceType[],
+  sourcesLocations: Record<string, Target["subcellularLocations"]>
+) => sourcesArray.filter((s) => sourcesLocations[s.id]);
 
 function LocationLink({ sourceId, id }: { sourceId: string; id: string }) {
   return (
@@ -62,14 +67,22 @@ function LocationLink({ sourceId, id }: { sourceId: string; id: string }) {
 /**
  * The text list of locations displayed to the right of the visualiztion
  */
-function LocationsList({ sls, hoveredCellPart, setHoveredCellPart }: { sls: Array<Target["subcellularLocations"][number] & { targetModifier?: string | null }>; hoveredCellPart: string | null; setHoveredCellPart: (cellPart: string | null) => void }) {
+function LocationsList({
+  sls,
+  hoveredCellPart,
+  setHoveredCellPart,
+}: {
+  sls: Array<Target["subcellularLocations"][number] & { targetModifier?: string | null }>;
+  hoveredCellPart: string | null;
+  setHoveredCellPart: (cellPart: string | null) => void;
+}) {
   const sortedSls = sls.toSorted((a, b): number => {
     return a.location.localeCompare(b.location);
   });
 
   // Group locations by targetModifier
   const groupedSls = sortedSls.reduce((acc: Record<string, typeof sortedSls>, sl) => {
-    const modifier = sl.targetModifier || 'no-modifier';
+    const modifier = sl.targetModifier || "no-modifier";
     if (!acc[modifier]) {
       acc[modifier] = [];
     }
@@ -79,11 +92,11 @@ function LocationsList({ sls, hoveredCellPart, setHoveredCellPart }: { sls: Arra
 
   // Create an array to maintain order: items without modifier first, then groups
   const orderedGroups = [];
-  if (groupedSls['no-modifier']) {
-    orderedGroups.push({ modifier: null, items: groupedSls['no-modifier'] });
+  if (groupedSls["no-modifier"]) {
+    orderedGroups.push({ modifier: null, items: groupedSls["no-modifier"] });
   }
   Object.entries(groupedSls).forEach(([modifier, items]) => {
-    if (modifier !== 'no-modifier') {
+    if (modifier !== "no-modifier") {
       orderedGroups.push({ modifier, items });
     }
   });
@@ -91,14 +104,18 @@ function LocationsList({ sls, hoveredCellPart, setHoveredCellPart }: { sls: Arra
   return (
     <List data-testid="subcellular-locations-list">
       {orderedGroups.map(({ modifier, items }) => (
-        <Box key={modifier || 'no-modifier'}>
+        <Box key={modifier || "no-modifier"}>
           {modifier && (
             <Typography variant="body1" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>
               {modifier}
             </Typography>
           )}
           {items.map(({ location, termSL }: Target["subcellularLocations"][number]) => {
-            const locationCode = termSL ? parseLocationTerm(membraneCodes[termSL as keyof typeof membraneCodes]?.parentCode ?? termSL) ?? null : null;
+            const locationCode = termSL
+              ? (parseLocationTerm(
+                  membraneCodes[termSL as keyof typeof membraneCodes]?.parentCode ?? termSL
+                ) ?? null)
+              : null;
             return (
               <ListItem
                 key={location}
@@ -109,9 +126,8 @@ function LocationsList({ sls, hoveredCellPart, setHoveredCellPart }: { sls: Arra
                   gap: 1,
                   cursor: "default",
                   width: "fit-content",
-                  color: (theme) => theme.palette.primary[
-                    hoveredCellPart === locationCode ? "dark" : "main"
-                  ]
+                  color: (theme) =>
+                    theme.palette.primary[hoveredCellPart === locationCode ? "dark" : "main"],
                 }}
                 onMouseEnter={() => setHoveredCellPart(locationCode)}
                 onMouseLeave={() => setHoveredCellPart(null)}
@@ -145,15 +161,17 @@ interface SubcellularTabPanelProps {
   index: number;
 }
 
-
-  
-function SubcellularTabPanel({ target, source, sourcesLocations, uniprotId, value, index }: SubcellularTabPanelProps) {
+function SubcellularTabPanel({
+  target,
+  source,
+  sourcesLocations,
+  uniprotId,
+  value,
+  index,
+}: SubcellularTabPanelProps) {
   const [hoveredCellPart, setHoveredCellPart] = useState<string | null>(null);
 
-  const tempSls = useMemo(() => 
-    sourcesLocations[source.id],
-    [sourcesLocations, source.id]
-  );
+  const tempSls = useMemo(() => sourcesLocations[source.id], [sourcesLocations, source.id]);
 
   return (
     <Box
@@ -163,22 +181,26 @@ function SubcellularTabPanel({ target, source, sourcesLocations, uniprotId, valu
       aria-labelledby={`subcellular-tab-${index}`}
       data-testid={`subcellular-tabpanel-${source.id.toLowerCase()}`}
       sx={{ display: "flex", gap: 4 }}
-    >{value === index && (
+    >
+      {value === index && (
         <>
           <SwissBioVis
             taxonId="9606"
-            locationIds={sourcesLocations[source.id].map(l => l.termSL ? parseLocationTerm(l.termSL) : "").filter(Boolean).join()}
+            locationIds={sourcesLocations[source.id]
+              .map((l) => (l.termSL ? parseLocationTerm(l.termSL) : ""))
+              .filter(Boolean)
+              .join()}
             sourceId={source.id.toLowerCase()}
             hoveredCellPart={hoveredCellPart}
             setHoveredCellPart={setHoveredCellPart}
           />
-          <Box
-            key={source.id}
-            sx={{ width: { xs: "55%", sm: "45%" }, flexGrow: 0 }}
-          >
+          <Box key={source.id} sx={{ width: { xs: "55%", sm: "45%" }, flexGrow: 0 }}>
             <Typography variant="h6">{source.label}</Typography>
             Location for{" "}
-            <LocationLink sourceId={source.id} id={source.id === "uniprot" ? uniprotId : target.id} />
+            <LocationLink
+              sourceId={source.id}
+              id={source.id === "uniprot" ? uniprotId : target.id}
+            />
             <LocationsList
               sls={tempSls}
               hoveredCellPart={hoveredCellPart}
@@ -207,9 +229,18 @@ function SubcellularViz({ data: target }: { data: Target }) {
 
   return (
     <>
-      <Tabs data-testid="subcellular-tabs" value={activeTabIndex} onChange={onTabChange} aria-label="Subcellular location sources">
+      <Tabs
+        data-testid="subcellular-tabs"
+        value={activeTabIndex}
+        onChange={onTabChange}
+        aria-label="Subcellular location sources"
+      >
         {activeSources.map((source: SourceType) => (
-          <Tab data-testid={`subcellular-tab-${source.id.toLowerCase()}`} label={source.label} key={source.id} />
+          <Tab
+            data-testid={`subcellular-tab-${source.id.toLowerCase()}`}
+            label={source.label}
+            key={source.id}
+          />
         ))}
       </Tabs>
 
