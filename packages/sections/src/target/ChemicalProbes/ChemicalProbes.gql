@@ -1,4 +1,4 @@
-query ChemicalProbes($ensemblId: String!) {
+query TargetChemicalProbesQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     chemicalProbes {
