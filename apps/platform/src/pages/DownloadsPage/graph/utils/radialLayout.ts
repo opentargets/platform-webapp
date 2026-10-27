@@ -47,8 +47,10 @@ const HUB_FALLBACK_COUNT = 5;
 // their own half-diagonals.
 const SPACING_PADDING = 8;
 
+// Centre-to-centre spacing that keeps the group's largest (highest-degree)
+// footprints clear of each other - see getNodeHalfDiagonal in graphVisuals.ts.
 const minSpacingFor = (group: GraphNodeDatum[]): number => {
-  const maxDiag = group.reduce((m, n) => Math.max(m, getNodeHalfDiagonal(n.size)), getNodeHalfDiagonal());
+  const maxDiag = group.reduce((m, n) => Math.max(m, getNodeHalfDiagonal(n.degree)), getNodeHalfDiagonal());
   return 2 * (maxDiag + SPACING_PADDING);
 };
 

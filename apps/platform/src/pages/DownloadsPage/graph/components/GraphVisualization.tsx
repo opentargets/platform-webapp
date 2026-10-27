@@ -1,129 +1,102 @@
 /**
  * Component: GraphVisualization
- * The "Network" pane - a force-directed view of the dataset schema graph.
- * Lives side by side with the card list (see DownloadsPage), sharing a single
- * page's worth of state rather than deep-linkable URL params: filters come
- * from DownloadsContext, and the selected/hovered node are lifted into
- * DownloadsPage (via `selectedNodeId`/`onNodeSelect`/`onNodeDeselect` and
- * `externalHighlightId`/`onNodeHoverChange`) so both panes stay in sync.
+ * The network canvas plus its pointer-driven overlays: the node hover
+ * popover and the edge tooltips. Selection, basket scope and the canvas
+ * controls are owned by the parent (NetworkView), which also renders the
+ * details panel, legend and header around this component.
  */
 
-import React, { useState, useCallback, useMemo, useContext } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Box } from 'ui';
 import GraphCanvas from './GraphCanvas';
-import GraphControls from './GraphControls';
-import GraphTooltip from './GraphTooltip';
+import NodePopover, { PopoverNode } from './NodePopover';
 import GraphEdgeTooltip, { EdgeTooltipInfo } from './GraphEdgeTooltip';
-import useGraphData from '../hooks/useGraphData';
 import useGraphLayout from '../hooks/useGraphLayout';
 import { GraphController, GraphPointerPosition } from '../hooks/useForceGraph';
-import { DownloadsContext } from '../../context/DownloadsContext';
 
 interface GraphVisualizationProps {
+  nodes: any[];
+  edges: any[];
   sx?: any;
-  /** Id of a node to raise from outside the canvas (e.g. hovering its card) */
-  externalHighlightId?: string | null;
-  /** Called as the pointer hovers/unhovers a node, so the matching card's border can be raised */
-  onNodeHoverChange?: (nodeId: string | null) => void;
   /** The currently selected (clicked) node id, owned by the parent */
   selectedNodeId?: string | null;
-  /** Called when a node is clicked */
   onNodeSelect?: (nodeId: string) => void;
-  /** Called when the selection is cleared (click on empty canvas, or "reset view") */
   onNodeDeselect?: () => void;
+  /** Basket ids while the scope is "basket"; null otherwise */
+  basketIds?: Set<string> | null;
+  inBasket: (id: string) => boolean;
+  onToggleBasket: (id: string) => void;
+  onControllerReady?: (controller: GraphController | null) => void;
 }
 
-interface HoveredNodeInfo {
-  id: string;
-  label: string;
-  type: string;
-  degree?: number;
-  description?: string;
+interface HoveredNode extends PopoverNode {
   position: GraphPointerPosition;
 }
 
-/**
- * The network pane: canvas, zoom/export controls, and the pointer-follow tooltip
- */
+/** Delay before a hover popover closes once the pointer leaves the node, so it can reach the popover */
+const POPOVER_CLOSE_DELAY = 180;
+
 const GraphVisualization: React.FC<GraphVisualizationProps> = ({
+  nodes,
+  edges,
   sx = {},
-  externalHighlightId = null,
-  onNodeHoverChange,
   selectedNodeId = null,
   onNodeSelect,
   onNodeDeselect,
+  basketIds = null,
+  inBasket,
+  onToggleBasket,
+  onControllerReady,
 }) => {
-  const { state } = useContext(DownloadsContext);
-
-  const [hoveredNode, setHoveredNode] = useState<HoveredNodeInfo | null>(null);
-  const [controller, setController] = useState<GraphController | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<HoveredNode | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
   const [pinnedEdge, setPinnedEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get graph data from schema context
-  const { nodes: allNodes, edges: allEdges } = useGraphData();
-
-  // The canvas renders the full node/edge set minus datasets with no
-  // schema-declared relationship to anything else in the graph (degree 0) -
-  // those have no edges to draw, so keeping them only forces the radial
-  // layout (see radialLayout.ts) to reserve an entire extra ring of space
-  // for them far from the connected part of the graph. This is distinct
-  // from the category/search filters the card view uses: those toggle on
-  // every keystroke/click, so instead of re-filtering `nodes`/`edges`
-  // (which would tear down and rebuild the whole simulation, keyed off
-  // their identity - see useGraphSimulation) matches are dimmed in place
-  // via `filterMatchedIds` below. The degree filter below only changes when
-  // `allNodes` itself does, i.e. when the underlying schema data changes.
-  const nodes = useMemo(() => allNodes.filter((n) => (n.data.degree ?? 0) > 0), [allNodes]);
-  const edges = useMemo(() => {
-    const keptIds = new Set(nodes.map((n) => n.data.id));
-    return allEdges.filter((e) => keptIds.has(e.data.source) && keptIds.has(e.data.target));
-  }, [allEdges, nodes]);
-
-  const filterMatchedIds = useMemo(() => {
-    const query = state.freeTextQuery?.toLowerCase() ?? '';
-    const hasCategoryFilter = state.selectedFilters.length > 0;
-    if (!query && !hasCategoryFilter) return null;
-
-    const matchesQuery = (n: any) =>
-      !query ||
-      n.data.label?.toLowerCase().includes(query) ||
-      n.data.description?.toLowerCase().includes(query);
-    const matchesCategory = (n: any) => !hasCategoryFilter || state.selectedFilters.includes(n.data.type);
-
-    return new Set(allNodes.filter((n) => matchesQuery(n) && matchesCategory(n)).map((n) => n.data.id));
-  }, [allNodes, state.freeTextQuery, state.selectedFilters]);
-
-  // Get layout configuration
   const { layoutConfig } = useGraphLayout();
+
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setHoveredNode(null), POPOVER_CLOSE_DELAY);
+  }, [cancelClose]);
+
+  useEffect(() => cancelClose, [cancelClose]);
 
   // Only pass the selected id through if it still exists in the data - guards
   // against a stale id after the underlying schema changes.
-  const hasSelectedNode = Boolean(
-    selectedNodeId && nodes.some((n) => n.data.id === selectedNodeId)
-  );
+  const hasSelectedNode = Boolean(selectedNodeId && nodes.some((n) => n.data.id === selectedNodeId));
 
-  // Handle node hover (compact floating tooltip + raising the matching card)
+  // Hovering a node opens its popover where the pointer is and keeps it there
+  // (it holds buttons, so it can't follow the pointer); leaving the node
+  // starts a short countdown the popover itself can cancel.
   const handleNodeHover = useCallback(
     (nodeId: string | null, position?: GraphPointerPosition) => {
-      onNodeHoverChange?.(nodeId);
       if (!nodeId || !position) {
-        setHoveredNode(null);
+        scheduleClose();
         return;
       }
-      const node = nodes.find((n) => n.data.id === nodeId);
-      if (node) {
-        setHoveredNode({
+      cancelClose();
+      setHoveredNode((current) => {
+        if (current?.id === nodeId) return current;
+        const node = nodes.find((n) => n.data.id === nodeId);
+        if (!node) return current;
+        return {
           id: node.data.id,
           label: node.data.label,
           type: node.data.type,
-          degree: node.data.degree,
           description: node.data.description,
           position,
-        });
-      }
+        };
+      });
     },
-    [nodes, onNodeHoverChange]
+    [nodes, cancelClose, scheduleClose]
   );
 
   // Resolve an edge id to what the tooltip needs: the two datasets' names and
@@ -153,13 +126,15 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   }, []);
 
   // Anything that moves focus elsewhere (selecting a node, clicking empty
-  // canvas, "reset view") closes a pinned edge.
+  // canvas) closes a pinned edge and the hover popover.
   const handleNodeSelect = useCallback(
     (nodeId: string) => {
       setPinnedEdge(null);
+      cancelClose();
+      setHoveredNode(null);
       onNodeSelect?.(nodeId);
     },
-    [onNodeSelect]
+    [onNodeSelect, cancelClose]
   );
   const handleNodeDeselect = useCallback(() => {
     setPinnedEdge(null);
@@ -169,18 +144,13 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   const hoveredEdgeInfo = hoveredEdge && hoveredEdge.id !== pinnedEdge?.id ? describeEdge(hoveredEdge.id) : null;
   const pinnedEdgeInfo = pinnedEdge ? describeEdge(pinnedEdge.id) : null;
 
-  const handleGraphReady = useCallback((graphController: GraphController | null) => {
-    setController(graphController);
-  }, []);
-
   return (
     <Box sx={{ width: '100%', height: '100%', position: 'relative', ...sx }}>
       <GraphCanvas
         nodes={nodes}
         edges={edges}
         selectedNode={hasSelectedNode ? selectedNodeId : null}
-        externalHighlightId={externalHighlightId}
-        filterMatchedIds={filterMatchedIds}
+        basketIds={basketIds}
         selectedEdge={pinnedEdge?.id ?? null}
         onNodeSelect={handleNodeSelect}
         onNodeDeselect={handleNodeDeselect}
@@ -188,20 +158,20 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         onEdgeHover={handleEdgeHover}
         onNodeHover={handleNodeHover}
         layoutConfig={layoutConfig}
-        onGraphReady={handleGraphReady}
+        onGraphReady={onControllerReady}
         sx={{ height: '100%' }}
       />
 
-      <Box sx={{ position: 'absolute', top: 24, right: 24, zIndex: 2 }}>
-        <GraphControls
-          controller={controller}
-          onReset={handleNodeDeselect}
-          sx={{ backgroundColor: 'background.paper', boxShadow: 2 }}
+      {hoveredNode && (
+        <NodePopover
+          node={hoveredNode}
+          position={hoveredNode.position}
+          inBasket={inBasket(hoveredNode.id)}
+          onToggleBasket={onToggleBasket}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
         />
-      </Box>
-
-      {/* Compact tooltip that follows the pointer while hovering a node */}
-      {hoveredNode && <GraphTooltip node={hoveredNode} position={hoveredNode.position} />}
+      )}
 
       {/* Edge details: follows the pointer on hover, pinned in place on click */}
       {hoveredEdgeInfo && hoveredEdge && <GraphEdgeTooltip edge={hoveredEdgeInfo} position={hoveredEdge.position} />}

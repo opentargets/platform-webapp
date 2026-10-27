@@ -1,13 +1,14 @@
 /**
  * Hook: useForceGraph
  * Renders and manages a D3 force-directed graph: simulation, zoom/pan, drag,
- * selection highlighting, and an imperative controller for GraphControls.
+ * selection/basket highlighting, and an imperative controller for the canvas
+ * controls.
  *
  * This is a thin composition of the pieces in `./useGraphSimulation`,
- * `./useSelectionHighlight`, `./useHoverHighlight`, and `./useGraphController` -
- * see each for its specific responsibility. This hook owns the refs those
- * pieces share (the SVG/zoom/simulation handles and the latest-callbacks ref)
- * and wires them together.
+ * `./useSelectionHighlight` and `./useGraphController` - see each for its
+ * specific responsibility. This hook owns the refs those pieces share (the
+ * SVG/zoom/simulation handles and the latest-callbacks ref) and wires them
+ * together.
  */
 
 import { useEffect, useRef } from 'react';
@@ -16,8 +17,6 @@ import { ForceLayoutConfig } from '../utils/layoutConfig';
 import { GraphNodeDatum, GraphLinkDatum, GraphController, GraphPointerPosition, GraphCallbacks } from '../types';
 import { useGraphSimulation } from './useGraphSimulation';
 import { useSelectionHighlight } from './useSelectionHighlight';
-import { useHoverHighlight } from './useHoverHighlight';
-import { useFilterHighlight } from './useFilterHighlight';
 import { useGraphController } from './useGraphController';
 
 export type { GraphController, GraphPointerPosition };
@@ -28,10 +27,8 @@ interface UseForceGraphOptions extends GraphCallbacks {
   selectedNode?: string | null;
   /** Id of the edge whose details are pinned open */
   selectedEdge?: string | null;
-  /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
-  externalHighlightId?: string | null;
-  /** Ids of nodes matching the active filter chips/search; null means no filter active */
-  filterMatchedIds?: Set<string> | null;
+  /** Basket ids while in basket scope; null when every node is in scope */
+  basketIds?: Set<string> | null;
   layoutConfig?: ForceLayoutConfig;
 }
 
@@ -49,8 +46,7 @@ export const useForceGraph = ({
   edges,
   selectedNode,
   selectedEdge,
-  externalHighlightId,
-  filterMatchedIds,
+  basketIds = null,
   layoutConfig,
   onNodeSelect,
   onNodeDeselect,
@@ -84,26 +80,13 @@ export const useForceGraph = ({
     layoutConfig,
   });
 
-  // Card-hover highlighting only - the canvas's own pointer hover no longer
-  // raises/fades nodes, it just drives the tooltip (see useGraphSimulation).
-  useHoverHighlight({
-    svgRef,
-    simulationRef,
-    externalHighlightId,
-    isReady,
-  });
-
-  useSelectionHighlight({ svgRef, selectedNode, selectedEdge, isReady });
-
-  useFilterHighlight({ svgRef, matchedIds: filterMatchedIds ?? null, isReady });
+  useSelectionHighlight({ svgRef, selectedNode, selectedEdge, basketIds, isReady });
 
   const controller = useGraphController({
     containerRef,
     svgRef,
     zoomRef,
     simulationRef,
-    initialFitTransformRef,
-    callbacksRef,
   });
 
   return { containerRef, isReady, controller };

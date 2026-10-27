@@ -14,7 +14,6 @@
 
 import { useLayoutEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { lightenHex } from '../../categoryColors';
 import { getDefaultLayoutConfig, getResponsiveLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
 import { computeRadialLayout } from '../utils/radialLayout';
 import { computeFitTransform } from '../utils/fitTransform';
@@ -22,9 +21,12 @@ import { curvedEdgePath } from '../utils/edgePath';
 import {
   GRAPH_STYLES,
   EDGE_COLOR,
+  PRIMARY_DARK,
+  CHECK_DOT_RADIUS,
+  NODE_RADIUS,
   strokeOf,
-  getNodeBoxSize,
   getNodeHalfDiagonal,
+  applyNodeGeometry,
   truncateLabel,
   isLabelVisible,
 } from '../utils/graphVisuals';
@@ -118,8 +120,9 @@ export const useGraphSimulation = ({
       .on('zoom', function () {
         const { transform } = (d3 as any).event;
         zoomLayer.attr('transform', transform);
-        // Reveal the rest of the labels once zoomed in enough to read them
-        label?.attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, transform.k) ? null : 'none'));
+        // Reveal the rest of the labels once zoomed in enough past the fit
+        const zoomMultiple = transform.k / (initialFitTransformRef.current?.k ?? transform.k);
+        label?.attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, zoomMultiple) ? null : 'none'));
       });
     (svg as any).call(zoom);
     zoomRef.current = zoom;
@@ -138,8 +141,8 @@ export const useGraphSimulation = ({
       .attr('class', 'graph-edge')
       .attr('fill', 'none')
       .attr('stroke', EDGE_COLOR)
-      .attr('stroke-width', 2)
-      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', 0.8)
+      .attr('stroke-opacity', 0.5)
       .style('pointer-events', 'none');
 
     // Invisible, much wider stroke on top of each edge purely to catch
@@ -177,48 +180,62 @@ export const useGraphSimulation = ({
       .data(simNodes, (d: any) => d.id)
       .join((enter: any) => {
         const g = enter.append('g').attr('class', 'graph-node');
-        g.append('rect');
+        // Outer ring, only shown while selected (see GRAPH_STYLES)
+        g.append('rect').attr('class', 'node-ring');
+        // Opaque base so edges running under the node don't show through
+        // the translucent category fill above it
+        g.append('rect').attr('class', 'node-base');
+        g.append('rect').attr('class', 'node-box');
+        // Check dot at the top-right corner, only shown while in the basket
+        const check = g.append('g').attr('class', 'node-check');
+        check.append('circle').attr('r', CHECK_DOT_RADIUS).attr('fill', PRIMARY_DARK).attr('stroke', '#fff').attr('stroke-width', 1);
+        check
+          .append('path')
+          .attr('d', 'M-2.2,0.2 L-0.6,1.8 L2.4,-1.6')
+          .attr('fill', 'none')
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 1.5)
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round');
         g.append('text');
         return g;
       });
 
-    const fillOf = (d: GraphNodeDatum) => lightenHex(strokeOf(d), 0.25);
-
-    // Rounded-rectangle "card" per node (like an ER-diagram table) rather
-    // than a circle, since each node represents a dataset - sized by degree
-    // (via `size`, computed by nodeClassifier.enrichNodesWithClassification)
-    // so hubs and other heavily-referenced datasets stand out as bigger
-    // boxes. The label lives outside the box, not inside it (see below).
+    // Small rounded-rectangle per node (an ER-diagram table in miniature),
+    // filled with the category colour at low opacity and stroked in it. The
+    // size follows the node's visual state (default / in basket / selected)
+    // scaled by its degree (see graphVisuals.ts), so hubs read as much
+    // bigger boxes than leaves.
     node
-      .select('rect')
-      .attr('width', (d: GraphNodeDatum) => getNodeBoxSize(d.size).width)
-      .attr('height', (d: GraphNodeDatum) => getNodeBoxSize(d.size).height)
-      .attr('x', (d: GraphNodeDatum) => -getNodeBoxSize(d.size).width / 2)
-      .attr('y', (d: GraphNodeDatum) => -getNodeBoxSize(d.size).height / 2)
-      .attr('rx', 5)
-      .attr('ry', 5)
-      .attr('fill', fillOf)
-      .attr('stroke', strokeOf)
+      .select('rect.node-box')
+      .attr('rx', NODE_RADIUS)
+      .attr('ry', NODE_RADIUS)
+      .attr('fill', strokeOf)
+      .attr('stroke', strokeOf);
+
+    node.select('rect.node-base').attr('rx', NODE_RADIUS).attr('ry', NODE_RADIUS).attr('fill', '#fff');
+
+    node
+      .select('rect.node-ring')
+      .attr('rx', NODE_RADIUS + 2)
+      .attr('ry', NODE_RADIUS + 2)
+      .attr('fill', 'none')
+      .attr('stroke', PRIMARY_DARK)
       .attr('stroke-width', 1.5);
 
-    // Labels sit below the box rather than inside it. Whether they're all
-    // shown or revealed progressively on zoom is controlled by
-    // ALWAYS_SHOW_LABELS (see graphVisuals.ts).
+    // Labels sit below the box and are revealed progressively on zoom (see
+    // isLabelVisible in graphVisuals.ts); font/colour come from GRAPH_STYLES.
     label = node
       .select('text')
       .text((d: GraphNodeDatum) => truncateLabel(d.label))
       .attr('text-anchor', 'middle')
-      .attr('dy', (d: GraphNodeDatum) => getNodeBoxSize(d.size).height / 2 + 14)
-      .attr('font-size', 14)
-      .attr('font-weight', 500)
-      .attr('fill', 'rgba(0, 0, 0, 0.6)')
-      .attr('paint-order', 'stroke')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 3)
-      .attr('stroke-linejoin', 'round')
-      .attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, 0) ? null : 'none'))
+      .attr('display', (d: GraphNodeDatum) => (isLabelVisible(d.degree, 1) ? null : 'none'))
       .style('pointer-events', 'none')
       .style('user-select', 'none');
+
+    // Everything starts in the resting state; useSelectionHighlight resizes
+    // boxes in place as the mode/selection changes.
+    applyNodeGeometry(node, () => 'default');
 
     node
       .on('click', function (d: GraphNodeDatum) {
@@ -258,7 +275,7 @@ export const useGraphSimulation = ({
       )
       .force(
         'collide',
-        d3.forceCollide<GraphNodeDatum>((d) => getNodeHalfDiagonal(d.size) + config.collidePadding)
+        d3.forceCollide<GraphNodeDatum>((d) => getNodeHalfDiagonal(d.degree) + config.collidePadding)
       )
       .alphaDecay(config.alphaDecay)
       .velocityDecay(config.velocityDecay)
