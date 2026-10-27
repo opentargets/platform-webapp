@@ -1,13 +1,35 @@
-import { Link, Tooltip, DataTable, EllsWrapper, useApolloClient, GridLegacy, Typography } from "ui";
-import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { ApolloClient } from "@apollo/client";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
-import { MethodIconText, MethodIconArrow } from "./custom/MethodIcons";
-import { defaultRowsPerPageOptions } from "@ot/constants";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  defaultRowsPerPageOptions,
+  InteractionSourceDatabase,
+  type TargetInteractionsQuery,
+  type TargetInteractionsQueryVariables,
+} from "@ot/constants";
+import { useEffect, useState } from "react";
+import { DataTable, EllsWrapper, GridLegacy, Link, Tooltip, Typography, useApolloClient } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import { MethodIconArrow, MethodIconText } from "./custom/MethodIcons";
+import INTERACTIONS_QUERY_DOCUMENT from "./InteractionsQuery.gql";
 
-import INTERACTIONS_QUERY from "./InteractionsQuery.gql";
+const INTERACTIONS_QUERY = typedDocument<TargetInteractionsQuery, TargetInteractionsQueryVariables>(
+  INTERACTIONS_QUERY_DOCUMENT
+);
 
-const getData = (query, ensgId, sourceDatabase, index, size, client) =>
+type InteractionRow = NonNullable<
+  TargetInteractionsQuery["target"]
+>["interactions"]["rows"][number];
+type InteractionEvidence = InteractionRow["evidences"][number];
+
+const getData = (
+  query: typeof INTERACTIONS_QUERY,
+  ensgId: string,
+  sourceDatabase: TargetInteractionsQueryVariables["sourceDatabase"],
+  index: number,
+  size: number,
+  client: ApolloClient<object>
+) =>
   client.query({
     query,
     variables: {
@@ -18,7 +40,7 @@ const getData = (query, ensgId, sourceDatabase, index, size, client) =>
     },
   });
 
-const onLinkClick = e => {
+const onLinkClick = (e) => {
   // handler to stop propagation of clicks on links in table rows
   // to avoid selection of a different row
   e.stopPropagation();
@@ -39,7 +61,7 @@ const columns = {
         </>
       ),
       exportLabel: "interactorB-AltId",
-      renderCell: row => (
+      renderCell: (row) => (
         <>
           <EllsWrapper title={row.targetB ? row.targetB.approvedSymbol : row.intB}>
             {row.targetB ? (
@@ -66,21 +88,21 @@ const columns = {
           </EllsWrapper>
         </>
       ),
-      exportValue: row => row.targetB?.approvedSymbol || row.intB,
-      filterValue: row => `${row.targetB?.approvedSymbol} ${row.intB}`,
+      exportValue: (row) => row.targetB?.approvedSymbol || row.intB,
+      filterValue: (row) => `${row.targetB?.approvedSymbol} ${row.intB}`,
       width: "40%",
     },
     {
       id: "score",
       label: "Score",
-      renderCell: row => row.score.toFixed(2),
-      exportValue: row => row.score.toFixed(2),
+      renderCell: (row) => row.score.toFixed(2),
+      exportValue: (row) => row.score.toFixed(2),
       width: "14%",
     },
     {
       id: "biologicalRole",
       label: "Biological role",
-      renderCell: row => (
+      renderCell: (row) => (
         <>
           <MethodIconText tooltip={row.intABiologicalRole} enabled>
             A
@@ -90,14 +112,14 @@ const columns = {
           </MethodIconText>
         </>
       ),
-      exportValue: row => `A: ${row.intABiologicalRole}, B: ${row.intBBiologicalRole}`,
-      filterValue: row => `${row.intABiologicalRole} ${row.intBBiologicalRole}`,
+      exportValue: (row) => `A: ${row.intABiologicalRole}, B: ${row.intBBiologicalRole}`,
+      filterValue: (row) => `${row.intABiologicalRole} ${row.intBBiologicalRole}`,
       width: "23%",
     },
     {
       id: "evidences",
       label: "Interaction evidence entries",
-      renderCell: row => (
+      renderCell: (row) => (
         <>
           {row.count}
           <span className="selected-evidence">
@@ -105,7 +127,7 @@ const columns = {
           </span>
         </>
       ),
-      exportValue: row => row.count,
+      exportValue: (row) => row.count,
       width: "23%",
     },
   ],
@@ -114,7 +136,7 @@ const columns = {
     {
       id: "interactionIdentifier",
       label: "Identifier",
-      renderCell: row => (
+      renderCell: (row) => (
         <Link
           to={`http://www.ebi.ac.uk/intact/interaction/${row.interactionIdentifier}`}
           onClick={onLinkClick}
@@ -134,7 +156,7 @@ const columns = {
           <Typography variant="caption">Host organism</Typography>
         </>
       ),
-      renderCell: row => (
+      renderCell: (row) => (
         <>
           <EllsWrapper>{row.interactionTypeShortName}</EllsWrapper>
           {row.hostOrganismScientificName ? (
@@ -147,16 +169,16 @@ const columns = {
           ) : null}
         </>
       ),
-      filterValue: row => `${row.interactionTypeShortName} ${row.hostOrganismScientificName}`,
+      filterValue: (row) => `${row.interactionTypeShortName} ${row.hostOrganismScientificName}`,
       width: "30%",
     },
     {
       id: "methods",
       label: "Detection methods",
-      renderCell: row => (
+      renderCell: (row) => (
         <>
           <MethodIconText
-            tooltip={row.participantDetectionMethodA.map(m => m.shortName).join()}
+            tooltip={row.participantDetectionMethodA.map((m) => m.shortName).join()}
             enabled
           >
             A
@@ -172,8 +194,8 @@ const columns = {
           </MethodIconText>
         </>
       ),
-      filterValue: row =>
-        `${row.participantDetectionMethodA.map(m => m.shortName).join(" ")} ${
+      filterValue: (row) =>
+        `${row.participantDetectionMethodA.map((m) => m.shortName).join(" ")} ${
           row.interactionDetectionMethodShortName
         } ${row.participantDetectionMethodB ? row.participantDetectionMethodB[0].shortName : ""}`,
       width: "25%",
@@ -181,7 +203,7 @@ const columns = {
     {
       id: "pubmedId",
       label: "Publication",
-      renderCell: d => (
+      renderCell: (d) => (
         <EllsWrapper title={d.pubmedId}>
           {d.pubmedId && d.pubmedId.indexOf("unassigned") === -1 ? (
             <Link external to={`http://europepmc.org/abstract/MED/${d.pubmedId}`}>
@@ -192,7 +214,7 @@ const columns = {
           )}
         </EllsWrapper>
       ),
-      filterValue: row => row.pubmedId,
+      filterValue: (row) => row.pubmedId,
       width: "20%",
     },
   ],
@@ -201,40 +223,40 @@ const columns = {
 const evidenceColsExport = [
   {
     label: "Identifier",
-    exportValue: row => row.interactionIdentifier,
+    exportValue: (row) => row.interactionIdentifier,
   },
   {
     label: "interaction",
-    exportValue: row => row.interactionTypeShortName,
+    exportValue: (row) => row.interactionTypeShortName,
   },
   {
     label: "interaction host organism",
-    exportValue: row => row.hostOrganismScientificName,
+    exportValue: (row) => row.hostOrganismScientificName,
   },
   {
     label: "detection method A",
-    exportValue: row => row.participantDetectionMethodA.map(m => m.shortName),
+    exportValue: (row) => row.participantDetectionMethodA.map((m) => m.shortName),
   },
   {
     label: "detection method short name",
-    exportValue: row => row.interactionDetectionMethodShortName,
+    exportValue: (row) => row.interactionDetectionMethodShortName,
   },
   {
     label: "detection method B",
-    exportValue: row => row.participantDetectionMethodB[0].shortName,
+    exportValue: (row) => row.participantDetectionMethodB[0].shortName,
   },
   {
     label: "publication id",
-    exportValue: row => row.pubmedId,
+    exportValue: (row) => row.pubmedId,
   },
 ];
-const id = "intact";
+const id = InteractionSourceDatabase.Intact;
 const index = 0;
 const size = 3000;
 
 function IntactTab({ ensgId, symbol }) {
-  const [data, setData] = useState([]);
-  const [evidence, setEvidence] = useState([]);
+  const [data, setData] = useState<InteractionRow[]>([]);
+  const [evidence, setEvidence] = useState<InteractionEvidence[]>([]);
   const [selectedIntB, setSelectedIntB] = useState("");
   const [loading, setLoading] = useState(false);
   const variables = { ensgId, sourceDatabase: id };
@@ -243,15 +265,13 @@ function IntactTab({ ensgId, symbol }) {
   // load tab data when new tab selected (also on first load)
   useEffect(() => {
     setLoading(true);
-    getData(INTERACTIONS_QUERY, ensgId, id, index, size, client).then(res => {
-      if (res.data.target.interactions) {
-        setLoading(false);
-        setData(res.data.target.interactions.rows);
-        setEvidence(res.data.target.interactions.rows[0].evidences);
-        setSelectedIntB(
-          res.data.target.interactions.rows[0].targetB?.approvedSymbol ||
-            res.data.target.interactions.rows[0].intB
-        );
+    getData(INTERACTIONS_QUERY, ensgId, id, index, size, client).then((res) => {
+      const rows = res.data.target?.interactions?.rows;
+      setLoading(false);
+      if (rows && rows.length > 0) {
+        setData(rows);
+        setEvidence(rows[0].evidences);
+        setSelectedIntB(rows[0].targetB?.approvedSymbol || rows[0].intB);
       }
     });
   }, [ensgId]);
@@ -276,7 +296,7 @@ function IntactTab({ ensgId, symbol }) {
           dataDownloaderFileStem={`${symbol}-molecular-interactions-interactors`}
           hover
           selected
-          onRowClick={r => {
+          onRowClick={(r) => {
             setEvidence(r.evidences);
             setSelectedIntB(r.targetB?.approvedSymbol || r.intB);
           }}
@@ -291,7 +311,7 @@ function IntactTab({ ensgId, symbol }) {
           }}
           rowsPerPageOptions={defaultRowsPerPageOptions}
           loading={loading}
-          query={INTERACTIONS_QUERY.loc.source.body}
+          query={INTERACTIONS_QUERY_DOCUMENT.loc?.source.body}
           variables={variables}
         />
       </GridLegacy>
