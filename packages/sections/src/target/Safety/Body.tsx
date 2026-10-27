@@ -1,18 +1,38 @@
 import { useQuery } from "@apollo/client";
-
-import { SectionItem, Link, Tooltip, PublicationsDrawer, TableDrawer, OtTable } from "ui";
-import { useTheme } from "@mui/material/styles";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleDown, faArrowAltCircleUp } from "@fortawesome/free-solid-svg-icons";
-
-import SafetyStudiesDrawer from "./SafetyStudiesDrawer";
-import { naLabel, defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { Theme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import {
+  defaultRowsPerPageOptions,
+  naLabel,
+  type TargetBodyProps,
+  type TargetSafetyQuery,
+  type TargetSafetyQueryVariables,
+} from "@ot/constants";
+import {
+  Link,
+  OtTable,
+  type OtTableColumn,
+  PublicationsDrawer,
+  SectionItem,
+  TableDrawer,
+  Tooltip,
+} from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import SAFETY_QUERY from "./Safety.gql";
+import SAFETY_QUERY_DOCUMENT from "./Safety.gql";
+import SafetyStudiesDrawer from "./SafetyStudiesDrawer";
 
-function EffectTooltipContent({ effect }) {
+const SAFETY_QUERY = typedDocument<TargetSafetyQuery, TargetSafetyQueryVariables>(
+  SAFETY_QUERY_DOCUMENT
+);
+
+type SafetyRow = NonNullable<TargetSafetyQuery["target"]>["safetyLiabilities"][number];
+type SafetyEffect = SafetyRow["effects"][number];
+
+function EffectTooltipContent({ effect }: { effect: SafetyEffect }) {
   return (
     <>
       <strong>Direction:</strong>
@@ -23,7 +43,7 @@ function EffectTooltipContent({ effect }) {
   );
 }
 
-function getColumns(theme, symbol) {
+function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
   return [
     {
       id: "event",
@@ -35,7 +55,7 @@ function getColumns(theme, symbol) {
             {event ?? naLabel}
           </Link>
         ) : (
-          event ?? naLabel
+          (event ?? naLabel)
         ),
     },
     {
@@ -49,13 +69,14 @@ function getColumns(theme, symbol) {
         return "biosamples";
       },
       renderCell: ({ biosamples }) => {
-        /* TODO: remove to handle only arrays */
-        if (!biosamples) return "N/A";
+        if (biosamples.length === 0) return "N/A";
         const entries = biosamples.map(({ cellFormat, cellLabel, tissueLabel, tissueId }) => ({
-          name: cellFormat ? `${cellFormat}${cellLabel ? ` (${cellLabel})` : ""}` : tissueLabel,
+          name:
+            (cellFormat ? `${cellFormat}${cellLabel ? ` (${cellLabel})` : ""}` : tissueLabel) ??
+            naLabel,
           url:
             cellFormat || !tissueId
-              ? null
+              ? undefined
               : `https://identifiers.org/${tissueId.replace("_", ":")}`,
           group: cellFormat ? "Assay" : "Organ system",
         }));
@@ -73,12 +94,12 @@ function getColumns(theme, symbol) {
       id: "dosing",
       label: "Dosing effects",
       renderCell: ({ effects }) => {
-        const circleUpData = effects
-          ? effects.find(effect => effect.direction === "Activation/Increase/Upregulation")
-          : null;
-        const circleDownData = effects
-          ? effects.find(effect => effect.direction === "Inhibition/Decrease/Downregulation")
-          : null;
+        const circleUpData = effects.find(
+          (effect) => effect.direction === "Activation/Increase/Upregulation"
+        );
+        const circleDownData = effects.find(
+          (effect) => effect.direction === "Inhibition/Decrease/Downregulation"
+        );
         return (
           <>
             {circleUpData ? (
@@ -110,7 +131,11 @@ function getColumns(theme, symbol) {
                 </span>
               </Tooltip>
             ) : (
-              <FontAwesomeIcon color={theme.palette.grey[300]} icon={faArrowAltCircleDown} size="lg" />
+              <FontAwesomeIcon
+                color={theme.palette.grey[300]}
+                icon={faArrowAltCircleDown}
+                size="lg"
+              />
             )}
           </>
         );
@@ -120,8 +145,7 @@ function getColumns(theme, symbol) {
       id: "studies",
       label: "Experimental studies",
       renderCell: ({ studies }) => {
-        /* TODO: remove to handle only arrays */
-        if (!studies) return "N/A";
+        if (studies.length === 0) return "N/A";
         return <SafetyStudiesDrawer studies={studies} />;
       },
     },
@@ -158,9 +182,9 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-safety-${entity}`}
           columns={getColumns(theme, symbol)}
-          rows={request.data?.target.safetyLiabilities}
+          rows={request.data?.target?.safetyLiabilities ?? []}
           rowsPerPageOptions={defaultRowsPerPageOptions}
-          query={SAFETY_QUERY.loc.source.body}
+          query={SAFETY_QUERY_DOCUMENT.loc?.source.body}
           variables={variables}
           loading={request.loading}
         />
