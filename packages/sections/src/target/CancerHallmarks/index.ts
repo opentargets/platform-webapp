@@ -1,11 +1,12 @@
+import type { CancerHallmarksSummaryFragment } from "@ot/constants";
 import { lazy } from "react";
-import { TargetData } from "../../types/target";
 
 export const definition = {
   id: "cancerHallmarks",
   name: "Cancer Hallmarks",
   shortName: "CH",
-  hasData: (data: TargetData) => (data.hallmarks?.cancerHallmarks?.length || 0) > 0,
+  hasData: (data: CancerHallmarksSummaryFragment) =>
+    (data.hallmarks?.cancerHallmarks?.length ?? 0) > 0,
 };
 
 // Components
