@@ -1,4 +1,4 @@
-query InteractionsSectionQuery($ensgId: String!) {
+query TargetInteractionsStatsQuery($ensgId: String!) {
   target(ensemblId: $ensgId) {
     id
     intact: interactions(sourceDatabase: intact) {
