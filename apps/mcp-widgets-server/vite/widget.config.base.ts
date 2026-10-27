@@ -12,11 +12,11 @@ export const ROOT = resolve(__dirname, "..");
 /** Monorepo root (two levels up from apps/mcp-widgets-server). */
 const MONO_ROOT = resolve(ROOT, "../..");
 
-const PUBLIC_API_URL = "https://api.platform.opentargets.org/api/v4/graphql";
+const PUBLIC_API_URL = "https://dev.opentargets.xyz/api/v4/graphql";
 
 /**
  * Load OT_API_URL from .env at build time (empty prefix = load all vars).
- * Falls back to the public production endpoint.
+ * Falls back to the dev endpoint (the new-API schema main's sections query).
  */
 const { OT_API_URL = PUBLIC_API_URL } = loadEnv("production", ROOT, "");
 

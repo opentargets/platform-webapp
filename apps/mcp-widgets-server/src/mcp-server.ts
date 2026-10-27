@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { WIDGET_REGISTRY } from "./widgets/index.js";
 
-const PUBLIC_API_URL = "https://api.platform.opentargets.org/api/v4/graphql";
+const PUBLIC_API_URL = "https://dev.opentargets.xyz/api/v4/graphql";
 
 // Same profile mechanism the real platform app uses: apps/platform/index.html loads
 // <script src="/profiles/{name}.js"> before its app bundle, setting window.configProfile.
