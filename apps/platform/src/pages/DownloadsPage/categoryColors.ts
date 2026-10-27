@@ -26,22 +26,4 @@ const OVERFLOW_COLOR = '#757575';
 export const getCategoryColor = (category: string): string =>
   CATEGORY_COLORS[category] ?? OVERFLOW_COLOR;
 
-/** Convert a hex color to an rgba() string at the given alpha, for tinted fills/backgrounds. */
-export const tintHex = (hex: string, alpha = 0.12): string => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
-/** Lighten a hex color by mixing it toward white, returning an opaque rgb() - unlike
- * `tintHex`, nothing behind this fill (e.g. graph edges) shows through. */
-export const lightenHex = (hex: string, ratio = 0.14): string => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const mix = (channel: number) => Math.round(channel + (255 - channel) * (1 - ratio));
-  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
-};
-
 export default CATEGORY_COLORS;
