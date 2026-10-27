@@ -317,6 +317,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           variables={variables}
           dataPath="target.pharmacogenomics"
           pageSize={PAGE_SIZE}
+          sortBy="evidenceLevel"
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-pharmacogenomics-${entity}`}
         />
