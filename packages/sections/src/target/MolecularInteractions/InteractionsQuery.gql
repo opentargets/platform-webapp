@@ -1,4 +1,4 @@
-query InteractionsSectionQuery(
+query TargetInteractionsQuery(
   $ensgId: String!
   $sourceDatabase: InteractionSourceDatabase
   $index: Int = 0
