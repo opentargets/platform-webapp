@@ -1,4 +1,4 @@
-import _ from "lodash";
+import type { DepmapSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -11,9 +11,7 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => {
-        return <>{data.depMapEssentiality?.count} tissues</>;
-      }}
+      renderSummary={(data: DepmapSummaryFragment) => <>{data.depMapEssentiality.count} tissues</>}
     />
   );
 }
