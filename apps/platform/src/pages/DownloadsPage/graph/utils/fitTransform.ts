@@ -5,10 +5,9 @@ export const computeFitTransform = (
   simNodes: { x?: number; y?: number }[],
   width: number,
   height: number,
-  // Wide enough to clear a node's full box plus its label below (boxes now
-  // scale up to ~73x48 with 14px labels, see graphVisuals.ts), not just its
-  // center point
-  padding = 110
+  // Clears a node's box and the label of a labelled hub below it (see
+  // graphVisuals.ts), not just its center point
+  padding = 64
 ) => {
   const xs = simNodes.map((n) => n.x ?? 0);
   const ys = simNodes.map((n) => n.y ?? 0);

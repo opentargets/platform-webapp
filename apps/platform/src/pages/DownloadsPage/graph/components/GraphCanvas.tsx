@@ -1,6 +1,7 @@
 /**
  * Component: GraphCanvas
- * D3 force-directed graph container and renderer
+ * D3 force-directed graph container and renderer. Unframed: the surrounding
+ * NetworkView draws the border, header and overlays.
  */
 
 import React, { useEffect } from 'react';
@@ -13,10 +14,8 @@ interface GraphCanvasProps {
   edges: any[];
   selectedNode?: string | null;
   selectedEdge?: string | null;
-  /** Id of a node to highlight from outside the canvas (e.g. hovering its card) */
-  externalHighlightId?: string | null;
-  /** Ids of nodes matching the active filter chips/search; null means no filter active */
-  filterMatchedIds?: Set<string> | null;
+  /** Basket ids while in basket scope; null when every node is in scope */
+  basketIds?: Set<string> | null;
   onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string, position?: GraphPointerPosition) => void;
@@ -36,8 +35,7 @@ const GraphCanvas = React.memo(
     edges,
     selectedNode,
     selectedEdge,
-    externalHighlightId,
-    filterMatchedIds,
+    basketIds = null,
     onNodeSelect,
     onNodeDeselect,
     onEdgeSelect,
@@ -52,8 +50,7 @@ const GraphCanvas = React.memo(
       edges,
       selectedNode,
       selectedEdge,
-      externalHighlightId,
-      filterMatchedIds,
+      basketIds,
       layoutConfig,
       onNodeSelect,
       onNodeDeselect,
@@ -74,11 +71,7 @@ const GraphCanvas = React.memo(
           height: '100%',
           minHeight: 320,
           backgroundColor: '#fff',
-          border: '1px solid',
-          borderColor: 'grey.300',
-          borderRadius: 1,
           boxSizing: 'border-box',
-          p: 3,
           display: 'flex',
           ...sx,
         }}

@@ -7,10 +7,9 @@ import * as d3 from 'd3';
 export interface GraphNodeDatum extends d3.SimulationNodeDatum {
   id: string;
   label: string;
-  type: 'core' | 'evidence' | 'attribute';
+  /** The dataset's category (see categoryColors.ts) */
+  type: string;
   degree?: number;
-  /** Degree-bucketed size hint (40/60/80) computed by nodeClassifier.enrichNodesWithClassification, driving node box size */
-  size?: number;
   description?: string;
   [key: string]: any;
 }
@@ -22,10 +21,10 @@ export interface GraphLinkDatum extends d3.SimulationLinkDatum<GraphNodeDatum> {
 export interface GraphController {
   zoomIn: () => void;
   zoomOut: () => void;
+  /** Fit every node in view */
   fit: () => void;
-  center: () => void;
-  reset: () => void;
-  exportSVG: () => void;
+  /** Fit only the given nodes in view (falls back to `fit` when none match) */
+  fitTo: (ids: Iterable<string>) => void;
 }
 
 export interface GraphPointerPosition {
