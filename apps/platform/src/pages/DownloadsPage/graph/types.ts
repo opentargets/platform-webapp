@@ -18,6 +18,9 @@ export interface GraphLinkDatum extends d3.SimulationLinkDatum<GraphNodeDatum> {
   id: string;
 }
 
+/** Which deterministic placement the canvas uses (see radialLayout.ts and stackedLayout.ts) */
+export type GraphLayout = 'radial' | 'stacked';
+
 export interface GraphController {
   zoomIn: () => void;
   zoomOut: () => void;

@@ -14,7 +14,15 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { ForceLayoutConfig } from '../utils/layoutConfig';
-import { GraphNodeDatum, GraphLinkDatum, GraphController, GraphPointerPosition, GraphCallbacks } from '../types';
+import type { GraphBounds } from '../utils/fitTransform';
+import {
+  GraphNodeDatum,
+  GraphLinkDatum,
+  GraphController,
+  GraphPointerPosition,
+  GraphCallbacks,
+  GraphLayout,
+} from '../types';
 import { useGraphSimulation } from './useGraphSimulation';
 import { useSelectionHighlight } from './useSelectionHighlight';
 import { useGraphController } from './useGraphController';
@@ -30,6 +38,7 @@ interface UseForceGraphOptions extends GraphCallbacks {
   /** Basket ids while in basket scope; null when every node is in scope */
   basketIds?: Set<string> | null;
   layoutConfig?: ForceLayoutConfig;
+  layout?: GraphLayout;
 }
 
 interface UseForceGraphResult {
@@ -48,6 +57,7 @@ export const useForceGraph = ({
   selectedEdge,
   basketIds = null,
   layoutConfig,
+  layout,
   onNodeSelect,
   onNodeDeselect,
   onEdgeSelect,
@@ -60,6 +70,8 @@ export const useForceGraph = ({
   const simulationRef = useRef<d3.Simulation<GraphNodeDatum, GraphLinkDatum> | null>(null);
   const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const initialFitTransformRef = useRef<d3.ZoomTransform | null>(null);
+  // Extent of anything drawn beyond the nodes (lane bands), for fitting
+  const boundsRef = useRef<GraphBounds | null>(null);
 
   // Keep latest callbacks available to D3 event handlers without rebuilding the graph
   const callbacksRef = useRef<GraphCallbacks>({ onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover });
@@ -74,19 +86,29 @@ export const useForceGraph = ({
     simulationRef,
     positionsRef,
     initialFitTransformRef,
+    boundsRef,
     callbacksRef,
     nodes,
     edges,
     layoutConfig,
+    layout,
   });
 
-  useSelectionHighlight({ svgRef, selectedNode, selectedEdge, basketIds, isReady });
+  useSelectionHighlight({
+    svgRef,
+    selectedNode,
+    selectedEdge,
+    basketIds,
+    isReady,
+    labelPlacement: layout === 'stacked' ? 'right' : 'below',
+  });
 
   const controller = useGraphController({
     containerRef,
     svgRef,
     zoomRef,
     simulationRef,
+    boundsRef,
   });
 
   return { containerRef, isReady, controller };
