@@ -1,4 +1,4 @@
-import { Params, useNavigate, useParams } from "react-router";
+import { Params, useLocation, useNavigate, useParams } from "react-router";
 
 import DownloadsSchema from "./DownloadsSchema";
 import DownloadsAccessOptions from "./DownloadsAccessOptions";
@@ -19,6 +19,8 @@ function DownloadsDialog() {
   const { state } = useContext(DownloadsContext);
   const { downloadsRow, downloadsView }: Readonly<Params<string>> = useParams();
   const navigate = useNavigate();
+  // Keep the page's query string (e.g. ?view=network) across dialog navigation
+  const { search } = useLocation();
 
   const currentDataRow = useMemo(() => {
     return state.rows.filter(e => e["@id"] === `${downloadsRow}-fileset`);
@@ -41,12 +43,12 @@ function DownloadsDialog() {
   };
 
   function handleClose() {
-    navigate("/downloads");
+    navigate({ pathname: "/downloads", search });
   }
 
   function switchDisplayMode() {
-    if (downloadsView === "access") navigate(`/downloads/${downloadsRow}/schema`);
-    else navigate(`/downloads/${downloadsRow}/access`);
+    if (downloadsView === "access") navigate({ pathname: `/downloads/${downloadsRow}/schema`, search });
+    else navigate({ pathname: `/downloads/${downloadsRow}/access`, search });
   }
 
   function getDisplayText() {
