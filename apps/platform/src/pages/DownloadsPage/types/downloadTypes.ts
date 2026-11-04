@@ -11,8 +11,11 @@ export interface DownloadRow {
   [key: string]: unknown;
 }
 
+import type { GraphLayout } from "../graph/types";
+
 export type DownloadsView = "cards" | "network";
 export type NetworkScope = "all" | "basket";
+export type NetworkLayout = GraphLayout;
 
 export type DownloadsState = {
   count: number;
@@ -30,6 +33,7 @@ export type DownloadsState = {
   basket: string[];
   basketOpen: boolean;
   networkScope: NetworkScope;
+  networkLayout: NetworkLayout;
   selectedNodeId: string | null;
 };
 
@@ -50,6 +54,7 @@ export enum ActionType {
   CLEAR_BASKET = "CLEAR_BASKET",
   SET_BASKET_OPEN = "SET_BASKET_OPEN",
   SET_NETWORK_SCOPE = "SET_NETWORK_SCOPE",
+  SET_NETWORK_LAYOUT = "SET_NETWORK_LAYOUT",
   SELECT_NODE = "SELECT_NODE",
 }
 
@@ -66,4 +71,5 @@ export type Action =
   | { type: ActionType.CLEAR_BASKET }
   | { type: ActionType.SET_BASKET_OPEN; open: boolean }
   | { type: ActionType.SET_NETWORK_SCOPE; scope: NetworkScope }
+  | { type: ActionType.SET_NETWORK_LAYOUT; layout: NetworkLayout }
   | { type: ActionType.SELECT_NODE; id: string | null };

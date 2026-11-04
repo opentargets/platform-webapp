@@ -8,13 +8,15 @@
 import { useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
 import { GraphController, GraphNodeDatum, GraphLinkDatum } from '../types';
-import { computeFitTransform } from '../utils/fitTransform';
+import { computeFitTransform, GraphBounds } from '../utils/fitTransform';
 
 interface UseGraphControllerOptions {
   containerRef: React.RefObject<HTMLDivElement>;
   svgRef: React.RefObject<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>;
   zoomRef: React.RefObject<d3.ZoomBehavior<SVGSVGElement, unknown> | null>;
   simulationRef: React.RefObject<d3.Simulation<GraphNodeDatum, GraphLinkDatum> | null>;
+  /** Extent of the lane bands in the stacked layout; null when only nodes matter */
+  boundsRef: React.RefObject<GraphBounds | null>;
 }
 
 export const useGraphController = ({
@@ -22,6 +24,7 @@ export const useGraphController = ({
   svgRef,
   zoomRef,
   simulationRef,
+  boundsRef,
 }: UseGraphControllerOptions): GraphController => {
   const applyZoomScale = useCallback(
     (factor: number) => {
@@ -42,13 +45,13 @@ export const useGraphController = ({
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 600;
-    const { scale, translateX, translateY } = computeFitTransform(simNodes, width, height);
+    const { scale, translateX, translateY } = computeFitTransform(simNodes, width, height, undefined, boundsRef.current);
 
     (svg.transition().duration(300) as any).call(
       zoom.transform,
       d3.zoomIdentity.translate(translateX, translateY).scale(scale)
     );
-  }, [containerRef, simulationRef, svgRef, zoomRef]);
+  }, [containerRef, simulationRef, svgRef, zoomRef, boundsRef]);
 
   return useMemo<GraphController>(
     () => ({
