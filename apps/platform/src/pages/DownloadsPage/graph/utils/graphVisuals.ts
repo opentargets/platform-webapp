@@ -52,6 +52,15 @@ export const GRAPH_STYLES = `
   .graph-node.selected .node-box { fill-opacity: 0.6; stroke: ${PRIMARY_DARK} !important; stroke-width: 2px; }
   .graph-node.selected .node-ring { display: inline; }
 
+  .graph-lane rect { fill-opacity: 0.07; }
+  .graph-lane text {
+    font-family: ${MONO_FONT};
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
   .graph-edge { cursor: pointer; transition: stroke-opacity 0.2s ease, opacity 0.2s ease; }
   .graph-edge.faded { stroke-opacity: 0.08 !important; }
   .graph-edge.highlighted,
@@ -102,6 +111,11 @@ export const SELECT_RING_OFFSET = 4;
 export const CHECK_DOT_RADIUS = 6;
 /** Space between the bottom of the box and the label baseline */
 const LABEL_GAP = 13;
+/** Space between the right edge of the box and a label beside it (stacked layout) */
+const LABEL_SIDE_GAP = 8;
+
+/** Where a node's label sits: below the box (radial) or to its right (stacked columns) */
+export type LabelPlacement = 'below' | 'right';
 
 /**
  * Footprint reserved per degree-1 node by the radial layout and the
@@ -127,7 +141,11 @@ export const getLabelOffset = (state: NodeVisualState, degree: number | undefine
  * Called at build time (all default) and again by useSelectionHighlight
  * whenever the mode or selection changes.
  */
-export const applyNodeGeometry = (nodeSel: any, stateOf: (d: GraphNodeDatum) => NodeVisualState) => {
+export const applyNodeGeometry = (
+  nodeSel: any,
+  stateOf: (d: GraphNodeDatum) => NodeVisualState,
+  labelPlacement: LabelPlacement = 'below'
+) => {
   const box = (d: GraphNodeDatum) => getNodeBox(stateOf(d), d.degree);
   nodeSel
     .selectAll('rect.node-box, rect.node-base')
@@ -144,7 +162,19 @@ export const applyNodeGeometry = (nodeSel: any, stateOf: (d: GraphNodeDatum) => 
   nodeSel
     .select('g.node-check')
     .attr('transform', (d: GraphNodeDatum) => `translate(${box(d).width / 2}, ${-box(d).height / 2})`);
-  nodeSel.select('text').attr('dy', (d: GraphNodeDatum) => getLabelOffset(stateOf(d), d.degree));
+  if (labelPlacement === 'right') {
+    nodeSel
+      .select('text')
+      .attr('text-anchor', 'start')
+      .attr('x', (d: GraphNodeDatum) => box(d).width / 2 + LABEL_SIDE_GAP)
+      .attr('dy', 4);
+  } else {
+    nodeSel
+      .select('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', 0)
+      .attr('dy', (d: GraphNodeDatum) => getLabelOffset(stateOf(d), d.degree));
+  }
 };
 
 /**

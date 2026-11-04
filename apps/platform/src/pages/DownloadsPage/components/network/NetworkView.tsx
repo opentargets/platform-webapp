@@ -1,8 +1,8 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "ui";
 import { DownloadsContext } from "../../context/DownloadsContext";
-import { selectNode, setNetworkScope } from "../../context/downloadsActions";
-import { NetworkScope } from "../../types/downloadTypes";
+import { selectNode, setNetworkLayout, setNetworkScope } from "../../context/downloadsActions";
+import { NetworkLayout, NetworkScope } from "../../types/downloadTypes";
 import { selectRowsById } from "../../context/downloadsSelectors";
 import { GraphVisualization, useGraphData } from "../../graph";
 import type { GraphController } from "../../graph/types";
@@ -98,6 +98,18 @@ function NetworkView() {
     [dispatch]
   );
 
+  const layout: NetworkLayout = state.networkLayout;
+  const changeLayout = useCallback((next: NetworkLayout) => dispatch(setNetworkLayout(next)), [dispatch]);
+
+  // Re-fit once the canvas has rebuilt for a new layout (the controller is
+  // replaced on rebuild, so this fires after the new one is ready).
+  useEffect(() => {
+    if (!controller) return;
+    if (basketMode) controller.fitTo(basket);
+    else controller.fit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controller]);
+
   // Fit follows the scope: basket mode zooms to the basket's nodes, leaving
   // it fits everything again. The layout itself never changes.
   useEffect(() => {
@@ -148,6 +160,8 @@ function NetworkView() {
         scope={scope}
         basketCount={basket.length}
         onScopeChange={changeScope}
+        layout={layout}
+        onLayoutChange={changeLayout}
         hint={hint}
         selectedLabel={selected?.label ?? null}
         onClearSelection={clearSelection}
@@ -164,6 +178,7 @@ function NetworkView() {
           inBasket={inBasket}
           onToggleBasket={toggle}
           onControllerReady={setController}
+          layout={layout}
         />
         <CategoryLegend categories={categories} basketMode={basketMode} />
         {selected && (

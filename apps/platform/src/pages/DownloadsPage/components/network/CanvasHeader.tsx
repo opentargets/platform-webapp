@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Box, Typography } from "ui";
-import { NetworkScope } from "../../types/downloadTypes";
+import { NetworkLayout, NetworkScope } from "../../types/downloadTypes";
 import type { GraphController } from "../../graph/types";
 import { CONTROL_BORDER, RADIUS } from "../tokens";
 
@@ -9,6 +9,8 @@ interface CanvasHeaderProps {
   scope: NetworkScope;
   basketCount: number;
   onScopeChange: (scope: NetworkScope) => void;
+  layout: NetworkLayout;
+  onLayoutChange: (layout: NetworkLayout) => void;
   hint: string;
   selectedLabel: string | null;
   onClearSelection: () => void;
@@ -20,6 +22,8 @@ function CanvasHeader({
   scope,
   basketCount,
   onScopeChange,
+  layout,
+  onLayoutChange,
   hint,
   selectedLabel,
   onClearSelection,
@@ -38,6 +42,7 @@ function CanvasHeader({
       })}
     >
       <BasketScopeSwitch scope={scope} basketCount={basketCount} onChange={onScopeChange} />
+      <LayoutSwitch layout={layout} onChange={onLayoutChange} />
       <Typography component="span" sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}>
         {hint}
       </Typography>
@@ -49,6 +54,59 @@ function CanvasHeader({
 }
 
 /* ------------------------------------------------------------------ */
+
+/** Same pill styling as the scope switch, shared by both radio groups */
+const segmentSx = (selected: boolean, disabled = false) => (theme: any) => ({
+  font: "inherit",
+  fontSize: ".8125rem",
+  lineHeight: 1.2,
+  padding: "3px 10px",
+  borderRadius: RADIUS,
+  cursor: disabled ? "default" : "pointer",
+  border: `1px solid ${selected ? CONTROL_BORDER : "transparent"}`,
+  backgroundColor: selected ? theme.palette.grey[50] : "transparent",
+  color: disabled ? theme.palette.grey[400] : selected ? theme.palette.primary.dark : theme.palette.text.primary,
+  fontWeight: selected ? 500 : 400,
+  whiteSpace: "nowrap",
+  "&:hover": selected || disabled ? undefined : { backgroundColor: theme.palette.grey[300] },
+});
+
+const segmentGroupSx = (theme: any) => ({
+  display: "inline-flex",
+  gap: "3px",
+  padding: "3px 5px",
+  borderRadius: RADIUS,
+  backgroundColor: theme.palette.grey[200],
+});
+
+const LAYOUT_LABELS: Record<NetworkLayout, string> = { radial: "Radial", stacked: "Stacked" };
+
+/** Radial hub-and-spoke vs stacked category lanes (see graph/utils/stackedLayout.ts) */
+export function LayoutSwitch({
+  layout,
+  onChange,
+}: {
+  layout: NetworkLayout;
+  onChange: (layout: NetworkLayout) => void;
+}) {
+  return (
+    <Box role="radiogroup" aria-label="Layout" sx={segmentGroupSx}>
+      {(Object.keys(LAYOUT_LABELS) as NetworkLayout[]).map(option => (
+        <Box
+          key={option}
+          component="button"
+          type="button"
+          role="radio"
+          aria-checked={layout === option}
+          onClick={() => onChange(option)}
+          sx={segmentSx(layout === option)}
+        >
+          {LAYOUT_LABELS[option]}
+        </Box>
+      ))}
+    </Box>
+  );
+}
 
 interface BasketScopeSwitchProps {
   scope: NetworkScope;

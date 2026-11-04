@@ -136,11 +136,11 @@ function BasketRow({ dataset, locationURLs, onRemove }: BasketRowProps) {
           Remove
         </Box>
       </Box>
-      <CopyField
+      {/* <CopyField
         value={getLocationLink(dataset, locationURLs, shown)}
         label={`Copy ${dataset.name} ${LOCATION_LABELS[shown]} file location`}
         leading={<LocationPicker name={dataset.name} options={locations} value={shown} onChange={setLocation} />}
-      />
+      /> */}
     </Box>
   );
 }
