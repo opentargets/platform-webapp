@@ -69,13 +69,24 @@ export const getContainedIn = (row: DownloadRow): string[] => {
   return list.map(entry => entry?.["@id"]).filter((id): id is string => Boolean(id));
 };
 
-/** Same precedence as the Access dialog: GCP when published there, else FTP, else AWS. */
-export const getLocationType = (row: DownloadRow): LocationType => {
-  const containedIn = getContainedIn(row);
-  if (containedIn.includes(GCP_LOCATION)) return GCP_LOCATION;
-  if (containedIn.includes(FTP_LOCATION)) return FTP_LOCATION;
-  return AWS_LOCATION;
+export const LOCATION_LABELS: Record<LocationType, string> = {
+  [GCP_LOCATION]: "Google Cloud",
+  [FTP_LOCATION]: "FTP",
+  [AWS_LOCATION]: "AWS",
 };
+
+/** Display and precedence order: GCP first, then FTP, then AWS. */
+const LOCATION_ORDER: LocationType[] = [GCP_LOCATION, FTP_LOCATION, AWS_LOCATION];
+
+/** Every location a dataset is published in, in precedence order; AWS when it names none. */
+export const getLocationTypes = (row: DownloadRow): LocationType[] => {
+  const containedIn = getContainedIn(row);
+  const types = LOCATION_ORDER.filter(type => containedIn.includes(type));
+  return types.length ? types : [AWS_LOCATION];
+};
+
+/** Same precedence as the Access dialog: GCP when published there, else FTP, else AWS. */
+export const getLocationType = (row: DownloadRow): LocationType => getLocationTypes(row)[0];
 
 /** Built the way DownloadsAccessOptions.getLink() does: `locationURLs[loc] + datasetId`. */
 export const getLocationLink = (
@@ -117,41 +128,110 @@ export const getCommonScripts = (rows: DownloadRow[]): ScriptType[] => {
   return SCRIPT_TYPES.filter(type => rows.every(row => getSupportedScripts(row).includes(type)));
 };
 
-const ftpToRsyncModule = (link: string): string =>
-  link.replace(/^(?:https?|ftp):\/\/ftp\.ebi\.ac\.uk\//, "");
+/** `locationURLs` values end in "/" (e.g. "gs://…/26.09/output/"); the scripts want a bare base. */
+const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, "");
 
-/** Build the one command (or command list) that fetches every given dataset with the given tool. */
+/** "http://ftp.ebi.ac.uk/pub/…/output" -> "rsync.ebi.ac.uk::pub/…/output" */
+const ftpToRsyncModule = (base: string): string =>
+  `rsync.ebi.ac.uk::${base.replace(/^(?:https?|ftp):\/\/ftp\.ebi\.ac\.uk\//, "")}`;
+
+/** "http://ftp.ebi.ac.uk/pub/…" -> "ftp://ftp.ebi.ac.uk/pub/…" */
+const ftpToFtpScheme = (base: string): string => base.replace(/^https?:\/\//, "ftp://");
+
+/** Number of path segments wget must drop so datasets land directly in "." (6 for /pub/databases/opentargets/platform/<release>/output). */
+const wgetCutDirs = (base: string): number =>
+  base
+    .replace(/^[a-z]+:\/\/[^/]+/, "")
+    .split("/")
+    .filter(Boolean).length;
+
+/**
+ * The dataset ids, one per line, piped into each script's `while read` loop:
+ *
+ *   printf '%s\n' \
+ *     target \
+ *     disease |
+ */
+const datasetListLines = (rows: DownloadRow[]): string[] => {
+  const ids = rows.map(getDatasetId);
+  return ["printf '%s\\n' \\", ...ids.map((id, i) => `  ${id} ${i === ids.length - 1 ? "|" : "\\"}`)];
+};
+
+const FAIL = (verb: string) => `    { printf '${verb} failed: %s\\n' "\${dataset}" >&2; exit 1; }`;
+
+/**
+ * Build the shell snippet that fetches every given dataset with the given
+ * tool. Each script declares a BASE, lists the datasets once and loops over
+ * them, so a user can edit the list in place and a failed dataset stops the
+ * run instead of being silently skipped.
+ */
 export const buildAccessScript = (
   type: ScriptType,
   rows: DownloadRow[],
   locationURLs: Record<string, string>
 ): string => {
-  const links = rows.map(row => getLocationLink(row, locationURLs, SCRIPT_LOCATION[type]));
+  const base = stripTrailingSlash(locationURLs[SCRIPT_LOCATION[type]] ?? "");
+  const list = datasetListLines(rows);
   switch (type) {
     case "gcp":
+      // gcloud takes the whole list at once from stdin; one process, one bill
       return [
-        "gcloud storage cp -r \\",
-        "  --billing-project ${PROJECT_ID} \\",
-        ...links.map(link => `  ${link}/ \\`),
+        `BASE="${base}"`,
+        "",
+        ...list,
+        "while read -r dataset; do",
+        "  printf '%s/%s\\n' \"${BASE}\" \"${dataset}\"",
+        "done |",
+        "gcloud storage cp \\",
+        "  --recursive \\",
+        '  --billing-project "${PROJECT_ID}" \\',
+        "  --read-paths-from-stdin \\",
         "  .",
       ].join("\n");
     case "aws":
-      // `aws s3 cp` only takes one source, so chain one copy per dataset
-      return links.map(link => `aws s3 cp --recursive --no-sign-request ${link}/ .`).join(" && \\\n  ");
+      // `aws s3 cp` only takes one source, so copy each dataset in turn
+      return [
+        `BASE="${base}"`,
+        "",
+        ...list,
+        "while read -r dataset; do",
+        "  aws s3 cp \\",
+        '    "${BASE}/${dataset}/" \\',
+        '    "./${dataset}/" \\',
+        "    --recursive \\",
+        "    --no-sign-request ||",
+        FAIL("Download"),
+        "done",
+      ].join("\n");
     case "rsync":
-      return links
-        .map(link => `rsync -rpltvz --delete rsync.ebi.ac.uk::${ftpToRsyncModule(link)} .`)
-        .join("\n");
+      return [
+        `BASE="${ftpToRsyncModule(base)}"`,
+        "",
+        ...list,
+        "while read -r dataset; do",
+        "  rsync -rpltvz \\",
+        "    --delete \\",
+        '    "${BASE}/${dataset}" \\',
+        "    ./ ||",
+        FAIL("Sync"),
+        "done",
+      ].join("\n");
     case "wget":
-      return links
-        .map(
-          link =>
-            `wget --recursive --no-parent --no-host-directories --cut-dirs 6 ${link.replace(
-              /^http/,
-              "ftp"
-            )} .`
-        )
-        .join("\n");
+      return [
+        `BASE="${ftpToFtpScheme(base)}"`,
+        "",
+        ...list,
+        "while read -r dataset; do",
+        "  wget \\",
+        "    --recursive \\",
+        "    --level=inf \\",
+        "    --no-parent \\",
+        "    --no-host-directories \\",
+        `    --cut-dirs=${wgetCutDirs(base)} \\`,
+        '    "${BASE}/${dataset}/" ||',
+        FAIL("Download"),
+        "done",
+      ].join("\n");
     default:
       return "";
   }

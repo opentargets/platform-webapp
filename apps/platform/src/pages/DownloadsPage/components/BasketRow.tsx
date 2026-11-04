@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { Box, Typography } from "ui";
 import { Link, useLocation } from "react-router";
 import { DownloadRow } from "../types/downloadTypes";
-import { getDatasetId, getFileLocation } from "../context/downloadsSelectors";
+import {
+  getDatasetId,
+  getLocationLink,
+  getLocationTypes,
+  LOCATION_LABELS,
+  LocationType,
+} from "../context/downloadsSelectors";
 import CategoryDot from "./CategoryDot";
 import CopyField from "./CopyField";
+import { RADIUS } from "./tokens";
 
 interface BasketRowProps {
   dataset: DownloadRow;
@@ -24,11 +32,66 @@ const linkSx = (theme: any) => ({
   "&:hover": { textDecoration: "underline" },
 });
 
+const pickerSx = (theme: any) => ({
+  flex: "none",
+  height: 24,
+  padding: "0 4px",
+  fontFamily: "inherit",
+  fontSize: ".6875rem",
+  fontWeight: 500,
+  color: theme.palette.grey[700],
+  backgroundColor: "#fff",
+  border: `1px solid ${theme.palette.grey[300]}`,
+  borderRadius: RADIUS,
+  cursor: "pointer",
+  "&:hover": { borderColor: theme.palette.grey[500] },
+});
+
+/** The dropdown of every location a dataset is published in; a plain label when there is only one. */
+function LocationPicker({
+  name,
+  options,
+  value,
+  onChange,
+}: {
+  name: string;
+  options: LocationType[];
+  value: LocationType;
+  onChange: (location: LocationType) => void;
+}) {
+  if (options.length < 2) {
+    return (
+      <Box component="span" sx={theme => ({ ...pickerSx(theme), display: "inline-flex", alignItems: "center", cursor: "default" })}>
+        {LOCATION_LABELS[value]}
+      </Box>
+    );
+  }
+  return (
+    <Box
+      component="select"
+      value={value}
+      onChange={e => onChange(e.target.value as LocationType)}
+      aria-label={`${name} file location`}
+      sx={pickerSx}
+    >
+      {options.map(location => (
+        <option key={location} value={location}>
+          {LOCATION_LABELS[location]}
+        </option>
+      ))}
+    </Box>
+  );
+}
+
 /** One basket item: its category, name, Schema and Remove links, and its file location to copy. */
 function BasketRow({ dataset, locationURLs, onRemove }: BasketRowProps) {
   const id = getDatasetId(dataset);
   const { search } = useLocation();
   const category = dataset.categories?.[0];
+  const locations = getLocationTypes(dataset);
+  const [location, setLocation] = useState<LocationType>(locations[0]);
+  // the default (GCP-first) location if the picked one is no longer published
+  const shown = locations.includes(location) ? location : locations[0];
 
   return (
     <Box
@@ -73,7 +136,11 @@ function BasketRow({ dataset, locationURLs, onRemove }: BasketRowProps) {
           Remove
         </Box>
       </Box>
-      <CopyField value={getFileLocation(dataset, locationURLs)} label={`Copy ${dataset.name} file location`} />
+      <CopyField
+        value={getLocationLink(dataset, locationURLs, shown)}
+        label={`Copy ${dataset.name} ${LOCATION_LABELS[shown]} file location`}
+        leading={<LocationPicker name={dataset.name} options={locations} value={shown} onChange={setLocation} />}
+      />
     </Box>
   );
 }
