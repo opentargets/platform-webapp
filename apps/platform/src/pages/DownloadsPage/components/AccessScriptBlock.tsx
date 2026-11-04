@@ -113,14 +113,17 @@ function ScriptBody({ type, script, note }: { type: ScriptType; script: string; 
           })}
         >
           {lines.map((line, i) => {
-            const continuation = /^\s/.test(line);
+            // keep the script's own indentation and let a wrapped line hang
+            // at the same depth as its first line
+            const indent = line.length - line.trimStart().length;
             return (
               <Box
                 key={`${i}-${line}`}
                 component="span"
-                sx={{ display: "block", pl: continuation ? 2 : 0 }}
+                sx={{ display: "block", pl: `${indent}ch` }}
               >
-                {line.trimStart()}
+                {/* an empty block span has no height, so keep blank lines visible */}
+                {line.trimStart() || "\u00a0"}
               </Box>
             );
           })}

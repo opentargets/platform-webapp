@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Box } from "ui";
 import CopyIconButton from "./CopyIconButton";
 import { MONO_FONT, RADIUS } from "./tokens";
@@ -5,10 +6,12 @@ import { MONO_FONT, RADIUS } from "./tokens";
 interface CopyFieldProps {
   value: string;
   label?: string;
+  /** A control rendered at the field's left, e.g. the location picker */
+  leading?: ReactNode;
 }
 
 /** A read-only mono value (a path, an id) on a grey field with a copy button at its right. */
-function CopyField({ value, label = "Copy file location" }: CopyFieldProps) {
+function CopyField({ value, label = "Copy file location", leading }: CopyFieldProps) {
   return (
     <Box
       sx={theme => ({
@@ -21,6 +24,7 @@ function CopyField({ value, label = "Copy file location" }: CopyFieldProps) {
         minWidth: 0,
       })}
     >
+      {leading}
       <Box
         component="code"
         title={value}
