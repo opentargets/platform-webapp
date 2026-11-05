@@ -73,6 +73,7 @@ export type OtTableProps = {
   query: DocumentNode;
   variables: Record<string, unknown>;
   showColumnVisibilityControl: boolean;
+  initialColumnVisibility?: Record<string, boolean>;
   showRowsPerPageControl: boolean;
   showPaginationAlways: boolean;
   loading: boolean;
