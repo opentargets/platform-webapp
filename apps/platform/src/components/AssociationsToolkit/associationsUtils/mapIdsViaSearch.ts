@@ -40,7 +40,7 @@ export async function mapIdsViaSearch(
       )
       .join("\n");
     const query = gql`
-      query MapIdsViaSearch($entityNames: [String!], $size: Int!, ${variableDefinitions}) {
+      query MapIdsViaSearch($entityNames: [EntityType!], $size: Int!, ${variableDefinitions}) {
         ${fields}
       }
     `;

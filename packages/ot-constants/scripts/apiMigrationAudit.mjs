@@ -66,8 +66,8 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../..");
 
-const DEFAULT_OLD = "https://dev.opentargets.xyz/api/v4/graphql";
-const DEFAULT_NEW = "https://ng.opentargets.org:8080/latest/graphql";
+const DEFAULT_OLD = "https://api.platform.opentargets.org/api/v4/graphql";
+const DEFAULT_NEW = "https://api.platform.opentargets.xyz/api/v4/graphql";
 
 const PAGES = {
   disease: [
