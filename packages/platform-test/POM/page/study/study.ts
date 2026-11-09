@@ -62,7 +62,7 @@ export class StudyPage {
 
   // Study page header
   getStudyHeader(): Locator {
-    return this.page.locator("[data-testid='profile-page-header']");
+    return this.page.locator("[data-testid='profile-page-header-block']");
   }
 
   async isStudyHeaderVisible(): Promise<boolean> {
@@ -79,7 +79,7 @@ export class StudyPage {
   async waitForStudyPageLoad(): Promise<void> {
     // Wait for the main page content to be visible
     await this.page
-      .waitForSelector("[data-testid='profile-page-header']", {
+      .waitForSelector("[data-testid='profile-page-header-block']", {
         state: "visible",
         timeout: WIDGET_LOAD_TIMEOUT,
       })

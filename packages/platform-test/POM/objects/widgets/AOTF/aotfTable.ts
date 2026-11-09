@@ -150,7 +150,10 @@ export class AotfTable {
 
     for (let i = 0; i < rowCount; i++) {
       const nameCell = this.getNameCell(i, prefix);
-      const text = await nameCell.textContent();
+      // Bounded timeout: if the row count shrinks after a filter change
+      // (e.g. this call raced ahead of waitForTableLoad), fail fast here
+      // instead of hanging until the whole test times out.
+      const text = await nameCell.textContent({ timeout: 5000 }).catch(() => null);
 
       if (text?.includes(geneSymbol)) {
         return i;
@@ -221,29 +224,46 @@ export class AotfTable {
     return text?.trim() || null;
   }
 
-  // Check if table is loading
-  getLoadingIndicator(): Locator {
-    return this.page.locator("[data-testid='table-loading']");
-  }
-
+  // Row cells (name-cell, score-cell-*) render as MUI Skeletons while their
+  // data is (re)loading - there is no dedicated loading-indicator element,
+  // so the skeleton count is the only reliable "table is loading" signal.
   async isLoading(): Promise<boolean> {
-    return await this.getLoadingIndicator().isVisible();
+    return (await this.getTable().locator(".MuiSkeleton-root").count()) > 0;
   }
 
-  // Wait for table to load
+  // Wait for the table to load, or to finish re-fetching after a filter,
+  // sort, or facet change. Row cells swap to skeletons for the duration of
+  // the request, so waiting for those to clear - rather than a fixed sleep -
+  // is what actually guarantees the request has finished and re-rendered.
   async waitForTableLoad(): Promise<void> {
     await this.page.waitForSelector(".TAssociations", { state: "visible" });
-    // Wait for loading to finish if present
-    const loadingVisible = await this.getLoadingIndicator()
-      .isVisible()
-      .catch(() => false);
-    if (loadingVisible) {
-      await this.getLoadingIndicator().waitFor({ state: "hidden" });
-    }
-    // Wait for at least one row to be present with actual content
     await this.page.waitForSelector("[data-testid^='table-row-core']", { state: "visible" });
-    // Give a moment for content to populate
-    await this.page.waitForTimeout(500);
+
+    // A triggered refetch may not swap in skeletons immediately; give it a
+    // short window to appear, but don't fail the wait if it never does
+    // (e.g. the request had already resolved by the time we checked).
+    // Note: the options object must be the 3rd argument - passing it 2nd
+    // silently binds it as the page function's `arg` instead, so it stops
+    // being a real timeout and blocks until the whole test times out.
+    await this.page
+      .waitForFunction(
+        () => {
+          const table = document.querySelector(".TAssociations");
+          return !!table && table.querySelectorAll(".MuiSkeleton-root").length > 0;
+        },
+        undefined,
+        { timeout: 2000 }
+      )
+      .catch(() => {});
+
+    await this.page.waitForFunction(
+      () => {
+        const table = document.querySelector(".TAssociations");
+        return !!table && table.querySelectorAll(".MuiSkeleton-root").length === 0;
+      },
+      undefined,
+      { timeout: 20000 }
+    );
   }
 
   // Get all data cells with scores in a specific row

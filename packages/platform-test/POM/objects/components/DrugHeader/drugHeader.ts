@@ -118,6 +118,17 @@ export class DrugHeader {
       .catch(() => false);
   }
 
+  // Probes & Drugs link
+  getProbesDrugsLink(): Locator {
+    return this.getExternalLinksSection().locator("a[href*='probes-drugs.org']");
+  }
+
+  async hasProbesDrugsLink(): Promise<boolean> {
+    return await this.getProbesDrugsLink()
+      .isVisible()
+      .catch(() => false);
+  }
+
   // Get all external links
   getAllExternalLinks(): Locator {
     return this.getExternalLinksSection().locator("a");

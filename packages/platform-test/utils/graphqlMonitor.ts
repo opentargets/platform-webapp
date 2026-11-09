@@ -202,6 +202,40 @@ export class GraphQLMonitor {
   }
 
   /**
+   * Wait until no new GraphQL request has been logged for `quietMs`,
+   * bounded by `timeout`. Unlike page.waitForLoadState("networkidle"), this
+   * only looks at GraphQL traffic, so it isn't blocked by unrelated
+   * background activity (analytics, polling, etc.) that never goes idle.
+   */
+  async waitForIdle(quietMs = 750, timeout = 20000): Promise<void> {
+    const deadline = Date.now() + timeout;
+
+    // A fresh navigation hasn't dispatched any GraphQL requests yet; give it
+    // a moment to start before treating "zero requests so far" as idle.
+    const firstRequestDeadline = Math.min(deadline, Date.now() + 3000);
+    while (this.requests.length === 0 && Date.now() < firstRequestDeadline) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    let lastCount = this.requests.length;
+    let lastChangeAt = Date.now();
+
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      if (this.requests.length !== lastCount) {
+        lastCount = this.requests.length;
+        lastChangeAt = Date.now();
+        continue;
+      }
+
+      if (Date.now() - lastChangeAt >= quietMs) {
+        return;
+      }
+    }
+  }
+
+  /**
    * Print a summary report
    */
   printSummary(): void {

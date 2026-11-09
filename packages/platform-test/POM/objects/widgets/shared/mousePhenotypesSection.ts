@@ -61,7 +61,7 @@ export class MousePhenotypesSection {
   // Phenotype class/category
   async getPhenotypeCategory(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    const categoryCell = row.locator("td").first();
+    const categoryCell = row.locator("td").nth(2);
     return await categoryCell.textContent();
   }
 
@@ -75,7 +75,7 @@ export class MousePhenotypesSection {
   // Phenotype link (MP ontology)
   async getPhenotypeLink(rowIndex: number): Promise<Locator> {
     const row = await this.getTableRow(rowIndex);
-    return row.locator("a").first();
+    return row.locator("td").nth(1).locator("a");
   }
 
   async hasPhenotypeLink(rowIndex: number): Promise<boolean> {
@@ -106,7 +106,7 @@ export class MousePhenotypesSection {
 
   // MGI link
   getMGILinks(): Locator {
-    return this.getSection().locator("a[href*='mgi']");
+    return this.getSection().locator("a[href*='MGI']");
   }
 
   async hasMGILinks(): Promise<boolean> {

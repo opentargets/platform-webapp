@@ -46,7 +46,7 @@ export class BibliographySection {
 
   // PubMed links
   getPubMedLink(index: number): Locator {
-    return this.getLiteratureEntry(index).locator("a[href*='pubmed']");
+    return this.getLiteratureEntry(index).locator("a[href*='europepmc.org']");
   }
 
   async clickPubMedLink(index: number): Promise<void> {
@@ -64,11 +64,11 @@ export class BibliographySection {
 
   // Pagination
   getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='next-page-button']");
+    return this.getSection().locator("button[aria-label='Go to next page']");
   }
 
   getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='previous-page-button']");
+    return this.getSection().locator("button[aria-label='Go to previous page']");
   }
 
   async clickNextPage(): Promise<void> {
