@@ -1,5 +1,5 @@
-import { Link } from "ui";
 import { Fragment } from "react";
+import { Link } from "ui";
 import { v1 } from "uuid";
 
 type Molecule = { id: string; name: string };
@@ -21,7 +21,7 @@ function Description({ name, parentMolecule, childMolecules }: Props) {
       {molecules.length > 0 && (
         <>
           , and related molecules{" "}
-          {molecules.map(molecule => (
+          {molecules.map((molecule) => (
             <Fragment key={v1()}>
               <Link to={`/drug/${molecule.id}`}>{molecule.name}</Link>
               {", "}
