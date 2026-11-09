@@ -14,6 +14,7 @@ export {
   Box,
   Button as MuiButton,
   ButtonBase,
+  ButtonGroup,
   Card,
   CardActions,
   CardContent,
