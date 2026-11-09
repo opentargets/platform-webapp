@@ -38,9 +38,9 @@ function getColumns(targetSymbol, targetId) {
         const v = credibleSet?.variant;
         if (!v) return naLabel;
         return (
-          <Link asyncTooltip to={`/variant/${v.id}`}>
+          <Link asyncTooltip to={`/variant/${v.variantId}`}>
             <DisplayVariantId
-              variantId={v.id}
+              variantId={v.variantId}
               referenceAllele={v.referenceAllele}
               alternateAllele={v.alternateAllele}
               expand={false}
