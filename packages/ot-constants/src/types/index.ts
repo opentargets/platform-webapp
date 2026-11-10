@@ -4442,12 +4442,12 @@ export type SubcellularLocation = { __typename?: 'Query', target?: { __typename?
 
 export type SubcellularLocationFragment = { __typename?: 'Target', subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string }> };
 
-export type TractabilityQueryVariables = Exact<{
+export type TargetTractabilityQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type TractabilityQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, tractability: Array<{ __typename?: 'Tractability', value: boolean, modality: string, label: string }> } | null };
+export type TargetTractabilityQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, tractability: Array<{ __typename?: 'Tractability', value: boolean, modality: string, label: string }> } | null };
 
 export type TractabilitySummaryFragment = { __typename?: 'Target', id: string, tractability: Array<{ __typename?: 'Tractability', modality: string }> };
 
@@ -5643,8 +5643,8 @@ export const SubcellularLocationDocument = gql`
   }
 }
     `;
-export const TractabilityQueryDocument = gql`
-    query TractabilityQuery($ensemblId: String!) {
+export const TargetTractabilityQueryDocument = gql`
+    query TargetTractabilityQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     tractability {
@@ -5822,8 +5822,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     SubcellularLocation(variables: SubcellularLocationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SubcellularLocation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SubcellularLocation>({ document: SubcellularLocationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SubcellularLocation', 'query', variables);
     },
-    TractabilityQuery(variables: TractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TractabilityQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<TractabilityQuery>({ document: TractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TractabilityQuery', 'query', variables);
+    TargetTractabilityQuery(variables: TargetTractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetTractabilityQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetTractabilityQuery>({ document: TargetTractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetTractabilityQuery', 'query', variables);
     },
     ClinicalRecordsQuery(variables: ClinicalRecordsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ClinicalRecordsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ClinicalRecordsQuery>({ document: ClinicalRecordsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ClinicalRecordsQuery', 'query', variables);
