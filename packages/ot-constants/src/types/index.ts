@@ -4264,10 +4264,12 @@ export type DrugWarningsSummaryFragment = { __typename?: 'Drug', drugWarnings: {
 
 export type IndicationsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
-export type IndicationsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', indications: { __typename?: 'ClinicalIndicationPage', count: number, rows: Array<{ __typename?: 'ClinicalIndication', id: string, maxClinicalStage: string, disease: { __typename?: 'Disease', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
+export type IndicationsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, indications: { __typename?: 'ClinicalIndicationPage', count: number, rows: Array<{ __typename?: 'ClinicalIndication', id: string, maxClinicalStage: string, disease: { __typename?: 'Disease', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
 
 export type IndicationsSummaryFragment = { __typename?: 'Drug', indications: { __typename?: 'ClinicalIndicationPage', count: number } };
 
@@ -4408,7 +4410,7 @@ export const DrugWarningsSummaryFragment = gql`
     `;
 export const IndicationsSummaryFragment = gql`
     fragment IndicationsSummaryFragment on Drug {
-  indications {
+  indications(page: {index: 0, size: 1}) {
     count
   }
 }
@@ -4907,9 +4909,10 @@ export const DrugWarningsQueryDocument = gql`
 }
     `;
 export const IndicationsQueryDocument = gql`
-    query IndicationsQuery($chemblId: String!) {
+    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
-    indications {
+    id
+    indications(page: {index: $index, size: $size}) {
       count
       rows {
         id
