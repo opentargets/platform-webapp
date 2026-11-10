@@ -4424,12 +4424,12 @@ export type QtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename
 
 export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
-export type SafetyVariables = Exact<{
+export type TargetSafetyQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type Safety = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null, eventId?: string | null, datasource: string, literature?: string | null, biosamples: Array<{ __typename?: 'SafetyBiosamples', cellFormat?: string | null, cellLabel?: string | null, tissueLabel?: string | null, tissueId?: string | null }>, effects: Array<{ __typename?: 'SafetyEffects', dosing?: string | null, direction: string }>, studies: Array<{ __typename?: 'SafetyStudies', name?: string | null, type?: string | null, description?: string | null }> }> } | null };
+export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null, eventId?: string | null, datasource: string, literature?: string | null, biosamples: Array<{ __typename?: 'SafetyBiosamples', cellFormat?: string | null, cellLabel?: string | null, tissueLabel?: string | null, tissueId?: string | null }>, effects: Array<{ __typename?: 'SafetyEffects', dosing?: string | null, direction: string }>, studies: Array<{ __typename?: 'SafetyStudies', name?: string | null, type?: string | null, description?: string | null }> }> } | null };
 
 export type SafetySummaryFragment = { __typename?: 'Target', safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null }> };
 
@@ -5598,8 +5598,8 @@ export const QtlCredibleSetsQueryDocument = gql`
   }
 }
     `;
-export const SafetyDocument = gql`
-    query Safety($ensemblId: String!) {
+export const TargetSafetyQueryDocument = gql`
+    query TargetSafetyQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     safetyLiabilities {
@@ -5816,8 +5816,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     QTLCredibleSetsQuery(variables: QtlCredibleSetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<QtlCredibleSetsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<QtlCredibleSetsQuery>({ document: QtlCredibleSetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'QTLCredibleSetsQuery', 'query', variables);
     },
-    Safety(variables: SafetyVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Safety> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Safety>({ document: SafetyDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Safety', 'query', variables);
+    TargetSafetyQuery(variables: TargetSafetyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSafetyQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetSafetyQuery>({ document: TargetSafetyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSafetyQuery', 'query', variables);
     },
     SubcellularLocation(variables: SubcellularLocationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SubcellularLocation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SubcellularLocation>({ document: SubcellularLocationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SubcellularLocation', 'query', variables);
