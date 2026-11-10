@@ -1,6 +1,7 @@
-query IndicationsQuery($chemblId: String!) {
+query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
-    indications {
+    id
+    indications(page: { index: $index, size: $size }) {
       count
       rows {
         id
