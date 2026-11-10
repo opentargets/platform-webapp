@@ -4433,12 +4433,12 @@ export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 
 
 export type SafetySummaryFragment = { __typename?: 'Target', safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null }> };
 
-export type SubcellularLocationVariables = Exact<{
+export type TargetSubcellularLocationQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type SubcellularLocation = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+export type TargetSubcellularLocationQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
 
 export type SubcellularLocationFragment = { __typename?: 'Target', subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string }> };
 
@@ -5626,8 +5626,8 @@ export const TargetSafetyQueryDocument = gql`
   }
 }
     `;
-export const SubcellularLocationDocument = gql`
-    query SubcellularLocation($ensemblId: String!) {
+export const TargetSubcellularLocationQueryDocument = gql`
+    query TargetSubcellularLocationQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     subcellularLocations {
@@ -5819,8 +5819,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetSafetyQuery(variables: TargetSafetyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSafetyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetSafetyQuery>({ document: TargetSafetyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSafetyQuery', 'query', variables);
     },
-    SubcellularLocation(variables: SubcellularLocationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SubcellularLocation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SubcellularLocation>({ document: SubcellularLocationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SubcellularLocation', 'query', variables);
+    TargetSubcellularLocationQuery(variables: TargetSubcellularLocationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSubcellularLocationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetSubcellularLocationQuery>({ document: TargetSubcellularLocationQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSubcellularLocationQuery', 'query', variables);
     },
     TargetTractabilityQuery(variables: TargetTractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetTractabilityQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetTractabilityQuery>({ document: TargetTractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetTractabilityQuery', 'query', variables);
