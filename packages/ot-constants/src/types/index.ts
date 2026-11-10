@@ -4341,12 +4341,12 @@ export type Hallmarks = { __typename?: 'Query', target?: { __typename?: 'Target'
 
 export type CancerHallmarksSummaryFragment = { __typename?: 'Target', hallmarks: { __typename?: 'Hallmark', cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', impact?: string | null, label: string }> } };
 
-export type ChemicalProbesVariables = Exact<{
+export type TargetChemicalProbesQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type ChemicalProbes = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, chemicalProbes: Array<{ __typename?: 'ChemicalProbe', id: string, control?: string | null, drugId?: string | null, isHighQuality: boolean, mechanismOfAction: Array<string>, origin: Array<string>, probesDrugsScore?: number | null, scoreInCells?: number | null, scoreInOrganisms?: number | null, targetFromSourceId: string, urls: Array<{ __typename?: 'Url', niceName: string, url?: string | null }> }> } | null };
+export type TargetChemicalProbesQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, chemicalProbes: Array<{ __typename?: 'ChemicalProbe', id: string, control?: string | null, drugId?: string | null, isHighQuality: boolean, mechanismOfAction: Array<string>, origin: Array<string>, probesDrugsScore?: number | null, scoreInCells?: number | null, scoreInOrganisms?: number | null, targetFromSourceId: string, urls: Array<{ __typename?: 'Url', niceName: string, url?: string | null }> }> } | null };
 
 export type ChemicalProbesSummaryFragment = { __typename?: 'Target', chemicalProbes: Array<{ __typename?: 'ChemicalProbe', id: string }> };
 
@@ -5395,8 +5395,8 @@ export const HallmarksDocument = gql`
   }
 }
     `;
-export const ChemicalProbesDocument = gql`
-    query ChemicalProbes($ensemblId: String!) {
+export const TargetChemicalProbesQueryDocument = gql`
+    query TargetChemicalProbesQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     chemicalProbes {
@@ -5789,8 +5789,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     Hallmarks(variables: HallmarksVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Hallmarks> {
       return withWrapper((wrappedRequestHeaders) => client.request<Hallmarks>({ document: HallmarksDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Hallmarks', 'query', variables);
     },
-    ChemicalProbes(variables: ChemicalProbesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ChemicalProbes> {
-      return withWrapper((wrappedRequestHeaders) => client.request<ChemicalProbes>({ document: ChemicalProbesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ChemicalProbes', 'query', variables);
+    TargetChemicalProbesQuery(variables: TargetChemicalProbesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetChemicalProbesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetChemicalProbesQuery>({ document: TargetChemicalProbesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetChemicalProbesQuery', 'query', variables);
     },
     CompGenomics(variables: CompGenomicsVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CompGenomics> {
       return withWrapper((wrappedRequestHeaders) => client.request<CompGenomics>({ document: CompGenomicsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CompGenomics', 'query', variables);
