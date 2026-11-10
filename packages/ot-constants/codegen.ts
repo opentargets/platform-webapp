@@ -24,8 +24,9 @@ const MIGRATED_DOCUMENTS = [
   "packages/sections/src/drug/**/*.gql",
   // Drugs, GeneOntology, OverlappingVariants and TargetGenomicRegion stay out: the
   // new API has no drugAndClinicalCandidates, GeneOntologyAnnotation.term,
-  // proteinCodingCoordinates or region query yet
-  "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,GeneticConstraint,MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,Tractability}/*.gql",
+  // proteinCodingCoordinates or region query yet. MolecularInteractions joins once its
+  // queries no longer share the InteractionsSectionQuery name with InteractorsQuery.gql
+  "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,GeneticConstraint,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,Tractability}/*.gql",
   "packages/ui/src/components/ClinicalReports/*.gql",
 ].map((glob) => resolve(__dirname, "../..", glob));
 
