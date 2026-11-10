@@ -4255,10 +4255,12 @@ export type DrugBibliography = { __typename?: 'Drug', literatureOcurrences: { __
 
 export type DrugWarningsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
-export type DrugWarningsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, drugWarnings: { __typename?: 'DrugWarningPage', count: number, rows: Array<{ __typename?: 'DrugWarning', warningType: string, description?: string | null, toxicityClass?: string | null, country?: string | null, year?: number | null, efoTerm?: string | null, efoId?: string | null, efoIdForWarningClass?: string | null, references: Array<{ __typename?: 'DrugWarningReference', id: string, source: string, url: string }> }> } } | null };
+export type DrugWarningsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, drugWarnings: { __typename?: 'DrugWarningPage', count: number, rows: Array<{ __typename?: 'DrugWarning', id?: number | null, warningType: string, description?: string | null, toxicityClass?: string | null, country?: string | null, year?: number | null, efoTerm?: string | null, efoId?: string | null, efoIdForWarningClass?: string | null, references: Array<{ __typename?: 'DrugWarningReference', id: string, source: string, url: string }> }> } } | null };
 
 export type DrugWarningsSummaryFragment = { __typename?: 'Drug', drugWarnings: { __typename?: 'DrugWarningPage', count: number } };
 
@@ -4884,12 +4886,13 @@ export const DrugBibliographyQueryDocument = gql`
 }
     `;
 export const DrugWarningsQueryDocument = gql`
-    query DrugWarningsQuery($chemblId: String!) {
+    query DrugWarningsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
-    drugWarnings(page: {index: 0, size: 10000}) {
+    drugWarnings(page: {index: $index, size: $size}) {
       count
       rows {
+        id
         warningType
         description
         toxicityClass
