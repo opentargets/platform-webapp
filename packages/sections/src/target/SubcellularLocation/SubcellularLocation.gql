@@ -1,4 +1,4 @@
-query SubcellularLocation($ensemblId: String!) {
+query TargetSubcellularLocationQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     subcellularLocations {

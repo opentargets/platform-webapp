@@ -445,6 +445,8 @@ export type ClinicalReport = {
 
 export type ClinicalReportDrugListItem = {
   __typename?: 'ClinicalReportDrugListItem';
+  /** Drug in the clinical report. */
+  drug: Drug;
   /** Drug name as reported in the source. */
   drugFromSource: Scalars['String']['output'];
 };
@@ -487,6 +489,30 @@ export enum ClinicalStage {
   /** The drug has been Withdrawn. */
   Withdrawal = 'WITHDRAWAL'
 }
+
+/**
+ * Target-drug associations derived from clinical reports, capturing the maximum clinical stage and
+ * associated diseases for each target-drug pair.
+ */
+export type ClinicalTargetFromTarget = {
+  __typename?: 'ClinicalTargetFromTarget';
+  /** Reports related with the drug in question. */
+  clinicalReports: Array<ClinicalReport>;
+  /** Diseases associated with the clinical reports linked to the drug in question. */
+  diseases: Array<ClinicalDiseaseListItem>;
+  /** Drug or clinical candidate entity. */
+  drug: Drug;
+  /** Hash between drugId and targetId. */
+  id: Scalars['String']['output'];
+  maxClinicalStage: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type ClinicalTargetPage = {
+  __typename?: 'ClinicalTargetPage';
+  count: Scalars['Int']['output'];
+  rows: Array<ClinicalTargetFromTarget>;
+};
 
 /**
  * GWAS-GWAS and GWAS-molQTL credible set colocalisation results. Dataset includes colocalising
@@ -920,7 +946,7 @@ export type Disease = {
   /** List of synonyms for the disease. */
   synonyms: Array<DiseaseSynonym>;
   /** List of major therapeutic areas the disease belongs to. */
-  therapeuticAreas: Array<Scalars['String']['output']>;
+  therapeuticAreas: Array<Disease>;
 };
 
 
@@ -935,6 +961,7 @@ export type DiseaseAssociatedTargetsArgs = {
   Bs?: Array<Scalars['String']['input']>;
   datasourcePolicyOverrides?: Array<DatasourcePolicyOverride>;
   facetFilters?: Array<Scalars['String']['input']>;
+  indirectWeight?: Scalars['Float']['input'];
   page?: Page;
   sort?: AssociationSort;
 };
@@ -1239,6 +1266,8 @@ export type DrugLiteratureOcurrencesArgs = {
  */
 export type DrugPharmacogenomicsArgs = {
   page?: Page;
+  search?: InputMaybe<PharmacogenomicsSearch>;
+  sort?: Array<PharmacogenomicsSort>;
 };
 
 
@@ -1326,7 +1355,7 @@ export type DrugWarningReference = {
 /** Drug with drug identifiers. */
 export type DrugWithIdentifiers = {
   __typename?: 'DrugWithIdentifiers';
-  /** Drug or clinical candidate entity */
+  /** Drug or clinical candidate entity. */
   drug?: Maybe<Drug>;
   /** Drug identifier from the original data source. */
   drugFromSource: Scalars['String']['output'];
@@ -1337,6 +1366,8 @@ export type DrugWithIdentifiers = {
 /**
  * Regulatory enhancer/promoter regions to gene (target) predictions for
  * a specific tissue/cell type based on the integration of experimental sources.
+ *
+ * Field order must match the column list in `enhancer_to_gene.sql`.
  */
 export type EnhancerToGene = {
   __typename?: 'EnhancerToGene';
@@ -1379,8 +1410,53 @@ export type EnhancerToGenePage = {
   rows: Array<EnhancerToGene>;
 };
 
+/** Case-insensitive text search over enhancer-to-gene predictions. */
+export type EnhancerToGeneSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EnhancerToGeneSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum EnhancerToGeneSearchField {
+  BiosampleName = 'BIOSAMPLE_NAME',
+  IntervalType = 'INTERVAL_TYPE',
+  StudyId = 'STUDY_ID',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EnhancerToGeneSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EnhancerToGeneSortField;
+};
+
+/** Fields available for sorting enhancer-to-gene predictions. */
+export enum EnhancerToGeneSortField {
+  /** Distance from the regulatory region to the transcription start site. */
+  DistanceToTss = 'DISTANCE_TO_TSS',
+  /** Length of the regulatory region in base pairs. */
+  IntervalSize = 'INTERVAL_SIZE',
+  /** Type of regulatory region, alphabetically. */
+  IntervalType = 'INTERVAL_TYPE',
+  /** Combined prediction score. */
+  Score = 'SCORE'
+}
+
 /** Union of core Platform entities (target, disease, drug, variant, study). */
-export type EntityObject = Disease | Study;
+export type EntityObject = Disease | Drug | Study | Target | Variant;
+
+/** Kind of core Platform entity; used to select the search index to query. */
+export enum EntityType {
+  Disease = 'disease',
+  Drug = 'drug',
+  Study = 'study',
+  Target = 'target',
+  Variant = 'variant'
+}
 
 export type Evidence = {
   __typename?: 'Evidence';
@@ -1438,6 +1514,8 @@ export type Evidence = {
   confidence?: Maybe<Scalars['String']['output']>;
   /** Experiment contrast. */
   contrast?: Maybe<Scalars['String']['output']>;
+  /** Credible set (`StudyLocus`) supporting this evidence */
+  credibleSet?: Maybe<CredibleSet>;
   /** Applied screening library in the CRISPR/Cas9 project. */
   crisprScreenLibrary?: Maybe<Scalars['String']['output']>;
   /** Identifer of the evidence source. */
@@ -1590,6 +1668,8 @@ export type Evidence = {
    * reports, etc.).
    */
   urls: Array<LabelledUri>;
+  /** Variant supporting the relationship between the target and the disease. */
+  variant?: Maybe<Variant>;
   /** Descriptions of variant consequences at protein level. */
   variantAminoacidDescriptions: Array<Scalars['String']['output']>;
   /** Sequence ontology (SO) term of the functional consequence of the variant. */
@@ -1607,6 +1687,15 @@ export type EvidencePage = {
   __typename?: 'EvidencePage';
   count: Scalars['Int']['output'];
   rows: Array<Evidence>;
+};
+
+/** List of available evidence datasources and their datatypes. */
+export type EvidenceSource = {
+  __typename?: 'EvidenceSource';
+  /** Name of the evidence datasource. */
+  datasource: Scalars['String']['output'];
+  /** Datatype/category of the evidence (e.g., Genetic association, Somatic, Literature). */
+  datatype: Scalars['String']['output'];
 };
 
 /** Sentences of a publication supporting the disease/target relationship. */
@@ -1638,6 +1727,12 @@ export type EvidenceVariation = {
   /** Number of cohort samples in which target is mutated with a specific mutation type. */
   numberSamplesWithMutationType?: Maybe<Scalars['Int']['output']>;
 };
+
+/** Kind of entity that has a facet search index. */
+export enum FacetEntity {
+  Disease = 'disease',
+  Target = 'target'
+}
 
 /** The different product flavors served by the API (platform/ppp). */
 export enum Flavor {
@@ -1688,6 +1783,8 @@ export type GeneOntologyAnnotation = {
   geneProduct: Scalars['String']['output'];
   /** Source database and identifier where the ontology term was sourced from. */
   source: Scalars['String']['output'];
+  /** Gene ontology term */
+  term?: Maybe<GeneOntology>;
 };
 
 /** List of gene expression altering biomarkers. */
@@ -1851,6 +1948,15 @@ export type InteractionPage = {
   __typename?: 'InteractionPage';
   count: Scalars['Int']['output'];
   rows: Array<Interaction>;
+};
+
+/** Databases providing evidence for the interaction. */
+export type InteractionResource = {
+  __typename?: 'InteractionResource';
+  /** Version of the source database providing interaction evidence. */
+  databaseVersion: Scalars['String']['output'];
+  /** Name of the source database reporting the interaction evidence. */
+  sourceDatabase: Scalars['String']['output'];
 };
 
 /** Source database reporting the molecular interaction. */
@@ -2041,6 +2147,26 @@ export type LocusPage = {
   __typename?: 'LocusPage';
   count: Scalars['Int']['output'];
   rows: Array<Locus>;
+};
+
+/** Mapping result for a single input term. */
+export type MappingResult = {
+  __typename?: 'MappingResult';
+  /** Search hits that the term maps to, if any. */
+  hits?: Maybe<Array<SearchResult>>;
+  /** Input term submitted for mapping. */
+  term: Scalars['String']['output'];
+};
+
+/** Mapping results for multiple terms with total hit count and aggregations. */
+export type MappingResults = {
+  __typename?: 'MappingResults';
+  /** Facet aggregations over mapped entities and categories. */
+  aggregations?: Maybe<SearchResultAggs>;
+  /** Per-term mapping results. */
+  mappings: Array<MappingResult>;
+  /** Total number of mapped hits across all terms. */
+  total: Scalars['Int']['output'];
 };
 
 /** Mechanism of action information for a drug. */
@@ -2251,6 +2377,47 @@ export type PharmacogenomicsPage = {
   rows: Array<Pharmacogenomics>;
 };
 
+/** Case-insensitive text search over pharmacogenomics records. */
+export type PharmacogenomicsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<PharmacogenomicsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum PharmacogenomicsSearchField {
+  DrugFromSources = 'DRUG_FROM_SOURCES',
+  DrugIds = 'DRUG_IDS',
+  EvidenceLevel = 'EVIDENCE_LEVEL',
+  GenotypeAnnotationText = 'GENOTYPE_ANNOTATION_TEXT',
+  GenotypeId = 'GENOTYPE_ID',
+  HaplotypeFromSourceId = 'HAPLOTYPE_FROM_SOURCE_ID',
+  HaplotypeId = 'HAPLOTYPE_ID',
+  PgxCategory = 'PGX_CATEGORY',
+  PhenotypeFromSourceId = 'PHENOTYPE_FROM_SOURCE_ID',
+  PhenotypeText = 'PHENOTYPE_TEXT',
+  StudyId = 'STUDY_ID',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL',
+  TargetFromSourceId = 'TARGET_FROM_SOURCE_ID',
+  VariantFunctionalConsequenceLabel = 'VARIANT_FUNCTIONAL_CONSEQUENCE_LABEL',
+  VariantRsId = 'VARIANT_RS_ID'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type PharmacogenomicsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: PharmacogenomicsSortField;
+};
+
+/** Fields available for sorting pharmacogenomics records. */
+export enum PharmacogenomicsSortField {
+  /** Evidence level, strongest (1A) first when ascending. */
+  EvidenceLevel = 'EVIDENCE_LEVEL'
+}
+
 /** A container for all evidence-related attributes supporting the disease-phenotype association. */
 export type PhenotypeEvidence = {
   __typename?: 'PhenotypeEvidence';
@@ -2268,6 +2435,8 @@ export type PhenotypeEvidence = {
   evidenceType?: Maybe<Scalars['String']['output']>;
   /** The observed frequency of the phenotype in individuals with the disease. */
   frequency?: Maybe<Scalars['String']['output']>;
+  /** HPO Entity */
+  frequencyHPO?: Maybe<Hpo>;
   /** Additional characteristics or modifiers related to the phenotype. */
   modifiers: Array<Hpo>;
   /** Age or stage of disease onset for the phenotype. */
@@ -2383,6 +2552,8 @@ export type PublicationStats = {
 /** The query root for the `Platform` product. */
 export type Query = {
   __typename?: 'Query';
+  /** List of available evidence datasources and their datatypes. */
+  associationDatasources: Array<EvidenceSource>;
   /** Retrieve a clinical report by an identifier. */
   clinicalReport?: Maybe<ClinicalReport>;
   /** Retrieve a list of clinical reports by identifiers. */
@@ -2400,6 +2571,13 @@ export type Query = {
   drugs: DrugPage;
   /** Search sets of targets or diseases used to facet associations. */
   facets: SearchFacetsResults;
+  /** List of molecular interaction resources and their versions. */
+  interactionResources: Array<InteractionResource>;
+  /**
+   * Map terms to entities (targets, diseases, drugs, variants or studies) by exact keyword
+   * match.
+   */
+  mapIds: MappingResults;
   meta: Meta;
   /**
    * Full-text, multi-entity search across all types of entities (targets, diseases, drugs,
@@ -2417,6 +2595,8 @@ export type Query = {
    * indels (e.g. 19_44908684_T_C).
    */
   variant?: Maybe<Variant>;
+  variantCredibleSets: VariantCredibleSetPage;
+  variantTranscriptConsequences: VariantTranscriptConsequencePage;
   /**
    * Retrieve a list of variants by their identifier in the format of CHROM_POS_REF_ALT for SNPs
    * and short indels (e.g. 19_44908684_T_C).
@@ -2481,15 +2661,22 @@ export type QueryDrugsArgs = {
 /** The query root for the `Platform` product. */
 export type QueryFacetsArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
-  entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
+  entityNames?: InputMaybe<Array<FacetEntity>>;
   page?: Page;
   queryString: Scalars['String']['input'];
 };
 
 
 /** The query root for the `Platform` product. */
+export type QueryMapIdsArgs = {
+  entityNames?: InputMaybe<Array<EntityType>>;
+  queryTerms: Array<Scalars['String']['input']>;
+};
+
+
+/** The query root for the `Platform` product. */
 export type QuerySearchArgs = {
-  entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
+  entityNames?: InputMaybe<Array<EntityType>>;
   page?: Page;
   queryString: Scalars['String']['input'];
 };
@@ -2528,6 +2715,25 @@ export type QueryTargetsArgs = {
 
 /** The query root for the `Platform` product. */
 export type QueryVariantArgs = {
+  variantId: Scalars['String']['input'];
+};
+
+
+/** The query root for the `Platform` product. */
+export type QueryVariantCredibleSetsArgs = {
+  page?: Page;
+  search?: InputMaybe<VariantCredibleSetsSearch>;
+  sort?: Array<VariantCredibleSetsSort>;
+  studyTypes: Array<StudyType>;
+  variantId: Scalars['String']['input'];
+};
+
+
+/** The query root for the `Platform` product. */
+export type QueryVariantTranscriptConsequencesArgs = {
+  page?: Page;
+  search?: InputMaybe<VariantTranscriptConsequencesSearch>;
+  sort?: Array<VariantTranscriptConsequencesSort>;
   variantId: Scalars['String']['input'];
 };
 
@@ -2651,7 +2857,7 @@ export type SearchFacetResult = {
   /** Facet category this item belongs to (e.g., target, disease). */
   category: Scalars['String']['output'];
   /** Identifier of the datasource contributing this facet. */
-  datasourceId: Scalars['String']['output'];
+  datasourceId?: Maybe<Scalars['String']['output']>;
   /** Optional list of underlying entity identifiers represented by this facet. */
   entityIds: Array<Scalars['String']['output']>;
   /** Highlighted text snippets showing why this facet matched the query. */
@@ -2695,7 +2901,7 @@ export type SearchResult = {
   /** Short description or summary of the entity. */
   description?: Maybe<Scalars['String']['output']>;
   /** Entity type (target, disease, drug, variant, study). */
-  entity: Scalars['String']['output'];
+  entity: EntityType;
   /** Highlighted text snippets showing where the query matched. */
   highlights: Array<Scalars['String']['output']>;
   /** Entity identifier (e.g., Ensembl, EFO, ChEMBL, variant or study ID). */
@@ -2835,6 +3041,10 @@ export type Study = {
   SumstatQCValues: Array<SumStatQc>;
   /** Collection of flags indicating the type of the analysis conducted in the association study. */
   analysisFlags: Array<Scalars['String']['output']>;
+  /** Any background trait(s) shared by all individuals in the study. */
+  backgroundTraits: Array<Disease>;
+  /** Tissue or cell type in which the molQTL has been detected. */
+  biosample?: Maybe<Biosample>;
   /** List of cohort(s) represented in the discovery sample. */
   cohorts: Array<Scalars['String']['output']>;
   /** Reported sample conditions. */
@@ -2885,6 +3095,8 @@ export type Study = {
   studyType: StudyType;
   /** Path to the source study summary statistics (if exists at the source). */
   summarystatsLocation?: Maybe<Scalars['String']['output']>;
+  /** In molQTL studies, the gene under study for changes in expression, abundance, etc. */
+  target?: Maybe<Target>;
   /** Molecular or phenotypic trait, derived from source, analysed in the study. */
   traitFromSource: Scalars['String']['output'];
   /** Phenotypic trait IDs that map to the analysed trait reported by study. */
@@ -3061,6 +3273,8 @@ export type Target = {
    * Project. Gene effects below -1 can be considered dependencies.
    */
   depMapEssentiality: DepMapEssentialityPage;
+  /** Target-drug associations derived from clinical reports for this target. */
+  drugAndClinicalCandidates: ClinicalTargetPage;
   /**
    * Target-disease evidence from all data sources supporting associations between this target
    * and diseases or phenotypes. Evidence entries are reported and scored according to confidence
@@ -3162,6 +3376,7 @@ export type TargetAssociatedDiseasesArgs = {
   datasourcePolicyOverrides?: Array<DatasourcePolicyOverride>;
   facetFilters?: Array<Scalars['String']['input']>;
   includeMeasurements?: Scalars['Boolean']['input'];
+  indirectWeight?: Scalars['Float']['input'];
   page?: Page;
   sort?: AssociationSort;
 };
@@ -3212,6 +3427,17 @@ export type TargetCredibleSetsArgs = {
  * assemblies but encoding for a reviewed protein product according to the UniProt database.
  */
 export type TargetDepMapEssentialityArgs = {
+  page?: Page;
+};
+
+
+/**
+ * Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl
+ * database and uses the Ensembl gene ID as the primary identifier. An Ensembl gene ID is
+ * considered potential drug target if included in the canonical assembly or if present alternative
+ * assemblies but encoding for a reviewed protein product according to the UniProt database.
+ */
+export type TargetDrugAndClinicalCandidatesArgs = {
   page?: Page;
 };
 
@@ -3277,6 +3503,8 @@ export type TargetMousePhenotypesArgs = {
  */
 export type TargetPharmacogenomicsArgs = {
   page?: Page;
+  search?: InputMaybe<PharmacogenomicsSearch>;
+  sort?: Array<PharmacogenomicsSort>;
 };
 
 
@@ -3504,6 +3732,12 @@ export type Variant = {
   /** Cross-references for the variant in different databases. */
   dbXrefs: Array<DbXref>;
   enhancerToGene: EnhancerToGenePage;
+  /**
+   * Target-disease evidence from all data sources where this variant supports the association.
+   * Evidence entries report associations between targets (genes or proteins) and diseases or
+   * phenotypes, scored according to confidence in the association.
+   */
+  evidences: EvidencePage;
   /** HGVS identifier of the variant. */
   hgvsId?: Maybe<Scalars['String']['output']>;
   /**
@@ -3563,6 +3797,20 @@ export type VariantCredibleSetsArgs = {
  */
 export type VariantEnhancerToGeneArgs = {
   page?: Page;
+  search?: InputMaybe<EnhancerToGeneSearch>;
+  sort?: Array<EnhancerToGeneSort>;
+};
+
+
+/**
+ * Core variant information for all variants in the Platform.
+ * Variants are included if any phenotypic information is available for the variant,
+ * including GWAS or molQTL credible sets, ClinVar, Uniprot or ClinPGx.
+ * The dataset includes variant metadata as well as variant effects derived from Ensembl VEP.
+ */
+export type VariantEvidencesArgs = {
+  datasourceIds?: Array<Datasource>;
+  page?: Page;
 };
 
 
@@ -3574,6 +3822,8 @@ export type VariantEnhancerToGeneArgs = {
  */
 export type VariantPharmacogenomicsArgs = {
   page?: Page;
+  search?: InputMaybe<PharmacogenomicsSearch>;
+  sort?: Array<PharmacogenomicsSort>;
 };
 
 
@@ -3622,6 +3872,94 @@ export type VariantAnnotation = {
   literature?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * Rows are decoded by position, so field order must match the column order of the
+ * `variant_credible_sets` table. Update this struct if that table's columns change.
+ */
+export type VariantCredibleSet = {
+  __typename?: 'VariantCredibleSet';
+  beta?: Maybe<Scalars['Float']['output']>;
+  confidence: Scalars['String']['output'];
+  diseaseTherapeuticAreas: Array<VariantCredibleSetDisease>;
+  diseases: Array<VariantCredibleSetDisease>;
+  finemappingMethod: Scalars['String']['output'];
+  leadAlternateAllele: Scalars['String']['output'];
+  leadChromosome: Chromosome;
+  leadPosition: Scalars['Int']['output'];
+  leadReferenceAllele: Scalars['String']['output'];
+  leadVariantId: Scalars['String']['output'];
+  locusSize: Scalars['Int']['output'];
+  pValueExponent: Scalars['Int']['output'];
+  pValueMantissa: Scalars['Float']['output'];
+  posteriorProbability: Scalars['Float']['output'];
+  studyId: Scalars['String']['output'];
+  studyLocusId: Scalars['String']['output'];
+  studyType: StudyType;
+  topL2GApprovedSymbol: Scalars['String']['output'];
+  topL2GGeneId: Scalars['String']['output'];
+  topL2GScore: Scalars['Float']['output'];
+  traitFromSource: Scalars['String']['output'];
+  variantId: Scalars['String']['output'];
+};
+
+/** A disease (or therapeutic area) linked to a credible set. */
+export type VariantCredibleSetDisease = {
+  __typename?: 'VariantCredibleSetDisease';
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type VariantCredibleSetPage = {
+  __typename?: 'VariantCredibleSetPage';
+  count: Scalars['Int']['output'];
+  rows: Array<VariantCredibleSet>;
+};
+
+/** Case-insensitive text search over the credible sets. */
+export type VariantCredibleSetsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<VariantCredibleSetsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against.
+ *
+ * Leaves out `variantId` (the same on every row) and the alleles (single letters
+ * that would match almost every search).
+ */
+export enum VariantCredibleSetsSearchField {
+  Confidence = 'CONFIDENCE',
+  DiseaseIds = 'DISEASE_IDS',
+  DiseaseNames = 'DISEASE_NAMES',
+  DiseaseTherapeuticAreaIds = 'DISEASE_THERAPEUTIC_AREA_IDS',
+  DiseaseTherapeuticAreaNames = 'DISEASE_THERAPEUTIC_AREA_NAMES',
+  FinemappingMethod = 'FINEMAPPING_METHOD',
+  LeadVariantId = 'LEAD_VARIANT_ID',
+  StudyId = 'STUDY_ID',
+  StudyLocusId = 'STUDY_LOCUS_ID',
+  TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL',
+  TopL2GGeneId = 'TOP_L2G_GENE_ID',
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type VariantCredibleSetsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: VariantCredibleSetsSortField;
+};
+
+/** Fields available for sorting. */
+export enum VariantCredibleSetsSortField {
+  LeadVariant = 'LEAD_VARIANT',
+  PValue = 'P_VALUE',
+  TopL2GScore = 'TOP_L2G_SCORE'
+}
+
 /** Predicted or measured effect of the variant based on various methods. */
 export type VariantEffect = {
   __typename?: 'VariantEffect';
@@ -3645,6 +3983,90 @@ export type VariantPage = {
   count: Scalars['Int']['output'];
   rows: Array<Variant>;
 };
+
+/**
+ * Predicted consequence of a variant on one transcript.
+ *
+ * Field order must match the column list in `variant_transcript_consequences.sql`.
+ */
+export type VariantTranscriptConsequence = {
+  __typename?: 'VariantTranscriptConsequence';
+  /** Amino acid change caused by this variant on this gene. */
+  aminoAcidChange?: Maybe<Scalars['String']['output']>;
+  /** Affected codon in the transcript. */
+  codons?: Maybe<Scalars['String']['output']>;
+  /** Score assigned to transcript based on Ensembl VEP consequence. */
+  consequenceScore: Scalars['Float']['output'];
+  /** Distance of the variant from the transcript. */
+  distanceFromFootprint: Scalars['Int']['output'];
+  /** Distance of the variant from the transcription start site. */
+  distanceFromTss: Scalars['Int']['output'];
+  /** Ensembl VEP predicted impact of the variant on the transcript. */
+  impact?: Maybe<Scalars['String']['output']>;
+  /** Flagging if the transcript is the canonical transcript for the gene. */
+  isEnsemblCanonical: Scalars['Boolean']['output'];
+  /** Loss-of-function prediction based on LOFTEE. */
+  lofteePrediction?: Maybe<Scalars['String']['output']>;
+  /** Polyphen prediction of the variant impact on the transcript. */
+  polyphenPrediction?: Maybe<Scalars['Float']['output']>;
+  /** SIFT prediction of the variant impact on the transcript. */
+  siftPrediction?: Maybe<Scalars['Float']['output']>;
+  /** The target (gene/protein) associated with the transcript. */
+  target?: Maybe<Target>;
+  /** Ensembl transcript identifier [bioregistry:ensembl]. */
+  transcriptId?: Maybe<Scalars['String']['output']>;
+  /** Index of the transcript in the list of transcripts around the gene. */
+  transcriptIndex: Scalars['Int']['output'];
+  /** Uniprot identifiers of the gene product [bioregistry:uniprot]. */
+  uniprotAccessions: Array<Scalars['String']['output']>;
+  /**
+   * The sequence ontology terms of the consequence of the variant based on Ensembl VEP in the
+   * context of the transcript.
+   */
+  variantConsequences: Array<SequenceOntologyTerm>;
+  /** Variant identifier in CHROM_POS_REF_ALT notation. */
+  variantId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type VariantTranscriptConsequencePage = {
+  __typename?: 'VariantTranscriptConsequencePage';
+  count: Scalars['Int']['output'];
+  rows: Array<VariantTranscriptConsequence>;
+};
+
+/** Case-insensitive text search over the transcript consequences. */
+export type VariantTranscriptConsequencesSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<VariantTranscriptConsequencesSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum VariantTranscriptConsequencesSearchField {
+  Impact = 'IMPACT',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL',
+  VariantConsequenceLabels = 'VARIANT_CONSEQUENCE_LABELS'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type VariantTranscriptConsequencesSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: VariantTranscriptConsequencesSortField;
+};
+
+/** Fields available for sorting. */
+export enum VariantTranscriptConsequencesSortField {
+  /** Distance of the variant from the transcript. */
+  DistanceFromFootprint = 'DISTANCE_FROM_FOOTPRINT',
+  /** Distance of the variant from the transcription start site. */
+  DistanceFromTss = 'DISTANCE_FROM_TSS',
+  /** Approved gene symbol of the target. Rows without a target come last. */
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
+}
 
 /** Version information for the API and its underlying data sources. */
 export type Version = {
@@ -3675,11 +4097,11 @@ export type GeneEnrichmentAnalysisDiseaseAssociationsQueryVariables = Exact<{
   efoId: Scalars['String']['input'];
   index: Scalars['Int']['input'];
   size: Scalars['Int']['input'];
-  sortBy: Scalars['String']['input'];
-  datasources?: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
-  rowsFilter?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  facetFilters?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  entitySearch: Scalars['String']['input'];
+  sort: AssociationSort;
+  datasourcePolicyOverrides: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
+  rowsFilter: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  facetFilters: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  entitySearch?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -3689,11 +4111,11 @@ export type DiseaseAssociationsQueryVariables = Exact<{
   id: Scalars['String']['input'];
   index: Scalars['Int']['input'];
   size: Scalars['Int']['input'];
-  sortBy: Scalars['String']['input'];
-  datasources?: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
-  rowsFilter?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  facetFilters?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  entitySearch: Scalars['String']['input'];
+  sort: AssociationSort;
+  datasourcePolicyOverrides: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
+  rowsFilter: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  facetFilters: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  entitySearch?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -3708,20 +4130,38 @@ export type DiseasePageQuery = { __typename?: 'Query', disease?: { __typename?: 
 
 export type DiseaseProfileHeaderFragment = { __typename?: 'Disease', description?: string | null, synonyms: Array<{ __typename?: 'DiseaseSynonym', relation: string, terms: Array<string | null> }> };
 
+export type DrugPageQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+}>;
+
+
+export type DrugPageQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, name: string, crossReferences: Array<{ __typename?: 'DrugReferences', source: string, ids: Array<string> }> } | null };
+
+export type DrugProfileHeaderFragment = { __typename?: 'Drug', description?: string | null, drugType: string, maximumClinicalStage: string, synonyms: Array<{ __typename?: 'DrugLabelAndSource', label: string, source: string }>, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }>, tradeNames: Array<{ __typename?: 'DrugLabelAndSource', label: string, source: string }> };
+
 export type TargetAssociationsQueryVariables = Exact<{
   id: Scalars['String']['input'];
   index: Scalars['Int']['input'];
   size: Scalars['Int']['input'];
-  sortBy: Scalars['String']['input'];
-  datasources?: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
-  rowsFilter?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  facetFilters?: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  entitySearch: Scalars['String']['input'];
-  includeMeasurements?: Scalars['Boolean']['input'];
+  sort: AssociationSort;
+  datasourcePolicyOverrides: Array<DatasourcePolicyOverride> | DatasourcePolicyOverride;
+  rowsFilter: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  facetFilters: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  entitySearch?: InputMaybe<Scalars['String']['input']>;
+  includeMeasurements: Scalars['Boolean']['input'];
 }>;
 
 
 export type TargetAssociationsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, associatedDiseases: { __typename?: 'DiseaseAssociationPage', count: number, rows: Array<{ __typename?: 'DiseaseAssociation', score: number, disease?: { __typename?: 'Disease', id: string, name: string } | null, datasourceScores: Array<{ __typename?: 'Score', score: number, componentId: string }> }> } } | null };
+
+export type TargetPageQueryVariables = Exact<{
+  ensgId: Scalars['String']['input'];
+}>;
+
+
+export type TargetPageQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, approvedName: string, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }>, dbXrefs: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+
+export type TargetProfileHeaderFragment = { __typename?: 'Target', functionDescriptions: Array<string>, isEssential?: boolean | null, synonyms: Array<{ __typename?: 'LabelSource', label: string, source: string }>, genomicLocation: { __typename?: 'GenomicLocation', chromosome: string, start: number, end: number, strand: Strand }, canonicalTranscript: { __typename?: 'CanonicalTranscript', chromosome: string, start: number, end: number, strand: Strand } };
 
 export type DiseaseBibliographyQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3779,7 +4219,7 @@ export type OntologyQueryVariables = Exact<{
 
 export type OntologyQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, name: string, isTherapeuticArea: boolean, ancestors: Array<string>, parents: Array<{ __typename?: 'Disease', id: string }>, children: Array<{ __typename?: 'Disease', id: string, name: string, isTherapeuticArea: boolean, parents: Array<{ __typename?: 'Disease', id: string }> }> } | null };
 
-export type OntologySummaryFragment = { __typename?: 'Disease', id: string, name: string, isTherapeuticArea: boolean, therapeuticAreas: Array<string> };
+export type OntologySummaryFragment = { __typename?: 'Disease', id: string, name: string, isTherapeuticArea: boolean, therapeuticAreas: Array<{ __typename?: 'Disease', id: string }> };
 
 export type PhenotypesQueryVariables = Exact<{
   efoId: Scalars['String']['input'];
@@ -3791,6 +4231,17 @@ export type PhenotypesQueryVariables = Exact<{
 export type PhenotypesQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, phenotypes: { __typename?: 'DiseasePhenotypePage', count: number, rows: Array<{ __typename?: 'DiseasePhenotype', phenotypeHPO?: { __typename?: 'Hpo', id: string, name: string, description?: string | null, namespace: Array<string> } | null, phenotypeEFO?: { __typename?: 'Disease', id: string, name: string } | null, evidence: Array<{ __typename?: 'PhenotypeEvidence', aspect?: string | null, bioCuration?: string | null, diseaseFromSourceId: string, diseaseFromSource: string, evidenceType?: string | null, frequency?: string | null, qualifierNot: boolean, references: Array<string>, sex?: string | null, resource: string, onset: Array<{ __typename?: 'Hpo', name: string, id: string }>, modifiers: Array<{ __typename?: 'Hpo', name: string, id: string }> }> }> } } | null };
 
 export type PhenotypesSummaryFragment = { __typename?: 'Disease', phenotypes: { __typename?: 'DiseasePhenotypePage', count: number } };
+
+export type AdverseEventsQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+}>;
+
+
+export type AdverseEventsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, maxLlr?: { __typename?: 'AdverseEventPage', rows: Array<{ __typename?: 'AdverseEvent', logLR: number }> } | null, adverseEvents?: { __typename?: 'AdverseEventPage', count: number, stats: { __typename?: 'AdverseEventStats', criticalValue: number }, rows: Array<{ __typename?: 'AdverseEvent', name: string, count: number, logLR: number, meddraCode: string }> } | null } | null };
+
+export type AdverseEventsSummaryFragment = { __typename?: 'Drug', adverseEvents?: { __typename?: 'AdverseEventPage', count: number } | null };
 
 export type DrugBibliographyQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3811,6 +4262,57 @@ export type DrugBibliographyQuery = { __typename?: 'Query', drug?: { __typename?
 
 export type DrugBibliography = { __typename?: 'Drug', literatureOcurrences: { __typename?: 'PublicationPage', count: number } };
 
+export type DrugWarningsQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+}>;
+
+
+export type DrugWarningsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, drugWarnings: { __typename?: 'DrugWarningPage', count: number, rows: Array<{ __typename?: 'DrugWarning', id?: number | null, warningType: string, description?: string | null, toxicityClass?: string | null, country?: string | null, year?: number | null, efoTerm?: string | null, efoId?: string | null, efoIdForWarningClass?: string | null, references: Array<{ __typename?: 'DrugWarningReference', id: string, source: string, url: string }> }> } } | null };
+
+export type DrugWarningsSummaryFragment = { __typename?: 'Drug', drugWarnings: { __typename?: 'DrugWarningPage', count: number } };
+
+export type IndicationsQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+}>;
+
+
+export type IndicationsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, indications: { __typename?: 'ClinicalIndicationPage', count: number, rows: Array<{ __typename?: 'ClinicalIndication', id: string, maxClinicalStage: string, disease: { __typename?: 'Disease', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
+
+export type IndicationsSummaryFragment = { __typename?: 'Drug', indications: { __typename?: 'ClinicalIndicationPage', count: number } };
+
+export type MechanismsOfActionSectionQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+}>;
+
+
+export type MechanismsOfActionSectionQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string>, rows: Array<{ __typename?: 'MechanismOfActionRow', mechanismOfAction: string, targetName?: string | null, targets: Array<{ __typename?: 'Target', id: string, approvedSymbol: string }>, references: Array<{ __typename?: 'Reference', source: string, urls: Array<string> }> }> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> } | null };
+
+export type MechanismsOfActionSummaryFragment = { __typename?: 'Drug', mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> };
+
+export type DrugPharmacogenomicsQueryVariables = Exact<{
+  chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+}>;
+
+
+export type DrugPharmacogenomicsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number, rows: Array<{ __typename?: 'Pharmacogenomics', variantRsId?: string | null, genotypeId?: string | null, haplotypeId?: string | null, haplotypeFromSourceId?: string | null, isDirectTarget: boolean, phenotypeFromSourceId?: string | null, genotypeAnnotationText?: string | null, phenotypeText?: string | null, pgxCategory: string, evidenceLevel: string, studyId?: string | null, literature: Array<string>, variantAnnotation: Array<{ __typename?: 'VariantAnnotation', entity?: string | null, effect?: string | null, effectType?: string | null, effectDescription?: string | null, literature?: string | null, directionality?: string | null, baseAlleleOrGenotype?: string | null, comparisonAlleleOrGenotype?: string | null }>, variantFunctionalConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } } | null };
+
+export type DrugPharmacogenomicsSummaryFragment = { __typename?: 'Drug', pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number } };
+
+export type ExpressionQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type ExpressionQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, baselineExpression: { __typename?: 'BaselineExpressionPage', count: number, rows: Array<{ __typename?: 'BaselineExpression', tissueBiosampleFromSource?: string | null, celltypeBiosampleFromSource?: string | null, median?: number | null, datasourceId: string, datatypeId: string, unit: string, specificity_score?: number | null, distribution_score: number, tissueBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, tissueBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null }> } } | null };
+
+export type ExpressionSummaryFragment = { __typename?: 'Target', baselineExpression: { __typename?: 'BaselineExpressionPage', count: number } };
+
 export type TargetBibliographyQueryVariables = Exact<{
   id: Scalars['String']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -3829,6 +4331,125 @@ export type TargetBibliographyQueryVariables = Exact<{
 export type TargetBibliographyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedName: string, similarEntities: { __typename?: 'SimilarEntityPage', count: number, rows: Array<{ __typename?: 'Similarity', score: number, id: string, object?: { __typename?: 'Disease', id: string, name: string } | { __typename?: 'Drug', id: string, name: string } | { __typename?: 'Target', id: string, approvedSymbol: string } | null }> }, literatureOcurrences: { __typename?: 'PublicationPage', count: number, stats: { __typename?: 'PublicationStats', earliestPubDate: number }, rows: Array<{ __typename?: 'Publication', pmid: string, pmcid?: string | null, publicationDate: string }> } } | null };
 
 export type EntitiesSummaryFragment = { __typename?: 'Target', literatureOcurrences: { __typename?: 'PublicationPage', count: number } };
+
+export type HallmarksVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type Hallmarks = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, hallmarks: { __typename?: 'Hallmark', attributes: Array<{ __typename?: 'Attributes', name: string, pmid?: number | null, description: string }>, cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', pmid: number, impact?: string | null, description: string, label: string }> } } | null };
+
+export type CancerHallmarksSummaryFragment = { __typename?: 'Target', hallmarks: { __typename?: 'Hallmark', cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', impact?: string | null, label: string }> } };
+
+export type TargetChemicalProbesQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type TargetChemicalProbesQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, chemicalProbes: Array<{ __typename?: 'ChemicalProbe', id: string, control?: string | null, drugId?: string | null, isHighQuality: boolean, mechanismOfAction: Array<string>, origin: Array<string>, probesDrugsScore?: number | null, scoreInCells?: number | null, scoreInOrganisms?: number | null, targetFromSourceId: string, urls: Array<{ __typename?: 'Url', niceName: string, url?: string | null }> }> } | null };
+
+export type ChemicalProbesSummaryFragment = { __typename?: 'Target', chemicalProbes: Array<{ __typename?: 'ChemicalProbe', id: string }> };
+
+export type CompGenomicsVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type CompGenomics = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, homologues: Array<{ __typename?: 'Homologue', speciesId: string, speciesName: string, homologyType: string, isHighConfidence?: string | null, targetGeneId: string, targetGeneSymbol: string, queryPercentageIdentity: number, targetPercentageIdentity: number }> } | null };
+
+export type CompGenomicsSummaryFragment = { __typename?: 'Target', homologues: Array<{ __typename?: 'Homologue', homologyType: string }> };
+
+export type DepmapVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type Depmap = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number, rows: Array<{ __typename?: 'DepMapEssentiality', tissueName?: string | null, screens: Array<{ __typename?: 'GeneEssentialityScreen', depmapId?: string | null, cellLineName?: string | null, diseaseFromSource?: string | null, geneEffect?: number | null, expression?: number | null }> }> } } | null };
+
+export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number } };
+
+export type GeneticConstraintVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type GeneticConstraint = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, exp?: number | null, obs?: number | null, score?: number | null, oe?: number | null, oeLower?: number | null, oeUpper?: number | null, upperBin6?: number | null }> } | null };
+
+export type GeneticConstraintFragment = { __typename?: 'Target', geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, upperBin6?: number | null }> };
+
+export type ProtVistaQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type ProtVistaQuery = { __typename?: 'Query', target?: { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+
+export type TargetMolecularStructureSummaryFragment = { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> };
+
+export type MousePhenotypesVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type MousePhenotypes = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number, rows: Array<{ __typename?: 'MousePhenotype', targetInModel: string, targetInModelMgiId: string, modelPhenotypeId: string, modelPhenotypeLabel: string, modelPhenotypeClasses: Array<{ __typename?: 'ModelPhenotypeClasses', id: string, label: string }>, biologicalModels: Array<{ __typename?: 'BiologicalModels', id?: string | null, allelicComposition: string, geneticBackground: string, literature: Array<string> }> }> } } | null };
+
+export type MousePhenotypesSummaryFragment = { __typename?: 'Target', mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number } };
+
+export type PathwaysVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type Pathways = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string, pathway: string, topLevelTerm: string }> } | null };
+
+export type PathwaysSummaryFragment = { __typename?: 'Target', pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string }> };
+
+export type PharmacogenomicsQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type PharmacogenomicsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number, rows: Array<{ __typename?: 'Pharmacogenomics', variantRsId?: string | null, genotypeId?: string | null, haplotypeId?: string | null, haplotypeFromSourceId?: string | null, isDirectTarget: boolean, phenotypeFromSourceId?: string | null, genotypeAnnotationText?: string | null, phenotypeText?: string | null, pgxCategory: string, evidenceLevel: string, studyId?: string | null, literature: Array<string>, variantAnnotation: Array<{ __typename?: 'VariantAnnotation', entity?: string | null, effect?: string | null, effectType?: string | null, effectDescription?: string | null, literature?: string | null, directionality?: string | null, baseAlleleOrGenotype?: string | null, comparisonAlleleOrGenotype?: string | null }>, variantFunctionalConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null, drugs: Array<{ __typename?: 'DrugWithIdentifiers', drugId: string, drugFromSource: string }> }> } } | null };
+
+export type TargetPharmacogenomicsSummaryFragment = { __typename?: 'Target', pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number } };
+
+export type QtlCredibleSetsQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+  size: Scalars['Int']['input'];
+  index: Scalars['Int']['input'];
+}>;
+
+
+export type QtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null, locus: { __typename?: 'LocusPage', count: number } }> } } | null };
+
+export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
+
+export type TargetSafetyQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null, eventId?: string | null, datasource: string, literature?: string | null, biosamples: Array<{ __typename?: 'SafetyBiosamples', cellFormat?: string | null, cellLabel?: string | null, tissueLabel?: string | null, tissueId?: string | null }>, effects: Array<{ __typename?: 'SafetyEffects', dosing?: string | null, direction: string }>, studies: Array<{ __typename?: 'SafetyStudies', name?: string | null, type?: string | null, description?: string | null }> }> } | null };
+
+export type SafetySummaryFragment = { __typename?: 'Target', safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null }> };
+
+export type SubcellularLocationVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type SubcellularLocation = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+
+export type SubcellularLocationFragment = { __typename?: 'Target', subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string }> };
+
+export type TargetTractabilityQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type TargetTractabilityQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, tractability: Array<{ __typename?: 'Tractability', value: boolean, modality: string, label: string }> } | null };
+
+export type TractabilitySummaryFragment = { __typename?: 'Target', id: string, tractability: Array<{ __typename?: 'Tractability', modality: string }> };
 
 export type ClinicalRecordsQueryVariables = Exact<{
   clinicalReportsIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -3853,6 +4474,51 @@ export const DiseaseProfileHeaderFragment = gql`
   }
 }
     `;
+export const DrugProfileHeaderFragment = gql`
+    fragment DrugProfileHeaderFragment on Drug {
+  description
+  drugType
+  synonyms {
+    label
+    source
+  }
+  parentMolecule {
+    id
+    name
+  }
+  childMolecules {
+    id
+    name
+  }
+  maximumClinicalStage
+  tradeNames {
+    label
+    source
+  }
+}
+    `;
+export const TargetProfileHeaderFragment = gql`
+    fragment TargetProfileHeaderFragment on Target {
+  synonyms {
+    label
+    source
+  }
+  functionDescriptions
+  isEssential
+  genomicLocation {
+    chromosome
+    start
+    end
+    strand
+  }
+  canonicalTranscript {
+    chromosome
+    start
+    end
+    strand
+  }
+}
+    `;
 export const DiseaseBibliography = gql`
     fragment DiseaseBibliography on Disease {
   literatureOcurrences(page: {index: 0, size: 1}) {
@@ -3872,12 +4538,21 @@ export const OntologySummaryFragment = gql`
   id
   name
   isTherapeuticArea
-  therapeuticAreas
+  therapeuticAreas {
+    id
+  }
 }
     `;
 export const PhenotypesSummaryFragment = gql`
     fragment PhenotypesSummaryFragment on Disease {
   phenotypes(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const AdverseEventsSummaryFragment = gql`
+    fragment AdverseEventsSummaryFragment on Drug {
+  adverseEvents(page: {index: 0, size: 1}) {
     count
   }
 }
@@ -3889,10 +4564,151 @@ export const DrugBibliography = gql`
   }
 }
     `;
+export const DrugWarningsSummaryFragment = gql`
+    fragment DrugWarningsSummaryFragment on Drug {
+  drugWarnings(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const IndicationsSummaryFragment = gql`
+    fragment IndicationsSummaryFragment on Drug {
+  indications(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const MechanismsOfActionSummaryFragment = gql`
+    fragment MechanismsOfActionSummaryFragment on Drug {
+  mechanismsOfAction {
+    uniqueActionTypes
+    uniqueTargetTypes
+  }
+  parentMolecule {
+    id
+    name
+  }
+  childMolecules {
+    id
+    name
+  }
+}
+    `;
+export const DrugPharmacogenomicsSummaryFragment = gql`
+    fragment DrugPharmacogenomicsSummaryFragment on Drug {
+  pharmacogenomics(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const ExpressionSummaryFragment = gql`
+    fragment ExpressionSummaryFragment on Target {
+  baselineExpression(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
 export const EntitiesSummaryFragment = gql`
     fragment EntitiesSummaryFragment on Target {
   literatureOcurrences(page: {index: 0, size: 1}) {
     count
+  }
+}
+    `;
+export const CancerHallmarksSummaryFragment = gql`
+    fragment CancerHallmarksSummaryFragment on Target {
+  hallmarks {
+    cancerHallmarks {
+      impact
+      label
+    }
+  }
+}
+    `;
+export const ChemicalProbesSummaryFragment = gql`
+    fragment ChemicalProbesSummaryFragment on Target {
+  chemicalProbes {
+    id
+  }
+}
+    `;
+export const CompGenomicsSummaryFragment = gql`
+    fragment CompGenomicsSummaryFragment on Target {
+  homologues {
+    homologyType
+  }
+}
+    `;
+export const DepmapSummaryFragment = gql`
+    fragment DepmapSummaryFragment on Target {
+  depMapEssentiality(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const GeneticConstraintFragment = gql`
+    fragment GeneticConstraintFragment on Target {
+  geneticConstraint {
+    constraintType
+    upperBin6
+  }
+}
+    `;
+export const TargetMolecularStructureSummaryFragment = gql`
+    fragment TargetMolecularStructureSummaryFragment on Target {
+  proteinIds {
+    id
+    source
+  }
+}
+    `;
+export const MousePhenotypesSummaryFragment = gql`
+    fragment MousePhenotypesSummaryFragment on Target {
+  mousePhenotypes(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const PathwaysSummaryFragment = gql`
+    fragment PathwaysSummaryFragment on Target {
+  pathways {
+    pathwayId
+  }
+}
+    `;
+export const TargetPharmacogenomicsSummaryFragment = gql`
+    fragment TargetPharmacogenomicsSummaryFragment on Target {
+  pharmacogenomics(page: {index: 0, size: 1}) {
+    count
+  }
+}
+    `;
+export const TargetQtlCredibleSetsSummaryFragment = gql`
+    fragment TargetQTLCredibleSetsSummaryFragment on Target {
+  credibleSets(page: {size: 1, index: 0}) {
+    count
+  }
+}
+    `;
+export const SafetySummaryFragment = gql`
+    fragment SafetySummaryFragment on Target {
+  safetyLiabilities {
+    event
+  }
+}
+    `;
+export const SubcellularLocationFragment = gql`
+    fragment SubcellularLocationFragment on Target {
+  subcellularLocations {
+    source
+  }
+}
+    `;
+export const TractabilitySummaryFragment = gql`
+    fragment TractabilitySummaryFragment on Target {
+  id
+  tractability {
+    modality
   }
 }
     `;
@@ -3955,14 +4771,14 @@ export const InteractionsSectionQueryDocument = gql`
 }
     `;
 export const GeneEnrichmentAnalysisDiseaseAssociationsQueryDocument = gql`
-    query GeneEnrichmentAnalysisDiseaseAssociationsQuery($efoId: String!, $index: Int!, $size: Int!, $sortBy: String!, $datasources: [DatasourcePolicyOverride!]! = [], $rowsFilter: [String!]! = [], $facetFilters: [String!]! = [], $entitySearch: String!) {
+    query GeneEnrichmentAnalysisDiseaseAssociationsQuery($efoId: String!, $index: Int!, $size: Int!, $sort: AssociationSort!, $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!, $rowsFilter: [String!]!, $facetFilters: [String!]!, $entitySearch: String) {
   disease(efoId: $efoId) {
     id
     name
     associatedTargets(
       page: {index: $index, size: $size}
-      sort: {key: $sortBy, direction: DESCENDING}
-      datasourcePolicyOverrides: $datasources
+      sort: $sort
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -3991,14 +4807,14 @@ export const GeneEnrichmentAnalysisDiseaseAssociationsQueryDocument = gql`
 }
     `;
 export const DiseaseAssociationsQueryDocument = gql`
-    query DiseaseAssociationsQuery($id: String!, $index: Int!, $size: Int!, $sortBy: String!, $datasources: [DatasourcePolicyOverride!]! = [], $rowsFilter: [String!]! = [], $facetFilters: [String!]! = [], $entitySearch: String!) {
+    query DiseaseAssociationsQuery($id: String!, $index: Int!, $size: Int!, $sort: AssociationSort!, $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!, $rowsFilter: [String!]!, $facetFilters: [String!]!, $entitySearch: String) {
   disease(efoId: $id) {
     id
     name
     associatedTargets(
       page: {index: $index, size: $size}
-      sort: {key: $sortBy, direction: DESCENDING}
-      datasourcePolicyOverrides: $datasources
+      sort: $sort
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -4035,15 +4851,27 @@ export const DiseasePageQueryDocument = gql`
   }
 }
     `;
+export const DrugPageQueryDocument = gql`
+    query DrugPageQuery($chemblId: String!) {
+  drug(chemblId: $chemblId) {
+    id
+    name
+    crossReferences {
+      source
+      ids
+    }
+  }
+}
+    `;
 export const TargetAssociationsQueryDocument = gql`
-    query TargetAssociationsQuery($id: String!, $index: Int!, $size: Int!, $sortBy: String!, $datasources: [DatasourcePolicyOverride!]! = [], $rowsFilter: [String!]! = [], $facetFilters: [String!]! = [], $entitySearch: String!, $includeMeasurements: Boolean! = false) {
+    query TargetAssociationsQuery($id: String!, $index: Int!, $size: Int!, $sort: AssociationSort!, $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!, $rowsFilter: [String!]!, $facetFilters: [String!]!, $entitySearch: String, $includeMeasurements: Boolean!) {
   target(ensemblId: $id) {
     id
     approvedSymbol
     associatedDiseases(
       page: {index: $index, size: $size}
-      sort: {key: $sortBy, direction: DESCENDING}
-      datasourcePolicyOverrides: $datasources
+      sort: $sort
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -4061,6 +4889,23 @@ export const TargetAssociationsQueryDocument = gql`
           score
         }
       }
+    }
+  }
+}
+    `;
+export const TargetPageQueryDocument = gql`
+    query TargetPageQuery($ensgId: String!) {
+  target(ensemblId: $ensgId) {
+    id
+    approvedSymbol
+    approvedName
+    proteinIds {
+      id
+      source
+    }
+    dbXrefs {
+      id
+      source
     }
   }
 }
@@ -4246,6 +5091,30 @@ export const PhenotypesQueryDocument = gql`
   }
 }
     `;
+export const AdverseEventsQueryDocument = gql`
+    query AdverseEventsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+  drug(chemblId: $chemblId) {
+    id
+    maxLlr: adverseEvents(page: {index: 0, size: 1}) {
+      rows {
+        logLR
+      }
+    }
+    adverseEvents(page: {index: $index, size: $size}) {
+      count
+      stats {
+        criticalValue
+      }
+      rows {
+        name
+        count
+        logLR
+        meddraCode
+      }
+    }
+  }
+}
+    `;
 export const DrugBibliographyQueryDocument = gql`
     query DrugBibliographyQuery($id: String!, $ids: [String!] = [], $startYear: Int = null, $startMonth: Int = null, $endYear: Int = null, $endMonth: Int = null, $threshold: Float = 0.5, $size: Int! = 15, $entityNames: [String!] = [], $index: Int! = 0, $pageSize: Int! = 5) {
   drug(chemblId: $id) {
@@ -4293,6 +5162,162 @@ export const DrugBibliographyQueryDocument = gql`
         pmid
         pmcid
         publicationDate
+      }
+    }
+  }
+}
+    `;
+export const DrugWarningsQueryDocument = gql`
+    query DrugWarningsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+  drug(chemblId: $chemblId) {
+    id
+    drugWarnings(page: {index: $index, size: $size}) {
+      count
+      rows {
+        id
+        warningType
+        description
+        toxicityClass
+        country
+        year
+        efoTerm
+        efoId
+        efoIdForWarningClass
+        references {
+          id
+          source
+          url
+        }
+      }
+    }
+  }
+}
+    `;
+export const IndicationsQueryDocument = gql`
+    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+  drug(chemblId: $chemblId) {
+    id
+    indications(page: {index: $index, size: $size}) {
+      count
+      rows {
+        id
+        maxClinicalStage
+        disease {
+          id
+          name
+        }
+        clinicalReports {
+          id
+        }
+      }
+    }
+  }
+}
+    `;
+export const MechanismsOfActionSectionQueryDocument = gql`
+    query MechanismsOfActionSectionQuery($chemblId: String!) {
+  drug(chemblId: $chemblId) {
+    id
+    mechanismsOfAction {
+      rows {
+        mechanismOfAction
+        targetName
+        targets {
+          id
+          approvedSymbol
+        }
+        references {
+          source
+          urls
+        }
+      }
+      uniqueActionTypes
+      uniqueTargetTypes
+    }
+    parentMolecule {
+      id
+      name
+    }
+    childMolecules {
+      id
+      name
+    }
+  }
+}
+    `;
+export const DrugPharmacogenomicsQueryDocument = gql`
+    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+  drug(chemblId: $chemblId) {
+    id
+    pharmacogenomics(page: {index: $index, size: $size}) {
+      count
+      rows {
+        variantAnnotation {
+          entity
+          effect
+          effectType
+          effectDescription
+          literature
+          directionality
+          baseAlleleOrGenotype
+          comparisonAlleleOrGenotype
+        }
+        variantRsId
+        genotypeId
+        variantFunctionalConsequence {
+          id
+          label
+        }
+        target {
+          id
+          approvedSymbol
+        }
+        haplotypeId
+        haplotypeFromSourceId
+        isDirectTarget
+        phenotypeFromSourceId
+        genotypeAnnotationText
+        phenotypeText
+        pgxCategory
+        evidenceLevel
+        studyId
+        literature
+      }
+    }
+  }
+}
+    `;
+export const ExpressionQueryDocument = gql`
+    query ExpressionQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    baselineExpression(page: {index: 0, size: 1500}) {
+      count
+      rows {
+        tissueBiosample {
+          biosampleId
+          biosampleName
+        }
+        tissueBiosampleParent {
+          biosampleId
+          biosampleName
+        }
+        tissueBiosampleFromSource
+        celltypeBiosample {
+          biosampleId
+          biosampleName
+        }
+        celltypeBiosampleParent {
+          biosampleId
+          biosampleName
+        }
+        celltypeBiosampleFromSource
+        median
+        datasourceId
+        datatypeId
+        specificity_score: specificityScore
+        distribution_score: distributionScore
+        unit
       }
     }
   }
@@ -4346,6 +5371,286 @@ export const TargetBibliographyQueryDocument = gql`
         pmcid
         publicationDate
       }
+    }
+  }
+}
+    `;
+export const HallmarksDocument = gql`
+    query Hallmarks($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    hallmarks {
+      attributes {
+        name
+        pmid
+        description
+      }
+      cancerHallmarks {
+        pmid
+        impact
+        description
+        label
+      }
+    }
+  }
+}
+    `;
+export const TargetChemicalProbesQueryDocument = gql`
+    query TargetChemicalProbesQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    chemicalProbes {
+      id
+      control
+      drugId
+      isHighQuality
+      mechanismOfAction
+      origin
+      probesDrugsScore
+      scoreInCells
+      scoreInOrganisms
+      targetFromSourceId
+      urls {
+        niceName
+        url
+      }
+    }
+  }
+}
+    `;
+export const CompGenomicsDocument = gql`
+    query CompGenomics($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    homologues {
+      speciesId
+      speciesName
+      homologyType
+      isHighConfidence
+      targetGeneId
+      targetGeneSymbol
+      queryPercentageIdentity
+      targetPercentageIdentity
+    }
+  }
+}
+    `;
+export const DepmapDocument = gql`
+    query Depmap($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    depMapEssentiality(page: {index: 0, size: 10000}) {
+      count
+      rows {
+        tissueName
+        screens {
+          depmapId
+          cellLineName
+          diseaseFromSource
+          geneEffect
+          expression
+        }
+      }
+    }
+  }
+}
+    `;
+export const GeneticConstraintDocument = gql`
+    query GeneticConstraint($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    geneticConstraint {
+      constraintType
+      exp
+      obs
+      score
+      oe
+      oeLower
+      oeUpper
+      upperBin6
+    }
+  }
+}
+    `;
+export const ProtVistaQueryDocument = gql`
+    query ProtVistaQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    proteinIds {
+      id
+      source
+    }
+  }
+}
+    `;
+export const MousePhenotypesDocument = gql`
+    query MousePhenotypes($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    mousePhenotypes(page: {index: 0, size: 10000}) {
+      count
+      rows {
+        targetInModel
+        targetInModelMgiId
+        modelPhenotypeId
+        modelPhenotypeLabel
+        modelPhenotypeClasses {
+          id
+          label
+        }
+        biologicalModels {
+          id
+          allelicComposition
+          geneticBackground
+          literature
+        }
+      }
+    }
+  }
+}
+    `;
+export const PathwaysDocument = gql`
+    query Pathways($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    approvedSymbol
+    pathways {
+      pathwayId
+      pathway
+      topLevelTerm
+    }
+  }
+}
+    `;
+export const PharmacogenomicsQueryDocument = gql`
+    query PharmacogenomicsQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    pharmacogenomics(page: {index: 0, size: 10000}) {
+      count
+      rows {
+        variantAnnotation {
+          entity
+          effect
+          effectType
+          effectDescription
+          literature
+          directionality
+          baseAlleleOrGenotype
+          comparisonAlleleOrGenotype
+        }
+        variantRsId
+        genotypeId
+        variantFunctionalConsequence {
+          id
+          label
+        }
+        haplotypeId
+        haplotypeFromSourceId
+        isDirectTarget
+        drugs {
+          drugId
+          drugFromSource
+        }
+        phenotypeFromSourceId
+        genotypeAnnotationText
+        phenotypeText
+        pgxCategory
+        evidenceLevel
+        studyId
+        literature
+      }
+    }
+  }
+}
+    `;
+export const QtlCredibleSetsQueryDocument = gql`
+    query QTLCredibleSetsQuery($ensemblId: String!, $size: Int!, $index: Int!) {
+  target(ensemblId: $ensemblId) {
+    id
+    approvedSymbol
+    credibleSets(page: {size: $size, index: $index}) {
+      count
+      rows {
+        studyLocusId
+        pValueMantissa
+        pValueExponent
+        beta
+        finemappingMethod
+        confidence
+        isTransQtl
+        variant {
+          id: variantId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+        }
+        study {
+          id
+          studyType
+          condition
+        }
+        locus {
+          count
+        }
+      }
+    }
+  }
+}
+    `;
+export const TargetSafetyQueryDocument = gql`
+    query TargetSafetyQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    safetyLiabilities {
+      event
+      eventId
+      biosamples {
+        cellFormat
+        cellLabel
+        tissueLabel
+        tissueId
+      }
+      effects {
+        dosing
+        direction
+      }
+      studies {
+        name
+        type
+        description
+      }
+      datasource
+      literature
+    }
+  }
+}
+    `;
+export const SubcellularLocationDocument = gql`
+    query SubcellularLocation($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    subcellularLocations {
+      source
+      location
+      termSL
+      targetModifier
+    }
+    proteinIds {
+      id
+      source
+    }
+  }
+}
+    `;
+export const TargetTractabilityQueryDocument = gql`
+    query TargetTractabilityQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    tractability {
+      value
+      modality
+      label
     }
   }
 }
@@ -4430,8 +5735,14 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     DiseasePageQuery(variables: DiseasePageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DiseasePageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<DiseasePageQuery>({ document: DiseasePageQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DiseasePageQuery', 'query', variables);
     },
+    DrugPageQuery(variables: DrugPageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugPageQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DrugPageQuery>({ document: DrugPageQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugPageQuery', 'query', variables);
+    },
     TargetAssociationsQuery(variables: TargetAssociationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetAssociationsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetAssociationsQuery>({ document: TargetAssociationsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetAssociationsQuery', 'query', variables);
+    },
+    TargetPageQuery(variables: TargetPageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetPageQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetPageQuery>({ document: TargetPageQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetPageQuery', 'query', variables);
     },
     DiseaseBibliographyQuery(variables: DiseaseBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DiseaseBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<DiseaseBibliographyQuery>({ document: DiseaseBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DiseaseBibliographyQuery', 'query', variables);
@@ -4451,11 +5762,68 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     PhenotypesQuery(variables: PhenotypesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<PhenotypesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PhenotypesQuery>({ document: PhenotypesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'PhenotypesQuery', 'query', variables);
     },
+    AdverseEventsQuery(variables: AdverseEventsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<AdverseEventsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<AdverseEventsQuery>({ document: AdverseEventsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'AdverseEventsQuery', 'query', variables);
+    },
     DrugBibliographyQuery(variables: DrugBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<DrugBibliographyQuery>({ document: DrugBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugBibliographyQuery', 'query', variables);
     },
+    DrugWarningsQuery(variables: DrugWarningsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugWarningsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DrugWarningsQuery>({ document: DrugWarningsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugWarningsQuery', 'query', variables);
+    },
+    IndicationsQuery(variables: IndicationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<IndicationsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<IndicationsQuery>({ document: IndicationsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'IndicationsQuery', 'query', variables);
+    },
+    MechanismsOfActionSectionQuery(variables: MechanismsOfActionSectionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MechanismsOfActionSectionQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<MechanismsOfActionSectionQuery>({ document: MechanismsOfActionSectionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MechanismsOfActionSectionQuery', 'query', variables);
+    },
+    DrugPharmacogenomicsQuery(variables: DrugPharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugPharmacogenomicsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DrugPharmacogenomicsQuery>({ document: DrugPharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugPharmacogenomicsQuery', 'query', variables);
+    },
+    ExpressionQuery(variables: ExpressionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ExpressionQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<ExpressionQuery>({ document: ExpressionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ExpressionQuery', 'query', variables);
+    },
     TargetBibliographyQuery(variables: TargetBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetBibliographyQuery>({ document: TargetBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetBibliographyQuery', 'query', variables);
+    },
+    Hallmarks(variables: HallmarksVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Hallmarks> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Hallmarks>({ document: HallmarksDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Hallmarks', 'query', variables);
+    },
+    TargetChemicalProbesQuery(variables: TargetChemicalProbesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetChemicalProbesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetChemicalProbesQuery>({ document: TargetChemicalProbesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetChemicalProbesQuery', 'query', variables);
+    },
+    CompGenomics(variables: CompGenomicsVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CompGenomics> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CompGenomics>({ document: CompGenomicsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CompGenomics', 'query', variables);
+    },
+    Depmap(variables: DepmapVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Depmap> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Depmap>({ document: DepmapDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Depmap', 'query', variables);
+    },
+    GeneticConstraint(variables: GeneticConstraintVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GeneticConstraint> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GeneticConstraint>({ document: GeneticConstraintDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GeneticConstraint', 'query', variables);
+    },
+    ProtVistaQuery(variables: ProtVistaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ProtVistaQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<ProtVistaQuery>({ document: ProtVistaQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ProtVistaQuery', 'query', variables);
+    },
+    MousePhenotypes(variables: MousePhenotypesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MousePhenotypes> {
+      return withWrapper((wrappedRequestHeaders) => client.request<MousePhenotypes>({ document: MousePhenotypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MousePhenotypes', 'query', variables);
+    },
+    Pathways(variables: PathwaysVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Pathways> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Pathways>({ document: PathwaysDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Pathways', 'query', variables);
+    },
+    PharmacogenomicsQuery(variables: PharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<PharmacogenomicsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PharmacogenomicsQuery>({ document: PharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'PharmacogenomicsQuery', 'query', variables);
+    },
+    QTLCredibleSetsQuery(variables: QtlCredibleSetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<QtlCredibleSetsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<QtlCredibleSetsQuery>({ document: QtlCredibleSetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'QTLCredibleSetsQuery', 'query', variables);
+    },
+    TargetSafetyQuery(variables: TargetSafetyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSafetyQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetSafetyQuery>({ document: TargetSafetyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSafetyQuery', 'query', variables);
+    },
+    SubcellularLocation(variables: SubcellularLocationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SubcellularLocation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SubcellularLocation>({ document: SubcellularLocationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SubcellularLocation', 'query', variables);
+    },
+    TargetTractabilityQuery(variables: TargetTractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetTractabilityQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetTractabilityQuery>({ document: TargetTractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetTractabilityQuery', 'query', variables);
     },
     ClinicalRecordsQuery(variables: ClinicalRecordsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ClinicalRecordsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ClinicalRecordsQuery>({ document: ClinicalRecordsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ClinicalRecordsQuery', 'query', variables);

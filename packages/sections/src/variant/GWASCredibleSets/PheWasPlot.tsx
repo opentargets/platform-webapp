@@ -52,7 +52,7 @@ function PheWasPlot({
     let bestId = null;
     let bestRank = Infinity;
     const areaIds = row.study.diseases.flatMap((d) => {
-      return d.therapeuticAreas;
+      return d.therapeuticAreas.map((area: { id: string }) => area.id);
     });
     for (const id of areaIds) {
       const rank = therapeuticPriorities[id]?.rank;

@@ -2,5 +2,7 @@ fragment OntologySummaryFragment on Disease {
   id
   name
   isTherapeuticArea
-  therapeuticAreas
+  therapeuticAreas {
+    id
+  }
 }

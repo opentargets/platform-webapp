@@ -3,7 +3,7 @@ query UniProtVariantsQuery($variantId: String!) {
     id
     referenceAllele
     alternateAllele
-    uniProtEvidences: evidences(datasourceIds: ["uniprot_variants"]) {
+    uniProtEvidences: evidences(datasourceIds: [uniprot_variants]) {
       count
       rows {
         targetFromSourceId

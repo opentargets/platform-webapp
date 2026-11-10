@@ -16,7 +16,9 @@ query GWASCredibleSetsPlotQuery($variantId: String!) {
         }
         study {
           diseases {
-            therapeuticAreas
+            therapeuticAreas {
+              id
+            }
           }
         }
       }

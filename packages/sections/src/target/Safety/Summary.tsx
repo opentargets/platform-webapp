@@ -1,3 +1,4 @@
+import type { SafetySummaryFragment } from "@ot/constants";
 import _ from "lodash";
 import { SummaryItem, usePlatformApi } from "ui";
 
@@ -11,7 +12,7 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => {
+      renderSummary={(data: SafetySummaryFragment) => {
         const uniqueEvents = _.uniqBy(data.safetyLiabilities, "event");
         return `${uniqueEvents.length} unique safety events`;
       }}
