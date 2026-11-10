@@ -4225,8 +4225,8 @@ export type PhenotypesSummaryFragment = { __typename?: 'Disease', phenotypes: { 
 
 export type AdverseEventsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
-  index?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
@@ -4389,7 +4389,7 @@ export const PhenotypesSummaryFragment = gql`
     `;
 export const AdverseEventsSummaryFragment = gql`
     fragment AdverseEventsSummaryFragment on Drug {
-  adverseEvents {
+  adverseEvents(page: {index: 0, size: 1}) {
     count
   }
 }
@@ -4808,7 +4808,7 @@ export const PhenotypesQueryDocument = gql`
 }
     `;
 export const AdverseEventsQueryDocument = gql`
-    query AdverseEventsQuery($chemblId: String!, $index: Int = 0, $size: Int = 10) {
+    query AdverseEventsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
     maxLlr: adverseEvents(page: {index: 0, size: 1}) {
@@ -4817,10 +4817,10 @@ export const AdverseEventsQueryDocument = gql`
       }
     }
     adverseEvents(page: {index: $index, size: $size}) {
+      count
       stats {
         criticalValue
       }
-      count
       rows {
         name
         count
