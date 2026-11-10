@@ -4284,12 +4284,14 @@ export type MechanismsOfActionSectionQuery = { __typename?: 'Query', drug?: { __
 
 export type MechanismsOfActionSummaryFragment = { __typename?: 'Drug', mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> };
 
-export type PharmacogenomicsQueryVariables = Exact<{
+export type DrugPharmacogenomicsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
-export type PharmacogenomicsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number, rows: Array<{ __typename?: 'Pharmacogenomics', variantRsId?: string | null, genotypeId?: string | null, haplotypeId?: string | null, haplotypeFromSourceId?: string | null, isDirectTarget: boolean, phenotypeFromSourceId?: string | null, genotypeAnnotationText?: string | null, phenotypeText?: string | null, pgxCategory: string, evidenceLevel: string, studyId?: string | null, literature: Array<string>, variantAnnotation: Array<{ __typename?: 'VariantAnnotation', entity?: string | null, effect?: string | null, effectType?: string | null, effectDescription?: string | null, literature?: string | null, directionality?: string | null, baseAlleleOrGenotype?: string | null, comparisonAlleleOrGenotype?: string | null }>, variantFunctionalConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } } | null };
+export type DrugPharmacogenomicsQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number, rows: Array<{ __typename?: 'Pharmacogenomics', variantRsId?: string | null, genotypeId?: string | null, haplotypeId?: string | null, haplotypeFromSourceId?: string | null, isDirectTarget: boolean, phenotypeFromSourceId?: string | null, genotypeAnnotationText?: string | null, phenotypeText?: string | null, pgxCategory: string, evidenceLevel: string, studyId?: string | null, literature: Array<string>, variantAnnotation: Array<{ __typename?: 'VariantAnnotation', entity?: string | null, effect?: string | null, effectType?: string | null, effectDescription?: string | null, literature?: string | null, directionality?: string | null, baseAlleleOrGenotype?: string | null, comparisonAlleleOrGenotype?: string | null }>, variantFunctionalConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } } | null };
 
 export type DrugPharmacogenomicsSummaryFragment = { __typename?: 'Drug', pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number } };
 
@@ -4963,11 +4965,11 @@ export const MechanismsOfActionSectionQueryDocument = gql`
   }
 }
     `;
-export const PharmacogenomicsQueryDocument = gql`
-    query PharmacogenomicsQuery($chemblId: String!) {
+export const DrugPharmacogenomicsQueryDocument = gql`
+    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
-    pharmacogenomics(page: {index: 0, size: 10000}) {
+    pharmacogenomics(page: {index: $index, size: $size}) {
       count
       rows {
         variantAnnotation {
@@ -5176,8 +5178,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     MechanismsOfActionSectionQuery(variables: MechanismsOfActionSectionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MechanismsOfActionSectionQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MechanismsOfActionSectionQuery>({ document: MechanismsOfActionSectionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MechanismsOfActionSectionQuery', 'query', variables);
     },
-    PharmacogenomicsQuery(variables: PharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<PharmacogenomicsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PharmacogenomicsQuery>({ document: PharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'PharmacogenomicsQuery', 'query', variables);
+    DrugPharmacogenomicsQuery(variables: DrugPharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugPharmacogenomicsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DrugPharmacogenomicsQuery>({ document: DrugPharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugPharmacogenomicsQuery', 'query', variables);
     },
     TargetBibliographyQuery(variables: TargetBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetBibliographyQuery>({ document: TargetBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetBibliographyQuery', 'query', variables);
