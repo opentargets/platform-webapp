@@ -4545,12 +4545,12 @@ export type TargetHomologuesQuery = { __typename?: 'Query', target?: { __typenam
 
 export type CompGenomicsSummaryFragment = { __typename?: 'Target', homologues: Array<{ __typename?: 'Homologue', homologyType: string }> };
 
-export type DepmapVariables = Exact<{
+export type TargetDepMapQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type Depmap = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number, rows: Array<{ __typename?: 'DepMapEssentiality', tissueName?: string | null, screens: Array<{ __typename?: 'GeneEssentialityScreen', depmapId?: string | null, cellLineName?: string | null, diseaseFromSource?: string | null, geneEffect?: number | null, expression?: number | null }> }> } } | null };
+export type TargetDepMapQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number, rows: Array<{ __typename?: 'DepMapEssentiality', tissueName?: string | null, screens: Array<{ __typename?: 'GeneEssentialityScreen', depmapId?: string | null, cellLineName?: string | null, diseaseFromSource?: string | null, geneEffect?: number | null, expression?: number | null }> }> } } | null };
 
 export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number } };
 
@@ -5621,8 +5621,8 @@ export const TargetHomologuesQueryDocument = gql`
   }
 }
     `;
-export const DepmapDocument = gql`
-    query Depmap($ensemblId: String!) {
+export const TargetDepMapQueryDocument = gql`
+    query TargetDepMapQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     depMapEssentiality(page: {index: 0, size: 10000}) {
@@ -5981,8 +5981,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetHomologuesQuery(variables: TargetHomologuesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetHomologuesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetHomologuesQuery>({ document: TargetHomologuesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetHomologuesQuery', 'query', variables);
     },
-    Depmap(variables: DepmapVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Depmap> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Depmap>({ document: DepmapDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Depmap', 'query', variables);
+    TargetDepMapQuery(variables: TargetDepMapQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetDepMapQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetDepMapQuery>({ document: TargetDepMapQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetDepMapQuery', 'query', variables);
     },
     TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
