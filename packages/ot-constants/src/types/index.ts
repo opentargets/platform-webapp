@@ -4601,12 +4601,14 @@ export type TargetMolecularStructureQuery = { __typename?: 'Query', target?: { _
 
 export type TargetMolecularStructureSummaryFragment = { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> };
 
-export type MousePhenotypesVariables = Exact<{
+export type TargetMousePhenotypesQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
-export type MousePhenotypes = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number, rows: Array<{ __typename?: 'MousePhenotype', targetInModel: string, targetInModelMgiId: string, modelPhenotypeId: string, modelPhenotypeLabel: string, modelPhenotypeClasses: Array<{ __typename?: 'ModelPhenotypeClasses', id: string, label: string }>, biologicalModels: Array<{ __typename?: 'BiologicalModels', id?: string | null, allelicComposition: string, geneticBackground: string, literature: Array<string> }> }> } } | null };
+export type TargetMousePhenotypesQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number, rows: Array<{ __typename?: 'MousePhenotype', targetInModel: string, targetInModelMgiId: string, modelPhenotypeId: string, modelPhenotypeLabel: string, modelPhenotypeClasses: Array<{ __typename?: 'ModelPhenotypeClasses', id: string, label: string }>, biologicalModels: Array<{ __typename?: 'BiologicalModels', id?: string | null, allelicComposition: string, geneticBackground: string, literature: Array<string> }> }> } } | null };
 
 export type MousePhenotypesSummaryFragment = { __typename?: 'Target', mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number } };
 
@@ -5806,11 +5808,11 @@ export const TargetMolecularStructureQueryDocument = gql`
   }
 }
     `;
-export const MousePhenotypesDocument = gql`
-    query MousePhenotypes($ensemblId: String!) {
+export const TargetMousePhenotypesQueryDocument = gql`
+    query TargetMousePhenotypesQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
-    mousePhenotypes(page: {index: 0, size: 10000}) {
+    mousePhenotypes(page: {index: $index, size: $size}) {
       count
       rows {
         targetInModel
@@ -6137,8 +6139,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetMolecularStructureQuery(variables: TargetMolecularStructureQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetMolecularStructureQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetMolecularStructureQuery>({ document: TargetMolecularStructureQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetMolecularStructureQuery', 'query', variables);
     },
-    MousePhenotypes(variables: MousePhenotypesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MousePhenotypes> {
-      return withWrapper((wrappedRequestHeaders) => client.request<MousePhenotypes>({ document: MousePhenotypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MousePhenotypes', 'query', variables);
+    TargetMousePhenotypesQuery(variables: TargetMousePhenotypesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetMousePhenotypesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetMousePhenotypesQuery>({ document: TargetMousePhenotypesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetMousePhenotypesQuery', 'query', variables);
     },
     TargetPathwaysQuery(variables: TargetPathwaysQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetPathwaysQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetPathwaysQuery>({ document: TargetPathwaysQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetPathwaysQuery', 'query', variables);
