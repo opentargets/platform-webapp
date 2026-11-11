@@ -94,6 +94,7 @@ function OtTable({
   query,
   variables,
   showColumnVisibilityControl = true,
+  initialColumnVisibility = {},
   showRowsPerPageControl = true,
   showPaginationAlways = true,
   loading,
@@ -136,6 +137,7 @@ function OtTable({
     },
     initialState: {
       sorting: getDefaultSortObj(sortBy, order),
+      columnVisibility: initialColumnVisibility,
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
