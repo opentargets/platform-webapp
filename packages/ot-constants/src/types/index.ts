@@ -4581,12 +4581,12 @@ export type MousePhenotypes = { __typename?: 'Query', target?: { __typename?: 'T
 
 export type MousePhenotypesSummaryFragment = { __typename?: 'Target', mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number } };
 
-export type PathwaysVariables = Exact<{
+export type TargetPathwaysQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type Pathways = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string, pathway: string, topLevelTerm: string }> } | null };
+export type TargetPathwaysQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string, pathway: string, topLevelTerm: string }> } | null };
 
 export type PathwaysSummaryFragment = { __typename?: 'Target', pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string }> };
 
@@ -5694,8 +5694,8 @@ export const MousePhenotypesDocument = gql`
   }
 }
     `;
-export const PathwaysDocument = gql`
-    query Pathways($ensemblId: String!) {
+export const TargetPathwaysQueryDocument = gql`
+    query TargetPathwaysQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol
@@ -5993,8 +5993,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     MousePhenotypes(variables: MousePhenotypesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MousePhenotypes> {
       return withWrapper((wrappedRequestHeaders) => client.request<MousePhenotypes>({ document: MousePhenotypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MousePhenotypes', 'query', variables);
     },
-    Pathways(variables: PathwaysVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Pathways> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Pathways>({ document: PathwaysDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Pathways', 'query', variables);
+    TargetPathwaysQuery(variables: TargetPathwaysQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetPathwaysQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetPathwaysQuery>({ document: TargetPathwaysQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetPathwaysQuery', 'query', variables);
     },
     PharmacogenomicsQuery(variables: PharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<PharmacogenomicsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PharmacogenomicsQuery>({ document: PharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'PharmacogenomicsQuery', 'query', variables);
