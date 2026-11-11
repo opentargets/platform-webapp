@@ -1,4 +1,9 @@
-query GWASCredibleSetsTableQuery($variantId: String!, $page: Page!) {
+query GWASCredibleSetsTableQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [VariantCredibleSetsSort!]! = []
+) {
   variant(variantId: $variantId) {
     variantId
     referenceAllele
@@ -7,7 +12,12 @@ query GWASCredibleSetsTableQuery($variantId: String!, $page: Page!) {
       count
     }
   }
-  gwasCredibleSetsByVariant(variantId: $variantId, page: $page) {
+  variantCredibleSets(
+    variantId: $variantId
+    page: { index: $index, size: $size }
+    sort: $sort
+    studyTypes: [gwas]
+  ) {
     count
     rows {
       studyLocusId
@@ -17,8 +27,10 @@ query GWASCredibleSetsTableQuery($variantId: String!, $page: Page!) {
       leadReferenceAllele
       leadAlternateAllele
       traitFromSource
-      diseaseIds
-      diseaseNames
+      diseases {
+        id
+        name
+      }
       studyId
       pValueMantissa
       pValueExponent

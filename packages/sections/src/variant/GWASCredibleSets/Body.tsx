@@ -3,7 +3,7 @@ import {
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTableOffsetPagination,
+  OtTableServer,
   Tooltip,
   ClinvarStars,
   L2GScoreIndicator,
@@ -17,25 +17,21 @@ import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
 import { mantissaExponentComparator, variantComparator, nullishComparator } from "@ot/utils";
 // import PheWasPlot from "./PheWasPlot";
-import { credsetConfidenceMap, naLabel } from "@ot/constants";
-import { useState } from "react";
+import {
+  credsetConfidenceMap,
+  naLabel,
+  SortDirection,
+  VariantCredibleSetsSortField,
+} from "@ot/constants";
+import { useQuery } from "@apollo/client";
+import type { SortingState } from "@tanstack/react-table";
 // import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
-// import { useQuery } from "@apollo/client";
 
 type getColumnsType = {
   id: string;
   referenceAllele: string;
   alternateAllele: string;
 };
-
-function getDiseases({ diseaseIds = [], diseaseNames = [] }) {
-  const count = Math.max(diseaseIds.length, diseaseNames.length);
-
-  return Array.from({ length: count }, (_, index) => ({
-    id: diseaseIds[index],
-    name: diseaseNames[index],
-  }));
-}
 
 function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
   return [
@@ -98,9 +94,8 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "disease",
       label: "Disease/phenotype",
-      filterValue: ({ diseaseNames }) => diseaseNames?.join(", "),
-      renderCell: row => {
-        const diseases = getDiseases(row);
+      filterValue: ({ diseases = [] }) => diseases.map(({ name }) => name).join(", "),
+      renderCell: ({ diseases = [] }) => {
         if (!diseases.length) return naLabel;
         return (
           <>
@@ -119,7 +114,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           </>
         );
       },
-      exportValue: ({ diseaseNames }) => diseaseNames?.join(", "),
+      exportValue: ({ diseases = [] }) => diseases.map(({ name }) => name).join(", "),
     },
     {
       id: "studyId",
@@ -163,7 +158,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       numeric: true,
       filterValue: false,
       tooltip: "Beta with respect to the ALT allele",
-      sortable: true,
       renderCell: ({ beta }) => {
         if (typeof beta !== "number") return naLabel;
         return beta.toPrecision(3);
@@ -187,7 +181,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
         </>
       ),
       comparator: (a, b) => a?.posteriorProbability - b?.posteriorProbability,
-      sortable: true,
       renderCell: ({ posteriorProbability }) =>
         typeof posteriorProbability === "number" ? posteriorProbability.toPrecision(3) : naLabel,
       exportValue: ({ posteriorProbability }) => posteriorProbability,
@@ -212,7 +205,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           for more details.
         </>
       ),
-      sortable: true,
       renderCell: ({ confidence }) => {
         if (!confidence) return naLabel;
         return (
@@ -281,7 +273,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "credibleSetSize",
       label: "Credible set size",
       comparator: (a, b) => a?.locusSize - b?.locusSize,
-      sortable: true,
       numeric: true,
       filterValue: false,
       renderCell: ({ locusSize }) => {
@@ -297,9 +288,30 @@ type BodyProps = {
   entity: string;
 };
 
+const PAGE_SIZE = 10;
+
+const SORT_FIELDS: Record<string, VariantCredibleSetsSortField | undefined> = {
+  leadVariant: VariantCredibleSetsSortField.LeadVariant,
+  pValue: VariantCredibleSetsSortField.PValue,
+  l2gScore: VariantCredibleSetsSortField.TopL2GScore,
+};
+
+function getSortVariables(sorting: SortingState) {
+  return {
+    sort: sorting.flatMap(({ id, desc }) => {
+      const key = SORT_FIELDS[id];
+      return key
+        ? [{ key, direction: desc ? SortDirection.Descending : SortDirection.Ascending }]
+        : [];
+    }),
+  };
+}
+
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(GWAS_CREDIBLE_SETS_TABLE_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   return (
     <SectionItem
@@ -327,14 +339,13 @@ function Body({ id, entity }: BodyProps) {
           alternateAllele: request.data?.variant.alternateAllele,
         });
         return (
-          <OtTableOffsetPagination
+          <OtTableServer
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-variant`}
-            entity="variant"
-            sectionName="gwasCredibleSets"
-            dataPath="gwasCredibleSetsByVariant"
-            setInitialRequestData={setRequest}
+            dataPath="variantCredibleSets"
+            pageSize={PAGE_SIZE}
             columns={columns}
+            getSortVariables={getSortVariables}
             query={GWAS_CREDIBLE_SETS_TABLE_QUERY}
             variables={variables}
           />
