@@ -1,6 +1,6 @@
 query GWASColocQuery {
   credibleSet(studyLocusId: "118db6d05cf67fe7668ee7bac1170fd3") {
-    colocalisation(studyTypes: [gwas]) {
+    colocalisation(filter: { studyTypes: [gwas] }) {
       count
       rows {
         otherStudyLocus {
@@ -12,7 +12,7 @@ query GWASColocQuery {
             publicationFirstAuthor
           }
           variant {
-            id
+            variantId
             chromosome
             position
             referenceAllele
