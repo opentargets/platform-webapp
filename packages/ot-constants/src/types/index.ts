@@ -4518,12 +4518,12 @@ export type TargetBibliographyQuery = { __typename?: 'Query', target?: { __typen
 
 export type EntitiesSummaryFragment = { __typename?: 'Target', literatureOcurrences: { __typename?: 'PublicationPage', count: number } };
 
-export type HallmarksVariables = Exact<{
+export type TargetHallmarksQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type Hallmarks = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, hallmarks: { __typename?: 'Hallmark', attributes: Array<{ __typename?: 'Attributes', name: string, pmid?: number | null, description: string }>, cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', pmid: number, impact?: string | null, description: string, label: string }> } } | null };
+export type TargetHallmarksQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, hallmarks: { __typename?: 'Hallmark', attributes: Array<{ __typename?: 'Attributes', name: string, pmid?: number | null, description: string }>, cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', pmid: number, impact?: string | null, description: string, label: string }> } } | null };
 
 export type CancerHallmarksSummaryFragment = { __typename?: 'Target', hallmarks: { __typename?: 'Hallmark', cancerHallmarks: Array<{ __typename?: 'CancerHallmarks', impact?: string | null, label: string }> } };
 
@@ -5561,8 +5561,8 @@ export const TargetBibliographyQueryDocument = gql`
   }
 }
     `;
-export const HallmarksDocument = gql`
-    query Hallmarks($ensemblId: String!) {
+export const TargetHallmarksQueryDocument = gql`
+    query TargetHallmarksQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     hallmarks {
@@ -5972,8 +5972,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetBibliographyQuery(variables: TargetBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetBibliographyQuery>({ document: TargetBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetBibliographyQuery', 'query', variables);
     },
-    Hallmarks(variables: HallmarksVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Hallmarks> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Hallmarks>({ document: HallmarksDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Hallmarks', 'query', variables);
+    TargetHallmarksQuery(variables: TargetHallmarksQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetHallmarksQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetHallmarksQuery>({ document: TargetHallmarksQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetHallmarksQuery', 'query', variables);
     },
     TargetChemicalProbesQuery(variables: TargetChemicalProbesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetChemicalProbesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetChemicalProbesQuery>({ document: TargetChemicalProbesQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetChemicalProbesQuery', 'query', variables);
