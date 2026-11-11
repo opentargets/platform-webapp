@@ -4554,12 +4554,12 @@ export type Depmap = { __typename?: 'Query', target?: { __typename?: 'Target', i
 
 export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number } };
 
-export type GeneticConstraintVariables = Exact<{
+export type TargetGeneticConstraintQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type GeneticConstraint = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, exp?: number | null, obs?: number | null, score?: number | null, oe?: number | null, oeLower?: number | null, oeUpper?: number | null, upperBin6?: number | null }> } | null };
+export type TargetGeneticConstraintQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, exp?: number | null, obs?: number | null, score?: number | null, oe?: number | null, oeLower?: number | null, oeUpper?: number | null, upperBin6?: number | null }> } | null };
 
 export type GeneticConstraintFragment = { __typename?: 'Target', geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, upperBin6?: number | null }> };
 
@@ -5641,8 +5641,8 @@ export const DepmapDocument = gql`
   }
 }
     `;
-export const GeneticConstraintDocument = gql`
-    query GeneticConstraint($ensemblId: String!) {
+export const TargetGeneticConstraintQueryDocument = gql`
+    query TargetGeneticConstraintQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     geneticConstraint {
@@ -5984,8 +5984,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     Depmap(variables: DepmapVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Depmap> {
       return withWrapper((wrappedRequestHeaders) => client.request<Depmap>({ document: DepmapDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Depmap', 'query', variables);
     },
-    GeneticConstraint(variables: GeneticConstraintVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GeneticConstraint> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GeneticConstraint>({ document: GeneticConstraintDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GeneticConstraint', 'query', variables);
+    TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
     },
     ProtVistaQuery(variables: ProtVistaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ProtVistaQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ProtVistaQuery>({ document: ProtVistaQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ProtVistaQuery', 'query', variables);
