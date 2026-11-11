@@ -4490,12 +4490,12 @@ export type DrugPharmacogenomicsQuery = { __typename?: 'Query', drug?: { __typen
 
 export type DrugPharmacogenomicsSummaryFragment = { __typename?: 'Drug', pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number } };
 
-export type ExpressionQueryVariables = Exact<{
+export type TargetExpressionQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type ExpressionQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, baselineExpression: { __typename?: 'BaselineExpressionPage', count: number, rows: Array<{ __typename?: 'BaselineExpression', tissueBiosampleFromSource?: string | null, celltypeBiosampleFromSource?: string | null, median?: number | null, datasourceId: string, datatypeId: string, unit: string, specificity_score?: number | null, distribution_score: number, tissueBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, tissueBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null }> } } | null };
+export type TargetExpressionQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, baselineExpression: { __typename?: 'BaselineExpressionPage', count: number, rows: Array<{ __typename?: 'BaselineExpression', tissueBiosampleFromSource?: string | null, celltypeBiosampleFromSource?: string | null, median?: number | null, datasourceId: string, datatypeId: string, unit: string, specificity_score?: number | null, distribution_score: number, tissueBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, tissueBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, celltypeBiosampleParent?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null }> } } | null };
 
 export type ExpressionSummaryFragment = { __typename?: 'Target', baselineExpression: { __typename?: 'BaselineExpressionPage', count: number } };
 
@@ -4563,12 +4563,12 @@ export type TargetGeneticConstraintQuery = { __typename?: 'Query', target?: { __
 
 export type GeneticConstraintFragment = { __typename?: 'Target', geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, upperBin6?: number | null }> };
 
-export type ProtVistaQueryVariables = Exact<{
+export type TargetMolecularStructureQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type ProtVistaQuery = { __typename?: 'Query', target?: { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+export type TargetMolecularStructureQuery = { __typename?: 'Query', target?: { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
 
 export type TargetMolecularStructureSummaryFragment = { __typename?: 'Target', proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> };
 
@@ -5473,8 +5473,8 @@ export const DrugPharmacogenomicsQueryDocument = gql`
   }
 }
     `;
-export const ExpressionQueryDocument = gql`
-    query ExpressionQuery($ensemblId: String!) {
+export const TargetExpressionQueryDocument = gql`
+    query TargetExpressionQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     baselineExpression(page: {index: 0, size: 1500}) {
@@ -5658,8 +5658,8 @@ export const TargetGeneticConstraintQueryDocument = gql`
   }
 }
     `;
-export const ProtVistaQueryDocument = gql`
-    query ProtVistaQuery($ensemblId: String!) {
+export const TargetMolecularStructureQueryDocument = gql`
+    query TargetMolecularStructureQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     proteinIds {
       id
@@ -5966,8 +5966,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     DrugPharmacogenomicsQuery(variables: DrugPharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DrugPharmacogenomicsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<DrugPharmacogenomicsQuery>({ document: DrugPharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DrugPharmacogenomicsQuery', 'query', variables);
     },
-    ExpressionQuery(variables: ExpressionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ExpressionQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<ExpressionQuery>({ document: ExpressionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ExpressionQuery', 'query', variables);
+    TargetExpressionQuery(variables: TargetExpressionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetExpressionQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetExpressionQuery>({ document: TargetExpressionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetExpressionQuery', 'query', variables);
     },
     TargetBibliographyQuery(variables: TargetBibliographyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetBibliographyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetBibliographyQuery>({ document: TargetBibliographyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetBibliographyQuery', 'query', variables);
@@ -5987,8 +5987,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
     },
-    ProtVistaQuery(variables: ProtVistaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ProtVistaQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<ProtVistaQuery>({ document: ProtVistaQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ProtVistaQuery', 'query', variables);
+    TargetMolecularStructureQuery(variables: TargetMolecularStructureQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetMolecularStructureQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetMolecularStructureQuery>({ document: TargetMolecularStructureQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetMolecularStructureQuery', 'query', variables);
     },
     MousePhenotypes(variables: MousePhenotypesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MousePhenotypes> {
       return withWrapper((wrappedRequestHeaders) => client.request<MousePhenotypes>({ document: MousePhenotypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MousePhenotypes', 'query', variables);
