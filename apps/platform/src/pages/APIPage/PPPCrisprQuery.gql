@@ -3,9 +3,8 @@ query APIPagePPPCrisprQuery{
     id
     OtCrisprSummary: evidences(
       ensemblIds: ["ENSG00000188906"]
-      enableIndirect: true
-      datasourceIds: ["ot_crispr"]
-      size: 3500
+      datasourceIds: [ot_crispr]
+      page: { index: 0, size: 3500 }
     ) {
       count
       rows {
