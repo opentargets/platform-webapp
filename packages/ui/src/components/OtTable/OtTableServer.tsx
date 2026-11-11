@@ -148,8 +148,8 @@ function getLoadingCells<Row>(columns: ColumnDef<Row>[]): ColumnDef<Row>[] {
  *   whole dataset once, sort it locally by the column's comparator or value,
  *   and paginate the result locally; clearing the sort returns to server
  *   pagination. A default `sortBy` therefore fetches the whole dataset on mount.
- * - `searchVariable` names the query variable that receives the global search
- *   text. When it is omitted (the API field has no search argument) a search
+ * - `searchFields` enables server-side search using the API's `{ text, fields }`
+ *   input. When it is omitted (the API field has no search argument), a search
  *   term makes the table fetch the whole dataset once, filter it locally with
  *   the same matcher as the client-side table, and paginate the matches
  *   locally; clearing the box returns to server pagination.
@@ -167,7 +167,7 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   sortBy,
   order,
   getSortVariables,
-  searchVariable,
+  searchFields,
   showGlobalFilter = true,
   globalFilterPlaceholderText,
   verticalHeaders = false,
@@ -206,7 +206,7 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
 
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
   const serverSorting = !!getSortVariables;
-  const serverSearch = !!searchVariable;
+  const serverSearch = searchFields !== undefined;
   const serverSearchTerm = serverSearch ? search.trim() : "";
   const localSearchTerm = serverSearch ? "" : search.trim();
   const localSearchMode = localSearchTerm.length > 0;
@@ -238,9 +238,15 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
       ...memoizedVariables,
       ...(getSortVariables && serverSortingState ? getSortVariables(serverSortingState) : {}),
       // omitted when empty so the first page shares its cache entry with the section's own query
-      ...(searchVariable && serverSearchTerm ? { [searchVariable]: serverSearchTerm } : {}),
+      ...(serverSearchTerm ? { search: { text: serverSearchTerm, fields: searchFields } } : {}),
     }),
-    [memoizedVariables, getSortVariables, serverSortingState, searchVariable, serverSearchTerm]
+    [
+      memoizedVariables,
+      getSortVariables,
+      serverSortingState,
+      searchFields,
+      serverSearchTerm,
+    ]
   );
 
   // local search and/or sort: the whole dataset filtered and ordered here, paginated here

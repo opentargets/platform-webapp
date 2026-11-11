@@ -1,4 +1,4 @@
-query Pathways($ensemblId: String!) {
+query TargetPathwaysQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol

@@ -185,9 +185,8 @@ export type OtTableServerProps<Row extends object, ServerRow extends object = Ro
   order?: "asc" | "desc";
   /** maps the react-table sorting state to query variables; enables server-side sorting */
   getSortVariables?: (sorting: SortingState) => Record<string, unknown>;
-  /** name of the query variable receiving the global search text (server-side search);
-   * without it a search term fetches the whole dataset once and filters it locally */
-  searchVariable?: string;
+  /** API search fields; enables server-side search with `{ text, fields }` input */
+  searchFields?: string[];
   showGlobalFilter?: boolean;
   globalFilterPlaceholderText?: string;
   verticalHeaders?: boolean;

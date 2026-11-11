@@ -939,6 +939,8 @@ export type Disease = {
    * integrated from multiple sources including EFO, MONDO and HPO.
    */
   phenotypes: DiseasePhenotypePage;
+  /** All ancestor diseases up to the top-level therapeutic area. */
+  resolvedAncestors: Array<Disease>;
   /** Semantically similar diseases based on a PubMed word embedding model. */
   similarEntities: SimilarEntityPage;
   /** List of studies associated with the disease. */
@@ -2586,8 +2588,12 @@ export type Query = {
   search: SearchResults;
   studies: StudyPage;
   study?: Maybe<Study>;
+  /** GWAS credible sets for a study. */
+  studyCredibleSets: StudyCredibleSetPage;
   /** Retrieve a target (gene/protein) by target identifier (e.g. ENSG00000139618). */
   target?: Maybe<Target>;
+  /** molQTL credible sets linked to a target. */
+  targetCredibleSets: TargetCredibleSetPage;
   /** Retrieve multiple targets by target identifiers. */
   targets: TargetPage;
   /**
@@ -2689,7 +2695,7 @@ export type QueryStudiesArgs = {
   filter?: InputMaybe<StudyFilter>;
   page?: Page;
   search?: InputMaybe<Scalars['String']['input']>;
-  sort: Array<StudySort>;
+  sort?: Array<StudySort>;
   studyIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -2701,8 +2707,27 @@ export type QueryStudyArgs = {
 
 
 /** The query root for the `Platform` product. */
+export type QueryStudyCredibleSetsArgs = {
+  page?: Page;
+  search?: InputMaybe<StudyCredibleSetsSearch>;
+  sort?: Array<StudyCredibleSetsSort>;
+  studyId: Scalars['String']['input'];
+};
+
+
+/** The query root for the `Platform` product. */
 export type QueryTargetArgs = {
   ensemblId: Scalars['String']['input'];
+};
+
+
+/** The query root for the `Platform` product. */
+export type QueryTargetCredibleSetsArgs = {
+  ensemblId: Scalars['String']['input'];
+  page?: Page;
+  search?: InputMaybe<TargetCredibleSetsSearch>;
+  sort?: Array<TargetCredibleSetsSort>;
+  studyTypes?: Array<StudyType>;
 };
 
 
@@ -3114,6 +3139,80 @@ export type Study = {
 export type StudyCredibleSetsArgs = {
   page?: Page;
 };
+
+/**
+ * A GWAS credible set, as shown in the study page's credible sets table.
+ *
+ * Rows are decoded by position, so field order must match the column order of the
+ * `study_credible_sets` table. Update this struct if that table's columns change.
+ */
+export type StudyCredibleSet = {
+  __typename?: 'StudyCredibleSet';
+  beta?: Maybe<Scalars['Float']['output']>;
+  confidence: Scalars['String']['output'];
+  finemappingMethod: Scalars['String']['output'];
+  leadAlternateAllele: Scalars['String']['output'];
+  leadChromosome: Chromosome;
+  leadPosition: Scalars['Int']['output'];
+  leadReferenceAllele: Scalars['String']['output'];
+  leadVariantId: Scalars['String']['output'];
+  /** Number of variants in the credible set. */
+  locusSize: Scalars['Int']['output'];
+  pValueExponent: Scalars['Int']['output'];
+  pValueMantissa: Scalars['Float']['output'];
+  studyId: Scalars['String']['output'];
+  studyLocusId: Scalars['String']['output'];
+  topL2GApprovedSymbol?: Maybe<Scalars['String']['output']>;
+  /** Null when the credible set has no L2G predictions. */
+  topL2GGeneId?: Maybe<Scalars['String']['output']>;
+  topL2GScore?: Maybe<Scalars['Float']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type StudyCredibleSetPage = {
+  __typename?: 'StudyCredibleSetPage';
+  count: Scalars['Int']['output'];
+  rows: Array<StudyCredibleSet>;
+};
+
+/** Case-insensitive text search over the credible sets. */
+export type StudyCredibleSetsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<StudyCredibleSetsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum StudyCredibleSetsSearchField {
+  FinemappingMethod = 'FINEMAPPING_METHOD',
+  LeadVariantId = 'LEAD_VARIANT_ID',
+  TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type StudyCredibleSetsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: StudyCredibleSetsSortField;
+};
+
+/** Fields available for sorting. */
+export enum StudyCredibleSetsSortField {
+  Beta = 'BETA',
+  /** Alphabetically. */
+  Confidence = 'CONFIDENCE',
+  /** By chromosome, then position, then alleles. */
+  LeadVariant = 'LEAD_VARIANT',
+  /** Number of variants in the credible set. */
+  LocusSize = 'LOCUS_SIZE',
+  /** By exponent, then mantissa. */
+  PValue = 'P_VALUE',
+  /** By the top L2G gene's symbol. */
+  TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL',
+  TopL2GScore = 'TOP_L2G_SCORE'
+}
 
 /** Filter for studies. */
 export type StudyFilter = {
@@ -3553,6 +3652,93 @@ export type TargetClass = {
   level: Scalars['String']['output'];
 };
 
+/**
+ * A molQTL credible set, as shown in the target page's credible sets table.
+ *
+ * Rows are decoded by position, so field order must match the column order of the
+ * `target_credible_sets` table. Update this struct if that table's columns change.
+ */
+export type TargetCredibleSet = {
+  __typename?: 'TargetCredibleSet';
+  beta?: Maybe<Scalars['Float']['output']>;
+  biosampleId?: Maybe<Scalars['String']['output']>;
+  /** Empty when the biosample is not in the biosample index. */
+  biosampleName: Scalars['String']['output'];
+  condition?: Maybe<Scalars['String']['output']>;
+  confidence: Scalars['String']['output'];
+  finemappingMethod: Scalars['String']['output'];
+  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  leadAlternateAllele: Scalars['String']['output'];
+  leadChromosome: Chromosome;
+  leadPosition: Scalars['Int']['output'];
+  leadReferenceAllele: Scalars['String']['output'];
+  leadVariantId: Scalars['String']['output'];
+  /** Number of variants in the credible set. */
+  locusSize: Scalars['Int']['output'];
+  pValueExponent: Scalars['Int']['output'];
+  pValueMantissa: Scalars['Float']['output'];
+  studyId: Scalars['String']['output'];
+  studyLocusId: Scalars['String']['output'];
+  studyType: StudyType;
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type TargetCredibleSetPage = {
+  __typename?: 'TargetCredibleSetPage';
+  count: Scalars['Int']['output'];
+  rows: Array<TargetCredibleSet>;
+};
+
+/** Case-insensitive text search over the credible sets. */
+export type TargetCredibleSetsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<TargetCredibleSetsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum TargetCredibleSetsSearchField {
+  BiosampleName = 'BIOSAMPLE_NAME',
+  Condition = 'CONDITION',
+  FinemappingMethod = 'FINEMAPPING_METHOD',
+  LeadVariantId = 'LEAD_VARIANT_ID',
+  StudyId = 'STUDY_ID',
+  StudyType = 'STUDY_TYPE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type TargetCredibleSetsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: TargetCredibleSetsSortField;
+};
+
+/** Fields available for sorting. */
+export enum TargetCredibleSetsSortField {
+  Beta = 'BETA',
+  /** Alphabetically by biosample (affected tissue/cell) name. */
+  BiosampleName = 'BIOSAMPLE_NAME',
+  /** Alphabetically. */
+  Condition = 'CONDITION',
+  /** Alphabetically. */
+  Confidence = 'CONFIDENCE',
+  /** Alphabetically. */
+  FinemappingMethod = 'FINEMAPPING_METHOD',
+  /** By chromosome, then position, then alleles. */
+  LeadVariant = 'LEAD_VARIANT',
+  /** Number of variants in the credible set. */
+  LocusSize = 'LOCUS_SIZE',
+  /** By exponent, then mantissa. */
+  PValue = 'P_VALUE',
+  /** Alphabetically by study ID. */
+  Study = 'STUDY',
+  /** Alphabetically by study type name. */
+  StudyType = 'STUDY_TYPE'
+}
+
 /** The result of a paginated query, containing the total number of items and the items. */
 export type TargetPage = {
   __typename?: 'TargetPage';
@@ -3895,9 +4081,9 @@ export type VariantCredibleSet = {
   studyId: Scalars['String']['output'];
   studyLocusId: Scalars['String']['output'];
   studyType: StudyType;
-  topL2GApprovedSymbol: Scalars['String']['output'];
-  topL2GGeneId: Scalars['String']['output'];
-  topL2GScore: Scalars['Float']['output'];
+  topL2GApprovedSymbol?: Maybe<Scalars['String']['output']>;
+  topL2GGeneId?: Maybe<Scalars['String']['output']>;
+  topL2GScore?: Maybe<Scalars['Float']['output']>;
   traitFromSource: Scalars['String']['output'];
   variantId: Scalars['String']['output'];
 };
@@ -4368,12 +4554,12 @@ export type Depmap = { __typename?: 'Query', target?: { __typename?: 'Target', i
 
 export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number } };
 
-export type GeneticConstraintVariables = Exact<{
+export type TargetGeneticConstraintQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type GeneticConstraint = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, exp?: number | null, obs?: number | null, score?: number | null, oe?: number | null, oeLower?: number | null, oeUpper?: number | null, upperBin6?: number | null }> } | null };
+export type TargetGeneticConstraintQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, exp?: number | null, obs?: number | null, score?: number | null, oe?: number | null, oeLower?: number | null, oeUpper?: number | null, upperBin6?: number | null }> } | null };
 
 export type GeneticConstraintFragment = { __typename?: 'Target', geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, upperBin6?: number | null }> };
 
@@ -4395,12 +4581,12 @@ export type MousePhenotypes = { __typename?: 'Query', target?: { __typename?: 'T
 
 export type MousePhenotypesSummaryFragment = { __typename?: 'Target', mousePhenotypes: { __typename?: 'MousePhenotypePage', count: number } };
 
-export type PathwaysVariables = Exact<{
+export type TargetPathwaysQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type Pathways = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string, pathway: string, topLevelTerm: string }> } | null };
+export type TargetPathwaysQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string, pathway: string, topLevelTerm: string }> } | null };
 
 export type PathwaysSummaryFragment = { __typename?: 'Target', pathways: Array<{ __typename?: 'ReactomePathway', pathwayId: string }> };
 
@@ -4433,12 +4619,12 @@ export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 
 
 export type SafetySummaryFragment = { __typename?: 'Target', safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null }> };
 
-export type SubcellularLocationVariables = Exact<{
+export type TargetSubcellularLocationQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
 
 
-export type SubcellularLocation = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
+export type TargetSubcellularLocationQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
 
 export type SubcellularLocationFragment = { __typename?: 'Target', subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string }> };
 
@@ -5455,8 +5641,8 @@ export const DepmapDocument = gql`
   }
 }
     `;
-export const GeneticConstraintDocument = gql`
-    query GeneticConstraint($ensemblId: String!) {
+export const TargetGeneticConstraintQueryDocument = gql`
+    query TargetGeneticConstraintQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     geneticConstraint {
@@ -5508,8 +5694,8 @@ export const MousePhenotypesDocument = gql`
   }
 }
     `;
-export const PathwaysDocument = gql`
-    query Pathways($ensemblId: String!) {
+export const TargetPathwaysQueryDocument = gql`
+    query TargetPathwaysQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol
@@ -5626,8 +5812,8 @@ export const TargetSafetyQueryDocument = gql`
   }
 }
     `;
-export const SubcellularLocationDocument = gql`
-    query SubcellularLocation($ensemblId: String!) {
+export const TargetSubcellularLocationQueryDocument = gql`
+    query TargetSubcellularLocationQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     subcellularLocations {
@@ -5798,8 +5984,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     Depmap(variables: DepmapVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Depmap> {
       return withWrapper((wrappedRequestHeaders) => client.request<Depmap>({ document: DepmapDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Depmap', 'query', variables);
     },
-    GeneticConstraint(variables: GeneticConstraintVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GeneticConstraint> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GeneticConstraint>({ document: GeneticConstraintDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GeneticConstraint', 'query', variables);
+    TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
     },
     ProtVistaQuery(variables: ProtVistaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ProtVistaQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ProtVistaQuery>({ document: ProtVistaQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ProtVistaQuery', 'query', variables);
@@ -5807,8 +5993,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     MousePhenotypes(variables: MousePhenotypesVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MousePhenotypes> {
       return withWrapper((wrappedRequestHeaders) => client.request<MousePhenotypes>({ document: MousePhenotypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MousePhenotypes', 'query', variables);
     },
-    Pathways(variables: PathwaysVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Pathways> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Pathways>({ document: PathwaysDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'Pathways', 'query', variables);
+    TargetPathwaysQuery(variables: TargetPathwaysQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetPathwaysQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetPathwaysQuery>({ document: TargetPathwaysQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetPathwaysQuery', 'query', variables);
     },
     PharmacogenomicsQuery(variables: PharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<PharmacogenomicsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PharmacogenomicsQuery>({ document: PharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'PharmacogenomicsQuery', 'query', variables);
@@ -5819,8 +6005,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetSafetyQuery(variables: TargetSafetyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSafetyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetSafetyQuery>({ document: TargetSafetyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSafetyQuery', 'query', variables);
     },
-    SubcellularLocation(variables: SubcellularLocationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SubcellularLocation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SubcellularLocation>({ document: SubcellularLocationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SubcellularLocation', 'query', variables);
+    TargetSubcellularLocationQuery(variables: TargetSubcellularLocationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSubcellularLocationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetSubcellularLocationQuery>({ document: TargetSubcellularLocationQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSubcellularLocationQuery', 'query', variables);
     },
     TargetTractabilityQuery(variables: TargetTractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetTractabilityQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetTractabilityQuery>({ document: TargetTractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetTractabilityQuery', 'query', variables);
