@@ -4563,6 +4563,35 @@ export type TargetGeneticConstraintQuery = { __typename?: 'Query', target?: { __
 
 export type GeneticConstraintFragment = { __typename?: 'Target', geneticConstraint: Array<{ __typename?: 'Constraint', constraintType: string, upperBin6?: number | null }> };
 
+export type TargetInteractionsQueryVariables = Exact<{
+  ensgId: Scalars['String']['input'];
+  sourceDatabase?: InputMaybe<InteractionSourceDatabase>;
+  index?: InputMaybe<Scalars['Int']['input']>;
+  size?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type TargetInteractionsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedName: string, approvedSymbol: string, interactions: { __typename?: 'InteractionPage', count: number, rows: Array<{ __typename?: 'Interaction', intA: string, intABiologicalRole: string, intB: string, intBBiologicalRole: string, score?: number | null, count: number, sourceDatabase: InteractionSourceDatabase, targetA?: { __typename?: 'Target', id: string, approvedSymbol: string } | null, speciesA: { __typename?: 'InteractionSpeciesA', mnemonic: string }, targetB?: { __typename?: 'Target', id: string, approvedSymbol: string } | null, speciesB: { __typename?: 'InteractionSpeciesB', mnemonic: string }, evidences: Array<{ __typename?: 'InteractionEvidence', evidenceScore?: number | null, hostOrganismScientificName?: string | null, interactionDetectionMethodMiIdentifier: string, interactionDetectionMethodShortName: string, interactionIdentifier?: string | null, interactionTypeShortName?: string | null, expansionMethodShortName?: string | null, pubmedId?: string | null, participantDetectionMethodA: Array<{ __typename?: 'ParticipantDetectionMethod', miIdentifier?: string | null, shortName?: string | null }>, participantDetectionMethodB: Array<{ __typename?: 'ParticipantDetectionMethod', miIdentifier?: string | null, shortName?: string | null }> }> }> } } | null };
+
+export type TargetInteractionsStatsQueryVariables = Exact<{
+  ensgId: Scalars['String']['input'];
+}>;
+
+
+export type TargetInteractionsStatsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, intact: { __typename?: 'InteractionPage', count: number }, signor: { __typename?: 'InteractionPage', count: number }, reactome: { __typename?: 'InteractionPage', count: number }, string: { __typename?: 'InteractionPage', count: number } } | null };
+
+export type TargetInteractionsStringQueryVariables = Exact<{
+  ensgId: Scalars['String']['input'];
+  sourceDatabase?: InputMaybe<InteractionSourceDatabase>;
+  index?: InputMaybe<Scalars['Int']['input']>;
+  size?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type TargetInteractionsStringQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, interactions: { __typename?: 'InteractionPage', count: number, rows: Array<{ __typename?: 'Interaction', intA: string, intB: string, score?: number | null, targetB?: { __typename?: 'Target', approvedSymbol: string, id: string } | null, evidences: Array<{ __typename?: 'InteractionEvidence', evidenceScore?: number | null, interactionDetectionMethodShortName: string }> }> } } | null };
+
+export type TargetMolecularInteractionsSummaryFragment = { __typename?: 'Target', interactions: { __typename?: 'InteractionPage', count: number } };
+
 export type TargetMolecularStructureQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
@@ -4837,6 +4866,13 @@ export const GeneticConstraintFragment = gql`
   geneticConstraint {
     constraintType
     upperBin6
+  }
+}
+    `;
+export const TargetMolecularInteractionsSummaryFragment = gql`
+    fragment TargetMolecularInteractionsSummaryFragment on Target {
+  interactions {
+    count
   }
 }
     `;
@@ -5658,6 +5694,108 @@ export const TargetGeneticConstraintQueryDocument = gql`
   }
 }
     `;
+export const TargetInteractionsQueryDocument = gql`
+    query TargetInteractionsQuery($ensgId: String!, $sourceDatabase: InteractionSourceDatabase, $index: Int = 0, $size: Int = 10) {
+  target(ensemblId: $ensgId) {
+    id
+    approvedName
+    approvedSymbol
+    interactions(
+      sourceDatabase: $sourceDatabase
+      page: {index: $index, size: $size}
+    ) {
+      count
+      rows {
+        intA
+        intABiologicalRole
+        targetA {
+          id
+          approvedSymbol
+        }
+        speciesA {
+          mnemonic
+        }
+        intB
+        intBBiologicalRole
+        targetB {
+          id
+          approvedSymbol
+        }
+        speciesB {
+          mnemonic
+        }
+        score
+        count
+        sourceDatabase
+        evidences {
+          evidenceScore
+          hostOrganismScientificName
+          interactionDetectionMethodMiIdentifier
+          interactionDetectionMethodShortName
+          interactionIdentifier
+          interactionTypeShortName
+          participantDetectionMethodA {
+            miIdentifier
+            shortName
+          }
+          participantDetectionMethodB {
+            miIdentifier
+            shortName
+          }
+          interactionDetectionMethodShortName
+          expansionMethodShortName
+          pubmedId
+        }
+      }
+    }
+  }
+}
+    `;
+export const TargetInteractionsStatsQueryDocument = gql`
+    query TargetInteractionsStatsQuery($ensgId: String!) {
+  target(ensemblId: $ensgId) {
+    id
+    intact: interactions(sourceDatabase: intact) {
+      count
+    }
+    signor: interactions(sourceDatabase: signor) {
+      count
+    }
+    reactome: interactions(sourceDatabase: reactome) {
+      count
+    }
+    string: interactions(sourceDatabase: string) {
+      count
+    }
+  }
+}
+    `;
+export const TargetInteractionsStringQueryDocument = gql`
+    query TargetInteractionsStringQuery($ensgId: String!, $sourceDatabase: InteractionSourceDatabase, $index: Int = 0, $size: Int = 10) {
+  target(ensemblId: $ensgId) {
+    id
+    interactions(
+      sourceDatabase: $sourceDatabase
+      page: {index: $index, size: $size}
+    ) {
+      count
+      rows {
+        intA
+        intB
+        targetB {
+          approvedSymbol
+          id
+        }
+        score
+        evidences {
+          evidenceScore
+          interactionDetectionMethodShortName
+        }
+      }
+    }
+  }
+}
+    `;
 export const TargetMolecularStructureQueryDocument = gql`
     query TargetMolecularStructureQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
@@ -5986,6 +6124,15 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
+    },
+    TargetInteractionsQuery(variables: TargetInteractionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetInteractionsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetInteractionsQuery>({ document: TargetInteractionsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetInteractionsQuery', 'query', variables);
+    },
+    TargetInteractionsStatsQuery(variables: TargetInteractionsStatsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetInteractionsStatsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetInteractionsStatsQuery>({ document: TargetInteractionsStatsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetInteractionsStatsQuery', 'query', variables);
+    },
+    TargetInteractionsStringQuery(variables: TargetInteractionsStringQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetInteractionsStringQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetInteractionsStringQuery>({ document: TargetInteractionsStringQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetInteractionsStringQuery', 'query', variables);
     },
     TargetMolecularStructureQuery(variables: TargetMolecularStructureQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetMolecularStructureQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetMolecularStructureQuery>({ document: TargetMolecularStructureQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetMolecularStructureQuery', 'query', variables);
