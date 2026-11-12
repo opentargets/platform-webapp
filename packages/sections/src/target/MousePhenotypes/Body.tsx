@@ -1,13 +1,28 @@
 import { useQuery } from "@apollo/client";
-import { Link, TableDrawer, OtTable, SectionItem } from "ui";
-
+import type {
+  TargetBodyProps,
+  TargetMousePhenotypesQuery,
+  TargetMousePhenotypesQueryVariables,
+} from "@ot/constants";
+import { Link, type OtTableColumn, OtTableServer, SectionItem, TableDrawer } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
-import Description from "./Description";
-import MOUSE_PHENOTYPES_QUERY from "./MousePhenotypes.gql";
 import AllelicCompositionDrawer from "./AllelicCompositionDrawer";
-import type { TargetBodyProps } from "@ot/constants";
+import Description from "./Description";
+import MOUSE_PHENOTYPES_QUERY_DOCUMENT from "./MousePhenotypes.gql";
 
-const columns = [
+const MOUSE_PHENOTYPES_QUERY = typedDocument<
+  TargetMousePhenotypesQuery,
+  TargetMousePhenotypesQueryVariables
+>(MOUSE_PHENOTYPES_QUERY_DOCUMENT);
+
+type MousePhenotypeRow = NonNullable<
+  TargetMousePhenotypesQuery["target"]
+>["mousePhenotypes"]["rows"][number];
+
+const PAGE_SIZE = 10;
+
+const columns: OtTableColumn<MousePhenotypeRow>[] = [
   {
     id: "targetInModel",
     label: "Mouse gene",
@@ -37,7 +52,7 @@ const columns = [
       return "categories";
     },
     renderCell: ({ modelPhenotypeClasses }) => {
-      const entries = modelPhenotypeClasses.map(phenotypeClass => ({
+      const entries = modelPhenotypeClasses.map((phenotypeClass) => ({
         name: phenotypeClass.label,
         url: `https://identifiers.org/${phenotypeClass.id}`,
         group: "Categories",
@@ -51,7 +66,7 @@ const columns = [
       );
     },
     exportValue: ({ modelPhenotypeClasses }) =>
-      modelPhenotypeClasses.map(phenotypeClass => phenotypeClass.label),
+      modelPhenotypeClasses.map((phenotypeClass) => phenotypeClass.label),
   },
   {
     id: "allelicComposition",
@@ -60,7 +75,7 @@ const columns = [
     renderCell: ({ biologicalModels }) => (
       <AllelicCompositionDrawer biologicalModels={biologicalModels} />
     ),
-    exportValue: ({ biologicalModels }) => biologicalModels.map(bm => bm.allelicComposition),
+    exportValue: ({ biologicalModels }) => biologicalModels.map((bm) => bm.allelicComposition),
   },
 ];
 
@@ -68,8 +83,10 @@ type Props = TargetBodyProps;
 
 function Body({ id, label: symbol, entity }: Props) {
   const variables = { ensemblId: id };
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(MOUSE_PHENOTYPES_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -79,15 +96,14 @@ function Body({ id, label: symbol, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => (
-        <OtTable
-          showGlobalFilter
+        <OtTableServer<MousePhenotypeRow>
+          columns={columns}
+          query={MOUSE_PHENOTYPES_QUERY}
+          variables={variables}
+          dataPath="target.mousePhenotypes"
+          pageSize={PAGE_SIZE}
           dataDownloader
           dataDownloaderFileStem={`${symbol}-mouse-phenotypes`}
-          columns={columns}
-          rows={request.data?.target.mousePhenotypes?.rows}
-          query={MOUSE_PHENOTYPES_QUERY.loc.source.body}
-          variables={variables}
-          loading={request.loading}
         />
       )}
     />

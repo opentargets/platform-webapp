@@ -1,4 +1,4 @@
-query TractabilityQuery($ensemblId: String!) {
+query TargetTractabilityQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     tractability {

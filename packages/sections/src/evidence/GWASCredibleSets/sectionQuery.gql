@@ -28,7 +28,7 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
             nSamples
           }
           variant {
-            id
+            variantId
             chromosome
             position
             referenceAllele

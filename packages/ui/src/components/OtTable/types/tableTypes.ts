@@ -24,7 +24,8 @@ declare module "@tanstack/table-core" {
 /** A column of an OtTable, as written by the sections */
 export type OtTableColumn<Row> = {
   id: string;
-  label: string;
+  /** header content; a plain string is also used as the export header unless `exportLabel` is set */
+  label: ReactNode;
   renderCell?: (row: Row) => ReactNode;
   /** value used for searching/sorting; defaults to the value at `id` (dot path) */
   filterValue?: (row: Row) => unknown;
@@ -73,6 +74,7 @@ export type OtTableProps = {
   query: DocumentNode;
   variables: Record<string, unknown>;
   showColumnVisibilityControl: boolean;
+  initialColumnVisibility?: Record<string, boolean>;
   showRowsPerPageControl: boolean;
   showPaginationAlways: boolean;
   loading: boolean;

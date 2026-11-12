@@ -1,3 +1,4 @@
+import type { ChemicalProbesSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data =>
-        data.chemicalProbes?.length > 0
+      renderSummary={(data: ChemicalProbesSummaryFragment) =>
+        data.chemicalProbes.length > 0
           ? `${data.chemicalProbes.length} chemical probe${
               data.chemicalProbes.length !== 1 ? "s" : ""
             }`
