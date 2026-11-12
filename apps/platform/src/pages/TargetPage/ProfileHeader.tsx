@@ -1,20 +1,20 @@
+import { useTheme } from "@mui/material/styles";
+import type { TargetProfileHeaderFragment } from "@ot/constants";
+import { clearDescriptionCodes } from "@ot/utils";
 import {
-  usePlatformApi,
   ProfileHeader as BaseProfileHeader,
-  ProfileChipList,
-  Field,
-  Tooltip,
   Box,
   Chip,
+  ProfileChipList,
+  Tooltip,
+  usePlatformApi,
 } from "ui";
-import { useTheme } from "@mui/material/styles";
-import TargetDescription from "./TargetDescription";
-
-import { clearDescriptionCodes } from "@ot/utils";
-
-import TARGET_PROFILE_HEADER_FRAGMENT from "./TargetProfileHeader.gql";
-import { getGenomicLocation } from "@ot/constants";
 import GenomicLocation from "ui/src/components/GenomicLocation";
+import TargetDescription from "./TargetDescription";
+import TARGET_PROFILE_HEADER_FRAGMENT from "./TargetProfileHeader.gql";
+
+type Synonym = TargetProfileHeaderFragment["synonyms"][number];
+type ParsedSynonym = { label: string; tooltip: string };
 
 /*
  * Target synonyms from the API have a "label" and a "source"
@@ -22,41 +22,39 @@ import GenomicLocation from "ui/src/components/GenomicLocation";
  * Parse synonyms to a unique list (label) where terms can have
  * multiple sources in a tooltip
  */
-const parseSynonyms = synonyms => {
-  const sources = {
+const parseSynonyms = (synonyms: Synonym[]): ParsedSynonym[] => {
+  const sources: Record<string, string> = {
     HGNC: "HGNC",
     uniprot: "UniProt",
     NCBI_entrez: "Entrez",
   };
   // Synonyms needs to be sorted by source in specific order
   // (order converted to a map for convenience when doing the sort)
-  const sortingOrder = ["HGNC", "uniprot", "NCBI_entrez"].reduce(
-    (acc, a, i) => ({ ...acc, [a]: i }),
-    {}
+  const sortingOrder: Record<string, number> = Object.fromEntries(
+    ["HGNC", "uniprot", "NCBI_entrez"].map((source, i) => [source, i])
   );
   const sortedSynonyms = synonyms
     .slice()
-    .sort((a, b) => sortingOrder[a.source] - sortingOrder[b.source]);
+    .sort((a, b) => (sortingOrder[a.source] ?? 0) - (sortingOrder[b.source] ?? 0));
 
-  const parsedSynonyms = [];
+  const parsedSynonyms: { label: string; sources: string[] }[] = [];
 
-  sortedSynonyms.forEach(s => {
+  for (const s of sortedSynonyms) {
     const thisSyn = parsedSynonyms.find(
-      parsedSynonym => parsedSynonym.label.toLowerCase() === s.label.toLowerCase()
+      (parsedSynonym) => parsedSynonym.label.toLowerCase() === s.label.toLowerCase()
     );
     if (!thisSyn) {
-      parsedSynonyms.push({ label: s.label, tooltip: [s.source] });
+      parsedSynonyms.push({ label: s.label, sources: [s.source] });
     } else {
       // if synonym already in the list add the source to its tooltip
-      thisSyn.tooltip.push(s.source);
+      thisSyn.sources.push(s.source);
     }
-  });
+  }
 
-  parsedSynonyms.forEach(syn => {
-    syn.tooltip = `Source: ${syn.tooltip.map(s => sources[s]).join(", ")}`;
-  });
-
-  return parsedSynonyms;
+  return parsedSynonyms.map((syn) => ({
+    label: syn.label,
+    tooltip: `Source: ${syn.sources.map((s) => sources[s] ?? s).join(", ")}`,
+  }));
 };
 
 function ProfileHeader() {
@@ -67,11 +65,13 @@ function ProfileHeader() {
   // TODO: Errors!
   if (error) return null;
 
+  const target: (TargetProfileHeaderFragment & { id: string }) | undefined = data?.target;
+
   const targetDescription = clearDescriptionCodes(
-    data?.target.functionDescriptions,
+    target?.functionDescriptions,
     theme.palette.primary.main
   );
-  const synonyms = parseSynonyms(data?.target.synonyms || []);
+  const synonyms = parseSynonyms(target?.synonyms ?? []);
 
   // geneInfo currently holds the details for the "core essential" chip,
   // however in the future it will hold information to display other chips
@@ -79,7 +79,7 @@ function ProfileHeader() {
     {
       label: "Core essential gene",
       tooltip: "Source: Cancer DepMap",
-      isVisible: data?.target.isEssential,
+      isVisible: target?.isEssential,
     },
   ];
 
@@ -89,11 +89,11 @@ function ProfileHeader() {
         <TargetDescription
           loading={loading}
           descriptions={targetDescription}
-          targetId={data?.target.id}
+          targetId={target?.id}
         />
         {geneInfo
-          .filter(gi => gi.isVisible)
-          .map(e => (
+          .filter((gi) => gi.isVisible)
+          .map((e) => (
             <Box key={e.label} sx={{ mt: 2 }} component="span">
               <Tooltip title={e.tooltip}>
                 <Chip
@@ -102,22 +102,19 @@ function ProfileHeader() {
                   label={e.label}
                   sx={{
                     borderRadius: "4px",
-                    backgroundColor: theme => theme.palette.primary.dark,
-                    color: theme => theme.palette.primary.contrastText,
+                    backgroundColor: (theme) => theme.palette.primary.dark,
+                    color: (theme) => theme.palette.primary.contrastText,
                   }}
                 />
               </Tooltip>
             </Box>
           ))}
-        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap:2 }}>
-          {data?.target.genomicLocation && (
-            <GenomicLocation label="Gene body" geneLoc={data?.target.genomicLocation} />
+        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 2 }}>
+          {target?.genomicLocation && (
+            <GenomicLocation label="Gene body" geneLoc={target.genomicLocation} />
           )}
-          {data?.target.canonicalTranscript && (
-            <GenomicLocation
-              label="Canonical transcript"
-              geneLoc={data?.target.canonicalTranscript}
-            />
+          {target?.canonicalTranscript && (
+            <GenomicLocation label="Canonical transcript" geneLoc={target.canonicalTranscript} />
           )}
         </Box>
       </>

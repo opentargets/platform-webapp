@@ -1,22 +1,23 @@
 import { gql } from "@apollo/client";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import type { ReactNode } from "react";
+import { Target, type Widget } from "sections";
 import {
   PlatformApiProvider,
   SectionContainer,
+  SectionsRenderer,
   StickyProfileHeader,
   SummaryContainer,
-  summaryUtils,
-  SectionsRenderer,
   SummaryRenderer,
+  summaryUtils,
 } from "ui";
-import { Target } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
-// Drugs and Genomic region are not in this map: the API no longer exposes
-// drugAndClinicalCandidates on Target, and has no region query
-const targetProfileWidgets = new Map<string, any>([
+// Genomic region and Overlapping variants are not in this map: the API has no
+// region query and no proteinCodingCoordinates on Target
+const targetProfileWidgets = new Map<string, Widget>([
+  [Target.Drugs.definition.id, Target.Drugs],
   [Target.Tractability.definition.id, Target.Tractability],
   [Target.Safety.definition.id, Target.Safety],
   [Target.Pharmacogenomics.definition.id, Target.Pharmacogenomics],
@@ -34,14 +35,11 @@ const targetProfileWidgets = new Map<string, any>([
   [Target.MousePhenotypes.definition.id, Target.MousePhenotypes],
   [Target.ComparativeGenomics.definition.id, Target.ComparativeGenomics],
   [Target.Bibliography.definition.id, Target.Bibliography],
-  // [Target.OverlappingVariants.definition.id, Target.OverlappingVariants],
 ]);
 
 const TARGET_WIDGETS = Array.from(targetProfileWidgets.values());
 
-const targetProfileWidgetsSummaries = Array.from(targetProfileWidgets.values()).map(
-  widget => widget.Summary
-);
+const targetProfileWidgetsSummaries = TARGET_WIDGETS.map((widget) => widget.Summary);
 
 const TARGET = "target";
 const TARGET_PROFILE_SUMMARY_FRAGMENT = summaryUtils.createSummaryFragment(
