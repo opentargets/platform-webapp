@@ -1,5 +1,5 @@
 fragment TargetQTLCredibleSetsSummaryFragment on Target {
-	credibleSets(page: { size: 1, index: 0 }) {
-		count
-	}
+  credibleSets(page: { size: 1, index: 0 }) {
+    count
+  }
 }
