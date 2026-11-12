@@ -13,6 +13,7 @@ import NodePopover, { PopoverNode } from './NodePopover';
 import GraphEdgeTooltip, { EdgeTooltipInfo } from './GraphEdgeTooltip';
 import useGraphLayout from '../hooks/useGraphLayout';
 import { GraphController, GraphPointerPosition } from '../hooks/useForceGraph';
+import type { GraphLayout } from '../types';
 
 interface GraphVisualizationProps {
   nodes: any[];
@@ -27,6 +28,8 @@ interface GraphVisualizationProps {
   inBasket: (id: string) => boolean;
   onToggleBasket: (id: string) => void;
   onControllerReady?: (controller: GraphController | null) => void;
+  /** Radial hub-and-spoke (default) or stacked category lanes */
+  layout?: GraphLayout;
 }
 
 interface HoveredNode extends PopoverNode {
@@ -47,6 +50,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   inBasket,
   onToggleBasket,
   onControllerReady,
+  layout = 'radial',
 }) => {
   const [hoveredNode, setHoveredNode] = useState<HoveredNode | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
@@ -158,6 +162,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         onEdgeHover={handleEdgeHover}
         onNodeHover={handleNodeHover}
         layoutConfig={layoutConfig}
+        layout={layout}
         onGraphReady={onControllerReady}
         sx={{ height: '100%' }}
       />

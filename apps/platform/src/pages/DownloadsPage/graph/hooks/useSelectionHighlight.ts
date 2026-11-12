@@ -15,7 +15,7 @@
 
 import { useEffect } from 'react';
 import * as d3 from 'd3';
-import { getLinkEndpointId, applyNodeGeometry, NodeVisualState } from '../utils/graphVisuals';
+import { getLinkEndpointId, applyNodeGeometry, LabelPlacement, NodeVisualState } from '../utils/graphVisuals';
 
 interface UseSelectionHighlightOptions {
   svgRef: React.RefObject<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>;
@@ -25,6 +25,7 @@ interface UseSelectionHighlightOptions {
   /** Ids in the basket while the network scope is "basket"; null when the scope is "all" */
   basketIds?: Set<string> | null;
   isReady: boolean;
+  labelPlacement?: LabelPlacement;
 }
 
 export const useSelectionHighlight = ({
@@ -33,6 +34,7 @@ export const useSelectionHighlight = ({
   selectedEdge,
   basketIds = null,
   isReady,
+  labelPlacement = 'below',
 }: UseSelectionHighlightOptions) => {
   useEffect(() => {
     const svg = svgRef.current;
@@ -53,7 +55,7 @@ export const useSelectionHighlight = ({
     if (!basketMode && !selectMode) {
       nodeSel.classed('selected', false).classed('in-basket', false).classed('neighbour', false).classed('faded', false);
       linkSel.classed('highlighted', false).classed('faded', false);
-      applyNodeGeometry(nodeSel, () => 'default');
+      applyNodeGeometry(nodeSel, () => 'default', labelPlacement);
       return;
     }
 
@@ -92,8 +94,8 @@ export const useSelectionHighlight = ({
       .classed('neighbour', (d: any) => d.id !== selectedNode && neighbourhood.has(d.id))
       .classed('in-basket', (d: any) => basketMode && inBasket(d.id))
       .classed('faded', (d: any) => !isStrong(d.id));
-    applyNodeGeometry(nodeSel, stateOf);
+    applyNodeGeometry(nodeSel, stateOf, labelPlacement);
 
     linkSel.classed('highlighted', isHighlightedEdge).classed('faded', (d: any) => !isHighlightedEdge(d));
-  }, [svgRef, selectedNode, basketIds, isReady]);
+  }, [svgRef, selectedNode, basketIds, isReady, labelPlacement]);
 };

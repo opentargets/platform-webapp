@@ -1,4 +1,4 @@
-import { Action, ActionType, DownloadsView, NetworkScope } from "../types/downloadTypes";
+import { Action, ActionType, DownloadsView, NetworkLayout, NetworkScope } from "../types/downloadTypes";
 
 export function setDownloadsData(downloadsData: Record<string, unknown>): Action {
   return {
@@ -63,6 +63,10 @@ export function setBasketOpen(open: boolean): Action {
 
 export function setNetworkScope(scope: NetworkScope): Action {
   return { type: ActionType.SET_NETWORK_SCOPE, scope };
+}
+
+export function setNetworkLayout(layout: NetworkLayout): Action {
+  return { type: ActionType.SET_NETWORK_LAYOUT, layout };
 }
 
 export function selectNode(id: string | null): Action {
