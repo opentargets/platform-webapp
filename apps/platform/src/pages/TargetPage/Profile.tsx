@@ -14,11 +14,10 @@ import {
 
 import ProfileHeader from "./ProfileHeader";
 
-// Drugs, Genomic region, Gene Ontology and Overlapping variants are not in this
-// map: the API no longer exposes drugAndClinicalCandidates, the GO term on
-// GeneOntologyAnnotation or proteinCodingCoordinates on Target, and has no
-// region query
+// Genomic region and Overlapping variants are not in this map: the API has no
+// region query and no proteinCodingCoordinates on Target
 const targetProfileWidgets = new Map<string, Widget>([
+  [Target.Drugs.definition.id, Target.Drugs],
   [Target.Tractability.definition.id, Target.Tractability],
   [Target.Safety.definition.id, Target.Safety],
   [Target.Pharmacogenomics.definition.id, Target.Pharmacogenomics],
@@ -27,6 +26,7 @@ const targetProfileWidgets = new Map<string, Widget>([
   [Target.BaselineExpression.definition.id, Target.BaselineExpression],
   [Target.DepMap.definition.id, Target.DepMap],
   [Target.SubcellularLocation.definition.id, Target.SubcellularLocation],
+  [Target.GeneOntology.definition.id, Target.GeneOntology],
   [Target.GeneticConstraint.definition.id, Target.GeneticConstraint],
   [Target.MolecularStructure.definition.id, Target.MolecularStructure],
   [Target.MolecularInteractions.definition.id, Target.MolecularInteractions],

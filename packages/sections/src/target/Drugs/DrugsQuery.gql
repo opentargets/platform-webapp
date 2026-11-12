@@ -1,4 +1,4 @@
-query DrugsQuery($ensemblId: String!) {
+query TargetDrugsQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     drugAndClinicalCandidates {
       count
