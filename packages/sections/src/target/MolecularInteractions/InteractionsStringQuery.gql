@@ -10,6 +10,7 @@ query TargetInteractionsStringQuery(
       sourceDatabase: $sourceDatabase
       page: { index: $index, size: $size }
     ) {
+      count
       rows {
         intA
         intB

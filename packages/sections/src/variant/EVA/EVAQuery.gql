@@ -3,7 +3,7 @@ query EVAQuery($variantId: String!) {
     id
     referenceAllele
     alternateAllele
-    evaEvidences: evidences(datasourceIds: ["eva"]) {
+    evaEvidences: evidences(datasourceIds: [eva]) {
       count
       rows {
         alleleOrigins

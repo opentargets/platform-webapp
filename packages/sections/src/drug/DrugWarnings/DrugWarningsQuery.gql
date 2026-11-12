@@ -1,9 +1,10 @@
-query DrugWarningsQuery($chemblId: String!) {
+query DrugWarningsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
-    drugWarnings(page: { index: 0, size: 10000 }) {
+    drugWarnings(page: { index: $index, size: $size }) {
       count
       rows {
+        id
         warningType
         description
         toxicityClass

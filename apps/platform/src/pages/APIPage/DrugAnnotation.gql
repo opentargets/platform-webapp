@@ -3,14 +3,17 @@ query drugApprovalWithdrawnWarningData {
     name
     id
     drugWarnings {
-      warningType
-      description
-      toxicityClass
-      year
-      references {
-        id
-        source
-        url
+      count
+      rows {
+        warningType
+        description
+        toxicityClass
+        year
+        references {
+          id
+          source
+          url
+        }
       }
     }
   }

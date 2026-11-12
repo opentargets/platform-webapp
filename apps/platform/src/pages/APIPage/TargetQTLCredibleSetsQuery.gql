@@ -13,7 +13,7 @@ query QTLCredibleSetsQuery {
 				confidence
 				isTransQtl
 				variant {
-					id
+					variantId
 					chromosome
 					position
 					referenceAllele

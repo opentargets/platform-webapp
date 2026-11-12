@@ -16,11 +16,12 @@ if (!VITE_API_URL) {
 // page's documents here once its queries validate against the API.
 const MIGRATED_DOCUMENTS = [
   "apps/platform/src/pages/DiseasePage/**/*.gql",
+  "apps/platform/src/pages/DrugPage/**/*.gql",
   "apps/platform/src/pages/TargetPage/**/*.gql",
   "apps/platform/src/components/AssociationsToolkit/components/Table/RowInteractors/InteractorsQuery.gql",
   "apps/platform/src/components/GeneEnrichmentAnalysis/api/*.gql",
   "packages/sections/src/disease/{Bibliography,Drugs,GWASStudies,Ontology,Phenotypes}/*.gql",
-  "packages/sections/src/drug/Bibliography/*.gql",
+  "packages/sections/src/drug/**/*.gql",
   // Drugs, GeneOntology, OverlappingVariants and TargetGenomicRegion stay out: the
   // new API has no drugAndClinicalCandidates, GeneOntologyAnnotation.term,
   // proteinCodingCoordinates or region query yet

@@ -3,6 +3,8 @@
  * API migration audit
  * ===================
  *
+ * @author david oluwasusi
+ *
  * Reproduces the analysis used to migrate the disease page to a new GraphQL API:
  *
  *   1. fetches the SDL of the old and the new API (introspection) and, unless
@@ -31,8 +33,8 @@
  *                      analysis, shared (repeatable)
  *   --all              every document under apps/platform/src and packages/{ui,sections}/src
  *   --include <dir>    extra directory (relative to the repo root) to scan (repeatable)
- *   --old <url>        old API endpoint (default: $OLD_API_URL or the dev v4 API)
- *   --new <url>        new API endpoint (default: $NEW_API_URL or the ng "latest" API)
+ *   --old <url>        old API endpoint (default: $OLD_API_URL or the production v4 API)
+ *   --new <url>        new API endpoint (default: $NEW_API_URL or the latest dev API)
  *   --out <dir>        output directory (default: apps/platform/migrations, git-ignored)
  *   --no-types         skip graphql-codegen (schema fetch + diff only, much faster)
  *   --reuse-schemas    do not refetch schemas that already exist in <out>
@@ -66,8 +68,8 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../..");
 
-const DEFAULT_OLD = "https://dev.opentargets.xyz/api/v4/graphql";
-const DEFAULT_NEW = "https://ng.opentargets.org:8080/latest/graphql";
+const DEFAULT_OLD = "https://api.platform.opentargets.org/api/v4/graphql";
+const DEFAULT_NEW = "https://api.platform.opentargets.xyz/api/v4/graphql";
 
 const PAGES = {
   disease: [
