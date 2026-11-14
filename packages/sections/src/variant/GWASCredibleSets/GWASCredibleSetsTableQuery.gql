@@ -1,49 +1,47 @@
-query GWASCredibleSetsTableQuery($variantId: String!, $page: Page) {
+query GWASCredibleSetsTableQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [VariantCredibleSetsSort!]! = []
+) {
   variant(variantId: $variantId) {
+    variantId
     referenceAllele
     alternateAllele
-    gwasCredibleSets: credibleSets(filter: { studyTypes: [gwas] }, page: $page) {
+    gwasCredibleSets: credibleSets(filter: { studyTypes: [gwas] }, page: { size: 1, index: 0 }) {
       count
-      rows {
-        studyLocusId
-        pValueMantissa
-        pValueExponent
-        beta
-        finemappingMethod
-        confidence
-        variant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        study {
-          traitFromSource
-          id
-          diseases {
-            name
-            id
-          }
-        }
-        locus(filter: { variantIds: [$variantId] }) {
-          rows {
-            posteriorProbability
-          }
-        }
-        locusSize: locus {
-          count
-        }
-        l2GPredictions(page: { size: 1, index: 0 }) {
-          rows {
-            target {
-              id
-              approvedSymbol
-            }
-            score
-          }
-        }
+    }
+  }
+  variantCredibleSets(
+    variantId: $variantId
+    page: { index: $index, size: $size }
+    sort: $sort
+    studyTypes: [gwas]
+  ) {
+    count
+    rows {
+      studyLocusId
+      leadVariantId
+      leadChromosome
+      leadPosition
+      leadReferenceAllele
+      leadAlternateAllele
+      traitFromSource
+      diseases {
+        id
+        name
       }
+      studyId
+      pValueMantissa
+      pValueExponent
+      beta
+      posteriorProbability
+      finemappingMethod
+      confidence
+      topL2GGeneId
+      topL2GApprovedSymbol
+      topL2GScore
+      locusSize
     }
   }
 }
