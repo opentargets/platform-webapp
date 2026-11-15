@@ -1,4 +1,4 @@
-query Hallmarks($ensemblId: String!) {
+query TargetHallmarksQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     hallmarks {

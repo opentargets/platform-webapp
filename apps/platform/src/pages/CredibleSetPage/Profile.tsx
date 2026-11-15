@@ -68,7 +68,7 @@ function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps)
     >
       <ProfileHeader />
       <StickyProfileHeader
-        title={studyLocusId}
+        title="Credible set"
         Icon={Icon}
         externalLinks={externalLinks}
         widgets={CREDIBLE_SET_STICKY_WIDGETS}
