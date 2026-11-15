@@ -342,7 +342,7 @@ function Body({ id, entity }: BodyProps) {
           <OtTableServer
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-variant`}
-            dataPath="variantCredibleSets"
+            dataPath="variant.credibleSetsView"
             pageSize={PAGE_SIZE}
             columns={columns}
             getSortVariables={getSortVariables}

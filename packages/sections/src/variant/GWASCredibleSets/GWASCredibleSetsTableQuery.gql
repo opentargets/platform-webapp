@@ -12,38 +12,37 @@ query GWASCredibleSetsTableQuery(
     gwasCredibleSets: credibleSets(filter: { studyTypes: [gwas] }, page: { size: 1, index: 0 }) {
       count
     }
-  }
-  variantCredibleSets(
-    variantId: $variantId
-    page: { index: $index, size: $size }
-    sort: $sort
-    search: $search
-    studyTypes: [gwas]
-  ) {
-    count
-    rows {
-      studyLocusId
-      leadVariantId
-      leadChromosome
-      leadPosition
-      leadReferenceAllele
-      leadAlternateAllele
-      traitFromSource
-      diseases {
-        id
-        name
+    credibleSetsView(
+      page: { index: $index, size: $size }
+      sort: $sort
+      search: $search
+      studyTypes: [gwas]
+    ) {
+      count
+      rows {
+        studyLocusId
+        leadVariantId
+        leadChromosome
+        leadPosition
+        leadReferenceAllele
+        leadAlternateAllele
+        traitFromSource
+        diseases {
+          id
+          name
+        }
+        studyId
+        pValueMantissa
+        pValueExponent
+        beta
+        posteriorProbability
+        finemappingMethod
+        confidence
+        topL2GGeneId
+        topL2GApprovedSymbol
+        topL2GScore
+        locusSize
       }
-      studyId
-      pValueMantissa
-      pValueExponent
-      beta
-      posteriorProbability
-      finemappingMethod
-      confidence
-      topL2GGeneId
-      topL2GApprovedSymbol
-      topL2GScore
-      locusSize
     }
   }
 }
