@@ -1,11 +1,16 @@
 import { useQuery } from "@apollo/client";
+import type { TargetBodyProps, TargetDepMapQuery, TargetDepMapQueryVariables } from "@ot/constants";
 import { SectionItem } from "ui";
-
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
-import Description from "./Description";
+import DEPMAP_QUERY_DOCUMENT from "./Depmap.gql";
 import DepmapPlot from "./DepmapPlot";
-import DEPMAP_QUERY from "./Depmap.gql";
-import type { TargetBodyProps } from "@ot/constants";
+import Description from "./Description";
+
+// the plot needs every tissue, so the query asks for one large page
+const DEPMAP_QUERY = typedDocument<TargetDepMapQuery, TargetDepMapQueryVariables>(
+  DEPMAP_QUERY_DOCUMENT
+);
 
 type Props = TargetBodyProps;
 
@@ -22,9 +27,9 @@ function Section({ id, label: symbol, entity }: Props) {
       showContentLoading={true}
       renderBody={() => (
         <DepmapPlot
-          data={request.data?.target.depMapEssentiality?.rows}
+          data={request.data?.target?.depMapEssentiality?.rows}
           variables={variables}
-          query={DEPMAP_QUERY.loc.source.body}
+          query={DEPMAP_QUERY_DOCUMENT.loc?.source.body}
         />
       )}
     />

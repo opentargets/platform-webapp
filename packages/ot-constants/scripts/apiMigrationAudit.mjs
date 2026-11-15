@@ -31,8 +31,8 @@
  *                      analysis, shared (repeatable)
  *   --all              every document under apps/platform/src and packages/{ui,sections}/src
  *   --include <dir>    extra directory (relative to the repo root) to scan (repeatable)
- *   --old <url>        old API endpoint (default: $OLD_API_URL or the dev v4 API)
- *   --new <url>        new API endpoint (default: $NEW_API_URL or the ng "latest" API)
+ *   --old <url>        old API endpoint (default: $OLD_API_URL or the production v4 API)
+ *   --new <url>        new API endpoint (default: $NEW_API_URL or the latest dev API)
  *   --out <dir>        output directory (default: apps/platform/migrations, git-ignored)
  *   --no-types         skip graphql-codegen (schema fetch + diff only, much faster)
  *   --reuse-schemas    do not refetch schemas that already exist in <out>

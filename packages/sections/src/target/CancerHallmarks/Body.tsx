@@ -1,30 +1,53 @@
 import { useQuery } from "@apollo/client";
-import { ChipList, SectionItem, PublicationsDrawer, OtTable, Box, Typography } from "ui";
-
+import {
+  defaultRowsPerPageOptions,
+  type TargetBodyProps,
+  type TargetHallmarksQuery,
+  type TargetHallmarksQueryVariables,
+} from "@ot/constants";
+import {
+  Box,
+  ChipList,
+  OtTable,
+  type OtTableColumn,
+  PublicationsDrawer,
+  SectionItem,
+  Typography,
+} from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import { defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
+import HALLMARKS_QUERY_DOCUMENT from "./Hallmarks.gql";
 
-import HALLMARKS_QUERY from "./Hallmarks.gql";
+const HALLMARKS_QUERY = typedDocument<TargetHallmarksQuery, TargetHallmarksQueryVariables>(
+  HALLMARKS_QUERY_DOCUMENT
+);
 
-const columns = [
+type HallmarkRow = {
+  label: string;
+  activity: string;
+  description: string;
+  pmid: number;
+};
+
+const columns: OtTableColumn<HallmarkRow>[] = [
   {
     id: "label",
     label: "Hallmark",
     enableHiding: false,
-    renderCell: row => row.label,
+    renderCell: (row) => row.label,
     exportLabel: "Hallmark",
   },
   {
     id: "activity",
     label: "Effect",
-    renderCell: row => row.activity,
+    renderCell: (row) => row.activity,
     exportLabel: "Effect",
   },
   {
     id: "description",
     label: "Description",
-    renderCell: row => row.description,
+    renderCell: (row) => row.description,
     exportLabel: "Description",
   },
   {
@@ -34,7 +57,7 @@ const columns = [
       <PublicationsDrawer
         entries={[
           {
-            name: pmid,
+            name: String(pmid),
             url: `http://europepmc.org/search?query=EXT_ID:${pmid}`,
             group: "literature",
           },
@@ -42,7 +65,7 @@ const columns = [
       />
     ),
     exportLabel: "Literature (PubMed id)",
-    exportValue: row => row.pmid,
+    exportValue: (row) => row.pmid,
   },
 ];
 
@@ -59,14 +82,15 @@ function Section({ id, label: symbol, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => {
-        if (request.data?.target.hallmarks === null) return null;
-        const roleInCancer = request.data?.target.hallmarks.attributes
-          .filter(a => a.name === "role in cancer")
-          .map(r => ({
+        const hallmarks = request.data?.target?.hallmarks;
+        if (!hallmarks) return null;
+        const roleInCancer = hallmarks.attributes
+          .filter((a) => a.name === "role in cancer")
+          .map((r) => ({
             label: r.description,
             url: `http://europepmc.org/search?query=EXT_ID:${r.pmid}`,
           }));
-        const rows = request.data?.target.hallmarks.cancerHallmarks.map(r => ({
+        const rows: HallmarkRow[] = hallmarks.cancerHallmarks.map((r) => ({
           label: r.label,
           activity: r.impact === "promotes" ? "promotes" : "suppresses",
           description: r.description,
@@ -80,7 +104,7 @@ function Section({ id, label: symbol, entity }: Props) {
               sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
             >
               <Typography sx={{ marginRight: ".5rem !important" }}>Role in cancer:</Typography>
-              <ChipList items={roleInCancer?.length > 0 ? roleInCancer : [{ label: "Unknown" }]} />
+              <ChipList items={roleInCancer.length > 0 ? roleInCancer : [{ label: "Unknown" }]} />
             </Box>
             <OtTable
               columns={columns}
@@ -89,7 +113,7 @@ function Section({ id, label: symbol, entity }: Props) {
               rows={rows}
               noWrap={false}
               rowsPerPageOptions={defaultRowsPerPageOptions}
-              query={HALLMARKS_QUERY.loc.source.body}
+              query={HALLMARKS_QUERY_DOCUMENT.loc?.source.body}
               variables={variables}
               loading={request.loading}
             />

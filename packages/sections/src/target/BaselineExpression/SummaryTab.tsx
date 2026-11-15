@@ -1,9 +1,17 @@
-import { DataDownloader, Alert, AlertTitle, GridLegacy, Typography } from "ui";
+import type { ApolloClient } from "@apollo/client";
+import type { TargetExpressionQuery, TargetExpressionQueryVariables } from "@ot/constants";
+import { DataDownloader, GridLegacy } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import BaselineExpressionTable from "./BaselineExpressionTable";
-import EXPRESSION_QUERY from "./ExpressionQuery.gql";
+import EXPRESSION_QUERY_DOCUMENT from "./ExpressionQuery.gql";
 import { processData } from "./processData";
 
-export function getData(ensgId, client) {
+// the heatmap needs every biosample, so the query asks for one large page
+const EXPRESSION_QUERY = typedDocument<TargetExpressionQuery, TargetExpressionQueryVariables>(
+  EXPRESSION_QUERY_DOCUMENT
+);
+
+export function getData(ensgId: string, client: ApolloClient<object>) {
   return client.query({
     query: EXPRESSION_QUERY,
     variables: { ensemblId: ensgId },
@@ -25,7 +33,19 @@ const columns = [
   { id: "distributionScore" },
 ];
 
-const getDownloadRows = (baselineExpressions) =>
+type ExpressionRow = NonNullable<
+  TargetExpressionQuery["target"]
+>["baselineExpression"]["rows"][number];
+
+type SummaryTabProps = {
+  symbol: string;
+  ensgId: string;
+  data?: TargetExpressionQuery;
+  viewMode?: "tissue" | "celltype";
+  expandSpecificity?: boolean;
+};
+
+const getDownloadRows = (baselineExpressions: ExpressionRow[]) =>
   baselineExpressions.map((expression) => ({
     tissueBiosampleName: expression.tissueBiosample?.biosampleName ?? null,
     tissueBiosampleId: expression.tissueBiosample?.biosampleId ?? null,
@@ -41,13 +61,14 @@ const getDownloadRows = (baselineExpressions) =>
     distributionScore: expression.distribution_score,
   }));
 
-function SummaryTab({ symbol, ensgId, data, viewMode, expandSpecificity }) {
+function SummaryTab({ symbol, ensgId, data, viewMode, expandSpecificity }: SummaryTabProps) {
   if (!data) return null;
+  const rows = data.target?.baselineExpression.rows ?? [];
 
   const datatypes = ["scrna-seq", "bulk rna-seq", "mass-spectrometry proteomics"];
   const processedData = {
-    tissue: processData(data.target.baselineExpression.rows, datatypes, true),
-    celltype: processData(data.target.baselineExpression.rows, datatypes, false),
+    tissue: processData(rows, datatypes, true),
+    celltype: processData(rows, datatypes, false),
   };
 
   return (
@@ -61,14 +82,14 @@ function SummaryTab({ symbol, ensgId, data, viewMode, expandSpecificity }) {
           <DataDownloader
             btnLabel="Export"
             fileStem={`${symbol}-baseline-expression`}
-            rows={getDownloadRows(data.target.baselineExpression.rows)}
-            query={EXPRESSION_QUERY.loc.source.body}
+            rows={getDownloadRows(rows)}
+            query={EXPRESSION_QUERY_DOCUMENT.loc?.source.body}
             variables={{ ensemblId: ensgId }}
             columns={columns}
           />
         }
-        viewMode={viewMode}
-        expandSpecificity={expandSpecificity}
+        viewMode={viewMode ?? "tissue"}
+        expandSpecificity={expandSpecificity ?? false}
       />
     </GridLegacy>
   );

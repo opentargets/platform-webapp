@@ -1,24 +1,18 @@
-import { faInfo } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { grey } from "@mui/material/colors";
-import { sentenceCase } from "@ot/utils";
+import type { TargetBodyProps } from "@ot/constants";
 import { Fragment, useEffect, useState } from "react";
-import { SectionItem, useApolloClient, Alert, Collapse, Tab, Tabs, Typography } from "ui";
-
+import { SectionItem, Tab, Tabs, useApolloClient } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import GtexTab, { getData as getGtexData } from "./GtexTab";
 import SummaryTab, { getData as getSummaryData } from "./SummaryTab";
-import type { TargetBodyProps } from "@ot/constants";
 
 type Props = TargetBodyProps & {
-  viewMode?: string;
+  viewMode?: "tissue" | "celltype";
   expandSpecificity?: boolean;
 };
 
 function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificity }: Props) {
   const defaultTab = "summary";
-  const [showAlert, setShowAlert] = useState(true);
   const [tab, setTab] = useState(defaultTab);
   const [requestSummary, setRequestSummary] = useState({ loading: true });
   const [requestGtex, setRequestGtex] = useState({ loading: true });
@@ -62,7 +56,7 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
             <Tab value="summary" label="Summary" />
             <Tab value="gtex" label="Variation (GTEx)" />
           </Tabs>
-          {tab === "summary" &&
+          {tab === "summary" && (
             <SummaryTab
               symbol={symbol}
               ensgId={ensgId}
@@ -70,7 +64,7 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
               viewMode={viewMode}
               expandSpecificity={expandSpecificity}
             />
-          }
+          )}
           {tab === "gtex" && <GtexTab symbol={symbol} data={request.data} />}
         </Fragment>
       )}

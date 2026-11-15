@@ -1,16 +1,12 @@
+import type { ExpressionSummaryFragment } from "@ot/constants";
 import { lazy } from "react";
-import type { TargetData } from "../../types/target";
 
 export const definition = {
   id: "baselineExpression",
   name: "Baseline Expression",
   shortName: "BE",
-  hasData: (data: TargetData) => {
-    return (
-      (data.baselineExpression?.count || 0) > 0 || // main widget tab
-      (data.expressions?.length || 0) > 0 // GTEx tab
-    );
-  },
+  // the GTEx tab fetches its own data, so only the baseline expression count is known here
+  hasData: (data: ExpressionSummaryFragment) => (data.baselineExpression?.count ?? 0) > 0,
 };
 
 // Components

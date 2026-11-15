@@ -238,7 +238,14 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
       ...memoizedVariables,
       ...(getSortVariables && serverSortingState ? getSortVariables(serverSortingState) : {}),
       // omitted when empty so the first page shares its cache entry with the section's own query
-      ...(serverSearchTerm ? { search: { text: serverSearchTerm, fields: searchFields } } : {}),
+      ...(serverSearchTerm
+        ? {
+            search: {
+              text: serverSearchTerm,
+              ...(searchFields?.length ? { fields: searchFields } : {}),
+            },
+          }
+        : {}),
     }),
     [
       memoizedVariables,

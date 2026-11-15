@@ -1,31 +1,42 @@
-import type { CSSProperties } from "react";
 import { useQuery } from "@apollo/client";
-import { useTheme } from "@mui/material/styles";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar as faStarSolid } from "@fortawesome/free-solid-svg-icons";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
-import { SectionItem, Link, Tooltip, OtTable } from "ui";
-import ComparativeGenomicsPlot from "./ComparativeGenomicsPlot";
-
+import { faStar as faStarSolid } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useTheme } from "@mui/material/styles";
+import {
+  decimalPlaces,
+  type TargetBodyProps,
+  type TargetHomologuesQuery,
+  type TargetHomologuesQueryVariables,
+  VIEW,
+} from "@ot/constants";
+import { identifiersOrgLink } from "@ot/utils";
+import type { CSSProperties } from "react";
+import { Link, OtTable, type OtTableColumn, SectionItem, Tooltip } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
-import Description from "./Description";
-import COMP_GENOMICS_QUERY from "./CompGenomics.gql";
 import ChimpanzeeIcon from "./ChimpanzeeIcon";
-import HumanIcon from "./HumanIcon";
-import RatIcon from "./RatIcon";
-import FrogIcon from "./FrogIcon";
+import ComparativeGenomicsPlot from "./ComparativeGenomicsPlot";
+import COMP_GENOMICS_QUERY_DOCUMENT from "./CompGenomics.gql";
+import Description from "./Description";
 import DogIcon from "./DogIcon";
 import FlyIcon from "./FlyIcon";
-import RabbitIcon from "./RabbitIcon";
+import FrogIcon from "./FrogIcon";
+import GuineaPigIcon from "./GuineaPigIcon";
+import HumanIcon from "./HumanIcon";
 import MacaqueIcon from "./MacaqueIcon";
+import MouseIcon from "./MouseIcon";
 import PigIcon from "./PigIcon";
+import RabbitIcon from "./RabbitIcon";
+import RatIcon from "./RatIcon";
 import WormIcon from "./WormIcon";
 import ZebrafishIcon from "./ZebrafishIcon";
-import GuineaPigIcon from "./GuineaPigIcon";
-import MouseIcon from "./MouseIcon";
 
-import { identifiersOrgLink } from "@ot/utils";
-import { decimalPlaces, VIEW, type TargetBodyProps} from "@ot/constants";
+const COMP_GENOMICS_QUERY = typedDocument<TargetHomologuesQuery, TargetHomologuesQueryVariables>(
+  COMP_GENOMICS_QUERY_DOCUMENT
+);
+
+type HomologueRow = NonNullable<TargetHomologuesQuery["target"]>["homologues"][number];
 
 const VIEW_MODES = {
   default: "default",
@@ -34,7 +45,7 @@ const VIEW_MODES = {
 };
 
 // map species ids to species icon component
-const speciesIcons = {
+const speciesIcons: Record<string, () => JSX.Element> = {
   9598: ChimpanzeeIcon,
   10116: RatIcon,
   9606: HumanIcon,
@@ -58,7 +69,7 @@ const iconContainerStyle: CSSProperties = {
 };
 const containerStyle: CSSProperties = { display: "inline-block", width: "16px" };
 
-function getColumns(primaryColor: string) {
+function getColumns(primaryColor: string): OtTableColumn<HomologueRow>[] {
   return [
     {
       id: "speciesName",
@@ -68,9 +79,7 @@ function getColumns(primaryColor: string) {
         const SpeciesIcon = speciesIcons[speciesId];
         return (
           <>
-            <span style={iconContainerStyle}>
-              <SpeciesIcon />
-            </span>{" "}
+            <span style={iconContainerStyle}>{SpeciesIcon ? <SpeciesIcon /> : null}</span>{" "}
             {speciesName}
           </>
         );
@@ -146,10 +155,10 @@ function Body({ id: ensemblId, label: symbol, entity, viewMode = VIEW_MODES.defa
       renderDescription={() => <Description symbol={symbol} />}
       renderChart={() => (
         <ComparativeGenomicsPlot
-          homologues={request.data?.target.homologues}
+          homologues={request.data?.target?.homologues}
           viewMode={viewMode}
           loading={request.loading}
-          query={COMP_GENOMICS_QUERY.loc.source.body}
+          query={COMP_GENOMICS_QUERY_DOCUMENT.loc?.source.body}
           variables={variables}
           columns={columns}
         />
@@ -160,8 +169,8 @@ function Body({ id: ensemblId, label: symbol, entity, viewMode = VIEW_MODES.defa
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-comparative-genomics-${entity}`}
           columns={columns}
-          rows={request.data?.target.homologues}
-          query={COMP_GENOMICS_QUERY.loc.source.body}
+          rows={request.data?.target?.homologues ?? []}
+          query={COMP_GENOMICS_QUERY_DOCUMENT.loc?.source.body}
           variables={variables}
           loading={request.loading}
         />

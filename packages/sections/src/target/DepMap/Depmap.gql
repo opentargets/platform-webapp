@@ -1,4 +1,4 @@
-query Depmap ($ensemblId: String!) {
+query TargetDepMapQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     depMapEssentiality(page: { index: 0, size: 10000 }) {

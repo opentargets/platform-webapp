@@ -1,14 +1,24 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Box, GridLegacy } from "ui";
-import Description from "./Description";
-import { definition } from ".";
+import type {
+  TargetBodyProps,
+  TargetMolecularStructureQuery,
+  TargetMolecularStructureQueryVariables,
+} from "@ot/constants";
 import { getUniprotIds } from "@ot/utils";
-import MOLECULAR_STRUCTURE_QUERY from "./MolecularStructure.gql";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Box, GridLegacy, SectionItem } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import { definition } from ".";
+import Description from "./Description";
+import { getSegments, restructureRowProperties } from "./helpers";
+import MOLECULAR_STRUCTURE_QUERY_DOCUMENT from "./MolecularStructure.gql";
 import Table from "./Table";
 import Viewer from "./Viewer";
-import { getSegments, restructureRowProperties } from "./helpers";
-import type { TargetBodyProps } from "@ot/constants";
+
+const MOLECULAR_STRUCTURE_QUERY = typedDocument<
+  TargetMolecularStructureQuery,
+  TargetMolecularStructureQueryVariables
+>(MOLECULAR_STRUCTURE_QUERY_DOCUMENT);
 
 const experimentalResultsStem = "https://rest.uniprot.org/uniprotkb/";
 const alphaFoldResultsStem = "https://alphafold.ebi.ac.uk/api/prediction/";
@@ -65,7 +75,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
             console.error(`Response status (PDB request): ${response.status}`);
           } else {
             const json = await response.json();
-            const pdbResults = json?.uniProtKBCrossReferences?.filter(row => row.database === "PDB") ?? [];
+            const pdbResults =
+              json?.uniProtKBCrossReferences?.filter((row) => row.database === "PDB") ?? [];
             for (const row of pdbResults) restructureRowProperties(row);
             results.push(...pdbResults);
           }
@@ -120,7 +131,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
                 uniprotId={uniprotId}
                 setSelectedRow={setSelectedRow}
                 request={request}
-                query={MOLECULAR_STRUCTURE_QUERY.loc.source.body}
+                query={MOLECULAR_STRUCTURE_QUERY_DOCUMENT.loc?.source.body}
                 variables={variables}
               />
             </GridLegacy>

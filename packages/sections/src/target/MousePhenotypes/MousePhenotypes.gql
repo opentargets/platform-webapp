@@ -1,7 +1,7 @@
-query MousePhenotypes($ensemblId: String!) {
+query TargetMousePhenotypesQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
-    mousePhenotypes(page: { index: 0, size: 10000 }) {
+    mousePhenotypes(page: { index: $index, size: $size }) {
       count
       rows {
         targetInModel
