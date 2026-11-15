@@ -346,6 +346,7 @@ function Body({ id, entity }: BodyProps) {
             pageSize={PAGE_SIZE}
             columns={columns}
             getSortVariables={getSortVariables}
+            searchFields={[]}
             query={GWAS_CREDIBLE_SETS_TABLE_QUERY}
             variables={variables}
           />

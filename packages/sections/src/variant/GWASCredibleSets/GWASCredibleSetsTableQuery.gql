@@ -3,6 +3,7 @@ query GWASCredibleSetsTableQuery(
   $index: Int! = 0
   $size: Int! = 10
   $sort: [VariantCredibleSetsSort!]! = []
+  $search: VariantCredibleSetsSearch
 ) {
   variant(variantId: $variantId) {
     variantId
@@ -16,6 +17,7 @@ query GWASCredibleSetsTableQuery(
     variantId: $variantId
     page: { index: $index, size: $size }
     sort: $sort
+    search: $search
     studyTypes: [gwas]
   ) {
     count
