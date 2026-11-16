@@ -2,7 +2,6 @@ import type { ApolloClient, DocumentNode, NormalizedCacheObject } from "@apollo/
 import type {
   ColumnDef,
   RowData,
-  SortingState,
   Table,
   Row as TableRow,
 } from "@tanstack/table-core";
@@ -31,6 +30,10 @@ export type OtTableColumn<Row> = {
   filterValue?: (row: Row) => unknown;
   exportValue?: (row: Row) => unknown;
   exportLabel?: string;
+  /** API sort field; enables server-side sorting in OtTableServer */
+  sortField?: string;
+  /** API search fields; their union enables server-side search in OtTableServer */
+  searchFields?: string[];
   sortable?: boolean;
   comparator?: (a: Row, b: Row) => number;
   enableHiding?: boolean;
@@ -184,13 +187,6 @@ export type OtTableServerProps<Row extends object, ServerRow extends object = Ro
   pageSizeOptions?: number[];
   sortBy?: string;
   order?: "asc" | "desc";
-  /** maps the react-table sorting state to query variables; enables server-side sorting */
-  getSortVariables?: (sorting: SortingState) => Record<string, unknown>;
-  /**
-   * API search fields; enables server-side search. An empty array lets the API
-   * use its default searchable fields, while omitting this prop uses local search.
-   */
-  searchFields?: string[];
   showGlobalFilter?: boolean;
   globalFilterPlaceholderText?: string;
   verticalHeaders?: boolean;

@@ -15,6 +15,7 @@ import {
   NativeSelect,
   Skeleton,
 } from "@mui/material";
+import { SortDirection } from "@ot/constants";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
   type Cell,
@@ -142,17 +143,14 @@ function getLoadingCells<Row>(columns: ColumnDef<Row>[]): ColumnDef<Row>[] {
  *
  * - `dataPath` points at the `{ count, rows }` object inside the response
  *   (e.g. `disease.phenotypes`).
- * - `getSortVariables` turns the react-table sorting state into query
- *   variables (e.g. `{ sort: [{ key, direction }] }`). When it is omitted (the
- *   API field has no sort input) sorting a column makes the table fetch the
- *   whole dataset once, sort it locally by the column's comparator or value,
- *   and paginate the result locally; clearing the sort returns to server
- *   pagination. A default `sortBy` therefore fetches the whole dataset on mount.
- * - `searchFields` enables server-side search using the API's `{ text, fields }`
- *   input. When it is omitted (the API field has no search argument), a search
- *   term makes the table fetch the whole dataset once, filter it locally with
- *   the same matcher as the client-side table, and paginate the matches
- *   locally; clearing the box returns to server pagination.
+ * - A column's `sortField` enables server-side sorting with the API's
+ *   `{ sort: [{ key, direction }] }` input. Without server sort fields, sorting
+ *   fetches the whole dataset once, sorts it locally by the column's comparator
+ *   or value, and paginates the result locally.
+ * - The union of column `searchFields` enables server-side search using the
+ *   API's `{ text, fields }` input. Without server search fields, a search term
+ *   fetches the whole dataset once, filters it locally with the same matcher as
+ *   the client-side table, and paginates the matches locally.
  */
 function OtTableServer<Row extends object, ServerRow extends object = Row>({
   columns = [],
@@ -166,8 +164,6 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   pageSizeOptions = [10, 25, 100],
   sortBy,
   order,
-  getSortVariables,
-  searchFields,
   showGlobalFilter = true,
   globalFilterPlaceholderText,
   verticalHeaders = false,
@@ -205,8 +201,21 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const [allRowsLoading, setAllRowsLoading] = useState(false);
 
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
-  const serverSorting = !!getSortVariables;
-  const serverSearch = searchFields !== undefined;
+  const serverSortFields = useMemo(
+    () =>
+      new Map(
+        columns
+          .filter((column) => column.sortField)
+          .map((column) => [column.id, column.sortField] as const)
+      ),
+    [columns]
+  );
+  const serverSearchFields = useMemo(
+    () => [...new Set(columns.flatMap((column) => column.searchFields ?? []))],
+    [columns]
+  );
+  const serverSorting = serverSortFields.size > 0;
+  const serverSearch = serverSearchFields.length > 0;
   const serverSearchTerm = serverSearch ? search.trim() : "";
   const localSearchTerm = serverSearch ? "" : search.trim();
   const localSearchMode = localSearchTerm.length > 0;
@@ -218,9 +227,16 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const toRows = (rows: ServerRow[]): Row[] =>
     transformRows ? transformRows(rows) : (rows as unknown as Row[]);
 
+  const tableColumnsConfig = useMemo(
+    () =>
+      serverSorting
+        ? columns.map((column) => ({ ...column, sortable: serverSortFields.has(column.id) }))
+        : columns,
+    [columns, serverSortFields, serverSorting]
+  );
   const mappedColumns = useMemo(
-    () => mapTableColumnToTanstackColumns(columns) as unknown as ColumnDef<Row>[],
-    [columns]
+    () => mapTableColumnToTanstackColumns(tableColumnsConfig) as unknown as ColumnDef<Row>[],
+    [tableColumnsConfig]
   );
   const flatColumns = useMemo(() => flattenColumns(mappedColumns), [mappedColumns]);
   const loadingCells = useMemo(() => getLoadingCells(mappedColumns), [mappedColumns]);
@@ -229,30 +245,37 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
     [pagination.pageSize]
   );
 
-  // a local sort must not change the request variables, or the whole dataset
-  // would be discarded and the page refetched on every column click
-  const serverSortingState = serverSorting ? sorting : null;
   // variables shared by the page requests and the full-dataset download
   const requestVariables = useMemo(
     () => ({
       ...memoizedVariables,
-      ...(getSortVariables && serverSortingState ? getSortVariables(serverSortingState) : {}),
+      ...(serverSorting
+        ? {
+            sort: sorting.flatMap(({ id, desc }) => {
+              const key = serverSortFields.get(id);
+              return key
+                ? [{ key, direction: desc ? SortDirection.Descending : SortDirection.Ascending }]
+                : [];
+            }),
+          }
+        : {}),
       // omitted when empty so the first page shares its cache entry with the section's own query
       ...(serverSearchTerm
         ? {
             search: {
               text: serverSearchTerm,
-              ...(searchFields?.length ? { fields: searchFields } : {}),
+              fields: serverSearchFields,
             },
           }
         : {}),
     }),
     [
       memoizedVariables,
-      getSortVariables,
-      serverSortingState,
-      searchFields,
+      serverSorting,
+      sorting,
+      serverSortFields,
       serverSearchTerm,
+      serverSearchFields,
     ]
   );
 
