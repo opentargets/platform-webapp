@@ -6,12 +6,12 @@ import {
   PublicationsDrawer,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
-  OtTable,
+  OtTableServer,
   Typography,
 } from "ui";
 
 import { definition } from ".";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps } from "@ot/constants";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 import Description from "./Description";
 
@@ -161,17 +161,16 @@ const exportColumns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
+  const variables = { ensemblId: ensgId, efoId };
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
-
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(ORPHANET_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -183,21 +182,19 @@ function Body({ id, label, entity }: Props) {
       request={request}
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
-      renderBody={() => {
-        return (
-          <OtTable
-            columns={columns}
-            rows={request.data?.disease.orphanetSummary.rows}
-            dataDownloader
-            dataDownloaderFileStem={`orphanet-${ensgId}-${efoId}`}
-            dataDownloaderColumns={exportColumns}
-            showGlobalFilter
-            query={ORPHANET_QUERY.loc.source.body}
-            variables={variables}
-            loading={request.loading}
-          />
-        );
-      }}
+      renderBody={() => (
+        <OtTableServer
+          query={ORPHANET_QUERY}
+          columns={columns}
+          dataDownloader
+          dataDownloaderFileStem={`orphanet-${ensgId}-${efoId}`}
+          dataDownloaderColumns={exportColumns}
+          dataPath="disease.orphanetSummary"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
+          variables={variables}
+        />
+      )}
     />
   );
 }

@@ -1,10 +1,10 @@
-query CrisprQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query CrisprQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     crisprSummary: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [crispr]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
