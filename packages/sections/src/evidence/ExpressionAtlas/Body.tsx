@@ -1,11 +1,11 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Tooltip, Link, ScientificNotation, OtTable, Typography } from "ui";
+import { SectionItem, Tooltip, Link, ScientificNotation, OtTableServer, Typography } from "ui";
 
 import Description from "./Description";
 import { sentenceCase } from "@ot/utils";
 import EXPRESSION_ATLAS_QUERY from "./ExpressionAtlasQuery.gql";
 import { definition } from ".";
-import { dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, type EvidenceBodyProps} from "@ot/constants";
 
 const columns = [
   {
@@ -77,13 +77,11 @@ const columns = [
       </>
     ),
     numeric: true,
-    sortable: true,
   },
   {
     id: "log2FoldChangePercentileRank",
     label: "Percentile",
     numeric: true,
-    sortable: true,
   },
   {
     id: "resourceScore",
@@ -94,22 +92,21 @@ const columns = [
     ),
     renderCell: ({ resourceScore }) => <ScientificNotation number={resourceScore} />,
     numeric: true,
-    sortable: true,
   },
 ];
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(EXPRESSION_ATLAS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -121,17 +118,15 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={EXPRESSION_ATLAS_QUERY}
             columns={columns}
-            rows={request.data?.disease.expressionAtlasSummary.rows}
             dataDownloader
             dataDownloaderFileStem={`expression-atlas-${ensgId}-${efoId}`}
-            showGlobalFilter
-            sortBy="resourceScore"
-            order="asc"
-            query={EXPRESSION_ATLAS_QUERY.loc.source.body}
+            dataPath="disease.expressionAtlasSummary"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

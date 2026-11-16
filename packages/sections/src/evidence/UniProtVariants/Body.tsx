@@ -5,7 +5,7 @@ import {
   Tooltip,
   PublicationsDrawer,
   LabelChip,
-  OtTable,
+  OtTableServer,
   DisplayVariantId,
   Typography,
 } from "ui";
@@ -16,7 +16,6 @@ import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   variantConsequenceSource,
-  sectionsBaseSizeQuery,
   naLabel, EvidenceBodyProps} from "@ot/constants";
 import UNIPROT_VARIANTS_QUERY from "./UniprotVariantsQuery.gql";
 
@@ -59,7 +58,6 @@ function getColumns(label) {
       id: "variant.id",
       label: "Variant",
       enableHiding: false,
-      sortable: true,
       comparator: nullishComparator(variantComparator(), d => d?.variant),
       filterValue: ({ variant: v }) =>
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
@@ -159,18 +157,19 @@ function getColumns(label) {
 }
 
 type Props = EvidenceBodyProps;
+
+const PAGE_SIZE = 10;
+
 export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
   const columns = getColumns(label);
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(UNIPROT_VARIANTS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -182,16 +181,16 @@ export function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={UNIPROT_VARIANTS_QUERY}
             columns={columns}
-            rows={request.data?.disease.uniprotVariantsSummary.rows}
             dataDownloader
             dataDownloaderFileStem={`UniProt-variants-${ensgId}-${efoId}`}
-            showGlobalFilter
-            rowsPerPageOptions={defaultRowsPerPageOptions}
-            query={UNIPROT_VARIANTS_QUERY.loc.source.body}
+            dataPath="disease.uniprotVariantsSummary"
+            pageSize={PAGE_SIZE}
+            pageSizeOptions={defaultRowsPerPageOptions}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

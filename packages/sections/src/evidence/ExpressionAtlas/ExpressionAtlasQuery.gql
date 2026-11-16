@@ -1,10 +1,10 @@
-query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     expressionAtlasSummary: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [expression_atlas]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

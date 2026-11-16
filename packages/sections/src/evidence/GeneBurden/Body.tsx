@@ -7,14 +7,14 @@ import {
   ScientificNotation,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
-  OtTable,
+  OtTableServer,
   Typography,
 } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl } from "@ot/utils";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 
 import GENE_BURDEN_QUERY from "./GeneBurdenQuery.gql";
 
@@ -117,7 +117,6 @@ const getColumns = label => [
     id: "studyCasesWithQualifyingVariants",
     label: "Cases with QV",
     numeric: true,
-    sortable: true,
     renderCell: ({ studyCasesWithQualifyingVariants }) =>
       studyCasesWithQualifyingVariants
         ? parseInt(studyCasesWithQualifyingVariants, 10).toLocaleString()
@@ -129,7 +128,6 @@ const getColumns = label => [
     id: "studyCases",
     label: "Cases",
     numeric: true,
-    sortable: true,
     renderCell: ({ studyCases }) =>
       studyCases ? parseInt(studyCases, 10).toLocaleString() : naLabel,
   },
@@ -137,7 +135,6 @@ const getColumns = label => [
     id: "studySampleSize",
     label: "Sample size",
     numeric: true,
-    sortable: true,
     renderCell: ({ studySampleSize }) =>
       studySampleSize ? parseInt(studySampleSize, 10).toLocaleString() : naLabel,
   },
@@ -145,7 +142,6 @@ const getColumns = label => [
     id: "oddsRatio",
     label: "Odds Ratio (CI 95%)",
     numeric: true,
-    sortable: true,
     renderCell: ({
       oddsRatio,
       oddsRatioConfidenceIntervalLower,
@@ -170,7 +166,6 @@ const getColumns = label => [
     id: "beta",
     label: "Beta (CI 95%)",
     numeric: true,
-    sortable: true,
     renderCell: ({ beta, betaConfidenceIntervalLower, betaConfidenceIntervalUpper }) => {
       const ci =
         betaConfidenceIntervalLower && betaConfidenceIntervalUpper
@@ -202,7 +197,6 @@ const getColumns = label => [
       </>
     ),
     numeric: true,
-    sortable: true,
     renderCell: ({ pValueMantissa, pValueExponent }) => (
       <ScientificNotation number={[pValueMantissa, pValueExponent]} />
     ),
@@ -229,15 +223,16 @@ const getColumns = label => [
 ];
 
 type Props = EvidenceBodyProps;
+
+const PAGE_SIZE = 10;
+
 export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(GENE_BURDEN_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
   const columns = getColumns(label);
 
@@ -252,17 +247,15 @@ export function Body({ id, label, entity }: Props) {
       )}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={GENE_BURDEN_QUERY}
             columns={columns}
-            rows={request.data?.disease.geneBurdenSummary.rows}
-            order="asc"
-            sortBy="pValue"
             dataDownloader
             dataDownloaderFileStem={`geneburden-${ensgId}-${efoId}`}
-            showGlobalFilter
-            query={GENE_BURDEN_QUERY.loc.source.body}
+            dataPath="disease.geneBurdenSummary"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

@@ -1,4 +1,4 @@
-query UniprotVariantsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query UniprotVariantsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
@@ -7,7 +7,7 @@ query UniprotVariantsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     uniprotVariantsSummary: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [uniprot_variants]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
@@ -17,6 +17,16 @@ query UniprotVariantsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
         }
         diseaseFromSource
         targetFromSourceId
+        variant {
+          id: variantId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+          transcriptConsequences {
+            aminoAcidChange
+          }
+        }
         variantRsId
         confidence
         literature
