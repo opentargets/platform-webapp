@@ -19,6 +19,7 @@ import { Fragment } from "react/jsx-runtime";
 import {
   credsetConfidenceMap,
   naLabel,
+  SortDirection,
   VariantCredibleSetsSearchField,
   VariantCredibleSetsSortField,
 } from "@ot/constants";
@@ -29,6 +30,12 @@ type getColumnsType = {
   id: string;
   referenceAllele: string;
   alternateAllele: string;
+};
+
+const DEFAULT_SORT = {
+  id: "l2gScore",
+  field: VariantCredibleSetsSortField.TopL2GScore,
+  desc: true,
 };
 
 function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
@@ -219,7 +226,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "l2gScore",
       label: "L2G score",
-      sortField: VariantCredibleSetsSortField.TopL2GScore,
+      sortField: DEFAULT_SORT.field,
       tooltip: (
         <>
           Machine learning prediction linking a gene to a credible set using all features. Score
@@ -264,7 +271,17 @@ const PAGE_SIZE = 10;
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
   const request = useQuery(GWAS_CREDIBLE_SETS_TABLE_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -301,6 +318,8 @@ function Body({ id, entity }: BodyProps) {
             columns={columns}
             query={GWAS_CREDIBLE_SETS_TABLE_QUERY}
             variables={variables}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
           />
         );
       }}

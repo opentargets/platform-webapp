@@ -22,8 +22,6 @@ query GWASCredibleSetsTableQuery(
       rows {
         studyLocusId
         leadVariantId
-        leadChromosome
-        leadPosition
         leadReferenceAllele
         leadAlternateAllele
         traitFromSource
