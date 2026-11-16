@@ -15,16 +15,14 @@ import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
-import { mantissaExponentComparator, variantComparator, nullishComparator } from "@ot/utils";
 // import PheWasPlot from "./PheWasPlot";
 import {
   credsetConfidenceMap,
   naLabel,
-  SortDirection,
+  VariantCredibleSetsSearchField,
   VariantCredibleSetsSortField,
 } from "@ot/constants";
 import { useQuery } from "@apollo/client";
-import type { SortingState } from "@tanstack/react-table";
 // import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
 
 type getColumnsType = {
@@ -40,21 +38,16 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       label: "Credible set",
       sticky: true,
       enableHiding: false,
+      // For now add all search fields to first column - if move to column-based
+      // search, move these fields to their corresponding columns
+      searchFields: Object.values(VariantCredibleSetsSearchField),
       renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
     },
     {
       id: "leadVariant",
       label: "Lead variant",
       enableHiding: false,
-      comparator: variantComparator(d => ({
-        chromosome: d?.leadChromosome?.replace(/^chr/, ""),
-        position: d?.leadPosition,
-        referenceAllele: d?.leadReferenceAllele,
-        alternateAllele: d?.leadAlternateAllele,
-      })),
-      sortable: true,
-      filterValue: ({ leadChromosome, leadPosition, leadReferenceAllele, leadAlternateAllele }) =>
-        `${leadChromosome?.replace(/^chr/, "")}_${leadPosition}_${leadReferenceAllele}_${leadAlternateAllele}`,
+      sortField: VariantCredibleSetsSortField.LeadVariant,
       renderCell: ({ leadVariantId, leadReferenceAllele, leadAlternateAllele }) => {
         if (!leadVariantId) return naLabel;
         const displayElement = (
@@ -84,7 +77,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "trait",
       label: "Reported trait",
-      filterValue: ({ traitFromSource }) => traitFromSource,
       renderCell: ({ traitFromSource }) => {
         if (!traitFromSource) return naLabel;
         return traitFromSource;
@@ -94,7 +86,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "disease",
       label: "Disease/phenotype",
-      filterValue: ({ diseases = [] }) => diseases.map(({ name }) => name).join(", "),
       renderCell: ({ diseases = [] }) => {
         if (!diseases.length) return naLabel;
         return (
@@ -133,15 +124,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "pValue",
       label: "P-value",
       numeric: true,
-      comparator: (a, b) =>
-        mantissaExponentComparator(
-          a?.pValueMantissa,
-          a?.pValueExponent,
-          b?.pValueMantissa,
-          b?.pValueExponent
-        ),
-      sortable: true,
-      filterValue: false,
+      sortField: VariantCredibleSetsSortField.PValue,
       renderCell: ({ pValueMantissa, pValueExponent }) => {
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
           return naLabel;
@@ -156,7 +139,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "beta",
       label: "Beta",
       numeric: true,
-      filterValue: false,
       tooltip: "Beta with respect to the ALT allele",
       renderCell: ({ beta }) => {
         if (typeof beta !== "number") return naLabel;
@@ -167,7 +149,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "posteriorProbability",
       label: "Posterior probability",
       numeric: true,
-      filterValue: false,
       tooltip: (
         <>
           Posterior inclusion probability that the fixed page variant (
@@ -180,7 +161,6 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           ) is causal.
         </>
       ),
-      comparator: (a, b) => a?.posteriorProbability - b?.posteriorProbability,
       renderCell: ({ posteriorProbability }) =>
         typeof posteriorProbability === "number" ? posteriorProbability.toPrecision(3) : naLabel,
       exportValue: ({ posteriorProbability }) => posteriorProbability,
@@ -213,12 +193,10 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           </Tooltip>
         );
       },
-      filterValue: ({ confidence }) => credsetConfidenceMap[confidence],
     },
     {
       id: "topL2G",
       label: "Top L2G",
-      filterValue: ({ topL2GApprovedSymbol }) => topL2GApprovedSymbol,
       tooltip: (
         <>
           Top gene prioritised by our locus-to-gene model. See{" "}
@@ -241,12 +219,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "l2gScore",
       label: "L2G score",
-      comparator: nullishComparator(
-        (a, b) => a - b,
-        row => row?.topL2GScore,
-        false
-      ),
-      sortable: true,
+      sortField: VariantCredibleSetsSortField.TopL2GScore,
       tooltip: (
         <>
           Machine learning prediction linking a gene to a credible set using all features. Score
@@ -272,9 +245,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
     {
       id: "credibleSetSize",
       label: "Credible set size",
-      comparator: (a, b) => a?.locusSize - b?.locusSize,
       numeric: true,
-      filterValue: false,
       renderCell: ({ locusSize }) => {
         return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
       },
@@ -289,23 +260,6 @@ type BodyProps = {
 };
 
 const PAGE_SIZE = 10;
-
-const SORT_FIELDS: Record<string, VariantCredibleSetsSortField | undefined> = {
-  leadVariant: VariantCredibleSetsSortField.LeadVariant,
-  pValue: VariantCredibleSetsSortField.PValue,
-  l2gScore: VariantCredibleSetsSortField.TopL2GScore,
-};
-
-function getSortVariables(sorting: SortingState) {
-  return {
-    sort: sorting.flatMap(({ id, desc }) => {
-      const key = SORT_FIELDS[id];
-      return key
-        ? [{ key, direction: desc ? SortDirection.Descending : SortDirection.Ascending }]
-        : [];
-    }),
-  };
-}
 
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
@@ -345,8 +299,6 @@ function Body({ id, entity }: BodyProps) {
             dataPath="variant.credibleSetsView"
             pageSize={PAGE_SIZE}
             columns={columns}
-            getSortVariables={getSortVariables}
-            searchFields={[]}
             query={GWAS_CREDIBLE_SETS_TABLE_QUERY}
             variables={variables}
           />
