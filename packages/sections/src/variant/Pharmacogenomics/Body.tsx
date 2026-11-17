@@ -1,4 +1,5 @@
-import { Fragment, useState } from "react";
+import { useQuery } from "@apollo/client";
+import { Fragment } from "react";
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./PharmacogenomicsQuery.gql";
@@ -6,7 +7,7 @@ import { useTheme } from "@mui/material/styles";
 import {
   DirectionalityDrawer,
   Link,
-  OtTableOffsetPagination,
+  OtTableServer,
   PublicationsDrawer,
   SectionItem,
   Tooltip,
@@ -45,9 +46,13 @@ type BodyProps = {
   entity: string;
 };
 
+const PAGE_SIZE = 10;
+
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(PHARMACOGENOMICS_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   const theme = useTheme();
   const levelColors = {
@@ -240,12 +245,12 @@ function Body({ id, entity }: BodyProps) {
         />
       )}
       renderBody={() => (
-        <OtTableOffsetPagination
+        <OtTableServer
           dataDownloader
           dataDownloaderFileStem={`${id}-pharmacogenetics-variant`}
-          entity="variant"
-          sectionName="pharmacogenomics"
-          setInitialRequestData={setRequest}
+          dataPath="variant.pharmacogenomics"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           showColumnVisibilityControl
           variables={variables}
           columns={columns}

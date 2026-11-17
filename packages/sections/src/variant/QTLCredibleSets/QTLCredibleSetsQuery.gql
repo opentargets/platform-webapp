@@ -1,10 +1,14 @@
-query QTLCredibleSetsQuery($variantId: String!, $page: Page) {
+query QTLCredibleSetsQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
     qtlCredibleSets: credibleSets(
       filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
-      page: $page
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
