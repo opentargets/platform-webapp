@@ -2,7 +2,7 @@ query EuropePMCQuery(
   $ensemblId: String!
   $efoId: String!
   $index: Int! = 0
-  $size: Int!
+  $size: Int! = 10
 ) {
   disease(efoId: $efoId) {
     id
