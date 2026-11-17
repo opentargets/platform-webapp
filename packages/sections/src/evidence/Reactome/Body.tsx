@@ -5,7 +5,7 @@ import {
   Tooltip,
   PublicationsDrawer,
   EllsWrapper,
-  OtTable,
+  OtTableServer,
   TableDrawer,
   Typography,
 } from "ui";
@@ -19,7 +19,8 @@ import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+  type EvidenceBodyProps,
+} from "@ot/constants";
 
 const getColumns = label => [
   {
@@ -143,17 +144,16 @@ const getColumns = label => [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
+  const variables = { ensemblId: ensgId, efoId };
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
-
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(REACTOME_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -165,23 +165,19 @@ function Body({ id, label, entity }: Props) {
       request={request}
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
-      renderBody={() => {
-        return (
-          <OtTable
-            columns={columns}
-            rows={request.data?.disease.reactomeSummary.rows}
-            dataDownloader
-            dataDownloaderFileStem={`reactome-${ensgId}-${efoId}`}
-            showGlobalFilter
-            rowsPerPageOptions={defaultRowsPerPageOptions}
-            fixed
-            noWrapHeader={false}
-            query={REACTOME_QUERY.loc.source.body}
-            variables={variables}
-            loading={request.loading}
-          />
-        );
-      }}
+      renderBody={() => (
+        <OtTableServer
+          query={REACTOME_QUERY}
+          columns={columns}
+          dataDownloader
+          dataDownloaderFileStem={`reactome-${ensgId}-${efoId}`}
+          dataPath="disease.reactomeSummary"
+          pageSize={PAGE_SIZE}
+          pageSizeOptions={defaultRowsPerPageOptions}
+          showGlobalFilter={false}
+          variables={variables}
+        />
+      )}
     />
   );
 }

@@ -1,4 +1,4 @@
-query OrphanetQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query OrphanetQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
@@ -7,7 +7,7 @@ query OrphanetQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     orphanetSummary: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [orphanet]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

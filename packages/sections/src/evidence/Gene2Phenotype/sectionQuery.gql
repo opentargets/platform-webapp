@@ -1,14 +1,15 @@
 query OpenTargetsGeneticsQuery(
   $ensemblId: String!
   $efoId: String!
-  $size: Int!
+  $index: Int! = 0
+  $size: Int! = 10
 ) {
   disease(efoId: $efoId) {
     id
     gene2Phenotype: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [gene2phenotype]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

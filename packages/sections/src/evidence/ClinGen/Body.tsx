@@ -1,11 +1,12 @@
 import { useQuery } from "@apollo/client";
-import { Link, Tooltip, SectionItem, OtTable, Typography } from "ui";
+import { Link, Tooltip, SectionItem, OtTableServer, Typography } from "ui";
 
 import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+  type EvidenceBodyProps,
+} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 
@@ -89,17 +90,16 @@ const columns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
-  const { ensgId, efoId } = id;
+  const { ensgId: ensemblId, efoId } = id;
+  const variables = { ensemblId, efoId };
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
-
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CLINGEN_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -109,21 +109,19 @@ function Body({ id, label, entity }: Props) {
       chipText={dataTypesMap.genetic_association}
       request={request}
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
-      renderBody={() => {
-        return (
-          <OtTable
-            columns={columns}
-            rows={request.data?.disease.clingenSummary.rows}
-            dataDownloader
-            dataDownloaderFileStem={`clingen-${ensgId}-${efoId}`}
-            showGlobalFilter
-            rowsPerPageOptions={defaultRowsPerPageOptions}
-            query={CLINGEN_QUERY.loc.source.body}
-            variables={variables}
-            loading={request.loading}
-          />
-        );
-      }}
+      renderBody={() => (
+        <OtTableServer
+          query={CLINGEN_QUERY}
+          columns={columns}
+          dataDownloader
+          dataDownloaderFileStem={`clingen-${ensemblId}-${efoId}`}
+          dataPath="disease.clingenSummary"
+          pageSize={PAGE_SIZE}
+          pageSizeOptions={defaultRowsPerPageOptions}
+          showGlobalFilter={false}
+          variables={variables}
+        />
+      )}
     />
   );
 }

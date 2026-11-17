@@ -7,13 +7,13 @@ import {
   PublicationsDrawer,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
-  OtTable,
+  OtTableServer,
   List,
   ListItem,
   Typography,
 } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps } from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 import OPEN_TARGETS_GENETICS_QUERY from "./sectionQuery.gql";
@@ -146,11 +146,15 @@ const getColumns = label => [
 
 type Props = EvidenceBodyProps;
 
-function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props) {
-  const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
+const PAGE_SIZE = 10;
 
+function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props) {
+  const variables = { ensemblId: ensgId, efoId };
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(OPEN_TARGETS_GENETICS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns({ symbol, name });
@@ -163,15 +167,15 @@ function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props)
       entity={entity}
       renderDescription={() => <Description symbol={symbol} name={name} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
+          query={OPEN_TARGETS_GENETICS_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`${ensgId}-${efoId}-gene2phenotype`}
-          rows={request.data?.disease.gene2Phenotype.rows}
-          showGlobalFilter
-          query={OPEN_TARGETS_GENETICS_QUERY.loc.source.body}
+          dataPath="disease.gene2Phenotype"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           variables={variables}
-          loading={request.loading}
         />
       )}
     />
