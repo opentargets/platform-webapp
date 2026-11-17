@@ -31,9 +31,7 @@ const ENV_GIT_VERSION: string | undefined = import.meta.env.VITE_GIT_VERSION;
 
 export const getConfig = (): Config => {
   return {
-    // TODO: temporary hardcode while dev API is down — revert to:
-    // urlApi: window.configUrlApi ?? ENV_API_URL ?? "",
-    urlApi: "https://api.platform.opentargets.org/api/v4/graphql",
+    urlApi: window.configUrlApi ?? ENV_API_URL ?? "",
     urlAiApi: window.configOTAiApi ?? ENV_AI_API_URL ?? "",
     urlPathwaysApi: window.configPathwaysApi ?? ENV_PATHWAYS_API_URL ?? "",
     gitVersion: window.gitVersion ?? ENV_GIT_VERSION ?? "",

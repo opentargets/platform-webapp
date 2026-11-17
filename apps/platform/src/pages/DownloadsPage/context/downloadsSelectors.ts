@@ -100,7 +100,8 @@ export const getFileLocation = (row: DownloadRow, locationURLs: Record<string, s
 
 export type ScriptType = "gcp" | "aws" | "rsync" | "wget";
 
-export const SCRIPT_TYPES: ScriptType[] = ["gcp", "aws", "rsync", "wget"];
+/** Tab order in the bag's access script; the first one a bag supports is selected by default. */
+export const SCRIPT_TYPES: ScriptType[] = ["aws", "gcp", "rsync", "wget"];
 
 export const SCRIPT_LABELS: Record<ScriptType, string> = {
   gcp: "Google Cloud CLI",
