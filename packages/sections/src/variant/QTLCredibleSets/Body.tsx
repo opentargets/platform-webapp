@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useQuery } from "@apollo/client";
+import { type ReactNode } from "react";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTableOffsetPagination,
+  OtTableServer,
   Tooltip,
   ClinvarStars,
   Navigate,
@@ -230,9 +231,13 @@ type BodyProps = {
   entity: string;
 };
 
+const PAGE_SIZE = 10;
+
 function Body({ id, entity }: BodyProps): ReactNode {
   const variables = { variantId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(QTL_CREDIBLE_SETS_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   return (
     <SectionItem
@@ -248,12 +253,12 @@ function Body({ id, entity }: BodyProps): ReactNode {
       )}
       renderBody={() => {
         return (
-          <OtTableOffsetPagination
+          <OtTableServer
             dataDownloader
             dataDownloaderFileStem={`${id}-qtl-credible-sets-variant`}
-            entity="variant"
-            sectionName="qtlCredibleSets"
-            setInitialRequestData={setRequest}
+            dataPath="variant.qtlCredibleSets"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
             columns={getColumns({
               id,
               referenceAllele: request.data?.variant.referenceAllele,

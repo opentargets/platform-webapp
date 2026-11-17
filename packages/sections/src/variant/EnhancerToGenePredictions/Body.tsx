@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, SectionItem, OtTableOffsetPagination, Tooltip } from "ui";
+import { useQuery } from "@apollo/client";
+import { Link, SectionItem, OtTableServer, Tooltip } from "ui";
 import { naLabel } from "@ot/constants";
 import { definition } from ".";
 
@@ -242,9 +242,13 @@ type BodyProps = {
   entity: string;
 };
 
+const PAGE_SIZE = 10;
+
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(ENHANCER_TO_GENE_PREDICTIONS_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   return (
     <SectionItem
@@ -259,12 +263,12 @@ function Body({ id, entity }: BodyProps) {
         />
       )}
       renderBody={() => (
-        <OtTableOffsetPagination
+        <OtTableServer
           dataDownloader
           dataDownloaderFileStem={`${id}-enhancer-to-gene-predictions`}
-          entity="variant"
-          sectionName="enhancerToGene"
-          setInitialRequestData={setRequest}
+          dataPath="variant.enhancerToGene"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           columns={columns}
           query={ENHANCER_TO_GENE_PREDICTIONS_QUERY}
           variables={variables}
