@@ -16,7 +16,8 @@
     "dev-test": "playwright test",
     "dev-test:smoke": "playwright test --grep @smoke",
     "test:platform:e2e": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test\"",
-    "test:platform:e2e:smoke": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test --grep @smoke\""
+    "test:platform:e2e:smoke": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test --grep @smoke\"",
+    "test:canary": "node scripts/canary.mjs"
   },
   "keywords": [],
   "author": "",

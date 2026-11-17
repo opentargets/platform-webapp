@@ -1,48 +1,19 @@
 import { expect, test } from "../../../../fixtures";
-import { DepMapSection } from "../../../../POM/objects/widgets/shared/depMapSection";
+import { DepMapSection } from "../../../../POM/objects/components/ProfileSection/targetSections";
+import { sectionContract } from "../../../../utils/sectionContract";
 
-test.describe("DepMap Essentiality Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
+test.describe("Cancer DepMap Section", () => {
+  sectionContract({
+    id: "depmapessentiality",
+    title: "Cancer DepMap",
+    url: (config) => `/target/${config.target?.primary}`,
   });
 
-  test("Section is visible when target has DepMap data", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
+  test("shows the essentiality plot and the export", async ({ page }) => {
+    const section = new DepMapSection(page);
 
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      expect(isVisible).toBe(true);
-    }
-  });
-
-  test("Plot is displayed when data is available", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
-
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      const isPlotVisible = await depMapSection.isPlotVisible();
-
-      if (isPlotVisible) {
-        expect(isPlotVisible).toBe(true);
-      }
-    }
-  });
-
-  test("Export data button is available", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
-
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      const isExportVisible = await depMapSection.isExportDataButtonVisible();
-
-      if (isExportVisible) {
-        expect(isExportVisible).toBe(true);
-      }
-    }
+    await expect(section.plot()).toBeVisible();
+    await expect(section.plot().locator("svg").first()).toBeVisible();
+    await expect(section.exportButton()).toBeVisible();
   });
 });

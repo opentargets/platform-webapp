@@ -90,7 +90,7 @@ We use **Playwright fixtures** to manage test data and make tests flexible and m
 
 ### CSV Configuration Schema
 
-Test configurations are loaded from a Google Sheet CSV. Each row represents a testing scenario, and columns define the entity IDs to use for different test types.
+By default tests use the IDs committed in `fixtures/testConfig.ts` (they mirror the `testing_scenario_1` row of the [test config sheet](https://docs.google.com/spreadsheets/d/1oWYlb_o0AZBYOFUCd8k5-whZpKLpicZ-UyyNkLUbUk8)), so a run is reproducible from the code alone. To try other entities, point `TEST_CONFIG_URL` at the sheet's CSV export (`.../export?format=csv`) and pick a row with `TEST_SCENARIO`. Each row represents a testing scenario, and columns define the entity IDs to use for different test types.
 
 | Column Name | Type | Description |
 |-------------|------|-------------|
@@ -118,7 +118,7 @@ The test configuration integrates with GitHub Actions through environment variab
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
-| `TEST_CONFIG_URL` | URL to the Google Sheet CSV export | Hardcoded default URL |
+| `TEST_CONFIG_URL` | URL to the Google Sheet CSV export | Unset: committed defaults |
 | `TEST_SCENARIO` | Name of the scenario row to use | `testing_scenario_1` |
 
 **Workflow usage example:**
@@ -178,6 +178,30 @@ test("Disease header is correctly displayed", async ({ page, testConfig }) => {
 - **Easy to update** entity IDs without touching test files
 - **Test different scenarios** by swapping configurations
 - **Supports future external config** (API, environment variables)
+
+## Writing Tests That Can Fail
+
+A test is only useful if it fails when the page is broken. Rules:
+
+- Use web-first assertions on Locators: `await expect(section.rows().first()).toBeVisible()`. They wait, then fail loudly.
+- No assertions inside `if`: `if (isVisible) { expect(...) }` passes when the section is missing. Pick an entity that has the data and assert it.
+- No `.catch(() => false)`, `waitForTimeout`, `networkidle`, `toBeGreaterThanOrEqual(0)` or `test.fail()` (it means *expected to fail*, not *report a failure*).
+- Never skip or soften a failing test to get green. If the app is wrong, the test stays red and the bug gets reported.
+
+These patterns are enforced by Biome plugins in `lint/`: errors in folders that have been rewritten (listed in the root `biome.json` overrides), warnings in the rest.
+
+Profile sections share `ProfileSection` (`POM/objects/components/ProfileSection/`) and the `sectionContract` helper (`utils/sectionContract.ts`), which checks title, rows, search and export. See `e2e/pages/target/sections/` for examples.
+
+### Guards that run on every test
+
+- **GraphQL errors fail the test.** Known API gaps go in `fixtures/knownApiErrors.ts` with a link to their issue.
+- **Canary run.** `yarn test:canary [spec]` aborts every GraphQL request and fails if any test still passes. Run it on new specs to prove they can fail. Tests that do not depend on API data are tagged `@no-data` and excluded.
+
+```bash
+cd packages/platform-test
+PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000 npx playwright test e2e/pages/target/sections
+PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000 yarn test:canary e2e/pages/target/sections
+```
 
 ## Annotating Critical Tests
 
@@ -264,8 +288,4 @@ gantt
 - [Triggering Netlify Deploys with GitHub Workflows](https://dev.to/thiernope/trigger-netlify-deploys-using-github-workflow-cicd-lcm) - Netlify automation guide
 - [Actions Netlify Issue #1220](https://github.com/nwtgck/actions-netlify/issues/1220) - Discussion on Netlify GitHub Actions integration
 - [Grouping Playwright Tests](https://testomat.io/blog/grouping-playwright-tests-for-improved-framework-efficiency/) - Test organization strategies
-<<<<<<< HEAD
 - [Playwright Test Annotations](https://playwright.dev/docs/test-annotations) - Official documentation for conditional tests and tagging
-=======
-- [Playwright Test Annotations](https://playwright.dev/docs/test-annotations) - Official documentation for conditional tests and tagging
->>>>>>> origin/main
