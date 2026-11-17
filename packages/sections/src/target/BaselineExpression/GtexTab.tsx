@@ -44,9 +44,6 @@ export async function getData(symbol) {
     const urlData = `https://gtexportal.org/api/v2/expression/geneExpression?datasetId=gtex_v10&gencodeId=${gencodeId}`;
     const resData = await fetch(urlData);
     const rawData = await resData.json();
-    // TODO:
-    // in order for the SectionItem null check to work, the data needs to match the target object format.
-    // Ideally when switching tabs we don't want to check and hide the widget, so this should be handled differently
     const data = {
       target: {
         expressions: transformData(rawData.data),
