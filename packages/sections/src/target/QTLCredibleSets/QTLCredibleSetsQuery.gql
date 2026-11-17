@@ -1,33 +1,33 @@
-query QTLCredibleSetsQuery($ensemblId: String!, $size: Int!, $index: Int!) {
-	target(ensemblId: $ensemblId) {
-		id
-		approvedSymbol
-		credibleSets(page: { size: $size, index: $index }) {
-			count
-			rows {
-				studyLocusId
-				pValueMantissa
-				pValueExponent
-				beta
-				finemappingMethod
-				confidence
-				isTransQtl
-				variant {
-					id: variantId
-					chromosome
-					position
-					referenceAllele
-					alternateAllele
-				}
-				study {
-					id
-					studyType
-					condition
-				}
-				locus {
-					count
-				}
-			}
-		}
-	}
+query TargetQTLCredibleSetsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+  target(ensemblId: $ensemblId) {
+    id
+    approvedSymbol
+    credibleSets(page: { index: $index, size: $size }) {
+      count
+      rows {
+        studyLocusId
+        pValueMantissa
+        pValueExponent
+        beta
+        finemappingMethod
+        confidence
+        isTransQtl
+        variant {
+          id: variantId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+        }
+        study {
+          id
+          studyType
+          condition
+        }
+        locus {
+          count
+        }
+      }
+    }
+  }
 }

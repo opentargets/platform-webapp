@@ -845,6 +845,12 @@ export enum Datasource {
 
 /** Represents the policy for a datasource. */
 export type DatasourcePolicy = {
+  /**
+   * Whether the datasource's evidence counts towards indirect associations (descendant or
+   * ancestor diseases). If omitted, the datasource's default is used (`false` for
+   * `expression_atlas`, `true` for all others).
+   */
+  propagate?: InputMaybe<Scalars['Boolean']['input']>;
   /** Whether the datasource is required for the association to be considered valid. */
   required: Scalars['Boolean']['input'];
   /** The weight of the datasource in association scoring. Range is [0.0, 1.0]. */
@@ -943,6 +949,11 @@ export type Disease = {
   resolvedAncestors: Array<Disease>;
   /** Semantically similar diseases based on a PubMed word embedding model. */
   similarEntities: SimilarEntityPage;
+  /**
+   * Flat, sortable and searchable summary of the studies of this disease, for tables. Use
+   * `studies(diseaseIds: ...)` for the full study entities and stats.
+   */
+  studiesView: DiseaseStudyPage;
   /** List of studies associated with the disease. */
   studyIds: Array<Scalars['String']['output']>;
   /** List of synonyms for the disease. */
@@ -1049,6 +1060,20 @@ export type DiseaseSimilarEntitiesArgs = {
   threshold?: InputMaybe<Scalars['Float']['input']>;
 };
 
+
+/**
+ * Core annotation for diseases or phenotypes. A disease or phenotype in the Platform is understood
+ * as any disease, phenotype, biological process or measurement that might have any type of
+ * causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO)
+ * (slim version) is used as scaffold for the disease or phenotype entity.
+ */
+export type DiseaseStudiesViewArgs = {
+  enableIndirect?: Scalars['Boolean']['input'];
+  page?: Page;
+  search?: InputMaybe<DiseaseStudiesSearch>;
+  sort?: Array<DiseaseStudiesSort>;
+};
+
 /** A scored association between a disease and a target or vice versa. */
 export type DiseaseAssociation = {
   __typename?: 'DiseaseAssociation';
@@ -1114,6 +1139,15 @@ export type DiseasePhenotypePage = {
   rows: Array<DiseasePhenotype>;
 };
 
+/** Text fields that `search` can match against. */
+export enum DiseaseSearchField {
+  Description = 'DESCRIPTION',
+  Id = 'ID',
+  Name = 'NAME',
+  /** Any synonym, of any relation type. */
+  Synonyms = 'SYNONYMS'
+}
+
 /** Sort types. Contain the sort field and direction. */
 export type DiseaseSort = {
   /** The direction to sort in. */
@@ -1129,11 +1163,104 @@ export enum DiseaseSortField {
   Name = 'NAME'
 }
 
+/** Case-insensitive text search. */
+export type DiseaseStudiesSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<DiseaseStudiesSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum DiseaseStudiesSearchField {
+  Cohorts = 'COHORTS',
+  DiseaseIds = 'DISEASE_IDS',
+  DiseaseNames = 'DISEASE_NAMES',
+  ProjectId = 'PROJECT_ID',
+  PublicationDate = 'PUBLICATION_DATE',
+  PublicationFirstAuthor = 'PUBLICATION_FIRST_AUTHOR',
+  PublicationJournal = 'PUBLICATION_JOURNAL',
+  PubmedId = 'PUBMED_ID',
+  StudyId = 'STUDY_ID',
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type DiseaseStudiesSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: DiseaseStudiesSortField;
+};
+
+/** Fields available for sorting. */
+export enum DiseaseStudiesSortField {
+  /** Number of credible sets identified in the study. */
+  CredibleSetsCount = 'CREDIBLE_SETS_COUNT',
+  /** Number of samples tested. */
+  NSamples = 'N_SAMPLES',
+  /** By publication date. */
+  PublicationDate = 'PUBLICATION_DATE',
+  /** Alphabetically. */
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
+
+/**
+ * A study linked to a disease, as shown in the disease page's GWAS studies table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `DiseaseStudy::NAME`. Update both together.
+ */
+export type DiseaseStudy = {
+  __typename?: 'DiseaseStudy';
+  /** List of cohort(s) represented in the discovery sample. */
+  cohorts: Array<Scalars['String']['output']>;
+  /** Number of credible sets identified in the study. */
+  credibleSetsCount: Scalars['Int']['output'];
+  /** Identifiers of the diseases or phenotypes the study's trait is mapped to. */
+  diseaseIds: Array<Scalars['String']['output']>;
+  /** Names of the diseases in `disease_ids`, in the same order. Empty when a name is missing. */
+  diseaseNames: Array<Scalars['String']['output']>;
+  /** The GWAS or molQTL study identifier (e.g. GCST004132). */
+  id: Scalars['String']['output'];
+  /** Collection of populations referenced by the study. */
+  ldPopulationStructure: Array<LdPopulationStructure>;
+  /** The number of samples tested in GWAS analysis. */
+  nSamples?: Maybe<Scalars['Int']['output']>;
+  /** Identifier of the source project collection that the study information is derived from. */
+  projectId: Scalars['String']['output'];
+  /** Date of the publication that references the study. */
+  publicationDate?: Maybe<Scalars['String']['output']>;
+  /** First name and initials of the author of the publication that references the study. */
+  publicationFirstAuthor?: Maybe<Scalars['String']['output']>;
+  /** Abbreviated journal name where the publication referencing study was published. */
+  publicationJournal?: Maybe<Scalars['String']['output']>;
+  /** PubMed identifier of the publication that references the study [bioregistry:pubmed]. */
+  pubmedId?: Maybe<Scalars['String']['output']>;
+  /** Molecular or phenotypic trait, derived from source, analysed in the study. */
+  traitFromSource: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type DiseaseStudyPage = {
+  __typename?: 'DiseaseStudyPage';
+  count: Scalars['Int']['output'];
+  rows: Array<DiseaseStudy>;
+};
+
 /** List of synonymous disease labels. */
 export type DiseaseSynonym = {
   __typename?: 'DiseaseSynonym';
   relation: Scalars['String']['output'];
   terms: Array<Maybe<Scalars['String']['output']>>;
+};
+
+/** Case-insensitive text search. */
+export type DiseasesSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<DiseaseSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
 };
 
 /**
@@ -1412,7 +1539,7 @@ export type EnhancerToGenePage = {
   rows: Array<EnhancerToGene>;
 };
 
-/** Case-insensitive text search over enhancer-to-gene predictions. */
+/** Case-insensitive text search. */
 export type EnhancerToGeneSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<EnhancerToGeneSearchField>;
@@ -2379,7 +2506,7 @@ export type PharmacogenomicsPage = {
   rows: Array<Pharmacogenomics>;
 };
 
-/** Case-insensitive text search over pharmacogenomics records. */
+/** Case-insensitive text search. */
 export type PharmacogenomicsSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<PharmacogenomicsSearchField>;
@@ -2588,12 +2715,8 @@ export type Query = {
   search: SearchResults;
   studies: StudyPage;
   study?: Maybe<Study>;
-  /** GWAS credible sets for a study. */
-  studyCredibleSets: StudyCredibleSetPage;
   /** Retrieve a target (gene/protein) by target identifier (e.g. ENSG00000139618). */
   target?: Maybe<Target>;
-  /** molQTL credible sets linked to a target. */
-  targetCredibleSets: TargetCredibleSetPage;
   /** Retrieve multiple targets by target identifiers. */
   targets: TargetPage;
   /**
@@ -2601,8 +2724,6 @@ export type Query = {
    * indels (e.g. 19_44908684_T_C).
    */
   variant?: Maybe<Variant>;
-  variantCredibleSets: VariantCredibleSetPage;
-  variantTranscriptConsequences: VariantTranscriptConsequencePage;
   /**
    * Retrieve a list of variants by their identifier in the format of CHROM_POS_REF_ALT for SNPs
    * and short indels (e.g. 19_44908684_T_C).
@@ -2646,7 +2767,7 @@ export type QueryDiseaseArgs = {
 export type QueryDiseasesArgs = {
   efoIds: Array<Scalars['String']['input']>;
   page?: Page;
-  search?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<DiseasesSearch>;
   sort: Array<DiseaseSort>;
 };
 
@@ -2694,7 +2815,7 @@ export type QueryStudiesArgs = {
   enableIndirect?: Scalars['Boolean']['input'];
   filter?: InputMaybe<StudyFilter>;
   page?: Page;
-  search?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<StudiesSearch>;
   sort?: Array<StudySort>;
   studyIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -2707,27 +2828,8 @@ export type QueryStudyArgs = {
 
 
 /** The query root for the `Platform` product. */
-export type QueryStudyCredibleSetsArgs = {
-  page?: Page;
-  search?: InputMaybe<StudyCredibleSetsSearch>;
-  sort?: Array<StudyCredibleSetsSort>;
-  studyId: Scalars['String']['input'];
-};
-
-
-/** The query root for the `Platform` product. */
 export type QueryTargetArgs = {
   ensemblId: Scalars['String']['input'];
-};
-
-
-/** The query root for the `Platform` product. */
-export type QueryTargetCredibleSetsArgs = {
-  ensemblId: Scalars['String']['input'];
-  page?: Page;
-  search?: InputMaybe<TargetCredibleSetsSearch>;
-  sort?: Array<TargetCredibleSetsSort>;
-  studyTypes?: Array<StudyType>;
 };
 
 
@@ -2740,25 +2842,6 @@ export type QueryTargetsArgs = {
 
 /** The query root for the `Platform` product. */
 export type QueryVariantArgs = {
-  variantId: Scalars['String']['input'];
-};
-
-
-/** The query root for the `Platform` product. */
-export type QueryVariantCredibleSetsArgs = {
-  page?: Page;
-  search?: InputMaybe<VariantCredibleSetsSearch>;
-  sort?: Array<VariantCredibleSetsSort>;
-  studyTypes: Array<StudyType>;
-  variantId: Scalars['String']['input'];
-};
-
-
-/** The query root for the `Platform` product. */
-export type QueryVariantTranscriptConsequencesArgs = {
-  page?: Page;
-  search?: InputMaybe<VariantTranscriptConsequencesSearch>;
-  sort?: Array<VariantTranscriptConsequencesSort>;
   variantId: Scalars['String']['input'];
 };
 
@@ -3053,6 +3136,14 @@ export type StringFilter = {
   notContains?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Case-insensitive text search. */
+export type StudiesSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<StudySearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
 /**
  * Metadata for all complex trait GWAS and molecular QTL studies in the Platform. The dataset
  * includes study metadata, phenotype information, sample sizes, publication information and more.
@@ -3080,6 +3171,11 @@ export type Study = {
    * set.
    */
   credibleSets: CredibleSetPage;
+  /**
+   * Flat, sortable and searchable summary of this GWAS study's credible sets, for tables. Use
+   * `credibleSets` for the full credible sets with locus, L2G, colocalisation, etc.
+   */
+  credibleSetsView: StudyCredibleSetPage;
   /** Collection of ancestries reported by the study discovery phase. */
   discoverySamples: Array<Sample>;
   /** Disease associated with a studied trait. */
@@ -3140,6 +3236,20 @@ export type StudyCredibleSetsArgs = {
   page?: Page;
 };
 
+
+/**
+ * Metadata for all complex trait GWAS and molecular QTL studies in the Platform. The dataset
+ * includes study metadata, phenotype information, sample sizes, publication information and more.
+ * Molecular QTL studies are split by their target trait (e.g. gene, splice junction, etc),
+ * biosample (tissue, cell type or cell line) and condition (e.g. stimulation, time period, etc),
+ * potentially leading to tens of thousands of studies derived from the same publication.
+ */
+export type StudyCredibleSetsViewArgs = {
+  page?: Page;
+  search?: InputMaybe<StudyCredibleSetsSearch>;
+  sort?: Array<StudyCredibleSetsSort>;
+};
+
 /**
  * A GWAS credible set, as shown in the study page's credible sets table.
  *
@@ -3175,7 +3285,7 @@ export type StudyCredibleSetPage = {
   rows: Array<StudyCredibleSet>;
 };
 
-/** Case-insensitive text search over the credible sets. */
+/** Case-insensitive text search. */
 export type StudyCredibleSetsSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<StudyCredibleSetsSearchField>;
@@ -3234,6 +3344,13 @@ export type StudyPage = {
   rows: Array<Study>;
   stats: StudyStats;
 };
+
+/** Text fields that `search` can match against. */
+export enum StudySearchField {
+  ProjectId = 'PROJECT_ID',
+  StudyId = 'STUDY_ID',
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
 
 /** Sort types. Contain the sort field and direction. */
 export type StudySort = {
@@ -3363,6 +3480,12 @@ export type Target = {
    * set.
    */
   credibleSets: CredibleSetPage;
+  /**
+   * Flat, sortable and searchable summary of the molQTL credible sets linked to this target,
+   * for tables. Use `credibleSets` for the full credible sets with locus, L2G, colocalisation,
+   * etc.
+   */
+  credibleSetsView: TargetCredibleSetPage;
   /** Database cross-references for the target. */
   dbXrefs: Array<IdAndSource>;
   /**
@@ -3516,6 +3639,20 @@ export type TargetBaselineExpressionArgs = {
  */
 export type TargetCredibleSetsArgs = {
   page?: Page;
+};
+
+
+/**
+ * Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl
+ * database and uses the Ensembl gene ID as the primary identifier. An Ensembl gene ID is
+ * considered potential drug target if included in the canonical assembly or if present alternative
+ * assemblies but encoding for a reviewed protein product according to the UniProt database.
+ */
+export type TargetCredibleSetsViewArgs = {
+  page?: Page;
+  search?: InputMaybe<TargetCredibleSetsSearch>;
+  sort?: Array<TargetCredibleSetsSort>;
+  studyTypes?: Array<StudyType>;
 };
 
 
@@ -3690,7 +3827,7 @@ export type TargetCredibleSetPage = {
   rows: Array<TargetCredibleSet>;
 };
 
-/** Case-insensitive text search over the credible sets. */
+/** Case-insensitive text search. */
 export type TargetCredibleSetsSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<TargetCredibleSetsSearchField>;
@@ -3915,6 +4052,11 @@ export type Variant = {
    * derived statistics.
    */
   credibleSets: CredibleSetPage;
+  /**
+   * Flat, sortable and searchable summary of the credible sets containing this variant, for
+   * tables. Use `credibleSets` for the full credible sets with locus, L2G, colocalisation, etc.
+   */
+  credibleSetsView: VariantCredibleSetPage;
   /** Cross-references for the variant in different databases. */
   dbXrefs: Array<DbXref>;
   enhancerToGene: EnhancerToGenePage;
@@ -3951,6 +4093,11 @@ export type Variant = {
   rsIds: Array<Scalars['String']['output']>;
   /** Predicted consequences on transcript context. */
   transcriptConsequences: Array<TranscriptConsequence>;
+  /**
+   * Paginated, sortable and searchable predicted consequences on transcript context, for
+   * tables. Use `transcriptConsequences` for the full list as stored on the variant.
+   */
+  transcriptConsequencesView: VariantTranscriptConsequencePage;
   /** Short summary of the variant effect. */
   variantDescription: Scalars['String']['output'];
   /** List of predicted or measured effects of the variant based on various methods. */
@@ -3972,6 +4119,20 @@ export type Variant = {
 export type VariantCredibleSetsArgs = {
   filter?: InputMaybe<CredibleSetFilter>;
   page?: Page;
+};
+
+
+/**
+ * Core variant information for all variants in the Platform.
+ * Variants are included if any phenotypic information is available for the variant,
+ * including GWAS or molQTL credible sets, ClinVar, Uniprot or ClinPGx.
+ * The dataset includes variant metadata as well as variant effects derived from Ensembl VEP.
+ */
+export type VariantCredibleSetsViewArgs = {
+  page?: Page;
+  search?: InputMaybe<VariantCredibleSetsSearch>;
+  sort?: Array<VariantCredibleSetsSort>;
+  studyTypes: Array<StudyType>;
 };
 
 
@@ -4032,6 +4193,19 @@ export type VariantProteinCodingCoordinatesArgs = {
  */
 export type VariantTranscriptConsequencesArgs = {
   sort?: Array<TranscriptConsequenceSort>;
+};
+
+
+/**
+ * Core variant information for all variants in the Platform.
+ * Variants are included if any phenotypic information is available for the variant,
+ * including GWAS or molQTL credible sets, ClinVar, Uniprot or ClinPGx.
+ * The dataset includes variant metadata as well as variant effects derived from Ensembl VEP.
+ */
+export type VariantTranscriptConsequencesViewArgs = {
+  page?: Page;
+  search?: InputMaybe<VariantTranscriptConsequencesSearch>;
+  sort?: Array<VariantTranscriptConsequencesSort>;
 };
 
 /**
@@ -4102,7 +4276,7 @@ export type VariantCredibleSetPage = {
   rows: Array<VariantCredibleSet>;
 };
 
-/** Case-insensitive text search over the credible sets. */
+/** Case-insensitive text search. */
 export type VariantCredibleSetsSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<VariantCredibleSetsSearchField>;
@@ -4221,7 +4395,7 @@ export type VariantTranscriptConsequencePage = {
   rows: Array<VariantTranscriptConsequence>;
 };
 
-/** Case-insensitive text search over the transcript consequences. */
+/** Case-insensitive text search. */
 export type VariantTranscriptConsequencesSearch = {
   /** Fields to search in. Defaults to all of them. */
   fields?: Array<VariantTranscriptConsequencesSearchField>;
@@ -4384,7 +4558,7 @@ export type GwasStudiesQueryVariables = Exact<{
   size: Scalars['Int']['input'];
   index: Scalars['Int']['input'];
   sort?: Array<StudySort> | StudySort;
-  search?: InputMaybe<Scalars['String']['input']>;
+  search?: Scalars['String']['input'];
 }>;
 
 
@@ -4632,14 +4806,14 @@ export type TargetPharmacogenomicsQuery = { __typename?: 'Query', target?: { __t
 
 export type TargetPharmacogenomicsSummaryFragment = { __typename?: 'Target', pharmacogenomics: { __typename?: 'PharmacogenomicsPage', count: number } };
 
-export type QtlCredibleSetsQueryVariables = Exact<{
+export type TargetQtlCredibleSetsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
-  size: Scalars['Int']['input'];
-  index: Scalars['Int']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
 }>;
 
 
-export type QtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null, locus: { __typename?: 'LocusPage', count: number } }> } } | null };
+export type TargetQtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null, locus: { __typename?: 'LocusPage', count: number } }> } } | null };
 
 export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
@@ -5210,12 +5384,12 @@ export const DrugsQueryDocument = gql`
 }
     `;
 export const GwasStudiesQueryDocument = gql`
-    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!, $sort: [StudySort!]! = [], $search: String) {
+    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!, $sort: [StudySort!]! = [], $search: String! = "") {
   studies(
     diseaseIds: $diseaseIds
     page: {size: $size, index: $index}
     sort: $sort
-    search: $search
+    search: {text: $search}
   ) {
     count
     rows {
@@ -5891,12 +6065,12 @@ export const TargetPharmacogenomicsQueryDocument = gql`
   }
 }
     `;
-export const QtlCredibleSetsQueryDocument = gql`
-    query QTLCredibleSetsQuery($ensemblId: String!, $size: Int!, $index: Int!) {
+export const TargetQtlCredibleSetsQueryDocument = gql`
+    query TargetQTLCredibleSetsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol
-    credibleSets(page: {size: $size, index: $index}) {
+    credibleSets(page: {index: $index, size: $size}) {
       count
       rows {
         studyLocusId
@@ -6150,8 +6324,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetPharmacogenomicsQuery(variables: TargetPharmacogenomicsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetPharmacogenomicsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetPharmacogenomicsQuery>({ document: TargetPharmacogenomicsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetPharmacogenomicsQuery', 'query', variables);
     },
-    QTLCredibleSetsQuery(variables: QtlCredibleSetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<QtlCredibleSetsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<QtlCredibleSetsQuery>({ document: QtlCredibleSetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'QTLCredibleSetsQuery', 'query', variables);
+    TargetQTLCredibleSetsQuery(variables: TargetQtlCredibleSetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetQtlCredibleSetsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetQtlCredibleSetsQuery>({ document: TargetQtlCredibleSetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetQTLCredibleSetsQuery', 'query', variables);
     },
     TargetSafetyQuery(variables: TargetSafetyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSafetyQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetSafetyQuery>({ document: TargetSafetyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSafetyQuery', 'query', variables);
