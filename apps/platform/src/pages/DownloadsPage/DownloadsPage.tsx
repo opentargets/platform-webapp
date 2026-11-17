@@ -67,7 +67,7 @@ function DownloadsPage() {
   );
 }
 
-/** Everything under the page header: toolbar, the active view, the basket drawer and its helpers. */
+/** Everything under the page header: toolbar, the active view, the bag drawer and its helpers. */
 function DatasetsPage() {
   const { state, dispatch } = useDownloads();
   const basket = useBasket();
@@ -91,7 +91,7 @@ function DatasetsPage() {
     [searchParams, setSearchParams]
   );
 
-  // Persist the basket (the ids only, never in the URL)
+  // Persist the bag (the ids only, never in the URL)
   useEffect(() => {
     writeStoredBasket(state.basket);
   }, [state.basket]);
@@ -109,7 +109,7 @@ function DatasetsPage() {
   }, [state.basket.length]);
   const dismissCoach = () => setCoachOpen(false);
 
-  // "Empty basket" clears at once and offers an undo for a few seconds
+  // "Empty bag" clears at once and offers an undo for a few seconds
   const [undoIds, setUndoIds] = useState<string[] | null>(null);
   const handleEmptyBasket = () => {
     setUndoIds(state.basket);
@@ -189,7 +189,7 @@ function DatasetsPage() {
         onClose={(_, reason) => {
           if (reason !== "clickaway") setUndoIds(null);
         }}
-        message="Basket emptied"
+        message="Bag emptied"
         action={
           <Button size="small" onClick={handleUndoEmpty} sx={{ color: "#fff", border: 0 }}>
             Undo

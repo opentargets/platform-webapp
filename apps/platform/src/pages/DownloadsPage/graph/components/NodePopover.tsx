@@ -114,7 +114,7 @@ const NodePopover: React.FC<NodePopoverProps> = ({
         <BasketToggleButton
           inBasket={inBasket}
           onToggle={() => onToggleBasket(node.id)}
-          addLabel="Add to basket"
+          addLabel="Add to bag"
           datasetName={node.label}
         />
       </Box>

@@ -1,7 +1,7 @@
 /**
  * localStorage persistence for the dataset basket and the one-time coach
  * mark. Every access is wrapped: storage can be missing (SSR, tests) or throw
- * (private mode, blocked site data), and the basket must never break the page.
+ * (private mode, blocked site data), and the bag must never break the page.
  */
 
 export const BASKET_STORAGE_KEY = "ot.downloads.basket";
@@ -22,7 +22,7 @@ export function writeStoredBasket(ids: string[]): void {
   try {
     window.localStorage.setItem(BASKET_STORAGE_KEY, JSON.stringify(ids));
   } catch {
-    /* storage unavailable - the basket just won't survive a reload */
+    /* storage unavailable - the bag just won't survive a reload */
   }
 }
 

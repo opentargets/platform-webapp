@@ -1,8 +1,8 @@
 /**
  * Component: GraphEdgeTooltip
  * Describes what an edge is: which dataset references which, and through
- * which field(s). Shown following the pointer while hovering an edge, and
- * pinned in place (with a close button) once the edge is clicked.
+ * which field(s). Opened by clicking an edge and pinned where it was
+ * clicked, with a close button.
  */
 
 import React from 'react';
@@ -18,26 +18,18 @@ export interface EdgeTooltipInfo {
 interface GraphEdgeTooltipProps {
   edge: EdgeTooltipInfo;
   position: { x: number; y: number };
-  /** Pinned tooltips are interactive (scrollable, closable); hover ones follow the pointer and ignore it */
-  pinned?: boolean;
   onClose?: () => void;
 }
 
-const HOVER_REFERENCE_LIMIT = 5;
-
-const GraphEdgeTooltip: React.FC<GraphEdgeTooltipProps> = ({ edge, position, pinned = false, onClose }) => {
-  const shown = pinned ? edge.references : edge.references.slice(0, HOVER_REFERENCE_LIMIT);
-  const hiddenCount = edge.references.length - shown.length;
-
+const GraphEdgeTooltip: React.FC<GraphEdgeTooltipProps> = ({ edge, position, onClose }) => {
   return (
     <Box
       sx={{
         position: 'fixed',
         left: position.x,
         top: position.y,
-        transform: pinned ? 'translate(-50%, 12px)' : 'translate(-50%, calc(-100% - 12px))',
+        transform: 'translate(-50%, 12px)',
         zIndex: 1300,
-        pointerEvents: pinned ? 'auto' : 'none',
       }}
     >
       <Card elevation={4} sx={{ px: 1.5, py: 1, maxWidth: 360, minWidth: 220 }}>
@@ -45,18 +37,16 @@ const GraphEdgeTooltip: React.FC<GraphEdgeTooltipProps> = ({ edge, position, pin
           <Typography variant="body2" sx={{ fontWeight: 'bold', lineHeight: 1.3, flex: 1 }}>
             {edge.sourceLabel} → {edge.targetLabel}
           </Typography>
-          {pinned && (
-            <IconButton size="small" aria-label="Close edge details" onClick={onClose} sx={{ mt: -0.5, mr: -0.75 }}>
-              ×
-            </IconButton>
-          )}
+          <IconButton size="small" aria-label="Close edge details" onClick={onClose} sx={{ mt: -0.5, mr: -0.75 }}>
+            ×
+          </IconButton>
         </Box>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
           {edge.sourceLabel} references {edge.targetLabel} through{' '}
           {edge.references.length === 1 ? 'this field' : `${edge.references.length} fields`}:
         </Typography>
-        <Box sx={{ maxHeight: pinned ? 220 : 'none', overflowY: pinned ? 'auto' : 'visible' }}>
-          {shown.map(({ sourceField, targetField }) => (
+        <Box sx={{ maxHeight: 220, overflowY: 'auto' }}>
+          {edge.references.map(({ sourceField, targetField }) => (
             <Typography
               key={`${sourceField}->${targetField}`}
               variant="caption"
@@ -67,11 +57,6 @@ const GraphEdgeTooltip: React.FC<GraphEdgeTooltipProps> = ({ edge, position, pin
             </Typography>
           ))}
         </Box>
-        {hiddenCount > 0 && (
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            +{hiddenCount} more - click the edge to see all
-          </Typography>
-        )}
       </Card>
     </Box>
   );

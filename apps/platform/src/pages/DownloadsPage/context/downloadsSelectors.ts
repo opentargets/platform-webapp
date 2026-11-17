@@ -46,7 +46,7 @@ export const selectCategoryCounts = (
 export const selectRowsById = (rows: DownloadRow[]): Map<string, DownloadRow> =>
   new Map(rows.map(row => [getDatasetId(row), row]));
 
-/** The basket's rows in basket (insertion) order, skipping ids that no longer resolve. */
+/** The bag's rows in basket (insertion) order, skipping ids that no longer resolve. */
 export const selectBasketRows = (rows: DownloadRow[], basket: string[]): DownloadRow[] => {
   const byId = selectRowsById(rows);
   return basket.map(id => byId.get(id)).filter((row): row is DownloadRow => Boolean(row));

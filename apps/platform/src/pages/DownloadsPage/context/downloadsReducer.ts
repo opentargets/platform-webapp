@@ -25,7 +25,7 @@ export const initialState: DownloadsState = {
   basket: [],
   basketOpen: false,
   networkScope: "all",
-  networkLayout: "radial",
+  networkLayout: "stacked",
   selectedNodeId: null,
 };
 

@@ -1,7 +1,7 @@
 /**
  * Component: GraphVisualization
  * The network canvas plus its pointer-driven overlays: the node hover
- * popover and the edge tooltips. Selection, basket scope and the canvas
+ * popover and the edge details card (opened by clicking an edge). Selection, basket scope and the canvas
  * controls are owned by the parent (NetworkView), which also renders the
  * details panel, legend and header around this component.
  */
@@ -28,7 +28,7 @@ interface GraphVisualizationProps {
   inBasket: (id: string) => boolean;
   onToggleBasket: (id: string) => void;
   onControllerReady?: (controller: GraphController | null) => void;
-  /** Radial hub-and-spoke (default) or stacked category lanes */
+  /** Stacked category lanes (default) or radial hub-and-spoke */
   layout?: GraphLayout;
 }
 
@@ -50,10 +50,9 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   inBasket,
   onToggleBasket,
   onControllerReady,
-  layout = 'radial',
+  layout = 'stacked',
 }) => {
   const [hoveredNode, setHoveredNode] = useState<HoveredNode | null>(null);
-  const [hoveredEdge, setHoveredEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
   const [pinnedEdge, setPinnedEdge] = useState<{ id: string; position: GraphPointerPosition } | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -120,13 +119,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     [edges, nodes]
   );
 
-  const handleEdgeHover = useCallback((edgeId: string | null, position?: GraphPointerPosition) => {
-    setHoveredEdge(edgeId && position ? { id: edgeId, position } : null);
-  }, []);
-
   const handleEdgeSelect = useCallback((edgeId: string, position?: GraphPointerPosition) => {
     if (position) setPinnedEdge({ id: edgeId, position });
-    setHoveredEdge(null);
   }, []);
 
   // Anything that moves focus elsewhere (selecting a node, clicking empty
@@ -145,7 +139,6 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     onNodeDeselect?.();
   }, [onNodeDeselect]);
 
-  const hoveredEdgeInfo = hoveredEdge && hoveredEdge.id !== pinnedEdge?.id ? describeEdge(hoveredEdge.id) : null;
   const pinnedEdgeInfo = pinnedEdge ? describeEdge(pinnedEdge.id) : null;
 
   return (
@@ -159,7 +152,6 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         onNodeSelect={handleNodeSelect}
         onNodeDeselect={handleNodeDeselect}
         onEdgeSelect={handleEdgeSelect}
-        onEdgeHover={handleEdgeHover}
         onNodeHover={handleNodeHover}
         layoutConfig={layoutConfig}
         layout={layout}
@@ -178,13 +170,11 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         />
       )}
 
-      {/* Edge details: follows the pointer on hover, pinned in place on click */}
-      {hoveredEdgeInfo && hoveredEdge && <GraphEdgeTooltip edge={hoveredEdgeInfo} position={hoveredEdge.position} />}
+      {/* Edge details: opened by clicking an edge, pinned where it was clicked */}
       {pinnedEdgeInfo && pinnedEdge && (
         <GraphEdgeTooltip
           edge={pinnedEdgeInfo}
           position={pinnedEdge.position}
-          pinned
           onClose={() => setPinnedEdge(null)}
         />
       )}

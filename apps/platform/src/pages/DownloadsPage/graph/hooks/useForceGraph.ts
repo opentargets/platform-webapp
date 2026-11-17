@@ -61,7 +61,6 @@ export const useForceGraph = ({
   onNodeSelect,
   onNodeDeselect,
   onEdgeSelect,
-  onEdgeHover,
   onNodeHover,
 }: UseForceGraphOptions): UseForceGraphResult => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,10 +73,10 @@ export const useForceGraph = ({
   const boundsRef = useRef<GraphBounds | null>(null);
 
   // Keep latest callbacks available to D3 event handlers without rebuilding the graph
-  const callbacksRef = useRef<GraphCallbacks>({ onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover });
+  const callbacksRef = useRef<GraphCallbacks>({ onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover });
   useEffect(() => {
-    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover };
-  }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onEdgeHover, onNodeHover]);
+    callbacksRef.current = { onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover };
+  }, [onNodeSelect, onNodeDeselect, onEdgeSelect, onNodeHover]);
 
   const isReady = useGraphSimulation({
     containerRef,

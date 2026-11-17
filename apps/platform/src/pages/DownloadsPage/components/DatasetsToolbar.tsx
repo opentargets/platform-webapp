@@ -8,6 +8,7 @@ import BasketButton from "./BasketButton";
 import CategoryChip from "./CategoryChip";
 import SearchField from "./SearchField";
 import ViewToggle from "./ViewToggle";
+import CategoryLegend from "./network/CategoryLegend";
 import { MONO_FONT, RADIUS } from "./tokens";
 
 export interface DatasetsToolbarProps {
@@ -27,8 +28,9 @@ export interface DatasetsToolbarProps {
 
 /**
  * The sticky bar above both views. In Cards view it carries search, the
- * result count, "Clear all" and the category chips; in Network view only the
- * view toggle and the basket remain.
+ * result count, "Clear all" and the category chips; in Network view the
+ * network's category legend sits on the same row as the view toggle and
+ * the bag, and there is no second row.
  */
 function DatasetsToolbar({
   view,
@@ -114,7 +116,8 @@ function DatasetsToolbar({
           </>
         )}
 
-        <Box sx={{ flex: 1 }} />
+        {/* The free space left of the view toggle; in Network view the legend fills it and wraps within it */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>{!isCards && <CategoryLegend />}</Box>
 
         <ViewToggle view={view} onViewChange={onViewChange} />
         <BasketButton

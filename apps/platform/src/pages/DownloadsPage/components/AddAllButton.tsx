@@ -4,12 +4,12 @@ import { Button } from "ui";
 import { DISABLED_SX, RADIUS } from "./tokens";
 
 interface AddAllButtonProps {
-  /** How many of the shown datasets are not in the basket yet */
+  /** How many of the shown datasets are not in the bag yet */
   missingCount: number;
   onAddAll: () => void;
 }
 
-/** Adds every shown dataset that isn't already in the basket; reads `✓ All in basket` once none are missing. */
+/** Adds every shown dataset that isn't already in the bag; reads `✓ All in bag` once none are missing. */
 function AddAllButton({ missingCount, onAddAll }: AddAllButtonProps) {
   const allIn = missingCount === 0;
   return (
@@ -38,7 +38,7 @@ function AddAllButton({ missingCount, onAddAll }: AddAllButtonProps) {
       })}
     >
       <FontAwesomeIcon icon={allIn ? faCheck : faBagShopping} style={{ width: 13, height: 15 }} />
-      {allIn ? "All in basket" : `+ Add all ${missingCount} to basket`}
+      {allIn ? "All in bag" : `+ Add all ${missingCount} to bag`}
     </Button>
   );
 }

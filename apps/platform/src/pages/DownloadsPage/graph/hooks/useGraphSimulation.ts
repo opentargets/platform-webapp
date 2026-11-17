@@ -45,7 +45,7 @@ interface UseGraphSimulationOptions {
   nodes: any[];
   edges: any[];
   layoutConfig?: ForceLayoutConfig;
-  /** Radial hub-and-spoke (default) or stacked category lanes */
+  /** Stacked category lanes (default) or radial hub-and-spoke */
   layout?: GraphLayout;
 }
 
@@ -61,7 +61,7 @@ export const useGraphSimulation = ({
   nodes,
   edges,
   layoutConfig,
-  layout = 'radial',
+  layout = 'stacked',
 }: UseGraphSimulationOptions): boolean => {
   const [isReady, setIsReady] = useState(false);
   const lastLayoutRef = useRef<GraphLayout>(layout);
@@ -185,18 +185,13 @@ export const useGraphSimulation = ({
         event.stopPropagation();
         callbacksRef.current?.onEdgeSelect?.(d.id, { x: event.clientX, y: event.clientY });
       })
+      // Hovering only highlights the edge; its details card opens on click,
+      // so moving the pointer across the canvas to zoom doesn't pop cards up.
       .on('mouseover', function (d: any) {
-        const event = (d3 as any).event;
         link.filter((l: any) => l.id === d.id).classed('edge-active', true);
-        callbacksRef.current?.onEdgeHover?.(d.id, { x: event.clientX, y: event.clientY });
-      })
-      .on('mousemove', function (d: any) {
-        const event = (d3 as any).event;
-        callbacksRef.current?.onEdgeHover?.(d.id, { x: event.clientX, y: event.clientY });
       })
       .on('mouseout', function (d: any) {
         link.filter((l: any) => l.id === d.id).classed('edge-active', false);
-        callbacksRef.current?.onEdgeHover?.(null);
       });
 
     const node: any = nodeGroup
@@ -210,7 +205,7 @@ export const useGraphSimulation = ({
         // the translucent category fill above it
         g.append('rect').attr('class', 'node-base');
         g.append('rect').attr('class', 'node-box');
-        // Check dot at the top-right corner, only shown while in the basket
+        // Check dot at the top-right corner, only shown while in the bag
         const check = g.append('g').attr('class', 'node-check');
         check.append('circle').attr('r', CHECK_DOT_RADIUS).attr('fill', PRIMARY_DARK).attr('stroke', '#fff').attr('stroke-width', 1);
         check

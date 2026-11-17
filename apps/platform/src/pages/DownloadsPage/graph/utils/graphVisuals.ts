@@ -7,7 +7,7 @@
  * | State      | Box    | Fill | Stroke                       | Label             | Opacity |
  * | Default    | 14×10  | .35  | 1px category                 | mono 9px grey700  | 1       |
  * | Faded      | same   | same | same                         | same              | .15     |
- * | In basket  | 18×13  | .6   | 1px category + check dot     | bold grey900      | 1       |
+ * | In bag  | 18×13  | .6   | 1px category + check dot     | bold grey900      | 1       |
  * | Selected   | 22×16  | .6   | 2px primary.dark + outer ring| bold grey900      | 1       |
  *
  * The layout is computed once from a fixed footprint (`LAYOUT_FOOTPRINT`) and

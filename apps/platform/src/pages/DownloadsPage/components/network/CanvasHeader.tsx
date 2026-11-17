@@ -79,9 +79,9 @@ const segmentGroupSx = (theme: any) => ({
   backgroundColor: theme.palette.grey[200],
 });
 
-const LAYOUT_LABELS: Record<NetworkLayout, string> = { radial: "Radial", stacked: "Stacked" };
+const LAYOUT_LABELS: Record<NetworkLayout, string> = { stacked: "Stacked", radial: "Radial" };
 
-/** Radial hub-and-spoke vs stacked category lanes (see graph/utils/stackedLayout.ts) */
+/** Stacked category lanes (default, listed first) vs radial hub-and-spoke (see graph/utils/stackedLayout.ts) */
 export function LayoutSwitch({
   layout,
   onChange,
@@ -168,7 +168,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
         }}
         sx={optionSx(scope === "basket", basketDisabled)}
       >
-        {basketDisabled ? "Basket" : `Basket · ${basketCount}`}
+        {basketDisabled ? "Bag" : `Bag · ${basketCount}`}
       </Box>
     </Box>
   );

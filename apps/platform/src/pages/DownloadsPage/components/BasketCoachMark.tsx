@@ -62,7 +62,7 @@ function BasketCoachMark({ open, anchorRef, onOpenBasket, onDismiss }: BasketCoa
         })}
       >
         <Typography id="basket-coach-title" component="h3" sx={{ fontSize: ".875rem", fontWeight: 600, m: 0 }}>
-          Added to your basket
+          Added to your bag
         </Typography>
         <Typography sx={{ fontSize: ".8125rem", opacity: 0.9, lineHeight: 1.45 }}>
           Collect the datasets you need here, then copy file locations and one access script for all of
@@ -85,7 +85,7 @@ function BasketCoachMark({ open, anchorRef, onOpenBasket, onDismiss }: BasketCoa
               "&:hover": { backgroundColor: theme.palette.grey[100] },
             })}
           >
-            Open basket
+            Open bag
           </Button>
           <Button
             onClick={onDismiss}

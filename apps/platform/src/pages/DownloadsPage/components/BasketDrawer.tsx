@@ -30,7 +30,7 @@ const footerLinkSx = (theme: any) => ({
 });
 
 /**
- * Right-hand drawer listing the basket: one row per dataset with its file
+ * Right-hand drawer listing the bag: one row per dataset with its file
  * location, then one access script covering all of them. The footer switches
  * to a "jump to script" variant once the list overflows.
  */
@@ -73,13 +73,13 @@ function BasketDrawer({ open, onClose, rows, locationURLs, onRemove, onEmpty }: 
             component="h2"
             sx={theme => ({ fontSize: "1.2rem", fontWeight: 700, color: theme.palette.grey[800], m: 0 })}
           >
-            Your dataset basket
+            Your data bag
           </Typography>
           <Typography sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}>
             {n} {noun}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label="Close basket" size="small" sx={{ mt: -0.5, mr: -1 }}>
+        <IconButton onClick={onClose} aria-label="Close bag" size="small" sx={{ mt: -0.5, mr: -1 }}>
           <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />
         </IconButton>
       </Box>
@@ -196,12 +196,12 @@ function DrawerBody({ rows, locationURLs, onRemove, onEmpty }: DrawerBodyProps) 
               ·
             </Typography>
             <Box component="button" type="button" onClick={onEmpty} sx={footerLinkSx}>
-              Empty basket
+              Empty bag
             </Box>
           </>
         ) : (
           <Box component="button" type="button" onClick={onEmpty} sx={footerLinkSx}>
-            Empty basket
+            Empty bag
           </Box>
         )}
       </Box>

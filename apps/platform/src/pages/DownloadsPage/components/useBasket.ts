@@ -5,7 +5,7 @@ import { getDatasetId, selectBasketRows, selectRowsById } from "../context/downl
 import { announce } from "./LiveRegion";
 
 /**
- * The basket as the components use it: membership checks, toggling, bulk
+ * The bag as the components use it: membership checks, toggling, bulk
  * add, and the screen-reader announcements that go with each change.
  */
 export function useBasket() {
@@ -27,8 +27,8 @@ export function useBasket() {
       dispatch(addToBasket(missing));
       announce(
         missing.length === 1
-          ? `${nameOf(missing[0])} added to basket`
-          : `${missing.length} datasets added to basket`
+          ? `${nameOf(missing[0])} added to bag`
+          : `${missing.length} datasets added to bag`
       );
     },
     [basketSet, dispatch, nameOf]
@@ -38,7 +38,7 @@ export function useBasket() {
     (id: string) => {
       if (!basketSet.has(id)) return;
       dispatch(removeFromBasket(id));
-      announce(`${nameOf(id)} removed from basket`);
+      announce(`${nameOf(id)} removed from bag`);
     },
     [basketSet, dispatch, nameOf]
   );
@@ -50,7 +50,7 @@ export function useBasket() {
 
   const clear = useCallback(() => {
     dispatch(clearBasket());
-    announce("Basket emptied");
+    announce("Bag emptied");
   }, [dispatch]);
 
   const setOpen = useCallback((open: boolean) => dispatch(setBasketOpen(open)), [dispatch]);

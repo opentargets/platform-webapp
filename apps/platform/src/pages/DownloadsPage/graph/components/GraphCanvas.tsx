@@ -20,7 +20,6 @@ interface GraphCanvasProps {
   onNodeSelect?: (nodeId: string, position?: GraphPointerPosition) => void;
   onNodeDeselect?: () => void;
   onEdgeSelect?: (edgeId: string, position?: GraphPointerPosition) => void;
-  onEdgeHover?: (edgeId: string | null, position?: GraphPointerPosition) => void;
   onNodeHover?: (nodeId: string | null, position?: GraphPointerPosition) => void;
   layoutConfig?: ForceLayoutConfig;
   layout?: GraphLayout;
@@ -41,7 +40,6 @@ const GraphCanvas = React.memo(
     onNodeSelect,
     onNodeDeselect,
     onEdgeSelect,
-    onEdgeHover,
     onNodeHover,
     layoutConfig,
     layout,
@@ -59,7 +57,6 @@ const GraphCanvas = React.memo(
       onNodeSelect,
       onNodeDeselect,
       onEdgeSelect,
-      onEdgeHover,
       onNodeHover,
     });
 

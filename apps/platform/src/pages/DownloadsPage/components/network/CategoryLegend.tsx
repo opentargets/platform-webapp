@@ -1,40 +1,50 @@
+import { useContext, useMemo } from "react";
 import { Box, Typography } from "ui";
+import { DownloadsContext } from "../../context/DownloadsContext";
+import { useGraphData } from "../../graph";
 import CategoryDot from "../CategoryDot";
-import { RADIUS } from "../tokens";
 
-interface CategoryLegendProps {
-  categories: string[];
-  /** Adds the "In basket" swatch after a divider */
-  basketMode?: boolean;
-}
+/**
+ * The network's colour legend: one dot + label per category that has a node
+ * on the canvas. It sits in the toolbar, side by side with the view toggle,
+ * so it never covers the graph.
+ */
+function CategoryLegend() {
+  const { state } = useContext(DownloadsContext);
+  const { nodes } = useGraphData();
+  const basketMode = state.networkScope === "basket";
 
-/** Bottom-left overlay on the network canvas: one dot + label per category present. */
-function CategoryLegend({ categories, basketMode = false }: CategoryLegendProps) {
+  // Only datasets with at least one relationship are drawn (see NetworkView)
+  const categories = useMemo(() => {
+    const present = new Set<string>(nodes.filter(n => (n.data.degree ?? 0) > 0).map(n => n.data.type as string));
+    const ordered = state.allUniqueCategories.filter(c => present.has(c));
+    present.forEach(c => {
+      if (!ordered.includes(c)) ordered.push(c);
+    });
+    return ordered;
+  }, [nodes, state.allUniqueCategories]);
+
   if (!categories.length) return null;
   return (
     <Box
       component="ul"
       aria-label="Legend"
       sx={theme => ({
-        position: "absolute",
-        left: 12,
-        bottom: 12,
-        zIndex: 2,
         display: "flex",
         alignItems: "center",
         flexWrap: "wrap",
-        gap: 1.75,
+        columnGap: 1.75,
+        rowGap: 0.5,
         m: 0,
-        padding: "6px 10px",
+        p: 0,
         listStyle: "none",
-        backgroundColor: "rgba(255,255,255,.9)",
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: RADIUS,
-        fontSize: ".75rem",
+        fontSize: ".8125rem",
         color: theme.palette.grey[600],
-        pointerEvents: "none",
       })}
     >
+      <Box component="li" aria-hidden sx={{ mr: -0.5 }}>
+        Category
+      </Box>
       {categories.map(category => (
         <Box component="li" key={category} sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
           <CategoryDot category={category} />
@@ -68,7 +78,7 @@ function CategoryLegend({ categories, basketMode = false }: CategoryLegendProps)
             })}
           />
           <Typography component="span" sx={{ fontSize: "inherit", color: "inherit" }}>
-            In basket
+            In bag
           </Typography>
         </Box>
       )}

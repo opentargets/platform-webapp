@@ -334,7 +334,7 @@ export function ConnectedGroupHeader({ category, count, collapsed, onToggle, mis
         type="button"
         onClick={onAddAll}
         disabled={missingCount === 0}
-        aria-label={`Add all ${category} connections to basket`}
+        aria-label={`Add all ${category} connections to bag`}
         sx={theme => ({
           border: 0,
           padding: 0,
@@ -348,7 +348,7 @@ export function ConnectedGroupHeader({ category, count, collapsed, onToggle, mis
           "&:disabled": { opacity: 0.45, cursor: "default", textDecoration: "none" },
         })}
       >
-        {missingCount === 0 ? "All in basket" : "+ Add all"}
+        {missingCount === 0 ? "All in bag" : "+ Add all"}
       </Box>
     </Box>
   );

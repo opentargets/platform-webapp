@@ -5,7 +5,7 @@
  * moving a single node:
  *
  * - `none`:   everything at default.
- * - `basket`: basket nodes are "In basket", every other node is Faded (still
+ * - `basket`: basket nodes are "In bag", every other node is Faded (still
  *             clickable); edges between basket items are highlighted.
  * - `select`: the selected node and its neighbours are strong, the rest
  *             Faded; edges touching the selection are highlighted.
@@ -22,7 +22,7 @@ interface UseSelectionHighlightOptions {
   selectedNode?: string | null;
   /** Edge whose details are pinned open (clicked), kept visibly highlighted */
   selectedEdge?: string | null;
-  /** Ids in the basket while the network scope is "basket"; null when the scope is "all" */
+  /** Ids in the bag while the network scope is "basket"; null when the scope is "all" */
   basketIds?: Set<string> | null;
   isReady: boolean;
   labelPlacement?: LabelPlacement;

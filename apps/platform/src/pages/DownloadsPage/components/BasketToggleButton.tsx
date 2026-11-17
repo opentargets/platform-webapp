@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { Box, Button } from "ui";
+import BagPlusIcon from "./BagPlusIcon";
 import { RADIUS } from "./tokens";
 
 interface BasketToggleButtonProps {
@@ -8,16 +9,16 @@ interface BasketToggleButtonProps {
   onToggle: () => void;
   /** `button` (cards, popover, panel) or `text` (link-style, for connected rows) */
   variant?: "button" | "text";
-  /** Label used while not in the basket; the hover popover uses "Add to basket" */
+  /** Label used while not in the bag; the hover popover uses "Add to bag" */
   addLabel?: string;
-  /** Spoken name of the dataset, so the button reads "Add X to basket" */
+  /** Spoken name of the dataset, so the button reads "Add X to bag" */
   datasetName?: string;
   stopPropagation?: boolean;
 }
 
 /**
- * Adds a dataset to the basket or takes it out again. Outlined `+ Add` when
- * out, filled primary.dark `✓ In basket` when in; `aria-pressed` tracks it.
+ * Adds a dataset to the bag or takes it out again. Outlined bag-plus `Add` when
+ * out, filled primary.dark `✓ In bag` when in; `aria-pressed` tracks it.
  */
 function BasketToggleButton({
   inBasket,
@@ -33,8 +34,8 @@ function BasketToggleButton({
   };
   const ariaLabel = datasetName
     ? inBasket
-      ? `Remove ${datasetName} from basket`
-      : `Add ${datasetName} to basket`
+      ? `Remove ${datasetName} from bag`
+      : `Add ${datasetName} to bag`
     : undefined;
 
   if (variant === "text") {
@@ -61,8 +62,8 @@ function BasketToggleButton({
           "&:hover": { textDecoration: "underline" },
         }}
       >
-        <FontAwesomeIcon icon={inBasket ? faCheck : faPlus} style={{ fontSize: 10 }} />
-        {inBasket ? "In basket" : addLabel}
+        {inBasket ? <FontAwesomeIcon icon={faCheck} style={{ fontSize: 10 }} /> : <BagPlusIcon size={12} />}
+        {inBasket ? "In bag" : addLabel}
       </Box>
     );
   }
@@ -94,8 +95,8 @@ function BasketToggleButton({
           : { color: theme.palette.text.primary }),
       })}
     >
-      <FontAwesomeIcon icon={inBasket ? faCheck : faPlus} style={{ fontSize: 11 }} />
-      {inBasket ? "In basket" : addLabel}
+      {inBasket ? <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11 }} /> : <BagPlusIcon size={14} />}
+      {inBasket ? "In bag" : addLabel}
     </Button>
   );
 }

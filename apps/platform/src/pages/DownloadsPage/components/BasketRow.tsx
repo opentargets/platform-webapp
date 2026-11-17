@@ -130,7 +130,7 @@ function BasketRow({ dataset, locationURLs, onRemove }: BasketRowProps) {
           component="button"
           type="button"
           onClick={() => onRemove(id)}
-          aria-label={`Remove ${dataset.name} from basket`}
+          aria-label={`Remove ${dataset.name} from bag`}
           sx={linkSx}
         >
           Remove

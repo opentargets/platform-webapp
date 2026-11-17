@@ -27,7 +27,7 @@ export const sectionLabelSx = (theme: any) => ({
   color: theme.palette.grey[500],
 });
 
-/** The Access dialog's script tabs, generalised to every dataset in the basket. */
+/** The Access dialog's script tabs, generalised to every dataset in the bag. */
 function AccessScriptBlock({ rows, locationURLs }: AccessScriptBlockProps) {
   const common = useMemo(() => getCommonScripts(rows), [rows]);
 

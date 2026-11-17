@@ -9,13 +9,13 @@ import type { GraphController } from "../../graph/types";
 import useBasket from "../useBasket";
 import { RADIUS } from "../tokens";
 import CanvasHeader from "./CanvasHeader";
-import CategoryLegend from "./CategoryLegend";
 import NodeDetailsPanel, { PanelNode } from "./NodeDetailsPanel";
 
 /**
- * The Network view: the schema graph of every dataset, with a basket scope,
- * a selectable node whose details and connections dock on the right, and a
- * category legend. Filters from the Cards view don't apply here.
+ * The Network view: the schema graph of every dataset, with a bag scope,
+ * and a selectable node whose details and connections dock on the right.
+ * The category legend lives in the toolbar (see DatasetsToolbar). Filters
+ * from the Cards view don't apply here.
  */
 function NetworkView() {
   const { state, dispatch } = useContext(DownloadsContext);
@@ -79,15 +79,6 @@ function NetworkView() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [selectedId, neighboursById, nodeById]);
 
-  const categories = useMemo(() => {
-    const present = new Set(nodes.map(n => n.data.type as string));
-    const ordered = state.allUniqueCategories.filter(c => present.has(c));
-    present.forEach(c => {
-      if (!ordered.includes(c)) ordered.push(c);
-    });
-    return ordered;
-  }, [nodes, state.allUniqueCategories]);
-
   const select = useCallback((id: string | null) => dispatch(selectNode(id)), [dispatch]);
   const clearSelection = useCallback(() => select(null), [select]);
 
@@ -110,14 +101,14 @@ function NetworkView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controller]);
 
-  // Fit follows the scope: basket mode zooms to the basket's nodes, leaving
+  // Fit follows the scope: basket mode zooms to the bag's nodes, leaving
   // it fits everything again. The layout itself never changes.
   useEffect(() => {
     const c = controllerRef.current;
     if (!c) return;
     if (basketMode) c.fitTo(basket);
     else c.fit();
-    // Only react to scope flips (and the basket while in basket mode), not to
+    // Only react to scope flips (and the bag while in basket mode), not to
     // the controller instance changing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basketMode, basketMode ? basket : null]);
@@ -138,7 +129,7 @@ function NetworkView() {
   const hint = selected
     ? "Esc or click the canvas to clear"
     : basketMode
-      ? `${basket.length} ${basket.length === 1 ? "dataset" : "datasets"} in your basket · ${basketEdgeCount} direct ${
+      ? `${basket.length} ${basket.length === 1 ? "dataset" : "datasets"} in your bag · ${basketEdgeCount} direct ${
           basketEdgeCount === 1 ? "connection" : "connections"
         } between them`
       : "Hover a node to preview · click to select · scroll to zoom";
@@ -180,7 +171,6 @@ function NetworkView() {
           onControllerReady={setController}
           layout={layout}
         />
-        <CategoryLegend categories={categories} basketMode={basketMode} />
         {selected && (
           <NodeDetailsPanel
             node={selected}
