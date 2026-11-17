@@ -4728,6 +4728,24 @@ export type TargetDepMapQuery = { __typename?: 'Query', target?: { __typename?: 
 
 export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality: { __typename?: 'DepMapEssentialityPage', count: number } };
 
+export type TargetDrugsQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type TargetDrugsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number, rows: Array<{ __typename?: 'ClinicalTargetFromTarget', id: string, maxClinicalStage: string, drug: { __typename?: 'Drug', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
+
+export type TargetDrugsSummaryFragment = { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number } };
+
+export type TargetGeneOntologyQueryVariables = Exact<{
+  ensemblId: Scalars['String']['input'];
+}>;
+
+
+export type TargetGeneOntologyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, geneOntology: Array<{ __typename?: 'GeneOntologyAnnotation', aspect: string, evidence: string, geneProduct: string, source: string, term?: { __typename?: 'GeneOntology', id: string, label: string } | null }> } | null };
+
+export type GeneOntologySummaryFragment = { __typename?: 'Target', id: string, geneOntology: Array<{ __typename?: 'GeneOntologyAnnotation', aspect: string }> };
+
 export type TargetGeneticConstraintQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
 }>;
@@ -5036,6 +5054,21 @@ export const DepmapSummaryFragment = gql`
     fragment DepmapSummaryFragment on Target {
   depMapEssentiality(page: {index: 0, size: 1}) {
     count
+  }
+}
+    `;
+export const TargetDrugsSummaryFragment = gql`
+    fragment TargetDrugsSummaryFragment on Target {
+  drugAndClinicalCandidates {
+    count
+  }
+}
+    `;
+export const GeneOntologySummaryFragment = gql`
+    fragment GeneOntologySummaryFragment on Target {
+  id
+  geneOntology {
+    aspect
   }
 }
     `;
@@ -5855,6 +5888,43 @@ export const TargetDepMapQueryDocument = gql`
   }
 }
     `;
+export const TargetDrugsQueryDocument = gql`
+    query TargetDrugsQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    drugAndClinicalCandidates {
+      count
+      rows {
+        id
+        maxClinicalStage
+        drug {
+          id
+          name
+        }
+        clinicalReports {
+          id
+        }
+      }
+    }
+  }
+}
+    `;
+export const TargetGeneOntologyQueryDocument = gql`
+    query TargetGeneOntologyQuery($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    geneOntology {
+      term {
+        id
+        label
+      }
+      aspect
+      evidence
+      geneProduct
+      source
+    }
+  }
+}
+    `;
 export const TargetGeneticConstraintQueryDocument = gql`
     query TargetGeneticConstraintQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
@@ -6299,6 +6369,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     TargetDepMapQuery(variables: TargetDepMapQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetDepMapQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetDepMapQuery>({ document: TargetDepMapQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetDepMapQuery', 'query', variables);
+    },
+    TargetDrugsQuery(variables: TargetDrugsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetDrugsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetDrugsQuery>({ document: TargetDrugsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetDrugsQuery', 'query', variables);
+    },
+    TargetGeneOntologyQuery(variables: TargetGeneOntologyQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneOntologyQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneOntologyQuery>({ document: TargetGeneOntologyQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneOntologyQuery', 'query', variables);
     },
     TargetGeneticConstraintQuery(variables: TargetGeneticConstraintQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGeneticConstraintQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetGeneticConstraintQuery>({ document: TargetGeneticConstraintQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGeneticConstraintQuery', 'query', variables);
