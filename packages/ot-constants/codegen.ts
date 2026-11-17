@@ -22,10 +22,11 @@ const MIGRATED_DOCUMENTS = [
   "apps/platform/src/components/GeneEnrichmentAnalysis/api/*.gql",
   "packages/sections/src/disease/{Bibliography,Drugs,GWASStudies,Ontology,Phenotypes}/*.gql",
   "packages/sections/src/drug/**/*.gql",
-  // Drugs, GeneOntology, OverlappingVariants and TargetGenomicRegion stay out: the
-  // new API has no drugAndClinicalCandidates, GeneOntologyAnnotation.term,
-  // proteinCodingCoordinates or region query yet
-  "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,GeneticConstraint,MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,Tractability}/*.gql",
+  // OverlappingVariants and TargetGenomicRegion stay out: the new API has no
+  // proteinCodingCoordinates or region query yet. Two globs because a single brace
+  // list this long exceeds the 255-byte limit of a path component
+  "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,Drugs,GeneOntology,GeneticConstraint}/*.gql",
+  "packages/sections/src/target/{MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,Tractability}/*.gql",
   "packages/ui/src/components/ClinicalReports/*.gql",
 ].map((glob) => resolve(__dirname, "../..", glob));
 

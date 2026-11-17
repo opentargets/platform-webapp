@@ -16,6 +16,14 @@ query ClinvarQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size
           id
           name
         }
+        variant {
+          id: variantId
+          hgvsId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+        }
         directionOnTarget
         directionOnTrait
         diseaseFromSource

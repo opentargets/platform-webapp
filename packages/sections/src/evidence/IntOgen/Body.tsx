@@ -6,7 +6,7 @@ import {
   SectionItem,
   Tooltip,
   ScientificNotation,
-  OtTable,
+  OtTableServer,
   Box,
   List,
   ListItem,
@@ -18,7 +18,7 @@ import methods from "./methods";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 import INTOGEN_QUERY from "./sectionQuery.gql";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 
 const intOgenUrl = (id, approvedSymbol) =>
   `https://www.intogen.org/search?gene=${approvedSymbol}&cohort=${id}`;
@@ -91,7 +91,6 @@ const columns = [
       </>
     ),
     numeric: true,
-    sortable: true,
     renderCell: ({ resourceScore }) => <ScientificNotation number={resourceScore} />,
   },
   {
@@ -144,16 +143,16 @@ const columns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(INTOGEN_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -182,17 +181,15 @@ function Body({ id, label, entity }: Props) {
               </Typography>
               <ChipList items={roleInCancerItems} />
             </Box>
-            <OtTable
+            <OtTableServer
+              query={INTOGEN_QUERY}
               columns={columns}
               dataDownloader
               dataDownloaderFileStem={`intOGen-${ensgId}-${efoId}`}
-              order="asc"
-              rows={request.data?.disease.intOgen.rows}
-              sortBy="resourceScore"
-              showGlobalFilter
-              query={INTOGEN_QUERY.loc.source.body}
+              dataPath="disease.intOgen"
+              pageSize={PAGE_SIZE}
+              showGlobalFilter={false}
               variables={variables}
-              loading={request.loading}
             />
           </>
         );

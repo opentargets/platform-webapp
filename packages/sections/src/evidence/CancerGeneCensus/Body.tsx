@@ -6,14 +6,14 @@ import {
   Link,
   SectionItem,
   PublicationsDrawer,
-  OtTable,
+  OtTableServer,
   Box,
   List,
   ListItem,
   Typography,
 } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
 
@@ -72,7 +72,6 @@ const getColumns = label => [
   {
     id: "mutatedSamples",
     propertyPath: "mutatedSamples.numberSamplesWithMutationType",
-    sortable: true,
     label: "Mutated / Total samples",
     renderCell: ({ mutatedSamples }) => {
       if (!mutatedSamples) return naLabel;
@@ -125,17 +124,17 @@ const getColumns = label => [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CANCER_GENE_CENSUS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -166,17 +165,15 @@ function Body({ id, label, entity }: Props) {
               </Typography>
               <ChipList items={roleInCancerItems} />
             </Box>
-            <OtTable
+            <OtTableServer
+              query={CANCER_GENE_CENSUS_QUERY}
               columns={columns}
               dataDownloader
               dataDownloaderFileStem={`cancer-gene-census-${ensgId}-${efoId}`}
-              order="asc"
-              rows={request.data?.disease.cancerGeneCensusSummary.rows}
-              showGlobalFilter
-              sortBy="mutatedSamples"
-              query={CANCER_GENE_CENSUS_QUERY.loc.source.body}
+              dataPath="disease.cancerGeneCensusSummary"
+              pageSize={PAGE_SIZE}
+              showGlobalFilter={false}
               variables={variables}
-              loading={request.loading}
             />
           </>
         );

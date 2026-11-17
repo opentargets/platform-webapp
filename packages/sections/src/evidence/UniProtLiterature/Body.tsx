@@ -1,10 +1,10 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTable, Typography } from "ui";
+import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTableServer, Typography } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
-import { dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, type EvidenceBodyProps} from "@ot/constants";
 import UNIPROT_LITERATURE_QUERY from "./UniprotLiteratureQuery.gql";
 
 const getcolumns = label => [
@@ -72,17 +72,17 @@ const getcolumns = label => [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(UNIPROT_LITERATURE_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getcolumns(label);
@@ -96,15 +96,15 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={UNIPROT_LITERATURE_QUERY}
             columns={columns}
-            rows={request.data?.disease.uniprotLiteratureSummary.rows}
             dataDownloader
             dataDownloaderFileStem={`UniProtLiterature-${ensgId}-${efoId}`}
-            showGlobalFilter
-            query={UNIPROT_LITERATURE_QUERY.loc.source.body}
+            dataPath="disease.uniprotLiteratureSummary"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

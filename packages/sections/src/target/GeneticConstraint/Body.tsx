@@ -75,6 +75,7 @@ function getColumns(ensemblId: string, symbol: string): OtTableColumn<Constraint
       label: "Category",
       enableHiding: false,
       renderCell: ({ constraintType }) => constraintTypeMap[constraintType] ?? constraintType,
+      filterValue: ({ constraintType }) => constraintTypeMap[constraintType] ?? constraintType,
     },
     {
       id: "exp",

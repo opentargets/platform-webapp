@@ -13,8 +13,10 @@ export function renderWaterfallPlot({
   const dxValue = -45;
   const dyHeader = -20;
   const textFontSize = 12;
+  const baseLabelGap = 26;
 
-  return PlotLib.plot({
+
+  const plot = PlotLib.plot({
     width,
     height,
     marginLeft: margins.left,
@@ -103,19 +105,14 @@ export function renderWaterfallPlot({
         strokeDasharray: "4,3",
       }),
 
-      // vertical line at base score - and label at bottom
-      PlotLib.tickX(labelBase ? features.slice(0, 1) : [], {
+      // Base label anchored to the bottom of the plot frame so it stays a
+      // fixed distance below the x-axis regardless of how many rows there are.
+      PlotLib.text(labelBase ? [null] : [], {
         x: shapBaseValue,
-        y: "name",
-        dy: 24,
-        strokeOpacity: 0.3,
-        strokeDasharray: "4,3",
-      }),
-      PlotLib.text(labelBase ? features.slice(0, 1) : [], {
-        x: shapBaseValue,
-        y: "name",
-        text: (d) => `Base: ${shapBaseValue.toFixed(3)}`,
-        dy: 40,
+        frameAnchor: "bottom",
+        lineAnchor: "top",
+        dy: baseLabelGap,
+        text: () => `Base: ${shapBaseValue.toFixed(3)}`,
         fontSize: textFontSize,
       }),
 
@@ -176,4 +173,26 @@ export function renderWaterfallPlot({
       ),
     ],
   });
+
+  if (labelBase) {
+    const xScale = plot.scale("x");
+    const x = xScale?.apply(shapBaseValue);
+    const svgHeight = Number(plot.getAttribute("height"));
+    if (x != null && svgHeight) {
+      const frameBottom = svgHeight - margins.bottom;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      tick.setAttribute("x1", String(x));
+      tick.setAttribute("x2", String(x));
+      tick.setAttribute("y1", String(frameBottom + 2));
+      tick.setAttribute("y2", String(frameBottom + 24));
+      tick.setAttribute("stroke", "currentColor");
+      tick.setAttribute("stroke-opacity", "0.3");
+      tick.setAttribute("stroke-dasharray", "4,3");
+      g.appendChild(tick);
+      plot.appendChild(g);
+    }
+  }
+
+  return plot;
 }

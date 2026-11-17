@@ -1,8 +1,12 @@
-query PharmacogenomicsQuery($variantId: String!, $page: Page) {
+query PharmacogenomicsQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    pharmacogenomics(page: $page) {
+    pharmacogenomics(page: { index: $index, size: $size }) {
       count
       rows {
         variantAnnotation {
