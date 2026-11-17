@@ -1,10 +1,10 @@
-query CancerGeneCensusQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query CancerGeneCensusQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     cancerGeneCensusSummary: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [cancer_gene_census]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

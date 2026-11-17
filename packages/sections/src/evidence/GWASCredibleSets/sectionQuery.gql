@@ -1,4 +1,4 @@
-query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
@@ -8,7 +8,7 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     gwasCredibleSets: evidences(
       ensemblIds: [$ensemblId]
       datasourceIds: [gwas_credible_sets]
-      page: { index: 0, size: $size }
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
