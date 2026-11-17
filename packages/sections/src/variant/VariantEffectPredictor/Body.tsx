@@ -1,9 +1,13 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, OtTable, Box, Chip } from "ui";
+import { Link, SectionItem, Tooltip, OtTableServer, Box, Chip } from "ui";
 import { Fragment } from "react";
 import { definition } from "../VariantEffectPredictor";
 import Description from "../VariantEffectPredictor/Description";
-import { naLabel } from "@ot/constants";
+import {
+  naLabel,
+  VariantTranscriptConsequencesSearchField,
+  VariantTranscriptConsequencesSortField,
+} from "@ot/constants";
 import { identifiersOrgLink } from "@ot/utils";
 import VARIANT_EFFECT_PREDICTOR_QUERY from "./VariantEffectPredictorQuery.gql";
 
@@ -15,12 +19,17 @@ function isNumber(value: any): boolean {
   return typeof value === "number" && isFinite(value);
 }
 
+const PAGE_SIZE = 10;
+
 const columns = [
   {
     id: "target.approvedSymbol",
     label: "Gene",
-    sortable: true,
     enableHiding: false,
+    sortField: VariantTranscriptConsequencesSortField.TargetApprovedSymbol,
+    // For now add all search fields to first column - if move to column-based
+    // search, move these fields to their corresponding columns
+    searchFields: Object.values(VariantTranscriptConsequencesSearchField),
     renderCell: ({ target, transcriptId, uniprotAccessions }) => {
       if (!target) return naLabel;
       let displayElement = (
@@ -143,7 +152,7 @@ const columns = [
     id: "distanceFromFootprint",
     label: "Distance from footprint (bp)",
     numeric: true,
-    sortable: true,
+    sortField: VariantTranscriptConsequencesSortField.DistanceFromFootprint,
     renderCell: ({ distanceFromFootprint }) =>
       isNumber(distanceFromFootprint)
         ? parseInt(distanceFromFootprint, 10).toLocaleString()
@@ -153,7 +162,7 @@ const columns = [
     id: "distanceFromTss",
     label: "Distance from start site (bp)",
     numeric: true,
-    sortable: true,
+    sortField: VariantTranscriptConsequencesSortField.DistanceFromTss,
     renderCell: ({ distanceFromTss }) =>
       isNumber(distanceFromTss) ? parseInt(distanceFromTss, 10).toLocaleString() : naLabel,
   },
@@ -170,7 +179,11 @@ export function Body({ id, entity }: BodyProps) {
   };
 
   const request = useQuery(VARIANT_EFFECT_PREDICTOR_QUERY, {
-    variables,
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+    },
   });
 
   return (
@@ -186,18 +199,15 @@ export function Body({ id, entity }: BodyProps) {
         />
       )}
       renderBody={() => {
-        let sortedRows = [];
-        sortedRows = structuredClone(request.data?.variant.transcriptConsequences);
-        sortedRows?.sort((a, b) => a.transcriptIndex - b.transcriptIndex);
         return (
-          <OtTable
+          <OtTableServer
+            dataPath="variant.transcriptConsequencesView"
+            pageSize={PAGE_SIZE}
             columns={columns}
-            rows={sortedRows}
             dataDownloader
             dataDownloaderFileStem={`${id}-variant-effect-predictor`}
-            query={VARIANT_EFFECT_PREDICTOR_QUERY.loc.source.body}
+            query={VARIANT_EFFECT_PREDICTOR_QUERY}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}
