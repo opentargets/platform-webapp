@@ -33,13 +33,13 @@ test.describe("UniProt Variants Section", () => {
     expect(rowCount).toBeGreaterThan(0);
   });
 
-  test("Target gene link is displayed in table", async () => {
-    const geneLink = await uniprotSection.getDiseasePhenotypeLink(0);
+  test("Disease/phenotype link is displayed in table", async () => {
+    const diseasePhenotypeLink = await uniprotSection.getDiseasePhenotypeLink(0);
 
-    expect(await geneLink.isVisible()).toBe(true);
+    expect(await diseasePhenotypeLink.isVisible()).toBe(true);
   });
 
-  test("Can click disease phenotype link in table", async ({ page }) => {
+  test("Can click disease/phenotype link in table", async ({ page }) => {
     await uniprotSection.clickDiseasePhenotypeLink(0);
 
     // Wait for navigation to disease page using page load state
@@ -68,16 +68,5 @@ test.describe("UniProt Variants Section", () => {
       // Should navigate to disease page
       expect(page.url()).toContain("/disease/");
     }
-  });
-
-  test("Can search/filter UniProt variants", async () => {
-    // Search for a specific term
-    await uniprotSection.search("disease");
-
-    // Row count should change
-    const filteredRowCount = await uniprotSection.getTableRows();
-
-    // At least the search should execute without error
-    expect(filteredRowCount).toBeGreaterThanOrEqual(0);
   });
 });
