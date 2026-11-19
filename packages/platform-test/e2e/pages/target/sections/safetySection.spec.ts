@@ -1,94 +1,30 @@
 import { expect, test } from "../../../../fixtures";
-import { SafetySection } from "../../../../POM/objects/widgets/shared/safetySection";
+import { ProfileSection } from "../../../../POM/objects/components/ProfileSection/profileSection";
+import { sectionContract } from "../../../../utils/sectionContract";
 
 test.describe("Safety Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
+  sectionContract({
+    id: "safety",
+    title: "Safety",
+    url: (config) => `/target/${config.target?.primary}`,
+    table: { searchTerm: "heart", exportable: true },
   });
 
-  test("Section is visible when target has safety data", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
+  test("rows link the event to its disease page", async ({ page }) => {
+    const firstRow = new ProfileSection(page, "safety").rows().first();
 
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      expect(isVisible).toBe(true);
-    }
+    await expect(firstRow.locator("a[href*='/disease/']").first()).toBeVisible();
   });
 
-  test("Section header displays correct title", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
+  test("studies drawer opens", async ({ page }) => {
+    const section = new ProfileSection(page, "safety");
 
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      const title = await safetySection.getSectionTitle();
-      expect(title).toBeTruthy();
-    }
-  });
+    await section
+      .rows()
+      .first()
+      .getByRole("button", { name: /studies/ })
+      .click();
 
-  test("Table is displayed with safety data", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
-
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      const isTableVisible = await safetySection.isTableVisible();
-      expect(isTableVisible).toBe(true);
-    }
-  });
-
-  test("Table contains rows with safety events", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
-
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      const rowCount = await safetySection.getTableRowCount();
-
-      if (rowCount > 0) {
-        const eventName = await safetySection.getSafetyEventName(0);
-        expect(eventName).toBeTruthy();
-      }
-    }
-  });
-
-  test("Safety event links are functional", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
-
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      const rowCount = await safetySection.getTableRowCount();
-
-      if (rowCount > 0) {
-        const hasLink = await safetySection.hasSafetyEventLink(0);
-        if (hasLink) {
-          const link = safetySection.getSafetyEventLink(0);
-          const href = await link.getAttribute("href");
-          expect(href).toBeTruthy();
-        }
-      }
-    }
-  });
-
-  test("Search functionality filters safety events", async ({ page }) => {
-    const safetySection = new SafetySection(page);
-    const isVisible = await safetySection.isSectionVisible();
-
-    if (isVisible) {
-      await safetySection.waitForLoad();
-      const searchInput = safetySection.getSearchInput();
-      const searchVisible = await searchInput.isVisible().catch(() => false);
-
-      if (searchVisible) {
-        await safetySection.search("test");
-        await page.waitForTimeout(500);
-        const inputValue = await searchInput.inputValue();
-        expect(inputValue).toBe("test");
-      }
-    }
+    await expect(page.getByTestId("safety-studies-drawer")).toBeVisible();
   });
 });

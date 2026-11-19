@@ -21,6 +21,8 @@ export default defineConfig({
   workers: process.env.CI ? 6 : 10,
   /* Increase timeout for CI environments */
   timeout: process.env.CI ? 60000 : 80000,
+  /* Canary runs expect every test to fail, so there is no point in waiting long */
+  ...(process.env.E2E_CANARY === "1" && { timeout: 30000, retries: 0 }),
   /* Default expect() timeout is 5000ms, which doesn't leave enough headroom for
    * lazy-loaded route chunks to fetch on a cold page load (page components are
    * now code-split), on top of normal query latency. */

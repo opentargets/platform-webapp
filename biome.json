@@ -89,6 +89,36 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "packages/platform-test/e2e/**",
+        "packages/platform-test/POM/**",
+        "!packages/platform-test/e2e/pages/target/sections/**"
+      ],
+      "plugins": ["./packages/platform-test/lint/soft-tests-warn.grit"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noSkippedTests": "warn",
+            "noFocusedTests": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/platform-test/e2e/pages/target/sections/**"],
+      "plugins": ["./packages/platform-test/lint/soft-tests.grit"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noSkippedTests": "error",
+            "noFocusedTests": "error"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double",

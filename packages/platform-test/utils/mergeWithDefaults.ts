@@ -33,6 +33,7 @@ export function mergeWithDefaults(fetched: TestConfig, defaults: TestConfig): Te
       aotfDiseases: fetched.target?.aotfDiseases?.length
         ? fetched.target.aotfDiseases
         : defaults.target?.aotfDiseases,
+      withPharmacogenomics: defaults.target?.withPharmacogenomics,
     },
     disease: {
       primary: fetched.disease.primary || defaults.disease.primary,
