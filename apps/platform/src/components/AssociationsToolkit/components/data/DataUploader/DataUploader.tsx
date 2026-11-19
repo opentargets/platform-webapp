@@ -38,10 +38,10 @@ import {
 } from "ui";
 import { v1 } from "uuid";
 import * as XLSX from "xlsx";
-import { mapIdsViaSearch } from "../../../associationsUtils/mapIdsViaSearch";
 import { useAotfQueryState } from "../../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../../context/AssociationsURLContext";
 import NestedItem from "./NestedItem";
+import ValidationQuery from "./ValidationQuery.gql";
 
 const BorderAccordion = styled(Accordion)(({ theme }) => ({
   boxShadow: "none",
@@ -106,7 +106,10 @@ const getEntityToUploadLabel: Record<string, string> = {
 };
 
 const getValidationResults = async (entity: string[], queryTerms: string[], client: any) =>
-  mapIdsViaSearch(client, queryTerms, entity);
+  client.query({
+    query: ValidationQuery,
+    variables: { entity, queryTerms },
+  });
 
 interface Hit {
   id: string;
@@ -120,9 +123,12 @@ interface QueryTermResult {
 }
 
 function formatQueryTermsResults(queryResult: any): QueryTermResult[] {
-  const sortedResult = [...queryResult.mappings].sort((a: any, b: any) =>
-    a.hits.length < b.hits.length ? 1 : -1
-  );
+  // `hits` is nullable on the API, so terms without a match are normalised to an empty list
+  const mappings = queryResult.data.mapIds.mappings.map((qT: any) => ({
+    ...qT,
+    hits: qT.hits ?? [],
+  }));
+  const sortedResult = mappings.sort((a: any, b: any) => (a.hits.length < b.hits.length ? 1 : -1));
   return sortedResult.map((qT: any) => ({
     ...qT,
     hits: [...qT.hits.map((e: any) => ({ ...e, checked: true }))],
