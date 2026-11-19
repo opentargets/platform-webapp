@@ -1,9 +1,9 @@
-query EVAQuery($variantId: String!) {
+query EVAQuery($variantId: String!, $index: Int! = 0, $size: Int! = 10) {
   variant(variantId: $variantId) {
-    id
+    variantId
     referenceAllele
     alternateAllele
-    evaEvidences: evidences(datasourceIds: [eva]) {
+    evaEvidences: evidences(datasourceIds: [eva], page: { index: $index, size: $size }) {
       count
       rows {
         alleleOrigins

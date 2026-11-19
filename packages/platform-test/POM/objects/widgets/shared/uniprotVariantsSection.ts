@@ -57,7 +57,7 @@ export class UniProtVariantsSection {
     return tbody.locator("tr").nth(index);
   }
 
-  // Get target gene link
+  // Get disease/phenotype link
   async getDiseasePhenotypeLink(rowIndex: number): Promise<Locator> {
     const row = await this.getTableRow(rowIndex);
     return row.locator("a[href*='/disease/']");
@@ -83,15 +83,5 @@ export class UniProtVariantsSection {
   async clickDiseaseLink(rowIndex: number, linkIndex: number = 0): Promise<void> {
     const links = await this.getDiseaseLinks(rowIndex);
     await links.nth(linkIndex).click();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
   }
 }

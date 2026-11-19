@@ -1,29 +1,37 @@
-query VariantEffectPredictorQuery($variantId: String!) {
+query VariantEffectPredictorQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [VariantTranscriptConsequencesSort!]! = []
+  $search: VariantTranscriptConsequencesSearch
+) {
   variant(variantId: $variantId) {
-    transcriptConsequences {
-      variantConsequences {
-        id
-        label
-      }
-      aminoAcidChange
-      uniprotAccessions
-      codons
-      distanceFromFootprint
-      distanceFromTss
-      target {
-        id
-        approvedSymbol
-        biotype
-      }
-      impact
-      consequenceScore
-      transcriptIndex
-      transcriptId
-      lofteePrediction
-      siftPrediction
-      polyphenPrediction
-    }
     referenceAllele
     alternateAllele
+    transcriptConsequencesView(
+      page: { index: $index, size: $size }
+      sort: $sort
+      search: $search
+    ) {
+      count
+      rows {
+        variantConsequences {
+          id
+          label
+        }
+        aminoAcidChange
+        uniprotAccessions
+        codons
+        distanceFromFootprint
+        distanceFromTss
+        target {
+          id
+          approvedSymbol
+          biotype
+        }
+        impact
+        transcriptId
+      }
+    }
   }
 }
