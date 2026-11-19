@@ -67,7 +67,7 @@ export class DiseasePage {
   async waitForPageLoad(): Promise<void> {
     // Wait for the main page header to be visible
     await this.page
-      .waitForSelector("[data-testid='profile-page-header']", {
+      .waitForSelector("[data-testid='profile-page-header-block']", {
         state: "visible",
         timeout: WIDGET_LOAD_TIMEOUT,
       })
@@ -75,13 +75,17 @@ export class DiseasePage {
         // Header might not be immediately available
       });
 
-    // Wait for skeleton loaders to disappear
+    // Wait for skeleton loaders to disappear. Note: the options object must
+    // be the 3rd argument to waitForFunction - passing it 2nd silently binds
+    // it as the page function's `arg` instead, turning this into an
+    // unbounded wait that blocks until the whole test times out.
     await this.page
       .waitForFunction(
         () => {
           const skeletons = document.querySelectorAll(".MuiSkeleton-root");
           return skeletons.length === 0;
         },
+        undefined,
         { timeout: 15000 }
       )
       .catch(() => {
@@ -95,6 +99,7 @@ export class DiseasePage {
           const spinners = document.querySelectorAll(".MuiCircularProgress-root");
           return spinners.length === 0;
         },
+        undefined,
         { timeout: WIDGET_LOAD_TIMEOUT }
       )
       .catch(() => {
@@ -108,6 +113,7 @@ export class DiseasePage {
           const headerText = document.querySelector("[data-testid='profile-page-header-text']");
           return headerText?.textContent && headerText.textContent.trim().length > 0;
         },
+        undefined,
         { timeout: WIDGET_LOAD_TIMEOUT }
       )
       .catch(() => {

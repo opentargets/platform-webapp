@@ -27,7 +27,7 @@ export class OntologySection {
 
   // Ontology graph/diagram
   getOntologyGraph(): Locator {
-    return this.page.locator("[data-testid='ontology-graph']");
+    return this.getSection().locator("svg");
   }
 
   async isGraphVisible(): Promise<boolean> {

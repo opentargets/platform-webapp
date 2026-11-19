@@ -79,8 +79,7 @@ export class EnhancerToGenePredictionsSection {
   // Get E2G score
   async getE2GScore(rowIndex: number): Promise<string | null> {
     const row = await this.getTableRow(rowIndex);
-    // Score is typically in a specific column, adjust index as needed
-    const cell = row.locator("td").nth(2);
+    const cell = row.locator("td").last();
     return await cell.textContent();
   }
 

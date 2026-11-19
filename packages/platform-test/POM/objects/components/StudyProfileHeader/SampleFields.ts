@@ -78,16 +78,14 @@ export class SampleFields {
   async getPopulationChipLabel(index: number): Promise<string | null> {
     return await this.getPopulationChips()
       .nth(index)
-      .locator("[data-testid^='chip-ld-population-']")
-      .first()
+      .locator("[data-testid='label-chip-label']")
       .textContent();
   }
 
   async getPopulationChipValue(index: number): Promise<string | null> {
     return await this.getPopulationChips()
       .nth(index)
-      .locator("[data-testid^='chip-ld-population-']")
-      .nth(1)
+      .locator("[data-testid='label-chip-value']")
       .textContent();
   }
 

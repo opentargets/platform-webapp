@@ -4,14 +4,13 @@ import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 /**
  * Interactor for Baseline Expression section on Target page
  * Displays RNA and protein expression data with tabs (Summary, GTEx)
- * Uses only data-testid selectors for reliable, predictable testing
  */
 export class ExpressionSection {
   constructor(private page: Page) {}
 
   // Section container
   getSection(): Locator {
-    return this.page.locator("[data-testid='section-expressions']");
+    return this.page.locator("[data-testid='section-baselineexpression']");
   }
 
   async isSectionVisible(): Promise<boolean> {
@@ -29,7 +28,7 @@ export class ExpressionSection {
 
   // Section header
   getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-expressions-header']");
+    return this.page.locator("[data-testid='section-baselineexpression-header']");
   }
 
   async getSectionTitle(): Promise<string | null> {
@@ -43,16 +42,16 @@ export class ExpressionSection {
 
   // Tabs container
   getTabs(): Locator {
-    return this.getSection().locator("[data-testid='expression-tabs']");
+    return this.getSection().locator("[role='tablist']");
   }
 
   // Individual tabs
   getSummaryTab(): Locator {
-    return this.getSection().locator("[data-testid='expression-tab-summary']");
+    return this.getSection().locator("[role='tab']:has-text('Summary')");
   }
 
   getGtexTab(): Locator {
-    return this.getSection().locator("[data-testid='expression-tab-gtex']");
+    return this.getSection().locator("[role='tab']:has-text('GTEx')");
   }
 
   async clickSummaryTab(): Promise<void> {
@@ -67,11 +66,11 @@ export class ExpressionSection {
 
   // Tab content
   getSummaryContent(): Locator {
-    return this.getSection().locator("[data-testid='expression-summary-content']");
+    return this.getSection().locator("table");
   }
 
   getGtexContent(): Locator {
-    return this.getSection().locator("[data-testid='expression-gtex-content']");
+    return this.getSection().locator("svg");
   }
 
   async isSummaryContentVisible(): Promise<boolean> {
