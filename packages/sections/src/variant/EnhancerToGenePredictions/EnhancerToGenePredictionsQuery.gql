@@ -2,11 +2,13 @@ query EnhancerToGenePredictionsQuery(
   $variantId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $sort: [EnhancerToGeneSort!]! = []
+  $search: EnhancerToGeneSearch
 ) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    enhancerToGene(page: { index: $index, size: $size }) {
+    enhancerToGene(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         chromosome
