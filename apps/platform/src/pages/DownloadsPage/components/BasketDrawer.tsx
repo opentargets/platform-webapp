@@ -3,9 +3,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Box, Drawer, IconButton, Typography } from "ui";
 import { DownloadRow } from "../types/downloadTypes";
-import AccessScriptBlock, { sectionLabelSx } from "./AccessScriptBlock";
+import AccessScriptBlock from "./AccessScriptBlock";
 import BasketRow from "./BasketRow";
-import { RADIUS, shadow } from "./tokens";
+import { RADIUS, sectionLabelSx, shadow } from "./tokens";
 
 interface BasketDrawerProps {
   open: boolean;
@@ -30,8 +30,8 @@ const footerLinkSx = (theme: any) => ({
 });
 
 /**
- * Right-hand drawer listing the bag: one row per dataset with its file
- * location, then one access script covering all of them. The footer switches
+ * Right-hand drawer listing the bag: one row per dataset, then one access
+ * script covering all of them. The footer switches
  * to a "jump to script" variant once the list overflows.
  */
 function BasketDrawer({ open, onClose, rows, locationURLs, onRemove, onEmpty }: BasketDrawerProps) {
@@ -148,7 +148,7 @@ function DrawerBody({ rows, locationURLs, onRemove, onEmpty }: DrawerBodyProps) 
             </Typography>
             <Box component="ul" sx={{ m: 0, p: 0 }}>
               {rows.map(row => (
-                <BasketRow key={row["@id"]} dataset={row} locationURLs={locationURLs} onRemove={onRemove} />
+                <BasketRow key={row["@id"]} dataset={row} onRemove={onRemove} />
               ))}
             </Box>
             <Box ref={scriptRef}>

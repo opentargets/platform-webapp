@@ -21,7 +21,6 @@ export const initialState: DownloadsState = {
   selectedFilters: [],
   downloadsData: null,
   locationURLs: {},
-  view: "cards",
   basket: [],
   basketOpen: false,
   networkScope: "all",
@@ -60,9 +59,6 @@ export function downloadsReducer(
   state: DownloadsState = initialState,
   action: Action
 ): DownloadsState {
-  if (typeof state === undefined) {
-    throw Error("State provided to table reducer is undefined");
-  }
   switch (action.type) {
     case ActionType.SET_LOADING: {
       return {
@@ -131,10 +127,6 @@ export function downloadsReducer(
       };
     }
 
-    case ActionType.SET_VIEW: {
-      if (state.view === action.view) return state;
-      return { ...state, view: action.view };
-    }
     case ActionType.ADD_TO_BASKET: {
       const missing = action.ids.filter(id => !state.basket.includes(id));
       if (!missing.length) return state;
@@ -166,7 +158,6 @@ export function downloadsReducer(
 
     default: {
       throw Error("Unknown action: " + action);
-      return state;
     }
   }
 }

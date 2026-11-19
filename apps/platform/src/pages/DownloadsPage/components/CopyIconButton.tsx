@@ -11,7 +11,7 @@ interface CopyIconButtonProps {
 }
 
 /**
- * The 24×24 copy affordance used by CopyField and AccessScriptBlock. Same
+ * The 24×24 copy affordance used by AccessScriptBlock. Same
  * clipboard call as `ui/CopyToClipboard`, but feedback is an inline "Copied"
  * tooltip instead of a page-level snackbar, which would sit behind the drawer.
  */

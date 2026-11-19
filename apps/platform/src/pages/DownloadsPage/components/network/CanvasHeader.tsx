@@ -55,7 +55,7 @@ function CanvasHeader({
 
 /* ------------------------------------------------------------------ */
 
-/** Same pill styling as the scope switch, shared by both radio groups */
+/** Pill styling shared by both radio groups (scope and layout) */
 const segmentSx = (selected: boolean, disabled = false) => (theme: any) => ({
   font: "inherit",
   fontSize: ".8125rem",
@@ -116,36 +116,11 @@ interface BasketScopeSwitchProps {
 
 export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeSwitchProps) {
   const basketDisabled = basketCount === 0;
-  const optionSx = (selected: boolean, disabled = false) => (theme: any) => ({
-    font: "inherit",
-    fontSize: ".8125rem",
-    lineHeight: 1.2,
-    padding: "3px 10px",
-    borderRadius: RADIUS,
-    cursor: disabled ? "default" : "pointer",
-    border: `1px solid ${selected ? CONTROL_BORDER : "transparent"}`,
-    backgroundColor: selected ? theme.palette.grey[50] : "transparent",
-    color: disabled
-      ? theme.palette.grey[400]
-      : selected
-        ? theme.palette.primary.dark
-        : theme.palette.text.primary,
-    fontWeight: selected ? 500 : 400,
-    whiteSpace: "nowrap",
-    "&:hover": selected || disabled ? undefined : { backgroundColor: theme.palette.grey[300] },
-  });
-
   return (
     <Box
       role="radiogroup"
       aria-label="Datasets shown"
-      sx={theme => ({
-        display: "inline-flex",
-        gap: "3px",
-        padding: "3px 5px",
-        borderRadius: RADIUS,
-        backgroundColor: theme.palette.grey[200],
-      })}
+      sx={segmentGroupSx}
     >
       <Box
         component="button"
@@ -153,7 +128,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
         role="radio"
         aria-checked={scope === "all"}
         onClick={() => onChange("all")}
-        sx={optionSx(scope === "all")}
+        sx={segmentSx(scope === "all")}
       >
         All datasets
       </Box>
@@ -166,7 +141,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
         onClick={() => {
           if (!basketDisabled) onChange("basket");
         }}
-        sx={optionSx(scope === "basket", basketDisabled)}
+        sx={segmentSx(scope === "basket", basketDisabled)}
       >
         {basketDisabled ? "Bag" : `Bag · ${basketCount}`}
       </Box>

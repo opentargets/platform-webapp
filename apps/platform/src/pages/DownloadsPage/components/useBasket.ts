@@ -1,7 +1,7 @@
 import { useCallback, useContext, useMemo } from "react";
 import { DownloadsContext } from "../context/DownloadsContext";
 import { addToBasket, clearBasket, removeFromBasket, setBasketOpen } from "../context/downloadsActions";
-import { getDatasetId, selectBasketRows, selectRowsById } from "../context/downloadsSelectors";
+import { selectBasketRows, selectRowsById } from "../context/downloadsSelectors";
 import { announce } from "./LiveRegion";
 
 /**
@@ -66,7 +66,6 @@ export function useBasket() {
     toggle,
     clear,
     setOpen,
-    getDatasetId,
   };
 }
 

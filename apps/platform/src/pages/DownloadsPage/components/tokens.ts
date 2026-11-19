@@ -25,6 +25,15 @@ type ThemeWithShadows = Theme & { boxShadow?: Partial<Record<keyof typeof SHADOW
 export const shadow = (theme: Theme, size: keyof typeof SHADOW_FALLBACK): string =>
   (theme as ThemeWithShadows).boxShadow?.[size] ?? SHADOW_FALLBACK[size];
 
+/** Small uppercase section heading (bag drawer, access script, node details panel) */
+export const sectionLabelSx = (theme: Theme) => ({
+  fontSize: ".6875rem",
+  fontWeight: 600,
+  letterSpacing: ".06em",
+  textTransform: "uppercase" as const,
+  color: theme.palette.grey[500],
+});
+
 /** Disabled controls: dimmed and inert, unless they must stay focusable (then use aria-disabled). */
 export const DISABLED_SX = { opacity: 0.45, pointerEvents: "none" } as const;
 

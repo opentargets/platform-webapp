@@ -178,21 +178,8 @@ export const transformRecordSetToGraph = (
     });
   });
 
-  // Compute connection count per node (used for tooltip/legend display)
-  const degreeMap = new Map<string, number>();
-  nodes.forEach((node) => degreeMap.set(node.data.id, 0));
-  edges.forEach((edge) => {
-    degreeMap.set(edge.data.source, (degreeMap.get(edge.data.source) || 0) + 1);
-    degreeMap.set(edge.data.target, (degreeMap.get(edge.data.target) || 0) + 1);
-  });
-
-  const nodesWithDegree = nodes.map((node) => ({
-    ...node,
-    data: { ...node.data, degree: degreeMap.get(node.data.id) || 0 },
-  }));
-
-  // Enrich nodes with proper classification (type: core/evidence/attribute, colors, sizes)
-  const enrichedNodes = enrichNodesWithClassification(nodesWithDegree, edges);
+  // Add each node's degree (connection count) and category colour
+  const enrichedNodes = enrichNodesWithClassification(nodes, edges);
 
   return { nodes: enrichedNodes, edges };
 };

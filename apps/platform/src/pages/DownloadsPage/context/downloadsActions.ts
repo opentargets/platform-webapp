@@ -1,4 +1,4 @@
-import { Action, ActionType, DownloadsView, NetworkLayout, NetworkScope } from "../types/downloadTypes";
+import { Action, ActionType, NetworkLayout, NetworkScope } from "../types/downloadTypes";
 
 export function setDownloadsData(downloadsData: Record<string, unknown>): Action {
   return {
@@ -39,10 +39,6 @@ export function setError(error: string): Action {
     type: ActionType.SET_ERROR,
     error,
   };
-}
-
-export function setView(view: DownloadsView): Action {
-  return { type: ActionType.SET_VIEW, view };
 }
 
 export function addToBasket(ids: string[]): Action {

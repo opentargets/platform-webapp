@@ -11,7 +11,6 @@ import {
   setDownloadsData,
   setError,
   setLoading,
-  setView,
   textSearch,
 } from "./context/downloadsActions";
 import { DownloadsContext } from "./context/DownloadsContext";
@@ -74,12 +73,8 @@ function DatasetsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const basketButtonRef = useRef<HTMLButtonElement>(null);
 
-  // `?view=network` is the view's source of truth so it can be linked; the
-  // reducer mirrors it for the components.
+  // `?view=network` is the view's only source of truth so it can be linked
   const urlView: DownloadsView = searchParams.get("view") === "network" ? "network" : "cards";
-  useEffect(() => {
-    if (state.view !== urlView) dispatch(setView(urlView));
-  }, [urlView, state.view, dispatch]);
 
   const handleViewChange = useCallback(
     (view: DownloadsView) => {

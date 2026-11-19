@@ -16,6 +16,7 @@
  */
 
 import { GraphNodeDatum } from '../types';
+import { MONO_FONT } from '../../components/tokens';
 
 /** palette.primary.dark of the platform theme (darken(0.2, #3489ca)) */
 export const PRIMARY_DARK = '#1f5279';
@@ -23,7 +24,6 @@ export const PRIMARY_DARK = '#1f5279';
 export const EDGE_COLOR = '#b0bec5';
 export const EDGE_HIGHLIGHT_COLOR = PRIMARY_DARK;
 
-export const MONO_FONT = "'Roboto Mono', monospace";
 const GREY_700 = '#616161';
 const GREY_900 = '#212121';
 

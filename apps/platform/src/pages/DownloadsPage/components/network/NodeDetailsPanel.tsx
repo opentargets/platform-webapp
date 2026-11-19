@@ -5,7 +5,7 @@ import { Box, IconButton, Typography } from "ui";
 import BasketToggleButton from "../BasketToggleButton";
 import CategoryDot from "../CategoryDot";
 import DatasetActionLinks from "../DatasetActionLinks";
-import { CONTROL_BORDER, MONO_FONT, RADIUS } from "../tokens";
+import { CONTROL_BORDER, MONO_FONT, RADIUS, sectionLabelSx } from "../tokens";
 
 export interface PanelNode {
   id: string;
@@ -29,14 +29,6 @@ const HUB_THRESHOLD = 8;
 /** Groups larger than this start collapsed */
 const COLLAPSED_GROUP_SIZE = 5;
 export const PANEL_WIDTH = 320;
-
-const headerLabelSx = (theme: any) => ({
-  fontSize: ".6875rem",
-  fontWeight: 600,
-  letterSpacing: ".06em",
-  textTransform: "uppercase" as const,
-  color: theme.palette.grey[500],
-});
 
 /**
  * Docked panel for the selected network node: its details and actions, then
@@ -105,7 +97,7 @@ function NodeDetailsPanel({ node, neighbours, inBasket, onToggleBasket, onAddAll
         <GroupedConnectedList neighbours={neighbours} inBasket={inBasket} onToggleBasket={onToggleBasket} onAddAll={onAddAll} onSelect={onSelect} />
       ) : (
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <Typography component="h4" sx={theme => ({ ...headerLabelSx(theme), m: 0, padding: "12px 18px 6px" })}>
+          <Typography component="h4" sx={theme => ({ ...sectionLabelSx(theme), m: 0, padding: "12px 18px 6px" })}>
             Connected datasets · {neighbours.length}
           </Typography>
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
@@ -219,7 +211,7 @@ function GroupedConnectedList({ neighbours, inBasket, onToggleBasket, onAddAll, 
   return (
     <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, padding: "12px 18px 6px" }}>
-        <Typography component="h4" sx={theme => ({ ...headerLabelSx(theme), m: 0, flex: 1 })}>
+        <Typography component="h4" sx={theme => ({ ...sectionLabelSx(theme), m: 0, flex: 1 })}>
           Connected datasets · {neighbours.length}
         </Typography>
         <Box

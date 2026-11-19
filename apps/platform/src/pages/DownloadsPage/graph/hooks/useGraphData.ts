@@ -10,8 +10,6 @@ import { transformRecordSetToGraph } from '../utils/dataTransformer';
 interface GraphDataResult {
   nodes: any[];
   edges: any[];
-  loading: boolean;
-  error: Error | null;
 }
 
 /**
@@ -38,12 +36,7 @@ export const useGraphData = (): GraphDataResult => {
     }
   }, [state.schemaRows]);
 
-  return {
-    nodes: graphData.nodes,
-    edges: graphData.edges,
-    loading: state.loading,
-    error: null,
-  };
+  return graphData;
 };
 
 export default useGraphData;

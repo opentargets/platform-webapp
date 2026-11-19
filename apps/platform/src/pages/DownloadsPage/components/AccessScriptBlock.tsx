@@ -12,20 +12,12 @@ import {
 } from "../context/downloadsSelectors";
 import { DownloadRow } from "../types/downloadTypes";
 import CopyIconButton from "./CopyIconButton";
-import { MONO_FONT, RADIUS } from "./tokens";
+import { MONO_FONT, RADIUS, sectionLabelSx } from "./tokens";
 
 interface AccessScriptBlockProps {
   rows: DownloadRow[];
   locationURLs: Record<string, string>;
 }
-
-export const sectionLabelSx = (theme: any) => ({
-  fontSize: ".6875rem",
-  fontWeight: 600,
-  letterSpacing: ".06em",
-  textTransform: "uppercase" as const,
-  color: theme.palette.grey[500],
-});
 
 /** The Access dialog's script tabs, generalised to every dataset in the bag. */
 function AccessScriptBlock({ rows, locationURLs }: AccessScriptBlockProps) {

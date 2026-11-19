@@ -1,6 +1,6 @@
 /**
- * Pure, derived views over DownloadsState: ids, per-chip counts, basket rows,
- * file locations and the multi-dataset access scripts. Kept out of the
+ * Pure, derived views over DownloadsState: ids, per-chip counts, basket rows
+ * and the multi-dataset access scripts. Kept out of the
  * reducer so the components can compute them from plain
  * rows without a context.
  */
@@ -68,35 +68,6 @@ export const getContainedIn = (row: DownloadRow): string[] => {
   const list = Array.isArray(raw) ? raw : [raw];
   return list.map(entry => entry?.["@id"]).filter((id): id is string => Boolean(id));
 };
-
-export const LOCATION_LABELS: Record<LocationType, string> = {
-  [GCP_LOCATION]: "Google Cloud",
-  [FTP_LOCATION]: "FTP",
-  [AWS_LOCATION]: "AWS",
-};
-
-/** Display and precedence order: GCP first, then FTP, then AWS. */
-const LOCATION_ORDER: LocationType[] = [GCP_LOCATION, FTP_LOCATION, AWS_LOCATION];
-
-/** Every location a dataset is published in, in precedence order; AWS when it names none. */
-export const getLocationTypes = (row: DownloadRow): LocationType[] => {
-  const containedIn = getContainedIn(row);
-  const types = LOCATION_ORDER.filter(type => containedIn.includes(type));
-  return types.length ? types : [AWS_LOCATION];
-};
-
-/** Same precedence as the Access dialog: GCP when published there, else FTP, else AWS. */
-export const getLocationType = (row: DownloadRow): LocationType => getLocationTypes(row)[0];
-
-/** Built the way DownloadsAccessOptions.getLink() does: `locationURLs[loc] + datasetId`. */
-export const getLocationLink = (
-  row: DownloadRow,
-  locationURLs: Record<string, string>,
-  location: LocationType
-): string => `${locationURLs[location] ?? ""}${getDatasetId(row)}`;
-
-export const getFileLocation = (row: DownloadRow, locationURLs: Record<string, string>): string =>
-  getLocationLink(row, locationURLs, getLocationType(row));
 
 export type ScriptType = "gcp" | "aws" | "rsync" | "wget";
 

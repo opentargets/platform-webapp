@@ -28,7 +28,6 @@ export type DownloadsState = {
   selectedFilters: Array<string>;
   downloadsData: Record<string, unknown> | null;
   locationURLs: Record<string, string>;
-  view: DownloadsView;
   /** Dataset ids (RecordSet ids, i.e. the FileSet id without "-fileset") in insertion order */
   basket: string[];
   basketOpen: boolean;
@@ -48,7 +47,6 @@ export enum ActionType {
   SET_ACTIVE_FILTER = "SET_ACTIVE_FILTER",
   SET_DOWNLOADS_DATA = "SET_DOWNLOADS_DATA",
   SET_ERROR = "SET_ERROR",
-  SET_VIEW = "SET_VIEW",
   ADD_TO_BASKET = "ADD_TO_BASKET",
   REMOVE_FROM_BASKET = "REMOVE_FROM_BASKET",
   CLEAR_BASKET = "CLEAR_BASKET",
@@ -65,7 +63,6 @@ export type Action =
   | { type: ActionType.TEXT_SEARCH; freeQueryText: string }
   | { type: ActionType.SET_LOADING; loading: boolean }
   | { type: ActionType.SET_ERROR; error: string }
-  | { type: ActionType.SET_VIEW; view: DownloadsView }
   | { type: ActionType.ADD_TO_BASKET; ids: string[] }
   | { type: ActionType.REMOVE_FROM_BASKET; id: string }
   | { type: ActionType.CLEAR_BASKET }
