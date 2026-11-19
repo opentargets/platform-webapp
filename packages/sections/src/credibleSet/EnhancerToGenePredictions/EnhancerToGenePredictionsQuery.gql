@@ -1,4 +1,4 @@
-query EnhancerToGenePredictionsQuery($studyLocusId: String!, $page: Page) {
+query CredibleSetEnhancerToGenePredictionsQuery($studyLocusId: String!, $page: Page) {
   credibleSet(studyLocusId: $studyLocusId) {
     studyLocusId
     variant {

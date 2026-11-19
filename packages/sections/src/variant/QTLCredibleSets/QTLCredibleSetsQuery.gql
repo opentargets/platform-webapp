@@ -1,4 +1,4 @@
-query QTLCredibleSetsQuery(
+query VariantQTLCredibleSetsQuery(
   $variantId: String!
   $index: Int! = 0
   $size: Int! = 10

@@ -1,4 +1,4 @@
-query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query EvidenceGWASCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
