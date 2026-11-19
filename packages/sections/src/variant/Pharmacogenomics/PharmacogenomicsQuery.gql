@@ -2,17 +2,20 @@ query PharmacogenomicsQuery(
   $variantId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $sort: [PharmacogenomicsSort!]! = []
+  $search: PharmacogenomicsSearch
 ) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    pharmacogenomics(page: { index: $index, size: $size }) {
+    pharmacogenomics(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         variantAnnotation {
           entity
           effect
           effectType
+          effectDescription
           literature
           directionality
           baseAlleleOrGenotype
