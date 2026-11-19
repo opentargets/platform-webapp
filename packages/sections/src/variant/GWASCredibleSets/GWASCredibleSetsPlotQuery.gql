@@ -1,4 +1,4 @@
-query GWASCredibleSetsPlotQuery($variantId: String!) {
+query VariantGWASCredibleSetsPlotQuery($variantId: String!) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele

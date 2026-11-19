@@ -78,7 +78,7 @@ export const createApolloClient = (config: Config) => {
         },
         // Same pattern as CredibleSet.colocalisation/l2GPredictions above:
         // EnhancerToGenePredictionsSummaryFragment selects `variant.enhancerToGenes {
-        // count }` while EnhancerToGenePredictionsQuery selects the full paginated rows.
+        // count }` while VariantEnhancerToGenePredictionsQuery selects the full paginated rows.
         Variant: {
           fields: {
             enhancerToGenes: { merge: true },

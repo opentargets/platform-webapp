@@ -1,4 +1,4 @@
-query EnhancerToGenePredictionsQuery(
+query VariantEnhancerToGenePredictionsQuery(
   $variantId: String!
   $index: Int! = 0
   $size: Int! = 10
