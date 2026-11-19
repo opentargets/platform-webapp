@@ -84,6 +84,14 @@ export const createApolloClient = (config: Config) => {
             enhancerToGenes: { merge: true },
           },
         },
+        // EvidenceViews has no `id`, so it's embedded in its parent Disease/Target under
+        // `evidenceViews(ensemblIds/efoIds)`. Each evidence widget selects a different
+        // datasource field on it (a summary count, a body page with its own sort/search
+        // args), so without a merge each new query would replace the embedded object and
+        // drop the fields other widgets already cached.
+        EvidenceViews: {
+          merge: true,
+        },
       },
     }),
     headers: { "OT-Platform": "true" },

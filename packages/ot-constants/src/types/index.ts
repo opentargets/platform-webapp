@@ -920,6 +920,11 @@ export type Disease = {
   directLocationIds: Array<Scalars['String']['output']>;
   /** Clinical indications for this disease as reported by clinical trial records. */
   drugAndClinicalCandidates: ClinicalIndicationPage;
+  /**
+   * Sorted, searched and paged evidence tables for this disease and the given targets, one
+   * field per datasource.
+   */
+  evidenceViews: EvidenceViews;
   evidences: EvidencePage;
   /** Open Targets disease identifier [bioregistry:efo]. */
   id: Scalars['String']['output'];
@@ -949,11 +954,6 @@ export type Disease = {
   resolvedAncestors: Array<Disease>;
   /** Semantically similar diseases based on a PubMed word embedding model. */
   similarEntities: SimilarEntityPage;
-  /**
-   * Flat, sortable and searchable summary of the studies of this disease, for tables. Use
-   * `studies(diseaseIds: ...)` for the full study entities and stats.
-   */
-  studiesView: DiseaseStudyPage;
   /** List of studies associated with the disease. */
   studyIds: Array<Scalars['String']['output']>;
   /** List of synonyms for the disease. */
@@ -1013,6 +1013,18 @@ export type DiseaseDrugAndClinicalCandidatesArgs = {
  * causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO)
  * (slim version) is used as scaffold for the disease or phenotype entity.
  */
+export type DiseaseEvidenceViewsArgs = {
+  enableIndirect?: Scalars['Boolean']['input'];
+  ensemblIds: Array<Scalars['String']['input']>;
+};
+
+
+/**
+ * Core annotation for diseases or phenotypes. A disease or phenotype in the Platform is understood
+ * as any disease, phenotype, biological process or measurement that might have any type of
+ * causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO)
+ * (slim version) is used as scaffold for the disease or phenotype entity.
+ */
 export type DiseaseEvidencesArgs = {
   datasourceIds?: Array<Datasource>;
   ensemblIds: Array<Scalars['String']['input']>;
@@ -1060,20 +1072,6 @@ export type DiseaseSimilarEntitiesArgs = {
   threshold?: InputMaybe<Scalars['Float']['input']>;
 };
 
-
-/**
- * Core annotation for diseases or phenotypes. A disease or phenotype in the Platform is understood
- * as any disease, phenotype, biological process or measurement that might have any type of
- * causality relationship with a human target. The EMBL-EBI Experimental Factor Ontology (EFO)
- * (slim version) is used as scaffold for the disease or phenotype entity.
- */
-export type DiseaseStudiesViewArgs = {
-  enableIndirect?: Scalars['Boolean']['input'];
-  page?: Page;
-  search?: InputMaybe<DiseaseStudiesSearch>;
-  sort?: Array<DiseaseStudiesSort>;
-};
-
 /** A scored association between a disease and a target or vice versa. */
 export type DiseaseAssociation = {
   __typename?: 'DiseaseAssociation';
@@ -1108,11 +1106,29 @@ export type DiseaseCellLine = {
   tissueId?: Maybe<Scalars['String']['output']>;
 };
 
-/** The result of a paginated query, containing the total number of items and the items. */
+/** A page of diseases, plus a combined view over the studies of all the requested diseases. */
 export type DiseasePage = {
   __typename?: 'DiseasePage';
+  /** Total number of diseases matching the query. */
   count: Scalars['Int']['output'];
+  /** The diseases on this page. */
   rows: Array<Disease>;
+  /**
+   * Flat, sortable and searchable summary of the studies of all the requested diseases, for
+   * tables. Covers every ID in `efoIds`, ignoring the diseases' `search` and `page`. A study
+   * linked to several of the diseases appears once.
+   */
+  studiesView: DiseaseStudyPage;
+};
+
+
+/** A page of diseases, plus a combined view over the studies of all the requested diseases. */
+export type DiseasePageStudiesViewArgs = {
+  enableIndirect?: Scalars['Boolean']['input'];
+  filter?: InputMaybe<DiseaseStudiesFilter>;
+  page?: Page;
+  search?: InputMaybe<DiseaseStudiesSearch>;
+  sort?: Array<DiseaseStudiesSort>;
 };
 
 /**
@@ -1162,6 +1178,12 @@ export enum DiseaseSortField {
   IsTherapeuticArea = 'IS_THERAPEUTIC_AREA',
   Name = 'NAME'
 }
+
+/** Filter for the disease's studies. */
+export type DiseaseStudiesFilter = {
+  /** Keep studies whose ID matches this filter, e.g. `{ ne: "GCST..." }` to exclude one. */
+  studyId?: InputMaybe<StringFilter>;
+};
 
 /** Case-insensitive text search. */
 export type DiseaseStudiesSearch = {
@@ -1811,6 +1833,497 @@ export type Evidence = {
   warningMessage?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * A clinical precedence evidence, as shown in the evidence page's clinical precedence table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/clinical_precedence.sql`. Update both together.
+ */
+export type EvidenceClinicalPrecedence = {
+  __typename?: 'EvidenceClinicalPrecedence';
+  /** Identifier of the clinical report. */
+  clinicalReportId?: Maybe<Scalars['String']['output']>;
+  /** Clinical stage of the drug-disease pair. */
+  clinicalStage?: Maybe<Scalars['String']['output']>;
+  /**
+   * Gain or loss of function effect of the evidence on the target resulting from genetic
+   * variants, pharmacological modulation, or other perturbations.
+   */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the drug or clinical candidate [bioregistry:chembl]. */
+  drugId?: Maybe<Scalars['String']['output']>;
+  /** Name of the drug or clinical candidate. */
+  drugName?: Maybe<Scalars['String']['output']>;
+  /** Identifiers of all the targets in the drug's mechanisms of action. */
+  drugTargetIds: Array<Scalars['String']['output']>;
+  /** Approved symbols of `drugTargetIds`, in the same order. Empty when a symbol is missing. */
+  drugTargetSymbols: Array<Scalars['String']['output']>;
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Start date of study in a YYYY-MM-DD format. */
+  studyStartDate?: Maybe<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceClinicalPrecedencePage = {
+  __typename?: 'EvidenceClinicalPrecedencePage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceClinicalPrecedence>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceClinicalPrecedenceSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceClinicalPrecedenceSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceClinicalPrecedenceSearchField {
+  ClinicalReportId = 'CLINICAL_REPORT_ID',
+  ClinicalStage = 'CLINICAL_STAGE',
+  DirectionOnTarget = 'DIRECTION_ON_TARGET',
+  DirectionOnTrait = 'DIRECTION_ON_TRAIT',
+  DiseaseName = 'DISEASE_NAME',
+  DrugName = 'DRUG_NAME',
+  DrugTargetSymbols = 'DRUG_TARGET_SYMBOLS',
+  StudyStartDate = 'STUDY_START_DATE',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceClinicalPrecedenceSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceClinicalPrecedenceSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceClinicalPrecedenceSortField {
+  /** Clinical stage, from unknown up to approval. */
+  ClinicalStage = 'CLINICAL_STAGE',
+  /** Evidence score. */
+  Score = 'SCORE',
+  /** Study start date. */
+  StudyStartDate = 'STUDY_START_DATE'
+}
+
+/**
+ * A `ClinVar` evidence, as shown in the evidence page's `ClinVar` table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/eva.sql`. Update both together.
+ */
+export type EvidenceEva = {
+  __typename?: 'EvidenceEva';
+  /** Origins of the variant allele. */
+  alleleOrigins: Array<Scalars['String']['output']>;
+  /** Inheritance patterns. */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** Clinical significances of the variant. */
+  clinicalSignificances: Array<Scalars['String']['output']>;
+  /** Phenotypes of the cohort, from the source. */
+  cohortPhenotypes: Array<Scalars['String']['output']>;
+  /** `ClinVar` review status. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** `ClinVar` record (RCV) identifier. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Alternate allele of the variant. Null if the variant isn't found. */
+  variantAlternateAllele?: Maybe<Scalars['String']['output']>;
+  /** Chromosome of the variant. Null if the variant isn't found. */
+  variantChromosome?: Maybe<Chromosome>;
+  /** Sequence Ontology identifier of the variant's functional consequence. */
+  variantFunctionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the variant's functional consequence. */
+  variantFunctionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** HGVS identifier of the variant. */
+  variantHgvsId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the variant, as `chromosome_position_ref_alt`. */
+  variantId?: Maybe<Scalars['String']['output']>;
+  /** Position of the variant (`GRCh38`). Null if the variant isn't found. */
+  variantPosition?: Maybe<Scalars['Int']['output']>;
+  /** Reference allele of the variant. Null if the variant isn't found. */
+  variantReferenceAllele?: Maybe<Scalars['String']['output']>;
+  /** dbSNP rsID of the variant. */
+  variantRsId?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceEvaPage = {
+  __typename?: 'EvidenceEvaPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceEva>;
+};
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceEvaSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceEvaSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceEvaSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
+ * A Gene2Phenotype evidence, as shown in the evidence page's Gene2Phenotype table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/gene2phenotype.sql`. Update both together.
+ */
+export type EvidenceGene2Phenotype = {
+  __typename?: 'EvidenceGene2Phenotype';
+  /** Inheritance patterns. */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** Gene2Phenotype confidence category: limited, moderate, strong or definitive. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Gene2Phenotype panels the relationship is curated in, e.g. `DD; Ear`. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Target ID in resource of origin. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Sequence Ontology identifier of the functional consequence. */
+  variantFunctionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the functional consequence. */
+  variantFunctionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceGene2PhenotypePage = {
+  __typename?: 'EvidenceGene2PhenotypePage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceGene2Phenotype>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceGene2PhenotypeSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceGene2PhenotypeSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, functional
+ * consequence, allelic requirement, panel and confidence category columns of the table.
+ */
+export enum EvidenceGene2PhenotypeSearchField {
+  AllelicRequirements = 'ALLELIC_REQUIREMENTS',
+  Confidence = 'CONFIDENCE',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  DiseaseName = 'DISEASE_NAME',
+  StudyId = 'STUDY_ID',
+  VariantFunctionalConsequenceLabel = 'VARIANT_FUNCTIONAL_CONSEQUENCE_LABEL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceGene2PhenotypeSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceGene2PhenotypeSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceGene2PhenotypeSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
+ * A gene burden evidence, as shown in the evidence page's gene burden table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/gene_burden.sql`. Update both together.
+ */
+export type EvidenceGeneBurden = {
+  __typename?: 'EvidenceGeneBurden';
+  /** Inheritance patterns. */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** Genetic origin of the population. */
+  ancestry?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the ancestry in the HANCESTRO ontology [bioregistry:hancestro]. */
+  ancestryId?: Maybe<Scalars['String']['output']>;
+  /** Effect size of numeric traits. */
+  beta?: Maybe<Scalars['Float']['output']>;
+  /** Lower value of the confidence interval for beta. */
+  betaConfidenceIntervalLower?: Maybe<Scalars['Float']['output']>;
+  /** Upper value of the confidence interval for beta. */
+  betaConfidenceIntervalUpper?: Maybe<Scalars['Float']['output']>;
+  /** Identifier of the studied cohort. */
+  cohortId?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Size of effect captured as odds ratio. */
+  oddsRatio?: Maybe<Scalars['Float']['output']>;
+  /** Lower value of the confidence interval for the odds ratio. */
+  oddsRatioConfidenceIntervalLower?: Maybe<Scalars['Float']['output']>;
+  /** Upper value of the confidence interval for the odds ratio. */
+  oddsRatioConfidenceIntervalUpper?: Maybe<Scalars['Float']['output']>;
+  /** Exponent of the p-value. */
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
+  /** Mantissa of the p-value. */
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
+  /** Identifier of the project that generated the data. */
+  projectId?: Maybe<Scalars['String']['output']>;
+  /** Release version of the source data. */
+  releaseVersion?: Maybe<Scalars['String']['output']>;
+  /** Score provided by the datasource indicating the strength of the association. */
+  resourceScore?: Maybe<Scalars['Float']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Statistical method (model) used to calculate the association. */
+  statisticalMethod?: Maybe<Scalars['String']['output']>;
+  /** Overview of the statistical method used to calculate the association. */
+  statisticalMethodOverview?: Maybe<Scalars['String']['output']>;
+  /** Number of cases in the case-control study. */
+  studyCases?: Maybe<Scalars['Int']['output']>;
+  /** Number of cases that carry at least one allele of the qualifying variant. */
+  studyCasesWithQualifyingVariants?: Maybe<Scalars['Int']['output']>;
+  /** Identifier of the study generating the data. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Sample size of the study. */
+  studySampleSize?: Maybe<Scalars['Int']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Target ID in resource of origin. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** URLs of linked external resources. */
+  urls: Array<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceGeneBurdenPage = {
+  __typename?: 'EvidenceGeneBurdenPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceGeneBurden>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceGeneBurdenSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceGeneBurdenSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, cohort/project,
+ * ancestry, model and allelic requirement columns of the table.
+ */
+export enum EvidenceGeneBurdenSearchField {
+  AllelicRequirements = 'ALLELIC_REQUIREMENTS',
+  Ancestry = 'ANCESTRY',
+  AncestryId = 'ANCESTRY_ID',
+  CohortId = 'COHORT_ID',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  DiseaseName = 'DISEASE_NAME',
+  ProjectId = 'PROJECT_ID',
+  StatisticalMethod = 'STATISTICAL_METHOD'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceGeneBurdenSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceGeneBurdenSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceGeneBurdenSortField {
+  /** Effect size of numeric traits. */
+  Beta = 'BETA',
+  /** Number of cases. */
+  Cases = 'CASES',
+  /** Number of cases carrying a qualifying variant. */
+  CasesWithQualifyingVariants = 'CASES_WITH_QUALIFYING_VARIANTS',
+  /** Odds ratio. */
+  OddsRatio = 'ODDS_RATIO',
+  /** P-value. */
+  PValue = 'P_VALUE',
+  /** Sample size of the study. */
+  SampleSize = 'SAMPLE_SIZE',
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
+ * A GWAS credible sets evidence, as shown in the evidence page's GWAS associations table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/gwas_credible_sets.sql`. Update both together.
+ */
+export type EvidenceGwasCredibleSets = {
+  __typename?: 'EvidenceGwasCredibleSets';
+  /** Effect size of the lead variant. */
+  beta?: Maybe<Scalars['Float']['output']>;
+  /** Fine-mapping confidence of the credible set. */
+  confidence: Scalars['String']['output'];
+  /** Identifier of the disease the study's trait is mapped to. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Fine-mapping method used to derive the credible set. */
+  finemappingMethod: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Alternate allele of the lead variant. */
+  leadAlternateAllele: Scalars['String']['output'];
+  /** Chromosome of the lead variant. */
+  leadChromosome: Chromosome;
+  /** Position of the lead variant (`GRCh38`). */
+  leadPosition: Scalars['Int']['output'];
+  /** Reference allele of the lead variant. */
+  leadReferenceAllele: Scalars['String']['output'];
+  /** Identifier of the credible set's lead variant. */
+  leadVariantId: Scalars['String']['output'];
+  /** Number of samples tested in the study. */
+  nSamples?: Maybe<Scalars['Int']['output']>;
+  /** Exponent of the lead variant's p-value. */
+  pValueExponent: Scalars['Int']['output'];
+  /** Mantissa of the lead variant's p-value. */
+  pValueMantissa: Scalars['Float']['output'];
+  /** Identifier of the project the study comes from. */
+  projectId: Scalars['String']['output'];
+  /** Date of the publication that references the study. */
+  publicationDate?: Maybe<Scalars['String']['output']>;
+  /** First author of the publication that references the study. */
+  publicationFirstAuthor?: Maybe<Scalars['String']['output']>;
+  /** PubMed identifier of the publication that references the study [bioregistry:pubmed]. */
+  pubmedId?: Maybe<Scalars['String']['output']>;
+  /** Locus-to-gene (L2G) score of the target for the credible set. */
+  score: Scalars['Float']['output'];
+  /** Identifier of the GWAS study. */
+  studyId: Scalars['String']['output'];
+  /** Identifier of the credible set (`StudyLocus`) supporting this evidence. */
+  studyLocusId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target prioritised by L2G. */
+  targetId: Scalars['String']['output'];
+  /** Trait, derived from source, analysed in the study. */
+  traitFromSource: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceGwasCredibleSetsPage = {
+  __typename?: 'EvidenceGwasCredibleSetsPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceGwasCredibleSets>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceGwasCredibleSetsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceGwasCredibleSetsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceGwasCredibleSetsSearchField {
+  Confidence = 'CONFIDENCE',
+  DiseaseName = 'DISEASE_NAME',
+  FinemappingMethod = 'FINEMAPPING_METHOD',
+  LeadVariantId = 'LEAD_VARIANT_ID',
+  PublicationDate = 'PUBLICATION_DATE',
+  PublicationFirstAuthor = 'PUBLICATION_FIRST_AUTHOR',
+  StudyId = 'STUDY_ID',
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceGwasCredibleSetsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceGwasCredibleSetsSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceGwasCredibleSetsSortField {
+  /** Effect size of the lead variant. */
+  Beta = 'BETA',
+  /** Fine-mapping confidence, from PICS on a reported top hit up to `SuSiE` with in-sample LD. */
+  FinemappingConfidence = 'FINEMAPPING_CONFIDENCE',
+  /** Lead variant, by genomic position. */
+  LeadVariant = 'LEAD_VARIANT',
+  /** P-value of the lead variant. */
+  PValue = 'P_VALUE',
+  /** Number of samples in the study. */
+  SampleSize = 'SAMPLE_SIZE',
+  /** Evidence score, which is the target's locus-to-gene (L2G) score. */
+  Score = 'SCORE'
+}
+
 /** The result of a paginated query, containing the total number of items and the items. */
 export type EvidencePage = {
   __typename?: 'EvidencePage';
@@ -1844,6 +2357,77 @@ export type EvidenceTextMiningSentence = {
   text: Scalars['String']['output'];
 };
 
+/**
+ * A `UniProt` literature evidence, as shown in the evidence page's `UniProt` literature table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/uniprot_literature.sql`. Update both together.
+ */
+export type EvidenceUniprotLiterature = {
+  __typename?: 'EvidenceUniprotLiterature';
+  /** Confidence of the disease/target relationship reported by `UniProt`. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Identifier of the study generating the data. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Reported protein: the `UniProt` accession of the target in the source. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceUniprotLiteraturePage = {
+  __typename?: 'EvidenceUniprotLiteraturePage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceUniprotLiterature>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceUniprotLiteratureSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceUniprotLiteratureSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype and reported
+ * protein columns of the table.
+ */
+export enum EvidenceUniprotLiteratureSearchField {
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  DiseaseName = 'DISEASE_NAME',
+  TargetFromSourceId = 'TARGET_FROM_SOURCE_ID'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceUniprotLiteratureSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceUniprotLiteratureSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceUniprotLiteratureSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
 /** Mutation counts for a single functional consequence, across a tested sample cohort. */
 export type EvidenceVariation = {
   __typename?: 'EvidenceVariation';
@@ -1855,6 +2439,79 @@ export type EvidenceVariation = {
   numberSamplesTested?: Maybe<Scalars['Int']['output']>;
   /** Number of cohort samples in which target is mutated with a specific mutation type. */
   numberSamplesWithMutationType?: Maybe<Scalars['Int']['output']>;
+};
+
+export type EvidenceViews = {
+  __typename?: 'EvidenceViews';
+  /**
+   * Clinical precedence evidence: drugs that target the target and are in clinical
+   * development or approved for the disease.
+   */
+  clinicalPrecedence: EvidenceClinicalPrecedencePage;
+  /**
+   * `ClinVar` (EVA) evidence: germline variants in the target with a clinical significance
+   * for the disease. Sorted by score only, with no search, so it's paged from the evidence
+   * index and only the page's rows are read in full.
+   */
+  eva: EvidenceEvaPage;
+  /**
+   * Gene2Phenotype evidence: curated gene-disease relationships from the Gene2Phenotype
+   * panels.
+   */
+  gene2Phenotype: EvidenceGene2PhenotypePage;
+  /** Gene burden evidence: rare-variant collapsing (burden) tests. */
+  geneBurden: EvidenceGeneBurdenPage;
+  /**
+   * GWAS credible sets evidence: fine-mapped GWAS signals whose locus-to-gene (L2G) model
+   * prioritises the target.
+   */
+  gwasCredibleSets: EvidenceGwasCredibleSetsPage;
+  /**
+   * `UniProt` literature evidence: disease/target relationships curated by `UniProt` from the
+   * literature.
+   */
+  uniprotLiterature: EvidenceUniprotLiteraturePage;
+};
+
+
+export type EvidenceViewsClinicalPrecedenceArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceClinicalPrecedenceSearch>;
+  sort?: Array<EvidenceClinicalPrecedenceSort>;
+};
+
+
+export type EvidenceViewsEvaArgs = {
+  page?: Page;
+  sort?: Array<EvidenceEvaSort>;
+};
+
+
+export type EvidenceViewsGene2PhenotypeArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceGene2PhenotypeSearch>;
+  sort?: Array<EvidenceGene2PhenotypeSort>;
+};
+
+
+export type EvidenceViewsGeneBurdenArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceGeneBurdenSearch>;
+  sort?: Array<EvidenceGeneBurdenSort>;
+};
+
+
+export type EvidenceViewsGwasCredibleSetsArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceGwasCredibleSetsSearch>;
+  sort?: Array<EvidenceGwasCredibleSetsSort>;
+};
+
+
+export type EvidenceViewsUniprotLiteratureArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceUniprotLiteratureSearch>;
+  sort?: Array<EvidenceUniprotLiteratureSort>;
 };
 
 /** Kind of entity that has a facet search index. */
@@ -2768,7 +3425,7 @@ export type QueryDiseasesArgs = {
   efoIds: Array<Scalars['String']['input']>;
   page?: Page;
   search?: InputMaybe<DiseasesSearch>;
-  sort: Array<DiseaseSort>;
+  sort?: Array<DiseaseSort>;
 };
 
 
@@ -3498,6 +4155,11 @@ export type Target = {
   /** Target-drug associations derived from clinical reports for this target. */
   drugAndClinicalCandidates: ClinicalTargetPage;
   /**
+   * Sorted, searched and paged evidence tables for this target and the given diseases, one
+   * field per datasource.
+   */
+  evidenceViews: EvidenceViews;
+  /**
    * Target-disease evidence from all data sources supporting associations between this target
    * and diseases or phenotypes. Evidence entries are reported and scored according to confidence
    * in the association.
@@ -3675,6 +4337,18 @@ export type TargetDepMapEssentialityArgs = {
  */
 export type TargetDrugAndClinicalCandidatesArgs = {
   page?: Page;
+};
+
+
+/**
+ * Core annotation for drug targets (gene/proteins). Targets are defined based on EMBL-EBI Ensembl
+ * database and uses the Ensembl gene ID as the primary identifier. An Ensembl gene ID is
+ * considered potential drug target if included in the canonical assembly or if present alternative
+ * assemblies but encoding for a reviewed protein product according to the UniProt database.
+ */
+export type TargetEvidenceViewsArgs = {
+  efoIds: Array<Scalars['String']['input']>;
+  enableIndirect?: Scalars['Boolean']['input'];
 };
 
 
@@ -4239,10 +4913,14 @@ export type VariantAnnotation = {
 export type VariantCredibleSet = {
   __typename?: 'VariantCredibleSet';
   beta?: Maybe<Scalars['Float']['output']>;
+  biosampleId?: Maybe<Scalars['String']['output']>;
+  biosampleName?: Maybe<Scalars['String']['output']>;
+  condition?: Maybe<Scalars['String']['output']>;
   confidence: Scalars['String']['output'];
   diseaseTherapeuticAreas: Array<VariantCredibleSetDisease>;
   diseases: Array<VariantCredibleSetDisease>;
   finemappingMethod: Scalars['String']['output'];
+  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
   leadAlternateAllele: Scalars['String']['output'];
   leadChromosome: Chromosome;
   leadPosition: Scalars['Int']['output'];
@@ -4254,6 +4932,8 @@ export type VariantCredibleSet = {
   posteriorProbability: Scalars['Float']['output'];
   studyId: Scalars['String']['output'];
   studyLocusId: Scalars['String']['output'];
+  studyTargetApprovedSymbol?: Maybe<Scalars['String']['output']>;
+  studyTargetId?: Maybe<Scalars['String']['output']>;
   studyType: StudyType;
   topL2GApprovedSymbol?: Maybe<Scalars['String']['output']>;
   topL2GGeneId?: Maybe<Scalars['String']['output']>;
@@ -4291,17 +4971,15 @@ export type VariantCredibleSetsSearch = {
  * that would match almost every search).
  */
 export enum VariantCredibleSetsSearchField {
-  Confidence = 'CONFIDENCE',
+  BiosampleName = 'BIOSAMPLE_NAME',
+  Condition = 'CONDITION',
   DiseaseIds = 'DISEASE_IDS',
   DiseaseNames = 'DISEASE_NAMES',
-  DiseaseTherapeuticAreaIds = 'DISEASE_THERAPEUTIC_AREA_IDS',
-  DiseaseTherapeuticAreaNames = 'DISEASE_THERAPEUTIC_AREA_NAMES',
   FinemappingMethod = 'FINEMAPPING_METHOD',
   LeadVariantId = 'LEAD_VARIANT_ID',
   StudyId = 'STUDY_ID',
-  StudyLocusId = 'STUDY_LOCUS_ID',
+  StudyTargetApprovedSymbol = 'STUDY_TARGET_APPROVED_SYMBOL',
   TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL',
-  TopL2GGeneId = 'TOP_L2G_GENE_ID',
   TraitFromSource = 'TRAIT_FROM_SOURCE'
 }
 
@@ -4315,7 +4993,10 @@ export type VariantCredibleSetsSort = {
 
 /** Fields available for sorting. */
 export enum VariantCredibleSetsSortField {
+  Beta = 'BETA',
+  CredibleSetSize = 'CREDIBLE_SET_SIZE',
   LeadVariant = 'LEAD_VARIANT',
+  PosteriorProbablity = 'POSTERIOR_PROBABLITY',
   PValue = 'P_VALUE',
   TopL2GScore = 'TOP_L2G_SCORE'
 }
@@ -4425,7 +5106,8 @@ export enum VariantTranscriptConsequencesSortField {
   /** Distance of the variant from the transcription start site. */
   DistanceFromTss = 'DISTANCE_FROM_TSS',
   /** Approved gene symbol of the target. Rows without a target come last. */
-  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL',
+  TranscriptIndex = 'TRANSCRIPT_INDEX'
 }
 
 /** Version information for the API and its underlying data sources. */
