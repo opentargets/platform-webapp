@@ -1,16 +1,16 @@
 import { lazy } from "react";
-import { Variant } from "@ot/constants";
+
+type EVASummaryData = {
+  evaEvidences?: {
+    count?: number;
+  };
+};
 
 export const definition = {
   id: "eva",
   name: "ClinVar",
   shortName: "CV",
-  hasData: (data: Variant) => {
-    return (
-      // @ts-expect-error TODO: fix this
-      (data.evaEvidences?.count || 0) > 0 // section
-    );
-  },
+  hasData: (data: EVASummaryData) => (data.evaEvidences?.count || 0) > 0,
 };
 
 // Components

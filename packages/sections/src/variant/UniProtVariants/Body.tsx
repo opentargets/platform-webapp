@@ -1,11 +1,10 @@
 import { useQuery } from "@apollo/client";
-import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTable, Typography } from "ui";
+import { Link, SectionItem, Tooltip, PublicationsDrawer, OtTableServer, Typography } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl } from "@ot/utils";
 import { naLabel } from "@ot/constants";
 import UNIPROT_VARIANTS_QUERY from "./UniProtVariantsQuery.gql";
-import { useCallback } from "react";
 
 const columns = [
   {
@@ -41,7 +40,6 @@ const columns = [
       return displayElement;
     },
     exportValue: ({ disease }) => disease?.name,
-    filterValue: ({ disease }) => disease?.name,
   },
   {
     id: "confidence",
@@ -65,9 +63,10 @@ const columns = [
         }, []) || [];
       return <PublicationsDrawer entries={literatureList} />;
     },
-    filterValue: false,
   },
 ];
+
+const PAGE_SIZE = 10;
 
 type BodyProps = {
   id: string;
@@ -80,14 +79,11 @@ export function Body({ id, entity }: BodyProps) {
   };
 
   const request = useQuery(UNIPROT_VARIANTS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
-  const getTargetFromSourceId = useCallback(() => {
-    if (request.data?.variant.uniProtEvidences.rows.length > 0)
-      return request.data?.variant.uniProtEvidences.rows[0].targetFromSourceId;
-    return null;
-  }, [request]);
+  const targetFromSourceId =
+    request.data?.variant?.uniProtEvidences?.rows[0]?.targetFromSourceId ?? null;
 
   return (
     <SectionItem
@@ -96,23 +92,23 @@ export function Body({ id, entity }: BodyProps) {
       entity={entity}
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={request.data?.variant.variantId}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
-          targetFromSourceId={getTargetFromSourceId()}
+          targetFromSourceId={targetFromSourceId}
         />
       )}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
             dataDownloader
             dataDownloaderFileStem={`${id}-uniprot-variants`}
-            showGlobalFilter
             columns={columns}
-            loading={request.loading}
-            rows={request.data?.variant.uniProtEvidences.rows}
-            query={UNIPROT_VARIANTS_QUERY.loc.source.body}
+            query={UNIPROT_VARIANTS_QUERY}
             variables={variables}
+            dataPath="variant.uniProtEvidences"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
           />
         );
       }}
