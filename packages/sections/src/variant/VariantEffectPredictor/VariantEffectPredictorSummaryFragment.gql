@@ -1,5 +1,5 @@
 fragment VariantEffectPredictorSummaryFragment on Variant {
-  transcriptConsequences {
-    isEnsemblCanonical
+  transcriptConsequencesView(page: { index: 0, size: 1 }) {
+    count
   }
 }
