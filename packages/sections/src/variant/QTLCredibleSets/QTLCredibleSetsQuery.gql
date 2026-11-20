@@ -2,12 +2,16 @@ query VariantQTLCredibleSetsQuery(
   $variantId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $sort: [VariantCredibleSetsSort!]! = []
+  $search: VariantCredibleSetsSearch
 ) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    qtlCredibleSets: credibleSets(
-      filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
+    qtlCredibleSets: credibleSetsView(
+      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+      sort: $sort
+      search: $search
       page: { index: $index, size: $size }
     ) {
       count
@@ -19,26 +23,18 @@ query VariantQTLCredibleSetsQuery(
         finemappingMethod
         confidence
         isTransQtl
-        variant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        study {
-          id
-          studyType
-          condition
-        }
-        locus(filter: { variantIds: [$variantId] }) {
-          rows {
-            posteriorProbability
-          }
-        }
-        locusSize: locus {
-          count
-        }
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
+        studyId
+        studyType
+        condition
+        studyTargetId
+        studyTargetApprovedSymbol
+        biosampleId
+        biosampleName
+        posteriorProbability
+        locusSize
       }
     }
   }
