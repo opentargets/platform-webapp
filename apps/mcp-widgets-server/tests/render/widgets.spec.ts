@@ -52,7 +52,10 @@ for (const def of WIDGET_REGISTRY) {
     page.on("pageerror", (err) => pageErrors.push(err.message));
     page.on("console", (msg) => {
       if (msg.type() !== "error") return;
-      (msg.text().startsWith("Refused to") ? cspViolations : consoleErrors).push(msg.text());
+      (/Refused to|violates the following Content Security Policy/.test(msg.text())
+        ? cspViolations
+        : consoleErrors
+      ).push(msg.text());
     });
     page.on("request", (request) => {
       if (!isExternal(request)) return;
@@ -118,10 +121,16 @@ for (const def of WIDGET_REGISTRY) {
     const text = (await frame.locator("#root").innerText().catch(() => "")).trim();
     const errorText = text.match(ERROR_TEXTS)?.[0];
 
+    // Deduplicated with counts: a request loop would otherwise list the same failure thousands of times
+    const counted = (items: string[]) => {
+      const counts = new Map<string, number>();
+      for (const item of items) counts.set(item, (counts.get(item) ?? 0) + 1);
+      return [...counts].map(([item, n]) => (n > 1 ? `${item} (×${n})` : item));
+    };
     const problems = [
-      ...pageErrors.map((e) => `uncaught: ${e}`),
-      ...graphqlErrors.map((e) => `graphql: ${e}`),
-      ...failedRequests.map((e) => `request failed: ${e}`),
+      ...counted(pageErrors.map((e) => `uncaught: ${e}`)),
+      ...counted(graphqlErrors.map((e) => `graphql: ${e}`)),
+      ...counted(failedRequests.map((e) => `request failed: ${e}`)),
       ...(requests === 0 ? ["made no requests"] : []),
       ...(sections === 0
         ? ["rendered nothing (section returned null: no data for these IDs, or a failed query)"]
@@ -148,7 +157,7 @@ for (const def of WIDGET_REGISTRY) {
           status,
           problems,
           consoleErrors,
-          cspViolations,
+          cspViolations: [...new Set(cspViolations)],
           requests,
           screenshot,
         },
