@@ -35,6 +35,17 @@ export {
   useBatchQuery,
   usePlatformApi,
 } from "./ui-index";
+// Not used by this widget, but ui-index re-exports GeneVis, whose "ui" imports
+// resolve to this stub in the ms build — they must exist here too.
+export {
+  DataVLine,
+  GenTrack,
+  GenTrackProvider,
+  GenTrackTooltipProvider,
+  RegionBoundaryOverlay,
+  useGenTrackState,
+  useGenTrackTooltipDispatch,
+} from "./ui-index";
 
 // ---- Stubs ----
 
