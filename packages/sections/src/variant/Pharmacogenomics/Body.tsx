@@ -1,4 +1,5 @@
-import { Fragment, useState } from "react";
+import { useQuery } from "@apollo/client";
+import { Fragment } from "react";
 import { definition } from ".";
 import Description from "./Description";
 import PHARMACOGENOMICS_QUERY from "./PharmacogenomicsQuery.gql";
@@ -6,13 +7,19 @@ import { useTheme } from "@mui/material/styles";
 import {
   DirectionalityDrawer,
   Link,
-  OtTableOffsetPagination,
+  OtTableServer,
   PublicationsDrawer,
   SectionItem,
   Tooltip,
 } from "ui";
 import { epmcUrl } from "@ot/utils";
-import { naLabel, PHARM_GKB_COLOR } from "@ot/constants";
+import {
+  naLabel,
+  PHARM_GKB_COLOR,
+  PharmacogenomicsSearchField,
+  PharmacogenomicsSortField,
+  SortDirection,
+} from "@ot/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
@@ -45,9 +52,23 @@ type BodyProps = {
   entity: string;
 };
 
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "evidenceLevel",
+  field: PharmacogenomicsSortField.EvidenceLevel,
+  desc: false,
+};
+
 function Body({ id, entity }: BodyProps) {
   const variables = { variantId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(PHARMACOGENOMICS_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
+  });
 
   const theme = useTheme();
   const levelColors = {
@@ -61,6 +82,8 @@ function Body({ id, entity }: BodyProps) {
       id: "genotypeId",
       label: "Genotype ID",
       enableHiding: false,
+      // For now, attach all search fields to the first column.
+      searchFields: Object.values(PharmacogenomicsSearchField),
       tooltip: (
         <>
           VCF-style(chr_pos_ref_allele1,allele2). See{" "}
@@ -74,6 +97,7 @@ function Body({ id, entity }: BodyProps) {
         </>
       ),
       renderCell: ({ genotypeId }) => genotypeId || naLabel,
+      exportValue: ({ genotypeId }) => genotypeId ?? "",
     },
     {
       id: "drugs",
@@ -101,8 +125,13 @@ function Body({ id, entity }: BodyProps) {
           </>
         );
       },
-      filterValue: ({ drugs }) =>
-        drugs.map(d => `${d.drugFromSource ?? ""} ${d.drugId ?? ""}`).join(" "),
+      exportValue: ({ drugs }) =>
+        drugs
+          .filter(d => d.drugId || d.drugFromSource)
+          .map(({ drugFromSource, drugId }) =>
+            drugFromSource && drugId ? `${drugFromSource} (${drugId})` : drugFromSource || drugId
+          )
+          .join("; "),
     },
     {
       id: "genotypeAnnotationText",
@@ -124,16 +153,15 @@ function Body({ id, entity }: BodyProps) {
           );
         return phenotypeTextElement;
       },
-      filterValue: ({ phenotypeText }) => phenotypeText,
+      exportValue: ({ phenotypeText }) => phenotypeText ?? "",
     },
     {
       id: "pgxCategory",
       label: "Drug response category",
       renderCell: ({ pgxCategory }) => pgxCategory || naLabel,
-      filterValue: ({ pgxCategory }) => pgxCategory,
     },
     {
-      id: "target.approvedSymbol",
+      id: "target",
       label: "Gene",
       renderCell: ({ target }) => {
         if (!target) return naLabel;
@@ -143,7 +171,7 @@ function Body({ id, entity }: BodyProps) {
           </Link>
         );
       },
-      filterValue: ({ target }) => target.approvedSymbol,
+      exportValue: ({ target }) => target?.approvedSymbol ?? "",
     },
     {
       id: "directionality",
@@ -151,6 +179,13 @@ function Body({ id, entity }: BodyProps) {
       renderCell: ({ variantAnnotation }) => (
         <DirectionalityDrawer variantAnnotation={variantAnnotation} caption="Directionality" />
       ),
+      exportValue: ({ variantAnnotation }) =>
+        (variantAnnotation ?? [])
+          .map(({ directionality, effectDescription, literature }) =>
+            [directionality, effectDescription, literature].filter(Boolean).join(" | ")
+          )
+          .filter(Boolean)
+          .join("; "),
     },
     {
       id: "isDirectTarget",
@@ -163,8 +198,7 @@ function Body({ id, entity }: BodyProps) {
     {
       id: "evidenceLevel",
       label: "Confidence level",
-      comparator: (a, b) => (b.evidenceLevel < a.evidenceLevel ? 1 : -1),
-      sortable: true,
+      sortField: DEFAULT_SORT.field,
       tooltip: (
         <>
           As defined by
@@ -192,11 +226,12 @@ function Body({ id, entity }: BodyProps) {
         }
         return naLabel;
       },
-      filterValue: ({ evidenceLevel }) => `Level ${evidenceLevel}`,
     },
     {
       id: "source",
       label: "Source",
+      exportValue: ({ studyId }) =>
+        studyId ? `https://www.pharmgkb.org/clinicalAnnotation/${studyId}` : "",
       renderCell: ({ studyId }) =>
         studyId ? (
           <Link external to={`https://www.pharmgkb.org/clinicalAnnotation/${studyId}`}>
@@ -209,6 +244,7 @@ function Body({ id, entity }: BodyProps) {
     {
       id: "literature",
       label: "Literature",
+      exportValue: ({ literature }) => (literature ?? []).filter(id => id !== "NA").join("; "),
       renderCell: ({ literature }) => {
         const literatureList =
           literature?.reduce((acc, id) => {
@@ -240,12 +276,13 @@ function Body({ id, entity }: BodyProps) {
         />
       )}
       renderBody={() => (
-        <OtTableOffsetPagination
+        <OtTableServer
           dataDownloader
           dataDownloaderFileStem={`${id}-pharmacogenetics-variant`}
-          entity="variant"
-          sectionName="pharmacogenomics"
-          setInitialRequestData={setRequest}
+          dataPath="variant.pharmacogenomics"
+          pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           showColumnVisibilityControl
           variables={variables}
           columns={columns}

@@ -15,6 +15,7 @@ import {
   NativeSelect,
   Skeleton,
 } from "@mui/material";
+import { SortDirection } from "@ot/constants";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
   type Cell,
@@ -45,7 +46,7 @@ import {
   OtTH,
   OtTR,
 } from "./otTableLayout";
-import { INIT_PAGE_SIZE, type OtTableServerProps } from "./types/tableTypes";
+import { INIT_PAGE_SIZE, type OtTableColumn, type OtTableServerProps } from "./types/tableTypes";
 import {
   getCurrentPagePosition,
   getDefaultSortObj,
@@ -91,6 +92,42 @@ function matchesSearch<Row extends object>(
   );
 }
 
+const isEmptyValue = (value: unknown) => value == null || value === "";
+
+function compareValues(a: unknown, b: unknown): number {
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+}
+
+// client-side fallback when the API field has no sort input: orders the whole
+// dataset by the column's comparator, or by its filter value / id value, with
+// empty values last in either direction
+function sortRows<Row extends object>(
+  rows: Row[],
+  sorting: SortingState,
+  columns: OtTableColumn<Row>[]
+): Row[] {
+  const [sort] = sorting;
+  const column = sort && columns.find((c) => c.id === sort.id);
+  if (!sort || !column) return rows;
+  const sortValue = (row: Row): unknown =>
+    column.filterValue ? column.filterValue(row) : _.get(row, column.id);
+  const direction = sort.desc ? -1 : 1;
+  // a comparator handles its own empty values
+  if (column.comparator) {
+    const { comparator } = column;
+    return [...rows].sort((a, b) => direction * comparator(a, b));
+  }
+  return [...rows].sort((a, b) => {
+    const va = sortValue(a);
+    const vb = sortValue(b);
+    const emptyA = isEmptyValue(va);
+    const emptyB = isEmptyValue(vb);
+    if (emptyA || emptyB) return emptyA === emptyB ? 0 : emptyA ? 1 : -1;
+    return direction * compareValues(va, vb);
+  });
+}
+
 function getLoadingCells<Row>(columns: ColumnDef<Row>[]): ColumnDef<Row>[] {
   return columns.map((column) =>
     "columns" in column && column.columns
@@ -106,15 +143,14 @@ function getLoadingCells<Row>(columns: ColumnDef<Row>[]): ColumnDef<Row>[] {
  *
  * - `dataPath` points at the `{ count, rows }` object inside the response
  *   (e.g. `disease.phenotypes`).
- * - `getSortVariables` turns the react-table sorting state into query
- *   variables (e.g. `{ sort: [{ key, direction }] }`). When it is omitted the
- *   columns are not sortable, since client-side sorting would only reorder the
- *   current page.
- * - `searchVariable` names the query variable that receives the global search
- *   text. When it is omitted (the API field has no search argument) a search
- *   term makes the table fetch the whole dataset once, filter it locally with
- *   the same matcher as the client-side table, and paginate the matches
- *   locally; clearing the box returns to server pagination.
+ * - A column's `sortField` enables server-side sorting with the API's
+ *   `{ sort: [{ key, direction }] }` input. Without server sort fields, sorting
+ *   fetches the whole dataset once, sorts it locally by the column's comparator
+ *   or value, and paginates the result locally.
+ * - The union of column `searchFields` enables server-side search using the
+ *   API's `{ text, fields }` input. Without server search fields, a search term
+ *   fetches the whole dataset once, filters it locally with the same matcher as
+ *   the client-side table, and paginates the matches locally.
  */
 function OtTableServer<Row extends object, ServerRow extends object = Row>({
   columns = [],
@@ -128,8 +164,6 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   pageSizeOptions = [10, 25, 100],
   sortBy,
   order,
-  getSortVariables,
-  searchVariable,
   showGlobalFilter = true,
   globalFilterPlaceholderText,
   verticalHeaders = false,
@@ -162,24 +196,47 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const [search, setSearch] = useState("");
   const [rowSelection, setRowSelection] = useState({});
   const requestId = useRef(0);
-  // whole dataset, only fetched for a local search
+  // whole dataset, only fetched for a local search or sort
   const [allRows, setAllRows] = useState<Row[] | null>(null);
   const [allRowsLoading, setAllRowsLoading] = useState(false);
 
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
-  const serverSorting = !!getSortVariables;
-  const serverSearch = !!searchVariable;
+  const serverSortFields = useMemo(
+    () =>
+      new Map(
+        columns
+          .filter((column) => column.sortField)
+          .map((column) => [column.id, column.sortField] as const)
+      ),
+    [columns]
+  );
+  const serverSearchFields = useMemo(
+    () => [...new Set(columns.flatMap((column) => column.searchFields ?? []))],
+    [columns]
+  );
+  const serverSorting = serverSortFields.size > 0;
+  const serverSearch = serverSearchFields.length > 0;
   const serverSearchTerm = serverSearch ? search.trim() : "";
   const localSearchTerm = serverSearch ? "" : search.trim();
   const localSearchMode = localSearchTerm.length > 0;
+  const localSortMode = !serverSorting && sorting.length > 0;
+  // either fallback needs the whole dataset
+  const localMode = localSearchMode || localSortMode;
   const enableRowSelection = !!getSelectedRows || enableMultipleRowSelection;
 
   const toRows = (rows: ServerRow[]): Row[] =>
     transformRows ? transformRows(rows) : (rows as unknown as Row[]);
 
+  const tableColumnsConfig = useMemo(
+    () =>
+      serverSorting
+        ? columns.map((column) => ({ ...column, sortable: serverSortFields.has(column.id) }))
+        : columns,
+    [columns, serverSortFields, serverSorting]
+  );
   const mappedColumns = useMemo(
-    () => mapTableColumnToTanstackColumns(columns) as unknown as ColumnDef<Row>[],
-    [columns]
+    () => mapTableColumnToTanstackColumns(tableColumnsConfig) as unknown as ColumnDef<Row>[],
+    [tableColumnsConfig]
   );
   const flatColumns = useMemo(() => flattenColumns(mappedColumns), [mappedColumns]);
   const loadingCells = useMemo(() => getLoadingCells(mappedColumns), [mappedColumns]);
@@ -192,42 +249,77 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const requestVariables = useMemo(
     () => ({
       ...memoizedVariables,
-      ...(getSortVariables ? getSortVariables(sorting) : {}),
+      ...(serverSorting
+        ? {
+            sort: sorting.flatMap(({ id, desc }) => {
+              const key = serverSortFields.get(id);
+              return key
+                ? [{ key, direction: desc ? SortDirection.Descending : SortDirection.Ascending }]
+                : [];
+            }),
+          }
+        : {}),
       // omitted when empty so the first page shares its cache entry with the section's own query
-      ...(searchVariable && serverSearchTerm ? { [searchVariable]: serverSearchTerm } : {}),
+      ...(serverSearchTerm
+        ? {
+            search: {
+              text: serverSearchTerm,
+              fields: serverSearchFields,
+            },
+          }
+        : {}),
     }),
-    [memoizedVariables, getSortVariables, sorting, searchVariable, serverSearchTerm]
+    [
+      memoizedVariables,
+      serverSorting,
+      sorting,
+      serverSortFields,
+      serverSearchTerm,
+      serverSearchFields,
+    ]
   );
 
-  // local search: every matching row of the whole dataset, paginated here
-  const filteredRows = useMemo(() => {
-    if (!localSearchMode || !allRows) return null;
-    return allRows.filter((row) => matchesSearch(row, localSearchTerm, flatColumns));
-  }, [localSearchMode, allRows, localSearchTerm, flatColumns]);
+  // local search and/or sort: the whole dataset filtered and ordered here, paginated here
+  const localRows = useMemo(() => {
+    if (!localMode || !allRows) return null;
+    const matching = localSearchMode
+      ? allRows.filter((row) => matchesSearch(row, localSearchTerm, flatColumns))
+      : allRows;
+    return localSortMode ? sortRows(matching, sorting, columns) : matching;
+  }, [
+    localMode,
+    localSearchMode,
+    localSortMode,
+    allRows,
+    localSearchTerm,
+    flatColumns,
+    sorting,
+    columns,
+  ]);
 
-  const rowCount = filteredRows ? filteredRows.length : state.count;
+  const rowCount = localRows ? localRows.length : state.count;
   const loading = state.loading || allRowsLoading;
 
   // placeholder rows (and skeleton cells) until the first page, or the whole
   // dataset for a local search, has arrived
-  const showLoadingRows = state.initialLoading || (localSearchMode && !filteredRows);
+  const showLoadingRows = state.initialLoading || (localMode && !localRows);
   const tableColumns = useMemo(
     () => (showLoadingRows ? loadingCells : mappedColumns),
     [showLoadingRows, loadingCells, mappedColumns]
   );
   const tableData = useMemo(() => {
     if (showLoadingRows) return loadingRows;
-    if (filteredRows) {
+    if (localRows) {
       const start = pagination.pageIndex * pagination.pageSize;
-      return filteredRows.slice(start, start + pagination.pageSize);
+      return localRows.slice(start, start + pagination.pageSize);
     }
     return state.rows;
-  }, [showLoadingRows, state.rows, filteredRows, loadingRows, pagination]);
+  }, [showLoadingRows, state.rows, localRows, loadingRows, pagination]);
 
   // reset to the first page whenever anything other than the page changes
   useEffect(() => {
     setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
-  }, [requestVariables, localSearchTerm]);
+  }, [requestVariables, localSearchTerm, sorting]);
 
   // the whole dataset is only valid for the current variables
   useEffect(() => {
@@ -235,6 +327,8 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   }, [requestVariables]);
 
   useEffect(() => {
+    // pages of a local search or sort are cut from the whole dataset
+    if (localMode && allRows) return;
     const currentRequest = ++requestId.current;
     setState((prev) => ({ ...prev, loading: true }));
     client
@@ -260,7 +354,16 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
         if (currentRequest !== requestId.current) return;
         setState({ rows: [], count: 0, loading: false, initialLoading: false, error });
       });
-  }, [client, query, requestVariables, pagination.pageIndex, pagination.pageSize, dataPath]);
+  }, [
+    client,
+    query,
+    requestVariables,
+    pagination.pageIndex,
+    pagination.pageSize,
+    dataPath,
+    localMode,
+    allRows,
+  ]);
 
   const table = useReactTable<Row>({
     data: tableData,
@@ -270,8 +373,9 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
     // the OtTable module augments FilterFns with searchFilterFn, which makes it a required option
     filterFns: { searchFilterFn: searchFilter },
     manualPagination: true,
-    manualSorting: serverSorting,
-    enableSorting: serverSorting,
+    // the server orders the rows, or sortRows does on the whole dataset; never the current page alone
+    manualSorting: true,
+    enableSorting: true,
     autoResetPageIndex: false,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -295,9 +399,9 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   );
   const downloadRows = async (): Promise<Row[]> => toRows(await getWholeDataset());
 
-  // fetch the whole dataset the first time a local search term is typed
+  // fetch the whole dataset the first time a local search term is typed or a column is sorted
   useEffect(() => {
-    if (!localSearchMode || allRows !== null || allRowsLoading) return;
+    if (!localMode || allRows !== null || allRowsLoading) return;
     let isCurrent = true;
     setAllRowsLoading(true);
     downloadRows()
@@ -313,7 +417,7 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
     return () => {
       isCurrent = false;
     };
-  }, [localSearchMode, allRows, requestVariables]);
+  }, [localMode, allRows, requestVariables]);
 
   function onRowSelection(row: TableRow<Row>) {
     enableRowSelection && row.toggleSelected();

@@ -1,12 +1,12 @@
 import _ from "lodash";
 import { useQuery } from "@apollo/client";
-import { Tooltip, SectionItem, TooltipStyledLabel, OtTable, PublicationsDrawer, Link } from "ui";
+import { Tooltip, SectionItem, TooltipStyledLabel, OtTableServer, PublicationsDrawer, Link } from "ui";
 import Description from "./Description";
 import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  sectionsBaseSizeQuery, EvidenceBodyProps} from "@ot/constants";
+  EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 
 import CRISPR_QUERY from "./CrisprScreenQuery.gql";
@@ -93,7 +93,6 @@ const getColumns = label => [
   {
     id: "resourceScore",
     label: "Significance",
-    sortable: true,
     renderCell: row => {
       if (row.resourceScore && row.statisticalTestTail) {
         return (
@@ -194,15 +193,15 @@ const exportColumns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CRISPR_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -216,21 +215,17 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={CRISPR_QUERY}
             columns={columns}
-            rows={request.data?.disease.CrisprScreenSummary.rows}
             dataDownloader
             dataDownloaderColumns={exportColumns}
             dataDownloaderFileStem={`${ensgId}-${efoId}-crisprscreen`}
-            showGlobalFilter
-            sortBy="resourceScore"
-            order="asc"
-            noWrap={false}
-            noWrapHeader={false}
-            rowsPerPageOptions={defaultRowsPerPageOptions}
-            query={CRISPR_QUERY.loc.source.body}
+            dataPath="disease.CrisprScreenSummary"
+            pageSize={PAGE_SIZE}
+            pageSizeOptions={defaultRowsPerPageOptions}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

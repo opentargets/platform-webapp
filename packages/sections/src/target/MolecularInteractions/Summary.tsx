@@ -1,3 +1,4 @@
+import type { TargetMolecularInteractionsSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,7 +11,9 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => `${data.interactions.count} physical or functional interactors`}
+      renderSummary={(data: TargetMolecularInteractionsSummaryFragment) =>
+        `${data.interactions.count} physical or functional interactors`
+      }
     />
   );
 }

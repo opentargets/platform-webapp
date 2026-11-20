@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Drawer, IconButton, Paper, Typography, ButtonBase } from "ui";
-import { styled } from "@mui/material/styles";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { styled } from "@mui/material/styles";
+import { useState } from "react";
+import { ButtonBase, Drawer, IconButton, Paper, Typography } from "ui";
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
   color: `${theme.palette.primary.main} !important`,
@@ -33,7 +33,9 @@ const StyledPaper = styled(Paper)({
   padding: "1rem",
 });
 
-function SafetyStudiesDrawer({ studies }) {
+type Study = { name?: string | null; type?: string | null; description?: string | null };
+
+function SafetyStudiesDrawer({ studies }: { studies: Study[] }) {
   const [open, setOpen] = useState(false);
 
   function toggleOpen() {
@@ -61,8 +63,8 @@ function SafetyStudiesDrawer({ studies }) {
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </StyledTitle>
-        {studies.map(study => (
-          <StyledPaper key={study.name} variant="outlined">
+        {studies.map((study) => (
+          <StyledPaper key={study.name ?? study.description} variant="outlined">
             <Typography variant="h6" gutterBottom>
               Study:
             </Typography>

@@ -78,11 +78,19 @@ export const createApolloClient = (config: Config) => {
         },
         // Same pattern as CredibleSet.colocalisation/l2GPredictions above:
         // EnhancerToGenePredictionsSummaryFragment selects `variant.enhancerToGenes {
-        // count }` while EnhancerToGenePredictionsQuery selects the full paginated rows.
+        // count }` while VariantEnhancerToGenePredictionsQuery selects the full paginated rows.
         Variant: {
           fields: {
             enhancerToGenes: { merge: true },
           },
+        },
+        // EvidenceViews has no `id`, so it's embedded in its parent Disease/Target under
+        // `evidenceViews(ensemblIds/efoIds)`. Each evidence widget selects a different
+        // datasource field on it (a summary count, a body page with its own sort/search
+        // args), so without a merge each new query would replace the embedded object and
+        // drop the fields other widgets already cached.
+        EvidenceViews: {
+          merge: true,
         },
       },
     }),

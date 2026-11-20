@@ -4,7 +4,7 @@ import {
   Tooltip,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
-  OtTable,
+  OtTableServer,
   ClinicalRecordDrawer,
   Box,
   Typography,
@@ -12,7 +12,7 @@ import {
 import { useQuery } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
-import { clinicalStageCategories, naLabel, dataTypesMap, sectionsBaseSizeQuery, type EvidenceBodyProps } from "@ot/constants";
+import { clinicalStageCategories, naLabel, dataTypesMap, type EvidenceBodyProps } from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 import CLINICAL_PRECEDENCE_QUERY from "./ClinicalPrecedence.gql";
@@ -174,7 +174,6 @@ const columns = [
   {
     id: "clinicalStage",
     label: "Stage",
-    sortable: true,
     comparator: (a, b) => {
       return (clinicalStageCategories[a.clinicalStage]?.index ?? -1) -
         (clinicalStageCategories[b.clinicalStage]?.index ?? -1);
@@ -190,7 +189,6 @@ const columns = [
       return (new Date(a.studyStartDate).getTime() || -1) -
         (new Date(b.studyStartDate).getTime() || -1);
     },
-    sortable: true,
     renderCell: ({ studyStartDate }) => {
       return studyStartDate ? new Date(studyStartDate).getFullYear() : naLabel;
     },
@@ -202,16 +200,16 @@ const columns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
 
-  const variables = {
-    ensemblId: id.ensgId,
-    efoId: id.efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: id.ensgId, efoId: id.efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CLINICAL_PRECEDENCE_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -222,19 +220,16 @@ function Body({ id, label, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
+          query={CLINICAL_PRECEDENCE_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem={`${id.ensgId}-${id.efoId}-clinical-precedence-evidence`}
-          rows={request.data?.disease.clinical_precedence.rows}
-          showGlobalFilter
-          query={CLINICAL_PRECEDENCE_QUERY.loc.source.body}
+          dataPath="disease.clinical_precedence"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           variables={variables}
-          loading={request.loading}
-          sortBy="clinicalStage"
-          order="desc"
-          // fixed={true}
         />
       )}
     />

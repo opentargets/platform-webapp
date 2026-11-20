@@ -1,4 +1,4 @@
-query GWASCredibleSetsQuery($studyId: String!, $page: Page) {
+query StudyGWASCredibleSetsQuery($studyId: String!, $page: Page) {
   study(studyId: $studyId) {
     id
     credibleSets(page: $page) {

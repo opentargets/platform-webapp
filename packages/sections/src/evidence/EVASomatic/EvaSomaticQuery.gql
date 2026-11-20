@@ -12,6 +12,12 @@ query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $s
           id
           name
         }
+        variant {
+          id: variantId
+          hgvsId
+          referenceAllele
+          alternateAllele
+        }
         directionOnTarget
         directionOnTrait
         diseaseFromSource

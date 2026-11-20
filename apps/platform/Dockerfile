@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------ BUILD
-FROM alpine:3.21 AS nginx-base
+FROM alpine:3.24 AS nginx-base
 
 RUN apk add --no-cache nginx brotli nginx-mod-http-brotli && \
     # Point pid to /var/lib/nginx (owned by nginx user)

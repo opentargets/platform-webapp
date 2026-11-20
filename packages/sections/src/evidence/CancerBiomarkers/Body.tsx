@@ -4,12 +4,12 @@ import {
   Tooltip,
   SectionItem,
   PublicationsDrawer,
-  OtTable,
+  OtTableServer,
   TableDrawer,
   Typography,
 } from "ui";
 
-import { defaultRowsPerPageOptions, sectionsBaseSizeQuery, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import { defaultRowsPerPageOptions, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import { epmcUrl } from "@ot/utils";
 import Description from "./Description";
 import BiomarkersDrawer from "./BiomarkersDrawer";
@@ -96,17 +96,17 @@ const getColumns = label => [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CANCER_BIOMARKERS_EVIDENCE_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -120,16 +120,16 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={CANCER_BIOMARKERS_EVIDENCE_QUERY}
             columns={columns}
-            rows={request.data?.disease.cancerBiomarkersSummary.rows}
             dataDownloader
             dataDownloaderFileStem={`cancer-biomarker-${ensgId}-${efoId}`}
-            showGlobalFilter
-            rowsPerPageOptions={defaultRowsPerPageOptions}
-            query={CANCER_BIOMARKERS_EVIDENCE_QUERY.loc.source.body}
+            dataPath="disease.cancerBiomarkersSummary"
+            pageSize={PAGE_SIZE}
+            pageSizeOptions={defaultRowsPerPageOptions}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

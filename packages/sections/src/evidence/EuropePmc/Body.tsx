@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
-import { useQuery, useLazyQuery } from "@apollo/client";
-import { SectionItem, Link, getPage, Table } from "ui";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@apollo/client";
+import { SectionItem, Link, OtTableServer, Skeleton } from "ui";
 
 import Description from "./Description";
 import { europePmcLiteratureQuery } from "@ot/utils";
-import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps } from "@ot/constants";
 import Publication from "./Publication";
 import EUROPE_PMC_QUERY from "./sectionQuery.gql";
 import { definition } from ".";
 
-const getColumns = label => [
+// Europe PMC REST details of a publication, keyed by its id (row.literature[0])
+type LiteratureById = Record<string, Record<string, any>>;
+
+const getColumns = (label, literatureById: LiteratureById) => [
   {
     id: "disease",
     label: "Disease/phenotype",
@@ -25,39 +28,31 @@ const getColumns = label => [
     propertyPath: "title",
     label: "Publication",
     width: "80%",
-    renderCell: ({
-      europePmcId,
-      title,
-      abstract,
-      textMiningSentences,
-      authors,
-      journal,
-      source,
-      patentDetails,
-      isOpenAccess,
-      pmcId,
-      fullTextOpen,
-    }) => (
-      <Publication
-        europePmcId={europePmcId}
-        title={title}
-        abstract={abstract}
-        textMiningSentences={textMiningSentences}
-        authors={authors}
-        journal={journal}
-        source={source}
-        patentDetails={patentDetails}
-        isOpenAccess={isOpenAccess}
-        fullTextOpen={fullTextOpen}
-        pmcId={pmcId}
-        symbol={label.symbol}
-        name={label.name}
-      />
-    ),
+    renderCell: ({ literature, textMiningSentences }) => {
+      const entry = literatureById[literature[0]];
+      if (!entry) return <Skeleton variant="text" />;
+      return (
+        <Publication
+          europePmcId={entry.id}
+          title={entry.title}
+          abstract={entry.abstractText}
+          textMiningSentences={textMiningSentences}
+          authors={entry.authorList?.author || []}
+          journal={{ ...entry.journalInfo, page: entry.pageInfo }}
+          source={entry.source}
+          patentDetails={entry.patentDetails}
+          isOpenAccess={entry.isOpenAccess === "Y"}
+          fullTextOpen={!!(entry.inEPMC === "Y" || entry.inPMC === "Y")}
+          pmcId={entry.pmcid}
+          symbol={label.symbol}
+          name={label.name}
+        />
+      );
+    },
   },
   {
     id: "year",
-    renderCell: ({ year }) => year || naLabel,
+    renderCell: ({ literature }) => literatureById[literature[0]]?.pubYear || naLabel,
   },
   {
     id: "resourceScore",
@@ -66,223 +61,100 @@ const getColumns = label => [
   },
 ];
 
-// Merges data from platform-API and EuropePMC API.
-function mergeData(rows, literatureData) {
-  const mergedRows = rows.map(row => {
-    const relevantEntry = literatureData.find(entry => entry.id === row.literature[0]);
+// the publication title, PMC id and year come from the Europe PMC REST API,
+// not the Open Targets API, so the download only has the Open Targets fields
+const exportColumns = [
+  {
+    label: "Disease/phenotype",
+    exportValue: row => row.disease.name,
+  },
+  {
+    label: "europePmcId",
+    exportValue: row => row.literature[0],
+  },
+  {
+    label: "Score",
+    exportValue: row => row.resourceScore,
+  },
+];
 
-    if (relevantEntry) {
-      return {
-        ...row,
-        europePmcId: relevantEntry.id,
-        pmcId: relevantEntry.pmcid,
-        source: relevantEntry.source,
-        patentDetails: relevantEntry?.patentDetails,
-        title: relevantEntry.title,
-        year: relevantEntry.pubYear,
-        abstract: relevantEntry.abstractText,
-        authors: relevantEntry.authorList?.author || [],
-        isOpenAccess: relevantEntry.isOpenAccess === "Y",
-        fullTextOpen: !!(relevantEntry.inEPMC === "Y" || relevantEntry.inPMC === "Y"),
-        journal: {
-          ...relevantEntry.journalInfo,
-          page: relevantEntry.pageInfo,
-        },
-      };
-    }
-    return row;
-  });
-
-  return mergedRows;
-}
-
-/*
- * EuropePMC widget does NOT require the count prop
- */
 type Props = EvidenceBodyProps;
+
+const PAGE_SIZE = 5;
 
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const pagesToFetch = 10;
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
-  const [literatureData, setLiteratureData] = useState([]);
-  const [newIds, setNewIds] = useState([]);
-  const variables = { ensemblId: ensgId, efoId, size: pageSize * pagesToFetch };
-  const {
-    loading: isLoading,
-    error,
-    data,
-    fetchMore,
-    refetch,
-  } = useQuery(EUROPE_PMC_QUERY, {
-    variables,
-    onCompleted: res => {
-      setNewIds(res.disease.europePmc.rows.map(entry => entry.literature[0]));
-    },
-  });
-  const [fetchDownloadData] = useLazyQuery(EUROPE_PMC_QUERY, {
-    variables: { ensemblId: ensgId, efoId, size: data?.disease.europePmc.count },
+  const variables = { ensemblId: ensgId, efoId };
+  const [literatureById, setLiteratureById] = useState<LiteratureById>({});
+  const [pageIds, setPageIds] = useState<string[]>([]);
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(EUROPE_PMC_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
-  async function getDownloadData() {
-    // Get Elasticsearch europPmc data
-    const res = await fetchDownloadData();
-    const litIds = res.data.disease.europePmc.rows.map(entry => entry.literature[0]);
+  const onDataLoaded = useCallback(data => {
+    setPageIds(data?.disease?.europePmc.rows.map(row => row.literature[0]) ?? []);
+  }, []);
 
-    // Get literature data from europePmc
-    // in chucnks of 200 to prevent query to europepmc from getting too large
-    let downloadLiteratureData = [];
-    let chunkSize = 200;
-    for (let i = 0; i < litIds.length; i += chunkSize) {
-      const litIdsChunk = litIds.slice(i, i + chunkSize);
-      const queryUrl = europePmcLiteratureQuery(litIdsChunk);
-      const resp = await fetch(queryUrl);
-      const resJson = await resp.json();
-      const newLiteratureData = resJson.resultList.result;
-      downloadLiteratureData = [...downloadLiteratureData, ...newLiteratureData];
-    }
-
-    // Merge data
-    const rows = mergeData(res.data.disease.europePmc.rows, downloadLiteratureData);
-
-    return rows.map(row => {
-      return {
-        ...row,
-        disease: row.disease.name,
-      };
-    });
-  }
-
-  const [loading, setLoading] = useState(isLoading);
-
-  const handlePageChange = pageChange => {
-    if (
-      pageChange * pageSize >= data.disease.europePmc.rows.length - pageSize &&
-      (pageChange + 1) * pageSize < data.disease.europePmc.count
-    ) {
-      setLoading(true); // fetchMore takes too long to set loading to true.
-      fetchMore({
-        variables: {
-          ...variables,
-          index: Math.floor(data.disease.europePmc.rows.length / variables.size),
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev;
-
-          setNewIds(fetchMoreResult.disease.europePmc.rows.map(entry => entry.literature[0]));
-
-          return {
-            ...prev,
-            disease: {
-              ...prev.disease,
-              europePmc: {
-                ...prev.disease.europePmc,
-                rows: [...prev.disease.europePmc.rows, ...fetchMoreResult.disease.europePmc.rows],
-              },
-            },
-          };
-        },
-      });
-    }
-
-    setPage(pageChange);
-  };
-
-  const handleRowsPerPageChange = newPageSize => {
-    setLoading(true);
-    if (page * newPageSize >= data.disease.europePmc.rows.length - newPageSize) {
-      refetch(variables);
-    }
-
-    setPage(0);
-    setPageSize(newPageSize);
-  };
-
+  // Europe PMC details for the publications of the current page only
   useEffect(() => {
+    const missingIds = pageIds.filter(pmid => !literatureById[pmid]);
+    if (!missingIds.length) return;
     let isCurrent = true;
 
     async function fetchLiterature() {
-      setLoading(true);
-
-      if (newIds.length) {
-        const queryUrl = europePmcLiteratureQuery(newIds);
-        const res = await fetch(queryUrl);
-        const resJson = await res.json();
-        const newLiteratureData = resJson.resultList.result;
-
-        setLiteratureData(litData => [...litData, ...newLiteratureData]);
+      let entries = [];
+      try {
+        const res = await fetch(europePmcLiteratureQuery(missingIds));
+        entries = (await res.json()).resultList.result;
+      } catch {
+        // rendered with the id only, as when Europe PMC does not know the publication
       }
-      setLoading(false);
+      if (!isCurrent) return;
+      setLiteratureById(prev => {
+        const next = { ...prev };
+        missingIds.forEach(pmid => {
+          next[pmid] = { id: pmid };
+        });
+        entries.forEach(entry => {
+          next[entry.id] = entry;
+        });
+        return next;
+      });
     }
 
-    if (isCurrent) fetchLiterature();
-
+    fetchLiterature();
     return () => {
       isCurrent = false;
     };
-  }, [newIds]);
+  }, [pageIds]);
 
-  const columns = getColumns(label);
-  const downloadColumns = [
-    {
-      id: "disease",
-      label: "Disease/phenotype",
-    },
-    {
-      id: "title",
-      label: "Publication",
-    },
-    {
-      id: "europePmcId",
-    },
-    {
-      id: "pmcId",
-    },
-    {
-      id: "year",
-    },
-    {
-      id: "resourceScore",
-      label: "Score",
-      numeric: true,
-    },
-  ];
+  const columns = getColumns(label, literatureById);
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       chipText={dataTypesMap.literature}
-      request={{ loading, error, data }}
+      request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
-      showContentLoading={true}
-      renderBody={() => {
-        const rows = mergeData(
-          getPage(data?.disease.europePmc.rows, page, pageSize),
-          literatureData
-        );
-
-        return (
-          <Table
-            loading={loading}
-            columns={columns}
-            dataDownloader
-            dataDownloaderFileStem={`europepmc-${ensgId}-${efoId}`}
-            onPageChange={handlePageChange}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            page={page}
-            pageSize={pageSize}
-            rows={rows}
-            rowCount={data.disease.europePmc.count}
-            dataDownloaderRows={getDownloadData}
-            dataDownloaderColumns={downloadColumns}
-            rowsPerPageOptions={[5, 10, 15, 20, 25]}
-            query={EUROPE_PMC_QUERY.loc.source.body}
-            variables={variables}
-          />
-        );
-      }}
+      renderBody={() => (
+        <OtTableServer
+          query={EUROPE_PMC_QUERY}
+          columns={columns}
+          dataDownloader
+          dataDownloaderColumns={exportColumns}
+          dataDownloaderFileStem={`europepmc-${ensgId}-${efoId}`}
+          dataPath="disease.europePmc"
+          onDataLoaded={onDataLoaded}
+          pageSize={PAGE_SIZE}
+          pageSizeOptions={[5, 10, 15, 20, 25]}
+          showGlobalFilter={false}
+          variables={variables}
+        />
+      )}
     />
   );
 }

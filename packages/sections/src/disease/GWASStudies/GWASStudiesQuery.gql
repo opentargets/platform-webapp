@@ -3,13 +3,14 @@ query GWASStudiesQuery(
   $size: Int!
   $index: Int!
   $sort: [StudySort!]! = []
-  $search: String
+  # empty text matches every study, so the table can keep sending a plain string
+  $search: String! = ""
 ) {
   studies(
     diseaseIds: $diseaseIds
     page: { size: $size, index: $index }
     sort: $sort
-    search: $search
+    search: { text: $search }
   ) {
     count
     rows {

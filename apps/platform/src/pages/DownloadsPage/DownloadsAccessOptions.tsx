@@ -97,7 +97,7 @@ function HttpLocation({ link }: { link: string }) {
   );
 }
 
-function GcpLocationMemo() {
+export function GcpLocationMemo() {
   return (
     <Typography
       variant="caption"

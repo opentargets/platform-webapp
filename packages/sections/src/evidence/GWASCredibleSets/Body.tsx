@@ -3,7 +3,7 @@ import {
   SectionItem,
   Link,
   PublicationsDrawer,
-  OtTable,
+  OtTableServer,
   ScientificNotation,
   ClinvarStars,
   Tooltip,
@@ -13,7 +13,7 @@ import {
 } from "ui";
 import { variantComparator, mantissaExponentComparator } from "@ot/utils";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, credsetConfidenceMap, type EvidenceBodyProps} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./sectionQuery.gql";
@@ -32,15 +32,14 @@ function getColumns(targetSymbol, targetId) {
     {
       id: "variantId",
       label: "Lead Variant",
-      sortable: true,
       comparator: variantComparator(d => d?.credibleSet?.variant),
       renderCell: ({ credibleSet }) => {
         const v = credibleSet?.variant;
         if (!v) return naLabel;
         return (
-          <Link asyncTooltip to={`/variant/${v.id}`}>
+          <Link asyncTooltip to={`/variant/${v.variantId}`}>
             <DisplayVariantId
-              variantId={v.id}
+              variantId={v.variantId}
               referenceAllele={v.referenceAllele}
               alternateAllele={v.alternateAllele}
               expand={false}
@@ -86,7 +85,6 @@ function getColumns(targetSymbol, targetId) {
       id: "nSamples",
       label: "Sample size",
       numeric: true,
-      sortable: true,
       renderCell: ({ credibleSet }) =>
         credibleSet?.study.nSamples
           ? parseInt(credibleSet?.study.nSamples, 10).toLocaleString()
@@ -105,7 +103,6 @@ function getColumns(targetSymbol, targetId) {
           b?.credibleSet?.pValueExponent
         );
       },
-      sortable: true,
       filterValue: false,
       renderCell: ({ credibleSet }) => {
         const { pValueMantissa, pValueExponent } = credibleSet ?? {};
@@ -123,7 +120,6 @@ function getColumns(targetSymbol, targetId) {
       id: "credibleSet.beta",
       label: "Beta (CI 95%)",
       numeric: true,
-      sortable: true,
       renderCell: ({ credibleSet }) => {
         return credibleSet?.beta ? credibleSet.beta.toFixed(3) : naLabel;
       },
@@ -131,7 +127,6 @@ function getColumns(targetSymbol, targetId) {
     {
       id: "confidence",
       label: "Fine-mapping confidence",
-      sortable: true,
       tooltip:
         "Fine-mapping confidence based on the quality of the linkage-disequilibrium information available and fine-mapping method",
       renderCell: ({ credibleSet }) => {
@@ -164,7 +159,6 @@ function getColumns(targetSymbol, targetId) {
           for more information.
         </>
       ),
-      sortable: true,
       renderCell: ({ score, credibleSet }) => {
         if (!score) return naLabel;
         return (
@@ -202,14 +196,18 @@ function getColumns(targetSymbol, targetId) {
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
+  const variables = { ensemblId: ensgId, efoId };
 
   const columns = getColumns(label.symbol, ensgId);
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(GWAS_CREDIBLE_SETS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -220,17 +218,15 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
+          query={GWAS_CREDIBLE_SETS_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`GWASassociations-${ensgId}-${efoId}`}
-          order="desc"
-          rows={request.data?.disease.gwasCredibleSets.rows}
-          showGlobalFilter
-          sortBy="score"
-          query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
+          dataPath="disease.gwasCredibleSets"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           variables={variables}
-          loading={request.loading}
         />
       )}
     />

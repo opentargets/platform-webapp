@@ -1,4 +1,4 @@
-query GeneOntology($ensemblId: String!) {
+query TargetGeneOntologyQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     geneOntology {

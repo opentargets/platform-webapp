@@ -1,11 +1,11 @@
+import type { GeneOntologySummaryFragment } from "@ot/constants";
 import { lazy } from "react";
-import { TargetData } from "../../types/target";
 
 export const definition = {
   id: "geneOntology",
   name: "Gene Ontology",
   shortName: "GO",
-  hasData: (data: TargetData) => (data.geneOntology?.length || 0) > 0,
+  hasData: (data: GeneOntologySummaryFragment) => (data.geneOntology?.length ?? 0) > 0,
 };
 
 // Components

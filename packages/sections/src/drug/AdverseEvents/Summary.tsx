@@ -1,3 +1,4 @@
+import type { AdverseEventsSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,9 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data =>
-        `${data.adverseEvents.count} adverse event${data.adverseEvents.count !== 1 ? "s" : ""}`
-      }
+      renderSummary={(data: AdverseEventsSummaryFragment) => {
+        const count = data.adverseEvents?.count ?? 0;
+        return `${count} adverse event${count !== 1 ? "s" : ""}`;
+      }}
     />
   );
 }

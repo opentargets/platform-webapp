@@ -1,4 +1,4 @@
-query GWASCredibleSetsPlotQuery($variantId: String!) {
+query VariantGWASCredibleSetsPlotQuery($variantId: String!) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
@@ -16,7 +16,9 @@ query GWASCredibleSetsPlotQuery($variantId: String!) {
         }
         study {
           diseases {
-            therapeuticAreas
+            therapeuticAreas {
+              id
+            }
           }
         }
       }

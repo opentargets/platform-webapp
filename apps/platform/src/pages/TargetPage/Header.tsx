@@ -1,8 +1,15 @@
 import { faDna } from "@fortawesome/free-solid-svg-icons";
 
-import { ExternalLink, XRefLinks, Header as HeaderBase } from "ui";
+import { ExternalLink, Header as HeaderBase, XRefLinks } from "ui";
 
-export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
+type HeaderMetaArgs = {
+  ensgId: string;
+  uniprotIds: string[];
+  symbol: string;
+  name: string;
+};
+
+export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }: HeaderMetaArgs) {
   const ensemblUrl = `https://identifiers.org/ensembl:${ensgId}`;
   const genecardsUrl = `https://www.genecards.org/card/${symbol}`;
   const hgncUrl = `https://identifiers.org/hgnc.symbol:${symbol}`;
@@ -18,7 +25,7 @@ export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
           label="UniProt"
           urlStem="https://identifiers.org/uniprot:"
           ids={uniprotIds}
-          limit="3"
+          limit={3}
         />
         <ExternalLink title="GeneCards" id={symbol} url={genecardsUrl} />
         <ExternalLink title="HGNC" id={symbol} url={hgncUrl} />
@@ -27,7 +34,12 @@ export function buildHeaderMeta({ ensgId, uniprotIds, symbol, name }) {
   };
 }
 
-function Header({ loading, ensgId, uniprotIds, symbol, name, crisprId }) {
+type HeaderProps = HeaderMetaArgs & {
+  loading: boolean;
+  crisprId?: string;
+};
+
+function Header({ loading, ensgId, uniprotIds, symbol, name }: HeaderProps) {
   const { title, subtitle, Icon, externalLinks } = buildHeaderMeta({
     ensgId,
     uniprotIds,

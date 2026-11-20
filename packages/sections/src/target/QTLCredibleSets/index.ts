@@ -1,12 +1,11 @@
+import type { TargetQtlCredibleSetsSummaryFragment } from "@ot/constants";
 import { lazy } from "react";
-import { Target } from "@ot/constants";
 
 export const definition = {
   id: "qtl_credible_sets",
   name: "molQTL Credible Sets",
   shortName: "QT",
-  // @ts-expect-error TODO: fix this
-  hasData: (data: Target) => (data.credibleSets?.count || 0) > 0,
+  hasData: (data: TargetQtlCredibleSetsSummaryFragment) => (data.credibleSets?.count ?? 0) > 0,
 };
 
 // Components

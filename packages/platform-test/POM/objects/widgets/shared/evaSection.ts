@@ -74,14 +74,4 @@ export class EVASection {
     const cell = row.locator("td").nth(1);
     return await cell.textContent();
   }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
-  }
 }

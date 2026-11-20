@@ -55,15 +55,4 @@ test.describe("EVA / ClinVar Section", () => {
     expect(significance).not.toBeNull();
     expect(significance).not.toBe("");
   });
-
-  test("Can search/filter ClinVar entries", async () => {
-    // Search for a specific term
-    await evaSection.search("pathogenic");
-
-    // Row count should change
-    const filteredRowCount = await evaSection.getTableRows();
-
-    // At least the search should execute without error
-    expect(filteredRowCount).toBeGreaterThanOrEqual(0);
-  });
 });

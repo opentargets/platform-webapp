@@ -1,4 +1,4 @@
-query QTLCredibleSetsQuery($studyId: String!, $page: Page) {
+query StudyQTLCredibleSetsQuery($studyId: String!, $page: Page) {
   study(studyId: $studyId) {
     id
     credibleSets(page: $page) {

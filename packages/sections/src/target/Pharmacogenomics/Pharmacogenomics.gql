@@ -1,7 +1,7 @@
-query PharmacogenomicsQuery($ensemblId: String!) {
+query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
-    pharmacogenomics(page: { index: 0, size: 10000 }) {
+    pharmacogenomics(page: { index: $index, size: $size }) {
       count
       rows {
         variantAnnotation {

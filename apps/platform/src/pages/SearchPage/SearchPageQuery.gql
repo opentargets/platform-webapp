@@ -1,4 +1,4 @@
-query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String!]!) {
+query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [EntityType!]!) {
   search(queryString: $queryString, entityNames: $entityNames, page: { index: $index, size: 10 }) {
     total
     aggregations {
@@ -62,7 +62,10 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           id
           name
           description
-          therapeuticAreas
+          therapeuticAreas {
+            id
+            name
+          }
         }
       }
     }
