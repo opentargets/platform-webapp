@@ -3952,7 +3952,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.36.2":
+"@playwright/test@npm:1.63.0, @playwright/test@npm:^1.36.2":
   version: 1.63.0
   resolution: "@playwright/test@npm:1.63.0"
   dependencies:
@@ -9708,6 +9708,7 @@ __metadata:
     "@modelcontextprotocol/ext-apps": "npm:^1.7.5"
     "@modelcontextprotocol/sdk": "npm:^1.26.0"
     "@pixi/unsafe-eval": "npm:7.4.3"
+    "@playwright/test": "npm:1.63.0"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
     "@types/node": "npm:^20.0.0"
