@@ -21,7 +21,7 @@ SERVER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="$(cd "$SERVER_DIR/../.." && pwd)"
 
 GIT_SHA="$(git -C "$ROOT" rev-parse --short HEAD)"
-if [[ -n "$(git -C "$ROOT" status --porcelain -- apps/mcp-widgets-server packages)" ]]; then
+if [[ -n "$(git -C "$ROOT" status --porcelain --untracked-files=no -- apps/mcp-widgets-server packages)" ]]; then
   GIT_SHA="$GIT_SHA-dirty"
   echo "warning: uncommitted changes, deploying as $GIT_SHA"
 fi
