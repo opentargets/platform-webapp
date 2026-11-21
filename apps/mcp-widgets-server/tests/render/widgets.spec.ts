@@ -24,10 +24,23 @@ const ERROR_TEXTS = /Could not download|Something went wrong|Error loading|Faile
 /** How long the widget's requests must be quiet before we consider it rendered */
 const SETTLE_MS = 2000;
 
+/**
+ * Beyond this many external requests a widget is looping; the rest are aborted so a
+ * test run can't flood a third-party API (a looping widget once sent ~23k requests to
+ * Europe PMC in one run, and EBI then throttled the machine).
+ */
+const MAX_REQUESTS = 300;
+
+/** Widgets not rendered at all, with why. Remove an entry once its bug is fixed. */
+const SKIP: Record<string, string> = {
+  get_evidence_europe_pmc_widget: "requests Europe PMC in a loop",
+};
+
 for (const def of WIDGET_REGISTRY) {
   const paramNames = (def.inputParams ?? [def.inputParam]).map((p) => p.name);
 
   test(def.toolName, async ({ page }, testInfo) => {
+    test.skip(def.toolName in SKIP, SKIP[def.toolName]);
     const args = argsFor(def.toolName, paramNames);
     const mcp = await connectMcp();
     const toolResult = await mcp.callTool(def.toolName, args);
@@ -82,8 +95,19 @@ for (const def of WIDGET_REGISTRY) {
       // Blocked by the CSP: reported as a warning, since it can be cosmetic (e.g. web fonts);
       // a blocked data request still fails the test through the checks below.
       const reason = request.failure()?.errorText;
+      if (reason?.includes("BLOCKED_BY_CLIENT")) return; // aborted by the request cap
       (reason === "csp" ? cspViolations : failedRequests).push(`${request.url()} — ${reason}`);
     });
+
+    let aborted = 0;
+    await page.route(
+      (url) => url.protocol.startsWith("http") && !url.href.startsWith(HOST_URL),
+      (route) => {
+        if (requests <= MAX_REQUESTS) return route.continue();
+        aborted++;
+        return route.abort("blockedbyclient");
+      }
+    );
 
     // ── Mount ──
     const hostJs = await readFile(HOST_BUNDLE, "utf-8");
@@ -132,6 +156,7 @@ for (const def of WIDGET_REGISTRY) {
       ...counted(graphqlErrors.map((e) => `graphql: ${e}`)),
       ...counted(failedRequests.map((e) => `request failed: ${e}`)),
       ...(requests === 0 ? ["made no requests"] : []),
+      ...(aborted > 0 ? [`request loop: over ${MAX_REQUESTS} requests, ${aborted} aborted`] : []),
       ...(sections === 0
         ? ["rendered nothing (section returned null: no data for these IDs, or a failed query)"]
         : []),

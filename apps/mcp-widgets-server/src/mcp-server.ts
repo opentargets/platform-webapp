@@ -6,6 +6,7 @@ import {
 } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { log, logError } from "./log.js";
 import { WIDGET_REGISTRY } from "./widgets/index.js";
 
 const PUBLIC_API_URL = "https://api.platform.opentargets.xyz/api/v4/graphql";
@@ -57,6 +58,12 @@ async function makeWidgetShell(bundleFile: string, title: string): Promise<strin
 export function createMcpServer(): McpServer {
   const server = new McpServer({ name: "ot-widgets-server", version: "0.1.0" });
 
+  /** Fields identifying the calling client, from its initialize request */
+  const clientFields = () => {
+    const client = server.server.getClientVersion();
+    return { clientName: client?.name ?? "unknown", clientVersion: client?.version ?? "unknown" };
+  };
+
   for (const def of WIDGET_REGISTRY) {
     const resourceUri = `ui://ot-widgets/${def.toolName}`;
 
@@ -73,8 +80,10 @@ export function createMcpServer(): McpServer {
         inputSchema,
         _meta: { ui: { resourceUri } },
       },
-      async (input) => {
-        console.error(`[mcp] tool called: ${def.toolName}`, input);
+      async () => {
+        // The handler does no work, so this can't fail; it is logged so tool usage per
+        // client can be counted. Arguments are deliberately not logged.
+        log("INFO", "tool call", { event: "tool_call", tool: def.toolName, ...clientFields() });
         return {
           content: [{ type: "text" as const, text: def.successMessage }],
           _meta: { ui: { resourceUri } },
@@ -91,8 +100,24 @@ export function createMcpServer(): McpServer {
       resourceUri,
       { mimeType: RESOURCE_MIME_TYPE },
       async () => {
-        console.error(`[mcp] resource READ: ${resourceUri}`);
-        const html = await makeWidgetShell(def.bundleFile, def.title);
+        const start = performance.now();
+        const fields = { event: "resource_read", tool: def.toolName, ...clientFields() };
+        let html: string;
+        try {
+          html = await makeWidgetShell(def.bundleFile, def.title);
+        } catch (err) {
+          logError("resource read failed", err, {
+            ...fields,
+            outcome: "error",
+            latencyMs: Math.round(performance.now() - start),
+          });
+          throw err;
+        }
+        log("INFO", "resource read", {
+          ...fields,
+          outcome: "ok",
+          latencyMs: Math.round(performance.now() - start),
+        });
         const apiUrl = process.env.OT_API_URL ?? PUBLIC_API_URL;
         return {
           contents: [
