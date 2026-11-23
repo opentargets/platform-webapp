@@ -360,14 +360,25 @@ export type ClinicalDiseaseListItem = {
   diseaseFromSource: Scalars['String']['output'];
 };
 
-/** A drug-disease pair as reported by clinical trial records. */
+/**
+ * A drug-disease pair as reported by clinical trial records.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/clinical_indication.sql`. Update both together.
+ */
 export type ClinicalIndication = {
   __typename?: 'ClinicalIndication';
+  /** Number of clinical reports for the drug-disease pair. */
+  clinicalReportCount: Scalars['Int']['output'];
   clinicalReports: Array<ClinicalReport>;
   /** The disease entity related to this clinical indication. */
   disease: Disease;
+  /** Name of the disease. Null if the disease isn't found. */
+  diseaseName?: Maybe<Scalars['String']['output']>;
   /** The molecule entity related to this clinical indication. */
   drug: Drug;
+  /** Name of the drug. Null if the drug isn't found. */
+  drugName?: Maybe<Scalars['String']['output']>;
   /** Hash of drugId and diseaseId. */
   id: Scalars['String']['output'];
   /** Maximum Clinical Development Status for the association. */
@@ -380,6 +391,37 @@ export type ClinicalIndicationPage = {
   count: Scalars['Int']['output'];
   rows: Array<ClinicalIndication>;
 };
+
+/** Case-insensitive text search. */
+export type ClinicalIndicationSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<ClinicalIndicationSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum ClinicalIndicationSearchField {
+  DrugName = 'DRUG_NAME'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type ClinicalIndicationSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: ClinicalIndicationSortField;
+};
+
+/** Fields available for sorting. */
+export enum ClinicalIndicationSortField {
+  /** Number of clinical reports. */
+  ClinicalReportCount = 'CLINICAL_REPORT_COUNT',
+  /** Alphabetically by drug name. */
+  DrugName = 'DRUG_NAME',
+  /** By stage, from unknown and withdrawn up to approved and phase IV. */
+  MaxClinicalStage = 'MAX_CLINICAL_STAGE'
+}
 
 /** A clinical record (e.g. trial, drug label) reporting on drugs and diseases. */
 export type ClinicalReport = {
@@ -493,15 +535,22 @@ export enum ClinicalStage {
 /**
  * Target-drug associations derived from clinical reports, capturing the maximum clinical stage and
  * associated diseases for each target-drug pair.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/clinical_target.sql`. Update both together.
  */
 export type ClinicalTargetFromTarget = {
   __typename?: 'ClinicalTargetFromTarget';
+  /** Number of clinical reports for the target-drug pair. */
+  clinicalReportCount: Scalars['Int']['output'];
   /** Reports related with the drug in question. */
   clinicalReports: Array<ClinicalReport>;
   /** Diseases associated with the clinical reports linked to the drug in question. */
   diseases: Array<ClinicalDiseaseListItem>;
   /** Drug or clinical candidate entity. */
   drug: Drug;
+  /** Name of the drug. Null if the drug isn't found. */
+  drugName?: Maybe<Scalars['String']['output']>;
   /** Hash between drugId and targetId. */
   id: Scalars['String']['output'];
   maxClinicalStage: Scalars['String']['output'];
@@ -513,6 +562,37 @@ export type ClinicalTargetPage = {
   count: Scalars['Int']['output'];
   rows: Array<ClinicalTargetFromTarget>;
 };
+
+/** Case-insensitive text search. */
+export type ClinicalTargetSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<ClinicalTargetSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum ClinicalTargetSearchField {
+  DrugName = 'DRUG_NAME'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type ClinicalTargetSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: ClinicalTargetSortField;
+};
+
+/** Fields available for sorting. */
+export enum ClinicalTargetSortField {
+  /** Number of clinical reports. */
+  ClinicalReportCount = 'CLINICAL_REPORT_COUNT',
+  /** Alphabetically by drug name. */
+  DrugName = 'DRUG_NAME',
+  /** By stage, from unknown and withdrawn up to approved and phase IV. */
+  MaxClinicalStage = 'MAX_CLINICAL_STAGE'
+}
 
 /**
  * GWAS-GWAS and GWAS-molQTL credible set colocalisation results. Dataset includes colocalising
@@ -615,6 +695,12 @@ export type CredibleSet = {
    * pairs as well as the method and statistics used to estimate the colocalisation.
    */
   colocalisation: ColocalisationPage;
+  /**
+   * Flat, sortable and searchable list of this credible set's colocalisations with other
+   * credible sets, for the GWAS and molQTL colocalisation tables. Use `colocalisation` for the
+   * full colocalisations with the other credible set.
+   */
+  colocalisationView: CredibleSetColocalisationPage;
   /** Description of how this credible set was derived in terms of data and fine-mapping method. */
   confidence: Scalars['String']['output'];
   /** Integer label for the order of credible sets from study-region. */
@@ -637,6 +723,11 @@ export type CredibleSet = {
   locusEnd?: Maybe<Scalars['Int']['output']>;
   /** Start position of the region that was fine-mapped for this credible set. */
   locusStart?: Maybe<Scalars['Int']['output']>;
+  /**
+   * Flat, sortable and searchable list of the credible set's variants, for tables. Use `locus`
+   * for the full variants or to filter by variant IDs.
+   */
+  locusView: CredibleSetVariantPage;
   /** Exponent value of the lead variant P-value. */
   pValueExponent: Scalars['Int']['output'];
   /** Mantissa value of the lead variant P-value. */
@@ -691,6 +782,18 @@ export type CredibleSetColocalisationArgs = {
  * 95% credible sets for GWAS and molQTL studies. Credible sets include all variants in the
  * credible set (locus) as well as the fine-mapping method and derived statistics.
  */
+export type CredibleSetColocalisationViewArgs = {
+  page?: Page;
+  search?: InputMaybe<CredibleSetColocalisationsSearch>;
+  sort?: Array<CredibleSetColocalisationsSort>;
+  studyTypes: Array<StudyType>;
+};
+
+
+/**
+ * 95% credible sets for GWAS and molQTL studies. Credible sets include all variants in the
+ * credible set (locus) as well as the fine-mapping method and derived statistics.
+ */
 export type CredibleSetL2GPredictionsArgs = {
   page?: Page;
 };
@@ -705,6 +808,136 @@ export type CredibleSetLocusArgs = {
   page?: Page;
 };
 
+
+/**
+ * 95% credible sets for GWAS and molQTL studies. Credible sets include all variants in the
+ * credible set (locus) as well as the fine-mapping method and derived statistics.
+ */
+export type CredibleSetLocusViewArgs = {
+  page?: Page;
+  search?: InputMaybe<CredibleSetVariantsSearch>;
+  sort?: Array<CredibleSetVariantsSort>;
+};
+
+/**
+ * A colocalisation of this credible set with another one, as shown in the credible set page's
+ * GWAS and molQTL colocalisation tables. Study, lead variant and P-value fields describe the
+ * **other** credible set.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/credible_set_colocalisations.sql`. Update both together.
+ */
+export type CredibleSetColocalisation = {
+  __typename?: 'CredibleSetColocalisation';
+  /** Average sign of the beta ratio between colocalised variants (directionality). */
+  betaRatioSignAverage: Scalars['Float']['output'];
+  /** Description of `biosampleId`. */
+  biosampleDescription?: Maybe<Scalars['String']['output']>;
+  /** Tissue or cell type of the other credible set's molQTL study. */
+  biosampleId?: Maybe<Scalars['String']['output']>;
+  /** Name of `biosampleId`. Null when the biosample isn't in the biosample index. */
+  biosampleName?: Maybe<Scalars['String']['output']>;
+  /**
+   * Colocalisation posterior probability (CLPP) score estimating the probability of shared
+   * causal variants. Used in eCAVIAR method.
+   */
+  clpp: Scalars['Float']['output'];
+  /** Method used to estimate colocalisation (e.g. coloc, eCAVIAR). */
+  colocalisationMethod: Scalars['String']['output'];
+  /** Condition of the other credible set's molQTL study (e.g. naive). */
+  condition?: Maybe<Scalars['String']['output']>;
+  /**
+   * Posterior probability that both traits are associated, but with different causal variants
+   * (H3). Used in coloc method.
+   */
+  h3: Scalars['Float']['output'];
+  /**
+   * Posterior probability that both traits are associated and share a causal variant (H4).
+   * Used in coloc method.
+   */
+  h4: Scalars['Float']['output'];
+  /** Whether the other credible set is a trans-QTL. */
+  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  /** Chromosome of the lead variant. */
+  leadChromosome: Chromosome;
+  /** Position of the lead variant (`GRCh38`). */
+  leadPosition: Scalars['Int']['output'];
+  /** Lead variant of the other credible set. */
+  leadVariantId: Scalars['String']['output'];
+  /** Number of variants intersecting between the two credible sets. */
+  numberColocalisingVariants: Scalars['Int']['output'];
+  /** The other credible set (`StudyLocus`) in the colocalisation pair. */
+  otherStudyLocusId: Scalars['String']['output'];
+  /** Exponent of the other credible set's lead variant P-value. */
+  pValueExponent: Scalars['Int']['output'];
+  /** Mantissa of the other credible set's lead variant P-value. */
+  pValueMantissa: Scalars['Float']['output'];
+  /** Source project of the other credible set's study. */
+  projectId: Scalars['String']['output'];
+  /** First author of the publication of the other credible set's study. */
+  publicationFirstAuthor?: Maybe<Scalars['String']['output']>;
+  /** Study of the other credible set. */
+  studyId: Scalars['String']['output'];
+  /** This credible set (`StudyLocus`), on the left side of the colocalisation pair. */
+  studyLocusId: Scalars['String']['output'];
+  /** Type of the other credible set's study (e.g. gwas, eqtl, pqtl). */
+  studyType: StudyType;
+  /** Approved symbol of `targetId`. Null when the target is unknown. */
+  targetApprovedSymbol?: Maybe<Scalars['String']['output']>;
+  /** Gene under study in the other credible set's molQTL study. */
+  targetId?: Maybe<Scalars['String']['output']>;
+  /** Trait, as reported by the source, of the other credible set's study. */
+  traitFromSource: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type CredibleSetColocalisationPage = {
+  __typename?: 'CredibleSetColocalisationPage';
+  count: Scalars['Int']['output'];
+  rows: Array<CredibleSetColocalisation>;
+};
+
+/** Case-insensitive text search. */
+export type CredibleSetColocalisationsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<CredibleSetColocalisationsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against. The GWAS and molQTL tables each pass their
+ * own `fields`.
+ */
+export enum CredibleSetColocalisationsSearchField {
+  BiosampleName = 'BIOSAMPLE_NAME',
+  LeadVariantId = 'LEAD_VARIANT_ID',
+  PublicationFirstAuthor = 'PUBLICATION_FIRST_AUTHOR',
+  StudyId = 'STUDY_ID',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL',
+  TraitFromSource = 'TRAIT_FROM_SOURCE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type CredibleSetColocalisationsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: CredibleSetColocalisationsSortField;
+};
+
+/** Fields available for sorting. */
+export enum CredibleSetColocalisationsSortField {
+  Clpp = 'CLPP',
+  H3 = 'H3',
+  H4 = 'H4',
+  /** By chromosome, then position, then variant ID. */
+  LeadVariant = 'LEAD_VARIANT',
+  NumberColocalisingVariants = 'NUMBER_COLOCALISING_VARIANTS',
+  /** By exponent, then mantissa. */
+  PValue = 'P_VALUE'
+}
+
 /** Filter for credible sets. */
 export type CredibleSetFilter = {
   /** Keep credible sets whose study type is one of these. */
@@ -717,6 +950,89 @@ export type CredibleSetPage = {
   count: Scalars['Int']['output'];
   rows: Array<CredibleSet>;
 };
+
+/**
+ * A variant in a credible set, as shown in the credible set page's variants table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/credible_set_variants.sql`. Update both together.
+ */
+export type CredibleSetVariant = {
+  __typename?: 'CredibleSetVariant';
+  /** Alternate allele of the variant. */
+  alternateAllele: Scalars['String']['output'];
+  /** Beta coefficient of this variant in the credible set. */
+  beta?: Maybe<Scalars['Float']['output']>;
+  /** Chromosome of the variant. */
+  chromosome: Chromosome;
+  /** Log (natural) Bayes factor for the variant from fine-mapping. */
+  logBF?: Maybe<Scalars['Float']['output']>;
+  /** Sequence Ontology id of the variant's most severe consequence (e.g. `SO:0001583`). */
+  mostSevereConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the variant's most severe consequence (e.g. missense variant). */
+  mostSevereConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** Exponent of the P-value for this variant in the credible set. */
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
+  /** Mantissa of the P-value for this variant in the credible set. */
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
+  /** Position of the variant on the chromosome (`GRCh38`). */
+  position: Scalars['Int']['output'];
+  /** Posterior inclusion probability for the variant within this credible set. */
+  posteriorProbability: Scalars['Float']['output'];
+  /** R-squared (LD) between this credible set variant and the lead variant. */
+  r2Overall?: Maybe<Scalars['Float']['output']>;
+  /** Reference allele of the variant. */
+  referenceAllele: Scalars['String']['output'];
+  /** Standard error of this variant in the credible set. */
+  standardError?: Maybe<Scalars['Float']['output']>;
+  /** Identifier of the credible set (`StudyLocus`). */
+  studyLocusId: Scalars['String']['output'];
+  /** Variant identifier (`chromosome_position_ref_alt`). */
+  variantId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type CredibleSetVariantPage = {
+  __typename?: 'CredibleSetVariantPage';
+  count: Scalars['Int']['output'];
+  rows: Array<CredibleSetVariant>;
+};
+
+/** Case-insensitive text search. */
+export type CredibleSetVariantsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<CredibleSetVariantsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum CredibleSetVariantsSearchField {
+  MostSevereConsequenceLabel = 'MOST_SEVERE_CONSEQUENCE_LABEL',
+  VariantId = 'VARIANT_ID'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type CredibleSetVariantsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: CredibleSetVariantsSortField;
+};
+
+/** Fields available for sorting. */
+export enum CredibleSetVariantsSortField {
+  Beta = 'BETA',
+  LogBf = 'LOG_BF',
+  PosteriorProbability = 'POSTERIOR_PROBABILITY',
+  /** By exponent, then mantissa. */
+  PValue = 'P_VALUE',
+  /** R-squared (LD) with the lead variant. */
+  R2Overall = 'R2_OVERALL',
+  StandardError = 'STANDARD_ERROR',
+  /** By chromosome, then position, then alleles. */
+  Variant = 'VARIANT'
+}
 
 /** Represents a datasource for association scoring. */
 export enum Datasource {
@@ -1004,6 +1320,8 @@ export type DiseaseAssociationTimeSeriesArgs = {
  */
 export type DiseaseDrugAndClinicalCandidatesArgs = {
   page?: Page;
+  search?: InputMaybe<ClinicalIndicationSearch>;
+  sort?: Array<ClinicalIndicationSort>;
 };
 
 
@@ -1195,14 +1513,9 @@ export type DiseaseStudiesSearch = {
 
 /** Text fields that `search` can match against. */
 export enum DiseaseStudiesSearchField {
-  Cohorts = 'COHORTS',
-  DiseaseIds = 'DISEASE_IDS',
-  DiseaseNames = 'DISEASE_NAMES',
-  ProjectId = 'PROJECT_ID',
   PublicationDate = 'PUBLICATION_DATE',
   PublicationFirstAuthor = 'PUBLICATION_FIRST_AUTHOR',
   PublicationJournal = 'PUBLICATION_JOURNAL',
-  PubmedId = 'PUBMED_ID',
   StudyId = 'STUDY_ID',
   TraitFromSource = 'TRAIT_FROM_SOURCE'
 }
@@ -1217,14 +1530,10 @@ export type DiseaseStudiesSort = {
 
 /** Fields available for sorting. */
 export enum DiseaseStudiesSortField {
-  /** Number of credible sets identified in the study. */
-  CredibleSetsCount = 'CREDIBLE_SETS_COUNT',
   /** Number of samples tested. */
   NSamples = 'N_SAMPLES',
   /** By publication date. */
-  PublicationDate = 'PUBLICATION_DATE',
-  /** Alphabetically. */
-  TraitFromSource = 'TRAIT_FROM_SOURCE'
+  PublicationDate = 'PUBLICATION_DATE'
 }
 
 /**
@@ -1386,6 +1695,8 @@ export type DrugDrugWarningsArgs = {
  */
 export type DrugIndicationsArgs = {
   page?: Page;
+  search?: InputMaybe<DrugIndicationSearch>;
+  sort?: Array<DrugIndicationSort>;
 };
 
 
@@ -1436,6 +1747,37 @@ export type DrugSimilarEntitiesArgs = {
   page?: Page;
   threshold?: InputMaybe<Scalars['Float']['input']>;
 };
+
+/** Case-insensitive text search. */
+export type DrugIndicationSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<DrugIndicationSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against. */
+export enum DrugIndicationSearchField {
+  DiseaseName = 'DISEASE_NAME'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type DrugIndicationSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: DrugIndicationSortField;
+};
+
+/** Fields available for sorting. */
+export enum DrugIndicationSortField {
+  /** Number of clinical reports. */
+  ClinicalReportCount = 'CLINICAL_REPORT_COUNT',
+  /** Alphabetically by disease name. */
+  DiseaseName = 'DISEASE_NAME',
+  /** By stage, from unknown and withdrawn up to approved and phase IV. */
+  MaxClinicalStage = 'MAX_CLINICAL_STAGE'
+}
 
 /** Drug label with source information. */
 export type DrugLabelAndSource = {
@@ -1526,8 +1868,6 @@ export type EnhancerToGene = {
   biosample?: Maybe<Biosample>;
   /** Identifier of the biosample defined by the datasource provider. */
   biosampleFromSourceId?: Maybe<Scalars['String']['output']>;
-  /** Name of the biosample where the interval was identified. */
-  biosampleName: Scalars['String']['output'];
   /** Chromosome containing the regulatory region. */
   chromosome: Chromosome;
   /** Identifier of the data source providing the regulatory region to gene prediction. */
@@ -1571,6 +1911,7 @@ export type EnhancerToGeneSearch = {
 
 /** Text fields that `search` can match against. */
 export enum EnhancerToGeneSearchField {
+  BiosampleId = 'BIOSAMPLE_ID',
   BiosampleName = 'BIOSAMPLE_NAME',
   IntervalType = 'INTERVAL_TYPE',
   StudyId = 'STUDY_ID',
@@ -1834,6 +2175,248 @@ export type Evidence = {
 };
 
 /**
+ * A cancer biomarkers evidence, as shown in the evidence page's cancer biomarkers table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/cancer_biomarkers.sql`. Update both together.
+ */
+export type EvidenceCancerBiomarkers = {
+  __typename?: 'EvidenceCancerBiomarkers';
+  /** Gene expression biomarkers. */
+  biomarkerGeneExpressions: Array<EvidenceCancerBiomarkersGeneExpression>;
+  /** Genetic variation biomarkers. */
+  biomarkerGeneticVariations: Array<EvidenceCancerBiomarkersGeneticVariation>;
+  /** Name of the biomarker, e.g. `BRCA1 oncogenic mutation`. */
+  biomarkerName?: Maybe<Scalars['String']['output']>;
+  /** Source: the level of evidence, e.g. `FDA guidelines` or `Early trials`. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Reported drug: the drug label from the original source. */
+  drugFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the drug. Null if the source's drug isn't mapped. */
+  drugId?: Maybe<Scalars['String']['output']>;
+  /** Name of the drug. Null if the drug isn't found. */
+  drugName?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the drug response term (a disease or Gene Ontology term). */
+  drugResponseId?: Maybe<Scalars['String']['output']>;
+  /** Name of the drug response, e.g. `drug resistance`. Null if the term isn't found. */
+  drugResponseName?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Links to external resources, e.g. conference abstracts. */
+  urls: Array<LabelledUri>;
+};
+
+/** A gene expression biomarker. */
+export type EvidenceCancerBiomarkersGeneExpression = {
+  __typename?: 'EvidenceCancerBiomarkersGeneExpression';
+  /** Gene Ontology identifier of the expression process. */
+  id?: Maybe<Scalars['String']['output']>;
+  /** Gene Ontology label of the expression process. */
+  label?: Maybe<Scalars['String']['output']>;
+  /** Raw gene expression annotation from the source, e.g. `ESR1:over`. */
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+/** A genetic variation biomarker. */
+export type EvidenceCancerBiomarkersGeneticVariation = {
+  __typename?: 'EvidenceCancerBiomarkersGeneticVariation';
+  /** Sequence Ontology identifier of the functional consequence. */
+  functionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the functional consequence, e.g. `somatic_variant`. */
+  functionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** Variant identifier. */
+  id?: Maybe<Scalars['String']['output']>;
+  /** Name of the variant biomarker, e.g. `NF1:D1644A`. */
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceCancerBiomarkersPage = {
+  __typename?: 'EvidenceCancerBiomarkersPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceCancerBiomarkers>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceCancerBiomarkersSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceCancerBiomarkersSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceCancerBiomarkersSearchField {
+  BiomarkerName = 'BIOMARKER_NAME',
+  Confidence = 'CONFIDENCE',
+  DiseaseName = 'DISEASE_NAME',
+  DrugFromSource = 'DRUG_FROM_SOURCE',
+  DrugName = 'DRUG_NAME',
+  DrugResponseName = 'DRUG_RESPONSE_NAME'
+}
+
+/**
+ * A Cancer Gene Census evidence, as shown in the evidence page's Cancer Gene Census table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/cancer_gene_census.sql`. Update both together.
+ */
+export type EvidenceCancerGeneCensus = {
+  __typename?: 'EvidenceCancerGeneCensus';
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Mutation types with their sample counts. */
+  mutatedSamples: Array<EvidenceCancerGeneCensusMutation>;
+  /** Fraction of tested samples that are mutated, 0 to 1. 0 if the totals are unknown. */
+  mutatedSamplesRatio: Scalars['Float']['output'];
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** One mutation type observed for a disease/target pair, with its sample counts. */
+export type EvidenceCancerGeneCensusMutation = {
+  __typename?: 'EvidenceCancerGeneCensusMutation';
+  /** Sequence Ontology identifier of the functional consequence. */
+  functionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Label of the functional consequence, the mutation type. */
+  functionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** Number of samples with a mutation in the target. */
+  numberMutatedSamples?: Maybe<Scalars['Int']['output']>;
+  /** Number of samples tested. */
+  numberSamplesTested?: Maybe<Scalars['Int']['output']>;
+  /** Number of mutated samples with this mutation type. */
+  numberSamplesWithMutationType?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceCancerGeneCensusPage = {
+  __typename?: 'EvidenceCancerGeneCensusPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceCancerGeneCensus>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceCancerGeneCensusSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceCancerGeneCensusSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, mutation type and
+ * literature columns of the table.
+ */
+export enum EvidenceCancerGeneCensusSearchField {
+  DiseaseName = 'DISEASE_NAME',
+  Literature = 'LITERATURE',
+  MutationTypes = 'MUTATION_TYPES'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceCancerGeneCensusSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceCancerGeneCensusSortField;
+};
+
+/** Fields available for sorting. The table only sorts by the mutated over total samples. */
+export enum EvidenceCancerGeneCensusSortField {
+  /** Mutated over total samples. */
+  MutatedSamples = 'MUTATED_SAMPLES'
+}
+
+/**
+ * An ClinGen evidence, as shown in the evidence page's ClinGen table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/clingen.sql`. Update both together.
+ */
+export type EvidenceClinGen = {
+  __typename?: 'EvidenceClinGen';
+  /** Allelic requirements, e.g. AD (autosomal dominant) or AR (autosomal recessive). */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** ClinGen classification of the gene-disease validity, e.g. Definitive or Limited. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Disease/phenotype label from ClinGen. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceClinGenPage = {
+  __typename?: 'EvidenceClinGenPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceClinGen>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceClinGenSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceClinGenSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, allelic requirement
+ * and classification columns of the table.
+ */
+export enum EvidenceClinGenSearchField {
+  AllelicRequirements = 'ALLELIC_REQUIREMENTS',
+  Confidence = 'CONFIDENCE',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceClinGenSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceClinGenSortField;
+};
+
+/** Fields available for sorting. The table isn't sortable in the UI, so only the score. */
+export enum EvidenceClinGenSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
  * A clinical precedence evidence, as shown in the evidence page's clinical precedence table.
  *
  * Rows are decoded by position, so field order must match the column order of
@@ -1923,6 +2506,164 @@ export enum EvidenceClinicalPrecedenceSortField {
 }
 
 /**
+ * A Project Score (CRISPR screen) evidence, as shown in the evidence page's Project Score table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/crispr.sql`. Update both together.
+ */
+export type EvidenceCrispr = {
+  __typename?: 'EvidenceCrispr';
+  /** Cancer cell lines used to generate evidence. */
+  diseaseCellLines: Array<DiseaseCellLine>;
+  /** Reported disease/phenotype: the disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Project Score priority score. */
+  resourceScore?: Maybe<Scalars['Float']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceCrisprPage = {
+  __typename?: 'EvidenceCrisprPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceCrispr>;
+};
+
+/**
+ * A CRISPR screen evidence, as shown in the evidence page's CRISPR screen table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/crispr_screen.sql`. Update both together.
+ */
+export type EvidenceCrisprScreen = {
+  __typename?: 'EvidenceCrisprScreen';
+  /** Cell type screened. */
+  cellType?: Maybe<Scalars['String']['output']>;
+  /** Phenotype the screen compares. */
+  contrast?: Maybe<Scalars['String']['output']>;
+  /** CRISPR library used in the screen. */
+  crisprScreenLibrary?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the data source. */
+  datasourceId: Scalars['String']['output'];
+  /** Identifier of the data type. */
+  datatypeId: Scalars['String']['output'];
+  /** Reported disease: the disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier the source's disease label was mapped to. */
+  diseaseFromSourceMappedId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Log2 fold change of the phenotype when the target is perturbed. */
+  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
+  /** Source of the screen, e.g. `crispr_brain`. */
+  projectId?: Maybe<Scalars['String']['output']>;
+  /** Significance: the screen's p-value or FDR for the target. */
+  resourceScore?: Maybe<Scalars['Float']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Tail of the statistical test, e.g. `lower tail`. */
+  statisticalTestTail?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the screen. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Description of the screen. */
+  studyOverview?: Maybe<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Target label from the original source. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceCrisprScreenPage = {
+  __typename?: 'EvidenceCrisprScreenPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceCrisprScreen>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceCrisprScreenSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceCrisprScreenSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceCrisprScreenSearchField {
+  CellType = 'CELL_TYPE',
+  Contrast = 'CONTRAST',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  Source = 'SOURCE',
+  StudyId = 'STUDY_ID',
+  StudyOverview = 'STUDY_OVERVIEW'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceCrisprScreenSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceCrisprScreenSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceCrisprScreenSortField {
+  /** Evidence score. */
+  Score = 'SCORE',
+  /** Significance (p-value or FDR). */
+  Significance = 'SIGNIFICANCE'
+}
+
+/** Case-insensitive text search. */
+export type EvidenceCrisprSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceCrisprSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceCrisprSearchField {
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  DiseaseName = 'DISEASE_NAME'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceCrisprSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceCrisprSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceCrisprSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
  * A `ClinVar` evidence, as shown in the evidence page's `ClinVar` table.
  *
  * Rows are decoded by position, so field order must match the column order of
@@ -1987,6 +2728,71 @@ export type EvidenceEvaPage = {
   rows: Array<EvidenceEva>;
 };
 
+/**
+ * A `ClinVar` somatic evidence, as shown in the evidence page's `ClinVar` (somatic) table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/eva.sql`, which this view shares with [`super::eva`]. Update both together.
+ */
+export type EvidenceEvaSomatic = {
+  __typename?: 'EvidenceEvaSomatic';
+  /** Origins of the variant allele. */
+  alleleOrigins: Array<Scalars['String']['output']>;
+  /** Inheritance patterns. */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** Clinical significances of the variant. */
+  clinicalSignificances: Array<Scalars['String']['output']>;
+  /** Phenotypes of the cohort, from the source. */
+  cohortPhenotypes: Array<Scalars['String']['output']>;
+  /** `ClinVar` review status. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** `ClinVar` record (RCV) identifier. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Alternate allele of the variant. Null if the variant isn't found. */
+  variantAlternateAllele?: Maybe<Scalars['String']['output']>;
+  /** Chromosome of the variant. Null if the variant isn't found. */
+  variantChromosome?: Maybe<Chromosome>;
+  /** Sequence Ontology identifier of the variant's functional consequence. */
+  variantFunctionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the variant's functional consequence. */
+  variantFunctionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** HGVS identifier of the variant. */
+  variantHgvsId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the variant, as `chromosome_position_ref_alt`. */
+  variantId?: Maybe<Scalars['String']['output']>;
+  /** Position of the variant (`GRCh38`). Null if the variant isn't found. */
+  variantPosition?: Maybe<Scalars['Int']['output']>;
+  /** Reference allele of the variant. Null if the variant isn't found. */
+  variantReferenceAllele?: Maybe<Scalars['String']['output']>;
+  /** dbSNP rsID of the variant. */
+  variantRsId?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceEvaSomaticPage = {
+  __typename?: 'EvidenceEvaSomaticPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceEvaSomatic>;
+};
+
 /** Sort types. Contain the sort field and direction. */
 export type EvidenceEvaSort = {
   /** The direction to sort in. */
@@ -1997,6 +2803,87 @@ export type EvidenceEvaSort = {
 
 /** Fields available for sorting. */
 export enum EvidenceEvaSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
+ * An Expression Atlas evidence, as shown in the evidence page's Expression Atlas table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/expression_atlas.sql`. Update both together.
+ */
+export type EvidenceExpressionAtlas = {
+  __typename?: 'EvidenceExpressionAtlas';
+  /** Experiment confidence: low, medium or high. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Experiment details: the conditions compared, e.g. `'disease' vs 'normal' in 'tissue'`. */
+  contrast?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Percentile rank of the fold change among the experiment's genes. */
+  log2FoldChangePercentileRank?: Maybe<Scalars['Int']['output']>;
+  /** Log2 fold change of the target's expression between the compared conditions. */
+  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
+  /** P-value of the differential expression. */
+  resourceScore?: Maybe<Scalars['Float']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Identifier of the Expression Atlas experiment. */
+  studyId?: Maybe<Scalars['String']['output']>;
+  /** Description of the experiment. */
+  studyOverview?: Maybe<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceExpressionAtlasPage = {
+  __typename?: 'EvidenceExpressionAtlasPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceExpressionAtlas>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceExpressionAtlasSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceExpressionAtlasSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceExpressionAtlasSearchField {
+  Confidence = 'CONFIDENCE',
+  Contrast = 'CONTRAST',
+  DiseaseName = 'DISEASE_NAME',
+  StudyId = 'STUDY_ID'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceExpressionAtlasSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceExpressionAtlasSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceExpressionAtlasSortField {
+  /** Log2 fold change. */
+  Log2FoldChange = 'LOG2_FOLD_CHANGE',
+  /** Percentile rank of the fold change. */
+  Percentile = 'PERCENTILE',
+  /** P-value. */
+  PValue = 'P_VALUE',
   /** Evidence score. */
   Score = 'SCORE'
 }
@@ -2218,6 +3105,77 @@ export enum EvidenceGeneBurdenSortField {
 }
 
 /**
+ * A Genomics England `PanelApp` evidence, as shown in the evidence page's `PanelApp` table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/genomics_england_panel_app.sql`. Update both together.
+ */
+export type EvidenceGenomicsEnglandPanelApp = {
+  __typename?: 'EvidenceGenomicsEnglandPanelApp';
+  /** Allelic requirements of the gene-disease relationship. */
+  allelicRequirements: Array<Scalars['String']['output']>;
+  /** `PanelApp` gene rating: green, amber or red. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Identifier of the Genomics England panel, used to link to `PanelApp`. */
+  panelId?: Maybe<Scalars['String']['output']>;
+  /** Name of the Genomics England panel. */
+  panelName?: Maybe<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target, used to link to `PanelApp`. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceGenomicsEnglandPanelAppPage = {
+  __typename?: 'EvidenceGenomicsEnglandPanelAppPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceGenomicsEnglandPanelApp>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceGenomicsEnglandPanelAppSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceGenomicsEnglandPanelAppSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceGenomicsEnglandPanelAppSearchField {
+  AllelicRequirements = 'ALLELIC_REQUIREMENTS',
+  DiseaseName = 'DISEASE_NAME',
+  PanelName = 'PANEL_NAME',
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceGenomicsEnglandPanelAppSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceGenomicsEnglandPanelAppSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceGenomicsEnglandPanelAppSortField {
+  /** Gene rating, from red up to green. */
+  Confidence = 'CONFIDENCE',
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
  * A GWAS credible sets evidence, as shown in the evidence page's GWAS associations table.
  *
  * Rows are decoded by position, so field order must match the column order of
@@ -2324,12 +3282,304 @@ export enum EvidenceGwasCredibleSetsSortField {
   Score = 'SCORE'
 }
 
+/**
+ * An IMPC evidence, as shown in the evidence page's IMPC table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/impc.sql`. Update both together.
+ */
+export type EvidenceImpc = {
+  __typename?: 'EvidenceImpc';
+  /** Allelic composition of the animal model. */
+  biologicalModelAllelicComposition?: Maybe<Scalars['String']['output']>;
+  /** Genetic background of the animal model (e.g. a mouse strain). */
+  biologicalModelGeneticBackground?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the animal model (e.g. an MGI model ID). */
+  biologicalModelId?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Human phenotypes of the disease that match the animal model's phenotypes. */
+  diseaseModelAssociatedHumanPhenotypes: Array<LabelledElement>;
+  /** Phenotypes observed in the animal model. */
+  diseaseModelAssociatedModelPhenotypes: Array<LabelledElement>;
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Symbol of the target orthologue in the animal model. */
+  targetInModel?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceImpcPage = {
+  __typename?: 'EvidenceImpcPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceImpc>;
+};
+
+/**
+ * An intOGen evidence, as shown in the evidence page's intOGen table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/intogen.sql`. Update both together.
+ */
+export type EvidenceIntogen = {
+  __typename?: 'EvidenceIntogen';
+  /** Description of the cohort. */
+  cohortDescription?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the cohort. */
+  cohortId?: Maybe<Scalars['String']['output']>;
+  /** Short name of the cohort. */
+  cohortShortName?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** Mutated and tested samples in the cohort. */
+  mutatedSamples: Array<EvidenceIntogenMutatedSamples>;
+  /** Combined p-value of the cancer driver methods. */
+  resourceScore?: Maybe<Scalars['Float']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Cancer driver methods that found the target significant. */
+  significantDriverMethods: Array<Scalars['String']['output']>;
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+};
+
+/** Mutation counts for one functional consequence, across the cohort's samples. */
+export type EvidenceIntogenMutatedSamples = {
+  __typename?: 'EvidenceIntogenMutatedSamples';
+  /** Sequence Ontology identifier of the functional consequence. */
+  functionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology label of the functional consequence. */
+  functionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** Number of cohort samples in which the target is mutated. */
+  numberMutatedSamples?: Maybe<Scalars['Int']['output']>;
+  /** Number of cohort samples tested. */
+  numberSamplesTested?: Maybe<Scalars['Int']['output']>;
+  /** Number of cohort samples with this type of mutation. */
+  numberSamplesWithMutationType?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceIntogenPage = {
+  __typename?: 'EvidenceIntogenPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceIntogen>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceIntogenSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceIntogenSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceIntogenSearchField {
+  CohortDescription = 'COHORT_DESCRIPTION',
+  CohortShortName = 'COHORT_SHORT_NAME',
+  DiseaseName = 'DISEASE_NAME'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceIntogenSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceIntogenSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceIntogenSortField {
+  /** Combined p-value. */
+  PValue = 'P_VALUE',
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
+/**
+ * An Orphanet evidence, as shown in the evidence page's Orphanet table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/orphanet.sql`. Update both together.
+ */
+export type EvidenceOrphanet = {
+  __typename?: 'EvidenceOrphanet';
+  /** Allele origins, e.g. germline or somatic. */
+  alleleOrigins: Array<Scalars['String']['output']>;
+  /** Whether Orphanet has assessed the association. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Gain or loss of function effect of the evidence on the target. */
+  directionOnTarget?: Maybe<Scalars['String']['output']>;
+  /** Predicted direction of effect on the trait. */
+  directionOnTrait?: Maybe<Scalars['String']['output']>;
+  /** Disease/phenotype label from Orphanet. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved name of the target, the reported protein. Empty if the target isn't found. */
+  targetApprovedName: Scalars['String']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Sequence Ontology identifier of the variant functional consequence. */
+  variantFunctionalConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Label of the variant functional consequence. */
+  variantFunctionalConsequenceLabel?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceOrphanetPage = {
+  __typename?: 'EvidenceOrphanetPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceOrphanet>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceOrphanetSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceOrphanetSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, reported protein,
+ * functional consequence and allele origin columns of the table.
+ */
+export enum EvidenceOrphanetSearchField {
+  AlleleOrigins = 'ALLELE_ORIGINS',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  TargetApprovedName = 'TARGET_APPROVED_NAME',
+  VariantFunctionalConsequenceLabel = 'VARIANT_FUNCTIONAL_CONSEQUENCE_LABEL'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceOrphanetSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceOrphanetSortField;
+};
+
+/** Fields available for sorting. The table isn't sortable in the UI, so only the score. */
+export enum EvidenceOrphanetSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
+
 /** The result of a paginated query, containing the total number of items and the items. */
 export type EvidencePage = {
   __typename?: 'EvidencePage';
   count: Scalars['Int']['output'];
   rows: Array<Evidence>;
 };
+
+/**
+ * A Reactome evidence, as shown in the evidence page's Reactome table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/reactome.sql`. Update both together.
+ */
+export type EvidenceReactome = {
+  __typename?: 'EvidenceReactome';
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Reactome pathways the reaction belongs to. */
+  pathways: Array<Pathway>;
+  /** Identifier of the Reactome reaction. */
+  reactionId?: Maybe<Scalars['String']['output']>;
+  /** Name of the Reactome reaction. */
+  reactionName?: Maybe<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Reported target: the `UniProt` accession from the source. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Effect of the variants on the target, e.g. `loss_of_function`. */
+  targetModulation?: Maybe<Scalars['String']['output']>;
+  /** Amino acid changes of the variants. */
+  variantAminoacidDescriptions: Array<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceReactomePage = {
+  __typename?: 'EvidenceReactomePage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceReactome>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceReactomeSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceReactomeSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/** Text fields that `search` can match against: the text shown in the table. */
+export enum EvidenceReactomeSearchField {
+  DiseaseName = 'DISEASE_NAME',
+  PathwayNames = 'PATHWAY_NAMES',
+  ReactionName = 'REACTION_NAME',
+  TargetFromSourceId = 'TARGET_FROM_SOURCE_ID',
+  TargetModulation = 'TARGET_MODULATION'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceReactomeSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceReactomeSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceReactomeSortField {
+  /** Evidence score. */
+  Score = 'SCORE'
+}
 
 /** List of available evidence datasources and their datatypes. */
 export type EvidenceSource = {
@@ -2428,6 +3678,95 @@ export enum EvidenceUniprotLiteratureSortField {
   Score = 'SCORE'
 }
 
+/**
+ * A `UniProt` curated variants evidence, as shown in the evidence page's `UniProt` curated
+ * variants table.
+ *
+ * Rows are decoded by position, so field order must match the column order of
+ * `src/sql/evidence/uniprot_variants.sql`. Update both together.
+ */
+export type EvidenceUniprotVariants = {
+  __typename?: 'EvidenceUniprotVariants';
+  /** Confidence of the disease/target relationship reported by `UniProt`. */
+  confidence?: Maybe<Scalars['String']['output']>;
+  /** Disease label from the original source. */
+  diseaseFromSource?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the disease for which the target is associated in this evidence. */
+  diseaseId: Scalars['String']['output'];
+  /** Name of the disease. Empty if the disease isn't found. */
+  diseaseName: Scalars['String']['output'];
+  /** Identifier of the disease/target evidence. */
+  id: Scalars['String']['output'];
+  /** List of PubMed or preprint reference identifiers. */
+  literature: Array<Scalars['String']['output']>;
+  /** Score of the evidence reflecting the strength of the disease/target relationship. */
+  score: Scalars['Float']['output'];
+  /** Approved symbol of the target. Empty if the target isn't found. */
+  targetApprovedSymbol: Scalars['String']['output'];
+  /** Reported protein: the `UniProt` accession of the target in the source. */
+  targetFromSourceId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the target for which the disease is associated in this evidence. */
+  targetId: Scalars['String']['output'];
+  /** Amino acid change of the variant on the reported target, e.g. `V717L`. */
+  variantAminoAcidChange?: Maybe<Scalars['String']['output']>;
+  /** Sequence Ontology identifier of the variant's most severe consequence. */
+  variantConsequenceId?: Maybe<Scalars['String']['output']>;
+  /** Label of the variant's most severe consequence. */
+  variantConsequenceLabel?: Maybe<Scalars['String']['output']>;
+  /** HGVS identifier of the variant. */
+  variantHgvsId?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the variant. */
+  variantId?: Maybe<Scalars['String']['output']>;
+  /** rsID of the variant. */
+  variantRsId?: Maybe<Scalars['String']['output']>;
+};
+
+/** The result of a paginated query, containing the total number of items and the items. */
+export type EvidenceUniprotVariantsPage = {
+  __typename?: 'EvidenceUniprotVariantsPage';
+  count: Scalars['Int']['output'];
+  rows: Array<EvidenceUniprotVariants>;
+};
+
+/** Case-insensitive text search. */
+export type EvidenceUniprotVariantsSearch = {
+  /** Fields to search in. Defaults to all of them. */
+  fields?: Array<EvidenceUniprotVariantsSearchField>;
+  /** Text to look for. Matches if any of `fields` contains it. */
+  text: Scalars['String']['input'];
+};
+
+/**
+ * Text fields that `search` can match against: the disease/phenotype, reported protein,
+ * variant, rsID, amino acid, consequence and confidence columns of the table.
+ */
+export enum EvidenceUniprotVariantsSearchField {
+  Confidence = 'CONFIDENCE',
+  DiseaseFromSource = 'DISEASE_FROM_SOURCE',
+  DiseaseName = 'DISEASE_NAME',
+  TargetFromSourceId = 'TARGET_FROM_SOURCE_ID',
+  VariantAminoAcidChange = 'VARIANT_AMINO_ACID_CHANGE',
+  VariantConsequenceLabel = 'VARIANT_CONSEQUENCE_LABEL',
+  VariantId = 'VARIANT_ID',
+  VariantRsId = 'VARIANT_RS_ID'
+}
+
+/** Sort types. Contain the sort field and direction. */
+export type EvidenceUniprotVariantsSort = {
+  /** The direction to sort in. */
+  direction?: SortDirection;
+  /** The field to sort by. */
+  key: EvidenceUniprotVariantsSortField;
+};
+
+/** Fields available for sorting. */
+export enum EvidenceUniprotVariantsSortField {
+  /** Evidence score. */
+  Score = 'SCORE',
+  /** Variant identifier. */
+  Variant = 'VARIANT'
+}
+
 /** Mutation counts for a single functional consequence, across a tested sample cohort. */
 export type EvidenceVariation = {
   __typename?: 'EvidenceVariation';
@@ -2444,16 +3783,49 @@ export type EvidenceVariation = {
 export type EvidenceViews = {
   __typename?: 'EvidenceViews';
   /**
+   * Cancer biomarkers evidence: genomic biomarkers of drug response in cancer, from the
+   * Cancer Genome Interpreter. Always sorted by score, highest first.
+   */
+  cancerBiomarkers: EvidenceCancerBiomarkersPage;
+  /**
+   * Cancer Gene Census evidence: somatic mutations in cancer genes, with the mutated and
+   * tested sample counts per mutation type.
+   */
+  cancerGeneCensus: EvidenceCancerGeneCensusPage;
+  /** ClinGen evidence: gene-disease validity classifications curated by ClinGen. */
+  clingen: EvidenceClinGenPage;
+  /**
    * Clinical precedence evidence: drugs that target the target and are in clinical
    * development or approved for the disease.
    */
   clinicalPrecedence: EvidenceClinicalPrecedencePage;
+  /**
+   * Project Score (CRISPR screen) evidence: cancer dependency genes prioritised from CRISPR
+   * knockout screens of cancer cell lines.
+   */
+  crispr: EvidenceCrisprPage;
+  /**
+   * CRISPR screen evidence: genes whose perturbation changes a disease-relevant phenotype in
+   * CRISPR screens (e.g. `CRISPRBrain`).
+   */
+  crisprScreen: EvidenceCrisprScreenPage;
   /**
    * `ClinVar` (EVA) evidence: germline variants in the target with a clinical significance
    * for the disease. Sorted by score only, with no search, so it's paged from the evidence
    * index and only the page's rows are read in full.
    */
   eva: EvidenceEvaPage;
+  /**
+   * `ClinVar` somatic (EVA somatic) evidence: somatic variants in the target with a clinical
+   * significance for the disease. Always sorted by score, highest first, with no search, so
+   * it's paged from the evidence index and only the page's rows are read in full.
+   */
+  evaSomatic: EvidenceEvaSomaticPage;
+  /**
+   * Expression Atlas evidence: genes differentially expressed between disease and normal
+   * samples in Expression Atlas experiments.
+   */
+  expressionAtlas: EvidenceExpressionAtlasPage;
   /**
    * Gene2Phenotype evidence: curated gene-disease relationships from the Gene2Phenotype
    * panels.
@@ -2462,15 +3834,60 @@ export type EvidenceViews = {
   /** Gene burden evidence: rare-variant collapsing (burden) tests. */
   geneBurden: EvidenceGeneBurdenPage;
   /**
+   * Genomics England `PanelApp` evidence: gene-disease relationships from expert-reviewed gene
+   * panels.
+   */
+  genomicsEnglandPanelApp: EvidenceGenomicsEnglandPanelAppPage;
+  /**
    * GWAS credible sets evidence: fine-mapped GWAS signals whose locus-to-gene (L2G) model
    * prioritises the target.
    */
   gwasCredibleSets: EvidenceGwasCredibleSetsPage;
   /**
+   * IMPC evidence: mouse models with a disrupted orthologue of the target whose phenotypes
+   * match the disease. Always sorted by score, highest first, with no search, so it's paged
+   * from the evidence index and only the page's rows are read in full.
+   */
+  impc: EvidenceImpcPage;
+  /**
+   * intOGen evidence: genes found to be cancer drivers in tumour cohorts by intOGen's driver
+   * detection methods.
+   */
+  intogen: EvidenceIntogenPage;
+  /** Orphanet evidence: rare-disease gene associations curated by Orphanet. */
+  orphanet: EvidenceOrphanetPage;
+  /**
+   * Reactome evidence: reactions and pathways disrupted by variants in the target, linked to
+   * the disease.
+   */
+  reactome: EvidenceReactomePage;
+  /**
    * `UniProt` literature evidence: disease/target relationships curated by `UniProt` from the
    * literature.
    */
   uniprotLiterature: EvidenceUniprotLiteraturePage;
+  /** `UniProt` curated variants evidence: disease-causing variants curated by `UniProt`. */
+  uniprotVariants: EvidenceUniprotVariantsPage;
+};
+
+
+export type EvidenceViewsCancerBiomarkersArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceCancerBiomarkersSearch>;
+};
+
+
+export type EvidenceViewsCancerGeneCensusArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceCancerGeneCensusSearch>;
+  sort?: Array<EvidenceCancerGeneCensusSort>;
+};
+
+
+export type EvidenceViewsClingenArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceClinGenSearch>;
+  sort?: Array<EvidenceClinGenSort>;
 };
 
 
@@ -2481,9 +3898,35 @@ export type EvidenceViewsClinicalPrecedenceArgs = {
 };
 
 
+export type EvidenceViewsCrisprArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceCrisprSearch>;
+  sort?: Array<EvidenceCrisprSort>;
+};
+
+
+export type EvidenceViewsCrisprScreenArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceCrisprScreenSearch>;
+  sort?: Array<EvidenceCrisprScreenSort>;
+};
+
+
 export type EvidenceViewsEvaArgs = {
   page?: Page;
   sort?: Array<EvidenceEvaSort>;
+};
+
+
+export type EvidenceViewsEvaSomaticArgs = {
+  page?: Page;
+};
+
+
+export type EvidenceViewsExpressionAtlasArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceExpressionAtlasSearch>;
+  sort?: Array<EvidenceExpressionAtlasSort>;
 };
 
 
@@ -2501,6 +3944,13 @@ export type EvidenceViewsGeneBurdenArgs = {
 };
 
 
+export type EvidenceViewsGenomicsEnglandPanelAppArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceGenomicsEnglandPanelAppSearch>;
+  sort?: Array<EvidenceGenomicsEnglandPanelAppSort>;
+};
+
+
 export type EvidenceViewsGwasCredibleSetsArgs = {
   page?: Page;
   search?: InputMaybe<EvidenceGwasCredibleSetsSearch>;
@@ -2508,10 +3958,43 @@ export type EvidenceViewsGwasCredibleSetsArgs = {
 };
 
 
+export type EvidenceViewsImpcArgs = {
+  page?: Page;
+};
+
+
+export type EvidenceViewsIntogenArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceIntogenSearch>;
+  sort?: Array<EvidenceIntogenSort>;
+};
+
+
+export type EvidenceViewsOrphanetArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceOrphanetSearch>;
+  sort?: Array<EvidenceOrphanetSort>;
+};
+
+
+export type EvidenceViewsReactomeArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceReactomeSearch>;
+  sort?: Array<EvidenceReactomeSort>;
+};
+
+
 export type EvidenceViewsUniprotLiteratureArgs = {
   page?: Page;
   search?: InputMaybe<EvidenceUniprotLiteratureSearch>;
   sort?: Array<EvidenceUniprotLiteratureSort>;
+};
+
+
+export type EvidenceViewsUniprotVariantsArgs = {
+  page?: Page;
+  search?: InputMaybe<EvidenceUniprotVariantsSearch>;
+  sort?: Array<EvidenceUniprotVariantsSort>;
 };
 
 /** Kind of entity that has a facet search index. */
@@ -3089,9 +4572,9 @@ export type ParticipantDetectionMethod = {
 /** Pathway annotations for a target. */
 export type Pathway = {
   __typename?: 'Pathway';
-  /** Name of the pathway. */
-  id?: Maybe<Scalars['String']['output']>;
   /** Unique identifier for the pathway. */
+  id?: Maybe<Scalars['String']['output']>;
+  /** Name of the pathway. */
   name?: Maybe<Scalars['String']['output']>;
 };
 
@@ -3178,16 +4661,9 @@ export enum PharmacogenomicsSearchField {
   EvidenceLevel = 'EVIDENCE_LEVEL',
   GenotypeAnnotationText = 'GENOTYPE_ANNOTATION_TEXT',
   GenotypeId = 'GENOTYPE_ID',
-  HaplotypeFromSourceId = 'HAPLOTYPE_FROM_SOURCE_ID',
-  HaplotypeId = 'HAPLOTYPE_ID',
   PgxCategory = 'PGX_CATEGORY',
-  PhenotypeFromSourceId = 'PHENOTYPE_FROM_SOURCE_ID',
   PhenotypeText = 'PHENOTYPE_TEXT',
-  StudyId = 'STUDY_ID',
-  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL',
-  TargetFromSourceId = 'TARGET_FROM_SOURCE_ID',
-  VariantFunctionalConsequenceLabel = 'VARIANT_FUNCTIONAL_CONSEQUENCE_LABEL',
-  VariantRsId = 'VARIANT_RS_ID'
+  TargetApprovedSymbol = 'TARGET_APPROVED_SYMBOL'
 }
 
 /** Sort types. Contain the sort field and direction. */
@@ -4337,6 +5813,8 @@ export type TargetDepMapEssentialityArgs = {
  */
 export type TargetDrugAndClinicalCandidatesArgs = {
   page?: Page;
+  search?: InputMaybe<ClinicalTargetSearch>;
+  sort?: Array<ClinicalTargetSort>;
 };
 
 
@@ -4971,6 +6449,7 @@ export type VariantCredibleSetsSearch = {
  * that would match almost every search).
  */
 export enum VariantCredibleSetsSearchField {
+  BiosampleId = 'BIOSAMPLE_ID',
   BiosampleName = 'BIOSAMPLE_NAME',
   Condition = 'CONDITION',
   DiseaseIds = 'DISEASE_IDS',
@@ -4979,6 +6458,7 @@ export enum VariantCredibleSetsSearchField {
   LeadVariantId = 'LEAD_VARIANT_ID',
   StudyId = 'STUDY_ID',
   StudyTargetApprovedSymbol = 'STUDY_TARGET_APPROVED_SYMBOL',
+  StudyTargetId = 'STUDY_TARGET_ID',
   TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL',
   TraitFromSource = 'TRAIT_FROM_SOURCE'
 }
@@ -4996,7 +6476,7 @@ export enum VariantCredibleSetsSortField {
   Beta = 'BETA',
   CredibleSetSize = 'CREDIBLE_SET_SIZE',
   LeadVariant = 'LEAD_VARIANT',
-  PosteriorProbablity = 'POSTERIOR_PROBABLITY',
+  PosteriorProbability = 'POSTERIOR_PROBABILITY',
   PValue = 'P_VALUE',
   TopL2GScore = 'TOP_L2G_SCORE'
 }
@@ -5313,6 +6793,8 @@ export type DrugsQueryVariables = Exact<{
   efoId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<ClinicalIndicationSort> | ClinicalIndicationSort;
+  search?: InputMaybe<ClinicalIndicationSearch>;
 }>;
 
 
@@ -5322,14 +6804,14 @@ export type DrugsSummaryFragment = { __typename?: 'Disease', drugAndClinicalCand
 
 export type GwasStudiesQueryVariables = Exact<{
   diseaseIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  size: Scalars['Int']['input'];
-  index: Scalars['Int']['input'];
-  sort?: Array<StudySort> | StudySort;
-  search?: Scalars['String']['input'];
+  size?: Scalars['Int']['input'];
+  index?: Scalars['Int']['input'];
+  sort?: Array<DiseaseStudiesSort> | DiseaseStudiesSort;
+  search?: InputMaybe<DiseaseStudiesSearch>;
 }>;
 
 
-export type GwasStudiesQuery = { __typename?: 'Query', studies: { __typename?: 'StudyPage', count: number, rows: Array<{ __typename?: 'Study', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, publicationJournal?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }>, credibleSets: { __typename?: 'CredibleSetPage', count: number } }> } };
+export type GwasStudiesQuery = { __typename?: 'Query', studies: { __typename?: 'DiseasePage', studiesView: { __typename?: 'DiseaseStudyPage', count: number, rows: Array<{ __typename?: 'DiseaseStudy', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, publicationJournal?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, credibleSetsCount: number, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> }> } } };
 
 export type OntologyAncestorsQueryVariables = Exact<{
   ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -5404,6 +6886,8 @@ export type IndicationsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<DrugIndicationSort> | DrugIndicationSort;
+  search?: InputMaybe<DrugIndicationSearch>;
 }>;
 
 
@@ -5424,6 +6908,8 @@ export type DrugPharmacogenomicsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<PharmacogenomicsSort> | PharmacogenomicsSort;
+  search?: InputMaybe<PharmacogenomicsSearch>;
 }>;
 
 
@@ -5681,13 +7167,16 @@ export type GwasCredibleSetsPlotQuery = { __typename?: 'Query', study?: { __type
 
 export type StudyGwasCredibleSetsQueryVariables = Exact<{
   studyId: Scalars['String']['input'];
-  page?: InputMaybe<Page>;
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+  sort?: Array<StudyCredibleSetsSort> | StudyCredibleSetsSort;
+  search?: InputMaybe<StudyCredibleSetsSearch>;
 }>;
 
 
-export type StudyGwasCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null, locus: { __typename?: 'LocusPage', count: number }, l2GPredictions: { __typename?: 'L2GPredictionPage', rows: Array<{ __typename?: 'L2Gprediction', score: number, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } }> } } | null };
+export type StudyGwasCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSetsView: { __typename?: 'StudyCredibleSetPage', count: number, rows: Array<{ __typename?: 'StudyCredibleSet', studyLocusId: string, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, locusSize: number, finemappingMethod: string, confidence: string, topL2GGeneId?: string | null, topL2GApprovedSymbol?: string | null, topL2GScore?: number | null }> } } | null };
 
-export type StudyGwasCredibleSetsSummaryFragment = { __typename?: 'Study', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
+export type StudyGwasCredibleSetsSummaryFragment = { __typename?: 'Study', credibleSetsView: { __typename?: 'StudyCredibleSetPage', count: number } };
 
 export type StudyQtlCredibleSetsQueryVariables = Exact<{
   studyId: Scalars['String']['input'];
@@ -5700,13 +7189,16 @@ export type StudyQtlCredibleSetsQuery = { __typename?: 'Query', study?: { __type
 export type StudyQtlCredibleSetsSummaryFragment = { __typename?: 'Study', qtlCredibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
 export type SharedTraitStudiesQueryVariables = Exact<{
+  studyId: Scalars['String']['input'];
   diseaseIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  size: Scalars['Int']['input'];
-  index: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+  index?: Scalars['Int']['input'];
+  sort?: Array<DiseaseStudiesSort> | DiseaseStudiesSort;
+  search?: InputMaybe<DiseaseStudiesSearch>;
 }>;
 
 
-export type SharedTraitStudiesQuery = { __typename?: 'Query', sharedTraitStudies: { __typename?: 'StudyPage', count: number, rows: Array<{ __typename?: 'Study', id: string, traitFromSource: string, projectId: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, publicationJournal?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, diseases: Array<{ __typename?: 'Disease', id: string, name: string }>, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> }> } };
+export type SharedTraitStudiesQuery = { __typename?: 'Query', sharedTraitStudies: { __typename?: 'DiseasePage', studiesView: { __typename?: 'DiseaseStudyPage', count: number, rows: Array<{ __typename?: 'DiseaseStudy', id: string, traitFromSource: string, projectId: string, diseaseIds: Array<string>, diseaseNames: Array<string>, publicationFirstAuthor?: string | null, publicationDate?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> }> } } };
 
 export type TargetExpressionQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
@@ -5774,10 +7266,14 @@ export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality:
 
 export type TargetDrugsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
+  index?: Scalars['Int']['input'];
+  size?: Scalars['Int']['input'];
+  sort?: Array<ClinicalTargetSort> | ClinicalTargetSort;
+  search?: InputMaybe<ClinicalTargetSearch>;
 }>;
 
 
-export type TargetDrugsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number, rows: Array<{ __typename?: 'ClinicalTargetFromTarget', id: string, maxClinicalStage: string, drug: { __typename?: 'Drug', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
+export type TargetDrugsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number, rows: Array<{ __typename?: 'ClinicalTargetFromTarget', id: string, maxClinicalStage: string, drug: { __typename?: 'Drug', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
 
 export type TargetDrugsSummaryFragment = { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number } };
 
@@ -5861,6 +7357,8 @@ export type TargetPharmacogenomicsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<PharmacogenomicsSort> | PharmacogenomicsSort;
+  search?: InputMaybe<PharmacogenomicsSearch>;
 }>;
 
 
@@ -5921,6 +7419,8 @@ export type VariantEnhancerToGenePredictionsQueryVariables = Exact<{
   variantId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<EnhancerToGeneSort> | EnhancerToGeneSort;
+  search?: InputMaybe<EnhancerToGeneSearch>;
 }>;
 
 
@@ -5974,12 +7474,14 @@ export type VariantQtlCredibleSetsQueryVariables = Exact<{
   variantId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<VariantCredibleSetsSort> | VariantCredibleSetsSort;
+  search?: InputMaybe<VariantCredibleSetsSearch>;
 }>;
 
 
-export type VariantQtlCredibleSetsQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, qtlCredibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null, locus: { __typename?: 'LocusPage', rows: Array<{ __typename?: 'Locus', posteriorProbability: number }> }, locusSize: { __typename?: 'LocusPage', count: number } }> } } | null };
+export type VariantQtlCredibleSetsQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, qtlCredibleSets: { __typename?: 'VariantCredibleSetPage', count: number, rows: Array<{ __typename?: 'VariantCredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, studyId: string, studyType: StudyType, condition?: string | null, studyTargetId?: string | null, studyTargetApprovedSymbol?: string | null, biosampleId?: string | null, biosampleName?: string | null, posteriorProbability: number, locusSize: number }> } } | null };
 
-export type VariantQtlCredibleSetsSummaryFragment = { __typename?: 'Variant', qtlCredibleSets: { __typename?: 'CredibleSetPage', count: number } };
+export type VariantQtlCredibleSetsSummaryFragment = { __typename?: 'Variant', qtlCredibleSets: { __typename?: 'VariantCredibleSetPage', count: number } };
 
 export type UniProtVariantsQueryVariables = Exact<{
   variantId: Scalars['String']['input'];
@@ -6539,7 +8041,7 @@ export const UniprotVariantsSummary = gql`
     `;
 export const StudyGwasCredibleSetsSummaryFragment = gql`
     fragment StudyGWASCredibleSetsSummaryFragment on Study {
-  credibleSets(page: {size: 1, index: 0}) {
+  credibleSetsView(page: {size: 1, index: 0}) {
     count
   }
 }
@@ -6727,8 +8229,8 @@ export const VariantPharmacogenomicsSummaryFragment = gql`
     `;
 export const VariantQtlCredibleSetsSummaryFragment = gql`
     fragment VariantQTLCredibleSetsSummaryFragment on Variant {
-  qtlCredibleSets: credibleSets(
-    filter: {studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]}
+  qtlCredibleSets: credibleSetsView(
+    studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
     page: {size: 1, index: 0}
   ) {
     count
@@ -7232,10 +8734,14 @@ export const DiseaseBibliographyQueryDocument = gql`
 }
     `;
 export const DrugsQueryDocument = gql`
-    query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [ClinicalIndicationSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: ClinicalIndicationSearch) {
   disease(efoId: $efoId) {
     name
-    drugAndClinicalCandidates(page: {index: $index, size: $size}) {
+    drugAndClinicalCandidates(
+      page: {index: $index, size: $size}
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
         id
@@ -7253,30 +8759,25 @@ export const DrugsQueryDocument = gql`
 }
     `;
 export const GwasStudiesQueryDocument = gql`
-    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!, $sort: [StudySort!]! = [], $search: String! = "") {
-  studies(
-    diseaseIds: $diseaseIds
-    page: {size: $size, index: $index}
-    sort: $sort
-    search: {text: $search}
-  ) {
-    count
-    rows {
-      id
-      projectId
-      traitFromSource
-      publicationFirstAuthor
-      publicationDate
-      publicationJournal
-      nSamples
-      cohorts
-      pubmedId
-      ldPopulationStructure {
-        ldPopulation
-        relativeSampleSize
-      }
-      credibleSets {
-        count
+    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int! = 10, $index: Int! = 0, $sort: [DiseaseStudiesSort!]! = [], $search: DiseaseStudiesSearch) {
+  studies: diseases(efoIds: $diseaseIds) {
+    studiesView(sort: $sort, search: $search, page: {size: $size, index: $index}) {
+      count
+      rows {
+        id
+        projectId
+        traitFromSource
+        publicationFirstAuthor
+        publicationDate
+        publicationJournal
+        nSamples
+        cohorts
+        pubmedId
+        ldPopulationStructure {
+          ldPopulation
+          relativeSampleSize
+        }
+        credibleSetsCount
       }
     }
   }
@@ -7463,10 +8964,10 @@ export const DrugWarningsQueryDocument = gql`
 }
     `;
 export const IndicationsQueryDocument = gql`
-    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [DrugIndicationSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: DrugIndicationSearch) {
   drug(chemblId: $chemblId) {
     id
-    indications(page: {index: $index, size: $size}) {
+    indications(page: {index: $index, size: $size}, sort: $sort, search: $search) {
       count
       rows {
         id
@@ -7515,10 +9016,14 @@ export const MechanismsOfActionSectionQueryDocument = gql`
 }
     `;
 export const DrugPharmacogenomicsQueryDocument = gql`
-    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [PharmacogenomicsSort!]! = [], $search: PharmacogenomicsSearch) {
   drug(chemblId: $chemblId) {
     id
-    pharmacogenomics(page: {index: $index, size: $size}) {
+    pharmacogenomics(
+      page: {index: $index, size: $size}
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
         variantAnnotation {
@@ -8353,37 +9858,29 @@ export const GwasCredibleSetsPlotQueryDocument = gql`
 }
     `;
 export const StudyGwasCredibleSetsQueryDocument = gql`
-    query StudyGWASCredibleSetsQuery($studyId: String!, $page: Page) {
+    query StudyGWASCredibleSetsQuery($studyId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [StudyCredibleSetsSort!]! = [], $search: StudyCredibleSetsSearch) {
   study(studyId: $studyId) {
     id
-    credibleSets(page: $page) {
+    credibleSetsView(
+      page: {index: $index, size: $size}
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
         studyLocusId
-        variant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
         pValueMantissa
         pValueExponent
         beta
-        locus {
-          count
-        }
+        locusSize
         finemappingMethod
         confidence
-        l2GPredictions(page: {size: 1, index: 0}) {
-          rows {
-            target {
-              id
-              approvedSymbol
-            }
-            score
-          }
-        }
+        topL2GGeneId
+        topL2GApprovedSymbol
+        topL2GScore
       }
     }
   }
@@ -8418,31 +9915,32 @@ export const StudyQtlCredibleSetsQueryDocument = gql`
 }
     `;
 export const SharedTraitStudiesQueryDocument = gql`
-    query SharedTraitStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
-  sharedTraitStudies: studies(
-    diseaseIds: $diseaseIds
-    sort: [{key: N_SAMPLES, direction: DESCENDING}]
-    page: {size: $size, index: $index}
-  ) {
-    count
-    rows {
-      id
-      traitFromSource
-      projectId
-      diseases {
+    query SharedTraitStudiesQuery($studyId: String!, $diseaseIds: [String!]!, $size: Int! = 10, $index: Int! = 0, $sort: [DiseaseStudiesSort!]! = [], $search: DiseaseStudiesSearch) {
+  sharedTraitStudies: diseases(efoIds: $diseaseIds) {
+    studiesView(
+      enableIndirect: false
+      filter: {studyId: {ne: $studyId}}
+      sort: $sort
+      search: $search
+      page: {size: $size, index: $index}
+    ) {
+      count
+      rows {
         id
-        name
+        traitFromSource
+        projectId
+        diseaseIds
+        diseaseNames
+        publicationFirstAuthor
+        publicationDate
+        nSamples
+        cohorts
+        ldPopulationStructure {
+          ldPopulation
+          relativeSampleSize
+        }
+        pubmedId
       }
-      publicationFirstAuthor
-      publicationDate
-      publicationJournal
-      nSamples
-      cohorts
-      ldPopulationStructure {
-        ldPopulation
-        relativeSampleSize
-      }
-      pubmedId
     }
   }
 }
@@ -8616,9 +10114,14 @@ export const TargetDepMapQueryDocument = gql`
 }
     `;
 export const TargetDrugsQueryDocument = gql`
-    query TargetDrugsQuery($ensemblId: String!) {
+    query TargetDrugsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [ClinicalTargetSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: ClinicalTargetSearch) {
   target(ensemblId: $ensemblId) {
-    drugAndClinicalCandidates {
+    id
+    drugAndClinicalCandidates(
+      page: {index: $index, size: $size}
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
         id
@@ -8821,10 +10324,14 @@ export const TargetPathwaysQueryDocument = gql`
 }
     `;
 export const TargetPharmacogenomicsQueryDocument = gql`
-    query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [PharmacogenomicsSort!]! = [], $search: PharmacogenomicsSearch) {
   target(ensemblId: $ensemblId) {
     id
-    pharmacogenomics(page: {index: $index, size: $size}) {
+    pharmacogenomics(
+      page: {index: $index, size: $size}
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
         variantAnnotation {
@@ -8984,11 +10491,11 @@ export const EvaQueryDocument = gql`
 }
     `;
 export const VariantEnhancerToGenePredictionsQueryDocument = gql`
-    query VariantEnhancerToGenePredictionsQuery($variantId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query VariantEnhancerToGenePredictionsQuery($variantId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [EnhancerToGeneSort!]! = [], $search: EnhancerToGeneSearch) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    enhancerToGene(page: {index: $index, size: $size}) {
+    enhancerToGene(page: {index: $index, size: $size}, sort: $sort, search: $search) {
       count
       rows {
         chromosome
@@ -9159,12 +10666,14 @@ export const PharmacogenomicsQueryDocument = gql`
 }
     `;
 export const VariantQtlCredibleSetsQueryDocument = gql`
-    query VariantQTLCredibleSetsQuery($variantId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query VariantQTLCredibleSetsQuery($variantId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [VariantCredibleSetsSort!]! = [], $search: VariantCredibleSetsSearch) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    qtlCredibleSets: credibleSets(
-      filter: {studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]}
+    qtlCredibleSets: credibleSetsView(
+      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+      sort: $sort
+      search: $search
       page: {index: $index, size: $size}
     ) {
       count
@@ -9176,26 +10685,18 @@ export const VariantQtlCredibleSetsQueryDocument = gql`
         finemappingMethod
         confidence
         isTransQtl
-        variant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        study {
-          id
-          studyType
-          condition
-        }
-        locus(filter: {variantIds: [$variantId]}) {
-          rows {
-            posteriorProbability
-          }
-        }
-        locusSize: locus {
-          count
-        }
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
+        studyId
+        studyType
+        condition
+        studyTargetId
+        studyTargetApprovedSymbol
+        biosampleId
+        biosampleName
+        posteriorProbability
+        locusSize
       }
     }
   }
