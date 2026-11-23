@@ -1,5 +1,8 @@
+/**
+ * The canonical transcript of a target, as served by the API's
+ * `Target.canonicalTranscript`: its coordinates and strand, without exons, so
+ * genes are drawn as a line spanning the transcript with no exon blocks.
+ */
 export function getCanonicalTranscript(target: any) {
-  const transcripts = target.transcripts?.rows ?? [];
-  return transcripts.find(transcript => transcript.isEnsemblCanonical) ??
-    (transcripts.length === 1 ? transcripts[0] : undefined);
+  return target.canonicalTranscript ?? undefined;
 }
