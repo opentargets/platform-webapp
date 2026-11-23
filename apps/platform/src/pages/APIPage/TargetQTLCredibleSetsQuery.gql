@@ -5,14 +5,14 @@ query QTLCredibleSetsQuery {
 		credibleSets(page: { size: 500, index: 0}) {
 			count
 			rows {
-				studyLocusId
-				pValueMantissa
-				pValueExponent
-				beta
-				finemappingMethod
+				credibleSetId
+				leadPValueMantissa
+				leadPValueExponent
+				leadBeta
+				fineMappingMethod
 				confidence
 				isTransQtl
-				variant {
+				leadVariant {
 					variantId
 					chromosome
 					position
@@ -28,9 +28,7 @@ query QTLCredibleSetsQuery {
 						biosampleName
 					}
 				}
-				locus {
-					count
-				}
+				locusSize
 			}
 		}
 	}
