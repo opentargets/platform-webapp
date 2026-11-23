@@ -478,6 +478,17 @@ test.describe("Study Page - GWAS Study", () => {
         }
       }
     });
+
+    test("Can paginate Shared Trait Studies", async ({ page }) => {
+      const section = new SharedTraitStudiesSection(page);
+      await section.waitForSectionLoad();
+      await test.expect(section.getStudyLink(0)).toBeVisible();
+      test.skip(!(await section.isNextPageEnabled()), "Study has only one page of related studies");
+      const firstStudy = (await section.getStudyLink(0).textContent()) ?? "";
+      await section.clickNextPage();
+      await test.expect(section.getStudyLink(0)).not.toHaveText(firstStudy);
+      await test.expect(section.getPreviousPageButton()).toBeEnabled();
+    });
   });
 
   //   test.describe("Study Page Navigation", () => {

@@ -1,5 +1,5 @@
 fragment StudyGWASCredibleSetsSummaryFragment on Study {
-  credibleSets(page: { size: 1, index: 0 }) {
+  credibleSetsView(page: { size: 1, index: 0 }) {
     count
   }
 }

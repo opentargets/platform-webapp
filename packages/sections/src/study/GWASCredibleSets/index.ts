@@ -1,11 +1,11 @@
+import type { Study } from "@ot/constants";
 import { lazy } from "react";
-import { Study } from "@ot/constants";
 
 export const definition = {
   id: "gwas_credible_sets",
   name: "GWAS Credible Sets",
   shortName: "GW",
-  hasData: (data: Study) => (data.credibleSets?.count || 0) > 0,
+  hasData: (data: Pick<Study, "credibleSetsView">) => (data.credibleSetsView?.count || 0) > 0,
 };
 
 export { default as Summary } from "./Summary";
