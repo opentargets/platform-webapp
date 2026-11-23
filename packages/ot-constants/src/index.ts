@@ -370,14 +370,6 @@ export const clinvarStarMap: { [key: string]: number } = {
   "no assertion provided": 0,
 };
 
-// Credset Confidence Mapping
-export const credsetConfidenceMap: { [key: string]: number } = {
-  "SuSiE fine-mapped credible set with in-sample LD": 4,
-  "SuSiE fine-mapped credible set with out-of-sample LD": 3,
-  "PICS fine-mapped credible set extracted from summary statistics": 2,
-  "PICS fine-mapped credible set based on reported top hit": 1,
-};
-
 // Credible set confidence: the API returns the level itself (0 to 4), which is
 // also the number of stars shown; these are the descriptions for each level
 export const credsetConfidenceLabels: { [level: number]: string } = {
