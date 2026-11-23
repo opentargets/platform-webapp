@@ -1,28 +1,36 @@
-query SharedTraitStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!) {
-  sharedTraitStudies: studies(
-    diseaseIds: $diseaseIds
-    sort: [{ key: N_SAMPLES, direction: DESCENDING }]
-    page: { size: $size, index: $index }
-  ) {
-    count
-    rows {
-      id
-      traitFromSource
-      projectId
-      diseases {
+query SharedTraitStudiesQuery(
+  $studyId: String!
+  $diseaseIds: [String!]!
+  $size: Int! = 10
+  $index: Int! = 0
+  $sort: [DiseaseStudiesSort!]! = []
+  $search: DiseaseStudiesSearch
+) {
+  sharedTraitStudies: diseases(efoIds: $diseaseIds) {
+    studiesView(
+      enableIndirect: false
+      filter: { studyId: { ne: $studyId } }
+      sort: $sort
+      search: $search
+      page: { size: $size, index: $index }
+    ) {
+      count
+      rows {
         id
-        name
+        traitFromSource
+        projectId
+        diseaseIds
+        diseaseNames
+        publicationFirstAuthor
+        publicationDate
+        nSamples
+        cohorts
+        ldPopulationStructure {
+          ldPopulation
+          relativeSampleSize
+        }
+        pubmedId
       }
-      publicationFirstAuthor
-      publicationDate
-      publicationJournal
-      nSamples
-      cohorts
-      ldPopulationStructure {
-        ldPopulation
-        relativeSampleSize
-      }
-      pubmedId
     }
   }
 }
