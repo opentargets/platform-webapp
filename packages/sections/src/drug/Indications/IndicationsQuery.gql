@@ -1,7 +1,17 @@
-query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+query IndicationsQuery(
+  $chemblId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  # most advanced first; the cards have no sort control
+  $sort: [DrugIndicationSort!]! = [
+    { key: MAX_CLINICAL_STAGE, direction: DESCENDING }
+    { key: CLINICAL_REPORT_COUNT, direction: DESCENDING }
+  ]
+  $search: DrugIndicationSearch
+) {
   drug(chemblId: $chemblId) {
     id
-    indications(page: { index: $index, size: $size }) {
+    indications(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         id
