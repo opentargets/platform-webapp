@@ -200,5 +200,11 @@ export type OtTableServerProps<Row extends object, ServerRow extends object = Ro
   getSelectedRows?: (rows: TableRow<Row>[]) => void;
   /** receives the raw response of every page request */
   onDataLoaded?: (data: unknown) => void;
+  /** fetches the pages either side of the current one in the background, so paging is instant */
+  prefetchAdjacentPages?: boolean;
+  /** receives the rows of each page fetched in the background */
+  onPagePrefetched?: (rows: Row[]) => void;
+  /** keeps the table body from shrinking on a shorter page, so the pagination controls stay put */
+  stableHeight?: boolean;
   wrapControls?: boolean | Record<string, unknown>;
 };

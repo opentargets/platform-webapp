@@ -30,6 +30,7 @@ import {
 import _ from "lodash";
 import { type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import useBatchDownloader from "../../hooks/useBatchDownloader";
+import useRatchetMinHeight from "../../hooks/useRatchetMinHeight";
 import { useApolloClient } from "../../providers/OTApolloProvider/OTApolloProvider";
 import DataDownloader from "../DataDownloader";
 import Tooltip from "../Tooltip";
@@ -176,6 +177,9 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   enableMultipleRowSelection = false,
   getSelectedRows,
   onDataLoaded,
+  prefetchAdjacentPages = false,
+  onPagePrefetched,
+  stableHeight = false,
   wrapControls,
 }: OtTableServerProps<Row, ServerRow>): ReactElement {
   const client = useApolloClient();
@@ -196,6 +200,10 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const [search, setSearch] = useState("");
   const [rowSelection, setRowSelection] = useState({});
   const requestId = useRef(0);
+  const [tableBodyRef, tableMinHeight] = useRatchetMinHeight<HTMLDivElement>(
+    JSON.stringify(variables),
+    stableHeight
+  );
   // whole dataset, only fetched for a local search or sort
   const allRowsRequestId = useRef(0);
   const [allRows, setAllRows] = useState<Row[] | null>(null);
@@ -357,6 +365,24 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
         setState({ rows: toRows(rows), count, loading: false, initialLoading: false, error: null });
         onDataLoaded?.(response.data);
         enableRowSelection && setRowSelection({ 0: true });
+        if (!prefetchAdjacentPages || localMode) return;
+        const lastPageIndex = Math.ceil(count / pagination.pageSize) - 1;
+        for (const index of [pagination.pageIndex + 1, pagination.pageIndex - 1]) {
+          if (index < 0 || index > lastPageIndex) continue;
+          client
+            .query<Record<string, unknown>>({
+              query,
+              variables: { ...requestVariables, index, size: pagination.pageSize },
+              fetchPolicy: "cache-first",
+            })
+            .then((adjacent) => {
+              const adjacentPage = _.get(adjacent.data, dataPath, {}) as ServerPage<ServerRow>;
+              onPagePrefetched?.(toRows((adjacentPage[rowField] ?? []) as ServerRow[]));
+            })
+            .catch(() => {
+              // a failed prefetch is retried, and reported, when the page is opened
+            });
+        }
       })
       .catch((error: Error) => {
         if (currentRequest !== requestId.current) return;
@@ -493,7 +519,11 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
         </GridLegacy>
       )}
 
-      <Box sx={{ w: 1, overflowX: "auto", marginTop: (theme) => theme.spacing(3) }}>
+      <Box
+        ref={tableBodyRef}
+        sx={{ w: 1, overflowX: "auto", marginTop: (theme) => theme.spacing(3) }}
+        style={{ minHeight: tableMinHeight }}
+      >
         <OtTableContainer data-testid="ot-table">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
