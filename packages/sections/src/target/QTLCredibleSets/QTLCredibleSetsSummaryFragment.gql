@@ -1,5 +1,8 @@
 fragment TargetQTLCredibleSetsSummaryFragment on Target {
-  credibleSets(page: { size: 1, index: 0 }) {
+  credibleSets: credibleSetsView(
+    studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+    page: { size: 1, index: 0 }
+  ) {
     count
   }
 }
