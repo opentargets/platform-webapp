@@ -7,11 +7,11 @@ query VariantGWASCredibleSetsPlotQuery($variantId: String!) {
       page: { index: 0, size: 50000 }
     ) {
       rows {
-        studyLocusId
-        pValueMantissa
-        pValueExponent
-        beta
-        variant {
+        credibleSetId
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        leadVariant {
           variantId
         }
         study {

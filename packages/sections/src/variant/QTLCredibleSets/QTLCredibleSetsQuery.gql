@@ -16,11 +16,11 @@ query VariantQTLCredibleSetsQuery(
     ) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         pValueMantissa
         pValueExponent
         beta
-        finemappingMethod
+        fineMappingMethod
         confidence
         isTransQtl
         leadVariantId
