@@ -3,7 +3,10 @@ import {
   credsetConfidenceMap,
   naLabel,
   SortDirection,
+  type StudyCredibleSet,
+  type StudyCredibleSetsSearch,
   StudyCredibleSetsSearchField,
+  type StudyCredibleSetsSort,
   StudyCredibleSetsSortField,
 } from "@ot/constants";
 import type { ReactElement } from "react";
@@ -13,17 +16,55 @@ import {
   L2GScoreIndicator,
   Link,
   Navigate,
+  type OtTableColumn,
   OtTableServer,
   ScientificNotation,
   SectionItem,
   Tooltip,
 } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";
+import GWAS_CREDIBLE_SETS_QUERY_DOCUMENT from "./GWASCredibleSetsQuery.gql";
 
 // import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
 // import ManhattanPlot from "./ManhattanPlot";
+
+type StudyRow = Pick<
+  StudyCredibleSet,
+  | "studyLocusId"
+  | "leadVariantId"
+  | "leadReferenceAllele"
+  | "leadAlternateAllele"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "beta"
+  | "locusSize"
+  | "finemappingMethod"
+  | "confidence"
+  | "topL2GGeneId"
+  | "topL2GApprovedSymbol"
+  | "topL2GScore"
+>;
+
+type QueryData = {
+  study?: {
+    id: string;
+    credibleSetsView: { count: number; rows: StudyRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  studyId: string;
+  index: number;
+  size: number;
+  sort: StudyCredibleSetsSort[];
+  search?: StudyCredibleSetsSearch;
+};
+
+const GWAS_CREDIBLE_SETS_QUERY = typedDocument<QueryData, QueryVariables>(
+  GWAS_CREDIBLE_SETS_QUERY_DOCUMENT
+);
 
 const PAGE_SIZE = 10;
 const DEFAULT_SORT = {
@@ -31,7 +72,7 @@ const DEFAULT_SORT = {
   field: StudyCredibleSetsSortField.PValue,
 };
 
-const columns = [
+const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "studyLocusId",
     label: "Credible set",
@@ -211,7 +252,7 @@ function Body({ id, entity }: BodyProps): ReactElement {
             />
           </Box>
           */}
-          <OtTableServer
+          <OtTableServer<StudyRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-studies`}
             dataPath="study.credibleSetsView"

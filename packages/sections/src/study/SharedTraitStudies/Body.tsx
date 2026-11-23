@@ -50,7 +50,7 @@ type QueryVariables = {
   index: number;
   size: number;
   sort: DiseaseStudiesSort[];
-  search: DiseaseStudiesSearch;
+  search?: DiseaseStudiesSearch;
 };
 
 const SHARED_TRAIT_STUDIES_QUERY = typedDocument<QueryData, QueryVariables>(
@@ -79,7 +79,7 @@ function getColumns(diseaseIds: string[]): OtTableColumn<StudyRow>[] {
       searchFields: [
         DiseaseStudiesSearchField.StudyId,
         DiseaseStudiesSearchField.TraitFromSource,
-        DiseaseStudiesSearchField.PublicationFirstAuthor
+        DiseaseStudiesSearchField.PublicationFirstAuthor,
       ],
       renderCell: ({ id }) => (
         <Link asyncTooltip to={`/study/${id}`}>
