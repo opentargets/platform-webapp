@@ -76,13 +76,12 @@ test.describe("Variant QTL Credible Sets Section", () => {
   });
 
   test("Can search/filter QTL credible sets", async () => {
-    // Search for a specific term
-    await qtlSection.search("ENSG");
+    // Search for an affected gene symbol present in the table
+    const geneLink = await qtlSection.getAffectedGeneLink(0);
+    await qtlSection.search((await geneLink.innerText()).trim());
 
-    // Row count should change
     const filteredRowCount = await qtlSection.getTableRows();
 
-    // At least the search should execute without error
-    expect(filteredRowCount).toBeGreaterThanOrEqual(0);
+    expect(filteredRowCount).toBeGreaterThan(0);
   });
 });
