@@ -18,7 +18,7 @@ type BodyProps = {
 
 function Body({ id, entity }: BodyProps) {
   const variables = {
-    studyLocusId: id,
+    credibleSetId: id,
     size: table5HChunkSize,
     index: 0,
   };

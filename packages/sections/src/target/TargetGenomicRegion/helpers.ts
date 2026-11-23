@@ -57,9 +57,9 @@ export function getTargetGenomicRegion(canonicalTranscript?: {
     end,
     initialZoom,
     regionVariables: {
-      chromosome: `chr${chromosome}`,
-      positionStart: start,
-      positionEnd: end,
+      chromosome: `chr${chromosome.toLowerCase()}`,
+      start,
+      end,
     },
   };
 }

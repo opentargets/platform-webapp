@@ -1,17 +1,17 @@
-query CredibleSetGenomicRegionQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    variant {
+query CredibleSetGenomicRegionQuery($credibleSetId: String!, $size: Int!, $index: Int!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    leadVariant {
       id: variantId
       chromosome
       position
       referenceAllele
       alternateAllele
     }
-    studyLocusId
+    credibleSetId
     locus(page: { size: $size, index: $index }) {
       count
       rows {
-        logBF
+        logBayesFactor
         posteriorProbability
         variant {
           id: variantId
@@ -26,8 +26,8 @@ query CredibleSetGenomicRegionQuery($studyLocusId: String!, $size: Int!, $index:
         }
         pValueMantissa
         pValueExponent
-        beta
-        standardError
+        reportedBeta
+        reportedStandardError
         r2Overall
       }
     }
