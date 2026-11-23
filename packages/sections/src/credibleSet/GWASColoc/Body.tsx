@@ -16,20 +16,20 @@ import { type ReactElement, useState } from "react";
 
 const columns = [
   {
-    id: "otherStudyLocus.studyLocusId",
+    id: "otherCredibleSet.credibleSetId",
     label: "Credible set",
     enableHiding: false,
     sticky: true,
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      return <Navigate to={`/credible-set/${otherStudyLocus.studyLocusId}`} />;
+    renderCell: ({ otherCredibleSet }) => {
+      if (!otherCredibleSet?.leadVariant) return naLabel;
+      return <Navigate to={`/credible-set/${otherCredibleSet.credibleSetId}`} />;
     },
   },
   {
-    id: "otherStudyLocus.study.id",
+    id: "otherCredibleSet.study.id",
     label: "Study",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyId = otherStudyLocus?.study?.id;
+    renderCell: ({ otherCredibleSet }) => {
+      const studyId = otherCredibleSet?.study?.id;
       if (!studyId) return naLabel;
       return (
         <Link asyncTooltip to={`../study/${studyId}`}>
@@ -39,39 +39,39 @@ const columns = [
     },
   },
   {
-    id: "otherStudyLocus.study.traitFromSource",
+    id: "otherCredibleSet.study.traitFromSource",
     label: "Reported trait",
-    renderCell: ({ otherStudyLocus }) => {
-      const trait = otherStudyLocus?.study?.traitFromSource;
+    renderCell: ({ otherCredibleSet }) => {
+      const trait = otherCredibleSet?.study?.traitFromSource;
       if (!trait) return naLabel;
       return trait;
     },
   },
   {
-    id: "otherStudyLocus.study.publicationFirstAuthor",
+    id: "otherCredibleSet.study.publicationFirstAuthor",
     label: "First author",
-    renderCell: ({ otherStudyLocus }) => {
-      const { projectId, publicationFirstAuthor } = otherStudyLocus?.study || {};
+    renderCell: ({ otherCredibleSet }) => {
+      const { projectId, publicationFirstAuthor } = otherCredibleSet?.study || {};
       return getStudyCategory(projectId) === "FINNGEN"
         ? "FinnGen"
         : publicationFirstAuthor || naLabel;
     },
-    exportValue: ({ otherStudyLocus }) => {
-      return otherStudyLocus?.study?.publicationFirstAuthor;
+    exportValue: ({ otherCredibleSet }) => {
+      return otherCredibleSet?.study?.publicationFirstAuthor;
     },
   },
   {
-    id: "otherStudyLocus.variant.variantId",
+    id: "otherCredibleSet.leadVariant.variantId",
     label: "Lead Variant",
-    comparator: variantComparator(d => d?.otherStudyLocus?.variant),
+    comparator: variantComparator(d => d?.otherCredibleSet?.leadVariant),
     sortable: true,
-    filterValue: ({ otherStudyLocus }) => {
-      const v = otherStudyLocus?.variant;
+    filterValue: ({ otherCredibleSet }) => {
+      const v = otherCredibleSet?.leadVariant;
       return `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`;
     },
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      const { variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+    renderCell: ({ otherCredibleSet }) => {
+      if (!otherCredibleSet?.leadVariant) return naLabel;
+      const { variantId, referenceAllele, alternateAllele } = otherCredibleSet.leadVariant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -83,28 +83,30 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.variantId,
+    exportValue: ({ otherCredibleSet }) => otherCredibleSet?.leadVariant?.variantId,
   },
   {
     id: "pValue",
     label: "P-Value",
     numeric: true,
-    comparator: ({ otherStudyLocus: a }, { otherStudyLocus: b }) =>
+    comparator: ({ otherCredibleSet: a }, { otherCredibleSet: b }) =>
       mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
+        a?.leadPValueMantissa,
+        a?.leadPValueExponent,
+        b?.leadPValueMantissa,
+        b?.leadPValueExponent
       ),
     sortable: true,
     filterValue: false,
-    renderCell: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    renderCell: ({ otherCredibleSet }) => {
+      const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+        otherCredibleSet ?? {};
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    exportValue: ({ otherCredibleSet }) => {
+      const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+        otherCredibleSet ?? {};
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
@@ -203,7 +205,7 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = { studyLocusId: id };
+  const variables = { credibleSetId: id };
   const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
