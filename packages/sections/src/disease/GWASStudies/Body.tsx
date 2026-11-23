@@ -1,14 +1,13 @@
 import { useQuery } from "@apollo/client";
 import {
+  DiseaseStudiesSearchField,
+  DiseaseStudiesSortField,
   type GwasStudiesQuery,
   type GwasStudiesQueryVariables,
   naLabel,
   SortDirection,
-  type StudySort,
-  StudySortField,
 } from "@ot/constants";
 import { epmcUrl, getStudyCategory } from "@ot/utils";
-import type { SortingState } from "@tanstack/react-table";
 import type { ReactElement } from "react";
 import {
   Box,
@@ -29,13 +28,20 @@ const GWAS_STUDIES_BODY_QUERY = typedDocument<GwasStudiesQuery, GwasStudiesQuery
   GWAS_STUDIES_BODY_QUERY_DOCUMENT
 );
 
-type StudyRow = GwasStudiesQuery["studies"]["rows"][number];
+type StudyRow = GwasStudiesQuery["studies"]["studiesView"]["rows"][number];
+
+const DEFAULT_SORT = {
+  id: "nSamples",
+  field: DiseaseStudiesSortField.NSamples,
+};
 
 const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "id",
     label: "Study",
     enableHiding: false,
+    // For now, attach all search fields to the first column.
+    searchFields: Object.values(DiseaseStudiesSearchField),
     renderCell: ({ id }) => (
       <Link asyncTooltip to={`/study/${id}`}>
         {id}
@@ -45,7 +51,6 @@ const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "traitFromSource",
     label: "Reported trait",
-    sortable: true,
   },
   {
     id: "nSamples",
@@ -53,7 +58,7 @@ const columns: OtTableColumn<StudyRow>[] = [
     renderCell: ({ nSamples }) => {
       return typeof nSamples === "number" ? nSamples.toLocaleString() : naLabel;
     },
-    sortable: true,
+    sortField: DEFAULT_SORT.field,
   },
   {
     id: "cohorts",
@@ -97,7 +102,7 @@ const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "publication",
     label: "Publication",
-    sortable: true,
+    sortField: DiseaseStudiesSortField.PublicationDate,
     renderCell: ({ publicationFirstAuthor, publicationDate, pubmedId, projectId }) => {
       if (!publicationFirstAuthor) return naLabel;
       const year = publicationDate ? new Date(publicationDate).getFullYear() : naLabel;
@@ -110,37 +115,14 @@ const columns: OtTableColumn<StudyRow>[] = [
         />
       );
     },
-    filterValue: ({ publicationDate, publicationFirstAuthor }) =>
-      `${publicationDate ?? ""} ${publicationFirstAuthor ?? ""}`,
     exportValue: ({ pubmedId }) => pubmedId ?? "",
   },
   {
-    id: "credibleSets",
+    id: "credibleSetsCount",
     label: "Credible sets count",
-    renderCell: ({ credibleSets }) => {
-      return credibleSets?.count ?? naLabel;
-    },
+    renderCell: ({ credibleSetsCount }) => credibleSetsCount ?? naLabel,
   },
 ];
-
-// column id -> StudySortField of the API; columns not listed here are not sortable
-const SORT_FIELDS: Record<string, StudySortField | undefined> = {
-  traitFromSource: StudySortField.TraitFromSource,
-  nSamples: StudySortField.NSamples,
-  publication: StudySortField.PublicationAuthorDate,
-};
-
-const DEFAULT_SORTING: SortingState = [{ id: "nSamples", desc: true }];
-
-export function getStudySortVariables(sorting: SortingState): { sort: StudySort[] } {
-  const sort = sorting.flatMap(({ id, desc }) => {
-    const key = SORT_FIELDS[id];
-    return key
-      ? [{ key, direction: desc ? SortDirection.Descending : SortDirection.Ascending }]
-      : [];
-  });
-  return { sort };
-}
 
 const PAGE_SIZE = 10;
 
@@ -159,7 +141,7 @@ function Body({ id: efoId, label: diseaseName }: BodyProps): ReactElement {
       ...variables,
       index: 0,
       size: PAGE_SIZE,
-      ...getStudySortVariables(DEFAULT_SORTING),
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Descending }],
     },
   });
 
@@ -176,12 +158,10 @@ function Body({ id: efoId, label: diseaseName }: BodyProps): ReactElement {
           columns={columns}
           query={GWAS_STUDIES_BODY_QUERY}
           variables={variables}
-          dataPath="studies"
+          dataPath="studies.studiesView"
           pageSize={PAGE_SIZE}
-          sortBy={DEFAULT_SORTING[0].id}
+          sortBy={DEFAULT_SORT.id}
           order="desc"
-          getSortVariables={getStudySortVariables}
-          searchVariable="search"
           globalFilterPlaceholderText="Search studies..."
           dataDownloader
           dataDownloaderFileStem={`${efoId}-gwas-studies`}
