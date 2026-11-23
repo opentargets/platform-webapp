@@ -197,22 +197,27 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   const [rowSelection, setRowSelection] = useState({});
   const requestId = useRef(0);
   // whole dataset, only fetched for a local search or sort
+  const allRowsRequestId = useRef(0);
   const [allRows, setAllRows] = useState<Row[] | null>(null);
   const [allRowsLoading, setAllRowsLoading] = useState(false);
 
   const memoizedVariables = useMemo(() => ({ ...variables }), [JSON.stringify(variables)]);
-  const serverSortFields = useMemo(
-    () =>
-      new Map(
-        columns
-          .filter((column) => column.sortField)
-          .map((column) => [column.id, column.sortField] as const)
-      ),
-    [columns]
+  // Keyed by content, not by the `columns` array: sections that build their
+  // columns inline pass a new array on every render, and these feed
+  // `requestVariables`, whose identity resets the page and the local dataset.
+  const sortFieldsKey = JSON.stringify(
+    columns.filter((column) => column.sortField).map((column) => [column.id, column.sortField])
   );
+  const serverSortFields = useMemo(
+    () => new Map<string, string>(JSON.parse(sortFieldsKey) as [string, string][]),
+    [sortFieldsKey]
+  );
+  const searchFieldsKey = JSON.stringify([
+    ...new Set(columns.flatMap((column) => column.searchFields ?? [])),
+  ]);
   const serverSearchFields = useMemo(
-    () => [...new Set(columns.flatMap((column) => column.searchFields ?? []))],
-    [columns]
+    () => JSON.parse(searchFieldsKey) as string[],
+    [searchFieldsKey]
   );
   const serverSorting = serverSortFields.size > 0;
   const serverSearch = serverSearchFields.length > 0;
@@ -323,7 +328,10 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
 
   // the whole dataset is only valid for the current variables
   useEffect(() => {
+    // also drops a download still in flight for the previous variables
+    allRowsRequestId.current += 1;
     setAllRows(null);
+    setAllRowsLoading(false);
   }, [requestVariables]);
 
   useEffect(() => {
@@ -402,22 +410,22 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
   // fetch the whole dataset the first time a local search term is typed or a column is sorted
   useEffect(() => {
     if (!localMode || allRows !== null || allRowsLoading) return;
-    let isCurrent = true;
+    // Not cancelled on cleanup: the rows stay valid for these variables even if
+    // the search is cleared meanwhile, and the loading flag must always be reset.
+    const currentRequest = ++allRowsRequestId.current;
+    const isCurrent = () => currentRequest === allRowsRequestId.current;
     setAllRowsLoading(true);
     downloadRows()
       .then((rows) => {
-        if (isCurrent) setAllRows(rows);
+        if (isCurrent()) setAllRows(rows);
       })
       .catch((error: Error) => {
-        if (!isCurrent) return;
+        if (!isCurrent()) return;
         setState((prev) => ({ ...prev, error }));
         setAllRows([]);
       })
-      .finally(() => isCurrent && setAllRowsLoading(false));
-    return () => {
-      isCurrent = false;
-    };
-  }, [localMode, allRows, requestVariables]);
+      .finally(() => isCurrent() && setAllRowsLoading(false));
+  }, [localMode, allRows, allRowsLoading, requestVariables]);
 
   function onRowSelection(row: TableRow<Row>) {
     enableRowSelection && row.toggleSelected();
