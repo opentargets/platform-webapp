@@ -177,7 +177,7 @@ function getColumns({
       id: "posteriorProbability",
       label: "Posterior probability",
       numeric: true,
-      sortField: VariantCredibleSetsSortField.PosteriorProbablity,
+      sortField: VariantCredibleSetsSortField.PosteriorProbability,
       tooltip: (
         <>
           Posterior inclusion probability that the fixed page variant (
