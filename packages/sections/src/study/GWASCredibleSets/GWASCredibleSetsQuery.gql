@@ -10,7 +10,7 @@ query StudyGWASCredibleSetsQuery(
     credibleSetsView(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         leadVariantId
         leadReferenceAllele
         leadAlternateAllele
@@ -18,7 +18,7 @@ query StudyGWASCredibleSetsQuery(
         pValueExponent
         beta
         locusSize
-        finemappingMethod
+        fineMappingMethod
         confidence
         topL2GGeneId
         topL2GApprovedSymbol

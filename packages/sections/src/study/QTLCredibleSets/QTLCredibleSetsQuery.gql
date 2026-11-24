@@ -4,21 +4,19 @@ query StudyQTLCredibleSetsQuery($studyId: String!, $page: Page) {
     credibleSets(page: $page) {
       count
       rows {
-        studyLocusId
-        variant {
+        credibleSetId
+        leadVariant {
           variantId
           chromosome
           position
           referenceAllele
           alternateAllele
         }
-        pValueMantissa
-        pValueExponent
-        beta
-        locus {
-          count
-        }
-        finemappingMethod
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        locusSize
+        fineMappingMethod
         confidence
       }
     }
