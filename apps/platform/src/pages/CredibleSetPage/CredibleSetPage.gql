@@ -1,7 +1,7 @@
-query CredibleSetPageQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    variant {
+query CredibleSetPageQuery($credibleSetId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
       variantId
       referenceAllele
       alternateAllele

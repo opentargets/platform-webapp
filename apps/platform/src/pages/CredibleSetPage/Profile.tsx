@@ -29,7 +29,7 @@ const CREDIBLE_SET_WIDGETS = Array.from(credibleSetProfileWidgets.values());
 const CREDIBLE_SET_STICKY_WIDGETS = [CredibleSet.Variants, ...CREDIBLE_SET_WIDGETS];
 
 type ProfileProps = {
-  studyLocusId: string;
+  credibleSetId: string;
   variantId: string;
   Icon?: IconProp;
   externalLinks?: ReactNode;
@@ -46,9 +46,9 @@ const CREDIBLE_SET_PROFILE_SUMMARY_FRAGMENT = summaryUtils.createSummaryFragment
 );
 
 const CREDIBLE_SET_PROFILE_QUERY = gql`
-  query CredibleSetProfileQuery($studyLocusId: String!, $variantIds: [String!]!) {
-    credibleSet(studyLocusId: $studyLocusId) {
-      studyLocusId
+  query CredibleSetProfileQuery($credibleSetId: String!, $variantIds: [String!]!) {
+    credibleSet(credibleSetId: $credibleSetId) {
+      credibleSetId
       ...CredibleSetProfileHeaderFragment
       ...CredibleSetProfileSummaryFragment
     }
@@ -59,12 +59,12 @@ const CREDIBLE_SET_PROFILE_QUERY = gql`
 
 const VariantsSection = CredibleSet.Variants.getBodyComponent();
 
-function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps) {
+function Profile({ credibleSetId, variantId, Icon, externalLinks }: ProfileProps) {
   return (
     <PlatformApiProvider
       entity={CREDIBLE_SET}
       query={CREDIBLE_SET_PROFILE_QUERY}
-      variables={{ studyLocusId: studyLocusId, variantIds: [variantId] }}
+      variables={{ credibleSetId, variantIds: [variantId] }}
     >
       <ProfileHeader />
       <StickyProfileHeader
@@ -83,10 +83,10 @@ function Profile({ studyLocusId, variantId, Icon, externalLinks }: ProfileProps)
       <SectionContainer>
         {/* TODO: remove this once we have a proper variants section. look at the parent prop */}
         <Suspense fallback={<SectionLoader />}>
-          <VariantsSection id={studyLocusId} leadVariantId={variantId} entity={CREDIBLE_SET} />
+          <VariantsSection id={credibleSetId} leadVariantId={variantId} entity={CREDIBLE_SET} />
         </Suspense>
         <SectionsRenderer
-          id={studyLocusId}
+          id={credibleSetId}
           label={CREDIBLE_SET}
           entity={CREDIBLE_SET}
           widgets={CREDIBLE_SET_WIDGETS}

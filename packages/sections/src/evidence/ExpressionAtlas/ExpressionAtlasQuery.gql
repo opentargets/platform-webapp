@@ -16,7 +16,6 @@ query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $index: Int! = 
         contrast
         confidence
         studyOverview
-        log2FoldChangeValue
         resourceScore
         log2FoldChangePercentileRank
         studyId
