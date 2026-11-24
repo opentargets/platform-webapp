@@ -10,14 +10,14 @@ import { apolloClient } from "../../apolloClient";
 export async function loader({ params }: LoaderFunctionArgs) {
   const { data } = await apolloClient.query({
     query: CREDIBLE_SET_PAGE_QUERY,
-    variables: { studyLocusId: params.studyLocusId },
+    variables: { credibleSetId: params.credibleSetId },
   });
   return data;
 }
 
 function CredibleSetPage(): ReactElement {
   const location = useLocation();
-  const { studyLocusId } = useParams() as { studyLocusId: string };
+  const { credibleSetId } = useParams() as { credibleSetId: string };
   const data = useLoaderData<typeof loader>();
 
   if (data && !data?.credibleSet) {
@@ -25,7 +25,7 @@ function CredibleSetPage(): ReactElement {
   }
 
   const { id: studyId } = data?.credibleSet?.study || {};
-  const { variantId, referenceAllele, alternateAllele } = data?.credibleSet?.variant || {};
+  const { variantId, referenceAllele, alternateAllele } = data?.credibleSet?.leadVariant || {};
   const headerMeta = buildHeaderMeta({
     variantId: variantId ?? "",
     referenceAllele: referenceAllele ?? "",
@@ -37,9 +37,9 @@ function CredibleSetPage(): ReactElement {
     <>
       <PageMeta
         title={
-          variantId && studyId ? `Credible set around ${variantId} for ${studyId}` : studyLocusId
+          variantId && studyId ? `Credible set around ${variantId} for ${studyId}` : credibleSetId
         }
-        description={`Annotation information for credible set ${studyLocusId}`}
+        description={`Annotation information for credible set ${credibleSetId}`}
         location={location}
       />
       <Header
@@ -56,13 +56,13 @@ function CredibleSetPage(): ReactElement {
             label={<Box sx={{ textTransform: "capitalize" }}>Profile</Box>}
             value={location.pathname}
             component={Link}
-            to={`/credible-set/${studyLocusId}`}
+            to={`/credible-set/${credibleSetId}`}
           />
         </Tabs>
       </Box>
       {variantId && (
         <Profile
-          studyLocusId={studyLocusId}
+          credibleSetId={credibleSetId}
           variantId={variantId}
           Icon={headerMeta.Icon}
           externalLinks={headerMeta.externalLinks}

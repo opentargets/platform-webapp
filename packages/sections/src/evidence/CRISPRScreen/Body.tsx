@@ -84,10 +84,12 @@ const getColumns = label => [
     width: "12%",
   },
   {
-    id: "log2FoldChangeValue",
+    id: "phenotypicConsequenceScore",
     label: "log2 fold change",
     renderCell: row =>
-      row.log2FoldChangeValue ? parseFloat(row.log2FoldChangeValue.toFixed(6)) : naLabel,
+      row.phenotypicConsequenceScore
+        ? parseFloat(row.phenotypicConsequenceScore.toFixed(6))
+        : naLabel,
     width: "9%",
   },
   {
@@ -171,7 +173,7 @@ const exportColumns = [
   },
   {
     label: "log2 fold change",
-    exportValue: row => row.log2FoldChangeValue,
+    exportValue: row => row.phenotypicConsequenceScore,
   },
   {
     label: "significance",

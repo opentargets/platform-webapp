@@ -1,34 +1,28 @@
-query StudyGWASCredibleSetsQuery($studyId: String!, $page: Page) {
+query StudyGWASCredibleSetsQuery(
+  $studyId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [StudyCredibleSetsSort!]! = []
+  $search: StudyCredibleSetsSearch
+) {
   study(studyId: $studyId) {
     id
-    credibleSets(page: $page) {
+    credibleSetsView(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
-        studyLocusId
-        variant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
+        credibleSetId
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
         pValueMantissa
         pValueExponent
         beta
-        locus {
-          count
-        }
-        finemappingMethod
+        locusSize
+        fineMappingMethod
         confidence
-        l2GPredictions(page: { size: 1, index: 0 }) {
-          rows {
-            target {
-              id
-              approvedSymbol
-            }
-            score
-          }
-        }
+        topL2GGeneId
+        topL2GApprovedSymbol
+        topL2GScore
       }
     }
   }

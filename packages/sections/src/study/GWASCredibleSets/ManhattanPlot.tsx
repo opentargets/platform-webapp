@@ -26,11 +26,11 @@ function ManhattanPlot({ loading, data: originalData }) {
 
   const data = structuredClone(
     originalData.filter((d) => {
-      const chromosome = d.variant?.chromosome?.replace(/^chr/i, "");
+      const chromosome = d.leadVariant?.chromosome?.replace(/^chr/i, "");
       return (
-        d.pValueMantissa != null &&
-        d.pValueExponent != null &&
-        d.variant != null &&
+        d.leadPValueMantissa != null &&
+        d.leadPValueExponent != null &&
+        d.leadVariant != null &&
         chromosomeInfoMap.has(chromosome)
       );
     })
@@ -40,10 +40,10 @@ function ManhattanPlot({ loading, data: originalData }) {
   const yMax = 0;
   let yMin = Infinity;
   for (const d of data) {
-    const y = Math.log10(d.pValueMantissa) + d.pValueExponent;
+    const y = Math.log10(d.leadPValueMantissa) + d.leadPValueExponent;
     yMin = Math.min(yMin, y);
     d._y = y;
-    d._genomePosition = cumulativePosition(d.variant);
+    d._genomePosition = cumulativePosition(d.leadVariant);
   }
 
   function highlightElement(elmt) {
@@ -180,21 +180,21 @@ function renderTooltip(datum) {
       <TooltipTable>
         <TooltipRow label="Credible set">
           <Box display="flex">
-            <Navigate to={`/credible-set/${datum.studyLocusId}`} />
+            <Navigate to={`/credible-set/${datum.credibleSetId}`} />
           </Box>
         </TooltipRow>
         <TooltipRow label="Lead variant">
-          <Link asyncTooltip to={`/variant/${datum.variant.variantId}`}>
+          <Link asyncTooltip to={`/variant/${datum.leadVariant.variantId}`}>
             <DisplayVariantId
-              variantId={datum.variant.variantId}
-              referenceAllele={datum.variant.referenceAllele}
-              alternateAllele={datum.variant.alternateAllele}
+              variantId={datum.leadVariant.variantId}
+              referenceAllele={datum.leadVariant.referenceAllele}
+              alternateAllele={datum.leadVariant.alternateAllele}
               expand={false}
             />
           </Link>
         </TooltipRow>
         <TooltipRow label="P-value">
-          <ScientificNotation number={[datum.pValueMantissa, datum.pValueExponent]} dp={2} />
+          <ScientificNotation number={[datum.leadPValueMantissa, datum.leadPValueExponent]} dp={2} />
         </TooltipRow>
       </TooltipTable>
     </Box>

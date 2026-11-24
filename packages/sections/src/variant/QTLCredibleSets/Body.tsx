@@ -6,6 +6,7 @@ import {
   ScientificNotation,
   DisplayVariantId,
   OtTableServer,
+  type OtTableColumn,
   Tooltip,
   ClinvarStars,
   Navigate,
@@ -16,8 +17,21 @@ import {
 import { definition } from ".";
 import Description from "./Description";
 import QTL_CREDIBLE_SETS_QUERY from "./QTLCredibleSetsQuery.gql";
-import { mantissaExponentComparator, variantComparator } from "@ot/utils";
-import { credsetConfidenceMap, naLabel } from "@ot/constants";
+import {
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
+  naLabel,
+  SortDirection,
+  type VariantCredibleSet,
+  VariantCredibleSetsSearchField,
+  VariantCredibleSetsSortField,
+} from "@ot/constants";
+
+const DEFAULT_SORT = {
+  id: "pValue",
+  field: VariantCredibleSetsSortField.PValue,
+  desc: false,
+};
 
 type getColumnsType = {
   id: string;
@@ -25,35 +39,44 @@ type getColumnsType = {
   alternateAllele: string;
 };
 
-function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
+function getColumns({
+  id,
+  referenceAllele,
+  alternateAllele,
+}: getColumnsType): OtTableColumn<VariantCredibleSet>[] {
   return [
     {
-      id: "studyLocusId",
+      id: "credibleSetId",
       label: "Credible set",
       enableHiding: false,
       sticky: true,
-      renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+      // For now, attach all QTL search fields to the first column.
+      searchFields: [
+        VariantCredibleSetsSearchField.LeadVariantId,
+        VariantCredibleSetsSearchField.StudyId,
+        VariantCredibleSetsSearchField.StudyTargetApprovedSymbol,
+        VariantCredibleSetsSearchField.BiosampleName,
+        VariantCredibleSetsSearchField.Condition,
+        VariantCredibleSetsSearchField.FineMappingMethod,
+      ],
+      renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
     },
     {
       id: "leadVariant",
       label: "Lead variant",
       enableHiding: false,
-      comparator: variantComparator(d => d.variant),
-      sortable: true,
-      filterValue: ({ variant: v }) =>
-        `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-      renderCell: ({ variant }) => {
-        if (!variant) return naLabel;
-        const { variantId, referenceAllele, alternateAllele } = variant;
+      sortField: VariantCredibleSetsSortField.LeadVariant,
+      renderCell: ({ leadVariantId, leadReferenceAllele, leadAlternateAllele }) => {
+        if (!leadVariantId) return naLabel;
         const displayElement = (
           <DisplayVariantId
-            variantId={variantId}
-            referenceAllele={referenceAllele}
-            alternateAllele={alternateAllele}
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
             expand={false}
           />
         );
-        if (variantId === id) {
+        if (leadVariantId === id) {
           return (
             <Box display="flex" alignItems="center" gap={0.5}>
               {displayElement}
@@ -62,74 +85,74 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           );
         }
         return (
-          <Link asyncTooltip to={`/variant/${variantId}`}>
+          <Link asyncTooltip to={`/variant/${leadVariantId}`}>
             {displayElement}
           </Link>
         );
       },
-      exportValue: ({ variant }) => variant?.variantId,
+      exportValue: ({ leadVariantId }) => leadVariantId,
     },
     {
       id: "studyId",
       label: "Study",
-      renderCell: ({ study }) => {
-        if (!study) return naLabel;
+      renderCell: ({ studyId }) => {
+        if (!studyId) return naLabel;
         return (
-          <Link asyncTooltip to={`../study/${study.id}`}>
-            {study.id}
+          <Link asyncTooltip to={`/study/${studyId}`}>
+            {studyId}
           </Link>
         );
       },
     },
     {
-      id: "study.studyType",
+      id: "studyType",
       label: "Type",
-      renderCell: ({ study, isTransQtl }) => {
-        const type = study?.studyType;
-        if (!type) return naLabel;
+      renderCell: ({ studyType, isTransQtl }) => (
+        <>
+          {`${studyType.slice(0, -3)}${studyType.slice(-3).toUpperCase()}`}{" "}
+          {isTransQtl && <Chip label="trans" />}
+        </>
+      ),
+      exportValue: ({ studyType, isTransQtl }) =>
+        `${studyType.slice(0, -3)}${studyType.slice(-3).toUpperCase()}, isTrans:${isTransQtl ?? naLabel}`,
+    },
+    {
+      id: "studyTargetApprovedSymbol",
+      label: "Affected gene",
+      renderCell: ({ studyTargetId, studyTargetApprovedSymbol }) => {
+        if (!studyTargetId) return studyTargetApprovedSymbol || naLabel;
         return (
-          <>
-            {`${type.slice(0, -3)}${type.slice(-3).toUpperCase()}`}{" "}
-            {isTransQtl && <Chip label="trans" />}
-          </>
+          <Link asyncTooltip to={`/target/${studyTargetId}`}>
+            {studyTargetApprovedSymbol || studyTargetId}
+          </Link>
         );
       },
-      exportValue: ({ study, isTrans }) => {
-        const type = study?.studyType;
-        if (!type) return null;
-        return `${type.slice(0, -3)}${type.slice(-3).toUpperCase()}, isTrans:${isTrans}`;
-      },
+      exportValue: ({ studyTargetApprovedSymbol, studyTargetId }) =>
+        studyTargetApprovedSymbol || studyTargetId,
     },
     {
-      id: "study.target.approvedSymbol",
-      label: "Affected gene",
-      renderCell: () => "?API?",
-      exportValue: () => "?API?",
-    },
-    {
-      id: "study",
+      id: "biosampleName",
       label: "Affected tissue/cell",
-      renderCell: () => "?API?",
-      exportValue: () => "?API?",
+      renderCell: ({ biosampleId, biosampleName }) => {
+        if (!biosampleId) return biosampleName || naLabel;
+        return (
+          <Link external to={`https://www.ebi.ac.uk/ols4/search?q=${biosampleId}`}>
+            {biosampleName || biosampleId}
+          </Link>
+        );
+      },
+      exportValue: ({ biosampleName, biosampleId }) => biosampleName || biosampleId,
     },
     {
-      id: "study.condition",
+      id: "condition",
       label: "Condition",
-      renderCell: ({ study }) => study?.condition || naLabel,
+      renderCell: ({ condition }) => condition || naLabel,
     },
     {
       id: "pValue",
       label: "P-value",
       numeric: true,
-      comparator: (a, b) =>
-        mantissaExponentComparator(
-          a?.pValueMantissa,
-          a?.pValueExponent,
-          b?.pValueMantissa,
-          b?.pValueExponent
-        ),
-      sortable: true,
-      filterValue: false,
+      sortField: DEFAULT_SORT.field,
       renderCell: ({ pValueMantissa, pValueExponent }) => {
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
           return naLabel;
@@ -144,9 +167,8 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "beta",
       label: "Beta",
       numeric: true,
-      filterValue: false,
       tooltip: "Beta with respect to the ALT allele",
-      sortable: true,
+      sortField: VariantCredibleSetsSortField.Beta,
       renderCell: ({ beta }) => {
         if (typeof beta !== "number") return naLabel;
         return beta.toPrecision(3);
@@ -156,13 +178,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "posteriorProbability",
       label: "Posterior probability",
       numeric: true,
-      filterValue: false,
-      sortable: true,
-      comparator: (a, b) => {
-        return (
-          a?.locus?.rows?.[0]?.posteriorProbability - b?.locus?.rows?.[0]?.posteriorProbability
-        );
-      },
+      sortField: VariantCredibleSetsSortField.PosteriorProbability,
       tooltip: (
         <>
           Posterior inclusion probability that the fixed page variant (
@@ -175,10 +191,9 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           ) is causal.
         </>
       ),
-      renderCell: ({ locus }) =>
-        locus.rows.length > 0 ? locus?.rows[0]?.posteriorProbability.toPrecision(3) : naLabel,
-      exportValue: ({ locus }) =>
-        locus.rows.length > 0 ? locus?.rows[0]?.posteriorProbability : naLabel,
+      renderCell: ({ posteriorProbability }) =>
+        typeof posteriorProbability === "number" ? posteriorProbability.toPrecision(3) : naLabel,
+      exportValue: ({ posteriorProbability }) => posteriorProbability,
     },
     {
       id: "confidence",
@@ -196,32 +211,32 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           for more details.
         </>
       ),
-      sortable: true,
       renderCell: ({ confidence }) => {
         if (!confidence) return naLabel;
         return (
-          <Tooltip title={confidence} style="">
-            <ClinvarStars num={credsetConfidenceMap[confidence]} />
+          <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+            <ClinvarStars num={confidence} />
           </Tooltip>
         );
       },
-      filterValue: ({ confidence }) => credsetConfidenceMap[confidence],
     },
     {
-      id: "finemappingMethod",
+      id: "fineMappingMethod",
       label: "Fine-mapping method",
+      renderCell: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+      exportValue: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
     },
     {
       id: "credibleSetSize",
       label: "Credible set size",
       numeric: true,
-      comparator: (a, b) => a.locusSize?.count - b.locusSize?.count,
-      sortable: true,
-      filterValue: false,
+      sortField: VariantCredibleSetsSortField.CredibleSetSize,
       renderCell: ({ locusSize }) => {
-        return typeof locusSize?.count === "number" ? locusSize.count.toLocaleString() : naLabel;
+        return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
       },
-      exportValue: ({ locusSize }) => locusSize?.count,
+      exportValue: ({ locusSize }) => locusSize,
     },
   ];
 }
@@ -236,7 +251,12 @@ const PAGE_SIZE = 10;
 function Body({ id, entity }: BodyProps): ReactNode {
   const variables = { variantId: id };
   const request = useQuery(QTL_CREDIBLE_SETS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
   });
 
   return (
@@ -253,12 +273,13 @@ function Body({ id, entity }: BodyProps): ReactNode {
       )}
       renderBody={() => {
         return (
-          <OtTableServer
+          <OtTableServer<VariantCredibleSet>
             dataDownloader
             dataDownloaderFileStem={`${id}-qtl-credible-sets-variant`}
             dataPath="variant.qtlCredibleSets"
             pageSize={PAGE_SIZE}
-            showGlobalFilter={false}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             columns={getColumns({
               id,
               referenceAllele: request.data?.variant.referenceAllele,

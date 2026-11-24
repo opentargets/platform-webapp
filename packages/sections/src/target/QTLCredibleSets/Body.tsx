@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client";
 import {
-  credsetConfidenceMap,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
   naLabel,
   type TargetBodyProps,
   type TargetQtlCredibleSetsQuery,
@@ -33,28 +34,27 @@ type CredibleSetRow = NonNullable<
   TargetQtlCredibleSetsQuery["target"]
 >["credibleSets"]["rows"][number];
 
-const confidenceMap: Record<string, number | undefined> = credsetConfidenceMap;
 const compareVariants = variantComparator();
 
 const PAGE_SIZE = 10;
 
 const columns: OtTableColumn<CredibleSetRow>[] = [
   {
-    id: "studyLocusId",
+    id: "credibleSetId",
     label: "Credible set",
     enableHiding: false,
     sticky: true,
-    renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+    renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
   },
   {
     id: "leadVariant",
     label: "Lead variant",
     enableHiding: false,
     sortable: true,
-    comparator: (a, b) => compareVariants(a.variant, b.variant),
-    filterValue: ({ variant: v }) =>
+    comparator: (a, b) => compareVariants(a.leadVariant, b.leadVariant),
+    filterValue: ({ leadVariant: v }) =>
       `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-    renderCell: ({ variant }) => {
+    renderCell: ({ leadVariant: variant }) => {
       if (!variant) return naLabel;
       const { id: variantId, referenceAllele, alternateAllele } = variant;
       return (
@@ -68,7 +68,7 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
         </Link>
       );
     },
-    exportValue: ({ variant }) => variant?.id,
+    exportValue: ({ leadVariant }) => leadVariant?.id,
   },
   {
     id: "study.id",
@@ -113,27 +113,27 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
     sortable: true,
     comparator: (a, b) =>
       mantissaExponentComparator(
-        a.pValueMantissa,
-        a.pValueExponent,
-        b.pValueMantissa,
-        b.pValueExponent
+        a.leadPValueMantissa ?? null,
+        a.leadPValueExponent ?? null,
+        b.leadPValueMantissa ?? null,
+        b.leadPValueExponent ?? null
       ),
-    renderCell: ({ pValueMantissa, pValueExponent }) => {
+    renderCell: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ pValueMantissa, pValueExponent }) => {
+    exportValue: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
   },
   {
-    id: "beta",
+    id: "leadBeta",
     label: "Beta",
     numeric: true,
     sortable: true,
     tooltip: "Beta with respect to the ALT allele",
-    renderCell: ({ beta }) => {
+    renderCell: ({ leadBeta: beta }) => {
       if (typeof beta !== "number") return naLabel;
       return beta.toPrecision(3);
     },
@@ -155,29 +155,35 @@ const columns: OtTableColumn<CredibleSetRow>[] = [
       </>
     ),
     sortable: true,
-    comparator: (a, b) => (confidenceMap[a.confidence] ?? 0) - (confidenceMap[b.confidence] ?? 0),
+    comparator: (a, b) => a.confidence - b.confidence,
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
-        <Tooltip title={confidence} style="">
-          <ClinvarStars num={confidenceMap[confidence] ?? 0} />
+        <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+          <ClinvarStars num={confidence} />
         </Tooltip>
       );
     },
   },
   {
-    id: "finemappingMethod",
+    id: "fineMappingMethod",
     label: "Fine-mapping method",
+    renderCell: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+    filterValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+    exportValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
   },
   {
     id: "credibleSetSize",
     label: "Credible set size",
     numeric: true,
     sortable: true,
-    comparator: (a, b) => a.locus.count - b.locus.count,
-    renderCell: ({ locus }) =>
-      typeof locus?.count === "number" ? locus.count.toLocaleString() : naLabel,
-    exportValue: ({ locus }) => locus?.count,
+    comparator: (a, b) => a.locusSize - b.locusSize,
+    renderCell: ({ locusSize }) =>
+      typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel,
+    exportValue: ({ locusSize }) => locusSize,
   },
 ];
 

@@ -12,7 +12,7 @@ type BodyProps = {
 
 function Body({ id, entity }: BodyProps): ReactNode {
   const variables = {
-    studyLocusId: id,
+    credibleSetId: id,
     page: { index: 0, size: 1000 },
   };
 

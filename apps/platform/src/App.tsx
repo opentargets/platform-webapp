@@ -105,7 +105,7 @@ const router = createBrowserRouter([
             errorElement: <RouteErrorBoundary />,
           },
           {
-            path: "/credible-set/:studyLocusId/*",
+            path: "/credible-set/:credibleSetId/*",
             lazy: () =>
               import("./pages/CredibleSetPage/CredibleSetPage").then(m => ({
                 Component: m.default,
