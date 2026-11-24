@@ -50,6 +50,7 @@ export interface AnalysisInputs {
  * Gene data structure for GSEA API.
  */
 export interface Gene {
+  id?: string;
   symbol: string;
   globalScore: number;
 }

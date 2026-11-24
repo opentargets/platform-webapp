@@ -86,6 +86,7 @@ export function useGseaAnalysis({ client, state, dispatch }: UseGseaAnalysisPara
         }
 
         genes = filteredRows.map((row: any) => ({
+          id: row.target.id,
           symbol: row.target.approvedSymbol,
           globalScore: row.score,
         }));
