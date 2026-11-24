@@ -10,12 +10,13 @@ import {
   Navigate,
   Box,
   Chip,
+  Typography,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
-// import PheWasPlot from "./PheWasPlot";
+import PheWasPlot from "./PheWasPlot";
 import {
   credsetConfidenceMap,
   naLabel,
@@ -24,7 +25,7 @@ import {
   VariantCredibleSetsSortField,
 } from "@ot/constants";
 import { useQuery } from "@apollo/client";
-// import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
+import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
 
 type getColumnsType = {
   id: string;
@@ -296,13 +297,11 @@ function Body({ id, entity }: BodyProps) {
           alternateAllele={request.data?.variant.alternateAllele}
         />
       )}
-      // renderChart={() => {
-      //   return (
-      //     <Box mb={1} ml={2}>
-      //       <Plot variantId={id} />
-      //     </Box>
-      //   );
-      // }}
+      renderChart={() => (
+        <Box mb={1} ml={2}>
+          <Plot variantId={id} />
+        </Box>
+      )}
       renderBody={() => {
         const columns = getColumns({
           id,
@@ -327,20 +326,28 @@ function Body({ id, entity }: BodyProps) {
   );
 }
 
-// function Plot({ variantId }: { variantId: string }) {
-//   const { data, loading } = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
-//     variables: { variantId },
-//   });
-//
-//   return (
-//     <PheWasPlot
-//       loading={loading}
-//       data={data?.variant?.gwasCredibleSets?.rows}
-//       pageId={variantId}
-//       pageReferenceAllele={data?.variant?.referenceAllele}
-//       pageAlternateAllele={data?.variant?.alternateAllele}
-//     />
-//   );
-// }
+function Plot({ variantId }: { variantId: string }) {
+  const { data, loading, error } = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
+    variables: { variantId },
+  });
+
+  if (error) {
+    return (
+      <Typography  align="center" mt={1}>
+        Unable to load the GWAS credible sets plot
+      </Typography>
+    );
+  }
+
+  return (
+    <PheWasPlot
+      loading={loading}
+      data={data?.variant?.credibleSetsView?.rows}
+      pageId={variantId}
+      pageReferenceAllele={data?.variant?.referenceAllele}
+      pageAlternateAllele={data?.variant?.alternateAllele}
+    />
+  );
+}
 
 export default Body;
