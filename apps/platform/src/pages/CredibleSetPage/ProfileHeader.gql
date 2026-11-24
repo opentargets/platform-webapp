@@ -1,9 +1,9 @@
 fragment CredibleSetProfileHeaderFragment on CredibleSet {
-  pValueMantissa
-  pValueExponent
-  beta
-  standardError
-  effectAlleleFrequencyFromSource
+  leadPValueMantissa
+  leadPValueExponent
+  leadBeta
+  leadStandardError
+  leadEffectAlleleFrequency
   qualityControls
   locus(filter: { variantIds: $variantIds }) {
     count
@@ -11,20 +11,17 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
       posteriorProbability
       pValueMantissa
       pValueExponent
-      beta
-      standardError
+      reportedBeta
+      reportedStandardError
     }
   }
-  locusSize: locus(page: { size: 1, index: 0 }) {
-    count
-  }
-  variant {
+  leadVariant {
     variantId
     chromosome
     position
     rsIds
   }
-  finemappingMethod
+  fineMappingMethod
   purityMinR2
   locusStart
   locusEnd

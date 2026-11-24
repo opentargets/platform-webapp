@@ -81,27 +81,27 @@ function getColumns({ leadVariantId }: getColumnsType) {
       },
     },
     {
-      id: "beta",
+      id: "reportedBeta",
       label: "Beta",
       numeric: true,
       filterValue: false,
       sortable: true,
-      tooltip: "Beta with respect to the ALT allele",
-      renderCell: ({ beta }) => {
-        if (typeof beta !== "number") return naLabel;
-        return beta.toPrecision(3);
+      tooltip: "Beta with respect to the ALT allele, as reported by the source",
+      renderCell: ({ reportedBeta }) => {
+        if (typeof reportedBeta !== "number") return naLabel;
+        return reportedBeta.toPrecision(3);
       },
     },
     {
-      id: "standardError",
+      id: "reportedStandardError",
       label: "Standard error",
       numeric: true,
       filterValue: false,
       tooltip:
         "Standard Error: Estimate of the standard deviation of the sampling distribution of the beta",
-      renderCell: ({ standardError }) => {
-        if (typeof standardError !== "number") return naLabel;
-        return standardError.toFixed(3);
+      renderCell: ({ reportedStandardError }) => {
+        if (typeof reportedStandardError !== "number") return naLabel;
+        return reportedStandardError.toFixed(3);
       },
     },
     {
@@ -139,16 +139,16 @@ function getColumns({ leadVariantId }: getColumnsType) {
       },
     },
     {
-      id: "logBF",
+      id: "logBayesFactor",
       label: "log(BF)",
       numeric: true,
       tooltip:
         "Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal",
       filterValue: false,
       sortable: true,
-      renderCell: ({ logBF }) => {
-        if (typeof logBF !== "number") return naLabel;
-        return logBF.toPrecision(3);
+      renderCell: ({ logBayesFactor }) => {
+        if (typeof logBayesFactor !== "number") return naLabel;
+        return logBayesFactor.toPrecision(3);
       },
     },
     {
@@ -180,7 +180,7 @@ type BodyProps = {
 };
 
 function Body({ id, leadVariantId, entity }: BodyProps) {
-  const variables = { studyLocusId: id };
+  const variables = { credibleSetId: id };
   const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   const columns = getColumns({
