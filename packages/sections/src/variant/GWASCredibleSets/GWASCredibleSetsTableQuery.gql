@@ -20,7 +20,7 @@ query GWASCredibleSetsTableQuery(
     ) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         leadVariantId
         leadReferenceAllele
         leadAlternateAllele
@@ -34,7 +34,7 @@ query GWASCredibleSetsTableQuery(
         pValueExponent
         beta
         posteriorProbability
-        finemappingMethod
+        fineMappingMethod
         confidence
         topL2GGeneId
         topL2GApprovedSymbol

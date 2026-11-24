@@ -18,7 +18,8 @@ import { definition } from ".";
 import Description from "./Description";
 import QTL_CREDIBLE_SETS_QUERY from "./QTLCredibleSetsQuery.gql";
 import {
-  credsetConfidenceMap,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
   naLabel,
   SortDirection,
   type VariantCredibleSet,
@@ -45,7 +46,7 @@ function getColumns({
 }: getColumnsType): OtTableColumn<VariantCredibleSet>[] {
   return [
     {
-      id: "studyLocusId",
+      id: "credibleSetId",
       label: "Credible set",
       enableHiding: false,
       sticky: true,
@@ -56,9 +57,9 @@ function getColumns({
         VariantCredibleSetsSearchField.StudyTargetApprovedSymbol,
         VariantCredibleSetsSearchField.BiosampleName,
         VariantCredibleSetsSearchField.Condition,
-        VariantCredibleSetsSearchField.FinemappingMethod,
+        VariantCredibleSetsSearchField.FineMappingMethod,
       ],
-      renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+      renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
     },
     {
       id: "leadVariant",
@@ -213,15 +214,19 @@ function getColumns({
       renderCell: ({ confidence }) => {
         if (!confidence) return naLabel;
         return (
-          <Tooltip title={confidence} style="">
-            <ClinvarStars num={credsetConfidenceMap[confidence]} />
+          <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+            <ClinvarStars num={confidence} />
           </Tooltip>
         );
       },
     },
     {
-      id: "finemappingMethod",
+      id: "fineMappingMethod",
       label: "Fine-mapping method",
+      renderCell: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+      exportValue: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
     },
     {
       id: "credibleSetSize",

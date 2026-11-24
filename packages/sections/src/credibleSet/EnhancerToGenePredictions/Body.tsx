@@ -145,7 +145,7 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = { studyLocusId: id };
+  const variables = { credibleSetId: id };
   const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
@@ -155,16 +155,16 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => (
         <Description
-          variantId={request.data?.credibleSet?.variant?.variantId || ""}
-          referenceAllele={request.data?.credibleSet?.variant?.referenceAllele || ""}
-          alternateAllele={request.data?.credibleSet?.variant?.alternateAllele || ""}
+          variantId={request.data?.credibleSet?.leadVariant?.variantId || ""}
+          referenceAllele={request.data?.credibleSet?.leadVariant?.referenceAllele || ""}
+          alternateAllele={request.data?.credibleSet?.leadVariant?.alternateAllele || ""}
         />
       )}
       renderBody={() => (
         <OtTableOffsetPagination
           dataDownloader
           dataDownloaderFileStem={`${id}-enhancer-to-gene-predictions`}
-          dataPath="credibleSet.variant.enhancerToGene"
+          dataPath="credibleSet.leadVariant.enhancerToGene"
           entity="credibleSet"
           sectionName="enhancerToGene"
           setInitialRequestData={setRequest}

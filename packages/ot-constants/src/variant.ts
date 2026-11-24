@@ -255,6 +255,13 @@ const VARIANT_EFFECT_METHODS: Record<string, VariantEffectMethod> = {
       "Scores used to identify regions of the genome that are evolutionarily conserved and likely to be functionally important.",
     docsUrl: "https://platform-docs.opentargets.org/variant#variant-effect",
   },
+  "GPN-Star": {
+    methodName: "GPN-Star",
+    prettyName: "GPN-Star",
+    description:
+      "Genomic language model that scores how evolutionarily constrained a variant's position is, genome-wide.",
+    docsUrl: "https://platform-docs.opentargets.org/variant#variant-effect",
+  },
   LOFTEE: {
     methodName: "LOFTEE",
     prettyName: "LOFTEE",

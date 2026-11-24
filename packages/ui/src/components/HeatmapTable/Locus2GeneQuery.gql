@@ -1,6 +1,6 @@
-query Locus2GeneQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
+query Locus2GeneQuery($credibleSetId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
     l2GPredictions {
       count
       rows {

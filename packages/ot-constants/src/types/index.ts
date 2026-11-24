@@ -601,7 +601,7 @@ export enum ClinicalTargetSortField {
 export type Colocalisation = {
   __typename?: 'Colocalisation';
   /** Average sign of the beta ratio between colocalised variants. */
-  betaRatioSignAverage: Scalars['Float']['output'];
+  betaRatioSignAverage?: Maybe<Scalars['Float']['output']>;
   /** Chromosome where the colocalisation occurs. */
   chromosome: Chromosome;
   /**
@@ -611,6 +611,8 @@ export type Colocalisation = {
   clpp: Scalars['Float']['output'];
   /** Method used to estimate colocalisation (e.g., coloc, eCAVIAR). */
   colocalisationMethod: Scalars['String']['output'];
+  /** Identifier of the credible set on this side of the colocalisation pair. */
+  credibleSetId: Scalars['String']['output'];
   /**
    * Posterior probability that both traits are associated, but with different causal variants
    * (H3). Used in coloc method.
@@ -623,14 +625,12 @@ export type Colocalisation = {
   h4: Scalars['Float']['output'];
   /** Number of variants intersecting between two overlapping study-loci. */
   numberColocalisingVariants: Scalars['Int']['output'];
-  /** The other credible set (study-locus) in the colocalisation pair. */
-  otherStudyLocus?: Maybe<CredibleSet>;
-  /** The other credible set (study-locus) in the colocalisation pair. */
-  otherStudyLocusId: Scalars['String']['output'];
+  /** The other credible set in the colocalisation pair. */
+  otherCredibleSet?: Maybe<CredibleSet>;
+  /** Identifier of the other credible set in the colocalisation pair. */
+  otherCredibleSetId: Scalars['String']['output'];
   /** Type of the right-side study (e.g., gwas, eqtl, pqtl). */
   rightStudyType: StudyType;
-  /** Credible set (study-locus) on the left side of the colocalisation pair. */
-  studyLocusId: Scalars['String']['output'];
 };
 
 /** Filter for colocalisations. */
@@ -686,8 +686,6 @@ export type Constraint = {
  */
 export type CredibleSet = {
   __typename?: 'CredibleSet';
-  /** Beta coefficient of the lead variant. */
-  beta?: Maybe<Scalars['Float']['output']>;
   /** Chromosome which the credible set is located. */
   chromosome: Chromosome;
   /**
@@ -701,70 +699,64 @@ export type CredibleSet = {
    * full colocalisations with the other credible set.
    */
   colocalisationView: CredibleSetColocalisationPage;
-  /** Description of how this credible set was derived in terms of data and fine-mapping method. */
-  confidence: Scalars['String']['output'];
-  /** Integer label for the order of credible sets from study-region. */
-  credibleSetIndex?: Maybe<Scalars['Int']['output']>;
-  /** Log10 Bayes factor for the entire credible set. */
-  credibleSetlog10BF?: Maybe<Scalars['Float']['output']>;
-  /** Allele frequency of the lead variant from the GWAS. */
-  effectAlleleFrequencyFromSource?: Maybe<Scalars['Float']['output']>;
+  /**
+   * Confidence level of the credible set, from 1 (PICS on a reported top hit) to 4 (`SuSiE`
+   * with in-sample LD); 0 means unknown.
+   */
+  confidence: Scalars['Int']['output'];
+  /** Identifier of the credible set. */
+  credibleSetId: Scalars['String']['output'];
   /** Method used for fine-mapping of credible set. */
-  finemappingMethod: Scalars['String']['output'];
-  /** Boolean for whether this credible set is a trans-pQTL or not. */
-  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  fineMappingMethod: FineMappingMethod;
+  /** Whether this credible set is a trans-QTL. */
+  isTransQtl: Scalars['Boolean']['output'];
   /** Predictions from Locus2gene gene assignment model. */
   l2GPredictions: L2GPredictionPage;
-  /** Array of structs which denote the variants in LD with the credible set lead variant. */
-  ldSet: Array<Ldset>;
-  /** Locus information for all variants in the credible set. */
+  /** Beta coefficient of the lead variant, as reported by the source. */
+  leadBeta?: Maybe<Scalars['Float']['output']>;
+  /** Effect allele frequency of the lead variant. */
+  leadEffectAlleleFrequency?: Maybe<Scalars['Float']['output']>;
+  /** Exponent value of the lead variant P-value. */
+  leadPValueExponent?: Maybe<Scalars['Int']['output']>;
+  /** Mantissa value of the lead variant P-value. */
+  leadPValueMantissa?: Maybe<Scalars['Float']['output']>;
+  /** Position of the lead variant for the credible set (`GRCh38`). */
+  leadPosition: Scalars['Int']['output'];
+  /** Sample size for the lead variant. */
+  leadSampleSize?: Maybe<Scalars['Int']['output']>;
+  /** Standard error of the lead variant, as reported by the source. */
+  leadStandardError?: Maybe<Scalars['Float']['output']>;
+  /** The lead variant for the credible set. */
+  leadVariant?: Maybe<Variant>;
+  /** Identifier of the lead variant of the credible set. */
+  leadVariantId: Scalars['String']['output'];
+  /** Variants in the credible set, with their fine-mapping statistics. */
   locus: LocusPage;
   /** End position of the region that was fine-mapped for this credible set. */
-  locusEnd?: Maybe<Scalars['Int']['output']>;
+  locusEnd: Scalars['Int']['output'];
+  /** Number of variants in the credible set. */
+  locusSize: Scalars['Int']['output'];
   /** Start position of the region that was fine-mapped for this credible set. */
-  locusStart?: Maybe<Scalars['Int']['output']>;
+  locusStart: Scalars['Int']['output'];
   /**
    * Flat, sortable and searchable list of the credible set's variants, for tables. Use `locus`
    * for the full variants or to filter by variant IDs.
    */
   locusView: CredibleSetVariantPage;
-  /** Exponent value of the lead variant P-value. */
-  pValueExponent: Scalars['Int']['output'];
-  /** Mantissa value of the lead variant P-value. */
-  pValueMantissa: Scalars['Float']['output'];
-  /** Position of the lead variant for the credible set (`GRCh38`). */
-  position: Scalars['Int']['output'];
+  /** Natural log Bayes factor for the entire credible set. */
+  logBayesFactor?: Maybe<Scalars['Float']['output']>;
   /** Mean R-squared linkage disequilibrium for variants in the credible set. */
   purityMeanR2?: Maybe<Scalars['Float']['output']>;
   /** Minimum R-squared linkage disequilibrium for variants in the credible set. */
   purityMinR2?: Maybe<Scalars['Float']['output']>;
-  /**
-   * Ensembl identifier of the gene representing a specific gene whose molecular is being
-   * analysed in molQTL study.
-   */
-  qtlGeneId?: Maybe<Scalars['String']['output']>;
   /** Quality control flags for this credible set. */
   qualityControls: Array<Scalars['String']['output']>;
-  /** Start and end positions of the region used for fine-mapping. */
-  region?: Maybe<Scalars['String']['output']>;
-  /** Sample size of the study which this credible set is derived. */
-  sampleSize?: Maybe<Scalars['Int']['output']>;
-  /** Standard error of the lead variant. */
-  standardError?: Maybe<Scalars['Float']['output']>;
   /** GWAS or molQTL study in which the credible set was identified. */
   study?: Maybe<Study>;
   /** Identifier of the GWAS or molQTL study in which the credible set was identified. */
   studyId: Scalars['String']['output'];
-  /** Identifier of the credible set (`StudyLocus`). */
-  studyLocusId: Scalars['String']['output'];
   /** Descriptor for whether the credible set is derived from GWAS or molecular QTL. */
   studyType: StudyType;
-  /** [Deprecated] */
-  subStudyDescription?: Maybe<Scalars['String']['output']>;
-  /** The lead variant for the credible set, by posterior probability. */
-  variant?: Maybe<Variant>;
-  /** Z-score of the lead variant from the GWAS. */
-  zScore?: Maybe<Scalars['Float']['output']>;
 };
 
 
@@ -830,7 +822,7 @@ export type CredibleSetLocusViewArgs = {
 export type CredibleSetColocalisation = {
   __typename?: 'CredibleSetColocalisation';
   /** Average sign of the beta ratio between colocalised variants (directionality). */
-  betaRatioSignAverage: Scalars['Float']['output'];
+  betaRatioSignAverage?: Maybe<Scalars['Float']['output']>;
   /** Description of `biosampleId`. */
   biosampleDescription?: Maybe<Scalars['String']['output']>;
   /** Tissue or cell type of the other credible set's molQTL study. */
@@ -846,6 +838,8 @@ export type CredibleSetColocalisation = {
   colocalisationMethod: Scalars['String']['output'];
   /** Condition of the other credible set's molQTL study (e.g. naive). */
   condition?: Maybe<Scalars['String']['output']>;
+  /** This credible set, on the left side of the colocalisation pair. */
+  credibleSetId: Scalars['String']['output'];
   /**
    * Posterior probability that both traits are associated, but with different causal variants
    * (H3). Used in coloc method.
@@ -857,7 +851,7 @@ export type CredibleSetColocalisation = {
    */
   h4: Scalars['Float']['output'];
   /** Whether the other credible set is a trans-QTL. */
-  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  isTransQtl: Scalars['Boolean']['output'];
   /** Chromosome of the lead variant. */
   leadChromosome: Chromosome;
   /** Position of the lead variant (`GRCh38`). */
@@ -866,20 +860,18 @@ export type CredibleSetColocalisation = {
   leadVariantId: Scalars['String']['output'];
   /** Number of variants intersecting between the two credible sets. */
   numberColocalisingVariants: Scalars['Int']['output'];
-  /** The other credible set (`StudyLocus`) in the colocalisation pair. */
-  otherStudyLocusId: Scalars['String']['output'];
+  /** The other credible set in the colocalisation pair. */
+  otherCredibleSetId: Scalars['String']['output'];
   /** Exponent of the other credible set's lead variant P-value. */
-  pValueExponent: Scalars['Int']['output'];
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
   /** Mantissa of the other credible set's lead variant P-value. */
-  pValueMantissa: Scalars['Float']['output'];
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
   /** Source project of the other credible set's study. */
   projectId: Scalars['String']['output'];
   /** First author of the publication of the other credible set's study. */
   publicationFirstAuthor?: Maybe<Scalars['String']['output']>;
   /** Study of the other credible set. */
   studyId: Scalars['String']['output'];
-  /** This credible set (`StudyLocus`), on the left side of the colocalisation pair. */
-  studyLocusId: Scalars['String']['output'];
   /** Type of the other credible set's study (e.g. gwas, eqtl, pqtl). */
   studyType: StudyType;
   /** Approved symbol of `targetId`. Null when the target is unknown. */
@@ -961,12 +953,12 @@ export type CredibleSetVariant = {
   __typename?: 'CredibleSetVariant';
   /** Alternate allele of the variant. */
   alternateAllele: Scalars['String']['output'];
-  /** Beta coefficient of this variant in the credible set. */
-  beta?: Maybe<Scalars['Float']['output']>;
   /** Chromosome of the variant. */
   chromosome: Chromosome;
-  /** Log (natural) Bayes factor for the variant from fine-mapping. */
-  logBF?: Maybe<Scalars['Float']['output']>;
+  /** Identifier of the credible set. */
+  credibleSetId: Scalars['String']['output'];
+  /** Natural log Bayes factor for the variant from fine-mapping. */
+  logBayesFactor?: Maybe<Scalars['Float']['output']>;
   /** Sequence Ontology id of the variant's most severe consequence (e.g. `SO:0001583`). */
   mostSevereConsequenceId?: Maybe<Scalars['String']['output']>;
   /** Sequence Ontology label of the variant's most severe consequence (e.g. missense variant). */
@@ -983,10 +975,10 @@ export type CredibleSetVariant = {
   r2Overall?: Maybe<Scalars['Float']['output']>;
   /** Reference allele of the variant. */
   referenceAllele: Scalars['String']['output'];
-  /** Standard error of this variant in the credible set. */
-  standardError?: Maybe<Scalars['Float']['output']>;
-  /** Identifier of the credible set (`StudyLocus`). */
-  studyLocusId: Scalars['String']['output'];
+  /** Beta coefficient of this variant, as reported by the source. Not comparable across studies. */
+  reportedBeta?: Maybe<Scalars['Float']['output']>;
+  /** Standard error of the reported beta. */
+  reportedStandardError?: Maybe<Scalars['Float']['output']>;
   /** Variant identifier (`chromosome_position_ref_alt`). */
   variantId: Scalars['String']['output'];
 };
@@ -1022,14 +1014,14 @@ export type CredibleSetVariantsSort = {
 
 /** Fields available for sorting. */
 export enum CredibleSetVariantsSortField {
-  Beta = 'BETA',
-  LogBf = 'LOG_BF',
+  LogBayesFactor = 'LOG_BAYES_FACTOR',
   PosteriorProbability = 'POSTERIOR_PROBABILITY',
   /** By exponent, then mantissa. */
   PValue = 'P_VALUE',
   /** R-squared (LD) with the lead variant. */
   R2Overall = 'R2_OVERALL',
-  StandardError = 'STANDARD_ERROR',
+  ReportedBeta = 'REPORTED_BETA',
+  ReportedStandardError = 'REPORTED_STANDARD_ERROR',
   /** By chromosome, then position, then alleles. */
   Variant = 'VARIANT'
 }
@@ -2006,7 +1998,7 @@ export type Evidence = {
   confidence?: Maybe<Scalars['String']['output']>;
   /** Experiment contrast. */
   contrast?: Maybe<Scalars['String']['output']>;
-  /** Credible set (`StudyLocus`) supporting this evidence */
+  /** Credible set supporting this evidence. */
   credibleSet?: Maybe<CredibleSet>;
   /** Applied screening library in the CRISPR/Cas9 project. */
   crisprScreenLibrary?: Maybe<Scalars['String']['output']>;
@@ -2063,8 +2055,6 @@ export type Evidence = {
   literature: Array<Scalars['String']['output']>;
   /** Percentile of top differentially regulated genes (transcripts) within experiment. */
   log2FoldChangePercentileRank?: Maybe<Scalars['Int']['output']>;
-  /** Log 2 fold expression change in contrast experiment. */
-  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
   /** Samples with a given mutation tested. */
   mutatedSamples: Array<EvidenceVariation>;
   /** Size of effect captured as odds ratio. */
@@ -2083,6 +2073,8 @@ export type Evidence = {
   phenotypicConsequenceLogFoldChange?: Maybe<Scalars['Float']['output']>;
   /** P-value of the the cell survival test. */
   phenotypicConsequencePValue?: Maybe<Scalars['Float']['output']>;
+  /** Score of the phenotypic consequence of the target perturbation in the CRISPR screen. */
+  phenotypicConsequenceScore?: Maybe<Scalars['Float']['output']>;
   /** If a given target was found to be a hit in the primary project. */
   primaryProjectHit?: Maybe<Scalars['Boolean']['output']>;
   /** Open Targets project identifier of the primary project. */
@@ -2572,8 +2564,8 @@ export type EvidenceCrisprScreen = {
   id: Scalars['String']['output'];
   /** List of PubMed or preprint reference identifiers. */
   literature: Array<Scalars['String']['output']>;
-  /** Log2 fold change of the phenotype when the target is perturbed. */
-  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
+  /** Score of the phenotypic consequence of the target perturbation in the CRISPR screen. */
+  phenotypicConsequenceScore?: Maybe<Scalars['Float']['output']>;
   /** Source of the screen, e.g. `crispr_brain`. */
   projectId?: Maybe<Scalars['String']['output']>;
   /** Significance: the screen's p-value or FDR for the target. */
@@ -2829,8 +2821,6 @@ export type EvidenceExpressionAtlas = {
   id: Scalars['String']['output'];
   /** Percentile rank of the fold change among the experiment's genes. */
   log2FoldChangePercentileRank?: Maybe<Scalars['Int']['output']>;
-  /** Log2 fold change of the target's expression between the compared conditions. */
-  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
   /** P-value of the differential expression. */
   resourceScore?: Maybe<Scalars['Float']['output']>;
   /** Score of the evidence reflecting the strength of the disease/target relationship. */
@@ -2878,8 +2868,6 @@ export type EvidenceExpressionAtlasSort = {
 
 /** Fields available for sorting. */
 export enum EvidenceExpressionAtlasSortField {
-  /** Log2 fold change. */
-  Log2FoldChange = 'LOG2_FOLD_CHANGE',
   /** Percentile rank of the fold change. */
   Percentile = 'PERCENTILE',
   /** P-value. */
@@ -3185,14 +3173,19 @@ export type EvidenceGwasCredibleSets = {
   __typename?: 'EvidenceGwasCredibleSets';
   /** Effect size of the lead variant. */
   beta?: Maybe<Scalars['Float']['output']>;
-  /** Fine-mapping confidence of the credible set. */
-  confidence: Scalars['String']['output'];
+  /**
+   * Confidence level of the credible set, from 1 (PICS on a reported top hit) to 4 (`SuSiE`
+   * with in-sample LD); 0 means unknown.
+   */
+  confidence: Scalars['Int']['output'];
+  /** Identifier of the credible set supporting this evidence. */
+  credibleSetId?: Maybe<Scalars['String']['output']>;
   /** Identifier of the disease the study's trait is mapped to. */
   diseaseId: Scalars['String']['output'];
   /** Name of the disease. Empty if the disease isn't found. */
   diseaseName: Scalars['String']['output'];
   /** Fine-mapping method used to derive the credible set. */
-  finemappingMethod: Scalars['String']['output'];
+  fineMappingMethod: FineMappingMethod;
   /** Identifier of the disease/target evidence. */
   id: Scalars['String']['output'];
   /** Alternate allele of the lead variant. */
@@ -3208,9 +3201,9 @@ export type EvidenceGwasCredibleSets = {
   /** Number of samples tested in the study. */
   nSamples?: Maybe<Scalars['Int']['output']>;
   /** Exponent of the lead variant's p-value. */
-  pValueExponent: Scalars['Int']['output'];
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
   /** Mantissa of the lead variant's p-value. */
-  pValueMantissa: Scalars['Float']['output'];
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
   /** Identifier of the project the study comes from. */
   projectId: Scalars['String']['output'];
   /** Date of the publication that references the study. */
@@ -3223,8 +3216,6 @@ export type EvidenceGwasCredibleSets = {
   score: Scalars['Float']['output'];
   /** Identifier of the GWAS study. */
   studyId: Scalars['String']['output'];
-  /** Identifier of the credible set (`StudyLocus`) supporting this evidence. */
-  studyLocusId?: Maybe<Scalars['String']['output']>;
   /** Identifier of the target prioritised by L2G. */
   targetId: Scalars['String']['output'];
   /** Trait, derived from source, analysed in the study. */
@@ -3248,9 +3239,8 @@ export type EvidenceGwasCredibleSetsSearch = {
 
 /** Text fields that `search` can match against: the text shown in the table. */
 export enum EvidenceGwasCredibleSetsSearchField {
-  Confidence = 'CONFIDENCE',
   DiseaseName = 'DISEASE_NAME',
-  FinemappingMethod = 'FINEMAPPING_METHOD',
+  FineMappingMethod = 'FINE_MAPPING_METHOD',
   LeadVariantId = 'LEAD_VARIANT_ID',
   PublicationDate = 'PUBLICATION_DATE',
   PublicationFirstAuthor = 'PUBLICATION_FIRST_AUTHOR',
@@ -3270,8 +3260,8 @@ export type EvidenceGwasCredibleSetsSort = {
 export enum EvidenceGwasCredibleSetsSortField {
   /** Effect size of the lead variant. */
   Beta = 'BETA',
-  /** Fine-mapping confidence, from PICS on a reported top hit up to `SuSiE` with in-sample LD. */
-  FinemappingConfidence = 'FINEMAPPING_CONFIDENCE',
+  /** By confidence level, from PICS on a reported top hit up to `SuSiE` with in-sample LD. */
+  Confidence = 'CONFIDENCE',
   /** Lead variant, by genomic position. */
   LeadVariant = 'LEAD_VARIANT',
   /** P-value of the lead variant. */
@@ -4003,6 +3993,16 @@ export enum FacetEntity {
   Target = 'target'
 }
 
+/** Fine-mapping method used to derive a credible set. */
+export enum FineMappingMethod {
+  /** Probabilistic Identification of Causal SNPs, from summary statistics or a reported top hit. */
+  Pics = 'PICS',
+  /** Sum of Single Effects regression (`SuSiE`). */
+  Susie = 'SUSIE',
+  /** `SuSiE` with an infinitesimal effects component. */
+  SusieInf = 'SUSIE_INF'
+}
+
 /** The different product flavors served by the API (platform/ppp). */
 export enum Flavor {
   /** Open Targets Platform Public version. */
@@ -4299,6 +4299,8 @@ export type L2Gfeature = {
  */
 export type L2Gprediction = {
   __typename?: 'L2Gprediction';
+  /** Identifier of the credible set. */
+  credibleSetId: Scalars['String']['output'];
   /** Features used in the Locus2gene model prediction. */
   features: Array<L2Gfeature>;
   /**
@@ -4311,8 +4313,6 @@ export type L2Gprediction = {
    * credible set.
    */
   shapBaseValue: Scalars['Float']['output'];
-  /** Study-locus identifier for the credible set. */
-  studyLocusId: Scalars['String']['output'];
   /** Target entity of the L2G predicted gene. */
   target?: Maybe<Target>;
 };
@@ -4356,15 +4356,6 @@ export type LdPopulationStructure = {
   relativeSampleSize?: Maybe<Scalars['Float']['output']>;
 };
 
-/** Variants in linkage disequilibrium (LD) with the credible set lead variant. */
-export type Ldset = {
-  __typename?: 'Ldset';
-  /** The R-squared value for the tag variants with the credible set lead variant. */
-  r2Overall: Scalars['Float']['output'];
-  /** The variant ID for tag variants in LD with the credible set lead variant. */
-  tagVariantId: Scalars['String']['output'];
-};
-
 /** Subcellular location information with source. */
 export type LocationAndSource = {
   __typename?: 'LocationAndSource';
@@ -4380,27 +4371,43 @@ export type LocationAndSource = {
   termSL?: Maybe<Scalars['String']['output']>;
 };
 
-/** List of variants within the credible set. */
+/**
+ * A variant in a credible set, with its fine-mapping statistics.
+ *
+ * Decoded by position from the `locus` tuple, so field order must match its element order.
+ */
 export type Locus = {
   __typename?: 'Locus';
-  /** Beta coefficient of this variant in the credible set. */
-  beta?: Maybe<Scalars['Float']['output']>;
-  /** Boolean for if the variant is part of the 95% credible set. */
-  is95CredibleSet: Scalars['Boolean']['output'];
-  /** Boolean for if the variant is part of the 99% credible set. */
-  is99CredibleSet: Scalars['Boolean']['output'];
-  /** Log (natural) Bayes factor for the variant from fine-mapping. */
-  logBF?: Maybe<Scalars['Float']['output']>;
+  /** Effect of this variant from fine-mapping, conditional on the other signals in the locus. */
+  conditionalBeta?: Maybe<Scalars['Float']['output']>;
+  /** Standard error of the conditional beta. */
+  conditionalStandardError?: Maybe<Scalars['Float']['output']>;
+  /** Effect allele frequency of this variant. */
+  effectAlleleFrequency?: Maybe<Scalars['Float']['output']>;
+  /** Natural log Bayes factor for the variant from fine-mapping. */
+  logBayesFactor?: Maybe<Scalars['Float']['output']>;
   /** Exponent of the P-value for this variant in the credible set. */
   pValueExponent?: Maybe<Scalars['Int']['output']>;
   /** Mantissa of the P-value for this variant in the credible set. */
   pValueMantissa?: Maybe<Scalars['Float']['output']>;
   /** Posterior inclusion probability for the variant within this credible set. */
   posteriorProbability: Scalars['Float']['output'];
+  /** Quality control flags for this variant in the credible set. */
+  qualityControls: Array<Scalars['String']['output']>;
   /** R-squared (LD) between this credible set variant and the lead variant. */
   r2Overall?: Maybe<Scalars['Float']['output']>;
-  /** Standard error of this variant in the credible set. */
-  standardError?: Maybe<Scalars['Float']['output']>;
+  /** Beta coefficient of this variant, as reported by the source. Not comparable across studies. */
+  reportedBeta?: Maybe<Scalars['Float']['output']>;
+  /** Standard error of the reported beta. */
+  reportedStandardError?: Maybe<Scalars['Float']['output']>;
+  /** Absolute effect rescaled to be comparable across studies. */
+  rescaledAbsBeta?: Maybe<Scalars['Float']['output']>;
+  /** Direction of the rescaled effect (1 or -1). */
+  rescaledDirection?: Maybe<Scalars['Int']['output']>;
+  /** Standard error of the rescaled effect. */
+  rescaledStandardError?: Maybe<Scalars['Float']['output']>;
+  /** Sample size for this variant. */
+  sampleSize?: Maybe<Scalars['Int']['output']>;
   /** Variant in the credible set. */
   variant?: Maybe<Variant>;
 };
@@ -4443,6 +4450,11 @@ export type MechanismOfActionRow = {
   __typename?: 'MechanismOfActionRow';
   /** Classification of how the drug interacts with its target (e.g., ACTIVATOR, INHIBITOR). */
   actionType?: Maybe<Scalars['String']['output']>;
+  /**
+   * How the mechanism was curated, e.g. whether it was inferred from trial text or the
+   * literature.
+   */
+  curation: Scalars['String']['output'];
   /** Description of the mechanism of action. */
   mechanismOfAction: Scalars['String']['output'];
   /** Reference information supporting the mechanism of action. */
@@ -4841,6 +4853,7 @@ export type Query = {
    */
   mapIds: MappingResults;
   meta: Meta;
+  region: Region;
   /**
    * Full-text, multi-entity search across all types of entities (targets, diseases, drugs,
    * variants or studies).
@@ -4879,14 +4892,14 @@ export type QueryClinicalReportsArgs = {
 
 /** The query root for the `Platform` product. */
 export type QueryCredibleSetArgs = {
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
 };
 
 
 /** The query root for the `Platform` product. */
 export type QueryCredibleSetsArgs = {
+  credibleSetIds: Array<Scalars['String']['input']>;
   page?: Page;
-  studyLocusIds: Array<Scalars['String']['input']>;
 };
 
 
@@ -4931,6 +4944,14 @@ export type QueryFacetsArgs = {
 export type QueryMapIdsArgs = {
   entityNames?: InputMaybe<Array<EntityType>>;
   queryTerms: Array<Scalars['String']['input']>;
+};
+
+
+/** The query root for the `Platform` product. */
+export type QueryRegionArgs = {
+  chromosome: Chromosome;
+  end: Scalars['Int']['input'];
+  start: Scalars['Int']['input'];
 };
 
 
@@ -5004,6 +5025,24 @@ export type Reference = {
   source: Scalars['String']['output'];
   /** List of URLs linking to the reference. */
   urls: Array<Scalars['String']['output']>;
+};
+
+/** Region with chromosome, start and end positions. */
+export type Region = {
+  __typename?: 'Region';
+  /** Chromosome the region is contained in. */
+  chromosome: Chromosome;
+  /** End position. */
+  end: Scalars['Int']['output'];
+  /** Start position. */
+  start: Scalars['Int']['output'];
+  targets: TargetPage;
+};
+
+
+/** Region with chromosome, start and end positions. */
+export type RegionTargetsArgs = {
+  page?: Page;
 };
 
 /** Score from a specific datasource. */
@@ -5392,8 +5431,10 @@ export type StudyCredibleSetsViewArgs = {
 export type StudyCredibleSet = {
   __typename?: 'StudyCredibleSet';
   beta?: Maybe<Scalars['Float']['output']>;
-  confidence: Scalars['String']['output'];
-  finemappingMethod: Scalars['String']['output'];
+  /** Confidence level, from 0 (unknown) to 4 (highest). */
+  confidence: Scalars['Int']['output'];
+  credibleSetId: Scalars['String']['output'];
+  fineMappingMethod: FineMappingMethod;
   leadAlternateAllele: Scalars['String']['output'];
   leadChromosome: Chromosome;
   leadPosition: Scalars['Int']['output'];
@@ -5401,10 +5442,9 @@ export type StudyCredibleSet = {
   leadVariantId: Scalars['String']['output'];
   /** Number of variants in the credible set. */
   locusSize: Scalars['Int']['output'];
-  pValueExponent: Scalars['Int']['output'];
-  pValueMantissa: Scalars['Float']['output'];
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
   studyId: Scalars['String']['output'];
-  studyLocusId: Scalars['String']['output'];
   topL2GApprovedSymbol?: Maybe<Scalars['String']['output']>;
   /** Null when the credible set has no L2G predictions. */
   topL2GGeneId?: Maybe<Scalars['String']['output']>;
@@ -5428,7 +5468,7 @@ export type StudyCredibleSetsSearch = {
 
 /** Text fields that `search` can match against. */
 export enum StudyCredibleSetsSearchField {
-  FinemappingMethod = 'FINEMAPPING_METHOD',
+  FineMappingMethod = 'FINE_MAPPING_METHOD',
   LeadVariantId = 'LEAD_VARIANT_ID',
   TopL2GApprovedSymbol = 'TOP_L2G_APPROVED_SYMBOL'
 }
@@ -5444,7 +5484,7 @@ export type StudyCredibleSetsSort = {
 /** Fields available for sorting. */
 export enum StudyCredibleSetsSortField {
   Beta = 'BETA',
-  /** Alphabetically. */
+  /** By confidence level. */
   Confidence = 'CONFIDENCE',
   /** By chromosome, then position, then alleles. */
   LeadVariant = 'LEAD_VARIANT',
@@ -5954,9 +5994,11 @@ export type TargetCredibleSet = {
   /** Empty when the biosample is not in the biosample index. */
   biosampleName: Scalars['String']['output'];
   condition?: Maybe<Scalars['String']['output']>;
-  confidence: Scalars['String']['output'];
-  finemappingMethod: Scalars['String']['output'];
-  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  /** Confidence level, from 0 (unknown) to 4 (highest). */
+  confidence: Scalars['Int']['output'];
+  credibleSetId: Scalars['String']['output'];
+  fineMappingMethod: FineMappingMethod;
+  isTransQtl: Scalars['Boolean']['output'];
   leadAlternateAllele: Scalars['String']['output'];
   leadChromosome: Chromosome;
   leadPosition: Scalars['Int']['output'];
@@ -5964,10 +6006,9 @@ export type TargetCredibleSet = {
   leadVariantId: Scalars['String']['output'];
   /** Number of variants in the credible set. */
   locusSize: Scalars['Int']['output'];
-  pValueExponent: Scalars['Int']['output'];
-  pValueMantissa: Scalars['Float']['output'];
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
   studyId: Scalars['String']['output'];
-  studyLocusId: Scalars['String']['output'];
   studyType: StudyType;
   targetId: Scalars['String']['output'];
 };
@@ -5991,7 +6032,7 @@ export type TargetCredibleSetsSearch = {
 export enum TargetCredibleSetsSearchField {
   BiosampleName = 'BIOSAMPLE_NAME',
   Condition = 'CONDITION',
-  FinemappingMethod = 'FINEMAPPING_METHOD',
+  FineMappingMethod = 'FINE_MAPPING_METHOD',
   LeadVariantId = 'LEAD_VARIANT_ID',
   StudyId = 'STUDY_ID',
   StudyType = 'STUDY_TYPE'
@@ -6012,10 +6053,10 @@ export enum TargetCredibleSetsSortField {
   BiosampleName = 'BIOSAMPLE_NAME',
   /** Alphabetically. */
   Condition = 'CONDITION',
-  /** Alphabetically. */
+  /** By confidence level. */
   Confidence = 'CONFIDENCE',
-  /** Alphabetically. */
-  FinemappingMethod = 'FINEMAPPING_METHOD',
+  /** By fine-mapping method. */
+  FineMappingMethod = 'FINE_MAPPING_METHOD',
   /** By chromosome, then position, then alleles. */
   LeadVariant = 'LEAD_VARIANT',
   /** Number of variants in the credible set. */
@@ -6108,10 +6149,6 @@ export type TranscriptConsequence = {
   isEnsemblCanonical: Scalars['Boolean']['output'];
   /** Loss-of-function prediction based on LOFTEE. */
   lofteePrediction?: Maybe<Scalars['String']['output']>;
-  /** Polyphen prediction of the variant impact on the transcript. */
-  polyphenPrediction?: Maybe<Scalars['Float']['output']>;
-  /** SIFT prediction of the variant impact on the transcript. */
-  siftPrediction?: Maybe<Scalars['Float']['output']>;
   /** The target (gene/protein) associated with the transcript. */
   target?: Maybe<Target>;
   /** Ensembl transcript identifier [bioregistry:ensembl]. */
@@ -6394,22 +6431,23 @@ export type VariantCredibleSet = {
   biosampleId?: Maybe<Scalars['String']['output']>;
   biosampleName?: Maybe<Scalars['String']['output']>;
   condition?: Maybe<Scalars['String']['output']>;
-  confidence: Scalars['String']['output'];
+  /** Confidence level, from 0 (unknown) to 4 (highest). */
+  confidence: Scalars['Int']['output'];
+  credibleSetId: Scalars['String']['output'];
   diseaseTherapeuticAreas: Array<VariantCredibleSetDisease>;
   diseases: Array<VariantCredibleSetDisease>;
-  finemappingMethod: Scalars['String']['output'];
-  isTransQtl?: Maybe<Scalars['Boolean']['output']>;
+  fineMappingMethod: FineMappingMethod;
+  isTransQtl: Scalars['Boolean']['output'];
   leadAlternateAllele: Scalars['String']['output'];
   leadChromosome: Chromosome;
   leadPosition: Scalars['Int']['output'];
   leadReferenceAllele: Scalars['String']['output'];
   leadVariantId: Scalars['String']['output'];
   locusSize: Scalars['Int']['output'];
-  pValueExponent: Scalars['Int']['output'];
-  pValueMantissa: Scalars['Float']['output'];
+  pValueExponent?: Maybe<Scalars['Int']['output']>;
+  pValueMantissa?: Maybe<Scalars['Float']['output']>;
   posteriorProbability: Scalars['Float']['output'];
   studyId: Scalars['String']['output'];
-  studyLocusId: Scalars['String']['output'];
   studyTargetApprovedSymbol?: Maybe<Scalars['String']['output']>;
   studyTargetId?: Maybe<Scalars['String']['output']>;
   studyType: StudyType;
@@ -6452,9 +6490,10 @@ export enum VariantCredibleSetsSearchField {
   BiosampleId = 'BIOSAMPLE_ID',
   BiosampleName = 'BIOSAMPLE_NAME',
   Condition = 'CONDITION',
+  CredibleSetId = 'CREDIBLE_SET_ID',
   DiseaseIds = 'DISEASE_IDS',
   DiseaseNames = 'DISEASE_NAMES',
-  FinemappingMethod = 'FINEMAPPING_METHOD',
+  FineMappingMethod = 'FINE_MAPPING_METHOD',
   LeadVariantId = 'LEAD_VARIANT_ID',
   StudyId = 'STUDY_ID',
   StudyTargetApprovedSymbol = 'STUDY_TARGET_APPROVED_SYMBOL',
@@ -6528,10 +6567,6 @@ export type VariantTranscriptConsequence = {
   isEnsemblCanonical: Scalars['Boolean']['output'];
   /** Loss-of-function prediction based on LOFTEE. */
   lofteePrediction?: Maybe<Scalars['String']['output']>;
-  /** Polyphen prediction of the variant impact on the transcript. */
-  polyphenPrediction?: Maybe<Scalars['Float']['output']>;
-  /** SIFT prediction of the variant impact on the transcript. */
-  siftPrediction?: Maybe<Scalars['Float']['output']>;
   /** The target (gene/protein) associated with the transcript. */
   target?: Maybe<Target>;
   /** Ensembl transcript identifier [bioregistry:ensembl]. */
@@ -6630,13 +6665,13 @@ export type GeneEnrichmentAnalysisDiseaseAssociationsQueryVariables = Exact<{
 export type GeneEnrichmentAnalysisDiseaseAssociationsQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, name: string, associatedTargets: { __typename?: 'TargetAssociationPage', count: number, rows: Array<{ __typename?: 'TargetAssociation', score: number, target?: { __typename?: 'Target', id: string, approvedSymbol: string, approvedName: string, prioritisation: { __typename?: 'TargetPrioritisations', items: Array<{ __typename?: 'TargetPrioritisation', key: string, value: string }> } } | null, datasourceScores: Array<{ __typename?: 'Score', score: number, componentId: string }> }> } } | null };
 
 export type CredibleSetPageQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
 }>;
 
 
-export type CredibleSetPageQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, variant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType } | null } | null };
+export type CredibleSetPageQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, leadVariant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType } | null } | null };
 
-export type CredibleSetProfileHeaderFragment = { __typename?: 'CredibleSet', pValueMantissa: number, pValueExponent: number, beta?: number | null, standardError?: number | null, effectAlleleFrequencyFromSource?: number | null, qualityControls: Array<string>, finemappingMethod: string, purityMinR2?: number | null, locusStart?: number | null, locusEnd?: number | null, confidence: string, locus: { __typename?: 'LocusPage', count: number, rows: Array<{ __typename?: 'Locus', posteriorProbability: number, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, standardError?: number | null }> }, locusSize: { __typename?: 'LocusPage', count: number }, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, rsIds: Array<string> } | null, study?: { __typename?: 'Study', id: string, projectId: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, traitFromSource: string, publicationJournal?: string | null, pubmedId?: string | null, nSamples?: number | null, cohorts: Array<string>, initialSampleSize?: string | null, studyType: StudyType, hasSumstats?: boolean | null, analysisFlags: Array<string>, diseases: Array<{ __typename?: 'Disease', id: string, name: string }>, SumstatQCValues: Array<{ __typename?: 'SumStatQC', QCCheckName: string, QCCheckValue: number }>, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> } | null };
+export type CredibleSetProfileHeaderFragment = { __typename?: 'CredibleSet', leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, leadStandardError?: number | null, leadEffectAlleleFrequency?: number | null, qualityControls: Array<string>, fineMappingMethod: FineMappingMethod, purityMinR2?: number | null, locusStart: number, locusEnd: number, confidence: number, locus: { __typename?: 'LocusPage', count: number, rows: Array<{ __typename?: 'Locus', posteriorProbability: number, pValueMantissa?: number | null, pValueExponent?: number | null, reportedBeta?: number | null, reportedStandardError?: number | null }> }, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, rsIds: Array<string> } | null, study?: { __typename?: 'Study', id: string, projectId: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, traitFromSource: string, publicationJournal?: string | null, pubmedId?: string | null, nSamples?: number | null, cohorts: Array<string>, initialSampleSize?: string | null, studyType: StudyType, hasSumstats?: boolean | null, analysisFlags: Array<string>, diseases: Array<{ __typename?: 'Disease', id: string, name: string }>, SumstatQCValues: Array<{ __typename?: 'SumStatQC', QCCheckName: string, QCCheckValue: number }>, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> } | null };
 
 export type DiseaseAssociationsQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -6720,55 +6755,75 @@ export type VariantPageQueryVariables = Exact<{
 
 export type VariantPageQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, dbXrefs: Array<{ __typename?: 'DbXref', id?: string | null, source?: string | null }> } | null };
 
+export type CredibleSetGenomicRegionQueryVariables = Exact<{
+  credibleSetId: Scalars['String']['input'];
+  size: Scalars['Int']['input'];
+  index: Scalars['Int']['input'];
+}>;
+
+
+export type CredibleSetGenomicRegionQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, leadVariant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, locus: { __typename?: 'LocusPage', count: number, rows: Array<{ __typename?: 'Locus', logBayesFactor?: number | null, posteriorProbability: number, pValueMantissa?: number | null, pValueExponent?: number | null, reportedBeta?: number | null, reportedStandardError?: number | null, r2Overall?: number | null, variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string, mostSevereConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null } | null }> }, l2GPredictions: { __typename?: 'L2GPredictionPage', count: number, rows: Array<{ __typename?: 'L2Gprediction', score: number, shapBaseValue: number, features: Array<{ __typename?: 'L2Gfeature', shapValue: number, value: number, name: string }>, target?: { __typename?: 'Target', id: string, approvedSymbol: string, genomicLocation: { __typename?: 'GenomicLocation', chromosome: string, start: number, end: number } } | null }> } } | null };
+
+export type CredibleSetGenomicRegionRegionTargetsQueryVariables = Exact<{
+  chromosome: Chromosome;
+  start: Scalars['Int']['input'];
+  end: Scalars['Int']['input'];
+}>;
+
+
+export type CredibleSetGenomicRegionRegionTargetsQuery = { __typename?: 'Query', region: { __typename?: 'Region', targets: { __typename?: 'TargetPage', count: number, rows: Array<{ __typename?: 'Target', id: string, approvedSymbol: string, biotype: string, genomicLocation: { __typename?: 'GenomicLocation', chromosome: string, start: number, end: number, strand: Strand }, canonicalTranscript: { __typename?: 'CanonicalTranscript', id: string, chromosome: string, start: number, end: number, strand: Strand } }> } } };
+
+export type CredibleSetGenomicRegionSummaryFragment = { __typename?: 'CredibleSet', l2GPredictions: { __typename?: 'L2GPredictionPage', count: number } };
+
 export type CredibleSetEnhancerToGenePredictionsQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
   page?: InputMaybe<Page>;
 }>;
 
 
-export type CredibleSetEnhancerToGenePredictionsQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, variant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string, enhancerToGene: { __typename?: 'EnhancerToGenePage', count: number, rows: Array<{ __typename?: 'EnhancerToGene', chromosome: Chromosome, start: number, end: number, pmid: string, biosampleFromSourceId?: string | null, score: number, datasourceId: string, distanceToTss: number, studyId: string, intervalType: string, target?: { __typename?: 'Target', id: string, approvedSymbol: string, approvedName: string } | null, biosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, resourceScore: Array<{ __typename?: 'ResourceScore', name: string, value: number }> }> } } | null } | null };
+export type CredibleSetEnhancerToGenePredictionsQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, leadVariant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string, enhancerToGene: { __typename?: 'EnhancerToGenePage', count: number, rows: Array<{ __typename?: 'EnhancerToGene', chromosome: Chromosome, start: number, end: number, pmid: string, biosampleFromSourceId?: string | null, score: number, datasourceId: string, distanceToTss: number, studyId: string, intervalType: string, target?: { __typename?: 'Target', id: string, approvedSymbol: string, approvedName: string } | null, biosample?: { __typename?: 'Biosample', biosampleId: string, biosampleName: string } | null, resourceScore: Array<{ __typename?: 'ResourceScore', name: string, value: number }> }> } } | null } | null };
 
-export type CredibleSetEnhancerToGenePredictionsSummaryFragment = { __typename?: 'CredibleSet', variant?: { __typename?: 'Variant', enhancerToGene: { __typename?: 'EnhancerToGenePage', count: number } } | null };
+export type CredibleSetEnhancerToGenePredictionsSummaryFragment = { __typename?: 'CredibleSet', leadVariant?: { __typename?: 'Variant', enhancerToGene: { __typename?: 'EnhancerToGenePage', count: number } } | null };
 
 export type GwasColocQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
   page?: InputMaybe<Page>;
 }>;
 
 
-export type GwasColocQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, colocalisation: { __typename?: 'ColocalisationPage', count: number, rows: Array<{ __typename?: 'Colocalisation', numberColocalisingVariants: number, colocalisationMethod: string, h3: number, h4: number, clpp: number, betaRatioSignAverage: number, otherStudyLocus?: { __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, study?: { __typename?: 'Study', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null } | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
+export type GwasColocQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, colocalisation: { __typename?: 'ColocalisationPage', count: number, rows: Array<{ __typename?: 'Colocalisation', numberColocalisingVariants: number, colocalisationMethod: string, h3: number, h4: number, clpp: number, betaRatioSignAverage?: number | null, otherCredibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, study?: { __typename?: 'Study', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null } | null, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
 
 export type GwasColocSummaryFragment = { __typename?: 'CredibleSet', colocalisation: { __typename?: 'ColocalisationPage', count: number } };
 
 export type Locus2GeneQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
   page?: InputMaybe<Page>;
 }>;
 
 
-export type Locus2GeneQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, l2GPredictions: { __typename?: 'L2GPredictionPage', count: number, rows: Array<{ __typename?: 'L2Gprediction', shapBaseValue: number, score: number, features: Array<{ __typename?: 'L2Gfeature', shapValue: number, value: number, name: string }>, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } } | null };
+export type Locus2GeneQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, l2GPredictions: { __typename?: 'L2GPredictionPage', count: number, rows: Array<{ __typename?: 'L2Gprediction', shapBaseValue: number, score: number, features: Array<{ __typename?: 'L2Gfeature', shapValue: number, value: number, name: string }>, target?: { __typename?: 'Target', id: string, approvedSymbol: string } | null }> } } | null };
 
 export type Locus2GeneQueryFragment = { __typename?: 'CredibleSet', l2GPredictions: { __typename?: 'L2GPredictionPage', count: number } };
 
 export type MolQtlColocQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
   page?: InputMaybe<Page>;
 }>;
 
 
-export type MolQtlColocQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, molqtlcolocalisation: { __typename?: 'ColocalisationPage', count: number, rows: Array<{ __typename?: 'Colocalisation', numberColocalisingVariants: number, colocalisationMethod: string, h3: number, h4: number, clpp: number, betaRatioSignAverage: number, otherStudyLocus?: { __typename?: 'CredibleSet', studyLocusId: string, isTransQtl?: boolean | null, pValueMantissa: number, pValueExponent: number, study?: { __typename?: 'Study', id: string, studyType: StudyType, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, condition?: string | null } | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
+export type MolQtlColocQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, molqtlcolocalisation: { __typename?: 'ColocalisationPage', count: number, rows: Array<{ __typename?: 'Colocalisation', numberColocalisingVariants: number, colocalisationMethod: string, h3: number, h4: number, clpp: number, betaRatioSignAverage?: number | null, otherCredibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, isTransQtl: boolean, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, condition?: string | null } | null, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
 
 export type MolQtlColocSummaryFragment = { __typename?: 'CredibleSet', molqtlcolocalisation: { __typename?: 'ColocalisationPage', count: number } };
 
 export type VariantsQueryVariables = Exact<{
-  studyLocusId: Scalars['String']['input'];
+  credibleSetId: Scalars['String']['input'];
   page?: InputMaybe<Page>;
 }>;
 
 
-export type VariantsQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', locus: { __typename?: 'LocusPage', count: number, rows: Array<{ __typename?: 'Locus', logBF?: number | null, posteriorProbability: number, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, standardError?: number | null, r2Overall?: number | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, mostSevereConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null } | null }> } } | null };
+export type VariantsQuery = { __typename?: 'Query', credibleSet?: { __typename?: 'CredibleSet', locus: { __typename?: 'LocusPage', count: number, rows: Array<{ __typename?: 'Locus', logBayesFactor?: number | null, posteriorProbability: number, pValueMantissa?: number | null, pValueExponent?: number | null, reportedBeta?: number | null, reportedStandardError?: number | null, r2Overall?: number | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, mostSevereConsequence?: { __typename?: 'SequenceOntologyTerm', id: string, label: string } | null } | null }> } } | null };
 
-export type VariantsSummaryFragment = { __typename?: 'CredibleSet', locus: { __typename?: 'LocusPage', count: number }, locusSize: { __typename?: 'LocusPage', count: number } };
+export type VariantsSummaryFragment = { __typename?: 'CredibleSet', locusSize: number, locus: { __typename?: 'LocusPage', count: number } };
 
 export type DiseaseBibliographyQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -6793,8 +6848,6 @@ export type DrugsQueryVariables = Exact<{
   efoId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
-  sort?: Array<ClinicalIndicationSort> | ClinicalIndicationSort;
-  search?: InputMaybe<ClinicalIndicationSearch>;
 }>;
 
 
@@ -6804,14 +6857,14 @@ export type DrugsSummaryFragment = { __typename?: 'Disease', drugAndClinicalCand
 
 export type GwasStudiesQueryVariables = Exact<{
   diseaseIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  size?: Scalars['Int']['input'];
-  index?: Scalars['Int']['input'];
-  sort?: Array<DiseaseStudiesSort> | DiseaseStudiesSort;
-  search?: InputMaybe<DiseaseStudiesSearch>;
+  size: Scalars['Int']['input'];
+  index: Scalars['Int']['input'];
+  sort?: Array<StudySort> | StudySort;
+  search?: Scalars['String']['input'];
 }>;
 
 
-export type GwasStudiesQuery = { __typename?: 'Query', studies: { __typename?: 'DiseasePage', studiesView: { __typename?: 'DiseaseStudyPage', count: number, rows: Array<{ __typename?: 'DiseaseStudy', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, publicationJournal?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, credibleSetsCount: number, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }> }> } } };
+export type GwasStudiesQuery = { __typename?: 'Query', studies: { __typename?: 'StudyPage', count: number, rows: Array<{ __typename?: 'Study', id: string, projectId: string, traitFromSource: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, publicationJournal?: string | null, nSamples?: number | null, cohorts: Array<string>, pubmedId?: string | null, ldPopulationStructure: Array<{ __typename?: 'LdPopulationStructure', ldPopulation: string, relativeSampleSize?: number | null }>, credibleSets: { __typename?: 'CredibleSetPage', count: number } }> } };
 
 export type OntologyAncestorsQueryVariables = Exact<{
   ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -6886,8 +6939,6 @@ export type IndicationsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
-  sort?: Array<DrugIndicationSort> | DrugIndicationSort;
-  search?: InputMaybe<DrugIndicationSearch>;
 }>;
 
 
@@ -6908,8 +6959,6 @@ export type DrugPharmacogenomicsQueryVariables = Exact<{
   chemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
-  sort?: Array<PharmacogenomicsSort> | PharmacogenomicsSort;
-  search?: InputMaybe<PharmacogenomicsSearch>;
 }>;
 
 
@@ -6937,7 +6986,7 @@ export type CrisprScreenQueryVariables = Exact<{
 }>;
 
 
-export type CrisprScreenQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, CrisprScreenSummary: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', studyId?: string | null, datatypeId: string, datasourceId: string, projectId?: string | null, crisprScreenLibrary?: string | null, studyOverview?: string | null, cellType?: string | null, literature: Array<string>, diseaseFromSource?: string | null, diseaseFromSourceMappedId?: string | null, contrast?: string | null, targetFromSourceId?: string | null, resourceScore?: number | null, statisticalTestTail?: string | null, log2FoldChangeValue?: number | null }> } } | null };
+export type CrisprScreenQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, CrisprScreenSummary: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', studyId?: string | null, datatypeId: string, datasourceId: string, projectId?: string | null, crisprScreenLibrary?: string | null, studyOverview?: string | null, cellType?: string | null, literature: Array<string>, diseaseFromSource?: string | null, diseaseFromSourceMappedId?: string | null, contrast?: string | null, targetFromSourceId?: string | null, resourceScore?: number | null, statisticalTestTail?: string | null, phenotypicConsequenceScore?: number | null }> } } | null };
 
 export type CrisprScreenSummary = { __typename?: 'Disease', CrisprScreenSummary: { __typename?: 'EvidencePage', count: number } };
 
@@ -7033,7 +7082,7 @@ export type ExpressionAtlasQueryVariables = Exact<{
 }>;
 
 
-export type ExpressionAtlasQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, expressionAtlasSummary: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', diseaseFromSource?: string | null, contrast?: string | null, confidence?: string | null, studyOverview?: string | null, log2FoldChangeValue?: number | null, resourceScore?: number | null, log2FoldChangePercentileRank?: number | null, studyId?: string | null, disease?: { __typename?: 'Disease', id: string, name: string } | null }> } } | null };
+export type ExpressionAtlasQuery = { __typename?: 'Query', disease?: { __typename?: 'Disease', id: string, expressionAtlasSummary: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', diseaseFromSource?: string | null, contrast?: string | null, confidence?: string | null, studyOverview?: string | null, resourceScore?: number | null, log2FoldChangePercentileRank?: number | null, studyId?: string | null, disease?: { __typename?: 'Disease', id: string, name: string } | null }> } } | null };
 
 export type ExpressionAtlasSummary = { __typename?: 'Disease', expressionAtlasSummary: { __typename?: 'EvidencePage', count: number } };
 
@@ -7047,7 +7096,7 @@ export type EvidenceGwasCredibleSetsQueryVariables = Exact<{
 }>;
 
 
-export type EvidenceGwasCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', approvedSymbol: string } | null, disease?: { __typename?: 'Disease', id: string, name: string, gwasCredibleSets: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', score: number, disease?: { __typename?: 'Disease', id: string, name: string } | null, credibleSet?: { __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, study?: { __typename?: 'Study', traitFromSource: string, id: string, projectId: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, pubmedId?: string | null, nSamples?: number | null } | null, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
+export type EvidenceGwasCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', approvedSymbol: string } | null, disease?: { __typename?: 'Disease', id: string, name: string, gwasCredibleSets: { __typename?: 'EvidencePage', count: number, rows: Array<{ __typename?: 'Evidence', score: number, disease?: { __typename?: 'Disease', id: string, name: string } | null, credibleSet?: { __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, fineMappingMethod: FineMappingMethod, confidence: number, study?: { __typename?: 'Study', traitFromSource: string, id: string, projectId: string, publicationFirstAuthor?: string | null, publicationDate?: string | null, pubmedId?: string | null, nSamples?: number | null } | null, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null } | null }> } } | null };
 
 export type Gene2PhenotypeSummaryFragment = { __typename?: 'Disease', gene2Phenotype: { __typename?: 'EvidencePage', count: number } };
 
@@ -7163,7 +7212,7 @@ export type GwasCredibleSetsPlotQueryVariables = Exact<{
 }>;
 
 
-export type GwasCredibleSetsPlotQuery = { __typename?: 'Query', study?: { __typename?: 'Study', credibleSets: { __typename?: 'CredibleSetPage', rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null }> } } | null };
+export type GwasCredibleSetsPlotQuery = { __typename?: 'Query', study?: { __typename?: 'Study', credibleSets: { __typename?: 'CredibleSetPage', rows: Array<{ __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null }> } } | null };
 
 export type StudyGwasCredibleSetsQueryVariables = Exact<{
   studyId: Scalars['String']['input'];
@@ -7174,7 +7223,7 @@ export type StudyGwasCredibleSetsQueryVariables = Exact<{
 }>;
 
 
-export type StudyGwasCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSetsView: { __typename?: 'StudyCredibleSetPage', count: number, rows: Array<{ __typename?: 'StudyCredibleSet', studyLocusId: string, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, locusSize: number, finemappingMethod: string, confidence: string, topL2GGeneId?: string | null, topL2GApprovedSymbol?: string | null, topL2GScore?: number | null }> } } | null };
+export type StudyGwasCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSetsView: { __typename?: 'StudyCredibleSetPage', count: number, rows: Array<{ __typename?: 'StudyCredibleSet', credibleSetId: string, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, locusSize: number, fineMappingMethod: FineMappingMethod, confidence: number, topL2GGeneId?: string | null, topL2GApprovedSymbol?: string | null, topL2GScore?: number | null }> } } | null };
 
 export type StudyGwasCredibleSetsSummaryFragment = { __typename?: 'Study', credibleSetsView: { __typename?: 'StudyCredibleSetPage', count: number } };
 
@@ -7184,7 +7233,7 @@ export type StudyQtlCredibleSetsQueryVariables = Exact<{
 }>;
 
 
-export type StudyQtlCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, variant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null, locus: { __typename?: 'LocusPage', count: number } }> } } | null };
+export type StudyQtlCredibleSetsQuery = { __typename?: 'Query', study?: { __typename?: 'Study', id: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, locusSize: number, fineMappingMethod: FineMappingMethod, confidence: number, leadVariant?: { __typename?: 'Variant', variantId: string, chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string } | null }> } } | null };
 
 export type StudyQtlCredibleSetsSummaryFragment = { __typename?: 'Study', qtlCredibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
@@ -7266,14 +7315,10 @@ export type DepmapSummaryFragment = { __typename?: 'Target', depMapEssentiality:
 
 export type TargetDrugsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
-  index?: Scalars['Int']['input'];
-  size?: Scalars['Int']['input'];
-  sort?: Array<ClinicalTargetSort> | ClinicalTargetSort;
-  search?: InputMaybe<ClinicalTargetSearch>;
 }>;
 
 
-export type TargetDrugsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number, rows: Array<{ __typename?: 'ClinicalTargetFromTarget', id: string, maxClinicalStage: string, drug: { __typename?: 'Drug', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
+export type TargetDrugsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number, rows: Array<{ __typename?: 'ClinicalTargetFromTarget', id: string, maxClinicalStage: string, drug: { __typename?: 'Drug', id: string, name: string }, clinicalReports: Array<{ __typename?: 'ClinicalReport', id: string }> }> } } | null };
 
 export type TargetDrugsSummaryFragment = { __typename?: 'Target', drugAndClinicalCandidates: { __typename?: 'ClinicalTargetPage', count: number } };
 
@@ -7357,8 +7402,6 @@ export type TargetPharmacogenomicsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
-  sort?: Array<PharmacogenomicsSort> | PharmacogenomicsSort;
-  search?: InputMaybe<PharmacogenomicsSearch>;
 }>;
 
 
@@ -7373,7 +7416,7 @@ export type TargetQtlCredibleSetsQueryVariables = Exact<{
 }>;
 
 
-export type TargetQtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, variant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null, locus: { __typename?: 'LocusPage', count: number } }> } } | null };
+export type TargetQtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, fineMappingMethod: FineMappingMethod, confidence: number, isTransQtl: boolean, locusSize: number, leadVariant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null }> } } | null };
 
 export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
@@ -7394,6 +7437,17 @@ export type TargetSubcellularLocationQueryVariables = Exact<{
 export type TargetSubcellularLocationQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string, location: string, termSL?: string | null, targetModifier?: string | null }>, proteinIds: Array<{ __typename?: 'IdAndSource', id: string, source: string }> } | null };
 
 export type SubcellularLocationFragment = { __typename?: 'Target', subcellularLocations: Array<{ __typename?: 'LocationAndSource', source: string }> };
+
+export type TargetGenomicRegionRegionTargetsQueryVariables = Exact<{
+  chromosome: Chromosome;
+  start: Scalars['Int']['input'];
+  end: Scalars['Int']['input'];
+}>;
+
+
+export type TargetGenomicRegionRegionTargetsQuery = { __typename?: 'Query', region: { __typename?: 'Region', targets: { __typename?: 'TargetPage', count: number, rows: Array<{ __typename?: 'Target', id: string, approvedSymbol: string, biotype: string, genomicLocation: { __typename?: 'GenomicLocation', chromosome: string, start: number, end: number, strand: Strand }, canonicalTranscript: { __typename?: 'CanonicalTranscript', id: string, chromosome: string, start: number, end: number, strand: Strand } }> } } };
+
+export type TargetGenomicRegionSummaryFragment = { __typename?: 'Target', id: string, approvedSymbol: string, canonicalTranscript: { __typename?: 'CanonicalTranscript', chromosome: string, start: number, end: number } };
 
 export type TargetTractabilityQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
@@ -7433,7 +7487,7 @@ export type VariantGwasCredibleSetsPlotQueryVariables = Exact<{
 }>;
 
 
-export type VariantGwasCredibleSetsPlotQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, gwasCredibleSets: { __typename?: 'CredibleSetPage', rows: Array<{ __typename?: 'CredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, variant?: { __typename?: 'Variant', variantId: string } | null, study?: { __typename?: 'Study', diseases: Array<{ __typename?: 'Disease', therapeuticAreas: Array<{ __typename?: 'Disease', id: string }> }> } | null }> } } | null };
+export type VariantGwasCredibleSetsPlotQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, gwasCredibleSets: { __typename?: 'CredibleSetPage', rows: Array<{ __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, leadVariant?: { __typename?: 'Variant', variantId: string } | null, study?: { __typename?: 'Study', diseases: Array<{ __typename?: 'Disease', therapeuticAreas: Array<{ __typename?: 'Disease', id: string }> }> } | null }> } } | null };
 
 export type VariantGwasCredibleSetsSummaryFragment = { __typename?: 'Variant', gwasCredibleSets: { __typename?: 'CredibleSetPage', count: number } };
 
@@ -7446,7 +7500,7 @@ export type GwasCredibleSetsTableQueryVariables = Exact<{
 }>;
 
 
-export type GwasCredibleSetsTableQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string, gwasCredibleSets: { __typename?: 'CredibleSetPage', count: number }, credibleSetsView: { __typename?: 'VariantCredibleSetPage', count: number, rows: Array<{ __typename?: 'VariantCredibleSet', studyLocusId: string, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, traitFromSource: string, studyId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, posteriorProbability: number, finemappingMethod: string, confidence: string, topL2GGeneId?: string | null, topL2GApprovedSymbol?: string | null, topL2GScore?: number | null, locusSize: number, diseases: Array<{ __typename?: 'VariantCredibleSetDisease', id: string, name: string }> }> } } | null };
+export type GwasCredibleSetsTableQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', variantId: string, referenceAllele: string, alternateAllele: string, gwasCredibleSets: { __typename?: 'CredibleSetPage', count: number }, credibleSetsView: { __typename?: 'VariantCredibleSetPage', count: number, rows: Array<{ __typename?: 'VariantCredibleSet', credibleSetId: string, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, traitFromSource: string, studyId: string, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, posteriorProbability: number, fineMappingMethod: FineMappingMethod, confidence: number, topL2GGeneId?: string | null, topL2GApprovedSymbol?: string | null, topL2GScore?: number | null, locusSize: number, diseases: Array<{ __typename?: 'VariantCredibleSetDisease', id: string, name: string }> }> } } | null };
 
 export type MolecularStructureQueryVariables = Exact<{
   variantId: Scalars['String']['input'];
@@ -7479,7 +7533,7 @@ export type VariantQtlCredibleSetsQueryVariables = Exact<{
 }>;
 
 
-export type VariantQtlCredibleSetsQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, qtlCredibleSets: { __typename?: 'VariantCredibleSetPage', count: number, rows: Array<{ __typename?: 'VariantCredibleSet', studyLocusId: string, pValueMantissa: number, pValueExponent: number, beta?: number | null, finemappingMethod: string, confidence: string, isTransQtl?: boolean | null, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, studyId: string, studyType: StudyType, condition?: string | null, studyTargetId?: string | null, studyTargetApprovedSymbol?: string | null, biosampleId?: string | null, biosampleName?: string | null, posteriorProbability: number, locusSize: number }> } } | null };
+export type VariantQtlCredibleSetsQuery = { __typename?: 'Query', variant?: { __typename?: 'Variant', referenceAllele: string, alternateAllele: string, qtlCredibleSets: { __typename?: 'VariantCredibleSetPage', count: number, rows: Array<{ __typename?: 'VariantCredibleSet', credibleSetId: string, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, fineMappingMethod: FineMappingMethod, confidence: number, isTransQtl: boolean, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, studyId: string, studyType: StudyType, condition?: string | null, studyTargetId?: string | null, studyTargetApprovedSymbol?: string | null, biosampleId?: string | null, biosampleName?: string | null, posteriorProbability: number, locusSize: number }> } } | null };
 
 export type VariantQtlCredibleSetsSummaryFragment = { __typename?: 'Variant', qtlCredibleSets: { __typename?: 'VariantCredibleSetPage', count: number } };
 
@@ -7516,6 +7570,17 @@ export type VariantEffectPredictorQuery = { __typename?: 'Query', variant?: { __
 
 export type VariantEffectPredictorSummaryFragment = { __typename?: 'Variant', transcriptConsequencesView: { __typename?: 'VariantTranscriptConsequencePage', count: number } };
 
+export type VariantGenomicRegionRegionTargetsQueryVariables = Exact<{
+  chromosome: Chromosome;
+  start: Scalars['Int']['input'];
+  end: Scalars['Int']['input'];
+}>;
+
+
+export type VariantGenomicRegionRegionTargetsQuery = { __typename?: 'Query', region: { __typename?: 'Region', targets: { __typename?: 'TargetPage', count: number, rows: Array<{ __typename?: 'Target', id: string, approvedSymbol: string, biotype: string, genomicLocation: { __typename?: 'GenomicLocation', chromosome: string, start: number, end: number, strand: Strand }, canonicalTranscript: { __typename?: 'CanonicalTranscript', id: string, chromosome: string, start: number, end: number, strand: Strand } }> } } };
+
+export type VariantGenomicRegionSummaryFragment = { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string };
+
 export type ClinicalRecordsQueryVariables = Exact<{
   clinicalReportsIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
 }>;
@@ -7532,11 +7597,11 @@ export type RecordDetailQuery = { __typename?: 'Query', clinicalReport?: { __typ
 
 export const CredibleSetProfileHeaderFragment = gql`
     fragment CredibleSetProfileHeaderFragment on CredibleSet {
-  pValueMantissa
-  pValueExponent
-  beta
-  standardError
-  effectAlleleFrequencyFromSource
+  leadPValueMantissa
+  leadPValueExponent
+  leadBeta
+  leadStandardError
+  leadEffectAlleleFrequency
   qualityControls
   locus(filter: {variantIds: $variantIds}) {
     count
@@ -7544,20 +7609,17 @@ export const CredibleSetProfileHeaderFragment = gql`
       posteriorProbability
       pValueMantissa
       pValueExponent
-      beta
-      standardError
+      reportedBeta
+      reportedStandardError
     }
   }
-  locusSize: locus(page: {size: 1, index: 0}) {
-    count
-  }
-  variant {
+  leadVariant {
     variantId
     chromosome
     position
     rsIds
   }
-  finemappingMethod
+  fineMappingMethod
   purityMinR2
   locusStart
   locusEnd
@@ -7694,9 +7756,16 @@ export const VariantProfileHeaderFragment = gql`
   }
 }
     `;
+export const CredibleSetGenomicRegionSummaryFragment = gql`
+    fragment CredibleSetGenomicRegionSummaryFragment on CredibleSet {
+  l2GPredictions {
+    count
+  }
+}
+    `;
 export const CredibleSetEnhancerToGenePredictionsSummaryFragment = gql`
     fragment CredibleSetEnhancerToGenePredictionsSummaryFragment on CredibleSet {
-  variant {
+  leadVariant {
     enhancerToGene {
       count
     }
@@ -7732,9 +7801,7 @@ export const VariantsSummaryFragment = gql`
   locus(filter: {variantIds: $variantIds}) {
     count
   }
-  locusSize: locus(page: {size: 1, index: 0}) {
-    count
-  }
+  locusSize
 }
     `;
 export const DiseaseBibliography = gql`
@@ -8178,6 +8245,17 @@ export const SubcellularLocationFragment = gql`
   }
 }
     `;
+export const TargetGenomicRegionSummaryFragment = gql`
+    fragment TargetGenomicRegionSummaryFragment on Target {
+  id
+  approvedSymbol
+  canonicalTranscript {
+    chromosome
+    start
+    end
+  }
+}
+    `;
 export const TractabilitySummaryFragment = gql`
     fragment TractabilitySummaryFragment on Target {
   id
@@ -8256,6 +8334,14 @@ export const VariantEffectPredictorSummaryFragment = gql`
   transcriptConsequencesView(page: {index: 0, size: 1}) {
     count
   }
+}
+    `;
+export const VariantGenomicRegionSummaryFragment = gql`
+    fragment VariantGenomicRegionSummaryFragment on Variant {
+  chromosome
+  position
+  referenceAllele
+  alternateAllele
 }
     `;
 export const InteractionsSectionQueryDocument = gql`
@@ -8353,10 +8439,10 @@ export const GeneEnrichmentAnalysisDiseaseAssociationsQueryDocument = gql`
 }
     `;
 export const CredibleSetPageQueryDocument = gql`
-    query CredibleSetPageQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    variant {
+    query CredibleSetPageQuery($credibleSetId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
       variantId
       referenceAllele
       alternateAllele
@@ -8511,11 +8597,96 @@ export const VariantPageQueryDocument = gql`
   }
 }
     `;
+export const CredibleSetGenomicRegionQueryDocument = gql`
+    query CredibleSetGenomicRegionQuery($credibleSetId: String!, $size: Int!, $index: Int!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    leadVariant {
+      id: variantId
+      chromosome
+      position
+      referenceAllele
+      alternateAllele
+    }
+    credibleSetId
+    locus(page: {size: $size, index: $index}) {
+      count
+      rows {
+        logBayesFactor
+        posteriorProbability
+        variant {
+          id: variantId
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+          mostSevereConsequence {
+            id
+            label
+          }
+        }
+        pValueMantissa
+        pValueExponent
+        reportedBeta
+        reportedStandardError
+        r2Overall
+      }
+    }
+    l2GPredictions {
+      count
+      rows {
+        score
+        shapBaseValue
+        features {
+          shapValue
+          value
+          name
+        }
+        target {
+          id
+          approvedSymbol
+          genomicLocation {
+            chromosome
+            start
+            end
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const CredibleSetGenomicRegionRegionTargetsQueryDocument = gql`
+    query CredibleSetGenomicRegionRegionTargetsQuery($chromosome: Chromosome!, $start: Int!, $end: Int!) {
+  region(chromosome: $chromosome, start: $start, end: $end) {
+    targets(page: {index: 0, size: 1000}) {
+      count
+      rows {
+        id
+        approvedSymbol
+        biotype
+        genomicLocation {
+          chromosome
+          start
+          end
+          strand
+        }
+        canonicalTranscript {
+          id
+          chromosome
+          start
+          end
+          strand
+        }
+      }
+    }
+  }
+}
+    `;
 export const CredibleSetEnhancerToGenePredictionsQueryDocument = gql`
-    query CredibleSetEnhancerToGenePredictionsQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    variant {
+    query CredibleSetEnhancerToGenePredictionsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
       variantId
       referenceAllele
       alternateAllele
@@ -8552,29 +8723,29 @@ export const CredibleSetEnhancerToGenePredictionsQueryDocument = gql`
 }
     `;
 export const GwasColocQueryDocument = gql`
-    query GWASColocQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
+    query GWASColocQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
     colocalisation(filter: {studyTypes: [gwas]}, page: $page) {
       count
       rows {
-        otherStudyLocus {
-          studyLocusId
+        otherCredibleSet {
+          credibleSetId
           study {
             id
             projectId
             traitFromSource
             publicationFirstAuthor
           }
-          variant {
+          leadVariant {
             variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
+          leadPValueMantissa
+          leadPValueExponent
         }
         numberColocalisingVariants
         colocalisationMethod
@@ -8588,9 +8759,9 @@ export const GwasColocQueryDocument = gql`
 }
     `;
 export const Locus2GeneQueryDocument = gql`
-    query Locus2GeneQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
+    query Locus2GeneQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
     l2GPredictions(page: $page) {
       count
       rows {
@@ -8611,17 +8782,17 @@ export const Locus2GeneQueryDocument = gql`
 }
     `;
 export const MolQtlColocQueryDocument = gql`
-    query MolQTLColocQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
+    query MolQTLColocQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
     molqtlcolocalisation: colocalisation(
       filter: {studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]}
       page: $page
     ) {
       count
       rows {
-        otherStudyLocus {
-          studyLocusId
+        otherCredibleSet {
+          credibleSetId
           isTransQtl
           study {
             id
@@ -8631,15 +8802,15 @@ export const MolQtlColocQueryDocument = gql`
             publicationFirstAuthor
             condition
           }
-          variant {
+          leadVariant {
             variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
+          leadPValueMantissa
+          leadPValueExponent
         }
         numberColocalisingVariants
         colocalisationMethod
@@ -8653,12 +8824,12 @@ export const MolQtlColocQueryDocument = gql`
 }
     `;
 export const VariantsQueryDocument = gql`
-    query VariantsQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
+    query VariantsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
     locus(page: $page) {
       count
       rows {
-        logBF
+        logBayesFactor
         posteriorProbability
         variant {
           variantId
@@ -8673,8 +8844,8 @@ export const VariantsQueryDocument = gql`
         }
         pValueMantissa
         pValueExponent
-        beta
-        standardError
+        reportedBeta
+        reportedStandardError
         r2Overall
       }
     }
@@ -8734,14 +8905,10 @@ export const DiseaseBibliographyQueryDocument = gql`
 }
     `;
 export const DrugsQueryDocument = gql`
-    query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [ClinicalIndicationSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: ClinicalIndicationSearch) {
+    query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     name
-    drugAndClinicalCandidates(
-      page: {index: $index, size: $size}
-      sort: $sort
-      search: $search
-    ) {
+    drugAndClinicalCandidates(page: {index: $index, size: $size}) {
       count
       rows {
         id
@@ -8759,25 +8926,30 @@ export const DrugsQueryDocument = gql`
 }
     `;
 export const GwasStudiesQueryDocument = gql`
-    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int! = 10, $index: Int! = 0, $sort: [DiseaseStudiesSort!]! = [], $search: DiseaseStudiesSearch) {
-  studies: diseases(efoIds: $diseaseIds) {
-    studiesView(sort: $sort, search: $search, page: {size: $size, index: $index}) {
-      count
-      rows {
-        id
-        projectId
-        traitFromSource
-        publicationFirstAuthor
-        publicationDate
-        publicationJournal
-        nSamples
-        cohorts
-        pubmedId
-        ldPopulationStructure {
-          ldPopulation
-          relativeSampleSize
-        }
-        credibleSetsCount
+    query GWASStudiesQuery($diseaseIds: [String!]!, $size: Int!, $index: Int!, $sort: [StudySort!]! = [], $search: String! = "") {
+  studies(
+    diseaseIds: $diseaseIds
+    page: {size: $size, index: $index}
+    sort: $sort
+    search: {text: $search}
+  ) {
+    count
+    rows {
+      id
+      projectId
+      traitFromSource
+      publicationFirstAuthor
+      publicationDate
+      publicationJournal
+      nSamples
+      cohorts
+      pubmedId
+      ldPopulationStructure {
+        ldPopulation
+        relativeSampleSize
+      }
+      credibleSets {
+        count
       }
     }
   }
@@ -8964,10 +9136,10 @@ export const DrugWarningsQueryDocument = gql`
 }
     `;
 export const IndicationsQueryDocument = gql`
-    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [DrugIndicationSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: DrugIndicationSearch) {
+    query IndicationsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
-    indications(page: {index: $index, size: $size}, sort: $sort, search: $search) {
+    indications(page: {index: $index, size: $size}) {
       count
       rows {
         id
@@ -9016,14 +9188,10 @@ export const MechanismsOfActionSectionQueryDocument = gql`
 }
     `;
 export const DrugPharmacogenomicsQueryDocument = gql`
-    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [PharmacogenomicsSort!]! = [], $search: PharmacogenomicsSearch) {
+    query DrugPharmacogenomicsQuery($chemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   drug(chemblId: $chemblId) {
     id
-    pharmacogenomics(
-      page: {index: $index, size: $size}
-      sort: $sort
-      search: $search
-    ) {
+    pharmacogenomics(page: {index: $index, size: $size}) {
       count
       rows {
         variantAnnotation {
@@ -9113,7 +9281,7 @@ export const CrisprScreenQueryDocument = gql`
         targetFromSourceId
         resourceScore
         statisticalTestTail
-        log2FoldChangeValue
+        phenotypicConsequenceScore
       }
     }
   }
@@ -9427,7 +9595,6 @@ export const ExpressionAtlasQueryDocument = gql`
         contrast
         confidence
         studyOverview
-        log2FoldChangeValue
         resourceScore
         log2FoldChangePercentileRank
         studyId
@@ -9456,7 +9623,7 @@ export const EvidenceGwasCredibleSetsQueryDocument = gql`
           name
         }
         credibleSet {
-          studyLocusId
+          credibleSetId
           study {
             traitFromSource
             id
@@ -9466,17 +9633,17 @@ export const EvidenceGwasCredibleSetsQueryDocument = gql`
             pubmedId
             nSamples
           }
-          variant {
+          leadVariant {
             variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
-          beta
-          finemappingMethod
+          leadPValueMantissa
+          leadPValueExponent
+          leadBeta
+          fineMappingMethod
           confidence
         }
         score
@@ -9842,16 +10009,16 @@ export const GwasCredibleSetsPlotQueryDocument = gql`
   study(studyId: $studyId) {
     credibleSets(page: $page) {
       rows {
-        studyLocusId
-        variant {
+        credibleSetId
+        leadVariant {
           variantId
           chromosome
           position
           referenceAllele
           alternateAllele
         }
-        pValueMantissa
-        pValueExponent
+        leadPValueMantissa
+        leadPValueExponent
       }
     }
   }
@@ -9868,7 +10035,7 @@ export const StudyGwasCredibleSetsQueryDocument = gql`
     ) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         leadVariantId
         leadReferenceAllele
         leadAlternateAllele
@@ -9876,7 +10043,7 @@ export const StudyGwasCredibleSetsQueryDocument = gql`
         pValueExponent
         beta
         locusSize
-        finemappingMethod
+        fineMappingMethod
         confidence
         topL2GGeneId
         topL2GApprovedSymbol
@@ -9893,21 +10060,19 @@ export const StudyQtlCredibleSetsQueryDocument = gql`
     credibleSets(page: $page) {
       count
       rows {
-        studyLocusId
-        variant {
+        credibleSetId
+        leadVariant {
           variantId
           chromosome
           position
           referenceAllele
           alternateAllele
         }
-        pValueMantissa
-        pValueExponent
-        beta
-        locus {
-          count
-        }
-        finemappingMethod
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        locusSize
+        fineMappingMethod
         confidence
       }
     }
@@ -10114,14 +10279,9 @@ export const TargetDepMapQueryDocument = gql`
 }
     `;
 export const TargetDrugsQueryDocument = gql`
-    query TargetDrugsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [ClinicalTargetSort!]! = [{key: MAX_CLINICAL_STAGE, direction: DESCENDING}, {key: CLINICAL_REPORT_COUNT, direction: DESCENDING}], $search: ClinicalTargetSearch) {
+    query TargetDrugsQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
-    id
-    drugAndClinicalCandidates(
-      page: {index: $index, size: $size}
-      sort: $sort
-      search: $search
-    ) {
+    drugAndClinicalCandidates {
       count
       rows {
         id
@@ -10324,14 +10484,10 @@ export const TargetPathwaysQueryDocument = gql`
 }
     `;
 export const TargetPharmacogenomicsQueryDocument = gql`
-    query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [PharmacogenomicsSort!]! = [], $search: PharmacogenomicsSearch) {
+    query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
-    pharmacogenomics(
-      page: {index: $index, size: $size}
-      sort: $sort
-      search: $search
-    ) {
+    pharmacogenomics(page: {index: $index, size: $size}) {
       count
       rows {
         variantAnnotation {
@@ -10377,14 +10533,14 @@ export const TargetQtlCredibleSetsQueryDocument = gql`
     credibleSets(page: {index: $index, size: $size}) {
       count
       rows {
-        studyLocusId
-        pValueMantissa
-        pValueExponent
-        beta
-        finemappingMethod
+        credibleSetId
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        fineMappingMethod
         confidence
         isTransQtl
-        variant {
+        leadVariant {
           id: variantId
           chromosome
           position
@@ -10396,9 +10552,7 @@ export const TargetQtlCredibleSetsQueryDocument = gql`
           studyType
           condition
         }
-        locus {
-          count
-        }
+        locusSize
       }
     }
   }
@@ -10445,6 +10599,33 @@ export const TargetSubcellularLocationQueryDocument = gql`
     proteinIds {
       id
       source
+    }
+  }
+}
+    `;
+export const TargetGenomicRegionRegionTargetsQueryDocument = gql`
+    query TargetGenomicRegionRegionTargetsQuery($chromosome: Chromosome!, $start: Int!, $end: Int!) {
+  region(chromosome: $chromosome, start: $start, end: $end) {
+    targets(page: {index: 0, size: 1000}) {
+      count
+      rows {
+        id
+        approvedSymbol
+        biotype
+        genomicLocation {
+          chromosome
+          start
+          end
+          strand
+        }
+        canonicalTranscript {
+          id
+          chromosome
+          start
+          end
+          strand
+        }
+      }
     }
   }
 }
@@ -10536,11 +10717,11 @@ export const VariantGwasCredibleSetsPlotQueryDocument = gql`
       page: {index: 0, size: 50000}
     ) {
       rows {
-        studyLocusId
-        pValueMantissa
-        pValueExponent
-        beta
-        variant {
+        credibleSetId
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        leadVariant {
           variantId
         }
         study {
@@ -10575,7 +10756,7 @@ export const GwasCredibleSetsTableQueryDocument = gql`
     ) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         leadVariantId
         leadReferenceAllele
         leadAlternateAllele
@@ -10589,7 +10770,7 @@ export const GwasCredibleSetsTableQueryDocument = gql`
         pValueExponent
         beta
         posteriorProbability
-        finemappingMethod
+        fineMappingMethod
         confidence
         topL2GGeneId
         topL2GApprovedSymbol
@@ -10678,11 +10859,11 @@ export const VariantQtlCredibleSetsQueryDocument = gql`
     ) {
       count
       rows {
-        studyLocusId
+        credibleSetId
         pValueMantissa
         pValueExponent
         beta
-        finemappingMethod
+        fineMappingMethod
         confidence
         isTransQtl
         leadVariantId
@@ -10770,6 +10951,33 @@ export const VariantEffectPredictorQueryDocument = gql`
         }
         impact
         transcriptId
+      }
+    }
+  }
+}
+    `;
+export const VariantGenomicRegionRegionTargetsQueryDocument = gql`
+    query VariantGenomicRegionRegionTargetsQuery($chromosome: Chromosome!, $start: Int!, $end: Int!) {
+  region(chromosome: $chromosome, start: $start, end: $end) {
+    targets(page: {index: 0, size: 1000}) {
+      count
+      rows {
+        id
+        approvedSymbol
+        biotype
+        genomicLocation {
+          chromosome
+          start
+          end
+          strand
+        }
+        canonicalTranscript {
+          id
+          chromosome
+          start
+          end
+          strand
+        }
       }
     }
   }
@@ -10875,6 +11083,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     VariantPageQuery(variables: VariantPageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<VariantPageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<VariantPageQuery>({ document: VariantPageQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'VariantPageQuery', 'query', variables);
+    },
+    CredibleSetGenomicRegionQuery(variables: CredibleSetGenomicRegionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CredibleSetGenomicRegionQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CredibleSetGenomicRegionQuery>({ document: CredibleSetGenomicRegionQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CredibleSetGenomicRegionQuery', 'query', variables);
+    },
+    CredibleSetGenomicRegionRegionTargetsQuery(variables: CredibleSetGenomicRegionRegionTargetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CredibleSetGenomicRegionRegionTargetsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CredibleSetGenomicRegionRegionTargetsQuery>({ document: CredibleSetGenomicRegionRegionTargetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CredibleSetGenomicRegionRegionTargetsQuery', 'query', variables);
     },
     CredibleSetEnhancerToGenePredictionsQuery(variables: CredibleSetEnhancerToGenePredictionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CredibleSetEnhancerToGenePredictionsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<CredibleSetEnhancerToGenePredictionsQuery>({ document: CredibleSetEnhancerToGenePredictionsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CredibleSetEnhancerToGenePredictionsQuery', 'query', variables);
@@ -11056,6 +11270,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     TargetSubcellularLocationQuery(variables: TargetSubcellularLocationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetSubcellularLocationQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetSubcellularLocationQuery>({ document: TargetSubcellularLocationQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetSubcellularLocationQuery', 'query', variables);
     },
+    TargetGenomicRegionRegionTargetsQuery(variables: TargetGenomicRegionRegionTargetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetGenomicRegionRegionTargetsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TargetGenomicRegionRegionTargetsQuery>({ document: TargetGenomicRegionRegionTargetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetGenomicRegionRegionTargetsQuery', 'query', variables);
+    },
     TargetTractabilityQuery(variables: TargetTractabilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<TargetTractabilityQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<TargetTractabilityQuery>({ document: TargetTractabilityQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'TargetTractabilityQuery', 'query', variables);
     },
@@ -11088,6 +11305,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     VariantEffectPredictorQuery(variables: VariantEffectPredictorQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<VariantEffectPredictorQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<VariantEffectPredictorQuery>({ document: VariantEffectPredictorQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'VariantEffectPredictorQuery', 'query', variables);
+    },
+    VariantGenomicRegionRegionTargetsQuery(variables: VariantGenomicRegionRegionTargetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<VariantGenomicRegionRegionTargetsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<VariantGenomicRegionRegionTargetsQuery>({ document: VariantGenomicRegionRegionTargetsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'VariantGenomicRegionRegionTargetsQuery', 'query', variables);
     },
     ClinicalRecordsQuery(variables: ClinicalRecordsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<ClinicalRecordsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ClinicalRecordsQuery>({ document: ClinicalRecordsQueryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'ClinicalRecordsQuery', 'query', variables);

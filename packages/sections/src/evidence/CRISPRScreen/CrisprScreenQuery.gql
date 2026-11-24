@@ -22,7 +22,7 @@ query CrisprScreenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, 
         targetFromSourceId
         resourceScore
         statisticalTestTail
-        log2FoldChangeValue
+        phenotypicConsequenceScore
       }
     }
   }

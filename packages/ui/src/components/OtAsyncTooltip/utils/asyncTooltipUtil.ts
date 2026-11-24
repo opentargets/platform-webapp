@@ -29,7 +29,7 @@ export function getQueryVariables(entity: string, id: string): Record<string, st
     case "study":
       return { studyId: id };
     case "credible-set":
-      return { studyLocusId: id };
+      return { credibleSetId: id };
     default:
       return { id };
   }
@@ -91,7 +91,7 @@ export const getEntityDescription = (entity, data) => {
       return getTrimmedDescription(data?.description);
     case "credible-set":
       return getCredibleSetsDescription({
-        variantId: data?.variant.id,
+        variantId: data?.leadVariant?.id,
         studyId: data?.study.id,
       });
     default:

@@ -12,17 +12,13 @@ const PopoverContent = styled("div")({
   minWidth: "750px",
 });
 
-function L2GScoreIndicator({ score, targetId, studyLocusId }) {
+function L2GScoreIndicator({ score, targetId, credibleSetId }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const variables = {
-    studyLocusId: studyLocusId,
-  };
+  const variables = { credibleSetId };
 
   const [loadIndicatorData, { loading, data }] = useLazyQuery(L2G_QUERY, {
-    variables: {
-      studyLocusId,
-    },
+    variables,
   });
 
   const handleClick = (event) => {

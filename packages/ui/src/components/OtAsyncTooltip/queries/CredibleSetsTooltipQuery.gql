@@ -1,7 +1,7 @@
-query CredibleSetsTooltipQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    id: studyLocusId
-    variant {
+query CredibleSetsTooltipQuery($credibleSetId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    id: credibleSetId
+    leadVariant {
       id: variantId
     }
     study {

@@ -1,7 +1,7 @@
-query CredibleSetEnhancerToGenePredictionsQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    variant {
+query CredibleSetEnhancerToGenePredictionsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
       variantId
       referenceAllele
       alternateAllele
