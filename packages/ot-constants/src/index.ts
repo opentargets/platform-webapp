@@ -378,6 +378,23 @@ export const credsetConfidenceMap: { [key: string]: number } = {
   "PICS fine-mapped credible set based on reported top hit": 1,
 };
 
+// Credible set confidence: the API returns the level itself (0 to 4), which is
+// also the number of stars shown; these are the descriptions for each level
+export const credsetConfidenceLabels: { [level: number]: string } = {
+  4: "SuSiE fine-mapped credible set with in-sample LD",
+  3: "SuSiE fine-mapped credible set with out-of-sample LD",
+  2: "PICS fine-mapped credible set extracted from summary statistics",
+  1: "PICS fine-mapped credible set based on reported top hit",
+  0: "Unknown confidence",
+};
+
+// Display names for the API's FineMappingMethod enum
+export const fineMappingMethodLabels: { [method: string]: string } = {
+  PICS: "PICS",
+  SUSIE: "SuSiE",
+  SUSIE_INF: "SuSiE-inf",
+};
+
 // Format Mapping
 export const formatMap: { [key: string]: string } = {
   json: "JSON",
