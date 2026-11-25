@@ -37,10 +37,9 @@ const flattenObj = (ob) => {
   return result;
 };
 
-// The search queries only select fields of `object` for diseases and studies. For a
-// target, drug or variant hit the API returns an object carrying nothing but its
-// `__typename` (or no object at all), so rebuild the shape the search UI expects from
-// the fields every hit carries.
+// The search queries select the fields of `object` for every entity. This is the
+// fallback for a hit whose object did not resolve (or resolved with no selected
+// fields): rebuild the shape the search UI expects from the fields every hit carries.
 const hasSelectedFields = (object) =>
   Boolean(object) && Object.keys(object).some((key) => key !== "__typename");
 
