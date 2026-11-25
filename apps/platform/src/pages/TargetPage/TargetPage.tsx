@@ -55,7 +55,16 @@ function TargetPage(): ReactElement {
   const { approvedSymbol: symbol, approvedName } = data?.target || {};
   const uniprotIds = getUniprotIds(data.target.proteinIds);
   const crisprId = data?.target.dbXrefs.find(p => p.source === "ProjectScore")?.id;
-  const headerMeta = buildHeaderMeta({ ensgId, uniprotIds, symbol, name: approvedName });
+  const rnacentralIds = (data?.target.dbXrefs ?? [])
+    .filter((x: { source: string }) => x.source === "RNAcentral")
+    .map((x: { id: string }) => x.id);
+  const headerMeta = buildHeaderMeta({
+    ensgId,
+    uniprotIds,
+    rnacentralIds,
+    symbol,
+    name: approvedName,
+  });
 
   return (
     <>
@@ -77,6 +86,7 @@ function TargetPage(): ReactElement {
         loading={false}
         ensgId={ensgId}
         uniprotIds={uniprotIds}
+        rnacentralIds={rnacentralIds}
         symbol={symbol}
         name={approvedName}
         crisprId={crisprId}
