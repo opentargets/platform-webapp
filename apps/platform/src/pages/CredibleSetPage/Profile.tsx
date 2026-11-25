@@ -35,9 +35,10 @@ type ProfileProps = {
   externalLinks?: ReactNode;
 };
 
-const credibleSetProfileWidgetsSummaries = Array.from(credibleSetProfileWidgets.values()).map(
-  widget => widget.Summary
-);
+const credibleSetProfileWidgetsSummaries = [
+  CredibleSet.Variants.Summary,
+  ...Array.from(credibleSetProfileWidgets.values()).map(widget => widget.Summary),
+];
 
 const CREDIBLE_SET_PROFILE_SUMMARY_FRAGMENT = summaryUtils.createSummaryFragment(
   credibleSetProfileWidgetsSummaries,
