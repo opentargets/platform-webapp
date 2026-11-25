@@ -6061,7 +6061,7 @@ export type MechanismsOfActionSectionQueryVariables = Exact<{
 }>;
 
 
-export type MechanismsOfActionSectionQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string>, rows: Array<{ __typename?: 'MechanismOfActionRow', mechanismOfAction: string, targetName?: string | null, targets: Array<{ __typename?: 'Target', id: string, approvedSymbol: string }>, references: Array<{ __typename?: 'Reference', source: string, urls: Array<string> }> }> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> } | null };
+export type MechanismsOfActionSectionQuery = { __typename?: 'Query', drug?: { __typename?: 'Drug', id: string, mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string>, rows: Array<{ __typename?: 'MechanismOfActionRow', mechanismOfAction: string, targetName?: string | null, curation: string, targets: Array<{ __typename?: 'Target', id: string, approvedSymbol: string }>, references: Array<{ __typename?: 'Reference', source: string, ids: Array<string>, urls: Array<string> }> }> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> } | null };
 
 export type MechanismsOfActionSummaryFragment = { __typename?: 'Drug', mechanismsOfAction?: { __typename?: 'MechanismsOfAction', uniqueActionTypes: Array<string>, uniqueTargetTypes: Array<string> } | null, parentMolecule?: { __typename?: 'Drug', id: string, name: string } | null, childMolecules: Array<{ __typename?: 'Drug', id: string, name: string }> };
 
@@ -8264,12 +8264,14 @@ export const MechanismsOfActionSectionQueryDocument = gql`
       rows {
         mechanismOfAction
         targetName
+        curation
         targets {
           id
           approvedSymbol
         }
         references {
           source
+          ids
           urls
         }
       }
