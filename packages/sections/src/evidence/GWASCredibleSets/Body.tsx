@@ -3,7 +3,7 @@ import {
   SectionItem,
   Link,
   PublicationsDrawer,
-  OtTable,
+  OtTableServer,
   ScientificNotation,
   ClinvarStars,
   Tooltip,
@@ -13,7 +13,13 @@ import {
 } from "ui";
 import { variantComparator, mantissaExponentComparator } from "@ot/utils";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, credsetConfidenceMap, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
+  type EvidenceBodyProps,
+} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_QUERY from "./sectionQuery.gql";
@@ -25,22 +31,21 @@ function getColumns(targetSymbol, targetId) {
       label: "Credible set",
       sticky: true,
       renderCell: ({ credibleSet }) => {
-        return <Navigate to={`/credible-set/${credibleSet?.studyLocusId}`} />;
+        return <Navigate to={`/credible-set/${credibleSet?.credibleSetId}`} />;
       },
-      exportValue: ({ credibleSet }) => credibleSet?.studyLocusId,
+      exportValue: ({ credibleSet }) => credibleSet?.credibleSetId,
     },
     {
       id: "variantId",
       label: "Lead Variant",
-      sortable: true,
-      comparator: variantComparator(d => d?.credibleSet?.variant),
+      comparator: variantComparator(d => d?.credibleSet?.leadVariant),
       renderCell: ({ credibleSet }) => {
-        const v = credibleSet?.variant;
+        const v = credibleSet?.leadVariant;
         if (!v) return naLabel;
         return (
-          <Link asyncTooltip to={`/variant/${v.id}`}>
+          <Link asyncTooltip to={`/variant/${v.variantId}`}>
             <DisplayVariantId
-              variantId={v.id}
+              variantId={v.variantId}
               referenceAllele={v.referenceAllele}
               alternateAllele={v.alternateAllele}
               expand={false}
@@ -48,9 +53,9 @@ function getColumns(targetSymbol, targetId) {
           </Link>
         );
       },
-      filterValue: ({ credibleSet: { variant: v } }) =>
+      filterValue: ({ credibleSet: { leadVariant: v } }) =>
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-      exportValue: ({ credibleSet: { variant: v } }) =>
+      exportValue: ({ credibleSet: { leadVariant: v } }) =>
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
     },
     {
@@ -86,7 +91,6 @@ function getColumns(targetSymbol, targetId) {
       id: "nSamples",
       label: "Sample size",
       numeric: true,
-      sortable: true,
       renderCell: ({ credibleSet }) =>
         credibleSet?.study.nSamples
           ? parseInt(credibleSet?.study.nSamples, 10).toLocaleString()
@@ -99,57 +103,62 @@ function getColumns(targetSymbol, targetId) {
       label: "P-value",
       comparator: (a, b) => {
         return mantissaExponentComparator(
-          a?.credibleSet?.pValueMantissa,
-          a?.credibleSet?.pValueExponent,
-          b?.credibleSet?.pValueMantissa,
-          b?.credibleSet?.pValueExponent
+          a?.credibleSet?.leadPValueMantissa,
+          a?.credibleSet?.leadPValueExponent,
+          b?.credibleSet?.leadPValueMantissa,
+          b?.credibleSet?.leadPValueExponent
         );
       },
-      sortable: true,
       filterValue: false,
       renderCell: ({ credibleSet }) => {
-        const { pValueMantissa, pValueExponent } = credibleSet ?? {};
+        const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+          credibleSet ?? {};
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
           return naLabel;
         return <ScientificNotation number={[pValueMantissa, pValueExponent]} />;
       },
       exportValue: ({ credibleSet }) => {
-        const { pValueMantissa, pValueExponent } = credibleSet ?? {};
+        const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+          credibleSet ?? {};
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
         return `${pValueMantissa}x10${pValueExponent}`;
       },
     },
     {
-      id: "credibleSet.beta",
+      id: "credibleSet.leadBeta",
       label: "Beta (CI 95%)",
       numeric: true,
-      sortable: true,
       renderCell: ({ credibleSet }) => {
-        return credibleSet?.beta ? credibleSet.beta.toFixed(3) : naLabel;
+        return credibleSet?.leadBeta ? credibleSet.leadBeta.toFixed(3) : naLabel;
       },
     },
     {
       id: "confidence",
       label: "Fine-mapping confidence",
-      sortable: true,
       tooltip:
         "Fine-mapping confidence based on the quality of the linkage-disequilibrium information available and fine-mapping method",
       renderCell: ({ credibleSet }) => {
         if (!credibleSet?.confidence) return naLabel;
         return (
-          <Tooltip title={credibleSet?.confidence} style="">
-            <ClinvarStars num={credsetConfidenceMap[credibleSet?.confidence]} />
+          <Tooltip title={credsetConfidenceLabels[credibleSet.confidence]} style="">
+            <ClinvarStars num={credibleSet.confidence} />
           </Tooltip>
         );
       },
-      filterValue: ({ credibleSet }) => credsetConfidenceMap[credibleSet?.confidence],
+      filterValue: ({ credibleSet }) => credibleSet?.confidence,
       exportValue: ({ credibleSet }) => credibleSet?.confidence,
     },
     {
-      id: "finemappingMethod",
+      id: "fineMappingMethod",
       label: "Fine-mapping method",
-      renderCell: ({ credibleSet }) => credibleSet?.finemappingMethod || naLabel,
-      exportValue: ({ credibleSet }) => credibleSet?.finemappingMethod,
+      renderCell: ({ credibleSet }) =>
+        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ??
+        credibleSet?.fineMappingMethod ??
+        naLabel,
+      filterValue: ({ credibleSet }) =>
+        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ?? credibleSet?.fineMappingMethod,
+      exportValue: ({ credibleSet }) =>
+        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ?? credibleSet?.fineMappingMethod,
     },
     {
       id: "score",
@@ -164,14 +173,13 @@ function getColumns(targetSymbol, targetId) {
           for more information.
         </>
       ),
-      sortable: true,
       renderCell: ({ score, credibleSet }) => {
         if (!score) return naLabel;
         return (
           <L2GScoreIndicator
             score={score}
             targetId={targetId}
-            studyLocusId={credibleSet?.studyLocusId}
+            credibleSetId={credibleSet?.credibleSetId}
           />
         );
       },
@@ -202,14 +210,18 @@ function getColumns(targetSymbol, targetId) {
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = { ensemblId: ensgId, efoId, size: sectionsBaseSizeQuery };
+  const variables = { ensemblId: ensgId, efoId };
 
   const columns = getColumns(label.symbol, ensgId);
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(GWAS_CREDIBLE_SETS_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -220,17 +232,15 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
+          query={GWAS_CREDIBLE_SETS_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`GWASassociations-${ensgId}-${efoId}`}
-          order="desc"
-          rows={request.data?.disease.gwasCredibleSets.rows}
-          showGlobalFilter
-          sortBy="score"
-          query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
+          dataPath="disease.gwasCredibleSets"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           variables={variables}
-          loading={request.loading}
         />
       )}
     />

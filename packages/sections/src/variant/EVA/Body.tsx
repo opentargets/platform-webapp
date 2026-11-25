@@ -5,7 +5,7 @@ import {
   SectionItem,
   PublicationsDrawer,
   ClinvarStars,
-  OtTable,
+  OtTableServer,
   Typography,
 } from "ui";
 import { clinvarStarMap, naLabel } from "@ot/constants";
@@ -63,7 +63,6 @@ const columns = [
       return displayElement;
     },
     exportValue: ({ disease }) => disease.name,
-    filterValue: ({ disease }) => disease.name,
   },
   {
     id: "studyId",
@@ -91,9 +90,6 @@ const columns = [
       return clinicalSignificances.map(clinicalSignificance => (
         <div key={clinicalSignificance}>{sentenceCase(clinicalSignificance)}</div>
       ));
-    },
-    filterValue: ({ clinicalSignificances }) => {
-      return clinicalSignificances?.join(" ") || "";
     },
   },
   {
@@ -125,7 +121,6 @@ const columns = [
       }
       return displayElement;
     },
-    filterValue: ({ alleleOrigins }) => alleleOrigins?.join(" ") || "",
   },
   {
     id: "reviewStatus",
@@ -159,6 +154,8 @@ const columns = [
   },
 ];
 
+const PAGE_SIZE = 10;
+
 type BodyProps = {
   id: string;
   entity: string;
@@ -170,7 +167,7 @@ function Body({ id, entity }: BodyProps) {
   };
 
   const request = useQuery(EVA_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -180,21 +177,21 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={request.data?.variant.variantId}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
         />
       )}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
           dataDownloader
           dataDownloaderFileStem={`${id}-clinvar-variant`}
-          showGlobalFilter
           columns={columns}
-          loading={request.loading}
-          rows={request.data?.variant.evaEvidences.rows}
-          query={EVA_QUERY.loc.source.body}
+          query={EVA_QUERY}
           variables={variables}
+          dataPath="variant.evaEvidences"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
         />
       )}
     />

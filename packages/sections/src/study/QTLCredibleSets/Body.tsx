@@ -1,15 +1,15 @@
-import { useQuery } from "@apollo/client";
+import { useState } from "react";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTable,
+  OtTableOffsetPagination,
   Navigate,
   Tooltip,
   ClinvarStars,
 } from "ui";
-import { naLabel, credsetConfidenceMap } from "@ot/constants";
+import { naLabel, credsetConfidenceLabels, fineMappingMethodLabels } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import QTL_CREDIBLE_SETS_QUERY from "./QTLCredibleSetsQuery.gql";
@@ -17,21 +17,21 @@ import { mantissaExponentComparator, nullishComparator, variantComparator } from
 
 const columns = [
   {
-    id: "studyLocusId",
+    id: "credibleSetId",
     label: "Credible set",
     sticky: true,
-    renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+    renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
   },
   {
     id: "leadVariant",
     label: "Lead variant",
-    comparator: variantComparator(d => d?.variant),
+    comparator: variantComparator(d => d?.leadVariant),
     sortable: true,
-    filterValue: ({ variant: v }) =>
+    filterValue: ({ leadVariant: v }) =>
       `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-    renderCell: ({ variant }) => {
+    renderCell: ({ leadVariant: variant }) => {
       if (!variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = variant;
+      const { variantId, referenceAllele, alternateAllele } = variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -43,7 +43,7 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ variant }) => variant?.id,
+    exportValue: ({ leadVariant: variant }) => variant?.variantId,
   },
   {
     id: "pValue",
@@ -51,37 +51,43 @@ const columns = [
     numeric: true,
     comparator: (a, b) =>
       mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
+        a?.leadPValueMantissa,
+        a?.leadPValueExponent,
+        b?.leadPValueMantissa,
+        b?.leadPValueExponent
       ),
     sortable: true,
     filterValue: false,
-    renderCell: ({ pValueMantissa, pValueExponent }) => {
+    renderCell: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ pValueMantissa, pValueExponent }) => {
+    exportValue: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
   },
   {
-    id: "beta",
+    id: "leadBeta",
     label: "Beta",
     numeric: true,
     sortable: true,
     filterValue: false,
     tooltip: "Beta with respect to the ALT allele",
-    renderCell: ({ beta }) => {
+    renderCell: ({ leadBeta: beta }) => {
       if (typeof beta !== "number") return naLabel;
       return beta.toPrecision(3);
     },
   },
   {
-    id: "finemappingMethod",
+    id: "fineMappingMethod",
     label: "Fine-mapping method",
+    renderCell: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod ?? naLabel,
+    filterValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+    exportValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
   },
   {
     id: "confidence",
@@ -102,30 +108,30 @@ const columns = [
     sortable: true,
     comparator: nullishComparator(
       (a, b) => a - b,
-      row => credsetConfidenceMap?.[row.confidence],
+      row => row.confidence,
       false
     ),
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
-        <Tooltip title={confidence} style="">
-          <ClinvarStars num={credsetConfidenceMap[confidence]} />
+        <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+          <ClinvarStars num={confidence} />
         </Tooltip>
       );
     },
-    filterValue: ({ confidence }) => credsetConfidenceMap[confidence],
+    filterValue: ({ confidence }) => confidence,
   },
   {
     id: "credibleSetSize",
     label: "Credible set size",
-    comparator: (a, b) => a.locus?.count - b.locus?.count,
+    comparator: (a, b) => a.locusSize - b.locusSize,
     sortable: true,
     numeric: true,
     filterValue: false,
-    renderCell: ({ locus }) => {
-      return typeof locus?.count === "number" ? locus.count.toLocaleString() : naLabel;
+    renderCell: ({ locusSize }) => {
+      return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
     },
-    exportValue: ({ locus }) => locus?.count,
+    exportValue: ({ locusSize }) => locusSize,
   },
 ];
 
@@ -135,13 +141,8 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    studyId: id,
-  };
-
-  const request = useQuery(QTL_CREDIBLE_SETS_QUERY, {
-    variables,
-  });
+  const variables = { studyId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
@@ -150,15 +151,14 @@ function Body({ id, entity }: BodyProps) {
       request={request}
       renderDescription={() => <Description studyId={request.data?.study.id} />}
       renderBody={() => (
-        <OtTable
+        <OtTableOffsetPagination
           dataDownloader
           dataDownloaderFileStem={`${id}-qtl-credible-sets-studies`}
-          showGlobalFilter
-          sortBy="pValue"
+          entity="study"
+          sectionName="credibleSets"
+          setInitialRequestData={setRequest}
           columns={columns}
-          loading={request.loading}
-          rows={request.data?.study.credibleSets.rows}
-          query={QTL_CREDIBLE_SETS_QUERY.loc.source.body}
+          query={QTL_CREDIBLE_SETS_QUERY}
           variables={variables}
         />
       )}

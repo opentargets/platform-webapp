@@ -1,30 +1,27 @@
 fragment CredibleSetProfileHeaderFragment on CredibleSet {
-  pValueMantissa
-  pValueExponent
-  beta
-  standardError
-  effectAlleleFrequencyFromSource
+  leadPValueMantissa
+  leadPValueExponent
+  leadBeta
+  leadStandardError
+  leadEffectAlleleFrequency
   qualityControls
-  locus(variantIds: $variantIds) {
+  locus(filter: { variantIds: $variantIds }) {
     count
     rows {
       posteriorProbability
       pValueMantissa
       pValueExponent
-      beta
-      standardError
+      reportedBeta
+      reportedStandardError
     }
   }
-  locusSize: locus(page: { size: 1, index: 0 }) {
-    count
-  }
-  variant {
-    id
+  leadVariant {
+    variantId
     chromosome
     position
     rsIds
   }
-  finemappingMethod
+  fineMappingMethod
   purityMinR2
   locusStart
   locusEnd
@@ -39,18 +36,6 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
       id
       name
     }
-    backgroundTraits {
-      id
-      name
-    }
-    target {
-      id
-      approvedSymbol
-    }
-    biosample {
-      biosampleId
-      biosampleName
-    }
     publicationJournal
     pubmedId
     nSamples
@@ -59,7 +44,7 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
     studyType
     hasSumstats
     analysisFlags
-    sumstatQCValues {
+    SumstatQCValues {
       QCCheckName
       QCCheckValue
     }

@@ -31,7 +31,6 @@ export function AssociationsDataProvider({ children }: { children: ReactNode }) 
     query,
     pagination,
     sorting,
-    enableIndirect,
     dataSourceControls,
     facetFiltersIds,
     entitySearch,
@@ -49,7 +48,6 @@ export function AssociationsDataProvider({ children }: { children: ReactNode }) 
   const sharedOptions = {
     id,
     entity,
-    enableIndirect,
     sortBy: resolvedSortBy,
     datasources: dataSourceControls,
     facetFilters: facetFiltersIds,

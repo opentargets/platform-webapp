@@ -4,6 +4,8 @@ import { gql, useQuery } from "@apollo/client";
 import * as Plot from "@observablehq/plot";
 import dataSourcesAssoc from "../../static_datasets/dataSourcesAssoc";
 
+// TODO(ng-api): valid on the new schema, but every associationTimeSeries request currently
+// drops the connection on the demo server: docs/new-api-migration/PAIN_POINTS.md #12.
 export const NOVELTY_TIME_SERIES_QUERY = gql`
   query NoveltyTimeSeriesDetail($efoId: String!, $ensemblId: String!, $isDirect: Boolean!) {
     target(ensemblId: $ensemblId) {

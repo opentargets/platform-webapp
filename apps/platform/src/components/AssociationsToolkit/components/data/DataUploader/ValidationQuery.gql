@@ -1,4 +1,4 @@
-query EntityValidationQuery($entity: [String!], $queryTerms: [String!]!) {
+query EntityValidationQuery($entity: [EntityType!], $queryTerms: [String!]!) {
   mapIds(queryTerms: $queryTerms, entityNames: $entity) {
     total
     mappings {

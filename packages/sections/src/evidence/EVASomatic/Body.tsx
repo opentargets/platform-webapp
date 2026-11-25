@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useQuery } from "@apollo/client";
 import {
   SectionItem,
   ChipList,
@@ -9,7 +9,7 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   DisplayVariantId,
-  OtTableSSP,
+  OtTableServer,
   Box,
   Typography,
 } from "ui";
@@ -85,7 +85,7 @@ const getColumns = label => [
       variantRsId ? (
         <Link
           external
-          to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+          to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
         >
           {variantRsId}
         </Link>
@@ -97,8 +97,8 @@ const getColumns = label => [
   {
     id: "variantHgvsId",
     label: "HGVS ID",
-    renderCell: ({ variant }) => variant.hgvsId || naLabel,
-    filterValue: ({ variant }) => `${variant.hgvsId}`,
+    renderCell: ({ variant }) => variant?.hgvsId || naLabel,
+    filterValue: ({ variant }) => `${variant?.hgvsId}`,
   },
   {
     id: "studyId",
@@ -252,9 +252,17 @@ const exportColumns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;
-  const [request, setRequest] = useState({ loading: true, data: null, error: false });
+  const variables = { ensemblId, efoId };
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(EVA_SOMATIC_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   const columns = getColumns(label);
 
@@ -295,22 +303,16 @@ function Body({ id, label, entity }: Props) {
             {getRoleInCancer()}
           </Box>
 
-          <OtTableSSP
+          <OtTableServer
             query={EVA_SOMATIC_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderColumns={exportColumns}
             dataDownloaderFileStem="eva_somatic-evidence"
-            entity={entity}
-            sectionName="eva_somatic"
+            dataPath="disease.eva_somatic"
+            pageSize={PAGE_SIZE}
             showGlobalFilter={false}
-            setInitialRequestData={req => {
-              setRequest(req);
-            }}
-            variables={{
-              ensemblId,
-              efoId,
-            }}
+            variables={variables}
           />
         </>
       )}

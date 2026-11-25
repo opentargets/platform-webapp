@@ -1,6 +1,6 @@
 fragment MolQTLColocSummaryFragment on CredibleSet {
   molqtlcolocalisation: colocalisation(
-    studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+    filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
     page: { size: 1, index: 0 }
   ) {
     count

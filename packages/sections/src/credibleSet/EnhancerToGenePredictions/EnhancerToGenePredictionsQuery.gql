@@ -1,11 +1,11 @@
-query EnhancerToGenePredictionsQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    variant {
-      id
+query CredibleSetEnhancerToGenePredictionsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
+      variantId
       referenceAllele
       alternateAllele
-      enhancerToGenes(page: { size: 3000, index: 0 }) {
+      enhancerToGene(page: $page) {
         count
         rows {
           chromosome

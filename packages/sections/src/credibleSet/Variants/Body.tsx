@@ -1,15 +1,14 @@
+import { useState } from "react";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTable,
-  useBatchQuery,
-  SectionLoader,
+  OtTableOffsetPagination,
   Box,
   Chip,
 } from "ui";
-import { naLabel, table5HChunkSize } from "@ot/constants";
+import { naLabel } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import VARIANTS_QUERY from "./VariantsQuery.gql";
@@ -26,7 +25,7 @@ function formatVariantConsequenceLabel(label) {
 function getColumns({ leadVariantId }: getColumnsType) {
   return [
     {
-      id: "variant.id",
+      id: "variant.variantId",
       label: "Variant",
       enableHiding: false,
       comparator: variantComparator(d => d?.variant),
@@ -35,7 +34,7 @@ function getColumns({ leadVariantId }: getColumnsType) {
         `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
       renderCell: ({ variant }) => {
         if (!variant) return naLabel;
-        const { id: variantId, referenceAllele, alternateAllele } = variant;
+        const { variantId, referenceAllele, alternateAllele } = variant;
         const displayElement = (
           <Link asyncTooltip to={`/variant/${variantId}`}>
             <DisplayVariantId
@@ -56,7 +55,7 @@ function getColumns({ leadVariantId }: getColumnsType) {
         }
         return displayElement;
       },
-      exportValue: ({ variant }) => variant?.id,
+      exportValue: ({ variant }) => variant?.variantId,
     },
     {
       id: "pValue",
@@ -82,27 +81,27 @@ function getColumns({ leadVariantId }: getColumnsType) {
       },
     },
     {
-      id: "beta",
+      id: "reportedBeta",
       label: "Beta",
       numeric: true,
       filterValue: false,
       sortable: true,
-      tooltip: "Beta with respect to the ALT allele",
-      renderCell: ({ beta }) => {
-        if (typeof beta !== "number") return naLabel;
-        return beta.toPrecision(3);
+      tooltip: "Beta with respect to the ALT allele, as reported by the source",
+      renderCell: ({ reportedBeta }) => {
+        if (typeof reportedBeta !== "number") return naLabel;
+        return reportedBeta.toPrecision(3);
       },
     },
     {
-      id: "standardError",
+      id: "reportedStandardError",
       label: "Standard error",
       numeric: true,
       filterValue: false,
       tooltip:
         "Standard Error: Estimate of the standard deviation of the sampling distribution of the beta",
-      renderCell: ({ standardError }) => {
-        if (typeof standardError !== "number") return naLabel;
-        return standardError.toFixed(3);
+      renderCell: ({ reportedStandardError }) => {
+        if (typeof reportedStandardError !== "number") return naLabel;
+        return reportedStandardError.toFixed(3);
       },
     },
     {
@@ -127,8 +126,8 @@ function getColumns({ leadVariantId }: getColumnsType) {
         const aPosterior = rowA?.posteriorProbability;
         const bPosterior = rowB?.posteriorProbability;
         if (aPosterior === bPosterior) {
-          if (rowA?.variant.id === leadVariantId) return 1;
-          else if (rowB?.variant.id === leadVariantId) return -1;
+          if (rowA?.variant.variantId === leadVariantId) return 1;
+          else if (rowB?.variant.variantId === leadVariantId) return -1;
           return 0;
         }
         return aPosterior - bPosterior;
@@ -140,16 +139,16 @@ function getColumns({ leadVariantId }: getColumnsType) {
       },
     },
     {
-      id: "logBF",
+      id: "logBayesFactor",
       label: "log(BF)",
       numeric: true,
       tooltip:
         "Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal",
       filterValue: false,
       sortable: true,
-      renderCell: ({ logBF }) => {
-        if (typeof logBF !== "number") return naLabel;
-        return logBF.toPrecision(3);
+      renderCell: ({ logBayesFactor }) => {
+        if (typeof logBayesFactor !== "number") return naLabel;
+        return logBayesFactor.toPrecision(3);
       },
     },
     {
@@ -181,20 +180,8 @@ type BodyProps = {
 };
 
 function Body({ id, leadVariantId, entity }: BodyProps) {
-  const variables = {
-    studyLocusId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: VARIANTS_QUERY,
-    variables,
-    dataPath: "credibleSet.locus",
-    size: table5HChunkSize,
-  });
-
-  if (request.loading) return <SectionLoader />;
+  const variables = { credibleSetId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   const columns = getColumns({
     leadVariantId,
@@ -205,21 +192,17 @@ function Body({ id, leadVariantId, entity }: BodyProps) {
       definition={definition}
       entity={entity}
       request={request}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTable
-            showGlobalFilter
+          <OtTableOffsetPagination
             dataDownloader
             dataDownloaderFileStem={`${id}-credibleset`}
-            sortBy="posteriorProbability"
-            order="desc"
+            entity="credibleSet"
+            sectionName="locus"
+            setInitialRequestData={setRequest}
             columns={columns}
-            loading={request.loading}
-            rows={request.data?.credibleSet.locus.rows}
-            query={VARIANTS_QUERY.loc.source.body}
+            query={VARIANTS_QUERY}
             variables={variables}
           />
         );

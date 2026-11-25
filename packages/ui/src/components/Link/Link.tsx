@@ -1,5 +1,5 @@
 import { styled } from "@mui/material/styles";
-import type { ReactElement, ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 import OtAsyncTooltip from "../OtAsyncTooltip/OtAsyncTooltip";
 import Tooltip from "../Tooltip";
@@ -58,7 +58,7 @@ const StyledRouterLink = styled(RouterLink, { shouldForwardProp })<{
 type LinkProptypes = {
   className?: string;
   to: string;
-  onClick?: () => void | null;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   external?: boolean;
   newTab?: boolean;
   footer?: boolean;

@@ -1,4 +1,4 @@
-query CompGenomics($ensemblId: String!) {
+query TargetHomologuesQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     homologues {

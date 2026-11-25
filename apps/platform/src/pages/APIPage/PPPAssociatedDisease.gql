@@ -2,11 +2,6 @@ query APIPagePPPAssociatedDisease {
   disease(efoId: "MONDO_0005180") {
     id
     name
-    otarProjects {
-      projectName
-      status
-      integratesInPPP
-    }
     associatedTargets {
       count
       rows {

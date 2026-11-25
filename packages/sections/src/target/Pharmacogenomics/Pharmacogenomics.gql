@@ -1,37 +1,40 @@
-query PharmacogenomicsQuery($ensemblId: String!) {
+query TargetPharmacogenomicsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     id
-    pharmacogenomics {
-      variantAnnotation {
-        entity
-        effect
-        effectType
-        effectDescription
+    pharmacogenomics(page: { index: $index, size: $size }) {
+      count
+      rows {
+        variantAnnotation {
+          entity
+          effect
+          effectType
+          effectDescription
+          literature
+          directionality
+          baseAlleleOrGenotype
+          comparisonAlleleOrGenotype
+        }
+        variantRsId
+        genotypeId
+        variantFunctionalConsequence {
+          id
+          label
+        }
+        haplotypeId
+        haplotypeFromSourceId
+        isDirectTarget
+        drugs {
+          drugId
+          drugFromSource
+        }
+        phenotypeFromSourceId
+        genotypeAnnotationText
+        phenotypeText
+        pgxCategory
+        evidenceLevel
+        studyId
         literature
-        directionality
-        baseAlleleOrGenotype
-        comparisonAlleleOrGenotype
       }
-      variantRsId
-      genotypeId
-      variantFunctionalConsequence {
-        id
-        label
-      }
-      haplotypeId
-      haplotypeFromSourceId
-      isDirectTarget
-      drugs {
-        drugId
-        drugFromSource
-      }
-      phenotypeFromSourceId
-      genotypeAnnotationText
-      phenotypeText
-      pgxCategory
-      evidenceLevel
-      studyId
-      literature
     }
   }
 }

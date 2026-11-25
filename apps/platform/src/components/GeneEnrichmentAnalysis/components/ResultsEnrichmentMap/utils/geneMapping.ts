@@ -1,12 +1,12 @@
-import { gql } from "@apollo/client";
 import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import { gql } from "@apollo/client";
 
 /**
  * Query to map gene symbols to target IDs using the mapIds endpoint
  */
 const MAP_IDS_QUERY = gql`
-  query MapIdsToTargets($queryTerms: [String!]!) {
-    mapIds(queryTerms: $queryTerms, entityNames: "target") {
+  query MapIdsToTargets($queryTerms: [String!]!, $entityNames: [EntityType!]) {
+    mapIds(queryTerms: $queryTerms, entityNames: $entityNames) {
       mappings {
         hits {
           id
@@ -35,18 +35,13 @@ export async function buildGeneToTargetIdMapping(
   try {
     const result = await client.query({
       query: MAP_IDS_QUERY,
-      variables: { queryTerms: uniqueSymbols },
+      variables: { queryTerms: uniqueSymbols, entityNames: ["target"] },
     });
 
-    const mappings = result.data?.mapIds?.mappings || [];
-
-    mappings.forEach((mapping_item: any) => {
-      const term = mapping_item.term;
-      if (mapping_item.hits && mapping_item.hits.length > 0) {
-        const targetId = mapping_item.hits[0].id;
-        mapping.set(term, targetId);
-      }
-    });
+    for (const mappingItem of result.data?.mapIds?.mappings ?? []) {
+      const targetId = mappingItem.hits?.[0]?.id;
+      if (targetId) mapping.set(mappingItem.term, targetId);
+    }
   } catch (err) {
     console.warn("[GENE_MAPPING] Error fetching target IDs:", err);
   }
@@ -58,10 +53,7 @@ export async function buildGeneToTargetIdMapping(
  * Get target URL for a gene symbol using the mapping
  * Falls back to symbol-based URL if target ID not found
  */
-export function getGeneTargetUrl(
-  geneSymbol: string,
-  mapping: Map<string, string>
-): string {
+export function getGeneTargetUrl(geneSymbol: string, mapping: Map<string, string>): string {
   const targetId = mapping.get(geneSymbol);
   if (targetId) {
     return `/target/${targetId}`;
@@ -90,11 +82,6 @@ export function buildAOTFLink(diseaseId: string, targetIds: string[]): string {
  * @param mapping - Map from gene symbols to target IDs
  * @returns Array of target IDs in order, excluding unmapped genes
  */
-export function getTargetIdsFromMapping(
-  genes: string[],
-  mapping: Map<string, string>
-): string[] {
-  return genes
-    .map((gene) => mapping.get(gene))
-    .filter((id): id is string => Boolean(id));
+export function getTargetIdsFromMapping(genes: string[], mapping: Map<string, string>): string[] {
+  return genes.map((gene) => mapping.get(gene)).filter((id): id is string => Boolean(id));
 }

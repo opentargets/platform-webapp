@@ -1,4 +1,5 @@
 import { ApiPlaygroundDrawer } from "ui";
+import { getAssociationsQueryVariables } from "../../associationsUtils";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 
 function AotfApiPlayground() {
@@ -6,29 +7,23 @@ function AotfApiPlayground() {
     id,
     pagination,
     sorting,
-    enableIndirect,
     dataSourceControls,
-    entity,
     query,
     entitySearch,
+    facetFiltersIds,
+    includeMeasurements,
   } = useAotfQueryState();
 
-  const variables = {
+  const variables = getAssociationsQueryVariables({
     id,
     index: pagination.pageIndex,
     size: pagination.pageSize,
     sortBy: sorting[0].id,
-    enableIndirect,
-    isDirect: !enableIndirect,
-    datasources: dataSourceControls.map(el => ({
-      id: el.id,
-      weight: el.weight,
-      propagate: el.propagate,
-      required: el.required,
-    })),
-    entity,
+    datasources: dataSourceControls,
+    facetFilters: facetFiltersIds,
     entitySearch,
-  };
+    includeMeasurements,
+  });
 
   return (
     <ApiPlaygroundDrawer

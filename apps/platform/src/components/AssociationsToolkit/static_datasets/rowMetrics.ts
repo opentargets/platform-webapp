@@ -19,7 +19,9 @@ export const ROW_METRICS: RowMetricDef[] = [
     sortField: "novelty",
     label: "Novelty Trend",
     description: "How novel this association is over time, based on the recency of its supporting evidence.",
-    sortable: true,
+    // TODO(ng-api): the API has no "novelty" sort key (it fails with a database error) and
+    // association rows no longer carry novelty: docs/new-api-migration/PAIN_POINTS.md #10, #13.
+    sortable: false,
     docsLink: "https://home.opentargets.org/timeseries",
     format: (v) => (v != null ? v.toFixed(2) : "—"),
     isPrivate: true,

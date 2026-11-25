@@ -1,11 +1,17 @@
 import { lazy } from "react";
-import { Variant } from "@ot/constants";
+
+type VariantWithTranscriptConsequencesView = {
+  transcriptConsequencesView?: {
+    count?: number;
+  };
+};
 
 export const definition = {
   id: "variant_effect_predictor",
   name: "Transcript consequences",
   shortName: "TC",
-  hasData: (data: Variant) => (data.transcriptConsequences?.length || 0) > 0,
+  hasData: (data: VariantWithTranscriptConsequencesView) =>
+    (data.transcriptConsequencesView?.count || 0) > 0,
 };
 
 // Components

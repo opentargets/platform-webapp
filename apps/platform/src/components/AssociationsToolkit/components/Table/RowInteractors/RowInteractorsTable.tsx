@@ -112,7 +112,6 @@ function RowInteractorsTable({ row, columns, nameProperty, parentTable }) {
   const {
     id: diseaseId,
     sorting,
-    enableIndirect,
     dataSourceControls: dataSourcesWeights,
     entityToGet,
   } = useAotfQueryState();
@@ -165,10 +164,8 @@ function RowInteractorsTable({ row, columns, nameProperty, parentTable }) {
       id: row.id,
       index: 0,
       size: 10,
-      filter: "",
       source: focusElement?.interactorsSource,
       aggregationFilters: [],
-      enableIndirect,
       datasources: dataSourcesWeights,
       rowsFilter: [],
       entityInteractors: null,

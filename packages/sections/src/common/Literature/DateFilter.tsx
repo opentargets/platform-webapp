@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
+import { useEffect, useState } from "react";
+import { FormControl, FormGroup, InputLabel, Slider, useApolloClient } from "ui";
 import { useLiterature, useLiteratureDispatch } from "./LiteratureContext";
-import { fetchSimilarEntities } from "./requests";
-import { useApolloClient, FormControl, FormGroup, InputLabel, Slider } from "ui";
+import { fetchSimilarEntities, literatureStateFromResponse } from "./requests";
 
 const OTSlider = styled(Slider)({
   root: {
@@ -39,24 +39,14 @@ export function DateFilter() {
   const literatureDispatch = useLiteratureDispatch();
   const client = useApolloClient();
 
-  const {
-    query,
-    id,
-    category,
-    earliestPubYear,
-    selectedEntities,
-    globalEntity,
-    litsIds,
-    pageSize,
-    litsCount,
-    loadingEntities,
-  } = literature;
+  const { query, id, category, earliestPubYear, selectedEntities, globalEntity, pageSize } =
+    literature;
 
   function getDateFromYear(year) {
     return new Date(year, 0, 1, 1, 1, 1, 1);
   }
 
-  const sumMonthsSinceYear = year => value => {
+  const sumMonthsSinceYear = (year) => (value) => {
     const from = getDateFromYear(year);
     const date = new Date(from.setMonth(from.getMonth() + value));
     return date;
@@ -91,14 +81,14 @@ export function DateFilter() {
   }
 
   function getLowerLimit(earliestDate) {
-    if (filterDate[0] == 0) return 0;
+    if (filterDate[0] === 0) return 0;
     const oldLowerDate = oldSelectedDate(filterDate[0]);
     const newLowerFilter = monthsBtwnDates(earliestDate, oldLowerDate);
     const lowerLimit = newLowerFilter > 0 ? newLowerFilter : 0;
     return lowerLimit;
   }
 
-  const handleChange = async values => {
+  const handleChange = async (values) => {
     literatureDispatch({ type: "loadingEntities", value: true });
     const request = await fetchSimilarEntities({
       client,
@@ -106,30 +96,26 @@ export function DateFilter() {
       id,
       category,
       entities: selectedEntities,
-      cursor: null,
-      ...values, // values has startYear, startMonth, endYear, endMonth
-    });
-    const data = request.data[globalEntity];
-    const update = {
-      id,
-      cursor: data.literatureOcurrences?.cursor,
-      query,
-      entities: data.similarEntities,
-      loadingEntities: false,
-      category,
-      litsIds: data.literatureOcurrences?.rows?.map(({ pmid }) => pmid),
-      litsCount: data.literatureOcurrences?.filteredCount,
-      earliestPubYear: data.literatureOcurrences?.earliestPubYear,
-      globalEntity,
-      selectedEntities,
-      page: 0,
       pageSize,
       ...values, // values has startYear, startMonth, endYear, endMonth
-    };
-    literatureDispatch({ type: "stateUpdate", value: update });
+    });
+    literatureDispatch({
+      type: "stateUpdate",
+      value: {
+        ...literatureStateFromResponse(request.data[globalEntity ?? ""]),
+        id,
+        query,
+        loadingEntities: false,
+        category,
+        globalEntity,
+        selectedEntities,
+        pageSize,
+        ...values, // values has startYear, startMonth, endYear, endMonth
+      },
+    });
   };
 
-  const valueLabelFormat = value => {
+  const valueLabelFormat = (value) => {
     if (earliestPubYear) {
       const labelDate = selectedDate(value);
       return `${labelDate.getFullYear()}-${labelDate.getMonth() + 1}`;

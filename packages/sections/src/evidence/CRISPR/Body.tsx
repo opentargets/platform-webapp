@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, TableDrawer, OtTable, Link } from "ui";
+import { SectionItem, TableDrawer, OtTableServer, Link } from "ui";
 
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 
@@ -48,17 +48,17 @@ const columns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CRISPR_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   return (
@@ -70,15 +70,15 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableServer
+            query={CRISPR_QUERY}
             columns={columns}
-            rows={request.data?.disease.crisprSummary.rows}
             dataDownloader
             dataDownloaderFileStem={`crispr-evidence-${ensgId}-${efoId}`}
-            showGlobalFilter
-            query={CRISPR_QUERY.loc.source.body}
+            dataPath="disease.crisprSummary"
+            pageSize={PAGE_SIZE}
+            showGlobalFilter={false}
             variables={variables}
-            loading={request.loading}
           />
         );
       }}

@@ -1,11 +1,10 @@
-query IntOgenQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query IntOgenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     intOgen: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["intogen"]
-      size: $size
+      datasourceIds: [intogen]
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

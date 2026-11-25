@@ -1,18 +1,29 @@
+import type { DocumentNode } from "@apollo/client";
 import { useEffect, useState } from "react";
+import { Box, SectionItem, type SectionRequest, useApolloClient } from "ui";
+import type { WidgetDefinition } from "../../types/widget";
 import { LiteratureProvider, useLiterature, useLiteratureDispatch } from "./LiteratureContext";
-import { fetchSimilarEntities } from "./requests";
-import { SectionItem, useApolloClient, Box } from "ui";
-import PublicationsList from "./PublicationsList";
-import Description from "./Description";
-import Entities from "./Entities";
+import { fetchSimilarEntities, literatureStateFromResponse } from "./requests";
+
+type LiteratureProps = {
+  id: string;
+  name: string;
+  entity: string;
+  BODY_QUERY: DocumentNode;
+  definition: Omit<WidgetDefinition, "isPrivate"> & { isPrivate?: boolean };
+};
+
 import Category from "./Category";
 import CountInfo from "./CountInfo";
 import { DateFilter } from "./DateFilter";
+import Description from "./Description";
+import Entities from "./Entities";
+import PublicationsList from "./PublicationsList";
 
-function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
-  const [requestObj, setRequestObj] = useState({});
+function LiteratureList({ id, name, entity, BODY_QUERY, definition }: LiteratureProps) {
+  const [requestObj, setRequestObj] = useState<SectionRequest>({ loading: true });
   const literature = useLiterature();
-  const { category, startYear, startMonth, endYear, endMonth } = literature;
+  const { category, startYear, startMonth, endYear, endMonth, pageSize } = literature;
   const literatureDispatch = useLiteratureDispatch();
   const client = useApolloClient();
 
@@ -23,24 +34,22 @@ function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
         id,
         query: BODY_QUERY,
         category,
+        pageSize,
         startYear,
         startMonth,
         endYear,
         endMonth,
       });
       setRequestObj(initRequest);
-      const data = initRequest.data[entity];
-      const update = {
-        entities: data.similarEntities,
-        litsIds: data.literatureOcurrences?.rows?.map(({ pmid }) => pmid),
-        litsCount: data.literatureOcurrences?.filteredCount,
-        earliestPubYear: data.literatureOcurrences?.earliestPubYear,
-        cursor: data.literatureOcurrences?.cursor,
-        id,
-        query: BODY_QUERY,
-        globalEntity: entity,
-      };
-      literatureDispatch({ type: "stateUpdate", value: update });
+      literatureDispatch({
+        type: "stateUpdate",
+        value: {
+          ...literatureStateFromResponse(initRequest.data[entity]),
+          id,
+          query: BODY_QUERY,
+          globalEntity: entity,
+        },
+      });
     }
     startRequest();
   }, []);
@@ -69,7 +78,7 @@ function LiteratureList({ id, name, entity, BODY_QUERY, definition }) {
   );
 }
 
-function Body({ definition, name, id, entity, BODY_QUERY }) {
+function Body({ definition, name, id, entity, BODY_QUERY }: LiteratureProps) {
   return (
     <LiteratureProvider>
       <LiteratureList

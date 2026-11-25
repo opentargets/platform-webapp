@@ -1,5 +1,5 @@
 query SharedTraitStudiesQuery {
-  studies(studyId: "GCST90204201") {
+  studies(studyIds: ["GCST90204201"]) {
     count
     rows {
       id

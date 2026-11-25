@@ -1,3 +1,4 @@
+import type { TargetPharmacogenomicsSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ pharmacogenomics }) =>
-        `${pharmacogenomics.length} Pharmacogenomics Records`
+      renderSummary={({ pharmacogenomics }: TargetPharmacogenomicsSummaryFragment) =>
+        `${pharmacogenomics.count} Pharmacogenomics Records`
       }
     />
   );

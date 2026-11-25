@@ -49,6 +49,14 @@ export type PublicationType = {
   pageInfo: string;
 };
 
+import type { DocumentNode } from "@apollo/client";
+import type { DiseaseBibliographyQuery } from "@ot/constants";
+
+/** `similarEntities` + `literatureOcurrences` of the entity, shared by the disease, target and drug queries */
+export type LiteratureEntityData = NonNullable<DiseaseBibliographyQuery["disease"]>;
+export type SimilarEntity = LiteratureEntityData["similarEntities"]["rows"][number];
+export type SimilarEntityObject = NonNullable<SimilarEntity["object"]>;
+
 export type SelectedEntityType = {
   score: number;
   object: {
@@ -59,13 +67,13 @@ export type SelectedEntityType = {
 
 export type LiteratureStateType = {
   id: string;
-  cursor: string | null;
   threshold?: number;
   size?: number;
   category: string[];
-  query: any | null;
-  globalEntity: any | null;
-  entities: any[];
+  query: DocumentNode | null;
+  /** root field of the bibliography query: `disease`, `target` or `drug` */
+  globalEntity: string | null;
+  entities: SimilarEntity[];
   selectedEntities: SelectedEntityType[];
   startYear: number | null;
   startMonth: number | null;

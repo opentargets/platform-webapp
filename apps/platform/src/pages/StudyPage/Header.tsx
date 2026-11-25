@@ -4,11 +4,6 @@ import { Header as HeaderBase, ExternalLink, XRefLinks } from "ui";
 type HeaderProps = {
   loading: boolean;
   studyId: string;
-  backgroundTraits: {
-    id: string;
-    name: string;
-  }[];
-  targetId: string;
   diseases: {
     id: string;
     name: string;
@@ -17,7 +12,7 @@ type HeaderProps = {
   testId?: string;
 };
 
-export function buildHeaderMeta({ studyId, backgroundTraits, targetId, diseases, projectId }) {
+export function buildHeaderMeta({ studyId, diseases, projectId }) {
   let traitLinks, sourceLink;
   if (projectId === "GCST") {
     if (diseases?.length) {
@@ -66,11 +61,6 @@ export function buildHeaderMeta({ studyId, backgroundTraits, targetId, diseases,
     };
   } else {
     // QTL
-    if (targetId) {
-      traitLinks = (
-        <ExternalLink title="Affected gene" id={targetId} url={`../target/${targetId}`} />
-      );
-    }
     sourceLink = {
       id: "eQTL Catalog",
       url: "https://www.ebi.ac.uk/eqtl/Studies/",
@@ -84,14 +74,6 @@ export function buildHeaderMeta({ studyId, backgroundTraits, targetId, diseases,
     externalLinks: (
       <>
         {traitLinks}
-        {projectId === "GWAS" && backgroundTraits?.length > 0 && (
-          <XRefLinks
-            label="Background traits"
-            urlStem="../disease/"
-            ids={backgroundTraits.map(t => t.id)}
-            names={backgroundTraits.map(t => t.name)}
-          />
-        )}
         <ExternalLink title="Source" id={sourceLink.id} url={sourceLink.url} />
       </>
     ),
@@ -101,16 +83,12 @@ export function buildHeaderMeta({ studyId, backgroundTraits, targetId, diseases,
 function Header({
   loading,
   studyId,
-  backgroundTraits,
-  targetId,
   diseases,
   projectId,
   testId,
 }: HeaderProps) {
   const { title, subtitle, Icon, externalLinks } = buildHeaderMeta({
     studyId,
-    backgroundTraits,
-    targetId,
     diseases,
     projectId,
   });

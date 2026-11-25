@@ -34,9 +34,10 @@ const STUDY_PROFILE_QUERY = gql`
       ...StudyProfileHeaderFragment
       ...StudyProfileSummaryFragment
     }
-    # TODO: remove this once we have a proper shared trait studies section
-    sharedTraitStudies: studies(diseaseIds: $diseaseIds, page: { size: 2, index: 0 }) {
-      count
+    sharedTraitStudies: diseases(efoIds: $diseaseIds) {
+      studiesView(enableIndirect: false, filter: { studyId: { ne: $studyId } }) {
+        count
+      }
     }
   }
   ${ProfileHeader.fragments.profileHeader}
@@ -92,7 +93,7 @@ function Profile({ studyId, studyType, diseases, Icon, externalLinks }: ProfileP
               <GWASCredibleSetsSection id={studyId} entity={STUDY} />
             </Suspense>
             <Suspense fallback={<SectionLoader />}>
-              <SharedTraitStudiesSection studyId={studyId} diseaseIds={diseaseIds} entity={STUDY} />
+              <SharedTraitStudiesSection studyId={studyId} diseaseIds={diseaseIds} />
             </Suspense>
           </>
         )}

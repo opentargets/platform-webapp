@@ -2,10 +2,10 @@ import { useQuery } from "@apollo/client";
 import { faCheckSquare, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { v1 } from "uuid";
-import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTable, Typography } from "ui";
+import { Tooltip, SectionItem, Link, PublicationsDrawer, OtTableServer, Typography } from "ui";
 
 import { definition } from ".";
-import { dataTypesMap, naLabel, sectionsBaseSizeQuery, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
@@ -115,7 +115,6 @@ const getColumns = label => [
   {
     id: "confidence",
     label: "Gene rating",
-    sortable: true,
     renderCell: ({ confidence }) => (
       <Tooltip
         title={
@@ -158,16 +157,16 @@ const getColumns = label => [
 ];
 
 type Props = EvidenceBodyProps;
+const PAGE_SIZE = 10;
+
 export function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
-  const variables = {
-    ensemblId: ensgId,
-    efoId,
-    size: sectionsBaseSizeQuery,
-  };
+  const variables = { ensemblId: ensgId, efoId };
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(GENOMICS_ENGLAND_QUERY, {
-    variables,
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
   const columns = getColumns(label);
@@ -180,17 +179,15 @@ export function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer
+          query={GENOMICS_ENGLAND_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`GEL-PanelApp-${ensgId}-${efoId}`}
-          order="desc"
-          rows={request.data?.disease.genomicsEngland.rows}
-          showGlobalFilter
-          sortBy="confidence"
-          query={GENOMICS_ENGLAND_QUERY.loc.source.body}
+          dataPath="disease.genomicsEngland"
+          pageSize={PAGE_SIZE}
+          showGlobalFilter={false}
           variables={variables}
-          loading={request.loading}
         />
       )}
     />

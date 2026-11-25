@@ -1,11 +1,10 @@
-query ClingenQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query ClingenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     clingenSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["clingen"]
-      size: $size
+      datasourceIds: [clingen]
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

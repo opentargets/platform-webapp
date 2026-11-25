@@ -1,4 +1,4 @@
-query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String!]!) {
+query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [EntityType!]!) {
   search(queryString: $queryString, entityNames: $entityNames, page: { index: $index, size: 10 }) {
     total
     aggregations {
@@ -9,16 +9,12 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
     }
     hits {
       id
+      entity
+      name
+      description
+      keywords
       highlights
       object {
-        ... on Variant {
-          id
-          variantDescription
-          referenceAllele
-          alternateAllele
-          rsIds
-        }
-
         ... on Study {
           id
           hasSumstats
@@ -28,22 +24,9 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           publicationFirstAuthor
           publicationJournal
           studyType
-          biosample {
-            biosampleId
-            biosampleName
-          }
-          target {
-            approvedSymbol
-          }
           credibleSets {
             credibleSetsCount: count
           }
-        }
-
-        ... on Target {
-          id
-          approvedSymbol
-          functionDescriptions
         }
 
         ... on Disease {
@@ -51,51 +34,28 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           name
           description
         }
-
-        ... on Drug {
-          id
-          name
-          description
-        }
       }
     }
   }
+
   topHit: search(
     queryString: $queryString
     entityNames: $entityNames
     page: { index: 0, size: 1 }
   ) {
     hits {
+      id
+      entity
+      name
+      description
+      keywords
       object {
-        ... on Variant {
-          id
-          variantDescription
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-          rsIds
-          mostSevereConsequence {
-            label
-          }
-        }
         ... on Study {
           id
           hasSumstats
           traitFromSource
           credibleSets {
             count
-          }
-        }
-        ... on Target {
-          id
-          approvedSymbol
-          approvedName
-          functionDescriptions
-          biotype
-          proteinIds {
-            id
-            source
           }
         }
         ... on Disease {
@@ -105,29 +65,6 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [String
           therapeuticAreas {
             id
             name
-          }
-        }
-        ... on Drug {
-          id
-          description
-          name
-          drugType
-          maximumClinicalStage
-          indications {
-            rows {
-              disease {
-                id
-                name
-              }
-            }
-          }
-          synonyms {
-            label
-            source
-          }
-          tradeNames {
-            label
-            source
           }
         }
       }

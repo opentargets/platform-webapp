@@ -1,37 +1,46 @@
-query PharmacogenomicsQuery($chemblId: String!) {
+query DrugPharmacogenomicsQuery(
+  $chemblId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [PharmacogenomicsSort!]! = []
+  $search: PharmacogenomicsSearch
+) {
   drug(chemblId: $chemblId) {
     id
-    pharmacogenomics {
-      variantAnnotation {
-        entity
-        effect
-        effectType
-        effectDescription
+    pharmacogenomics(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+      count
+      rows {
+        variantAnnotation {
+          entity
+          effect
+          effectType
+          effectDescription
+          literature
+          directionality
+          baseAlleleOrGenotype
+          comparisonAlleleOrGenotype
+        }
+        variantRsId
+        genotypeId
+        variantFunctionalConsequence {
+          id
+          label
+        }
+        target {
+          id
+          approvedSymbol
+        }
+        haplotypeId
+        haplotypeFromSourceId
+        isDirectTarget
+        phenotypeFromSourceId
+        genotypeAnnotationText
+        phenotypeText
+        pgxCategory
+        evidenceLevel
+        studyId
         literature
-        directionality
-        baseAlleleOrGenotype
-        comparisonAlleleOrGenotype
       }
-      variantRsId
-      genotypeId
-      variantFunctionalConsequence {
-        id
-        label
-      }
-      target {
-        id
-        approvedSymbol
-      }
-      haplotypeId
-      haplotypeFromSourceId
-      isDirectTarget
-      phenotypeFromSourceId
-      genotypeAnnotationText
-      phenotypeText
-      pgxCategory
-      evidenceLevel
-      studyId
-      literature
     }
   }
 }

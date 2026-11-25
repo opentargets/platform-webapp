@@ -1,5 +1,0 @@
-fragment StudySharedTraitStudiesFragment on Study {
-  sharedTraitStudies: studies(diseaseIds: $diseaseIds, page: { size: 2, index: 0 }) {
-    count
-  }
-}

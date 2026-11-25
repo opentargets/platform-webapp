@@ -1,15 +1,15 @@
+import { useState } from "react";
 import {
   Link,
   SectionItem,
   DisplayVariantId,
   ScientificNotation,
-  OtTable,
+  OtTableOffsetPagination,
   Tooltip,
-  useBatchQuery,
   Navigate,
   Chip,
 } from "ui";
-import { naLabel, table5HChunkSize } from "@ot/constants";
+import { naLabel } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
 import MOLQTL_COLOC_QUERY from "./MolQTLColocQuery.gql";
@@ -17,19 +17,19 @@ import { mantissaExponentComparator, variantComparator } from "@ot/utils";
 
 const columns = [
   {
-    id: "otherStudyLocus.studyLocusId",
+    id: "otherCredibleSet.credibleSetId",
     label: "Credible set",
     sticky: true,
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      return <Navigate to={`/credible-set/${otherStudyLocus.studyLocusId}`} />;
+    renderCell: ({ otherCredibleSet }) => {
+      if (!otherCredibleSet?.leadVariant) return naLabel;
+      return <Navigate to={`/credible-set/${otherCredibleSet.credibleSetId}`} />;
     },
   },
   {
-    id: "otherStudyLocus.study.id",
+    id: "otherCredibleSet.study.id",
     label: "Study",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyId = otherStudyLocus?.study?.id;
+    renderCell: ({ otherCredibleSet }) => {
+      const studyId = otherCredibleSet?.study?.id;
       if (!studyId) return naLabel;
       return (
         <Link asyncTooltip to={`../study/${studyId}`}>
@@ -39,71 +39,54 @@ const columns = [
     },
   },
   {
-    id: "otherStudyLocus.study.studyType",
+    id: "otherCredibleSet.study.studyType",
     label: "Type",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyType = otherStudyLocus?.study?.studyType;
+    renderCell: ({ otherCredibleSet }) => {
+      const studyType = otherCredibleSet?.study?.studyType;
       if (!studyType) return naLabel;
       return (
         <>
           {studyType}{" "}
-          {otherStudyLocus.isTransQtl && <Chip label="trans" />}
+          {otherCredibleSet.isTransQtl && <Chip label="trans" />}
         </>
       );
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const studyType = otherStudyLocus?.study?.studyType;
+    exportValue: ({ otherCredibleSet }) => {
+      const studyType = otherCredibleSet?.study?.studyType;
       if (!studyType) return naLabel;
-      return `${studyType}, isTrans:${otherStudyLocus.isTrans}`;
+      return `${studyType}, isTrans:${otherCredibleSet.isTrans}`;
     },
   },
   {
-    id: "otherStudyLocus.study.target.approvedSymbol",
+    id: "otherCredibleSet.study.target.approvedSymbol",
     label: "Affected gene",
-    renderCell: ({ otherStudyLocus }) => {
-      const target = otherStudyLocus?.study?.target;
-      if (!target) return naLabel;
-      return (
-        <Link asyncTooltip to={`/target/${target.id}`}>
-          {target.approvedSymbol}
-        </Link>
-      );
-    },
+    renderCell: () => "?API?",
+    exportValue: () => "?API?",
   },
 
   {
-    id: "otherStudyLocus.study.biosample.biosampleName",
+    id: "otherCredibleSet.study.biosample.biosampleName",
     label: "Affected tissue/cell",
-    renderCell: ({ otherStudyLocus }) => {
-      const biosample = otherStudyLocus?.study?.biosample;
-      if (!biosample) return naLabel;
-      return (
-        <Link
-          external
-          to={`https://www.ebi.ac.uk/ols4/search?q=${biosample.biosampleId}`}
-        >
-          {biosample.biosampleName}
-        </Link>
-      );
-    },
+    renderCell: () => "?API?",
+    exportValue: () => "?API?",
   },
   {
-    id: "otherStudyLocus.study.condition",
+    id: "otherCredibleSet.study.condition",
     label: "Condition",
-    renderCell: ({ otherStudyLocus }) => otherStudyLocus?.study?.condition || naLabel,
+    renderCell: ({ otherCredibleSet }) => otherCredibleSet?.study?.condition || naLabel,
   },
   {
-    id: "otherStudyLocus.variant.id",
+    id: "otherCredibleSet.leadVariant.variantId",
     label: "Lead Variant",
-    comparator: variantComparator(d => d?.otherStudyLocus?.variant),
+    comparator: variantComparator(d => d?.otherCredibleSet?.leadVariant),
     sortable: true,
-    filterValue: ({ otherStudyLocus }) => {
-      const v = otherStudyLocus?.variant;
+    filterValue: ({ otherCredibleSet }) => {
+      const v = otherCredibleSet?.leadVariant;
       return `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`;
     },
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+    renderCell: ({ otherCredibleSet }) => {
+      if (!otherCredibleSet?.leadVariant) return naLabel;
+      const { variantId, referenceAllele, alternateAllele } = otherCredibleSet.leadVariant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
@@ -115,28 +98,30 @@ const columns = [
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.id,
+    exportValue: ({ otherCredibleSet }) => otherCredibleSet?.leadVariant?.variantId,
   },
   {
     id: "pValue",
     label: "P-Value",
     numeric: true,
-    comparator: ({ otherStudyLocus: a }, { otherStudyLocus: b }) =>
+    comparator: ({ otherCredibleSet: a }, { otherCredibleSet: b }) =>
       mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
+        a?.leadPValueMantissa,
+        a?.leadPValueExponent,
+        b?.leadPValueMantissa,
+        b?.leadPValueExponent
       ),
     sortable: true,
     filterValue: false,
-    renderCell: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    renderCell: ({ otherCredibleSet }) => {
+      const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+        otherCredibleSet ?? {};
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    exportValue: ({ otherCredibleSet }) => {
+      const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
+        otherCredibleSet ?? {};
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
@@ -230,44 +215,30 @@ const columns = [
 ];
 
 type BodyProps = {
-  studyLocusId: string;
+  id: string;
   entity: string;
 };
 
 function Body({ id, entity }: BodyProps) {
-  const variables = {
-    studyLocusId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: MOLQTL_COLOC_QUERY,
-    variables,
-    dataPath: "credibleSet.molqtlcolocalisation",
-    size: table5HChunkSize,
-  });
+  const variables = { credibleSetId: id };
+  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      showContentLoading
-      loadingMessage="Loading data. This may take some time..."
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTable
+          <OtTableOffsetPagination
             dataDownloader
-            showGlobalFilter
             dataDownloaderFileStem={`${id}-credibleSets`}
-            sortBy="h4"
-            order="desc"
+            entity="credibleSet"
+            sectionName="molqtlcolocalisation"
+            setInitialRequestData={setRequest}
             columns={columns}
-            loading={request.loading}
-            rows={request.data?.credibleSet.molqtlcolocalisation.rows}
-            query={MOLQTL_COLOC_QUERY.loc.source.body}
+            query={MOLQTL_COLOC_QUERY}
             variables={variables}
           />
         );

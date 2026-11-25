@@ -1,3 +1,4 @@
+import type { SubcellularLocationFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,7 +11,7 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ subcellularLocations }) =>
+      renderSummary={({ subcellularLocations }: SubcellularLocationFragment) =>
         `${subcellularLocations.length} subcelullar locations`
       }
     />

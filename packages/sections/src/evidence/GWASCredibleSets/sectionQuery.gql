@@ -1,4 +1,4 @@
-query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query EvidenceGWASCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   target(ensemblId: $ensemblId) {
     approvedSymbol
   }
@@ -7,9 +7,8 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
     name
     gwasCredibleSets: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["gwas_credible_sets"]
-      size: $size
+      datasourceIds: [gwas_credible_sets]
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
@@ -18,7 +17,7 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
           name
         }
         credibleSet {
-          studyLocusId
+          credibleSetId
           study {
             traitFromSource
             id
@@ -28,17 +27,17 @@ query GwasCredibleSetsQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
             pubmedId
             nSamples
           }
-          variant {
-            id
+          leadVariant {
+            variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
-          beta
-          finemappingMethod
+          leadPValueMantissa
+          leadPValueExponent
+          leadBeta
+          fineMappingMethod
           confidence
         }
         score

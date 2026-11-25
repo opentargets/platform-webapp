@@ -1,5 +1,5 @@
 fragment VariantGWASCredibleSetsSummaryFragment on Variant {
-  gwasCredibleSets: credibleSets(studyTypes: [gwas], page: { size: 1, index: 0 }) {
+  gwasCredibleSets: credibleSets(filter: { studyTypes: [gwas] }, page: { size: 1, index: 0 }) {
     count
   }
 }

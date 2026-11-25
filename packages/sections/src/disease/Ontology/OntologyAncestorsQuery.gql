@@ -1,0 +1,13 @@
+query OntologyAncestorsQuery($ids: [String!]!, $size: Int!) {
+  diseases(efoIds: $ids, page: { index: 0, size: $size }, sort: []) {
+    count
+    rows {
+      id
+      name
+      isTherapeuticArea
+      parents {
+        id
+      }
+    }
+  }
+}

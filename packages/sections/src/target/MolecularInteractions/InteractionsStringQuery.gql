@@ -1,6 +1,6 @@
-query InteractionsSectionQuery(
+query TargetInteractionsStringQuery(
   $ensgId: String!
-  $sourceDatabase: InteractionSourceEnum
+  $sourceDatabase: InteractionSourceDatabase
   $index: Int = 0
   $size: Int = 10
 ) {
@@ -10,6 +10,7 @@ query InteractionsSectionQuery(
       sourceDatabase: $sourceDatabase
       page: { index: $index, size: $size }
     ) {
+      count
       rows {
         intA
         intB

@@ -4,7 +4,7 @@ export const definition = {
   id: "bibliography",
   name: "Bibliography",
   shortName: "B",
-  hasData: (data: any) => data.literatureOcurrences?.filteredCount > 0,
+  hasData: (data: any) => data.literatureOcurrences?.count > 0,
 };
 
 // Components

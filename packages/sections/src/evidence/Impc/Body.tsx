@@ -1,4 +1,4 @@
-
+import { useQuery } from "@apollo/client";
 import {
   Link,
   SectionItem,
@@ -7,7 +7,7 @@ import {
   MouseModelAllelicComposition,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
-  OtTableSSP,
+  OtTableServer,
   Typography,
 } from "ui";
 
@@ -17,7 +17,6 @@ import INTOGEN_QUERY from "./sectionQuery.gql";
 
 import { sentenceCase } from "@ot/utils";
 import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
-import { useState } from "react";
 
 const columns = [
   {
@@ -157,9 +156,17 @@ const exportColumns = [
 
 type Props = EvidenceBodyProps;
 
+const PAGE_SIZE = 10;
+
 function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;
-  const [request, setRequest] = useState({ loading: true, data: null, error: false });
+  const variables = { ensemblId, efoId };
+
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(INTOGEN_QUERY, {
+    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  });
 
   return (
     <SectionItem
@@ -169,22 +176,16 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableSSP
+        <OtTableServer
           query={INTOGEN_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem="impc-evidence"
-          entity={entity}
-          sectionName="impc"
+          dataPath="disease.impc"
+          pageSize={PAGE_SIZE}
           showGlobalFilter={false}
-          setInitialRequestData={req => {
-            setRequest(req);
-          }}
-          variables={{
-            ensemblId,
-            efoId,
-          }}
+          variables={variables}
         />
       )}
     />

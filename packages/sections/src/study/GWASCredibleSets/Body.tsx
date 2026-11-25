@@ -1,69 +1,113 @@
+import { useQuery } from "@apollo/client";
 import {
-  Link,
-  SectionItem,
-  ScientificNotation,
-  DisplayVariantId,
-  Tooltip,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
+  naLabel,
+  SortDirection,
+  type StudyCredibleSet,
+  type StudyCredibleSetsSearch,
+  StudyCredibleSetsSearchField,
+  type StudyCredibleSetsSort,
+  StudyCredibleSetsSortField,
+} from "@ot/constants";
+import type { ReactElement } from "react";
+import {
   ClinvarStars,
+  DisplayVariantId,
   L2GScoreIndicator,
-  OtTable,
-  useBatchQuery,
+  Link,
   Navigate,
-  Box,
+  type OtTableColumn,
+  OtTableServer,
+  ScientificNotation,
+  SectionItem,
+  Tooltip,
 } from "ui";
-import { mantissaExponentComparator, nullishComparator, variantComparator } from "@ot/utils";
-import { naLabel, credsetConfidenceMap, table5HChunkSize } from "@ot/constants";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import GWAS_CREDIBLE_SETS_QUERY from "./GWASCredibleSetsQuery.gql";
-import ManhattanPlot from "./ManhattanPlot";
-import { ReactElement } from "react";
+import GWAS_CREDIBLE_SETS_QUERY_DOCUMENT from "./GWASCredibleSetsQuery.gql";
 
-const columns = [
+// import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
+// import ManhattanPlot from "./ManhattanPlot";
+
+type StudyRow = Pick<
+  StudyCredibleSet,
+  | "credibleSetId"
+  | "leadVariantId"
+  | "leadReferenceAllele"
+  | "leadAlternateAllele"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "beta"
+  | "locusSize"
+  | "fineMappingMethod"
+  | "confidence"
+  | "topL2GGeneId"
+  | "topL2GApprovedSymbol"
+  | "topL2GScore"
+>;
+
+type QueryData = {
+  study?: {
+    id: string;
+    credibleSetsView: { count: number; rows: StudyRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  studyId: string;
+  index: number;
+  size: number;
+  sort: StudyCredibleSetsSort[];
+  search?: StudyCredibleSetsSearch;
+};
+
+const GWAS_CREDIBLE_SETS_QUERY = typedDocument<QueryData, QueryVariables>(
+  GWAS_CREDIBLE_SETS_QUERY_DOCUMENT
+);
+
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "pValue",
+  field: StudyCredibleSetsSortField.PValue,
+};
+
+const columns: OtTableColumn<StudyRow>[] = [
   {
-    id: "studyLocusId",
+    id: "credibleSetId",
     label: "Credible set",
     enableHiding: false,
     sticky: true,
-    renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+    // For now, attach all search fields to the first column.
+    searchFields: Object.values(StudyCredibleSetsSearchField),
+    renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
   },
   {
     id: "leadVariant",
     label: "Lead variant",
     enableHiding: false,
-    comparator: variantComparator(d => d?.variant),
-    sortable: true,
-    filterValue: ({ variant: v }) =>
-      `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-    renderCell: ({ variant }) => {
-      if (!variant) return naLabel;
-      const { id: variantId, referenceAllele, alternateAllele } = variant;
+    sortField: StudyCredibleSetsSortField.LeadVariant,
+    renderCell: ({ leadVariantId, leadReferenceAllele, leadAlternateAllele }) => {
+      if (!leadVariantId) return naLabel;
       return (
-        <Link asyncTooltip to={`/variant/${variantId}`}>
+        <Link asyncTooltip to={`/variant/${leadVariantId}`}>
           <DisplayVariantId
-            variantId={variantId}
-            referenceAllele={referenceAllele}
-            alternateAllele={alternateAllele}
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
             expand={false}
           />
         </Link>
       );
     },
-    exportValue: ({ variant }) => variant?.id,
+    exportValue: ({ leadVariantId }) => leadVariantId,
   },
   {
     id: "pValue",
     label: "P-value",
     numeric: true,
-    comparator: (a, b) =>
-      mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
-      ),
-    sortable: true,
-    filterValue: false,
+    sortField: DEFAULT_SORT.field,
     renderCell: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
@@ -76,9 +120,8 @@ const columns = [
   {
     id: "beta",
     label: "Beta",
-    filterValue: false,
     numeric: true,
-    sortable: true,
+    sortField: StudyCredibleSetsSortField.Beta,
     tooltip: "Beta with respect to the ALT allele",
     renderCell: ({ beta }) => {
       if (typeof beta !== "number") return naLabel;
@@ -86,8 +129,12 @@ const columns = [
     },
   },
   {
-    id: "finemappingMethod",
+    id: "fineMappingMethod",
     label: "Fine-mapping method",
+    renderCell: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+    exportValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
   },
   {
     id: "confidence",
@@ -105,26 +152,19 @@ const columns = [
         for more details.
       </>
     ),
-    sortable: true,
-    comparator: nullishComparator(
-      (a, b) => a - b,
-      row => credsetConfidenceMap?.[row.confidence],
-      false
-    ),
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
-        <Tooltip title={confidence} style="">
-          <ClinvarStars num={credsetConfidenceMap[confidence]} />
+        <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+          <ClinvarStars num={confidence} />
         </Tooltip>
       );
     },
-    filterValue: ({ confidence }) => credsetConfidenceMap[confidence],
   },
   {
     id: "topL2G",
     label: "Top L2G",
-    filterValue: ({ l2GPredictions }) => l2GPredictions?.rows[0]?.target.approvedSymbol,
+    sortField: StudyCredibleSetsSortField.TopL2GApprovedSymbol,
     tooltip: (
       <>
         Top gene prioritised by our locus-to-gene model. See{" "}
@@ -134,26 +174,20 @@ const columns = [
         for more information.
       </>
     ),
-    renderCell: ({ l2GPredictions }) => {
-      const target = l2GPredictions?.rows[0]?.target;
-      if (!target) return naLabel;
+    renderCell: ({ topL2GGeneId, topL2GApprovedSymbol }) => {
+      if (!topL2GGeneId || !topL2GApprovedSymbol) return naLabel;
       return (
-        <Link asyncTooltip to={`/target/${target.id}`}>
-          {target.approvedSymbol}
+        <Link asyncTooltip to={`/target/${topL2GGeneId}`}>
+          {topL2GApprovedSymbol}
         </Link>
       );
     },
-    exportValue: ({ l2GPredictions }) => l2GPredictions?.rows[0]?.target.approvedSymbol,
+    exportValue: ({ topL2GApprovedSymbol }) => topL2GApprovedSymbol,
   },
   {
     id: "l2gScore",
     label: "L2G score",
-    comparator: nullishComparator(
-      (a, b) => a - b,
-      row => row?.l2GPredictions?.rows[0]?.score,
-      false
-    ),
-    sortable: true,
+    sortField: StudyCredibleSetsSortField.TopL2GScore,
     tooltip: (
       <>
         Machine learning prediction linking a gene to a credible set using all features. Score range
@@ -164,25 +198,27 @@ const columns = [
         for more information.
       </>
     ),
-    renderCell: ({ studyLocusId, l2GPredictions }) => {
-      const score = l2GPredictions?.rows[0]?.score;
-      const target = l2GPredictions?.rows[0]?.target;
-      if (!score) return naLabel;
-      return <L2GScoreIndicator score={score} studyLocusId={studyLocusId} targetId={target.id} />;
+    renderCell: ({ credibleSetId, topL2GGeneId, topL2GScore }) => {
+      if (!topL2GGeneId || typeof topL2GScore !== "number") return naLabel;
+      return (
+        <L2GScoreIndicator
+          score={topL2GScore}
+          credibleSetId={credibleSetId}
+          targetId={topL2GGeneId}
+        />
+      );
     },
-    exportValue: ({ l2GPredictions }) => l2GPredictions?.rows[0]?.score,
+    exportValue: ({ topL2GScore }) => topL2GScore,
   },
   {
     id: "credibleSetSize",
     label: "Credible set size",
-    comparator: (a, b) => a.locus?.count - b.locus?.count,
-    sortable: true,
+    sortField: StudyCredibleSetsSortField.LocusSize,
     numeric: true,
-    filterValue: false,
-    renderCell: ({ locus }) => {
-      return typeof locus?.count === "number" ? locus.count.toLocaleString() : naLabel;
+    renderCell: ({ locusSize }) => {
+      return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
     },
-    exportValue: ({ locus }) => locus?.count,
+    exportValue: ({ locusSize }) => locusSize,
   },
 ];
 
@@ -192,40 +228,44 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = {
-    studyId: id,
-    size: table5HChunkSize,
-    index: 0,
-  };
-
-  const request = useBatchQuery({
-    query: GWAS_CREDIBLE_SETS_QUERY,
-    variables,
-    dataPath: "study.credibleSets",
-    size: table5HChunkSize,
+  const variables = { studyId: id };
+  const request = useQuery(GWAS_CREDIBLE_SETS_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
   });
+  // const plotRequest = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
+  //   variables: { ...variables, page: { index: 0, size: 50000 } },
+  // });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      loadingMessage="Loading data. This may take some time..."
-      renderDescription={() => <Description studyId={request.data?.study.id} />}
+      renderDescription={() => <Description studyId={id} />}
       renderBody={() => (
         <>
+          {/* Manhattan plot temporarily hidden.
           <Box my={3} ml={2}>
-            <ManhattanPlot loading={request.loading} data={request.data?.study.credibleSets.rows} />
+            <ManhattanPlot
+              loading={plotRequest.loading}
+              data={plotRequest.data?.study?.credibleSets?.rows}
+            />
           </Box>
-          <OtTable
+          */}
+          <OtTableServer<StudyRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-studies`}
-            showGlobalFilter
-            sortBy="pValue"
-            loading={request.loading}
+            dataPath="study.credibleSetsView"
+            pageSize={PAGE_SIZE}
+            sortBy={DEFAULT_SORT.id}
+            order="asc"
             columns={columns}
-            rows={request.data?.study.credibleSets.rows}
-            query={GWAS_CREDIBLE_SETS_QUERY.loc.source.body}
+            query={GWAS_CREDIBLE_SETS_QUERY}
             variables={variables}
           />
         </>

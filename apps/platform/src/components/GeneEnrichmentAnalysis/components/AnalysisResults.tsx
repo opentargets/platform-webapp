@@ -1,15 +1,15 @@
-import { faChartPie, faCircle, faSitemap, faTableColumns, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
+import { faChartPie, faSitemap, faTableColumns, faNetworkWired } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Alert, Box, ToggleButton, ToggleButtonGroup, Typography } from "ui";
 import { useState } from "react";
 import type { GseaResult, InputOverlap } from "../api/gseaApi";
-import ResultsPlotlySunburst from "./ResultsPlotlySunburst";
+import ResultsCustomSunburst from "./ResultsCustomSunburst";
 import { ResultsEnrichmentMap } from "./ResultsEnrichmentMap/";
 import { EnrichmentMapControlsProvider } from "./ResultsEnrichmentMap/utils/EnrichmentMapControlsContext";
 import ResultsTable from "./ResultsTable";
 import ResultsTreeView from "./ResultsTreeView";
 
-type ViewMode = "table" | "tree" | "plotly" | "network";
+type ViewMode = "table" | "tree" | "sunburst" | "network";
 
 interface AnalysisResultsProps {
   results: GseaResult[];
@@ -65,11 +65,7 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
               <FontAwesomeIcon icon={faSitemap} style={{ marginRight: 6 }} />
               Tree view
             </ToggleButton>
-            {/* <ToggleButton value="sunburst">
-              <FontAwesomeIcon icon={faCircle} style={{ marginRight: 6 }} />
-              Sunburst
-            </ToggleButton> */}
-            <ToggleButton value="plotly">
+            <ToggleButton value="sunburst">
               <FontAwesomeIcon icon={faChartPie} style={{ marginRight: 6 }} />
               Sunburst
             </ToggleButton>
@@ -88,11 +84,16 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
         </Alert>
       )}
       {/* Scrollable content */}
-      <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'plotly'].includes(viewMode) ? 0 : 2 }}>
+      <Box sx={{ flex: 1, overflow: "auto", p: ['network', 'sunburst'].includes(viewMode) ? 0 : 2 }}>
         {viewMode === "table" && <ResultsTable results={results} />}
         {viewMode === "tree" && <ResultsTreeView results={results} />}
-        {/* {viewMode === "sunburst" && <ResultsSunburst results={results} />} */}
-        {viewMode === "plotly" && <ResultsPlotlySunburst key={activeRunId} results={results} />}
+        {viewMode === "sunburst" && (
+          <ResultsCustomSunburst
+            key={activeRunId}
+            results={results}
+            library={inputOverlap?.library}
+          />
+        )}
          {viewMode === "network" && <ResultsEnrichmentMap results={results} diseaseId={diseaseId} />}
       </Box>
     </Box>

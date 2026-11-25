@@ -18,7 +18,7 @@ function Description({ variantId, referenceAllele, alternateAllele }: Descriptio
         />
       </strong>
       . Source:{" "}
-      <Link to="https://www.ensembl.org/info/docs/tools/vep/index.html" external>
+      <Link to="https://www.ensembl.org/tools/vep" external>
         Ensembl VEP
       </Link>
     </>

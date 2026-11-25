@@ -1,11 +1,10 @@
-query ClinicalPrecedence($ensemblId: String!, $efoId: String!, $size: Int!) {
+query ClinicalPrecedence($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     clinical_precedence: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["clinical_precedence"]
-      size: $size
+      datasourceIds: [clinical_precedence]
+      page: { index: $index, size: $size }
     ) {
       count
       rows {

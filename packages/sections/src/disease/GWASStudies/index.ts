@@ -5,8 +5,8 @@ export const definition = {
   name: "GWAS",
   shortName: "GS",
   hasData: data =>
-    data?.studies?.count > 0 || // summary
-    data?.count > 0, // section
+    data?.studies?.studiesView?.count > 0 || // summary
+    data?.studiesView?.count > 0, // section
 };
 
 // Components

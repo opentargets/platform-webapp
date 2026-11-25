@@ -8,12 +8,12 @@ const DATA_VERSION_QUERY = gql`
       dataVersion {
         month
         year
-        iteration
+        revision
       }
       apiVersion {
-        x
-        y
-        z
+        year
+        month
+        revision
       }
     }
   }
@@ -73,7 +73,7 @@ export const APIMetadataProvider = ({ children }: PropsWithChildren): JSX.Elemen
     }
     const {
       meta: {
-        dataVersion: { month, year, iteration },
+        dataVersion: { month, year, revision },
         apiVersion,
       },
     } = data;
@@ -83,8 +83,10 @@ export const APIMetadataProvider = ({ children }: PropsWithChildren): JSX.Elemen
       error: null,
       month: month,
       year: year,
-      iteration: iteration,
-      apiVersion: apiVersion,
+      iteration: revision,
+      // The API reports its semver through the same Version type as data releases:
+      // "0.1.0" comes back as { year: "0", month: "1", revision: "0" }.
+      apiVersion: { x: apiVersion.year, y: apiVersion.month, z: apiVersion.revision },
     });
   }, [data, loading, error]);
 

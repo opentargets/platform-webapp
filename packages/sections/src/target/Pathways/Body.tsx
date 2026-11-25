@@ -1,16 +1,26 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Link, OtTable } from "ui";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarker } from "@fortawesome/free-solid-svg-icons";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  defaultRowsPerPageOptions,
+  type TargetBodyProps,
+  type TargetPathwaysQuery,
+  type TargetPathwaysQueryVariables,
+} from "@ot/constants";
+import { identifiersOrgLink } from "@ot/utils";
+import { Link, OtTable, type OtTableColumn, SectionItem } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import PATHWAYS_QUERY from "./Pathways.gql";
+import PATHWAYS_QUERY_DOCUMENT from "./Pathways.gql";
 
-import { identifiersOrgLink } from "@ot/utils";
-import { defaultRowsPerPageOptions, type TargetBodyProps} from "@ot/constants";
+const PATHWAYS_QUERY = typedDocument<TargetPathwaysQuery, TargetPathwaysQueryVariables>(
+  PATHWAYS_QUERY_DOCUMENT
+);
 
-function getColumns(symbol) {
+type PathwayRow = NonNullable<TargetPathwaysQuery["target"]>["pathways"][number];
+
+function getColumns(symbol: string): OtTableColumn<PathwayRow>[] {
   return [
     {
       id: "pathway",
@@ -58,9 +68,9 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-pathway-${entity}`}
           columns={getColumns(symbol)}
-          rows={request.data?.target.pathways}
+          rows={request.data?.target?.pathways ?? []}
           rowsPerPageOptions={defaultRowsPerPageOptions}
-          query={PATHWAYS_QUERY.loc.source.body}
+          query={PATHWAYS_QUERY_DOCUMENT.loc?.source.body}
           variables={variables}
           loading={request.loading}
         />

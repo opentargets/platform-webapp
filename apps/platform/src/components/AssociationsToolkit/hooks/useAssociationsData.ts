@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { ApolloClient, DocumentNode } from "@apollo/client";
-import { getInitialLoadingData, getAssociationsData, getAllDataCount } from "../associationsUtils";
+import {
+  getInitialLoadingData,
+  getAssociationsData,
+  getAllDataCount,
+  getAssociationsQueryVariables,
+} from "../associationsUtils";
 import { columnAdvanceControl } from "../types";
-import { Facet } from "../Facets/facetsTypes";
 
 const INITIAL_ROW_COUNT = 25;
 
@@ -10,13 +14,11 @@ interface UseAssociationsDataOptions {
   id?: string;
   index?: number;
   size?: number;
-  filter?: string;
   sortBy?: string;
-  enableIndirect?: boolean;
   datasources?: columnAdvanceControl[];
   rowsFilter?: string[];
   entity?: string;
-  facetFilters?: Facet[];
+  facetFilters?: string[];
   entitySearch?: string;
   laodingCount?: number;
   includeMeasurements?: boolean;
@@ -45,9 +47,7 @@ function useAssociationsData({
     id = "",
     index = 0,
     size = 50,
-    filter = "",
     sortBy = "score",
-    enableIndirect = false,
     datasources = [],
     rowsFilter = [],
     entity,
@@ -73,25 +73,17 @@ function useAssociationsData({
       setState(prev => ({ ...prev, loading: true }));
       const resData = await client.query({
         query,
-        variables: {
+        variables: getAssociationsQueryVariables({
           id,
           index,
           size,
-          filter,
           sortBy,
-          enableIndirect,
-          isDirect: !enableIndirect,
-          datasources: datasources.map(el => ({
-            id: el.id,
-            weight: el.weight,
-            propagate: el.propagate,
-            required: el.required,
-          })),
+          datasources,
           rowsFilter,
           facetFilters,
           entitySearch,
           includeMeasurements,
-        },
+        }),
       });
       const parsedData = getAssociationsData(entity!, resData.data);
       const dataCount = getAllDataCount(entity!, resData.data);
@@ -115,7 +107,6 @@ function useAssociationsData({
     index,
     size,
     sortBy,
-    enableIndirect,
     datasources,
     query,
     entity,

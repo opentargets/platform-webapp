@@ -1,6 +1,5 @@
 fragment VariantMolecularStructureSummaryFragment on Variant {
-  id
-  proteinCodingCoordinates {
+  proteinCodingCoordinates(page: { index: 0, size: 1 }) {
     count
     rows {
       referenceAminoAcid

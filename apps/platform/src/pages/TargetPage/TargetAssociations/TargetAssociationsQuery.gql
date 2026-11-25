@@ -1,24 +1,25 @@
+# TODO(ng-api): rows no longer select novelty nor the nested associationTimeSeries used by the
+# novelty sparkline. Row novelty is gone from the API and any associationTimeSeries request
+# drops the connection, which would take the whole table down.
+# docs/new-api-migration/PAIN_POINTS.md #10, #12.
 query TargetAssociationsQuery(
   $id: String!
   $index: Int!
   $size: Int!
-  $sortBy: String!
-  $enableIndirect: Boolean!
-  $isDirect: Boolean!
-  $datasources: [DatasourceSettingsInput!]
-  $rowsFilter: [String!]
-  $facetFilters: [String!]
-  $entitySearch: String!
-  $includeMeasurements: Boolean
+  $sort: AssociationSort!
+  $datasourcePolicyOverrides: [DatasourcePolicyOverride!]!
+  $rowsFilter: [String!]!
+  $facetFilters: [String!]!
+  $entitySearch: String
+  $includeMeasurements: Boolean!
 ) {
   target(ensemblId: $id) {
     id
     approvedSymbol
     associatedDiseases(
       page: { index: $index, size: $size }
-      orderByScore: $sortBy
-      enableIndirect: $enableIndirect
-      datasources: $datasources
+      sort: $sort
+      datasourcePolicyOverrides: $datasourcePolicyOverrides
       Bs: $rowsFilter
       facetFilters: $facetFilters
       BFilter: $entitySearch
@@ -26,16 +27,9 @@ query TargetAssociationsQuery(
     ) {
       count
       rows {
-        novelty
         disease {
           id
           name
-          associationTimeSeries(ensemblId: $id, aggregationTypes: [overall], isDirect: $isDirect, page: { index: 0, size: 500 }) {
-            rows {
-              novelty
-              year
-            }
-          }
         }
         score
         datasourceScores {

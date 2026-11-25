@@ -58,7 +58,7 @@ declare module "@tanstack/table-core" {
   }
 }
 
-const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+export const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value);
   const allRowValuesInString = getFilterValueFromObject(row.original);
@@ -94,6 +94,7 @@ function OtTable({
   query,
   variables,
   showColumnVisibilityControl = true,
+  initialColumnVisibility = {},
   showRowsPerPageControl = true,
   showPaginationAlways = true,
   loading,
@@ -136,6 +137,7 @@ function OtTable({
     },
     initialState: {
       sorting: getDefaultSortObj(sortBy, order),
+      columnVisibility: initialColumnVisibility,
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
@@ -150,7 +152,7 @@ function OtTable({
     onRowSelectionChange: setRowSelection,
   });
 
-  function onRowSelection(e: any, row: Row<any>) {
+  function onRowSelection(_e: unknown, row: Row<any>) {
     enableRowSelection && row.toggleSelected();
   }
 
@@ -440,7 +442,7 @@ function OtTable({
 
 function getLoadingCells(columms: Array<Record<string, unknown>>) {
   const arr: Record<string, unknown>[] = [];
-  columms.forEach((e) => {
+  for (const e of columms) {
     if (isNestedColumns(e)) {
       const headerObj = {
         header: e.header || e.label,
@@ -448,7 +450,7 @@ function getLoadingCells(columms: Array<Record<string, unknown>>) {
       };
       arr.push(headerObj);
     } else arr.push({ ...e, cell: () => <Skeleton sx={{ minWidth: "50px" }} variant="text" /> });
-  });
+  }
   return arr;
 }
 

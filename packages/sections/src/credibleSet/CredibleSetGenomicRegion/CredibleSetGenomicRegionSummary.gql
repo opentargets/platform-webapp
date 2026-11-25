@@ -1,0 +1,5 @@
+fragment CredibleSetGenomicRegionSummaryFragment on CredibleSet {
+  l2GPredictions {
+    count
+  }
+}

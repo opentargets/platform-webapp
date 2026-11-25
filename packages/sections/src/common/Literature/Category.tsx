@@ -1,11 +1,12 @@
-import { useLiterature, useSelectedCategories, useLiteratureDispatch } from "./LiteratureContext";
-import { fetchSimilarEntities } from "./requests";
-import { useApolloClient, InputLabel, FormGroup, Checkbox, FormControlLabel } from "ui";
+import type { ChangeEvent } from "react";
+import { Checkbox, FormControlLabel, FormGroup, InputLabel, useApolloClient } from "ui";
+import { useLiterature, useLiteratureDispatch, useSelectedCategories } from "./LiteratureContext";
+import { fetchSimilarEntities, literatureStateFromResponse } from "./requests";
 
-const toggleValue = (selected, categories) => {
+const toggleValue = (selected: string, categories: string[]): string[] => {
   const isChecked = categories.indexOf(selected) !== -1;
   if (!isChecked) return [...categories, selected];
-  return [...categories.filter(value => value !== selected).sort()];
+  return [...categories.filter((value) => value !== selected).sort()];
 };
 
 const categories = [
@@ -20,14 +21,14 @@ export default function Category() {
   const literatureDispatch = useLiteratureDispatch();
   const client = useApolloClient();
 
-  const handleChange = async event => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const {
       query,
       id,
       category: bibliographyCategory,
       selectedEntities,
       globalEntity,
-      cursor,
+      pageSize,
       endYear,
       endMonth,
       startYear,
@@ -44,21 +45,20 @@ export default function Category() {
       id,
       category: newCategories,
       entities: selectedEntities,
-      cursor,
+      pageSize,
       endYear,
       endMonth,
       startYear,
       startMonth,
     });
-    const data = request.data[globalEntity];
-    const update = {
-      entities: data.similarEntities,
-      earliestPubYear: data.literatureOcurrences?.earliestPubYear,
-      litsCount: data.literatureOcurrences?.filteredCount,
-      loadingEntities: false,
-      category: newCategories,
-    };
-    literatureDispatch({ type: "stateUpdate", value: update });
+    literatureDispatch({
+      type: "stateUpdate",
+      value: {
+        ...literatureStateFromResponse(request.data[globalEntity ?? ""]),
+        loadingEntities: false,
+        category: newCategories,
+      },
+    });
   };
 
   return (

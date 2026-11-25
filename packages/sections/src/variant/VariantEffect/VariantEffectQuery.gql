@@ -1,6 +1,5 @@
 query VariantEffectQuery($variantId: String!) {
   variant(variantId: $variantId) {
-    id
     variantEffect {
       method
       assessment

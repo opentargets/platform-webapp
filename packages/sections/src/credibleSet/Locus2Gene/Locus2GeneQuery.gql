@@ -1,7 +1,7 @@
-query Locus2GeneQuery($studyLocusId: String!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    l2GPredictions {
+query Locus2GeneQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    l2GPredictions(page: $page) {
       count
       rows {
         shapBaseValue

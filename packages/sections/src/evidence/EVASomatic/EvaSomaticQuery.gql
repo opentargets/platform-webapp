@@ -1,14 +1,11 @@
-query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $size: Int!, $cursor: String) {
+query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     eva_somatic: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["eva_somatic"]
-      size: $size
-      cursor: $cursor
+      datasourceIds: [eva_somatic]
+      page: { index: $index, size: $size }
     ) {
-      cursor
       count
       rows {
         disease {
@@ -16,17 +13,14 @@ query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $size: Int!, $cursor
           name
         }
         variant {
-          hgvsId
-        }
-        directionOnTarget
-        directionOnTrait
-        diseaseFromSource
-        variant {
-          id
+          id: variantId
           hgvsId
           referenceAllele
           alternateAllele
         }
+        directionOnTarget
+        directionOnTrait
+        diseaseFromSource
         variantRsId
         studyId
         clinicalSignificances

@@ -44,7 +44,7 @@ const GenomicLocation: React.FC<GenomicLocationProps> = ({
   }
 
   return (
-    <Box sx={{ mt: 1, typography: "body2" }} component="span">
+    <Box sx={{ mt: 1, typography: "body2", display: "flex", flexDirection: "column", gap: 1 }} component="span" >
       {label && (
         <Box
           component="span"

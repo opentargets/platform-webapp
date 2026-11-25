@@ -18,7 +18,7 @@ import {
 } from "ui";
 import CREDIBLE_SET_PROFILE_HEADER_FRAGMENT from "./ProfileHeader.gql";
 import { epmcUrl, getSortedAncestries } from "@ot/utils";
-import { credsetConfidenceMap, populationMap } from "@ot/constants";
+import { credsetConfidenceLabels, fineMappingMethodLabels, populationMap } from "@ot/constants";
 
 function ProfileHeader() {
   const { loading, error, data } = usePlatformApi();
@@ -28,16 +28,20 @@ function ProfileHeader() {
 
   const credibleSet = data?.credibleSet;
   const leadVariant = credibleSet?.locus?.rows?.[0] || {};
-  const beta = leadVariant.beta ?? credibleSet?.beta;
-  const standardError = leadVariant.standardError ?? credibleSet?.standardError;
+  const beta = leadVariant.reportedBeta ?? credibleSet?.leadBeta;
+  const standardError = leadVariant.reportedStandardError ?? credibleSet?.leadStandardError;
   const study = credibleSet?.study;
-  const target = study?.target;
 
-  const { pValueMantissa, pValueExponent } =
+  // the lead variant's own locus row when it has a p-value, else the credible set's lead values
+  const hasLocusPValue =
     typeof leadVariant?.pValueMantissa === "number" &&
-    typeof leadVariant?.pValueExponent === "number"
-      ? leadVariant
-      : credibleSet ?? {};
+    typeof leadVariant?.pValueExponent === "number";
+  const pValueMantissa = hasLocusPValue
+    ? leadVariant.pValueMantissa
+    : credibleSet?.leadPValueMantissa;
+  const pValueExponent = hasLocusPValue
+    ? leadVariant.pValueExponent
+    : credibleSet?.leadPValueExponent;
 
   return (
     <BaseProfileHeader>
@@ -87,7 +91,7 @@ function ProfileHeader() {
             {standardError.toPrecision(3)}
           </Field>
         )}
-        {typeof credibleSet?.effectAlleleFrequencyFromSource === "number" && (
+        {typeof credibleSet?.leadEffectAlleleFrequency === "number" && (
           <Field
             loading={loading}
             title={
@@ -103,7 +107,7 @@ function ProfileHeader() {
               </Tooltip>
             }
           >
-            {credibleSet.effectAlleleFrequencyFromSource.toPrecision(3)}
+            {credibleSet.leadEffectAlleleFrequency.toPrecision(3)}
           </Field>
         )}
         {typeof leadVariant?.posteriorProbability === "number" && (
@@ -131,11 +135,11 @@ function ProfileHeader() {
         </Typography>
         {credibleSet?.locusStart && (
           <Field loading={loading} title="Locus">
-            {credibleSet?.variant?.chromosome}:{credibleSet?.locusStart}-{credibleSet?.locusEnd}
+            {credibleSet?.leadVariant?.chromosome}:{credibleSet?.locusStart}-{credibleSet?.locusEnd}
           </Field>
         )}
         <Field loading={loading} title="Method">
-          {credibleSet?.finemappingMethod}
+          {fineMappingMethodLabels[credibleSet?.fineMappingMethod] ?? credibleSet?.fineMappingMethod}
         </Field>
         <Field
           loading={loading}
@@ -148,9 +152,9 @@ function ProfileHeader() {
             </Tooltip>
           }
         >
-          <Tooltip title={credibleSet?.confidence}>
+          <Tooltip title={credsetConfidenceLabels[credibleSet?.confidence]}>
             <span>
-              <ClinvarStars num={credsetConfidenceMap[credibleSet?.confidence]} />
+              <ClinvarStars num={credibleSet?.confidence} />
             </span>
           </Tooltip>
         </Field>
@@ -212,16 +216,9 @@ function ProfileHeader() {
                 ))}
               </Field>
             )}
-            {study?.backgroundTraits?.length > 0 && (
-              <Field loading={loading} title="Background trait">
-                {study.backgroundTraits.map(({ id, name }, index) => (
-                  <Fragment key={id}>
-                    {index > 0 ? ", " : null}
-                    <Link to={`../disease/${id}`}>{name}</Link>
-                  </Fragment>
-                ))}
-              </Field>
-            )}
+            <Field loading={loading} title="Background trait">
+              ?API?
+            </Field>
           </>
         )}
         {study?.studyType !== "gwas" && (
@@ -231,21 +228,12 @@ function ProfileHeader() {
                 {study?.projectId?.replace(/_/gi, " ")}
               </Field>
             )}
-            {target?.id && (
-              <Field loading={loading} title="Affected gene">
-                <Link to={`../target/${target.id}`}>{target.approvedSymbol}</Link>
-              </Field>
-            )}
-            {study?.biosample?.biosampleId && (
-              <Field loading={loading} title="Affected cell/tissue">
-                <Link
-                  external
-                  to={`https://www.ebi.ac.uk/ols4/search?q=${study.biosample.biosampleId}`}
-                >
-                  {study.biosample.biosampleName}
-                </Link>
-              </Field>
-            )}
+            <Field loading={loading} title="Affected gene">
+              ?API?
+            </Field>
+            <Field loading={loading} title="Affected cell/tissue">
+              ?API?
+            </Field>
           </>
         )}
         {study?.publicationFirstAuthor && (
@@ -270,9 +258,9 @@ function ProfileHeader() {
         <Field loading={loading} title="Summary statistics">
           {!study?.hasSumstats ? (
             "Not Available"
-          ) : study?.sumstatQCValues ? (
+          ) : study?.SumstatQCValues ? (
             <DetailPopover title="Available">
-              <SummaryStatsTable sumstatQCValues={study.sumstatQCValues} />
+              <SummaryStatsTable sumstatQCValues={study.SumstatQCValues} />
             </DetailPopover>
           ) : (
             "Available"

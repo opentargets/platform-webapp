@@ -1,18 +1,12 @@
-query VariantsQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    variant {
-      id
-      referenceAllele
-      alternateAllele
-    }
-    studyLocusId
-    locus(page: { size: $size, index: $index }) {
+query VariantsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    locus(page: $page) {
       count
       rows {
-        logBF
+        logBayesFactor
         posteriorProbability
         variant {
-          id
+          variantId
           chromosome
           position
           referenceAllele
@@ -24,8 +18,8 @@ query VariantsQuery($studyLocusId: String!, $size: Int!, $index: Int!) {
         }
         pValueMantissa
         pValueExponent
-        beta
-        standardError
+        reportedBeta
+        reportedStandardError
         r2Overall
       }
     }

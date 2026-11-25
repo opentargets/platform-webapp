@@ -1,3 +1,4 @@
+export { TARGET_TOOLTIP_QUERY, VARIANT_TOOLTIP_QUERY };
 import {
   faChartBar,
   faDiagramProject,
@@ -28,7 +29,7 @@ export function getQueryVariables(entity: string, id: string): Record<string, st
     case "study":
       return { studyId: id };
     case "credible-set":
-      return { studyLocusId: id };
+      return { credibleSetId: id };
     default:
       return { id };
   }
@@ -90,7 +91,7 @@ export const getEntityDescription = (entity, data) => {
       return getTrimmedDescription(data?.description);
     case "credible-set":
       return getCredibleSetsDescription({
-        variantId: data?.variant.id,
+        variantId: data?.leadVariant?.id,
         studyId: data?.study.id,
       });
     default:
@@ -100,7 +101,7 @@ export const getEntityDescription = (entity, data) => {
 
 const getTrimmedDescription = (description: string | null) => {
   if (!description || description.length < 1) return "No description available.";
-  return description.substring(0, 150);
+  return description;
 };
 
 export const getCredibleSetsDescription = ({ variantId, studyId }): string => {

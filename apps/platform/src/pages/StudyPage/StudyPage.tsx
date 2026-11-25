@@ -28,8 +28,6 @@ function StudyPage(): ReactElement {
   const projectId = study?.projectId;
   const headerMeta = buildHeaderMeta({
     studyId,
-    backgroundTraits: study?.backgroundTraits,
-    targetId: study?.target?.id,
     diseases: study?.diseases,
     projectId,
   });
@@ -44,8 +42,6 @@ function StudyPage(): ReactElement {
       <Header
         loading={false}
         studyId={studyId}
-        backgroundTraits={study?.backgroundTraits}
-        targetId={study?.target?.id}
         diseases={study?.diseases}
         projectId={projectId}
       />

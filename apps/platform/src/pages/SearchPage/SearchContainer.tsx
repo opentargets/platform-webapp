@@ -19,6 +19,7 @@ import {
   FormControlLabel,
   TablePagination,
   Box,
+  getHitObject,
 } from "ui";
 
 import DiseaseDetail from "./DiseaseDetail";
@@ -134,7 +135,9 @@ function SearchResults({ results, page, onPageChange }) {
         page={page - 1}
         onPageChange={onPageChange}
       />
-      {results.hits.map(({ highlights, object }) => {
+      {results.hits.map((hit) => {
+        const { highlights } = hit;
+        const object = getHitObject(hit);
         if (object[TYPE_NAME] === "Target")
           return <TargetResult key={object.id} data={object} highlights={highlights} />;
         if (object[TYPE_NAME] === "Disease")
@@ -219,7 +222,7 @@ function NoResultsContainer({ q }) {
 
 function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity }) {
   const { entities: entitiesCount } = data.search.aggregations;
-  const topHit = data.topHit.hits[0]?.object;
+  const topHit = data.topHit.hits[0] && getHitObject(data.topHit.hits[0]);
 
   return (
     <>

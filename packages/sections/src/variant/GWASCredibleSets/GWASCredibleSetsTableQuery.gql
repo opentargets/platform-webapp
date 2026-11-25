@@ -1,0 +1,46 @@
+query GWASCredibleSetsTableQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [VariantCredibleSetsSort!]! = []
+  $search: VariantCredibleSetsSearch
+) {
+  variant(variantId: $variantId) {
+    variantId
+    referenceAllele
+    alternateAllele
+    gwasCredibleSets: credibleSets(filter: { studyTypes: [gwas] }, page: { size: 1, index: 0 }) {
+      count
+    }
+    credibleSetsView(
+      page: { index: $index, size: $size }
+      sort: $sort
+      search: $search
+      studyTypes: [gwas]
+    ) {
+      count
+      rows {
+        credibleSetId
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
+        traitFromSource
+        diseases {
+          id
+          name
+        }
+        studyId
+        pValueMantissa
+        pValueExponent
+        beta
+        posteriorProbability
+        fineMappingMethod
+        confidence
+        topL2GGeneId
+        topL2GApprovedSymbol
+        topL2GScore
+        locusSize
+      }
+    }
+  }
+}

@@ -7,25 +7,32 @@ import { naLabel, VARIANT_EFFECT_METHODS, VIEW } from "@ot/constants";
 import VARIANT_EFFECT_QUERY from "./VariantEffectQuery.gql";
 import VariantEffectPlot from "./VariantEffectPlot";
 
+// a data release can add a method before it is described in VARIANT_EFFECT_METHODS:
+// such a method is shown under the name the API gives it, without a tooltip
+const methodName = (method: string) => VARIANT_EFFECT_METHODS[method]?.prettyName ?? method;
+
 const columns = [
   {
     id: "method",
     label: "Method",
     enableHiding: false,
-    renderCell: ({ method }) => (
-      <Tooltip
-        title={
-          <>
-            {VARIANT_EFFECT_METHODS[method].description} See{" "}
-            <Link to={VARIANT_EFFECT_METHODS[method].docsUrl}>here </Link> for more info.
-          </>
-        }
-        showHelpIcon
-      >
-        {VARIANT_EFFECT_METHODS[method].prettyName}
-      </Tooltip>
-    ),
-    exportValue: ({ method }) => VARIANT_EFFECT_METHODS[method].prettyName,
+    renderCell: ({ method }) => {
+      const known = VARIANT_EFFECT_METHODS[method];
+      if (!known) return method;
+      return (
+        <Tooltip
+          title={
+            <>
+              {known.description} See <Link to={known.docsUrl}>here </Link> for more info.
+            </>
+          }
+          showHelpIcon
+        >
+          {known.prettyName}
+        </Tooltip>
+      );
+    },
+    exportValue: ({ method }) => methodName(method),
   },
   {
     id: "assessment",
@@ -71,11 +78,7 @@ function getSortedRows(request) {
   return request.data?.variant?.variantEffect
     ? [...request.data.variant.variantEffect]
         .filter(e => e.method !== null)
-        .sort((row1, row2) =>
-          VARIANT_EFFECT_METHODS[row1.method].prettyName.localeCompare(
-            VARIANT_EFFECT_METHODS[row2.method].prettyName
-          )
-        )
+        .sort((row1, row2) => methodName(row1.method).localeCompare(methodName(row2.method)))
     : [];
 }
 
@@ -97,7 +100,7 @@ export function Body({ id, entity }: BodyProps): ReactElement {
       defaultView={VIEW.chart}
       renderDescription={() => (
         <Description
-          variantId={request.data?.variant.id}
+          variantId={id}
           referenceAllele={request.data?.variant.referenceAllele}
           alternateAllele={request.data?.variant.alternateAllele}
         />

@@ -11,10 +11,6 @@ query RecordDetailQuery($clinicalReportId: String!) {
     }
     drugs {
       drugFromSource
-      drug {
-        id
-        name
-      }
     }
     id
     phaseFromSource
@@ -28,7 +24,7 @@ query RecordDetailQuery($clinicalReportId: String!) {
     trialDescription
     trialLiterature {
       id
-      type
+      type: referenceType
     }
     title
     trialOverallStatus
@@ -40,7 +36,7 @@ query RecordDetailQuery($clinicalReportId: String!) {
     trialStartDate
     trialWhyStopped
     trialStopReasonCategories
-    type
+    type: evidenceType
     trialStudyType
     url
     year

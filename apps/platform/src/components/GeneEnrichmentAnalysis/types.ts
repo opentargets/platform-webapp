@@ -16,6 +16,7 @@ export enum ActionType {
   SET_ACTIVE_RUN = "SET_ACTIVE_RUN",
   DELETE_RUN = "DELETE_RUN",
   SET_STANDALONE_GENES = "SET_STANDALONE_GENES",
+  HYDRATE_RUN_HISTORY = "HYDRATE_RUN_HISTORY",
 }
 
 /***************
@@ -104,4 +105,8 @@ export type Action =
   | { type: ActionType.UPDATE_RUN; payload: { id: string } & Partial<Omit<AnalysisRun, "id">> }
   | { type: ActionType.SET_ACTIVE_RUN; payload: string | null }
   | { type: ActionType.DELETE_RUN; payload: string }
-  | { type: ActionType.SET_STANDALONE_GENES; payload: Gene[] | null };
+  | { type: ActionType.SET_STANDALONE_GENES; payload: Gene[] | null }
+  | {
+      type: ActionType.HYDRATE_RUN_HISTORY;
+      payload: { runs: AnalysisRun[]; activeRunId: string | null };
+    };

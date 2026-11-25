@@ -1,3 +1,4 @@
+import type { MousePhenotypesSummaryFragment } from "@ot/constants";
 import { SummaryItem, usePlatformApi } from "ui";
 
 import { definition } from ".";
@@ -10,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ mousePhenotypes }) =>
-        `${mousePhenotypes.length} distinct phenotype${mousePhenotypes.length > 1 ? "s" : ""}`
+      renderSummary={({ mousePhenotypes }: MousePhenotypesSummaryFragment) =>
+        `${mousePhenotypes.count} distinct phenotype${mousePhenotypes.count > 1 ? "s" : ""}`
       }
     />
   );

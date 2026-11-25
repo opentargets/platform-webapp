@@ -1,23 +1,57 @@
 import { useQuery } from "@apollo/client";
+import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import {
+  type DrugBodyProps,
+  type DrugPharmacogenomicsQuery,
+  type DrugPharmacogenomicsQueryVariables,
+  naLabel,
+  PHARM_GKB_COLOR,
+  PharmacogenomicsSearchField,
+  PharmacogenomicsSortField,
+  SortDirection,
+  variantConsequenceSource,
+} from "@ot/constants";
+import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
+import type { ReactNode } from "react";
+import {
+  DirectionalityDrawer,
+  DisplayVariantId,
+  LabelChip,
   Link,
+  type OtTableColumn,
+  OtTableServer,
+  PublicationsDrawer,
   SectionItem,
   Tooltip,
-  LabelChip,
-  PublicationsDrawer,
-  OtTable,
-  DirectionalityDrawer,
 } from "ui";
-
-import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import PHARMACOGENOMICS_QUERY from "./Pharmacogenomics.gql";
-import { naLabel, PHARM_GKB_COLOR, variantConsequenceSource, type DrugBodyProps, type Pharmacogenomics } from "@ot/constants";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
+import PHARMACOGENOMICS_QUERY_DOCUMENT from "./Pharmacogenomics.gql";
+
+const PHARMACOGENOMICS_QUERY = typedDocument<
+  DrugPharmacogenomicsQuery,
+  DrugPharmacogenomicsQueryVariables
+>(PHARMACOGENOMICS_QUERY_DOCUMENT);
+
+type PharmacogenomicsRow = NonNullable<
+  DrugPharmacogenomicsQuery["drug"]
+>["pharmacogenomics"]["rows"][number];
+
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "evidenceLevel",
+  field: PharmacogenomicsSortField.EvidenceLevel,
+};
+// the drug is the page entity and has no column, so its fields are not searched
+const SEARCH_FIELDS = Object.values(PharmacogenomicsSearchField).filter(
+  (field) =>
+    field !== PharmacogenomicsSearchField.DrugIds &&
+    field !== PharmacogenomicsSearchField.DrugFromSources
+);
 
 const getLevelElementClassName = (level: string) => {
   switch (level) {
@@ -54,11 +88,13 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     blue: theme.palette.primary.main,
   };
 
-  const columns = [
+  const columns: OtTableColumn<PharmacogenomicsRow>[] = [
     {
       id: "gene",
       label: "Gene",
-      renderCell: ({ target }: Pharmacogenomics) => {
+      // For now, attach all search fields to the first column.
+      searchFields: SEARCH_FIELDS,
+      renderCell: ({ target }) => {
         if (target) {
           return (
             <Link asyncTooltip to={`/target/${target.id}`}>
@@ -68,17 +104,17 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         }
         return naLabel;
       },
-      filterValue: ({ target }: Pharmacogenomics) => `${target}`,
+      filterValue: ({ target }) => target?.approvedSymbol ?? "",
     },
     {
       id: "variantRsId",
       label: "rsID",
       enableHiding: false,
-      renderCell: ({ variantRsId }: Pharmacogenomics) =>
+      renderCell: ({ variantRsId }) =>
         variantRsId ? (
           <Link
             external
-            to={`http://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
+            to={`https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${variantRsId}`}
           >
             {variantRsId}
           </Link>
@@ -89,7 +125,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "starAllele",
       label: "Star Allele",
-      renderCell: ({ haplotypeId, haplotypeFromSourceId }: Pharmacogenomics) => {
+      renderCell: ({ haplotypeId, haplotypeFromSourceId }) => {
         const displayId = haplotypeId || haplotypeFromSourceId || naLabel;
         const LinkComponent = haplotypeFromSourceId && (
           <Link external to={`https://www.pharmgkb.org/haplotype/${haplotypeFromSourceId}`}>
@@ -115,19 +151,35 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }: Pharmacogenomics) => genotypeId || naLabel,
+      renderCell: ({ genotypeId }) => {
+        if (!genotypeId) return naLabel;
+        const [chr, pos, ref, alt] = genotypeId.split(",")[0].split("_");
+        if (!chr || !pos || !ref || !alt) return genotypeId;
+        const variantId = `${chr}_${pos}_${ref}_${alt}`;
+        return (
+          <Link asyncTooltip to={`/variant/${variantId}`}>
+            <DisplayVariantId
+              variantId={variantId}
+              referenceAllele={ref}
+              alternateAllele={alt}
+              expand={false}
+            />
+            {genotypeId.includes(",") ? `,${genotypeId.split(",")[1]}` : ""}
+          </Link>
+        );
+      },
     },
     {
       id: "variantConsequence",
       label: "Variant Consequence",
-      renderCell: ({ variantFunctionalConsequence, genotypeId }: Pharmacogenomics) => {
+      renderCell: ({ variantFunctionalConsequence, genotypeId }) => {
         const pvparams = genotypeId?.split(",")[0].split("_") || [];
         return (
           <div style={{ display: "flex", gap: "5px" }}>
             {variantFunctionalConsequence ? (
               <LabelChip
                 label={variantConsequenceSource.VEP.label}
-                value={sentenceCase(variantFunctionalConsequence.label)}
+                value={sentenceCase(variantFunctionalConsequence.label) ?? undefined}
                 tooltip={variantConsequenceSource.VEP.tooltip}
                 to={identifiersOrgLink("SO", variantFunctionalConsequence.id.slice(3))}
               />
@@ -136,27 +188,23 @@ function Body({ id: chemblId, label: name, entity }: Props) {
             )}
             {(variantFunctionalConsequence?.id === "SO:0001583" ||
               variantFunctionalConsequence?.id === "SO:0001587") && (
-                <LabelChip
-                  label={variantConsequenceSource.ProtVar.label}
-                  to={`https://www.ebi.ac.uk/ProtVar/query?chromosome=${pvparams[0]}&genomic_position=${pvparams[1]}&reference_allele=${pvparams[2]}&alternative_allele=${pvparams[3]}`}
-                  tooltip={variantConsequenceSource.ProtVar.tooltip}
-                />
-              )}
+              <LabelChip
+                label={variantConsequenceSource.ProtVar.label}
+                to={`https://www.ebi.ac.uk/ProtVar/query?chromosome=${pvparams[0]}&genomic_position=${pvparams[1]}&reference_allele=${pvparams[2]}&alternative_allele=${pvparams[3]}`}
+                tooltip={variantConsequenceSource.ProtVar.tooltip}
+              />
+            )}
           </div>
         );
       },
-      filterValue: ({ variantFunctionalConsequence }: Pharmacogenomics) =>
+      filterValue: ({ variantFunctionalConsequence }) =>
         sentenceCase(variantFunctionalConsequence?.label),
     },
     {
       id: "drugResponse",
       label: "Drug Response Phenotype",
-      renderCell: ({ phenotypeText, phenotypeFromSourceId, genotypeAnnotationText }: Pharmacogenomics) => {
-        let phenotypeTextElement;
-
-        if (phenotypeText) {
-          phenotypeTextElement = phenotypeText;
-        } else phenotypeTextElement = naLabel;
+      renderCell: ({ phenotypeText, phenotypeFromSourceId, genotypeAnnotationText }) => {
+        let phenotypeTextElement: ReactNode = phenotypeText || naLabel;
 
         if (phenotypeFromSourceId)
           phenotypeTextElement = (
@@ -174,25 +222,25 @@ function Body({ id: chemblId, label: name, entity }: Props) {
 
         return phenotypeTextElement;
       },
-      filterValue: ({ phenotypeText }: Pharmacogenomics) => `${phenotypeText}`,
+      filterValue: ({ phenotypeText }) => phenotypeText ?? "",
     },
     {
       id: "drugResponseCategory",
       label: "Drug Response Category",
-      renderCell: ({ pgxCategory }: Pharmacogenomics) => pgxCategory || naLabel,
-      filterValue: ({ pgxCategory }: Pharmacogenomics) => pgxCategory,
+      renderCell: ({ pgxCategory }) => pgxCategory || naLabel,
+      filterValue: ({ pgxCategory }) => pgxCategory,
     },
     {
       id: "directionality",
       label: "Directionality",
-      renderCell: ({ variantAnnotation }: Pharmacogenomics) => (
+      renderCell: ({ variantAnnotation }) => (
         <DirectionalityDrawer variantAnnotation={variantAnnotation} caption="Directionality" />
       ),
     },
     {
       id: "isDirectTarget",
       label: "Direct Drug Target",
-      renderCell: ({ isDirectTarget }: Pharmacogenomics) => {
+      renderCell: ({ isDirectTarget }) => {
         const ICON_NAME = isDirectTarget ? faCircleCheck : faCircleXmark;
         return <FontAwesomeIcon icon={ICON_NAME} size="lg" color={theme.palette.primary.main} />;
       },
@@ -200,17 +248,17 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "evidenceLevel",
       label: "Confidence Level",
-      sortable: true,
+      sortField: DEFAULT_SORT.field,
       tooltip: (
         <>
           As defined by
-          <Link external to={`https://www.pharmgkb.org/page/clinAnnLevels`}>
+          <Link external to={"https://www.pharmgkb.org/page/clinAnnLevels"}>
             {" "}
             ClinPGx ClinAnn Levels
           </Link>
         </>
       ),
-      renderCell: ({ evidenceLevel }: Pharmacogenomics) => {
+      renderCell: ({ evidenceLevel }) => {
         if (evidenceLevel) {
           const levelClass = getLevelElementClassName(evidenceLevel);
           return (
@@ -228,12 +276,12 @@ function Body({ id: chemblId, label: name, entity }: Props) {
         }
         return naLabel;
       },
-      filterValue: ({ evidenceLevel }: Pharmacogenomics) => `Level ${evidenceLevel}`,
+      filterValue: ({ evidenceLevel }) => `Level ${evidenceLevel}`,
     },
     {
       id: "source",
       label: "Source",
-      renderCell: ({ studyId }: Pharmacogenomics) =>
+      renderCell: ({ studyId }) =>
         studyId ? (
           <Link external to={`https://www.pharmgkb.org/clinicalAnnotation/${studyId}`}>
             ClinPGx
@@ -245,28 +293,29 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "literature",
       label: "Literature",
-      renderCell: ({ literature }: Pharmacogenomics) => {
-        const literatureList =
-          literature?.reduce((acc, id) => {
-            if (id === "NA") return acc;
-
-            return [
-              ...acc,
-              {
-                name: id,
-                url: epmcUrl(id),
-                group: "literature",
-              },
-            ];
-          }, []) || [];
+      renderCell: ({ literature }) => {
+        const literatureList = literature
+          .filter((id) => id !== "NA")
+          .map((id) => ({
+            name: id,
+            url: epmcUrl(id),
+            group: "literature",
+          }));
 
         return <PublicationsDrawer entries={literatureList} />;
       },
     },
   ];
 
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(PHARMACOGENOMICS_QUERY, {
-    variables,
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
   });
 
   return (
@@ -276,16 +325,16 @@ function Body({ id: chemblId, label: name, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description name={name} />}
       renderBody={() => (
-        <OtTable
-          sortBy="evidenceLevel"
-          showGlobalFilter
+        <OtTableServer<PharmacogenomicsRow>
+          columns={columns}
+          query={PHARMACOGENOMICS_QUERY}
+          variables={variables}
+          dataPath="drug.pharmacogenomics"
+          pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order="asc"
           dataDownloader
           dataDownloaderFileStem={`${chemblId}-pharmacogenomics`}
-          columns={columns}
-          rows={request.data?.drug.pharmacogenomics}
-          query={PHARMACOGENOMICS_QUERY.loc.source.body}
-          variables={variables}
-          loading={request.loading}
         />
       )}
     />

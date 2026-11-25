@@ -1,11 +1,10 @@
-query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
+query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
     expressionAtlasSummary: evidences(
       ensemblIds: [$ensemblId]
-      enableIndirect: true
-      datasourceIds: ["expression_atlas"]
-      size: $size
+      datasourceIds: [expression_atlas]
+      page: { index: $index, size: $size }
     ) {
       count
       rows {
@@ -17,7 +16,6 @@ query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $size: Int!) {
         contrast
         confidence
         studyOverview
-        log2FoldChangeValue
         resourceScore
         log2FoldChangePercentileRank
         studyId

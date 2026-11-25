@@ -1,36 +1,44 @@
-query PharmacogenomicsQuery($variantId: String!) {
+query PharmacogenomicsQuery(
+  $variantId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [PharmacogenomicsSort!]! = []
+  $search: PharmacogenomicsSearch
+) {
   variant(variantId: $variantId) {
-    id
     referenceAllele
     alternateAllele
-    pharmacogenomics {
-      variantAnnotation {
-        entity
-        effect
-        effectType
-        effectDescription
+    pharmacogenomics(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+      count
+      rows {
+        variantAnnotation {
+          entity
+          effect
+          effectType
+          effectDescription
+          literature
+          directionality
+          baseAlleleOrGenotype
+          comparisonAlleleOrGenotype
+        }
+        genotypeId
+        isDirectTarget
+        target {
+          id
+          approvedSymbol
+        }
+        drugs {
+          drugFromSource
+          drugId
+        }
+        phenotypeFromSourceId
+        genotypeAnnotationText
+        phenotypeText
+        pgxCategory
+        evidenceLevel
+        studyId
         literature
-        directionality
-        baseAlleleOrGenotype
-        comparisonAlleleOrGenotype
       }
-      genotypeId
-      isDirectTarget
-      target {
-        id
-        approvedSymbol
-      }
-      drugs {
-        drugFromSource
-        drugId
-      }
-      phenotypeFromSourceId
-      genotypeAnnotationText
-      phenotypeText
-      pgxCategory
-      evidenceLevel
-      studyId
-      literature
     }
   }
 }

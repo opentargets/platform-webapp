@@ -1,4 +1,4 @@
-query GeneticConstraint($ensemblId: String!) {
+query TargetGeneticConstraintQuery($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
     id
     geneticConstraint {

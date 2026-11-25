@@ -11,14 +11,42 @@ if (!VITE_API_URL) {
   throw new Error("VITE_API_URL environment variable is not set in .env file");
 }
 
+// Documents already migrated to the current API: each gets an exact result type
+// (`<OperationName>` / `<OperationName>Variables`) in src/types/index.ts. Add a
+// page's documents here once its queries validate against the API.
+const MIGRATED_DOCUMENTS = [
+  "apps/platform/src/pages/DiseasePage/**/*.gql",
+  "apps/platform/src/pages/DrugPage/**/*.gql",
+  "apps/platform/src/pages/TargetPage/**/*.gql",
+  "apps/platform/src/components/AssociationsToolkit/components/Table/RowInteractors/InteractorsQuery.gql",
+  "apps/platform/src/components/GeneEnrichmentAnalysis/api/*.gql",
+  "packages/sections/src/disease/{Bibliography,Drugs,GWASStudies,Ontology,Phenotypes}/*.gql",
+  "packages/sections/src/drug/**/*.gql",
+  // OverlappingVariants stays out: the API has no Target.proteinCodingCoordinates.
+  // Two globs because a single brace list this long exceeds the 255-byte limit of
+  // a path component
+  "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,Drugs,GeneOntology,GeneticConstraint}/*.gql",
+  "packages/sections/src/target/{MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,TargetGenomicRegion,Tractability}/*.gql",
+  "packages/ui/src/components/ClinicalReports/*.gql",
+  "apps/platform/src/pages/{VariantPage,StudyPage,CredibleSetPage,EvidencePage}/**/*.gql",
+  "packages/sections/src/study/**/*.gql",
+  // The PPP evidence widgets OTCRISPR, OTEncore and OTValidation stay out (their
+  // datasources are missing from the API's Datasource enum)
+  "packages/sections/src/variant/{EVA,EnhancerToGenePredictions,GWASCredibleSets,MolecularStructure,Pharmacogenomics,QTLCredibleSets,UniProtVariants,VariantEffect,VariantEffectPredictor,VariantGenomicRegion}/*.gql",
+  "packages/sections/src/credibleSet/**/*.gql",
+  "packages/sections/src/evidence/{CancerBiomarkers,CancerGeneCensus,ClinGen,ClinicalPrecedence,CRISPR,CRISPRScreen,EuropePmc,EVA,EVASomatic,ExpressionAtlas}/*.gql",
+  "packages/sections/src/evidence/{Gene2Phenotype,GeneBurden,GenomicsEngland,GWASCredibleSets,Impc,IntOgen,Orphanet,Reactome,UniProtLiterature,UniProtVariants}/*.gql",
+].map((glob) => resolve(__dirname, "../..", glob));
+
 const config: CodegenConfig = {
   overwrite: true,
   schema: `${VITE_API_URL}`,
+  documents: MIGRATED_DOCUMENTS,
   errorsOnly: false,
   generates: {
     "./src/types/index.ts": {
       plugins: ["typescript", "typescript-operations", "typescript-graphql-request"],
-      config: { gqlTagName: "gql", rawRequest: false },
+      config: { gqlTagName: "gql", rawRequest: false, omitOperationSuffix: true },
     },
   },
 };

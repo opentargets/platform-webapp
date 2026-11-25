@@ -1,24 +1,24 @@
 import { gql } from "@apollo/client";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import type { ReactNode } from "react";
+import { Disease, type Widget } from "sections";
 import {
   PlatformApiProvider,
   SectionContainer,
+  SectionsRenderer,
   StickyProfileHeader,
   SummaryContainer,
-  SectionsRenderer,
   SummaryRenderer,
   summaryUtils,
 } from "ui";
-import { Disease, Widget } from "sections";
 
 import ProfileHeader from "./ProfileHeader";
 
+// OTProjects is not in this map: the API no longer exposes `otarProjects`
 const diseaseProfileWidgets = new Map<string, Widget>([
   [Disease.Ontology.definition.id, Disease.Ontology],
   [Disease.Drugs.definition.id, Disease.Drugs],
   [Disease.Phenotypes.definition.id, Disease.Phenotypes],
-  [Disease.OTProjects.definition.id, Disease.OTProjects],
   [Disease.GWASStudies.definition.id, Disease.GWASStudies],
   [Disease.Bibliography.definition.id, Disease.Bibliography],
 ]);
@@ -26,7 +26,7 @@ const diseaseProfileWidgets = new Map<string, Widget>([
 const DISEASE_WIDGETS = Array.from(diseaseProfileWidgets.values());
 
 const diseaseProfileWidgetsSummaries = Array.from(diseaseProfileWidgets.values()).map(
-  widget => widget.Summary
+  (widget) => widget.Summary
 );
 
 const DISEASE = "disease";
@@ -42,8 +42,10 @@ const DISEASE_PROFILE_QUERY = gql`
       ...DiseaseProfileHeaderFragment
       ...DiseaseProfileSummaryFragment
     }
-    studies(diseaseIds: [$efoId], page: { size: 1, index: 0 }) {
-      count
+    studies: diseases(efoIds: [$efoId]) {
+      studiesView(page: { size: 1, index: 0 }) {
+        count
+      }
     }
   }
   ${ProfileHeader.fragments.profileHeader}

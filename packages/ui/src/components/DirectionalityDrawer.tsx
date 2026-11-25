@@ -4,7 +4,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, ButtonBase, Divider, Drawer, IconButton, Paper, Typography } from "@mui/material";
+import { Box, ButtonBase, Drawer, IconButton, Paper, Typography } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
 import { useState } from "react";
@@ -26,7 +26,7 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     opacity: "0 !important",
   },
   "& .MuiDrawer-paper": {
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: theme.palette.common.white,
     maxWidth: "100%",
   },
 }));
@@ -136,7 +136,17 @@ export function DirectionalityList({ variantAnnotation }) {
   return <OtTable columns={columns} rows={variantAnnotation} showColumnVisibilityControl={false} />;
 }
 
-function DirectionalityDrawer({ variantAnnotation, customLabel, caption }) {
+type DirectionalityDrawerProps = {
+  variantAnnotation?: object[] | null;
+  customLabel?: string;
+  caption?: string;
+};
+
+function DirectionalityDrawer({
+  variantAnnotation,
+  customLabel,
+  caption,
+}: DirectionalityDrawerProps) {
   const [open, setOpen] = useState(false);
 
   if (!variantAnnotation || !variantAnnotation.length) {

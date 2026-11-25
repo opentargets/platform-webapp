@@ -12,33 +12,32 @@ import { styled } from "@mui/material/styles";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
   Button,
   ButtonNoBorder,
-  Link,
-  Tooltip,
-  useApolloClient,
-  Box,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
+  Link,
   List,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Snackbar,
   ListSubheader,
+  Snackbar,
   Step,
   StepLabel,
   Stepper,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+  useApolloClient,
 } from "ui";
 import { v1 } from "uuid";
 import * as XLSX from "xlsx";
-
 import { useAotfQueryState } from "../../../context/AssociationsQueryContext";
 import { useAotfURLState } from "../../../context/AssociationsURLContext";
 import NestedItem from "./NestedItem";
@@ -124,9 +123,12 @@ interface QueryTermResult {
 }
 
 function formatQueryTermsResults(queryResult: any): QueryTermResult[] {
-  const sortedResult = [...queryResult.data.mapIds.mappings].sort(
-    (a: any, b: any) => (a.hits.length < b.hits.length ? 1 : -1)
-  );
+  // `hits` is nullable on the API, so terms without a match are normalised to an empty list
+  const mappings = queryResult.data.mapIds.mappings.map((qT: any) => ({
+    ...qT,
+    hits: qT.hits ?? [],
+  }));
+  const sortedResult = mappings.sort((a: any, b: any) => (a.hits.length < b.hits.length ? 1 : -1));
   return sortedResult.map((qT: any) => ({
     ...qT,
     hits: [...qT.hits.map((e: any) => ({ ...e, checked: true }))],
@@ -135,7 +137,14 @@ function formatQueryTermsResults(queryResult: any): QueryTermResult[] {
 
 const uploadSuggestions: Record<string, string[]> = {
   target: ["ENSG00000232810", "interleukin 6", "TP53", "ENSG00000105329", "P15692", "CD4"],
-  disease: ["MONDO_0003847", "neoplasm", "MONDO_0004992", "MONDO_0007256", "infection", "OBI_1110021"],
+  disease: [
+    "MONDO_0003847",
+    "neoplasm",
+    "MONDO_0004992",
+    "MONDO_0007256",
+    "infection",
+    "OBI_1110021",
+  ],
 };
 
 interface FileExampleProps {
@@ -209,7 +218,7 @@ const FileExample = ({ entity = "target", runAction }: FileExampleProps) => {
                   {fileType === "json" && (
                     <>
                       [
-                      {examples.map(ex => (
+                      {examples.map((ex) => (
                         <Typography key={v1()} variant="monoText" display="block" gutterBottom>
                           {`"${ex}",`}
                         </Typography>
@@ -218,7 +227,7 @@ const FileExample = ({ entity = "target", runAction }: FileExampleProps) => {
                     </>
                   )}
                   {fileType === "text" &&
-                    examples.map(ex => (
+                    examples.map((ex) => (
                       <Typography key={v1()} variant="monoText" display="block" gutterBottom>
                         {ex}
                       </Typography>
@@ -231,7 +240,7 @@ const FileExample = ({ entity = "target", runAction }: FileExampleProps) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {examples.map(ex => (
+                        {examples.map((ex) => (
                           <tr
                             key={v1()}
                             style={{ border: "1px solid black", borderCollapse: "collapse" }}
@@ -284,11 +293,12 @@ function DataUploader() {
       else if (fileType === "json") reader.readAsText(file);
       else setOpenErrorSnackbar(true);
 
-      reader.onload = async e => {
+      reader.onload = async (e) => {
         let contents: string[];
         if (fileType === "spreadsheet") contents = getDataFromSpreadsheet(e);
         else if (fileType === "text") contents = getDataFromTextFile(e);
-        else if (fileType === "json") contents = JSON.parse((e.target as FileReader).result as string);
+        else if (fileType === "json")
+          contents = JSON.parse((e.target as FileReader).result as string);
         else {
           setOpenErrorSnackbar(true);
           return;
@@ -314,7 +324,7 @@ function DataUploader() {
       );
     }
 
-    return data.map(item => item["id"]);
+    return data.map((item) => item["id"]);
   }
 
   function getDataFromTextFile(file: ProgressEvent<FileReader>): string[] {
@@ -347,7 +357,7 @@ function DataUploader() {
   const entityToUploadLabel = getEntityToUploadLabel[entityToGet];
 
   const handlePinElements = () => {
-    setActiveStep(prev => prev + 1);
+    setActiveStep((prev) => prev + 1);
     const allHits: string[] = [];
     for (const termResult of queryTermsResults ?? []) {
       for (const hit of termResult.hits) {
@@ -360,7 +370,7 @@ function DataUploader() {
 
   const handleBack = () => {
     if (activeStep < 1) handleClosePopover();
-    else setActiveStep(prev => prev - 1);
+    else setActiveStep((prev) => prev - 1);
   };
 
   const handleReset = () => {
@@ -381,25 +391,23 @@ function DataUploader() {
   };
 
   function handleParentChange(term: string) {
-    setQueryTermsResults(prev =>
-      prev!.map(hitItem => {
+    setQueryTermsResults((prev) =>
+      prev!.map((hitItem) => {
         if (hitItem.term !== term) return hitItem;
-        const allChecked = hitItem.hits.every(el => el.checked);
+        const allChecked = hitItem.hits.every((el) => el.checked);
         return {
           ...hitItem,
-          hits: hitItem.hits.map(el => ({ ...el, checked: !allChecked })),
+          hits: hitItem.hits.map((el) => ({ ...el, checked: !allChecked })),
         };
       })
     );
   }
 
   function handleChangeChildCheckbox(hitId: string) {
-    setQueryTermsResults(prev =>
-      prev!.map(hitItem => ({
+    setQueryTermsResults((prev) =>
+      prev!.map((hitItem) => ({
         ...hitItem,
-        hits: hitItem.hits.map(el =>
-          el.id === hitId ? { ...el, checked: !el.checked } : el
-        ),
+        hits: hitItem.hits.map((el) => (el.id === hitId ? { ...el, checked: !el.checked } : el)),
       }))
     );
   }
@@ -425,14 +433,14 @@ function DataUploader() {
           ".MuiDialog-paper": {
             width: "70%",
             maxWidth: "800px !important",
-            borderRadius: theme => theme.spacing(1),
+            borderRadius: (theme) => theme.spacing(1),
           },
         }}
       >
         <DialogTitle>{`Upload list of ${entityToUploadLabel}`}</DialogTitle>
         <DialogContent sx={{ pb: 0, overflowY: "scroll" }} dividers>
           <Typography
-            sx={{ m: theme => `${theme.spacing(1)} 0 ${theme.spacing(4)} 0` }}
+            sx={{ m: (theme) => `${theme.spacing(1)} 0 ${theme.spacing(4)} 0` }}
             variant="subtitle2"
             gutterBottom
           >
@@ -449,9 +457,9 @@ function DataUploader() {
             </Link>
           </Typography>
           {activeStep === 0 && <FileExample entity={entityToGet} runAction={handleRunExample} />}
-          <Box sx={{ m: theme => `${theme.spacing(1)} 0 ${theme.spacing(4)} 0` }}>
+          <Box sx={{ m: (theme) => `${theme.spacing(1)} 0 ${theme.spacing(4)} 0` }}>
             <Stepper activeStep={activeStep}>
-              {steps.map(label => (
+              {steps.map((label) => (
                 <Step key={label}>
                   <StepLabel>{label}</StepLabel>
                 </Step>

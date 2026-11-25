@@ -1,27 +1,48 @@
-import { ReactElement } from "react";
+import { useQuery } from "@apollo/client";
 import {
+  DiseaseStudiesSearchField,
+  DiseaseStudiesSortField,
+  type GwasStudiesQuery,
+  type GwasStudiesQueryVariables,
+  naLabel,
+  SortDirection,
+} from "@ot/constants";
+import { epmcUrl, getStudyCategory } from "@ot/utils";
+import type { ReactElement } from "react";
+import {
+  Box,
   Link,
+  type OtTableColumn,
+  OtTableServer,
+  PublicationsDrawer,
   SectionItem,
   Tooltip,
-  PublicationsDrawer,
-  OtTable,
-  useBatchQuery,
-  Box,
   Typography,
 } from "ui";
-import { naLabel, table5HChunkSize } from "@ot/constants";
-import { epmcUrl, getStudyCategory } from "@ot/utils";
-import Description from "./Description";
-
-import GWAS_STUDIES_BODY_QUERY from "./GWASStudiesQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
+import Description from "./Description";
+import GWAS_STUDIES_BODY_QUERY_DOCUMENT from "./GWASStudiesQuery.gql";
 
-const columns = [
+const GWAS_STUDIES_BODY_QUERY = typedDocument<GwasStudiesQuery, GwasStudiesQueryVariables>(
+  GWAS_STUDIES_BODY_QUERY_DOCUMENT
+);
+
+type StudyRow = GwasStudiesQuery["studies"]["studiesView"]["rows"][number];
+
+const DEFAULT_SORT = {
+  id: "nSamples",
+  field: DiseaseStudiesSortField.NSamples,
+};
+
+const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "id",
     label: "Study",
     enableHiding: false,
-    renderCell: ({ id }: { id: string }) => (
+    // For now, attach all search fields to the first column.
+    searchFields: Object.values(DiseaseStudiesSearchField),
+    renderCell: ({ id }) => (
       <Link asyncTooltip to={`/study/${id}`}>
         {id}
       </Link>
@@ -34,17 +55,16 @@ const columns = [
   {
     id: "nSamples",
     label: "Sample size",
-    renderCell: ({ nSamples }: { nSamples: number }) => {
+    renderCell: ({ nSamples }) => {
       return typeof nSamples === "number" ? nSamples.toLocaleString() : naLabel;
     },
-    comparator: (a, b) => a?.nSamples - b?.nSamples,
-    sortable: true,
+    sortField: DEFAULT_SORT.field,
   },
   {
     id: "cohorts",
     label: "Cohorts",
-    renderCell: ({ projectId, cohorts, ldPopulationStructure }: { projectId: string; cohorts: string[]; ldPopulationStructure: { ldPopulation: string; relativeSampleSize: number }[] }) => {
-      let displayText;
+    renderCell: ({ projectId, cohorts, ldPopulationStructure }) => {
+      let displayText: string;
       if (getStudyCategory(projectId) === "FINNGEN") displayText = "FinnGen";
       else if (cohorts?.length) displayText = cohorts.join(", ");
       else return naLabel;
@@ -72,43 +92,39 @@ const columns = [
         displayText
       );
     },
-    exportValue: ({ projectId, cohorts }: { projectId: string; cohorts: string[] }) =>
+    exportValue: ({ projectId, cohorts }) =>
       getStudyCategory(projectId) === "FINNGEN"
         ? "FinnGen"
         : cohorts?.length
-        ? cohorts.join(", ")
-        : null,
+          ? cohorts.join(", ")
+          : null,
   },
   {
     id: "publication",
     label: "Publication",
-    renderCell: ({ publicationFirstAuthor, publicationDate, pubmedId, projectId }: { publicationFirstAuthor: string; publicationDate: string; pubmedId: string; projectId: string } ) => {
+    sortField: DiseaseStudiesSortField.PublicationDate,
+    renderCell: ({ publicationFirstAuthor, publicationDate, pubmedId, projectId }) => {
       if (!publicationFirstAuthor) return naLabel;
+      const year = publicationDate ? new Date(publicationDate).getFullYear() : naLabel;
       return (
         <PublicationsDrawer
-          entries={[{ name: pubmedId, url: epmcUrl(pubmedId) }]}
+          entries={pubmedId ? [{ name: pubmedId, url: epmcUrl(pubmedId) }] : []}
           customLabel={`${
-            getStudyCategory(projectId) === "FINNGEN"
-              ? "FinnGen"
-              : publicationFirstAuthor || naLabel
-          } et al. (${new Date(publicationDate).getFullYear()})`}
+            getStudyCategory(projectId) === "FINNGEN" ? "FinnGen" : publicationFirstAuthor
+          } et al. (${year})`}
         />
       );
     },
-    filterValue: ({ publicationYear, publicationFirstAuthor }: { publicationYear: string; publicationFirstAuthor: string }) =>
-      `${publicationYear} ${publicationFirstAuthor}`,
-    exportValue: ({ pubmedId }: { pubmedId: string }) => `${pubmedId}`,
+    exportValue: ({ pubmedId }) => pubmedId ?? "",
   },
   {
-    id: "credibleSets",
+    id: "credibleSetsCount",
     label: "Credible sets count",
-    renderCell: ({ credibleSets }: { credibleSets: { count: number } }) => {
-      return credibleSets?.count ?? naLabel;
-    },
-    comparator: (a, b) => (a?.credibleSets?.count ?? 0) - (b?.credibleSets?.count ?? 0),
-    sortable: true,
+    renderCell: ({ credibleSetsCount }) => credibleSetsCount ?? naLabel,
   },
 ];
+
+const PAGE_SIZE = 10;
 
 type BodyProps = {
   id: string;
@@ -116,39 +132,39 @@ type BodyProps = {
 };
 
 function Body({ id: efoId, label: diseaseName }: BodyProps): ReactElement {
-  const variables = {
-    diseaseIds: [efoId],
-    size: table5HChunkSize,
-    index: 0,
-  };
+  const variables = { diseaseIds: [efoId] };
 
-  const request = useBatchQuery({
-    query: GWAS_STUDIES_BODY_QUERY,
-    variables,
-    dataPath: "studies",
-    size: table5HChunkSize,
+  // first page only: drives the section loading/error state, the table fetches
+  // the same page from the Apollo cache and then paginates on its own
+  const request = useQuery(GWAS_STUDIES_BODY_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Descending }],
+    },
   });
 
   return (
     <SectionItem
       definition={definition}
       entity="studies"
-      
       showContentLoading
       loadingMessage="Loading data. This may take some time..."
       request={request}
       renderDescription={() => <Description name={diseaseName} />}
       renderBody={() => (
-        <OtTable
+        <OtTableServer<StudyRow>
           columns={columns}
-          rows={request.data?.studies.rows}
-          sortBy="nSamples"
+          query={GWAS_STUDIES_BODY_QUERY}
+          variables={variables}
+          dataPath="studies.studiesView"
+          pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
           order="desc"
+          globalFilterPlaceholderText="Search studies..."
           dataDownloader
           dataDownloaderFileStem={`${efoId}-gwas-studies`}
-          loading={request.loading}
-          query={GWAS_STUDIES_BODY_QUERY.loc.source.body}
-          variables={variables}
         />
       )}
     />
