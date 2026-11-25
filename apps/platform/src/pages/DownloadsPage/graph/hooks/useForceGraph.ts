@@ -21,7 +21,6 @@ import {
   GraphController,
   GraphPointerPosition,
   GraphCallbacks,
-  GraphLayout,
 } from '../types';
 import { useGraphSimulation } from './useGraphSimulation';
 import { useSelectionHighlight } from './useSelectionHighlight';
@@ -38,7 +37,6 @@ interface UseForceGraphOptions extends GraphCallbacks {
   /** Basket ids while in basket scope; null when every node is in scope */
   basketIds?: Set<string> | null;
   layoutConfig?: ForceLayoutConfig;
-  layout?: GraphLayout;
 }
 
 interface UseForceGraphResult {
@@ -57,7 +55,6 @@ export const useForceGraph = ({
   selectedEdge,
   basketIds = null,
   layoutConfig,
-  layout,
   onNodeSelect,
   onNodeDeselect,
   onEdgeSelect,
@@ -90,7 +87,6 @@ export const useForceGraph = ({
     nodes,
     edges,
     layoutConfig,
-    layout,
   });
 
   useSelectionHighlight({
@@ -99,7 +95,6 @@ export const useForceGraph = ({
     selectedEdge,
     basketIds,
     isReady,
-    labelPlacement: layout === 'stacked' ? 'right' : 'below',
   });
 
   const controller = useGraphController({

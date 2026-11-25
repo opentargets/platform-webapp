@@ -24,7 +24,6 @@ export const initialState: DownloadsState = {
   basket: [],
   basketOpen: false,
   networkScope: "all",
-  networkLayout: "stacked",
   selectedNodeId: null,
 };
 
@@ -148,9 +147,6 @@ export function downloadsReducer(
     case ActionType.SET_NETWORK_SCOPE: {
       if (action.scope === "basket" && state.basket.length === 0) return state;
       return { ...state, networkScope: action.scope };
-    }
-    case ActionType.SET_NETWORK_LAYOUT: {
-      return { ...state, networkLayout: action.layout };
     }
     case ActionType.SELECT_NODE: {
       return { ...state, selectedNodeId: action.id };
