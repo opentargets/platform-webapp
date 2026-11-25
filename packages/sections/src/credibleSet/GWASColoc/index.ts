@@ -1,11 +1,11 @@
 import { lazy } from "react";
-import { CredibleSet } from "@ot/constants";
+import type { CredibleSet } from "@ot/constants";
 
 export const definition = {
   id: "gwas_coloc",
   name: "GWAS Colocalisation",
   shortName: "GC",
-  hasData: (data: CredibleSet) => (data.colocalisation?.count || 0) > 0,
+  hasData: (data: Pick<CredibleSet, "colocalisationView">) => (data.colocalisationView?.count || 0) > 0,
 };
 
 export { default as Summary } from "./Summary";
