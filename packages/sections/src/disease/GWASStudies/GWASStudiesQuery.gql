@@ -1,34 +1,28 @@
 query GWASStudiesQuery(
   $diseaseIds: [String!]!
-  $size: Int!
-  $index: Int!
-  $sort: [StudySort!]! = []
-  # empty text matches every study, so the table can keep sending a plain string
-  $search: String! = ""
+  $size: Int! = 10
+  $index: Int! = 0
+  $sort: [DiseaseStudiesSort!]! = []
+  $search: DiseaseStudiesSearch
 ) {
-  studies(
-    diseaseIds: $diseaseIds
-    page: { size: $size, index: $index }
-    sort: $sort
-    search: { text: $search }
-  ) {
-    count
-    rows {
-      id
-      projectId
-      traitFromSource
-      publicationFirstAuthor
-      publicationDate
-      publicationJournal
-      nSamples
-      cohorts
-      pubmedId
-      ldPopulationStructure {
-        ldPopulation
-        relativeSampleSize
-      }
-      credibleSets {
-        count
+  studies: diseases(efoIds: $diseaseIds) {
+    studiesView(sort: $sort, search: $search, page: { size: $size, index: $index }) {
+      count
+      rows {
+        id
+        projectId
+        traitFromSource
+        publicationFirstAuthor
+        publicationDate
+        publicationJournal
+        nSamples
+        cohorts
+        pubmedId
+        ldPopulationStructure {
+          ldPopulation
+          relativeSampleSize
+        }
+        credibleSetsCount
       }
     }
   }

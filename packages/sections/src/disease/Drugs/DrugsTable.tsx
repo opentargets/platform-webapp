@@ -3,7 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DrugsQueryVariables } from "@ot/constants";
-import { clinicalStageCategories, type DrugsQuery } from "@ot/constants";
+import {
+  ClinicalIndicationSearchField,
+  clinicalStageCategories,
+  type DrugsQuery,
+} from "@ot/constants";
 import type { Row } from "@tanstack/react-table";
 import type { MouseEvent } from "react";
 import { Box, Link, type OtTableColumn, OtTableServer, Typography } from "ui";
@@ -39,6 +43,7 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
     {
       id: "drugCard",
       label: "",
+      searchFields: [ClinicalIndicationSearchField.DrugName],
       renderCell: (row) => {
         const { drug, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
@@ -120,8 +125,6 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
           </Box>
         );
       },
-      filterValue: (row) =>
-        `${row.drug?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
@@ -179,7 +182,7 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
         dataDownloaderFileStem="drugs-and-clinical-candidates"
         dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        globalFilterPlaceholderText="Search..."
+        globalFilterPlaceholderText="Search drugs..."
         getSelectedRows={(rowsInfo: Row<DrugRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
