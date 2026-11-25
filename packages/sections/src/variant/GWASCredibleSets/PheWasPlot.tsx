@@ -43,7 +43,7 @@ function PheWasPlot({
 
   const data = structuredClone(
     originalData.filter((d) => {
-      return d.pValueMantissa != null && d.pValueExponent != null && d.variant != null;
+      return d.leadPValueMantissa != null && d.leadPValueExponent != null && d.leadVariant != null;
     })
   );
   if (data.length === 0) return null;
@@ -71,7 +71,7 @@ function PheWasPlot({
   const diseaseGroups = new Map();
   for (const row of data) {
     row._pageId = pageId;
-    row._y = Math.log10(row.pValueMantissa) + row.pValueExponent;
+    row._y = Math.log10(row.leadPValueMantissa) + row.leadPValueExponent;
     yMin = Math.min(yMin, row._y);
     const { id, name } = getTherapeuticArea(row);
     row._therapeuticAreaId = id;
@@ -229,14 +229,14 @@ function renderChart({
         x: (d) => d._x,
         y: (d) => d._y,
         r: 2.55,
-        symbol: (d) => (d.beta == null ? "circle" : "triangle"),
+        symbol: (d) => (d.leadBeta == null ? "circle" : "triangle"),
         stroke: (d) => palette[xIntervals.get(d._therapeuticAreaId).index],
         fill: (d) =>
-          d.variant.variantId === pageId
+          d.leadVariant.variantId === pageId
             ? palette[xIntervals.get(d._therapeuticAreaId).index]
             : background,
         strokeWidth: 1.3,
-        rotate: (d) => (d.beta < 0 ? 180 : 0),
+        rotate: (d) => (d.leadBeta < 0 ? 180 : 0),
         className: "obs-tooltip",
       }),
     ],
@@ -258,15 +258,15 @@ function renderTooltip(datum) {
       <TooltipTable>
         {/* Detailed tooltip content will be restored with its own request. */}
         <TooltipRow label="Credible set">
-          {datum.studyLocusId}
+          {datum.credibleSetId}
         </TooltipRow>
         <TooltipRow label="Lead variant">
-          {datum.variant?.variantId ?? naLabel}
+          {datum.leadVariant?.variantId ?? naLabel}
         </TooltipRow>
         <TooltipRow label="P-value">
-          {datum.pValueMantissa}x10{datum.pValueExponent}
+          {datum.leadPValueMantissa}x10{datum.leadPValueExponent}
         </TooltipRow>
-        <TooltipRow label="Beta">{datum.beta?.toPrecision(3) ?? naLabel}</TooltipRow>
+        <TooltipRow label="Beta">{datum.leadBeta?.toPrecision(3) ?? naLabel}</TooltipRow>
       </TooltipTable>
     </Box>
   );

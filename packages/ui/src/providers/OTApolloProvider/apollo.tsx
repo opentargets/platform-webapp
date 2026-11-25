@@ -53,17 +53,17 @@ export const createApolloClient = (config: Config) => {
           keyFields: ["biosampleId"],
         },
         // CredibleSet has no `id`/`_id` field, so Apollo can't auto-normalize it -
-        // every query touching Query.credibleSet(studyLocusId) collided in the same
+        // every query touching Query.credibleSet(credibleSetId) collided in the same
         // embedded field-level cache slot instead of a shared entity, causing the
         // "cache data may be lost" merge warning. Some queries (e.g. GWASColocQuery's
-        // root `credibleSet` result) don't select studyLocusId at that level, so a
+        // root `credibleSet` result) don't select credibleSetId at that level, so a
         // function is used instead of a plain keyFields array - it falls back to
         // Apollo's default (embedded) behavior for those instead of throwing, while
-        // still normalizing everywhere studyLocusId is present.
+        // still normalizing everywhere credibleSetId is present.
         CredibleSet: {
           keyFields: (obj, { readField }) => {
-            const studyLocusId = readField("studyLocusId", obj as any);
-            return studyLocusId ? `CredibleSet:${studyLocusId}` : false;
+            const credibleSetId = readField("credibleSetId", obj as any);
+            return credibleSetId ? `CredibleSet:${credibleSetId}` : false;
           },
           // Each credibleSet widget's Summary fragment selects a shallow/count-only
           // version of its own field (e.g. `colocalisation(...) { count }`), while its

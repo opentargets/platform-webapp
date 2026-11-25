@@ -1,9 +1,9 @@
-query VariantsQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
+query VariantsQuery($credibleSetId: String!, $page: Page) {
+  credibleSet(credibleSetId: $credibleSetId) {
     locus(page: $page) {
       count
       rows {
-        logBF
+        logBayesFactor
         posteriorProbability
         variant {
           variantId
@@ -18,8 +18,8 @@ query VariantsQuery($studyLocusId: String!, $page: Page) {
         }
         pValueMantissa
         pValueExponent
-        beta
-        standardError
+        reportedBeta
+        reportedStandardError
         r2Overall
       }
     }
