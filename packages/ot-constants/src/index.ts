@@ -272,6 +272,10 @@ export const clinicalReportsSourcesInfo = {
     name: "Aggregate Content of ClinicalTrials.gov",
     url: "https://aact.ctti-clinicaltrials.org/",
   },
+  "ClinicalTrials.gov": {
+    name: "ClinicalTrials.gov",
+    url: "https://clinicaltrials.gov/",
+  },
   TTD: {
     name: "Therapeutic Target Database",
     url: "https://ttd.idrblab.cn/",
@@ -295,6 +299,10 @@ export const clinicalReportsSourcesInfo = {
   FDA: {
     name: "Food and Drug Administration",
     url: "https://www.fda.gov/",
+  },
+  "Drugs@FDA": {
+    name: "Drugs@FDA",
+    url: "https://www.accessdata.fda.gov/scripts/cder/daf/",
   },
   USAN: {
     name: "United States Adopted Names",
