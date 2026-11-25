@@ -4,6 +4,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   clinicalStageCategories,
+  DrugIndicationSearchField,
   type IndicationsQuery,
   type IndicationsQueryVariables,
 } from "@ot/constants";
@@ -42,6 +43,7 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
     {
       id: "indicationCard",
       label: "",
+      searchFields: [DrugIndicationSearchField.DiseaseName],
       renderCell: (row) => {
         const { disease, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
@@ -120,8 +122,6 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
           </Box>
         );
       },
-      filterValue: (row) =>
-        `${row.disease?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
@@ -180,7 +180,7 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
         dataDownloaderFileStem="clinical-indications"
         dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        globalFilterPlaceholderText="Search..."
+        globalFilterPlaceholderText="Search indications..."
         getSelectedRows={(rowsInfo: Row<IndicationRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
