@@ -25,9 +25,13 @@ export class OTProjectsSection {
     return await this.getSectionHeader().textContent();
   }
 
-  // Projects list/cards
+  // Projects table
+  getTable(): Locator {
+    return this.getSection().locator("table");
+  }
+
   getProjectCards(): Locator {
-    return this.getSection().locator("[data-testid^='project-card-']");
+    return this.getTable().locator("tbody tr");
   }
 
   async getProjectCount(): Promise<number> {
@@ -39,7 +43,7 @@ export class OTProjectsSection {
   }
 
   async getProjectTitle(index: number): Promise<string | null> {
-    return await this.getProjectCard(index).locator("h3, h4, h5, h6").first().textContent();
+    return await this.getProjectCard(index).locator("td").first().textContent();
   }
 
   // Project links

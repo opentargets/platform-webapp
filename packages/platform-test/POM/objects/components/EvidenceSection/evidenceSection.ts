@@ -86,7 +86,10 @@ export class EvidenceSection {
       // Loader might not appear at all, which is fine
     }
 
-    // Also wait for skeleton loaders to disappear
+    // Also wait for skeleton loaders to disappear. Note: the options object
+    // must be the 3rd argument here - passing it 2nd silently binds it as
+    // the page function's `arg` instead, turning this into an unbounded
+    // wait that blocks until the whole test times out.
     await this.page
       .waitForFunction(
         () => {
@@ -97,6 +100,7 @@ export class EvidenceSection {
           }
           return true;
         },
+        undefined,
         { timeout: 15000 }
       )
       .catch(() => {
