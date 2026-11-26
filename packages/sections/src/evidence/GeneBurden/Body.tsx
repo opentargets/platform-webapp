@@ -106,7 +106,7 @@ const getSourceLink = (
   project: string | null | undefined,
   targetId: string,
   urls: GeneBurdenRow["urls"]
-) => urls?.[0]?.url ?? (project ? projectLinks[project]?.(targetId) : undefined) ?? "";
+) => urls?.[0] ?? (project ? projectLinks[project]?.(targetId) : undefined) ?? "";
 
 const formatCount = (value?: number | null) =>
   typeof value === "number" ? value.toLocaleString() : naLabel;
