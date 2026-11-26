@@ -339,6 +339,24 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
     "enhancer-to-gene-predictions",
   ],
 
+  // Evidence: BRAF in melanoma
+  "ENSG00000157764/MONDO_0005105": [
+    "eva",
+    "cancer-gene-census",
+    "intogen",
+    "eva-somatic",
+    "clinical-precedence",
+    "crispr",
+    "cancer-biomarkers",
+    "europe-pmc",
+  ],
+
+  // Evidence: IL6R in myocardial infarction
+  "ENSG00000160712/MONDO_0005068": ["gwas-credible-sets", "clinical-precedence", "europe-pmc"],
+
+  // Evidence: MIR1302-2HG in melanoma (both exist, no evidence between them)
+  "ENSG00000243485/MONDO_0005105": [],
+
   // Study: GWAS
   GCST90475211: ["gwas-credible-sets", "shared-trait-studies"],
 

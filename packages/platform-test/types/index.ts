@@ -69,6 +69,15 @@ export interface TestConfig {
     alternatives?: string[];
     aotfGenes?: string[];
   };
+  /** Target and disease pairs for the evidence page (/evidence/:ensgId/:efoId) */
+  evidence?: {
+    /** Pair with many evidence sections (BRAF, melanoma) */
+    primary: { ensgId: string; efoId: string };
+    /** Pair with genetic evidence (IL6R, myocardial infarction) */
+    withGeneticEvidence: { ensgId: string; efoId: string };
+    /** Existing target and disease with no evidence between them */
+    withoutEvidence: { ensgId: string; efoId: string };
+  };
   study: {
     gwas: {
       primary: string;
