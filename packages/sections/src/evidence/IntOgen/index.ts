@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "IntOGen",
   shortName: "IO",
-  hasData: (data: EvidenceData) => hasEvidence(data, "intogen", "intOgen"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "intogen"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
