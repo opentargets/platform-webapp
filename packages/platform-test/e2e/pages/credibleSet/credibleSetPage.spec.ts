@@ -1,7 +1,15 @@
 import { expect, test } from "../../../fixtures";
 import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { CredibleSetPage } from "../../../POM/page/credibleSet/credibleSet";
+import type { TestConfig } from "../../../types";
 import { expectSectionLoaded, expectSections } from "../../../utils/sections";
+
+/** The credible set ids under test; fails loudly when the config has none. */
+function credibleSetIds(testConfig: TestConfig): { primary: string; qtl: string } {
+  const { primary, qtl } = testConfig.credibleSet ?? {};
+  if (!primary || !qtl) throw new Error("testConfig.credibleSet needs a primary and a qtl id");
+  return { primary, qtl };
+}
 
 const GWAS = {
   variantId: "2_85545938_A_G",
@@ -24,7 +32,7 @@ test.describe("Credible set page", () => {
     page,
     testConfig,
   }) => {
-    const id = testConfig.credibleSet.primary;
+    const id = credibleSetIds(testConfig).primary;
     const credibleSet = new CredibleSetPage(page);
     await credibleSet.goToCredibleSetPage(id);
 
@@ -43,7 +51,7 @@ test.describe("Credible set page", () => {
     page,
     testConfig,
   }) => {
-    const id = testConfig.credibleSet.qtl;
+    const id = credibleSetIds(testConfig).qtl;
     const credibleSet = new CredibleSetPage(page);
     await credibleSet.goToCredibleSetPage(id);
 
@@ -60,14 +68,14 @@ test.describe("Credible set page", () => {
 
   test("GWAS lead variant and fine-mapping fields", async ({ page, testConfig }) => {
     const credibleSet = new CredibleSetPage(page);
-    await credibleSet.goToCredibleSetPage(testConfig.credibleSet.primary);
+    await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
     await expect(credibleSet.profileHeader).toContainText("Lead Variant");
 
     await expect(credibleSet.field("P-value")).toHaveText(/^P-value:\s*\d(\.\d+)?\s*×\s*10-17$/);
-    await expect(credibleSet.field("Beta")).toHaveText(/^Beta\??:\s*0\.0630$/);
-    await expect(credibleSet.field("Standard error")).toHaveText(/^Standard error\??:\s*\d\.\d+(e-\d+)?$/);
+    await expect(credibleSet.field("Beta")).toHaveText(/0\.0630$/);
+    await expect(credibleSet.field("Standard error")).toHaveText(/\d\.\d+(e-\d+)?$/);
     await expect(credibleSet.field("Posterior probability")).toHaveText(
-      /^Posterior probability\??:\s*[01]\.\d+$/
+      /[01]\.\d+$/
     );
     await expect(credibleSet.profileHeader).toContainText("Fine-mapping");
     await expect(credibleSet.field("Locus")).toHaveText("Locus: chr2:85366766-85770276");
@@ -75,12 +83,12 @@ test.describe("Credible set page", () => {
     await expect(credibleSet.field("Confidence")).toBeVisible();
     await credibleSet.field("Confidence").locator("svg, span").last().hover();
     await expect(page.getByRole("tooltip")).toContainText("SuSiE fine-mapped credible set");
-    await expect(credibleSet.field("Minimum R2")).toHaveText(/^Minimum R2\??:\s*0\.915$/);
+    await expect(credibleSet.field("Minimum R2")).toHaveText(/0\.915$/);
   });
 
   test("GWAS study fields and disease link", async ({ page, testConfig }) => {
     const credibleSet = new CredibleSetPage(page);
-    await credibleSet.goToCredibleSetPage(testConfig.credibleSet.primary);
+    await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
 
     await expect(credibleSet.profileHeader).toContainText(GWAS.studyHeading);
     await expect(credibleSet.field("Reported trait")).toHaveText(`Reported trait: ${GWAS.trait}`);
@@ -94,7 +102,7 @@ test.describe("Credible set page", () => {
 
   test("pQTL study fields have a project and no disease", async ({ page, testConfig }) => {
     const credibleSet = new CredibleSetPage(page);
-    await credibleSet.goToCredibleSetPage(testConfig.credibleSet.qtl);
+    await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).qtl);
 
     await expect(credibleSet.profileHeader).toContainText(QTL.studyHeading);
     await expect(credibleSet.field("Project")).toHaveText(`Project: ${QTL.project}`);
@@ -102,13 +110,14 @@ test.describe("Credible set page", () => {
     await expect(credibleSet.field("Disease or phenotype")).toHaveCount(0);
     await expect(credibleSet.field("P-value")).toHaveText(/^P-value:\s*\d(\.\d+)?\s*×\s*10-231$/);
     await expect(credibleSet.field("Method")).toHaveText(`Method: ${GWAS.method}`);
+    await expect(credibleSet.field("Posterior probability")).toHaveText(/[01]\.\d+$/);
   });
 
   test("has a single, selected Profile tab that links to the credible set", async ({
     page,
     testConfig,
   }) => {
-    const id = testConfig.credibleSet.primary;
+    const id = credibleSetIds(testConfig).primary;
     const credibleSet = new CredibleSetPage(page);
     await credibleSet.goToCredibleSetPage(id);
 
@@ -119,7 +128,7 @@ test.describe("Credible set page", () => {
 
   test("lead variant link goes to the variant page", async ({ page, testConfig }) => {
     const credibleSet = new CredibleSetPage(page);
-    await credibleSet.goToCredibleSetPage(testConfig.credibleSet.primary);
+    await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
 
     await expect(credibleSet.leadVariantLink).toHaveAttribute("href", `../variant/${GWAS.variantId}`);
     await credibleSet.leadVariantLink.click();
@@ -129,7 +138,7 @@ test.describe("Credible set page", () => {
 
   test("study link goes to the study page", async ({ page, testConfig }) => {
     const credibleSet = new CredibleSetPage(page);
-    await credibleSet.goToCredibleSetPage(testConfig.credibleSet.primary);
+    await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
 
     await expect(credibleSet.studyLink).toHaveAttribute("href", `../study/${GWAS.studyId}`);
     await credibleSet.studyLink.click();

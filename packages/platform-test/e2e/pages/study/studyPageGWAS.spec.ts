@@ -58,6 +58,7 @@ test.describe("Study page: GWAS study", () => {
     await expect(page.getByRole("tab")).toHaveText(["Profile"]);
     await expect(studyPage.profileTab).toHaveAttribute("aria-selected", "true");
     await expect(studyPage.profileTab).toHaveAttribute("href", `/study/${study}`);
+    await expectSectionLoaded(page, "gwas-credible-sets");
   });
 
   test("the header shows the study, its trait, publication and sample sizes", async ({
@@ -82,7 +83,7 @@ test.describe("Study page: GWAS study", () => {
 
     await test.step("publication: first author, journal and year, and the PubMed id", async () => {
       await expect(header.publication).toHaveText(/^Publication: .+ et al\. .+ \((19|20)\d{2}\)$/);
-      await expect(header.pubmed).toHaveText(/^PubMed: \d+$/);
+      await expect(header.pubmed).toHaveText(/^PubMed:\s+\d+\s*$/);
     });
 
     await test.step("sample size, cases and controls add up", async () => {

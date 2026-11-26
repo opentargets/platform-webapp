@@ -54,7 +54,7 @@ export class CredibleSetPage {
 
   /** A "Title: value" field of the profile header, found by its title. */
   field(title: string): Locator {
-    return this.profileHeader.getByText(new RegExp(`^${title}:`));
+    return this.profileHeader.getByRole("heading", { name: new RegExp(`^${title}`) });
   }
 
   section(sectionId: string): Locator {
