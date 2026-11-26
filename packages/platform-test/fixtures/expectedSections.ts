@@ -430,6 +430,46 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   "ENSG00000243485/MONDO_0005105": [],
 
+  // Evidence: KIF1A in neurodegenerative disease (17 CRISPR screens, 4 Expression Atlas experiments)
+  "ENSG00000130294/MONDO_0005559": [
+    "crispr-screen",
+    "europe-pmc",
+    "eva",
+    "expression-atlas",
+    "genomics-england",
+    "orphanet",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // Evidence: CHRM1 in Parkinson disease (one CRISPR screen)
+  "ENSG00000168539/MONDO_0005180": ["clinical-precedence", "crispr-screen", "europe-pmc"],
+
+  // Evidence: FGFR3 in cancer or benign tumor (Reactome 22 rows, Expression Atlas 22, IMPC 134)
+  "ENSG00000068078/MONDO_0045024": [
+    "cancer-biomarkers",
+    "cancer-gene-census",
+    "clinical-precedence",
+    "crispr",
+    "europe-pmc",
+    "eva",
+    "eva-somatic",
+    "expression-atlas",
+    "genomics-england",
+    "gwas-credible-sets",
+    "impc",
+    "intogen",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // Evidence: CTNNB1 in cancer or benign tumor (Reactome 5 rows, Expression Atlas 5, IMPC 11)
+  "ENSG00000168036/MONDO_0045024": ["expression-atlas", "impc", "reactome"],
+
+  // Evidence: HRAS in cancer or benign tumor (a single Expression Atlas experiment, 29 Reactome rows)
+  "ENSG00000174775/MONDO_0045024": ["expression-atlas", "reactome"],
+
   // Study: GWAS
   GCST90475211: ["gwas-credible-sets", "shared-trait-studies"],
 
