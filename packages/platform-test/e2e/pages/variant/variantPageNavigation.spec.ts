@@ -70,6 +70,8 @@ test.describe("Variant page", () => {
   test("a short id is shown in full without a dialog", async ({ page }) => {
     const variantPage = new VariantPage(page);
     await variantPage.goToVariantPage(VARIANTS.intron.id);
+    // the title is the whole id, so there is nothing to abbreviate and no dialog to open
+    await expect(variantPage.title).toHaveText(VARIANTS.intron.title);
     await expect(variantPage.title.getByTitle("Show variant ID")).toHaveCount(0);
   });
 

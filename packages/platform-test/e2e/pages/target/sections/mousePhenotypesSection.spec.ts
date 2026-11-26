@@ -1,6 +1,7 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
+  allowSwissBioPicsCors,
   MOUSE_PHENOTYPES_COLUMNS,
   MOUSE_PHENOTYPES_OPERATION,
   MousePhenotypesSection,
@@ -18,6 +19,10 @@ const MP_TERM_URL = /^https:\/\/identifiers\.org\/MP:\d{7}$/;
  * downloads every row and filters them in the browser.
  */
 test.describe("Target mouse phenotypes section", () => {
+  test.beforeEach(async ({ page }) => {
+    await allowSwissBioPicsCors(page);
+  });
+
   test("the section is loaded with its title, description and source link", async ({
     page,
     testConfig,
@@ -103,6 +108,7 @@ test.describe("Target mouse phenotypes section", () => {
       await expect(phenotypes.table.firstPageButton).toBeEnabled();
       await expect(phenotypes.table.previousPageButton).toBeEnabled();
       await expect(phenotypes.table.nextPageButton).toBeEnabled();
+      await phenotypes.table.expectRowsChangedFrom(firstPage);
       const secondPage = await phenotypes.table.rowTexts();
       for (const row of secondPage) expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
     });
@@ -125,7 +131,7 @@ test.describe("Target mouse phenotypes section", () => {
       await phenotypes.table.firstPageButton.click();
       await phenotypes.table.expectPosition(1, 10, total);
       await phenotypes.table.expectFirstPage();
-      expect(await phenotypes.table.rowTexts()).toEqual(firstPage);
+      await phenotypes.table.expectRowTexts(firstPage);
     });
   });
 
@@ -152,7 +158,7 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.table.setPageSize(25);
     await phenotypes.table.expectPosition(1, 25, total);
     await expect(phenotypes.table.rows).toHaveCount(25);
-    expect((await phenotypes.table.rowTexts()).slice(0, 10)).toEqual(firstPage);
+    await expect.poll(async () => (await phenotypes.table.rowTexts()).slice(0, 10)).toEqual(firstPage);
 
     await phenotypes.table.setPageSize(100);
     await phenotypes.table.expectPosition(1, Math.min(100, total), total);
@@ -170,13 +176,18 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.expectLoaded();
     await phenotypes.table.expectLoaded();
     const total = await phenotypes.table.total();
+    const firstPage = await phenotypes.table.rowTexts();
 
     // take a phenotype that is not on the first page, and search for its MP id
     await phenotypes.table.nextPageButton.click();
     await phenotypes.table.expectPosition(11, 20, total);
+    await phenotypes.table.expectRowsChangedFrom(firstPage);
     const link = phenotypes.cell(0, "phenotype").getByRole("link");
-    const name = (await link.innerText()).trim();
-    const termId = ((await link.getAttribute("href")) ?? "").replace("https://identifiers.org/", "");
+    const { name, href } = await link.evaluate((a: HTMLAnchorElement) => ({
+      name: (a.textContent ?? "").trim(),
+      href: a.href,
+    }));
+    const termId = href.replace("https://identifiers.org/", "");
     expect(termId).toMatch(/^MP:\d{7}$/);
 
     await phenotypes.table.search(termId);

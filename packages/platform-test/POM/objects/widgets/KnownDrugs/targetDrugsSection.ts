@@ -181,26 +181,48 @@ export class TargetDrugsSection {
    * Start waiting for the response of the drugs query that satisfies `matches`, which gets
    * the variables the page sent. Call it BEFORE the action that issues the query.
    */
-  async waitForPage(
+  waitForPage(
     matches: (variables: TargetDrugsVariables) => boolean
   ): Promise<{ data: TargetDrugsData; variables: TargetDrugsVariables }> {
+    return this.waitForOperation<TargetDrugsData, TargetDrugsVariables>(
+      TargetDrugsSection.operation,
+      matches
+    );
+  }
+
+  /**
+   * Start waiting for the response of the clinical reports query for exactly these report
+   * ids. The page also fetches the reports of other drugs in the background (the first drug
+   * of the next page), so the first reports response after an action is not necessarily the
+   * one it asked for. Call it BEFORE the action that issues the query.
+   */
+  waitForRecords(
+    clinicalReportsIds: string[]
+  ): Promise<{ data: ClinicalRecordsData; variables: { clinicalReportsIds: string[] } }> {
+    return this.waitForOperation<ClinicalRecordsData, { clinicalReportsIds: string[] }>(
+      TargetDrugsSection.recordsOperation,
+      ({ clinicalReportsIds: sent }) =>
+        sent.length === clinicalReportsIds.length && sent.every((id, i) => id === clinicalReportsIds[i])
+    );
+  }
+
+  private async waitForOperation<Data, Variables>(
+    operationName: string,
+    matches: (variables: Variables) => boolean
+  ): Promise<{ data: Data; variables: Variables }> {
     const response = await this.page.waitForResponse(
       (candidate) => {
         const body = candidate.request().postData();
         if (candidate.request().method() !== "POST" || !body?.includes('"query"')) return false;
-        const request = JSON.parse(body) as {
-          operationName?: string;
-          variables?: TargetDrugsVariables;
-        };
-        return request.operationName === TargetDrugsSection.operation && !!request.variables &&
-          matches(request.variables);
+        const request = JSON.parse(body) as { operationName?: string; variables?: Variables };
+        return request.operationName === operationName && !!request.variables && matches(request.variables);
       },
       { timeout: 60_000 }
     );
-    expect(response.status(), "the drugs query should answer with HTTP 200").toBe(200);
-    const body = (await response.json()) as { data: TargetDrugsData; errors?: unknown[] };
-    expect(body.errors, "the drugs query should not return GraphQL errors").toBeUndefined();
-    const variables = JSON.parse(response.request().postData() ?? "{}").variables;
+    expect(response.status(), `${operationName} should answer with HTTP 200`).toBe(200);
+    const body = (await response.json()) as { data: Data; errors?: unknown[] };
+    expect(body.errors, `${operationName} should not return GraphQL errors`).toBeUndefined();
+    const variables = JSON.parse(response.request().postData() ?? "{}").variables as Variables;
     return { data: body.data, variables };
   }
 

@@ -399,10 +399,7 @@ test.describe("Target drugs and clinical candidates section", () => {
     expect(other, "the target should have a drug at another max stage").toBeDefined();
     const row = other as TargetDrugRow;
 
-    const recordsResponse = waitForOperation<ClinicalRecordsData>(
-      page,
-      TargetDrugsSection.recordsOperation
-    );
+    const recordsResponse = drugs.waitForRecords(row.clinicalReports.map(({ id }) => id));
     await drugs.selectDrug(row);
     const { data, variables } = await recordsResponse;
 

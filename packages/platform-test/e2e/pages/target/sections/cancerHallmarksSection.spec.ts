@@ -299,6 +299,11 @@ test.describe("Target cancer hallmarks section", () => {
     const pubmedId = (await hallmarks.publicationButton(0).innerText()).trim();
     expect(pubmedId).toMatch(/^\d+$/);
     await hallmarks.publicationButton(0).click();
+    // Europe PMC answers in 10 to 30 seconds at times: wait for the real response, beyond the default timeout
+    await expect(
+      drawer.root.getByText("Loading Europe PMC search results"),
+      "Europe PMC should answer the publication search"
+    ).toHaveCount(0, { timeout: 60_000 });
     await drawer.expectOpen("Publications");
 
     await expect(drawer.entries, "the drawer should list the one publication of the row").toHaveCount(1);
