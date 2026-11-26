@@ -1,13 +1,10 @@
 /**
  * Hook: useGraphLayout
- * Base D3 force-simulation parameters (collision padding, cooling/friction).
+ * Base D3 force-simulation parameters (cooling/friction).
  *
  * Panel-size responsiveness lives in useGraphSimulation instead of here - it
- * measures the graph panel's own container via ResizeObserver (see
- * getResponsiveLayoutConfig in layoutConfig.ts) and drives the actual
- * width/height-adaptive layout (see radialLayout.ts), rather than this hook
- * reading the browser window's size, which can be much larger than the
- * panel itself once the cards/graph split divider is dragged.
+ * measures the graph panel's own container via ResizeObserver and re-derives
+ * the stacked layout for it (see stackedLayout.ts).
  */
 
 import { useMemo } from 'react';

@@ -8,7 +8,6 @@ import React, { useEffect } from 'react';
 import { Box } from 'ui';
 import { useForceGraph, GraphController, GraphPointerPosition } from '../hooks/useForceGraph';
 import type { ForceLayoutConfig } from '../utils/layoutConfig';
-import type { GraphLayout } from '../types';
 
 interface GraphCanvasProps {
   nodes: any[];
@@ -22,7 +21,6 @@ interface GraphCanvasProps {
   onEdgeSelect?: (edgeId: string, position?: GraphPointerPosition) => void;
   onNodeHover?: (nodeId: string | null, position?: GraphPointerPosition) => void;
   layoutConfig?: ForceLayoutConfig;
-  layout?: GraphLayout;
   onGraphReady?: (controller: GraphController | null) => void;
   sx?: any;
 }
@@ -42,7 +40,6 @@ const GraphCanvas = React.memo(
     onEdgeSelect,
     onNodeHover,
     layoutConfig,
-    layout,
     onGraphReady,
     sx = {},
   }: GraphCanvasProps) => {
@@ -53,7 +50,6 @@ const GraphCanvas = React.memo(
       selectedEdge,
       basketIds,
       layoutConfig,
-      layout,
       onNodeSelect,
       onNodeDeselect,
       onEdgeSelect,

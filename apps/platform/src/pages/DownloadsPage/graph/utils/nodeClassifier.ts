@@ -1,11 +1,8 @@
 /**
- * Node enrichment for the network graph: degree, category colour and the
- * set of core entities the radial layout uses as hubs.
+ * Node enrichment for the network graph: degree and category colour.
  */
 
 import { getCategoryColor } from '../../categoryColors';
-
-export const CORE_ENTITIES = new Set(['target', 'disease', 'drug', 'variant', 'study']);
 
 interface CytoscapeNode {
   data: any;

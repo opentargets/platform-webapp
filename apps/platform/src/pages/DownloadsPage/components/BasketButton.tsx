@@ -24,7 +24,7 @@ const BasketButton = forwardRef<HTMLButtonElement, BasketButtonProps>(function B
       component="button"
       type="button"
       onClick={onClick}
-      aria-label={`Your data bag, ${count} ${count === 1 ? "dataset" : "datasets"}`}
+      aria-label={`Your data bundle, ${count} ${count === 1 ? "dataset" : "datasets"}`}
       aria-expanded={open}
       aria-haspopup="dialog"
       sx={theme => ({
@@ -49,7 +49,7 @@ const BasketButton = forwardRef<HTMLButtonElement, BasketButtonProps>(function B
       })}
     >
       <FontAwesomeIcon icon={faBagShopping} style={{ width: 14, height: 16 }} />
-      Your data bag
+      Your data bundle
       <CountBadge count={count} />
     </Box>
   );
