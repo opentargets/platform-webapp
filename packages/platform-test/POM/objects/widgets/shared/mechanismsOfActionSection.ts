@@ -87,6 +87,44 @@ export class MechanismsOfActionSection {
     await links.nth(linkIndex).click();
   }
 
+  // Column headers
+  getColumnHeaders(): Locator {
+    return this.getTable().locator("thead th");
+  }
+
+  async getColumnHeaderTexts(): Promise<string[]> {
+    return (await this.getColumnHeaders().allTextContents()).map((text) => text.trim());
+  }
+
+  /**
+   * Get a body cell by its column header label
+   */
+  async getCellByColumn(rowIndex: number, columnLabel: string): Promise<Locator> {
+    const headers = await this.getColumnHeaderTexts();
+    const columnIndex = headers.indexOf(columnLabel);
+    if (columnIndex < 0) {
+      throw new Error(`Column "${columnLabel}" not found in [${headers.join(", ")}]`);
+    }
+    const row = await this.getTableRow(rowIndex);
+    return row.locator("td").nth(columnIndex);
+  }
+
+  // Curation
+  async getCuration(rowIndex: number): Promise<string> {
+    const cell = await this.getCellByColumn(rowIndex, "Curation");
+    return ((await cell.textContent()) ?? "").trim();
+  }
+
+  // References: PubMed ids open the publications drawer
+  async getPublicationsButton(rowIndex: number): Promise<Locator> {
+    const cell = await this.getCellByColumn(rowIndex, "References");
+    return cell.getByRole("button", { name: /\d+ publications?/ });
+  }
+
+  getPublicationsDrawer(): Locator {
+    return this.page.getByTestId("publications-drawer");
+  }
+
   // Global filter/search
   getSearchInput(): Locator {
     return this.getSection().locator("input[placeholder*='Search']");

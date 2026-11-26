@@ -65,3 +65,43 @@ test.describe("Drug Mechanisms of Action Section", () => {
     expect(filteredRowCount).toBeGreaterThanOrEqual(0);
   });
 });
+
+// Pinned: its first mechanism has a curation value and PubMed references on the API
+const DRUG_WITH_PUBMED_MOA = "CHEMBL3353410";
+
+test.describe("Drug Mechanisms of Action Section - Curation and references", () => {
+  let moaSection: MechanismsOfActionSection;
+
+  test.beforeEach(async ({ page }) => {
+    moaSection = new MechanismsOfActionSection(page);
+    await new DrugPage(page).goToDrugPage(DRUG_WITH_PUBMED_MOA);
+    await moaSection.waitForLoad();
+    await expect(moaSection.getTable().locator("tbody tr").first()).toBeVisible();
+  });
+
+  test("Curation column sits between Human targets and References", { tag: "@smoke" }, async () => {
+    const headers = await moaSection.getColumnHeaderTexts();
+    const curationIndex = headers.indexOf("Curation");
+
+    expect(curationIndex, `headers: ${headers.join(", ")}`).toBeGreaterThan(0);
+    expect(headers[curationIndex - 1]).toBe("Human targets");
+    expect(headers[curationIndex + 1]).toBe("References");
+  });
+
+  test("Curation value is capitalised", async () => {
+    const rowCount = await moaSection.getTableRows();
+    expect(rowCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < rowCount; i++) {
+      expect(await moaSection.getCuration(i)).toMatch(/^[A-Z][a-z]+$/);
+    }
+  });
+
+  test("PubMed references open the publications drawer", async () => {
+    const button = await moaSection.getPublicationsButton(0);
+    await expect(button).toBeVisible();
+
+    await button.click();
+    await expect(moaSection.getPublicationsDrawer()).toBeVisible();
+  });
+});
