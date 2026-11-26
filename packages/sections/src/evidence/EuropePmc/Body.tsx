@@ -1,31 +1,67 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@apollo/client";
-import { SectionItem, Link, OtTableServer, Skeleton } from "ui";
+import { SectionItem, Link, OtTableServer, type OtTableColumn, Skeleton } from "ui";
 
 import Description from "./Description";
 import { europePmcLiteratureQuery } from "@ot/utils";
 import { dataTypesMap, naLabel, type EvidenceBodyProps } from "@ot/constants";
 import Publication from "./Publication";
-import EUROPE_PMC_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import EUROPE_PMC_QUERY_DOCUMENT from "./sectionQuery.gql";
 import { definition } from ".";
+
+// `europePmc` is on the staging API but not yet in the generated types (see ../types.ts)
+type EuropePmcRow = {
+  diseaseId: string;
+  diseaseName: string;
+  literature: string[];
+  pmcIds: string[];
+  publicationYear?: number | null;
+  textMiningSentences: {
+    tStart: number;
+    tEnd: number;
+    dStart: number;
+    dEnd: number;
+    section: string;
+    text: string;
+  }[];
+  resourceScore?: number | null;
+};
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { europePmc: { count: number; rows: EuropePmcRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+};
+
+const EUROPE_PMC_QUERY = typedDocument<QueryData, QueryVariables>(EUROPE_PMC_QUERY_DOCUMENT);
 
 // Europe PMC REST details of a publication, keyed by its id (row.literature[0])
 type LiteratureById = Record<string, Record<string, any>>;
 
-const getColumns = (label, literatureById: LiteratureById) => [
+const getColumns = (
+  label: EvidenceBodyProps["label"],
+  literatureById: LiteratureById
+): OtTableColumn<EuropePmcRow>[] => [
   {
-    id: "disease",
+    id: "diseaseName",
     label: "Disease/phenotype",
-    renderCell: ({ disease }) => (
-      <Link asyncTooltip to={`/disease/${disease.id}`}>
-        {disease.name}
+    renderCell: ({ diseaseId, diseaseName }) => (
+      <Link asyncTooltip to={`/disease/${diseaseId}`}>
+        {diseaseName}
       </Link>
     ),
-    filterValue: ({ disease }) => disease.name,
   },
   {
     id: "publicationDetails",
-    propertyPath: "title",
     label: "Publication",
     width: "80%",
     renderCell: ({ literature, textMiningSentences }) => {
@@ -52,7 +88,8 @@ const getColumns = (label, literatureById: LiteratureById) => [
   },
   {
     id: "year",
-    renderCell: ({ literature }) => literatureById[literature[0]]?.pubYear || naLabel,
+    label: "Year",
+    renderCell: ({ publicationYear }) => publicationYear ?? naLabel,
   },
   {
     id: "resourceScore",
@@ -61,28 +98,39 @@ const getColumns = (label, literatureById: LiteratureById) => [
   },
 ];
 
-// the publication title, PMC id and year come from the Europe PMC REST API,
-// not the Open Targets API, so the download only has the Open Targets fields
-const exportColumns = [
+// the publication title comes from the Europe PMC REST API, not the Open Targets API,
+// so the download only has the Open Targets fields
+const exportColumns: OtTableColumn<EuropePmcRow>[] = [
   {
+    id: "diseaseName",
     label: "Disease/phenotype",
-    exportValue: row => row.disease.name,
+    exportValue: (row: EuropePmcRow) => row.diseaseName,
   },
   {
+    id: "europePmcId",
     label: "europePmcId",
-    exportValue: row => row.literature[0],
+    exportValue: (row: EuropePmcRow) => row.literature[0],
   },
   {
+    id: "pmcId",
+    label: "pmcId",
+    exportValue: (row: EuropePmcRow) => row.pmcIds.join(", "),
+  },
+  {
+    id: "year",
+    label: "year",
+    exportValue: (row: EuropePmcRow) => row.publicationYear,
+  },
+  {
+    id: "resourceScore",
     label: "Score",
-    exportValue: row => row.resourceScore,
+    exportValue: (row: EuropePmcRow) => row.resourceScore,
   },
 ];
 
-type Props = EvidenceBodyProps;
-
 const PAGE_SIZE = 5;
 
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
   const [literatureById, setLiteratureById] = useState<LiteratureById>({});
@@ -94,8 +142,9 @@ function Body({ id, label, entity }: Props) {
     variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
-  const onDataLoaded = useCallback(data => {
-    setPageIds(data?.disease?.europePmc.rows.map(row => row.literature[0]) ?? []);
+  const onDataLoaded = useCallback((data: unknown) => {
+    const rows = (data as QueryData | undefined)?.disease?.evidenceViews.europePmc.rows ?? [];
+    setPageIds(rows.map(row => row.literature[0]));
   }, []);
 
   // Europe PMC details for the publications of the current page only
@@ -105,7 +154,7 @@ function Body({ id, label, entity }: Props) {
     let isCurrent = true;
 
     async function fetchLiterature() {
-      let entries = [];
+      let entries: Record<string, any>[] = [];
       try {
         const res = await fetch(europePmcLiteratureQuery(missingIds));
         entries = (await res.json()).resultList.result;
@@ -141,16 +190,17 @@ function Body({ id, label, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<EuropePmcRow>
           query={EUROPE_PMC_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem={`europepmc-${ensgId}-${efoId}`}
-          dataPath="disease.europePmc"
+          dataPath="disease.evidenceViews.europePmc"
           onDataLoaded={onDataLoaded}
           pageSize={PAGE_SIZE}
           pageSizeOptions={[5, 10, 15, 20, 25]}
+          // no search on the Europe PMC view: a browser search would fetch every row
           showGlobalFilter={false}
           variables={variables}
         />
