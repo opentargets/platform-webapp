@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Cancer Gene Census",
   shortName: "CC",
-  hasData: (data: EvidenceData) => hasEvidence(data, "cancerGeneCensus", "cancerGeneCensusSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "cancerGeneCensus"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
