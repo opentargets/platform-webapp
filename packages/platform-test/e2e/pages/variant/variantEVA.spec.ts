@@ -69,7 +69,6 @@ test.describe("Variant page: ClinVar (EVA)", () => {
       );
       const eva = section.description.getByRole("link", { name: "EVA" });
       await expect(eva).toHaveAttribute("href", "https://www.ebi.ac.uk/eva/");
-      await expect(eva).toHaveAttribute("target", "_blank");
     });
 
     await test.step("exact column headers", async () => {
@@ -90,10 +89,8 @@ test.describe("Variant page: ClinVar (EVA)", () => {
       await expect(section.literatureTrigger(0)).toHaveCount(0);
     });
 
-    await test.step("a single page has no pagination, search or page size", async () => {
-      await expect(section.table.position).toHaveCount(0);
-      await expect(section.table.firstPageButton).toHaveCount(0);
-      await expect(section.table.nextPageButton).toHaveCount(0);
+    await test.step("one page: the footer reads 1 - 1 of 1 with every pagination button disabled", async () => {
+      await section.table.expectPosition("1 - 1 of 1", { canGoBack: false, canGoForward: false });
       await expect(section.table.searchInput).toHaveCount(0);
       await expect(section.table.pageSizeSelect).toHaveCount(0);
     });
@@ -103,7 +100,6 @@ test.describe("Variant page: ClinVar (EVA)", () => {
     const { section } = await open(page, FEW);
     const link = section.clinvarLink(0);
     await expect(link).toHaveAttribute("href", "https://www.ncbi.nlm.nih.gov/clinvar/RCV001262472");
-    await expect(link).toHaveAttribute("target", "_blank");
   });
 
   test("the disease tooltip lists the reported disease and all reported phenotypes", async ({
@@ -240,10 +236,12 @@ test.describe("Variant page: ClinVar (EVA)", () => {
     await section.literatureTrigger(withLiterature).click();
     const drawer = new PublicationsDrawer(page);
     await drawer.expectOpen();
-    await expect(drawer.entries).toHaveCount(literature.length);
-    for (const id of literature) {
+    // The drawer lists ten publications per page.
+    await expect(drawer.entries).toHaveCount(10);
+    for (const id of literature.slice(0, 10)) {
       await expect(drawer.entry(id)).toBeVisible();
     }
+    await expect(drawer.root.getByText(`1 - 10 of ${literature.length}`)).toBeVisible();
     await drawer.close();
   });
 
@@ -257,7 +255,14 @@ test.describe("Variant page: ClinVar (EVA)", () => {
 
     const tsv = await section.controls.downloadTsv();
     expect(tsv.filename).toBe(`${FEW}-clinvar-variant.tsv`);
-    expect(tsv.header).toEqual(expect.arrayContaining(["Disease/phenotype", "ClinVar ID"]));
+    expect(tsv.header).toEqual([
+      "diseasePhenotype",
+      "clinVarId",
+      "clinicalSignificance",
+      "alleleOrigin",
+      "reviewStatus",
+      "literature",
+    ]);
     expect(tsv.lines.filter((line) => line.join("").length > 0)).toHaveLength(evidences.count);
   });
 

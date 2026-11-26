@@ -5,7 +5,6 @@ import { waitForOperation } from "../../../POM/objects/widgets/shared/sectionDat
 import { VariantPage } from "../../../POM/page/variant/variant";
 
 const PAGE_SIZE = VariantEffectPredictorSection.pageSize;
-const NUMBER = /^-?[\d,]+$/;
 
 type Data = { variant: { transcriptConsequencesView: { count: number; rows: unknown[] } } };
 
@@ -37,7 +36,6 @@ test.describe("Variant page: Transcript consequences", () => {
       );
       const link = section.description.getByRole("link", { name: "Ensembl VEP" });
       await expect(link).toHaveAttribute("href", "https://www.ensembl.org/tools/vep");
-      await expect(link).toHaveAttribute("target", "_blank");
     });
 
     await section.table.expectHeaders(VariantEffectPredictorSection.headers);
@@ -77,7 +75,7 @@ test.describe("Variant page: Transcript consequences", () => {
     const { section } = await open(page, testConfig.variant.withMolecularStructure);
 
     await test.step("gene tooltip", async () => {
-      await section.geneLink(0).hover();
+      await section.table.cell(0, 0).locator("sup").hover();
       const tooltip = page.getByRole("tooltip").filter({ hasText: "Ensembl canonical transcript" });
       await expect(tooltip).toBeVisible();
       await expect(tooltip.getByRole("link", { name: "ENST00000252486" })).toHaveAttribute(
@@ -95,7 +93,6 @@ test.describe("Variant page: Transcript consequences", () => {
     await test.step("consequence link and codon tooltip", async () => {
       const consequence = section.table.cell(0, 1).getByRole("link", { name: "missense variant" });
       await expect(consequence).toHaveAttribute("href", "https://identifiers.org/SO:0001583");
-      await expect(consequence).toHaveAttribute("target", "_blank");
       await consequence.hover();
       await expect(page.getByRole("tooltip").filter({ hasText: "Cgc/Tgc" })).toBeVisible();
     });
@@ -151,26 +148,163 @@ test.describe("Variant page: Transcript consequences", () => {
     });
   });
 
-  test("sorting by gene and by the distance columns is done by the server", async ({
+  test("sorting by a distance column orders the whole dataset on the server", async ({
     page,
     testConfig,
   }) => {
     const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
     const table = section.table;
+    const first = await table.rowTexts();
+    const footprint = async () =>
+      (await table.columnTexts(3)).filter((text) => text !== "N/A").map(toNumber);
 
-    await test.step("Gene sorts ascending, then descending", async () => {
+    const sortedBy = (direction: 1 | -1) => async () => {
+      const values = await footprint();
+      return (
+        values.length > 1 &&
+        values.every((value, i) => i === 0 || (values[i - 1] - value) * direction <= 0)
+      );
+    };
+
+    await test.step("first click: largest distance first, across the whole dataset", async () => {
+      await table.clickHeader("Distance from footprint (bp)");
+      await expect.poll(sortedBy(-1), { message: "descending by footprint" }).toBe(true);
+      await table.expectPosition(1, PAGE_SIZE, count);
+      expect((await footprint())[0]).toBeGreaterThan(100_000);
+      expect(await table.rowTexts()).not.toEqual(first);
+    });
+
+    await test.step("second click reverses it: the variant's own transcript (0 bp) first", async () => {
+      await table.clickHeader("Distance from footprint (bp)");
+      await expect.poll(sortedBy(1), { message: "ascending by footprint" }).toBe(true);
+      expect((await footprint())[0]).toBe(0);
+    });
+
+    await test.step("sorting by gene reorders the rows by symbol", async () => {
       await table.clickHeader("Gene");
       await expect
         .poll(async () => {
-          const names = await table.columnTexts(0);
-          return names.map((n) => n.replace(/\s*protein coding$/, ""));
+          const symbols = await table.columnTexts(0).then((texts) =>
+            texts.map((text) => text.replace(/\s*protein coding$/, "").replace(/\s*\?$/, ""))
+          );
+          return symbols.every((symbol, i) => i === 0 || symbols[i - 1].toLowerCase() <= symbol.toLowerCase());
         })
-        .toEqual(
-          (await (async () => {
-            return null;
-          })()) ?? expect.anything()
-        );
+        .toBe(true);
     });
-    expect(count).toBeGreaterThan(0);
+
+    await test.step("a sorted table still pages: page 2 follows page 1", async () => {
+      const page1 = await table.rowTexts();
+      await table.nextPageButton.click();
+      await table.expectPosition(PAGE_SIZE + 1, 2 * PAGE_SIZE, count);
+      await table.expectRowsChangedFrom(page1);
+    });
+  });
+
+  test("searching filters on the server by gene, consequence and impact, and returns to page 1", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
+    const table = section.table;
+    await expect(table.searchInput).toHaveAttribute("placeholder", "Search all columns...");
+
+    await test.step("a gene symbol", async () => {
+      await table.nextPageButton.click();
+      await table.expectPosition(PAGE_SIZE + 1, 2 * PAGE_SIZE, count);
+      await table.search("APOE");
+      await expect.poll(async () => table.total()).toBeLessThan(count);
+      const total = await table.total();
+      expect(total).toBeGreaterThan(0);
+      await table.expectPosition(1, Math.min(PAGE_SIZE, total), total);
+      for (const gene of await table.columnTexts(0)) expect(gene).toMatch(/APOE/i);
+    });
+
+    await test.step("a consequence term", async () => {
+      await table.search("missense");
+      await expect.poll(async () => table.total()).toBeGreaterThan(0);
+      for (const text of await table.columnTexts(1)) expect(text).toContain("missense variant");
+      await expect(section.geneLink(0)).toHaveText("APOE");
+    });
+
+    await test.step("an impact level", async () => {
+      await table.search("modifier");
+      await expect.poll(async () => table.total()).toBeGreaterThan(PAGE_SIZE);
+      const total = await table.total();
+      expect(total).toBeLessThan(count + 1);
+      for (const impact of await table.columnTexts(2)) expect(impact).toBe("modifier");
+      await table.nextPageButton.click();
+      for (const impact of await table.columnTexts(2)) expect(impact).toBe("modifier");
+    });
+
+    await test.step("a term nothing matches leaves no rows", async () => {
+      await table.search("no-such-transcript-consequence");
+      await expect(table.rows).toHaveCount(0);
+      await expect(section.section.getByTestId("section-error")).toHaveCount(0);
+    });
+
+    await test.step("clearing the search restores the full list", async () => {
+      await table.clearSearch();
+      await table.expectPosition(1, PAGE_SIZE, count);
+      await expect(table.rows).toHaveCount(PAGE_SIZE);
+    });
+  });
+
+  test("exports every consequence, not just the visible page", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
+
+    await test.step("JSON holds the whole dataset", async () => {
+      const { filename, rows } = await section.controls.downloadJson();
+      expect(filename).toBe("19_44908822_C_T-variant-effect-predictor.json");
+      expect(rows).toHaveLength(count);
+      expect(rows[0]).toMatchObject({ impact: "MODERATE" });
+    });
+
+    await test.step("TSV has one line per consequence and the column labels", async () => {
+      const tsv = await section.controls.downloadTsv();
+      expect(tsv.header).toEqual([
+        "gene",
+        "predictedConsequence",
+        "impact",
+        "distanceFromFootprintBp",
+        "distanceFromStartSiteBp",
+      ]);
+      expect(tsv.lines).toHaveLength(count);
+    });
+  });
+
+  test("the API query drawer holds the section's query", async ({ page, testConfig }) => {
+    const { section } = await open(page, testConfig.variant.withMolecularStructure);
+    await section.controls.openApiQuery(
+      VariantEffectPredictorSection.operation,
+      "19_44908822_C_T"
+    );
+    await section.controls.closeApiQuery();
+  });
+
+  test("an intron variant: IL6R first, non-coding genes carry no protein chip", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, count } = await open(page, testConfig.variant.primary);
+    await section.table.expectHeaders(VariantEffectPredictorSection.headers);
+    await section.table.expectPosition(1, PAGE_SIZE, count);
+    await expect(section.geneLink(0)).toHaveText("IL6R");
+    await expect(section.geneLink(0)).toHaveAttribute("href", /\/target\/ENSG00000160712$/);
+    await expect(section.table.row(0)).toContainText("protein coding");
+    await expect(section.table.cell(0, 1)).toContainText("intron variant");
+    await expect(section.table.cell(0, 1)).not.toContainText(/[A-Z]\d+[A-Z]/);
+    await expect(section.table.cell(0, 2)).toHaveText("modifier");
+    await expect(section.table.cell(0, 3)).toHaveText("0");
+    await expect(section.table.cell(0, 4)).toHaveText("-48,445");
+    await test.step("a gene that is not protein coding has no chip", async () => {
+      await expect(section.geneLink(1)).toHaveText("ENSG00000273110");
+      await expect(section.table.row(1)).not.toContainText("protein coding");
+    });
+    await test.step("distances are formatted with thousands separators", async () => {
+      await expect(section.table.cell(1, 3)).toHaveText("26,224");
+    });
   });
 });

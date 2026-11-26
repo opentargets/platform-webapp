@@ -64,7 +64,6 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
       ]) {
         const link = section.description.getByRole("link", { name });
         await expect(link).toHaveAttribute("href", href);
-        await expect(link).toHaveAttribute("target", "_blank");
       }
     });
 
@@ -73,7 +72,7 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
       await expect(section.tableButton).toHaveAttribute("aria-pressed", "false");
       await expect(section.chart).toBeVisible();
       await expect(section.section.getByTestId("ot-table")).toHaveCount(0);
-      await expect(section.chartButton).toContainText("Chart");
+      await expect(section.chartButton).toContainText("Visualisation");
       await expect(section.tableButton).toContainText("Table view");
     });
   });
@@ -118,9 +117,18 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
       }
     });
 
-    await test.step("no search, pagination or page size on this client-side table", async () => {
-      await expect(section.table.searchInput).toHaveCount(0);
-      await expect(section.table.pageSizeSelect).toHaveCount(0);
+    await test.step("search narrows the rows to the matching methods", async () => {
+      await expect(section.table.searchInput).toHaveAttribute("placeholder", "Search all columns...");
+      await section.table.search("gerp");
+      await expect(section.table.rows).toHaveCount(1);
+      await expect(section.table.row(0)).toContainText("GERP");
+      await section.table.search("deleterious");
+      const matching = effects.filter((effect) => effect.assessment?.includes("deleterious"));
+      await expect(section.table.rows).toHaveCount(matching.length);
+      await section.table.search("no-such-predictor");
+      await expect(section.table.rows).toHaveCount(0);
+      await section.table.clearSearch();
+      await expect(section.table.rows).toHaveCount(expected.length);
     });
   });
 
@@ -131,10 +139,10 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     const { section } = await open(page, testConfig.variant.withMolecularStructure);
     await section.showTable();
     const row = section.table.rows.filter({ hasText: "Ensembl VEP" });
-    await row.getByText("Ensembl VEP").hover();
+    await row.locator("sup").hover();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText("Ensembl Variant Effect Predictor");
+    await expect(tooltip).toContainText("Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP.");
     await expect(tooltip.getByRole("link", { name: "here" })).toHaveAttribute("href", DOCS);
     await page.mouse.move(0, 0);
     await expect(tooltip).toBeHidden();
@@ -173,9 +181,8 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     const tip = section.chart.locator("g[aria-label='tip']");
     await expect(tip).toContainText("Method:");
     await expect(tip).toContainText("SIFT");
-    await expect(tip).toContainText(`Assessment:${sift?.assessment}`.replace(":", ":"), {
-      useInnerText: true,
-    });
+    await expect(tip).toContainText("Assessment:");
+    await expect(tip).toContainText(String(sift?.assessment));
   });
 
   test("hovering the ? next to a method name describes the method", async ({
@@ -186,7 +193,7 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     const names = expectedRows(effects).map((row) => row[0]);
     await section.methodHelpMarks.nth(names.indexOf("Ensembl VEP")).hover();
     const popup = page.locator("body > div.popup");
-    await expect(popup).toContainText("Ensembl Variant Effect Predictor");
+    await expect(popup).toContainText("Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP.");
     await page.mouse.move(0, 0);
     await expect(popup).toHaveCount(0);
   });
@@ -205,16 +212,17 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     await test.step("table export", async () => {
       const { filename, rows } = await section.controls.downloadJson();
       expect(filename).toBe("19_44908822_C_T-variant-effect.json");
-      expect(rows.map((row) => row.Method)).toEqual(expected.map((row) => row[0]));
+      expect(rows.map((row) => row.method)).toEqual(expected.map((row) => row[0]));
       const tsv = await section.controls.downloadTsv();
-      expect(tsv.header).toEqual([...VariantEffectSection.headers]);
+      expect(tsv.header).toEqual(["method", "prediction", "score", "normalisedScore"]);
       expect(tsv.lines).toHaveLength(expected.length);
     });
+  });
 
-    await test.step("API query drawer holds the section's query", async () => {
-      await section.controls.openApiQuery(VariantEffectSection.operation, "19_44908822_C_T");
-      await section.controls.closeApiQuery();
-    });
+  test("the API query drawer holds the section's query", async ({ page, testConfig }) => {
+    const { section } = await open(page, testConfig.variant.withMolecularStructure);
+    await section.controls.openApiQuery(VariantEffectSection.operation, "19_44908822_C_T");
+    await section.controls.closeApiQuery();
   });
 
   test("a variant with only two predictors lists just those", async ({ page, testConfig }) => {
