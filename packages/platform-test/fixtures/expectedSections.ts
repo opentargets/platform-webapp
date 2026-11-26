@@ -354,6 +354,12 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Evidence: IL6R in myocardial infarction
   "ENSG00000160712/MONDO_0005068": ["gwas-credible-sets", "clinical-precedence", "europe-pmc"],
 
+  // Evidence: BRAF in myocardial infarction (only five text-mined Europe PMC rows)
+  "ENSG00000157764/MONDO_0005068": ["europe-pmc"],
+
+  // Evidence: BRAF in a disease with a single clinical precedence row and two Europe PMC rows
+  "ENSG00000157764/MONDO_0005147": ["clinical-precedence", "europe-pmc"],
+
   // Evidence: PCSK9 in LDL cholesterol measurement (gene burden, 130 rows; GWAS credible sets, 600+ rows)
   "ENSG00000169174/EFO_0004611": ["gene-burden", "gwas-credible-sets"],
 
