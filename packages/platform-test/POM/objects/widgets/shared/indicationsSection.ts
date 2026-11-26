@@ -211,21 +211,18 @@ export class IndicationsSection {
    * Get a specific stage button by stage name
    */
   async getStageButton(stageName: string): Promise<Locator | null> {
-    const buttons = this.getStageFilterButtons();
-    const count = await buttons.count();
-    for (let i = 0; i < count; i++) {
-      const button = buttons.nth(i);
-      const parent = button.locator("xpath=ancestor::div[1]");
-      const text = await parent
-        .locator("span")
-        .first()
-        .textContent()
-        .catch(() => "");
-      if (text?.toLowerCase().includes(stageName.toLowerCase())) {
-        return button;
-      }
-    }
-    return null;
+    // Each stage column is a label block followed by the circle, which is a
+    // button only when the stage has reports. Match the label exactly so that
+    // "Phase I" does not pick "Early phase I" or "Phase I/II"
+    const label = this.getSection().locator("th").getByText(stageName, { exact: true }).first();
+    // the stage filter renders after the records query resolves
+    const rendered = await label
+      .waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT })
+      .then(() => true)
+      .catch(() => false);
+    if (!rendered) return null;
+    const button = label.locator("xpath=../following-sibling::button[1]");
+    return (await button.count()) > 0 ? button : null;
   }
 
   /**
@@ -301,6 +298,41 @@ export class IndicationsSection {
     const row = await this.getRecordRow(rowIndex);
     const title = row.locator("td p").first();
     await title.click();
+  }
+
+  /**
+   * Get the first record row whose card shows the given source (e.g. "ClinicalTrials.gov")
+   */
+  getRecordRowBySource(source: string): Locator {
+    return this.getRecordsTable()
+      .locator("tbody tr")
+      .filter({
+        hasText: new RegExp(`Source:\\s*${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+      })
+      .first();
+  }
+
+  /**
+   * Open the detail drawer of the first record from the given source
+   */
+  async openRecordBySource(source: string): Promise<void> {
+    await this.getRecordRowBySource(source).locator("td p").first().click();
+  }
+
+  /**
+   * Get the open record detail drawer
+   */
+  getRecordDrawer(): Locator {
+    return this.page.locator(".MuiDrawer-paper");
+  }
+
+  /**
+   * Get the value of the drawer's "Source" field (a link when the source is known)
+   */
+  getRecordDrawerSourceValue(): Locator {
+    return this.getRecordDrawer()
+      .getByText("Source", { exact: true })
+      .locator("xpath=following-sibling::*[1]");
   }
 
   /**
