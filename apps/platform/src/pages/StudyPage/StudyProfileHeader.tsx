@@ -35,13 +35,16 @@ function ProfileHeader() {
     initialSampleSize,
     traitFromSource,
     diseases,
+    target,
     projectId,
+    backgroundTraits,
     nCases,
     nControls,
     cohorts,
     ldPopulationStructure,
     qualityControls,
     analysisFlags,
+    biosample,
     condition,
   } = data?.study || {};
 
@@ -66,9 +69,16 @@ function ProfileHeader() {
                 ))}
               </Field>
             )}
-            <Field testId="field-background-trait" loading={loading} title="Background trait">
-              ?API?
-            </Field>
+            {backgroundTraits?.length > 0 && (
+              <Field testId="field-background-trait" loading={loading} title="Background trait">
+                {backgroundTraits.map(({ id, name }, index) => (
+                  <Fragment key={id}>
+                    {index > 0 ? ", " : null}
+                    <Link to={`../disease/${id}`}>{name}</Link>
+                  </Fragment>
+                ))}
+              </Field>
+            )}
           </>
         )}
         {studyType !== "gwas" && ( // QTL
@@ -78,12 +88,18 @@ function ProfileHeader() {
                 {projectId?.replace(/_/gi, " ")}
               </Field>
             )}
-            <Field testId="field-affected-gene" loading={loading} title="Affected gene">
-              ?API?
-            </Field>
-            <Field testId="field-affected-cell-tissue" loading={loading} title="Affected cell/tissue">
-              ?API?
-            </Field>
+             {target?.id && (
+              <Field testId="field-affected-gene" loading={loading} title="Affected gene">
+                <Link to={`../target/${target.id}`}>{target.approvedSymbol}</Link>
+              </Field>
+            )}
+            {biosample?.biosampleId && (
+              <Field testId="field-affected-cell-tissue" loading={loading} title="Affected cell/tissue">
+                <Link external to={`https://www.ebi.ac.uk/ols4/search?q=${biosample.biosampleId}`}>
+                  {biosample.biosampleName}
+                </Link>
+              </Field>
+            )}
             <Field testId="field-condition" loading={loading} title="Condition">
               {condition}
             </Field>
