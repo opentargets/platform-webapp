@@ -31,6 +31,9 @@ function expectedRows(effects: Effect[]): string[][] {
     ]);
 }
 
+/** A known method carries a "?" help icon after its name; the other cells are plain text. */
+const rowText = (row: string[]): string => `${row[0]}? ${row.slice(1).join(" ")}`;
+
 /** Open a variant and return its section together with the rows the API answered. */
 async function open(page: import("@playwright/test").Page, variantId: string) {
   const answer = waitForOperation<EffectData>(page, VariantEffectSection.operation);
@@ -90,8 +93,9 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
 
     await test.step("one row per method, sorted by display name, values as the API reports", async () => {
       await expect(section.table.rows).toHaveCount(expected.length);
-      await section.table.expectRowTexts(expected.map((row) => row.join(" ")));
-      const names = await section.table.columnTexts(0);
+      await section.table.expectRowTexts(expected.map(rowText));
+      const names = (await section.table.columnTexts(0)).map((name) => name.replace(/\?$/, ""));
+      expect(names).toEqual(expected.map((row) => row[0]));
       expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
       expect(new Set(names).size, "no method is listed twice").toBe(names.length);
     });
@@ -219,18 +223,18 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     await expect(section.dots).toHaveCount(2);
     await section.showTable();
     await section.table.expectHeaders(VariantEffectSection.headers);
-    await section.table.expectRowTexts(expectedRows(effects).map((row) => row.join(" ")));
-    await expect(section.table.cell(0, 0)).toHaveText("Ensembl VEP");
+    await section.table.expectRowTexts(expectedRows(effects).map(rowText));
+    await expect(section.table.cell(0, 0)).toContainText("Ensembl VEP");
     await expect(section.table.cell(0, 1)).toHaveText("intron_variant");
-    await expect(section.table.cell(1, 0)).toHaveText("GPN-Star");
+    await expect(section.table.cell(1, 0)).toContainText("GPN-Star");
   });
 
   test("a long deletion lists VEP and GERP", async ({ page }) => {
     const { section, effects } = await open(page, "1_916631_AGAGCCGGCCCT_A");
     expect(effects.map((effect) => effect.method).sort()).toEqual(["GERP", "VEP"]);
     await section.showTable();
-    await section.table.expectRowTexts(expectedRows(effects).map((row) => row.join(" ")));
-    await expect(section.table.cell(0, 0)).toHaveText("Ensembl VEP");
-    await expect(section.table.cell(1, 0)).toHaveText("GERP");
+    await section.table.expectRowTexts(expectedRows(effects).map(rowText));
+    await expect(section.table.cell(0, 0)).toContainText("Ensembl VEP");
+    await expect(section.table.cell(1, 0)).toContainText("GERP");
   });
 });
