@@ -262,7 +262,7 @@ test.describe("Study page: GWAS study", () => {
     await expect(studyPage.title).toHaveText(MYOCARDIAL_INFARCTION.name);
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`/study/${study}$`));
+    await expect(page).toHaveURL(new RegExp(`/study/${study}(#.*)?$`));
     await expect(studyPage.title).toHaveText(study);
     await expectSectionLoaded(page, "gwas-credible-sets");
 

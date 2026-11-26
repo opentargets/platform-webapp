@@ -1,146 +1,63 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionTestId } from "../../../utils/sections";
 
+/** The credible set profile page, /credible-set/:credibleSetId. */
 export class CredibleSetPage {
-  page: Page;
-  originalURL: string;
   CREDIBLE_SET_BASE_URL = "/credible-set/";
 
-  constructor(page: Page) {
-    this.page = page;
-    this.originalURL = page.url();
+  constructor(readonly page: Page) {}
+
+  /** Open a credible set page and wait for its header to show the page title. */
+  async goToCredibleSetPage(credibleSetId: string): Promise<void> {
+    await this.page.goto(`${this.CREDIBLE_SET_BASE_URL}${credibleSetId}`);
+    await expect(this.title, "the credible set header should show its title").toHaveText(
+      "Credible set"
+    );
   }
 
-  /**
-   * Navigate directly to a credible set page
-   * @param studyLocusId - The study locus ID to navigate to
-   */
-  async goToCredibleSetPage(studyLocusId: string): Promise<void> {
-    await this.page.goto(`${this.CREDIBLE_SET_BASE_URL}${studyLocusId}`);
-    await this.waitForCredibleSetPageLoad();
-  }
-
-  /**
-   * Navigate to a credible set page from a table link
-   * @param studyLocusId - The study locus ID to navigate to
-   */
-  async goToCredibleSetPageFromTable(studyLocusId: string): Promise<void> {
-    const link = this.page
-      .locator(`a[href*="${this.CREDIBLE_SET_BASE_URL}${studyLocusId}"]`)
-      .first();
-    await link.click();
-    await this.waitForCredibleSetPageLoad();
-  }
-
-  /**
-   * Wait for the credible set page to load
-   */
-  async waitForCredibleSetPageLoad(): Promise<void> {
-    // Wait for header to be visible
+  /** Click the link to a credible set in a table and wait for the page header. */
+  async goToCredibleSetPageFromTable(credibleSetId: string): Promise<void> {
     await this.page
-      .waitForSelector("[data-testid='profile-page-header-block']", {
-        state: "visible",
-        timeout: WIDGET_LOAD_TIMEOUT,
-      })
-      .catch(() => {
-        // Fallback if test-id not present
-      });
-    await this.page.waitForTimeout(500);
+      .locator(`a[href*="${this.CREDIBLE_SET_BASE_URL}${credibleSetId}"]`)
+      .first()
+      .click();
+    await expect(this.page).toHaveURL(new RegExp(`${this.CREDIBLE_SET_BASE_URL}${credibleSetId}`));
+    await expect(this.title).toHaveText("Credible set");
   }
 
-  /**
-   * Check if we're on a credible set page
-   */
-  async isCredibleSetPage(): Promise<boolean> {
-    const url = this.page.url();
-    return url.includes("/credible-set/");
+  get header(): Locator {
+    return this.page.getByTestId("profile-page-header-block");
   }
 
-  // Header elements
-  getHeader(): Locator {
-    return this.page.locator("[data-testid='profile-page-header-block']");
+  get title(): Locator {
+    return this.page.getByTestId("profile-page-header-text");
   }
 
-  async isHeaderVisible(): Promise<boolean> {
-    return await this.getHeader()
-      .isVisible()
-      .catch(() => false);
+  /** The lead variant link in the page header. */
+  get leadVariantLink(): Locator {
+    return this.page.getByTestId("external-links").getByRole("link").first();
   }
 
-  getPageTitle(): Locator {
-    return this.page.locator("[data-testid='profile-page-header-text']");
+  /** The study link in the page header. */
+  get studyLink(): Locator {
+    return this.page.getByTestId("external-links").getByRole("link").nth(1);
   }
 
-  async getPageTitleText(): Promise<string | null> {
-    return await this.getPageTitle().textContent();
+  get profileTab(): Locator {
+    return this.page.getByRole("tab", { name: "Profile" });
   }
 
-  // External links in header
-  getLeadVariantLink(): Locator {
-    return this.page.locator("a[href*='/variant/']").first();
+  /** The two-column block of lead variant / fine-mapping / study fields. */
+  get profileHeader(): Locator {
+    return this.page.getByTestId("profile-header");
   }
 
-  async clickLeadVariantLink(): Promise<void> {
-    await this.getLeadVariantLink().click();
+  /** A "Title: value" field of the profile header, found by its title. */
+  field(title: string): Locator {
+    return this.profileHeader.getByText(new RegExp(`^${title}:`));
   }
 
-  async getLeadVariantId(): Promise<string | null> {
-    const link = this.getLeadVariantLink();
-    return await link.textContent();
-  }
-
-  getStudyLink(): Locator {
-    return this.page.locator("a[href*='/study/']").first();
-  }
-
-  async clickStudyLink(): Promise<void> {
-    await this.getStudyLink().click();
-  }
-
-  async getStudyId(): Promise<string | null> {
-    const link = this.getStudyLink();
-    return await link.textContent();
-  }
-
-  // Tab navigation
-  getProfileTab(): Locator {
-    return this.page.locator(`a[href*="${this.CREDIBLE_SET_BASE_URL}"][role="tab"]`).first();
-  }
-
-  async isProfileTabActive(): Promise<boolean> {
-    const tab = this.getProfileTab();
-    const ariaSelected = await tab.getAttribute("aria-selected");
-    return ariaSelected === "true";
-  }
-
-  async clickProfileTab(): Promise<void> {
-    await this.getProfileTab().click();
-  }
-
-  /**
-   * Wait for a specific section to finish loading
-   * @param sectionTestId - The test-id of the section
-   */
-  async waitForSectionToLoad(sectionTestId: string): Promise<void> {
-    const section = this.page.locator(`[data-testid='${sectionTestId}']`);
-
-    // Wait for section to be visible
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        (testId) => {
-          const sect = document.querySelector(`[data-testid='${testId}']`);
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        sectionTestId,
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  section(sectionId: string): Locator {
+    return this.page.getByTestId(sectionTestId(sectionId));
   }
 }
