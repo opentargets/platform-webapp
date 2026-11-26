@@ -146,9 +146,9 @@ export class QTLCredibleSetsSection {
 
   // ---- header tooltips ----
 
-  /** Hover a column header and return the tooltip it shows. */
+  /** Hover the "?" marker of a column header and return the tooltip it shows. */
   async hoverHeader(name: RegExp): Promise<Locator> {
-    await this.headers.filter({ hasText: name }).hover();
+    await this.headers.filter({ hasText: name }).locator("sup").hover();
     return this.page.getByRole("tooltip");
   }
 }

@@ -65,31 +65,42 @@ export class GwasCredibleSetsSection {
     return this.table.cell(row, GWAS_CS_COLUMNS.topL2G).getByRole("link");
   }
 
-  /** Read every row on the current page. Call it once the table has settled. */
+  /**
+   * Read every row on the current page in one snapshot, so a table that re-renders while
+   * a poll is running cannot leave the read waiting on a row that is gone.
+   */
   async readRows(): Promise<GwasCredibleSetRow[]> {
-    const rows = await this.table.rows.all();
-    const result: GwasCredibleSetRow[] = [];
-    for (const row of rows) {
-      const cells = row.locator("td");
-      const text = async (index: number) => (await cells.nth(index).innerText()).trim();
-      const href = (index: number) => cells.nth(index).getByRole("link").getAttribute("href");
-      const pCell = (await text(GWAS_CS_COLUMNS.pValue)).replace(/\s+/g, "");
-      const p = /^(\d+(?:\.\d+)?)×10(-?\d+)$/.exec(pCell);
-      result.push({
-        credibleSetHref: await href(GWAS_CS_COLUMNS.credibleSet),
-        leadVariant: await text(GWAS_CS_COLUMNS.leadVariant),
-        leadVariantHref: await href(GWAS_CS_COLUMNS.leadVariant),
+    const raw = await this.table.rows.evaluateAll(
+      (rows, columns) =>
+        rows.map((row) => {
+          const cells = Array.from(row.querySelectorAll("td"));
+          const text = (index: number) => (cells[index]?.innerText ?? "").trim();
+          const href = (index: number) =>
+            cells[index]?.querySelector("a")?.getAttribute("href") ?? null;
+          return {
+            credibleSetHref: href(columns.credibleSet),
+            leadVariant: text(columns.leadVariant),
+            leadVariantHref: href(columns.leadVariant),
+            pValue: text(columns.pValue).replace(/\s+/g, ""),
+            beta: text(columns.beta),
+            method: text(columns.method),
+            topL2G: text(columns.topL2G),
+            topL2GHref: href(columns.topL2G),
+            l2gScore: text(columns.l2gScore),
+            size: text(columns.size),
+          };
+        }),
+      GWAS_CS_COLUMNS
+    );
+    return raw.map((row) => {
+      const p = /^(\d+(?:\.\d+)?)×10(-?\d+)$/.exec(row.pValue);
+      return {
+        ...row,
         pValue: p ? Number(`${p[1]}e${p[2]}`) : Number.NaN,
-        beta: Number(await text(GWAS_CS_COLUMNS.beta)),
-        method: await text(GWAS_CS_COLUMNS.method),
-        topL2G: await text(GWAS_CS_COLUMNS.topL2G),
-        topL2GHref: await cells.nth(GWAS_CS_COLUMNS.topL2G).getByRole("link").count()
-          ? await href(GWAS_CS_COLUMNS.topL2G)
-          : null,
-        l2gScore: Number(await text(GWAS_CS_COLUMNS.l2gScore)),
-        size: Number((await text(GWAS_CS_COLUMNS.size)).replace(/,/g, "")),
-      });
-    }
-    return result;
+        beta: Number(row.beta),
+        l2gScore: Number(row.l2gScore),
+        size: Number(row.size.replace(/,/g, "")),
+      };
+    });
   }
 }

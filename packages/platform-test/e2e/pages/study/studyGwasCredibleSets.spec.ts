@@ -152,6 +152,7 @@ test.describe("Study page: GWAS credible sets", () => {
     await section.table.header("Beta").locator("sup").hover();
     await expect(page.getByRole("tooltip")).toHaveText("Beta with respect to the ALT allele");
     await page.mouse.move(0, 0);
+    await expect(page.getByRole("tooltip")).toBeHidden();
 
     await section.table.header("Fine-mapping confidence").locator("sup").hover();
     const tooltip = page.getByRole("tooltip");
@@ -228,55 +229,66 @@ test.describe("Study page: GWAS credible sets", () => {
     const { section } = await open(page, testConfig.study.gwas.primary);
     const byDefault = await section.table.rowTexts();
 
-    await test.step("p-value: clicking the sorted column puts the weakest signal first", async () => {
-      await section.table.clickHeader("P-value");
+    await test.step("p-value: the sorted column cycles through unsorted, descending and ascending", async () => {
+      const pValues = async () => (await section.readRows()).map((row) => row.pValue);
+      await section.table.clickHeader(/^P-value/);
       await section.table.expectRowsChangedFrom(byDefault);
+      await section.table.clickHeader(/^P-value/);
       await expect
         .poll(async () => {
-          const pValues = (await section.readRows()).map((row) => row.pValue);
-          return pValues.every((value, index) => index === 0 || pValues[index - 1] >= value);
+          const values = await pValues();
+          return values.every((value, index) => index === 0 || values[index - 1] >= value);
         }, { message: "p-values should now be descending" })
         .toBe(true);
+      expect((await pValues())[0], "the weakest signal comes first").toBeGreaterThan(1e-8);
+      await section.table.clickHeader(/^P-value/);
+      await section.table.expectRowTexts(byDefault);
     });
 
-    await test.step("beta ascending, then descending", async () => {
-      await section.table.clickHeader("Beta");
-      await expect
-        .poll(async () => {
-          const betas = (await section.readRows()).map((row) => row.beta);
-          return betas.every((value, index) => index === 0 || betas[index - 1] <= value);
-        }, { message: "betas should be ascending" })
-        .toBe(true);
-      const smallest = (await section.readRows())[0].beta;
-      expect(smallest, "the most negative effect comes first").toBeLessThan(0);
+    const sortedBy = async (pick: (row: GwasCredibleSetRow) => number | string, direction: 1 | -1) =>
+      (await section.readRows()).map(pick).every((value, index, values) => {
+        if (index === 0) return true;
+        return direction === 1 ? values[index - 1] <= value : values[index - 1] >= value;
+      });
 
-      await section.table.clickHeader("Beta");
+    await test.step("beta: the first click sorts descending, the second ascending", async () => {
+      await section.table.clickHeader(/^Beta/);
       await expect
-        .poll(async () => {
-          const betas = (await section.readRows()).map((row) => row.beta);
-          return betas.every((value, index) => index === 0 || betas[index - 1] >= value);
-        }, { message: "betas should be descending" })
+        .poll(() => sortedBy((row) => row.beta, -1), { message: "betas should be descending" })
         .toBe(true);
-      expect((await section.readRows())[0].beta).toBeGreaterThan(smallest);
+      const largest = (await section.readRows())[0].beta;
+      expect(largest, "the strongest positive effect comes first").toBeGreaterThan(0);
+
+      await section.table.clickHeader(/^Beta/);
+      await expect
+        .poll(() => sortedBy((row) => row.beta, 1), { message: "betas should be ascending" })
+        .toBe(true);
+      expect((await section.readRows())[0].beta, "the most negative effect comes first").toBeLessThan(0);
     });
 
-    await test.step("credible set size", async () => {
-      await section.table.clickHeader("Credible set size");
+    await test.step("credible set size: largest first, then smallest first", async () => {
+      await section.table.clickHeader(/^Credible set size/);
       await expect
-        .poll(async () => {
-          const sizes = (await section.readRows()).map((row) => row.size);
-          return sizes.every((value, index) => index === 0 || sizes[index - 1] <= value);
-        }, { message: "sizes should be ascending" })
+        .poll(() => sortedBy((row) => row.size, -1), { message: "sizes should be descending" })
+        .toBe(true);
+      await section.table.clickHeader(/^Credible set size/);
+      await expect
+        .poll(() => sortedBy((row) => row.size, 1), { message: "sizes should be ascending" })
         .toBe(true);
     });
 
-    await test.step("top L2G gene is sorted alphabetically", async () => {
-      await section.table.clickHeader("Top L2G");
+    await test.step("top L2G gene: reverse alphabetical, then alphabetical", async () => {
+      await section.table.clickHeader(/^Top L2G/);
       await expect
-        .poll(async () => {
-          const genes = (await section.readRows()).map((row) => row.topL2G.toLowerCase());
-          return genes.every((value, index) => index === 0 || genes[index - 1] <= value);
-        }, { message: "genes should be alphabetical" })
+        .poll(() => sortedBy((row) => row.topL2G.toLowerCase(), -1), {
+          message: "genes should be reverse alphabetical",
+        })
+        .toBe(true);
+      await section.table.clickHeader(/^Top L2G/);
+      await expect
+        .poll(() => sortedBy((row) => row.topL2G.toLowerCase(), 1), {
+          message: "genes should be alphabetical",
+        })
         .toBe(true);
     });
 
@@ -296,12 +308,18 @@ test.describe("Study page: GWAS credible sets", () => {
     await test.step("by top L2G gene", async () => {
       await section.table.search("LPA");
       await expect
-        .poll(async () => (await section.readRows()).map((row) => row.topL2G), {
-          message: "every row left should have LPA as its top gene",
-        })
-        .toSatisfy((genes: string[]) => genes.length > 0 && genes.every((gene) => gene.includes("LPA")));
+        .poll(
+          async () => {
+            const genes = (await section.readRows()).map((row) => row.topL2G);
+            return genes.length > 0 && genes.every((gene) => gene.includes("LPA"));
+          },
+          { message: "every row left should have LPA as its top gene" }
+        )
+        .toBe(true);
+      await expect
+        .poll(async () => section.table.total(), { message: "the search leaves fewer rows" })
+        .toBeLessThan(total);
       const matching = await section.table.total();
-      expect(matching).toBeLessThan(total);
       expect(matching).toBeGreaterThanOrEqual(3);
       await section.table.expectPosition(1, Math.min(PAGE_SIZE, matching), matching);
     });
@@ -340,6 +358,9 @@ test.describe("Study page: GWAS credible sets", () => {
     await section.table.expectPosition(PAGE_SIZE + 1, 2 * PAGE_SIZE, total);
 
     await section.table.search("LPA");
+    await expect
+      .poll(async () => section.table.total(), { message: "the search leaves fewer rows" })
+      .toBeLessThan(total);
     const matching = await section.table.total();
     await section.table.expectPosition(1, Math.min(PAGE_SIZE, matching), matching);
     await expect(section.table.rows.first()).toContainText("LPA");
@@ -397,7 +418,7 @@ test.describe("Study page: GWAS credible sets", () => {
       expect(lines).toHaveLength(total + 1);
     });
 
-    await section.table.expectApiQuery("StudyCredibleSetsQuery");
+    await section.table.expectApiQuery("StudyGWASCredibleSetsQuery");
   });
 
   test("the credible set link opens that credible set's page, and back returns", async ({
@@ -411,12 +432,12 @@ test.describe("Study page: GWAS credible sets", () => {
 
     await section.credibleSetLink(0).click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
-    await expect(page.getByTestId("profile-page-header-text")).toHaveText(
-      href?.replace("/credible-set/", "") ?? ""
-    );
+    await expect(page.getByTestId("profile-page-header-text")).toHaveText("Credible set");
+    await expect(page.getByTestId("profile-page-header-block")).toContainText(`Study ID: ${study}`);
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`/study/${study}$`));
+    // The page tracks the section in view in the hash, so the hash is not part of the check.
+    await expect(page).toHaveURL(new RegExp(`/study/${study}(#.*)?$`));
     await expectSectionLoaded(page, GwasCredibleSetsSection.id);
     await section.table.expectLoaded();
   });

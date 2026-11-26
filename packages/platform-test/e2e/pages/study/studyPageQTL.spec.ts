@@ -75,7 +75,7 @@ test.describe("QTL study page: header of a pQTL study", () => {
       await expect(chip).toHaveText(/^NFE\s*100%$/);
       await chip.hover();
       await expect(page.getByRole("tooltip")).toHaveText(
-        "LD reference population: Non-Finnish European"
+        "LD reference population: non-Finnish Europeans"
       );
     });
 
@@ -155,7 +155,7 @@ test.describe("QTL study page: header of an eQTL study", () => {
     const studyId = testConfig.study.qtl?.alternatives?.[0] as string;
     const header = new QTLStudyHeader(page);
     await header.goto(studyId);
-    await expect(header.pubmed).toHaveText(/^PubMed:\s*32913098$/);
+    await expect(header.pubmed).toHaveText(/^PubMed:\s*32913098\s*$/);
     await header.pubmed.getByTestId("publications-drawer-trigger").click();
     const drawer = page.getByTestId("publications-drawer");
     await expect(drawer).toBeVisible();
@@ -333,13 +333,22 @@ test.describe("QTL study page: molQTL credible sets table", () => {
     expect(json.filename).toBe(`${PQTL.id}-qtl-credible-sets-studies.json`);
     const rows = JSON.parse(json.text) as Record<string, unknown>[];
     expect(rows, "the export holds every credible set, not just the page").toHaveLength(total);
-    for (const row of rows) expect(String(row["Lead variant"])).toMatch(VARIANT_ID);
+    expect(Object.keys(rows[0])).toEqual([
+      "credibleSet",
+      "leadVariant",
+      "pValue",
+      "beta",
+      "fineMappingMethod",
+      "fineMappingConfidence",
+      "credibleSetSize",
+    ]);
+    for (const row of rows) expect(String(row.leadVariant)).toMatch(VARIANT_ID);
 
     const tsv = await section.controls.download("TSV");
     expect(tsv.filename).toBe(`${PQTL.id}-qtl-credible-sets-studies.tsv`);
     const lines = tsv.text.trim().split("\n");
     expect(lines).toHaveLength(total + 1);
-    expect(lines[0].split("\t")).toEqual(expect.arrayContaining(["Lead variant", "Credible set"]));
+    expect(lines[0].split("\t")).toEqual(expect.arrayContaining(["leadVariant", "credibleSet"]));
   });
 
   test("API query drawer holds the section's query", async ({ page }) => {
@@ -353,15 +362,18 @@ test.describe("QTL study page: molQTL credible sets table", () => {
   }) => {
     const section = new QTLCredibleSetsSection(page);
     await section.expectLoaded();
+    const variantId = (await section.rowText(0))[1];
     const href = (await section.credibleSetLink(0).getAttribute("href")) ?? "";
     const id = href.replace("/credible-set/", "");
     expect(id).toMatch(/^[0-9a-f]{32}$/);
     await section.credibleSetLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/credible-set/${id}$`));
-    await expect(page.getByTestId("profile-page-header-text")).toContainText(id);
+    const block = page.getByTestId("profile-page-header-block");
+    await expect(block).toContainText(`Lead variant: ${variantId}`);
+    await expect(block).toContainText(`Study ID: ${PQTL.id}`);
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`/study/${PQTL.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/study/${PQTL.id}(#.*)?$`));
     await section.expectLoaded();
   });
 
