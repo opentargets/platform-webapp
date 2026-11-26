@@ -1,6 +1,17 @@
-query TargetDrugsQuery($ensemblId: String!) {
+query TargetDrugsQuery(
+  $ensemblId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  # most advanced first; the cards have no sort control
+  $sort: [ClinicalTargetSort!]! = [
+    { key: MAX_CLINICAL_STAGE, direction: DESCENDING }
+    { key: CLINICAL_REPORT_COUNT, direction: DESCENDING }
+  ]
+  $search: ClinicalTargetSearch
+) {
   target(ensemblId: $ensemblId) {
-    drugAndClinicalCandidates {
+    id
+    drugAndClinicalCandidates(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         id

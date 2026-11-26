@@ -1,5 +1,5 @@
 import { useApolloClient } from "@apollo/client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CLINICAL_RECORDS_QUERY from "../components/ClinicalReports/ClinicalRecordsQuery.gql";
 
 type GetClinicalReportsIds<Row> = (row: Row) => string[] | undefined | null;
@@ -23,7 +23,15 @@ type UseClinicalReportsMasterDetailResult<Row> = {
   recordsByStage: Record<string, any[]> | null;
   maxClinicalStage: string | null;
   loadingRecords: boolean;
+  /** warms the cache with a row's clinical reports, so selecting it is instant */
+  prefetchRecords: (row: Row | null | undefined) => void;
+  /** hover handlers for a row's card: prefetch its reports after a short dwell */
+  getPrefetchHandlers: (row: Row) => { onMouseEnter: () => void; onMouseLeave: () => void };
 };
+
+type LoadedRecords<Row> = { row: Row; recordsByStage: Record<string, any[]> };
+
+const HOVER_PREFETCH_DELAY = 150;
 
 function groupByClinicalStage(rows: any[]): Record<string, any[]> {
   return rows.reduce(
@@ -47,7 +55,11 @@ function useClinicalReportsMasterDetail<Row = any>({
   const client = useApolloClient();
 
   const [selectedRow, setSelectedRow] = useState<Row | null>(null);
-  const [recordsByStage, setRecordsByStage] = useState<Record<string, any[]> | null>(null);
+  // The reports on display, with the row they belong to. They stay on display
+  // while the reports of a newly selected row load, so the detail panel never
+  // empties between two selections.
+  const [loaded, setLoaded] = useState<LoadedRecords<Row> | null>(null);
+  const hoverTimer = useRef<number | undefined>(undefined);
   const [loadingRecords, setLoadingRecords] = useState(false);
 
   const resolveRowId = useMemo(() => {
@@ -61,25 +73,32 @@ function useClinicalReportsMasterDetail<Row = any>({
     if (prevId != null && nextId != null && prevId === nextId) return;
 
     setSelectedRow(row);
-    setRecordsByStage(null);
-    if (row) setLoadingRecords(true);
+    setLoadingRecords(!!row);
+    if (!row) setLoaded(null);
   };
 
+  // stage and entity describe the reports on display, not the row still loading
+  const displayedRow = loaded?.row ?? selectedRow;
+
   const maxClinicalStage = useMemo(() => {
-    if (!selectedRow) return null;
-    return getMaxClinicalStage(selectedRow) ?? null;
-  }, [selectedRow, getMaxClinicalStage]);
+    if (!displayedRow) return null;
+    return getMaxClinicalStage(displayedRow) ?? null;
+  }, [displayedRow, getMaxClinicalStage]);
 
   const selectedEntity = useMemo(() => {
-    if (!selectedRow) return null;
-    return getSelectedEntity?.(selectedRow) ?? null;
-  }, [selectedRow, getSelectedEntity]);
+    if (!displayedRow) return null;
+    return getSelectedEntity?.(displayedRow) ?? null;
+  }, [displayedRow, getSelectedEntity]);
 
   useEffect(() => {
     if (!selectedRow) return;
 
     const clinicalReportsIds = getClinicalReportsIds(selectedRow) ?? [];
-    if (clinicalReportsIds.length === 0) return;
+    if (clinicalReportsIds.length === 0) {
+      setLoaded({ row: selectedRow, recordsByStage: {} });
+      setLoadingRecords(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -93,8 +112,10 @@ function useClinicalReportsMasterDetail<Row = any>({
         if (cancelled) return;
 
         const recordsData = result.data?.clinicalReports ?? [];
-        const grouped = groupByClinicalStage(recordsData);
-        setRecordsByStage(grouped);
+        setLoaded({ row: selectedRow, recordsByStage: groupByClinicalStage(recordsData) });
+      } catch {
+        // do not leave another row's reports on display
+        if (!cancelled) setLoaded(null);
       } finally {
         if (!cancelled) setLoadingRecords(false);
       }
@@ -107,13 +128,42 @@ function useClinicalReportsMasterDetail<Row = any>({
     };
   }, [client, selectedRow, getClinicalReportsIds]);
 
+  const prefetchRecords = useCallback(
+    (row: Row | null | undefined) => {
+      if (!row) return;
+      const clinicalReportsIds = getClinicalReportsIds(row) ?? [];
+      if (clinicalReportsIds.length === 0) return;
+      client
+        .query({ query: CLINICAL_RECORDS_QUERY as any, variables: { clinicalReportsIds } })
+        .catch(() => {
+          // a failed prefetch is retried, and reported, when the row is selected
+        });
+    },
+    [client, getClinicalReportsIds]
+  );
+
+  const getPrefetchHandlers = useCallback(
+    (row: Row) => ({
+      onMouseEnter: () => {
+        window.clearTimeout(hoverTimer.current);
+        hoverTimer.current = window.setTimeout(() => prefetchRecords(row), HOVER_PREFETCH_DELAY);
+      },
+      onMouseLeave: () => window.clearTimeout(hoverTimer.current),
+    }),
+    [prefetchRecords]
+  );
+
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
   return {
     selectedRow,
     selectRow,
     selectedEntity,
-    recordsByStage,
+    recordsByStage: loaded?.recordsByStage ?? null,
     maxClinicalStage,
     loadingRecords,
+    prefetchRecords,
+    getPrefetchHandlers,
   };
 }
 

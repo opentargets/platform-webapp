@@ -3,7 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DrugsQueryVariables } from "@ot/constants";
-import { clinicalStageCategories, type DrugsQuery } from "@ot/constants";
+import {
+  ClinicalIndicationSearchField,
+  clinicalStageCategories,
+  type DrugsQuery,
+} from "@ot/constants";
 import type { Row } from "@tanstack/react-table";
 import type { MouseEvent } from "react";
 import { Box, Link, type OtTableColumn, OtTableServer, Typography } from "ui";
@@ -29,9 +33,17 @@ type DrugsTableProps = {
   efoId: string;
   selectedRow: DrugRow | null;
   selectRow: (row: DrugRow | null) => void;
+  prefetchRecords: (row: DrugRow | null | undefined) => void;
+  getPrefetchHandlers: (row: DrugRow) => { onMouseEnter: () => void; onMouseLeave: () => void };
 };
 
-function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
+function DrugsTable({
+  efoId,
+  selectedRow,
+  selectRow,
+  prefetchRecords,
+  getPrefetchHandlers,
+}: DrugsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -39,12 +51,14 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
     {
       id: "drugCard",
       label: "",
+      searchFields: [ClinicalIndicationSearchField.DrugName],
       renderCell: (row) => {
         const { drug, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
 
         return (
           <Box
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
@@ -120,8 +134,6 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
           </Box>
         );
       },
-      filterValue: (row) =>
-        `${row.drug?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
@@ -179,7 +191,7 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
         dataDownloaderFileStem="drugs-and-clinical-candidates"
         dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        globalFilterPlaceholderText="Search..."
+        globalFilterPlaceholderText="Search drugs..."
         getSelectedRows={(rowsInfo: Row<DrugRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
@@ -195,6 +207,11 @@ function DrugsTable({ efoId, selectedRow, selectRow }: DrugsTableProps) {
           }
         }}
         showRowsPerPageControl={false}
+        stableHeight
+        // the first card of a page is selected when the page opens, so its reports
+        // are fetched along with the neighbouring pages
+        prefetchAdjacentPages
+        onPagePrefetched={(rows) => prefetchRecords(rows[0])}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

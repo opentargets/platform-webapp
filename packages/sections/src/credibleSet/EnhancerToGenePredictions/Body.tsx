@@ -1,10 +1,19 @@
-import { useState } from "react";
-import { Link, SectionItem, OtTableOffsetPagination, Tooltip } from "ui";
-import { naLabel } from "@ot/constants";
+import { useQuery } from "@apollo/client";
+import { Link, SectionItem, OtTableServer, type OtTableColumn, Tooltip } from "ui";
+import {
+  type EnhancerToGene,
+  type EnhancerToGeneSearch,
+  EnhancerToGeneSearchField,
+  type EnhancerToGeneSort,
+  EnhancerToGeneSortField,
+  naLabel,
+  SortDirection,
+} from "@ot/constants";
 import { definition } from ".";
 
 import Description from "./Description";
-import ENHANCER_TO_GENE_PREDICTIONS_QUERY from "./EnhancerToGenePredictionsQuery.gql";
+import ENHANCER_TO_GENE_PREDICTIONS_QUERY_DOCUMENT from "./EnhancerToGenePredictionsQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
 
 interface Target {
   id: string;
@@ -15,127 +24,141 @@ interface Target {
 interface Biosample {
   biosampleId: string;
   biosampleName: string;
-  biosampleFromSource?: string;
 }
 
-const columns = [
+type E2GRow = Omit<EnhancerToGene, "target" | "biosample" | "qualityControls"> & {
+  target?: Target | null;
+  biosample?: Biosample | null;
+};
+
+type QueryData = {
+  credibleSet?: {
+    credibleSetId: string;
+    leadVariant?: {
+      variantId: string;
+      referenceAllele: string;
+      alternateAllele: string;
+      enhancerToGene: { count: number; rows: E2GRow[] };
+    } | null;
+  } | null;
+};
+
+type QueryVariables = {
+  credibleSetId: string;
+  index: number;
+  size: number;
+  sort: EnhancerToGeneSort[];
+  search?: EnhancerToGeneSearch;
+};
+
+const ENHANCER_TO_GENE_PREDICTIONS_QUERY = typedDocument<QueryData, QueryVariables>(
+  ENHANCER_TO_GENE_PREDICTIONS_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "score",
+  field: EnhancerToGeneSortField.Score,
+  desc: true,
+};
+
+const columns: OtTableColumn<E2GRow>[] = [
   {
     id: "target",
     label: "Gene",
     enableHiding: false,
     sticky: true,
-    renderCell: ({ target }: { target: Target }) => (
-      <Link asyncTooltip to={`/target/${target.id}`}>
-        {target.approvedSymbol}
-      </Link>
-    ),
-    exportValue: ({ target }: { target: Target }) => target?.approvedSymbol,
+    // For now, attach all search fields to the first column.
+    searchFields: Object.values(EnhancerToGeneSearchField),
+    renderCell: ({ target }) => {
+      if (!target) return naLabel;
+      return (
+        <Link asyncTooltip to={`/target/${target.id}`}>
+          {target.approvedSymbol}
+        </Link>
+      );
+    },
+    exportValue: ({ target }) => target?.approvedSymbol,
   },
   {
     id: "biosample",
     label: "Affected tissue/cell",
     enableHiding: false,
-    renderCell: ({ biosample, biosampleFromSourceId }: { biosample: Biosample; biosampleFromSourceId?: string }) => {
-      if (!biosample) return naLabel;
+    renderCell: ({ biosample, biosampleFromSourceId }) => {
+      const label = biosample?.biosampleName || biosample?.biosampleId;
+      if (!label) return naLabel;
       return (
         <Tooltip title={biosampleFromSourceId || ""}>
-        <Link
-          external
-          to={`https://www.ebi.ac.uk/ols4/search?q=${biosample.biosampleId}`}
-        >
-          {biosample.biosampleName || biosample.biosampleId}
-        </Link>
+          {biosample?.biosampleId ? (
+            <Link external to={`https://www.ebi.ac.uk/ols4/search?q=${biosample.biosampleId}`}>
+              {label}
+            </Link>
+          ) : (
+            label
+          )}
         </Tooltip>
       );
     },
-    filterValue: ({ biosample }: { biosample: Biosample }) =>
-      biosample?.biosampleName || biosample?.biosampleId || "",
-    exportValue: ({ biosample }: { biosample: Biosample }) =>
-      biosample?.biosampleName || biosample?.biosampleId || "",
+    exportValue: ({ biosample }) => biosample?.biosampleName || biosample?.biosampleId || "",
   },
   {
     id: "intervalType",
     label: "Interval type",
-    sortable: true,
-    renderCell: ({ intervalType }: { intervalType: string }) => {
+    sortField: EnhancerToGeneSortField.IntervalType,
+    renderCell: ({ intervalType }) => {
       if (!intervalType) return naLabel;
       return intervalType;
     },
-    filterValue: ({ intervalType }: { intervalType: string }) =>
-      intervalType || "",
   },
   {
     id: "studyId",
     label: "Study",
-    renderCell: ({ studyId }: { studyId: string }) => {
+    renderCell: ({ studyId }) => {
       if (!studyId) return naLabel;
       return (
-        <Link
-          external
-          to={`https://www.encodeproject.org/experiments/${studyId}/`}
-        >
+        <Link external to={`https://www.encodeproject.org/experiments/${studyId}/`}>
           {studyId}
         </Link>
       );
     },
-    filterValue: ({ studyId }: { studyId: string }) => studyId || "",
   },
   {
     id: "distanceToTss",
     label: "Distance from start site (bp)",
     numeric: true,
-    sortable: true,
-    renderCell: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss.toLocaleString(),
-    exportValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss?.toString(),
-    filterValue: ({ distanceToTss }: { distanceToTss: number }) => distanceToTss.toLocaleString(),
-    comparator: (a: any, b: any) => a.distanceToTss - b.distanceToTss,
+    sortField: EnhancerToGeneSortField.DistanceToTss,
+    renderCell: ({ distanceToTss }) => distanceToTss.toLocaleString(),
+    exportValue: ({ distanceToTss }) => distanceToTss?.toString(),
   },
   {
     id: "size",
     label: "Interval size (bp)",
     numeric: true,
-    sortable: true,
-    renderCell: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toLocaleString()}`,
-    exportValue: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toString()}`,
-    filterValue: ({ start, end }: { start: number; end: number }) => `${(end - start + 1).toLocaleString()}`,
-    comparator: (a: any, b: any) => (a.end - a.start + 1) - (b.end - b.start + 1),
+    sortField: EnhancerToGeneSortField.IntervalSize,
+    renderCell: ({ start, end }) => `${(end - start + 1).toLocaleString()}`,
+    exportValue: ({ start, end }) => `${(end - start + 1).toString()}`,
   },
   {
     id: "start_end",
     label: "Interval range",
     numeric: true,
-    exportValue: ({ chromosome, start, end }: {
-      chromosome: string;
-      start: number;
-      end: number;
-    }) => `${chromosome}:${start.toString()}-${end.toString()}`,
-    renderCell: ({ chromosome, start, end }: {
-      chromosome: string;
-      start: number;
-      end: number;
-    }) => `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
-    filterValue:  ({ chromosome, start, end }: {
-      chromosome: string;
-      start: number;
-      end: number;
-    }) => `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
+    exportValue: ({ chromosome, start, end }) =>
+      `${chromosome}:${start.toString()}-${end.toString()}`,
+    renderCell: ({ chromosome, start, end }) =>
+      `${chromosome}:${start.toLocaleString()}-${end.toLocaleString()}`,
   },
   {
     id: "score",
     label: "Score",
     numeric: true,
-    sortable: true,
+    sortField: DEFAULT_SORT.field,
     tooltip: (
       <>
-        This score (0-1) from E2G reflects the confidence that this genomic
-        region regulates its target gene, obtained by integrating epigenomic and
-        3D chromatin data
+        This score (0-1) from E2G reflects the confidence that this genomic region regulates its
+        target gene, obtained by integrating epigenomic and 3D chromatin data
       </>
     ),
-    filterValue: ({ score }: { score: number }) => score?.toFixed(3) ?? "",
-    renderCell: ({ score }: { score: number }) => score.toFixed(3),
-    exportValue: ({ score }: { score: number }) => score.toString(),
-    comparator: (a: any, b: any) => a.score - b.score,
+    renderCell: ({ score }) => score.toFixed(3),
+    exportValue: ({ score }) => score.toString(),
   },
 ];
 
@@ -146,7 +169,19 @@ type BodyProps = {
 
 function Body({ id, entity }: BodyProps) {
   const variables = { credibleSetId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(ENHANCER_TO_GENE_PREDICTIONS_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
+  });
 
   return (
     <SectionItem
@@ -161,13 +196,13 @@ function Body({ id, entity }: BodyProps) {
         />
       )}
       renderBody={() => (
-        <OtTableOffsetPagination
+        <OtTableServer<E2GRow>
           dataDownloader
           dataDownloaderFileStem={`${id}-enhancer-to-gene-predictions`}
           dataPath="credibleSet.leadVariant.enhancerToGene"
-          entity="credibleSet"
-          sectionName="enhancerToGene"
-          setInitialRequestData={setRequest}
+          pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           columns={columns}
           query={ENHANCER_TO_GENE_PREDICTIONS_QUERY}
           variables={variables}
