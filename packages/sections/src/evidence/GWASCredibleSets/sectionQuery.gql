@@ -1,46 +1,36 @@
-query EvidenceGWASCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
-  target(ensemblId: $ensemblId) {
-    approvedSymbol
-  }
+query EvidenceGWASCredibleSetsQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceGwasCredibleSetsSort!]! = []
+  $search: EvidenceGwasCredibleSetsSearch
+) {
   disease(efoId: $efoId) {
     id
-    name
-    gwasCredibleSets: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [gwas_credible_sets]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
-        }
-        credibleSet {
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      gwasCredibleSets(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
           credibleSetId
-          study {
-            traitFromSource
-            id
-            projectId
-            publicationFirstAuthor
-            publicationDate
-            pubmedId
-            nSamples
-          }
-          leadVariant {
-            variantId
-            chromosome
-            position
-            referenceAllele
-            alternateAllele
-          }
-          leadPValueMantissa
-          leadPValueExponent
-          leadBeta
+          leadVariantId
+          leadReferenceAllele
+          leadAlternateAllele
+          pValueMantissa
+          pValueExponent
+          beta
           fineMappingMethod
           confidence
+          studyId
+          traitFromSource
+          publicationFirstAuthor
+          publicationDate
+          pubmedId
+          nSamples
+          score
         }
-        score
       }
     }
   }

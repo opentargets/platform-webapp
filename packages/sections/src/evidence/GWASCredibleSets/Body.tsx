@@ -4,6 +4,7 @@ import {
   Link,
   PublicationsDrawer,
   OtTableServer,
+  type OtTableColumn,
   ScientificNotation,
   ClinvarStars,
   Tooltip,
@@ -11,7 +12,6 @@ import {
   DisplayVariantId,
   L2GScoreIndicator,
 } from "ui";
-import { variantComparator, mantissaExponentComparator } from "@ot/utils";
 
 import {
   dataTypesMap,
@@ -19,146 +19,180 @@ import {
   credsetConfidenceLabels,
   fineMappingMethodLabels,
   type EvidenceBodyProps,
+  type EvidenceGwasCredibleSets,
+  type EvidenceGwasCredibleSetsSearch,
+  EvidenceGwasCredibleSetsSearchField,
+  type EvidenceGwasCredibleSetsSort,
+  EvidenceGwasCredibleSetsSortField,
+  SortDirection,
 } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
-import GWAS_CREDIBLE_SETS_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import GWAS_CREDIBLE_SETS_QUERY_DOCUMENT from "./sectionQuery.gql";
 
-function getColumns(targetSymbol, targetId) {
+type GwasCredibleSetsRow = Pick<
+  EvidenceGwasCredibleSets,
+  | "diseaseId"
+  | "diseaseName"
+  | "credibleSetId"
+  | "leadVariantId"
+  | "leadReferenceAllele"
+  | "leadAlternateAllele"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "beta"
+  | "fineMappingMethod"
+  | "confidence"
+  | "studyId"
+  | "traitFromSource"
+  | "publicationFirstAuthor"
+  | "publicationDate"
+  | "pubmedId"
+  | "nSamples"
+  | "score"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { gwasCredibleSets: { count: number; rows: GwasCredibleSetsRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceGwasCredibleSetsSort[];
+  search?: EvidenceGwasCredibleSetsSearch;
+};
+
+const GWAS_CREDIBLE_SETS_QUERY = typedDocument<QueryData, QueryVariables>(
+  GWAS_CREDIBLE_SETS_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceGwasCredibleSetsSortField.Score,
+  desc: true,
+};
+
+const fineMappingMethodLabel = (method: string) => fineMappingMethodLabels[method] ?? method;
+
+function getColumns(targetSymbol: string, targetId: string): OtTableColumn<GwasCredibleSetsRow>[] {
   return [
     {
-      id: "credibleSet",
+      id: "credibleSetId",
       label: "Credible set",
       sticky: true,
-      renderCell: ({ credibleSet }) => {
-        return <Navigate to={`/credible-set/${credibleSet?.credibleSetId}`} />;
+      // Attach the GWAS credible sets search fields to the first column.
+      searchFields: [
+        EvidenceGwasCredibleSetsSearchField.LeadVariantId,
+        EvidenceGwasCredibleSetsSearchField.TraitFromSource,
+        EvidenceGwasCredibleSetsSearchField.DiseaseName,
+        EvidenceGwasCredibleSetsSearchField.StudyId,
+        EvidenceGwasCredibleSetsSearchField.FineMappingMethod,
+        EvidenceGwasCredibleSetsSearchField.PublicationFirstAuthor,
+        EvidenceGwasCredibleSetsSearchField.PublicationDate,
+      ],
+      renderCell: ({ credibleSetId }) => {
+        if (!credibleSetId) return naLabel;
+        return <Navigate to={`/credible-set/${credibleSetId}`} />;
       },
-      exportValue: ({ credibleSet }) => credibleSet?.credibleSetId,
+      exportValue: ({ credibleSetId }) => credibleSetId,
     },
     {
-      id: "variantId",
+      id: "leadVariantId",
       label: "Lead Variant",
-      comparator: variantComparator(d => d?.credibleSet?.leadVariant),
-      renderCell: ({ credibleSet }) => {
-        const v = credibleSet?.leadVariant;
-        if (!v) return naLabel;
-        return (
-          <Link asyncTooltip to={`/variant/${v.variantId}`}>
-            <DisplayVariantId
-              variantId={v.variantId}
-              referenceAllele={v.referenceAllele}
-              alternateAllele={v.alternateAllele}
-              expand={false}
-            />
-          </Link>
-        );
-      },
-      filterValue: ({ credibleSet: { leadVariant: v } }) =>
-        `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-      exportValue: ({ credibleSet: { leadVariant: v } }) =>
-        `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-    },
-    {
-      id: "trait",
-      label: "Reported trait",
-      renderCell: ({ credibleSet }) => credibleSet?.study.traitFromSource,
-      exportValue: ({ credibleSet }) => credibleSet?.study.traitFromSource,
-    },
-    {
-      id: "disease",
-      label: "Disease/phenotype",
-      renderCell: ({ disease }) => (
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          {disease.name}
+      sortField: EvidenceGwasCredibleSetsSortField.LeadVariant,
+      renderCell: ({ leadVariantId, leadReferenceAllele, leadAlternateAllele }) => (
+        <Link asyncTooltip to={`/variant/${leadVariantId}`}>
+          <DisplayVariantId
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
+            expand={false}
+          />
         </Link>
       ),
-      filterValue: ({ disease }) => disease.name,
-      exportValue: ({ disease }) => `${disease.name} (${disease.id})`,
+      exportValue: ({ leadVariantId }) => leadVariantId,
     },
     {
-      id: "study",
+      id: "traitFromSource",
+      label: "Reported trait",
+      renderCell: ({ traitFromSource }) => traitFromSource,
+    },
+    {
+      id: "diseaseName",
+      label: "Disease/phenotype",
+      renderCell: ({ diseaseId, diseaseName }) => (
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          {diseaseName}
+        </Link>
+      ),
+      exportValue: ({ diseaseId, diseaseName }) => `${diseaseName} (${diseaseId})`,
+    },
+    {
+      id: "studyId",
       label: "Study",
-      renderCell: ({ credibleSet }) => {
-        return (
-          <Link asyncTooltip to={`/study/${credibleSet?.study.id}`}>
-            {credibleSet?.study.id}
-          </Link>
-        );
-      },
-      exportValue: ({ credibleSet }) => credibleSet?.study.id,
+      renderCell: ({ studyId }) => (
+        <Link asyncTooltip to={`/study/${studyId}`}>
+          {studyId}
+        </Link>
+      ),
     },
     {
       id: "nSamples",
       label: "Sample size",
       numeric: true,
-      renderCell: ({ credibleSet }) =>
-        credibleSet?.study.nSamples
-          ? parseInt(credibleSet?.study.nSamples, 10).toLocaleString()
-          : naLabel,
-      filterValue: ({ credibleSet }) => parseInt(credibleSet?.study.nSamples, 10).toLocaleString(),
-      exportValue: ({ credibleSet }) => credibleSet?.study.nSamples,
+      sortField: EvidenceGwasCredibleSetsSortField.SampleSize,
+      renderCell: ({ nSamples }) =>
+        typeof nSamples === "number" ? nSamples.toLocaleString() : naLabel,
     },
     {
       id: "pValue",
       label: "P-value",
-      comparator: (a, b) => {
-        return mantissaExponentComparator(
-          a?.credibleSet?.leadPValueMantissa,
-          a?.credibleSet?.leadPValueExponent,
-          b?.credibleSet?.leadPValueMantissa,
-          b?.credibleSet?.leadPValueExponent
-        );
-      },
-      filterValue: false,
-      renderCell: ({ credibleSet }) => {
-        const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
-          credibleSet ?? {};
+      sortField: EvidenceGwasCredibleSetsSortField.PValue,
+      renderCell: ({ pValueMantissa, pValueExponent }) => {
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
           return naLabel;
         return <ScientificNotation number={[pValueMantissa, pValueExponent]} />;
       },
-      exportValue: ({ credibleSet }) => {
-        const { leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent } =
-          credibleSet ?? {};
+      exportValue: ({ pValueMantissa, pValueExponent }) => {
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
         return `${pValueMantissa}x10${pValueExponent}`;
       },
     },
     {
-      id: "credibleSet.leadBeta",
+      id: "beta",
       label: "Beta (CI 95%)",
       numeric: true,
-      renderCell: ({ credibleSet }) => {
-        return credibleSet?.leadBeta ? credibleSet.leadBeta.toFixed(3) : naLabel;
-      },
+      sortField: EvidenceGwasCredibleSetsSortField.Beta,
+      renderCell: ({ beta }) => (beta ? beta.toFixed(3) : naLabel),
     },
     {
       id: "confidence",
       label: "Fine-mapping confidence",
       tooltip:
         "Fine-mapping confidence based on the quality of the linkage-disequilibrium information available and fine-mapping method",
-      renderCell: ({ credibleSet }) => {
-        if (!credibleSet?.confidence) return naLabel;
+      sortField: EvidenceGwasCredibleSetsSortField.Confidence,
+      renderCell: ({ confidence }) => {
+        if (!confidence) return naLabel;
         return (
-          <Tooltip title={credsetConfidenceLabels[credibleSet.confidence]} style="">
-            <ClinvarStars num={credibleSet.confidence} />
+          <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+            <ClinvarStars num={confidence} />
           </Tooltip>
         );
       },
-      filterValue: ({ credibleSet }) => credibleSet?.confidence,
-      exportValue: ({ credibleSet }) => credibleSet?.confidence,
+      exportValue: ({ confidence }) => confidence,
     },
     {
       id: "fineMappingMethod",
       label: "Fine-mapping method",
-      renderCell: ({ credibleSet }) =>
-        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ??
-        credibleSet?.fineMappingMethod ??
-        naLabel,
-      filterValue: ({ credibleSet }) =>
-        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ?? credibleSet?.fineMappingMethod,
-      exportValue: ({ credibleSet }) =>
-        fineMappingMethodLabels[credibleSet?.fineMappingMethod] ?? credibleSet?.fineMappingMethod,
+      renderCell: ({ fineMappingMethod }) => fineMappingMethodLabel(fineMappingMethod),
+      exportValue: ({ fineMappingMethod }) => fineMappingMethodLabel(fineMappingMethod),
     },
     {
       id: "score",
@@ -173,46 +207,36 @@ function getColumns(targetSymbol, targetId) {
           for more information.
         </>
       ),
-      renderCell: ({ score, credibleSet }) => {
+      sortField: DEFAULT_SORT.field,
+      renderCell: ({ score, credibleSetId }) => {
         if (!score) return naLabel;
         return (
-          <L2GScoreIndicator
-            score={score}
-            targetId={targetId}
-            credibleSetId={credibleSet?.credibleSetId}
-          />
+          <L2GScoreIndicator score={score} targetId={targetId} credibleSetId={credibleSetId} />
         );
       },
     },
     {
       id: "publication",
       label: "Publication",
-      renderCell: ({ credibleSet, disease }) => {
-        const { publicationFirstAuthor, publicationDate, pubmedId } = credibleSet?.study ?? {};
+      renderCell: ({ diseaseName, publicationFirstAuthor, publicationDate, pubmedId }) => {
         if (!publicationFirstAuthor) return naLabel;
         return (
           <PublicationsDrawer
-            name={disease.name}
+            name={diseaseName}
             symbol={targetSymbol}
-            entries={[{ name: pubmedId }]}
+            entries={[{ name: pubmedId ?? "" }]}
             customLabel={`${publicationFirstAuthor} et al. (${new Date(
-              publicationDate
+              publicationDate ?? ""
             ).getFullYear()})`}
           />
         );
       },
-      filterValue: ({ literature, publicationYear, publicationFirstAuthor }) =>
-        `${literature} ${publicationYear} ${publicationFirstAuthor}`,
-      exportValue: ({ credibleSet }) => credibleSet?.study.pubmedId,
+      exportValue: ({ pubmedId }) => pubmedId,
     },
   ];
 }
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
 
@@ -221,7 +245,17 @@ function Body({ id, label, entity }: Props) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(GWAS_CREDIBLE_SETS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -232,14 +266,15 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<GwasCredibleSetsRow>
           query={GWAS_CREDIBLE_SETS_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`GWASassociations-${ensgId}-${efoId}`}
-          dataPath="disease.gwasCredibleSets"
+          dataPath="disease.evidenceViews.gwasCredibleSets"
           pageSize={PAGE_SIZE}
-          showGlobalFilter={false}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           variables={variables}
         />
       )}
