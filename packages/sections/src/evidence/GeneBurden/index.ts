@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Gene Burden",
   shortName: "GB",
-  hasData: (data: EvidenceData) => hasEvidence(data, "geneBurden", "geneBurdenSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "geneBurden"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
