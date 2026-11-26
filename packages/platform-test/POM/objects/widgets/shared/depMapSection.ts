@@ -1,70 +1,79 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection } from "../Target/sectionWidgets";
+import { SectionDataControls } from "./sectionDataControls";
+
+/** The cell-line fields the export and the tooltip carry for each dot of the plot. */
+export const DEPMAP_EXPORT_COLUMNS = [
+  "depmapId",
+  "cellLineName",
+  "diseaseFromSource",
+  "geneEffect",
+  "expression",
+  "tissueName",
+];
+
+export type DepMapExportRow = {
+  depmapId: string;
+  cellLineName: string;
+  diseaseFromSource: string;
+  geneEffect: number;
+  expression: number;
+  tissueName: string;
+};
 
 /**
- * Interactor for Cancer DepMap section on Target page
- * Displays gene essentiality data from DepMap as a visualization plot
+ * Cancer DepMap section of the target profile: a box plot of the CRISPR gene effect per
+ * tissue, with one dot per cancer cell line (Observable Plot SVG).
  */
-export class DepMapSection {
-  constructor(private page: Page) {}
+export class DepMapSection extends ProfileSection {
+  /** Dots with a gene effect below this value are coloured as a dependency. */
+  static readonly DEPENDENCY_THRESHOLD = -1;
+  static readonly DEPENDENCY_COLOUR = "#EC2846";
+  static readonly NEUTRAL_COLOUR = "#08519C";
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-depmapessentiality']");
+  readonly controls: SectionDataControls;
+
+  constructor(page: Page) {
+    super(page, "depmapessentiality");
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get plot(): Locator {
+    return this.section.getByTestId("depmap-plot");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-depmapessentiality']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  /** The chart itself, as opposed to its legend swatches. */
+  get chart(): Locator {
+    return this.plot.locator("svg[aria-label='dot']").or(this.plot.locator("svg").last());
   }
 
-  // Visualization plot
-  getPlot(): Locator {
-    return this.getSection().locator("[data-testid='depmap-plot']");
+  /** One circle per cancer cell line screen. */
+  get dots(): Locator {
+    return this.plot.locator("g[aria-label='dot'] circle");
   }
 
-  async isPlotVisible(): Promise<boolean> {
-    return await this.getPlot()
-      .isVisible()
-      .catch(() => false);
+  /** One box per tissue. */
+  get tissueLabels(): Locator {
+    return this.plot.locator("g[aria-label='y-axis tick label'] text");
   }
 
-  // Export data button
-  getExportDataButton(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
+  /** The legend entries ("Dependency", "Neutral"). */
+  get legendItems(): Locator {
+    return this.plot.locator("[class*='-swatches'] > span, [class*='-swatches'] > div");
   }
 
-  async isExportDataButtonVisible(): Promise<boolean> {
-    return await this.getExportDataButton()
-      .isVisible()
-      .catch(() => false);
+  /** The tooltip Observable Plot draws next to the pointed dot. */
+  get tip(): Locator {
+    return this.plot.locator("g[aria-label='tip']");
   }
 
-  async clickExportData(): Promise<void> {
-    await this.getExportDataButton().click();
+  /** The export rows, as the section's own export button delivers them. */
+  async exportedRows(): Promise<DepMapExportRow[]> {
+    const { rows } = await this.controls.downloadJson();
+    return rows as unknown as DepMapExportRow[];
+  }
+
+  async expectDotsMatch(rows: DepMapExportRow[]): Promise<void> {
+    await expect(this.dots).toHaveCount(rows.length);
   }
 }

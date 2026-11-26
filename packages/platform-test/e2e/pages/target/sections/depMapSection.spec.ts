@@ -1,48 +1,16 @@
 import { expect, test } from "../../../../fixtures";
 import { DepMapSection } from "../../../../POM/objects/widgets/shared/depMapSection";
 
-test.describe("DepMap Essentiality Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
-  });
-
-  test("Section is visible when target has DepMap data", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
-
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      expect(isVisible).toBe(true);
-    }
-  });
-
-  test("Plot is displayed when data is available", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
-
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      const isPlotVisible = await depMapSection.isPlotVisible();
-
-      if (isPlotVisible) {
-        expect(isPlotVisible).toBe(true);
-      }
-    }
-  });
-
-  test("Export data button is available", async ({ page }) => {
-    const depMapSection = new DepMapSection(page);
-    const isVisible = await depMapSection.isSectionVisible();
-
-    if (isVisible) {
-      await depMapSection.waitForLoad();
-      const isExportVisible = await depMapSection.isExportDataButtonVisible();
-
-      if (isExportVisible) {
-        expect(isExportVisible).toBe(true);
-      }
-    }
+test.describe("Target profile: Cancer DepMap section", () => {
+  test("probe", async ({ page }) => {
+    const depMap = new DepMapSection(page);
+    await page.goto("/target/ENSG00000157764");
+    await depMap.expectLoaded();
+    console.log(await depMap.plot.evaluate((e) => [...e.querySelectorAll("svg.plot-d6a7b5 > g, svg > g")].map((g) => g.getAttribute("aria-label") + " " + g.children.length + " " + (g.children[0]?.outerHTML.slice(0,200)))));
+    console.log(await depMap.plot.evaluate((e) => [...e.querySelectorAll("g[aria-label='y-axis tick label']")].map((g) => g.outerHTML.slice(0,500))));
+    const c = page.locator("g[aria-label='dot']").last().locator("circle, path").first();
+    console.log(await c.evaluate((e) => e.outerHTML));
+    await c.hover();
+    console.log(await depMap.plot.evaluate((e) => [...e.querySelectorAll("g[aria-label='tip']")].map(g=>g.outerHTML.slice(0,1500))));
   });
 });
