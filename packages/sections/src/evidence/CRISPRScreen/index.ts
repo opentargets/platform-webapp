@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "CRISPR Screens",
   shortName: "CS",
-  hasData: (data: EvidenceData) => hasEvidence(data, "crisprScreen", "CrisprScreenSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "crisprScreen"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
