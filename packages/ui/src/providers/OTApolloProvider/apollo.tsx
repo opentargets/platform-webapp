@@ -21,7 +21,7 @@ export const createApolloClient = (config: Config) => {
     link: from([errorLink, httpLink]),
     cache: new InMemoryCache({
       possibleTypes: {
-        EntityUnionType: ["Target", "Drug", "Disease", "Variant", "Gwas"],
+        EntityObject: ["Disease", "Drug", "Study", "Target", "Variant"],
       },
       typePolicies: {
         ScoredComponent: {

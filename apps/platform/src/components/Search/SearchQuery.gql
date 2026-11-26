@@ -11,7 +11,28 @@ query SearchQuery($queryString: String!, $size: Int!) {
       description
       keywords
       object {
+        ... on Target {
+          id
+          approvedSymbol
+          approvedName
+          functionDescriptions
+        }
+
         ... on Disease {
+          id
+          name
+          description
+        }
+
+        ... on Variant {
+          id: variantId
+          variantDescription
+          referenceAllele
+          alternateAllele
+          rsIds
+        }
+
+        ... on Drug {
           id
           name
           description
@@ -46,6 +67,13 @@ query SearchQuery($queryString: String!, $size: Int!) {
       name
       description
       keywords
+      object {
+        ... on Target {
+          id
+          approvedSymbol
+          approvedName
+        }
+      }
     }
   }
 
@@ -80,6 +108,15 @@ query SearchQuery($queryString: String!, $size: Int!) {
       name
       description
       keywords
+      object {
+        ... on Variant {
+          id: variantId
+          variantDescription
+          referenceAllele
+          alternateAllele
+          rsIds
+        }
+      }
     }
   }
 
@@ -116,6 +153,12 @@ query SearchQuery($queryString: String!, $size: Int!) {
       name
       description
       keywords
+      object {
+        ... on Drug {
+          id
+          name
+        }
+      }
     }
   }
 }
