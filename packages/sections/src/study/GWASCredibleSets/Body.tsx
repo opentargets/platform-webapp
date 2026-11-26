@@ -12,6 +12,7 @@ import {
 } from "@ot/constants";
 import type { ReactElement } from "react";
 import {
+  Box,
   ClinvarStars,
   DisplayVariantId,
   L2GScoreIndicator,
@@ -22,14 +23,14 @@ import {
   ScientificNotation,
   SectionItem,
   Tooltip,
+  Typography,
 } from "ui";
 import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
+import GWAS_CREDIBLE_SETS_PLOT_QUERY_DOCUMENT from "./GWASCredibleSetsPlotQuery.gql";
 import GWAS_CREDIBLE_SETS_QUERY_DOCUMENT from "./GWASCredibleSetsQuery.gql";
-
-// import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
-// import ManhattanPlot from "./ManhattanPlot";
+import ManhattanPlot, { type ManhattanPlotRow } from "./ManhattanPlot";
 
 type StudyRow = Pick<
   StudyCredibleSet,
@@ -66,6 +67,11 @@ type QueryVariables = {
 const GWAS_CREDIBLE_SETS_QUERY = typedDocument<QueryData, QueryVariables>(
   GWAS_CREDIBLE_SETS_QUERY_DOCUMENT
 );
+
+const GWAS_CREDIBLE_SETS_PLOT_QUERY = typedDocument<
+  { study?: { credibleSetsView: { rows: ManhattanPlotRow[] } } | null },
+  { studyId: string }
+>(GWAS_CREDIBLE_SETS_PLOT_QUERY_DOCUMENT);
 
 const PAGE_SIZE = 10;
 const DEFAULT_SORT = {
@@ -237,9 +243,7 @@ function Body({ id, entity }: BodyProps): ReactElement {
       sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
     },
   });
-  // const plotRequest = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
-  //   variables: { ...variables, page: { index: 0, size: 50000 } },
-  // });
+  const plotRequest = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, { variables });
 
   return (
     <SectionItem
@@ -249,14 +253,18 @@ function Body({ id, entity }: BodyProps): ReactElement {
       renderDescription={() => <Description studyId={id} />}
       renderBody={() => (
         <>
-          {/* Manhattan plot temporarily hidden.
           <Box my={3} ml={2}>
-            <ManhattanPlot
-              loading={plotRequest.loading}
-              data={plotRequest.data?.study?.credibleSets?.rows}
-            />
+            {plotRequest.error ? (
+              <Typography align="center" mt={1}>
+                Unable to load the GWAS credible sets plot
+              </Typography>
+            ) : (
+              <ManhattanPlot
+                loading={plotRequest.loading}
+                data={plotRequest.data?.study?.credibleSetsView.rows}
+              />
+            )}
           </Box>
-          */}
           <OtTableServer<StudyRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-gwas-credible-sets-studies`}

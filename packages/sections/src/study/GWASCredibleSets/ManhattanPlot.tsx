@@ -1,19 +1,28 @@
 import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
-import { chromosomeInfo } from "@ot/constants";
-import {
-  DisplayVariantId,
-  Link,
-  Navigate,
-  ObsPlot,
-  ScientificNotation,
-  TooltipRow,
-  TooltipTable,
-  Box,
-  Skeleton,
-} from "ui";
+import { chromosomeInfo, type StudyCredibleSet } from "@ot/constants";
+import { ObsPlot, Skeleton, Typography } from "ui";
+import ManhattanTooltip from "./ManhattanTooltip";
 
-function ManhattanPlot({ loading, data: originalData }) {
+export type ManhattanPlotRow = Pick<
+  StudyCredibleSet,
+  "credibleSetId" | "leadChromosome" | "leadPosition" | "pValueMantissa" | "pValueExponent"
+>;
+
+type PlotRow = ManhattanPlotRow & {
+  pValueMantissa: number;
+  pValueExponent: number;
+  _y: number;
+  _genomePosition: number;
+};
+
+function ManhattanPlot({
+  loading,
+  data: originalData,
+}: {
+  loading: boolean;
+  data?: ManhattanPlotRow[];
+}) {
   const theme = useTheme();
 
   const height = 360;
@@ -22,49 +31,73 @@ function ManhattanPlot({ loading, data: originalData }) {
 
   if (loading) return <Skeleton height={height} />;
 
-  if (originalData == null) return null;
-
-  const data = structuredClone(
-    originalData.filter((d) => {
-      const chromosome = d.leadVariant?.chromosome?.replace(/^chr/i, "");
-      return (
-        d.leadPValueMantissa != null &&
-        d.leadPValueExponent != null &&
-        d.leadVariant != null &&
-        chromosomeInfoMap.has(chromosome)
-      );
-    })
-  );
-  if (data.length === 0) return null;
+  const data = (originalData ?? []).flatMap<PlotRow>((row) => {
+    const chromosome = chromosomeInfoMap.get(row.leadChromosome.replace(/^chr/i, "").toUpperCase());
+    const { pValueMantissa, pValueExponent, leadPosition } = row;
+    if (
+      !chromosome ||
+      pValueMantissa == null ||
+      !Number.isFinite(pValueMantissa) ||
+      pValueMantissa <= 0 ||
+      pValueExponent == null ||
+      !Number.isFinite(pValueExponent) ||
+      !Number.isFinite(leadPosition) ||
+      leadPosition < 1 ||
+      leadPosition > chromosome.length
+    ) {
+      return [];
+    }
+    return [
+      {
+        ...row,
+        pValueMantissa,
+        pValueExponent,
+        _y: Math.log10(pValueMantissa) + pValueExponent,
+        _genomePosition: chromosome.start + leadPosition,
+      },
+    ];
+  });
+  if (data.length === 0) {
+    return (
+      <Typography align="center" mt={1}>
+        No data available for this plot
+      </Typography>
+    );
+  }
 
   const yMax = 0;
   let yMin = Infinity;
   for (const d of data) {
-    const y = Math.log10(d.leadPValueMantissa) + d.leadPValueExponent;
-    yMin = Math.min(yMin, y);
-    d._y = y;
-    d._genomePosition = cumulativePosition(d.leadVariant);
+    yMin = Math.min(yMin, d._y);
   }
 
-  function highlightElement(elmt) {
+  function highlightElement(elmt: SVGElement) {
     elmt.style.fill = markColor;
-    elmt.style.strokeOpacity = 1;
-    if (elmt.tagName === "line") elmt.style.strokeWidth = 1.7;
+    elmt.style.strokeOpacity = "1";
+    if (elmt.tagName === "line") elmt.style.strokeWidth = "1.7";
   }
 
-  function fadeElement(elmt) {
+  function fadeElement(elmt: SVGElement) {
     elmt.style.fill = background;
-    elmt.style.strokeOpacity = 0.6;
-    elmt.style.strokeWidth = 1;
+    elmt.style.strokeOpacity = "0.6";
+    elmt.style.strokeWidth = "1";
   }
 
-  function resetElement(elmt) {
+  function resetElement(elmt: SVGElement) {
     elmt.style.fill = background;
-    elmt.style.strokeOpacity = 1;
-    elmt.style.strokeWidth = 1;
+    elmt.style.strokeOpacity = "1";
+    elmt.style.strokeWidth = "1";
   }
 
-  function renderChart({ data, width, height }) {
+  function renderChart({
+    data,
+    width,
+    height,
+  }: {
+    data: PlotRow[];
+    width?: number;
+    height: number;
+  }) {
     return PlotLib.plot({
       width,
       height,
@@ -84,9 +117,9 @@ function ManhattanPlot({ loading, data: originalData }) {
         // x-axis
         PlotLib.axisX({
           stroke: "#888",
-          ticks: [0, ...chromosomeInfo.map((chromo) => chromo.end)],
+          ticks: [0, ...chromosomes.map((chromo) => chromo.end)],
           tickSize: 16,
-          tickFormat: (v) => "",
+          tickFormat: () => "",
         }),
         PlotLib.ruleY([0], {
           stroke: "#888",
@@ -106,7 +139,7 @@ function ManhattanPlot({ loading, data: originalData }) {
 
         // grid lines
         PlotLib.gridX(
-          chromosomeInfo.map((chromo) => chromo.end),
+          chromosomes.map((chromo) => chromo.end),
           {
             x: (d) => d,
             stroke: "#cecece",
@@ -116,7 +149,7 @@ function ManhattanPlot({ loading, data: originalData }) {
         ),
 
         // text mark for the x-axis labels
-        PlotLib.text(chromosomeInfo, {
+        PlotLib.text(chromosomes, {
           x: (d) => d.midpoint,
           y: yMax,
           text: (d) => d.chromosome,
@@ -165,53 +198,15 @@ function ManhattanPlot({ loading, data: originalData }) {
 
 export default ManhattanPlot;
 
-function renderTooltip(datum) {
-  return (
-    <Box
-      sx={{
-        background: "#fffc",
-        borderColor: "#ddd",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderRadius: "0.2rem",
-        padding: "0.25em 0.5rem",
-      }}
-    >
-      <TooltipTable>
-        <TooltipRow label="Credible set">
-          <Box display="flex">
-            <Navigate to={`/credible-set/${datum.credibleSetId}`} />
-          </Box>
-        </TooltipRow>
-        <TooltipRow label="Lead variant">
-          <Link asyncTooltip to={`/variant/${datum.leadVariant.variantId}`}>
-            <DisplayVariantId
-              variantId={datum.leadVariant.variantId}
-              referenceAllele={datum.leadVariant.referenceAllele}
-              alternateAllele={datum.leadVariant.alternateAllele}
-              expand={false}
-            />
-          </Link>
-        </TooltipRow>
-        <TooltipRow label="P-value">
-          <ScientificNotation number={[datum.leadPValueMantissa, datum.leadPValueExponent]} dp={2} />
-        </TooltipRow>
-      </TooltipTable>
-    </Box>
-  );
+function renderTooltip(datum: PlotRow) {
+  return <ManhattanTooltip key={datum.credibleSetId} credibleSetId={datum.credibleSetId} />;
 }
 
-chromosomeInfo.forEach((chromo, i) => {
-  chromo.start = chromosomeInfo[i - 1]?.end ?? 0;
-  chromo.end = chromo.start + chromo.length;
-  chromo.midpoint = (chromo.start + chromo.end) / 2;
+let genomeLength = 0;
+const chromosomes = chromosomeInfo.map((chromo) => {
+  const start = genomeLength;
+  genomeLength += chromo.length;
+  return { ...chromo, start, end: genomeLength, midpoint: (start + genomeLength) / 2 };
 });
 
-const genomeLength = chromosomeInfo.at(-1).end;
-
-const chromosomeInfoMap = new Map(chromosomeInfo.map((obj) => [obj.chromosome, obj]));
-
-function cumulativePosition({ chromosome, position }) {
-  const normalizedChromosome = chromosome.replace(/^chr/i, "");
-  return chromosomeInfoMap.get(normalizedChromosome).start + position;
-}
+const chromosomeInfoMap = new Map(chromosomes.map((obj) => [obj.chromosome, obj]));
