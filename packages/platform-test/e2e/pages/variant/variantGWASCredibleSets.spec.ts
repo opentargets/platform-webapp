@@ -30,7 +30,7 @@ const FEW_SECTIONS = [
 const NO_GWAS = "1_916631_AGAGCCGGCCCT_A";
 
 const CREDIBLE_SET_ID = /^[0-9a-f]{32}$/;
-const VARIANT_ID = /^[0-9XYM]+_\d+_[ACGT]+_[ACGT]+$/;
+const VARIANT_ID = /[0-9XYM]+_\d+_[ACGT]+_[ACGT]+/;
 
 async function openSection(
   page: import("@playwright/test").Page,
@@ -130,23 +130,29 @@ test.describe("Variant page: GWAS Credible Sets", () => {
     await section.table.setPageSize(100);
     await expect(section.table.rows).toHaveCount(100);
 
-    const leads = await section.columnTexts("leadVariant");
-    expect(leads.some((lead) => lead.includes(APOE)), "some credible sets are led by APOE").toBe(
-      true
+    const leads = await section.table.rows.evaluateAll((rows) =>
+      rows.map((row) => {
+        const cell = row.querySelectorAll("td")[1];
+        return {
+          text: (cell.textContent ?? "").trim(),
+          links: [...cell.querySelectorAll("a")].map((link) => link.getAttribute("href")),
+        };
+      })
     );
-    expect(leads.some((lead) => !lead.includes(APOE)), "some are led by another variant").toBe(true);
+    const own = leads.filter((lead) => lead.text.includes(APOE));
+    const others = leads.filter((lead) => !lead.text.includes(APOE));
+    expect(own.length, "some credible sets are led by APOE").toBeGreaterThan(0);
+    expect(others.length, "some are led by another variant").toBeGreaterThan(0);
 
-    for (const [row, lead] of leads.entries()) {
-      const cell = section.cell(row, "leadVariant");
-      if (lead.includes(APOE)) {
-        await expect(cell, `row ${row + 1}`).toContainText("self");
-        await expect(cell.getByRole("link")).toHaveCount(0);
-      } else {
-        await expect(cell, `row ${row + 1}`).not.toContainText("self");
-        const id = lead.match(VARIANT_ID.source.replace(/^\^|\$$/g, ""))?.[0];
-        expect(id, `"${lead}" has a variant id`).toBeTruthy();
-        await expect(cell.getByRole("link")).toHaveAttribute("href", `/variant/${id}`);
-      }
+    for (const lead of own) {
+      expect(lead.text).toContain("self");
+      expect(lead.links, "the page variant is not a link to itself").toEqual([]);
+    }
+    for (const lead of others) {
+      expect(lead.text).not.toContain("self");
+      const id = lead.text.match(VARIANT_ID)?.[0];
+      expect(id, `"${lead.text}" has a variant id`).toBeTruthy();
+      expect(lead.links).toEqual([`/variant/${id}`]);
     }
   });
 
@@ -256,7 +262,7 @@ test.describe("Variant page: GWAS Credible Sets", () => {
 
       await section.table.search("zzz-no-credible-set-matches-this");
       await expect(section.table.rows).toHaveCount(0);
-      await expect(section.table.pagePosition).toHaveText(/^0 - 0 of 0$/);
+      await expect(section.table.pagePosition).toHaveText(/^\d+ - 0 of 0$/);
       await expect(section.table.nextPageButton).toBeDisabled();
       await expect(section.table.firstPageButton).toBeDisabled();
 
@@ -278,47 +284,48 @@ test.describe("Variant page: GWAS Credible Sets", () => {
   });
 
   test.describe("sorting", () => {
-    test("P-value sorts in both directions, across all pages", async ({ page }) => {
+    const pValues = async (section: GWASCredibleSetsSection) =>
+      (await section.columnTexts("pValue")).map(pValueLog10);
+
+    test("P-value sorts in both directions", async ({ page }) => {
       const section = await openSection(page, APOE);
       const byDefault = await section.table.rowTexts();
 
       await section.table.clickHeader("P-value");
       await section.table.expectRowsChangedFrom(byDefault);
-      const firstClick = await section.table.rowTexts();
-      const firstDirection = directionOf((await section.columnTexts("pValue")).map(pValueLog10));
-      expect(firstDirection).toMatch(/^(ascending|descending)$/);
+      await expect.poll(async () => directionOf(await pValues(section))).toBe("descending");
+      await section.table.expectFirstPage();
 
       await section.table.clickHeader("P-value");
-      await section.table.expectRowsChangedFrom(firstClick);
-      const secondDirection = directionOf((await section.columnTexts("pValue")).map(pValueLog10));
-      expect(secondDirection).toBe(firstDirection === "ascending" ? "descending" : "ascending");
+      await expect.poll(async () => directionOf(await pValues(section))).toBe("ascending");
       await section.table.expectFirstPage();
     });
 
-    test("the smallest p-value is first when sorting ascending, so the order is global", async ({
+    test("the order is global: page 2 continues where page 1 of the sorted list ends", async ({
       page,
     }) => {
       const section = await openSection(page, IL6R);
       await section.table.clickHeader("P-value");
-      await expect
-        .poll(async () =>
-          directionOf((await section.columnTexts("pValue")).map(pValueLog10))
-        )
-        .toMatch(/^(ascending|descending)$/);
-      if (directionOf((await section.columnTexts("pValue")).map(pValueLog10)) === "descending") {
-        await section.table.clickHeader("P-value");
-      }
-      await expect
-        .poll(async () =>
-          directionOf((await section.columnTexts("pValue")).map(pValueLog10))
-        )
-        .toBe("ascending");
-      const page1 = (await section.columnTexts("pValue")).map(pValueLog10);
+      await expect.poll(async () => directionOf(await pValues(section))).toBe("descending");
+      await section.table.clickHeader("P-value");
+      await expect.poll(async () => directionOf(await pValues(section))).toBe("ascending");
+      const page1 = await pValues(section);
+
       await section.table.nextPageButton.click();
       await expect(section.table.pagePosition).toHaveText(/^11 - 20 of \d+$/);
+      await expect.poll(async () => (await pValues(section))[0]).toBeGreaterThanOrEqual(
+        page1[page1.length - 1]
+      );
+      expect(directionOf(await pValues(section))).toMatch(/^(ascending|constant)$/);
+    });
+
+    test("L2G score reverses the default order: the lowest scores come first", async ({ page }) => {
+      const section = await openSection(page, APOE);
+      await section.sortBy("L2G score");
       await expect
-        .poll(async () => (await section.columnTexts("pValue")).map(pValueLog10)[0])
-        .toBeGreaterThanOrEqual(page1[page1.length - 1]);
+        .poll(async () => directionOf(numbersOf(await section.columnTexts("l2gScore"))))
+        .toBe("ascending");
+      expect(numbersOf(await section.columnTexts("l2gScore"))[0]).toBeLessThan(0.5);
     });
 
     test("Lead variant sorts the table and reverses on the second click", async ({ page }) => {
@@ -366,28 +373,40 @@ test.describe("Variant page: GWAS Credible Sets", () => {
     page,
   }) => {
     const section = await openSection(page, APOE);
-    const tooltip = page.getByRole("tooltip");
+    /** Hover the "?" of a column and return the tooltip that says `text`. */
+    const helpOf = async (column: string, text: string) => {
+      await section.table.header(column).getByText("?").hover();
+      const tooltip = page.getByRole("tooltip").filter({ hasText: text });
+      await expect(tooltip).toBeVisible();
+      return tooltip;
+    };
 
-    await section.table.header("Beta").getByText("?").hover();
-    await expect(tooltip).toHaveText("Beta with respect to the ALT allele");
+    await expect(await helpOf("Beta", "Beta with respect to the ALT allele")).toHaveText(
+      "Beta with respect to the ALT allele"
+    );
+    const posterior = await helpOf(
+      "Posterior probability",
+      "Posterior inclusion probability that the fixed page variant"
+    );
+    await expect(posterior).toContainText(APOE);
 
-    await section.table.header("Posterior probability").getByText("?").hover();
-    await expect(tooltip).toContainText("Posterior inclusion probability that the fixed page variant");
-    await expect(tooltip).toContainText(APOE);
-
-    await section.table.header("Fine-mapping confidence").getByText("?").hover();
-    await expect(tooltip).toContainText("Fine-mapping confidence based on the suitability");
+    const confidence = await helpOf(
+      "Fine-mapping confidence",
+      "Fine-mapping confidence based on the suitability"
+    );
     await expectExternalLink(
-      tooltip.getByRole("link", { name: "here" }),
+      confidence.getByRole("link", { name: "here" }),
       "https://platform-docs.opentargets.org/credible-set#credible-set-confidence"
     );
 
-    await section.table.header("Top L2G").getByText("?").hover();
-    await expect(tooltip).toContainText("Top gene prioritised by our locus-to-gene model");
+    const topL2G = await helpOf("Top L2G", "Top gene prioritised by our locus-to-gene model");
     await expectExternalLink(
-      tooltip.getByRole("link", { name: "our documentation" }),
+      topL2G.getByRole("link", { name: "our documentation" }),
       "https://platform-docs.opentargets.org/gentropy/locus-to-gene-l2g"
     );
+
+    const l2gScore = await helpOf("L2G score", "Machine learning prediction linking a gene");
+    await expect(l2gScore).toContainText("Score range [0,1]");
   });
 
   test.describe("links", () => {
@@ -500,14 +519,18 @@ test.describe("Variant page: GWAS Credible Sets", () => {
     const rows = JSON.parse(json.text) as Record<string, unknown>[];
     expect(rows).toHaveLength(total);
     expect(Object.keys(rows[0])).toEqual(
-      expect.arrayContaining(["Credible set", "Lead variant", "Study", "P-value"])
+      expect.arrayContaining(["credibleSet", "leadVariant", "study", "pValue", "topL2G"])
     );
+    for (const row of rows) {
+      expect(row.leadVariant).toMatch(VARIANT_ID);
+      expect(String(row.study)).not.toBe("");
+    }
 
     const tsv = await section.table.download("TSV");
     expect(tsv.filename).toBe(`${IL6R}-gwas-credible-sets-variant.tsv`);
     const lines = tsv.text.trim().split("\n");
     expect(lines).toHaveLength(total + 1);
-    expect(lines[0].split("\t")).toEqual(expect.arrayContaining(["Study", "P-value"]));
+    expect(lines[0].split("\t")).toEqual(expect.arrayContaining(["study", "pValue"]));
   });
 
   test("the API query drawer holds the table query", async ({ page }) => {

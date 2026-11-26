@@ -49,6 +49,11 @@ export abstract class VariantCredibleSetsTable {
     return this.cell(rowIndex, "credibleSet").getByRole("link", { name: "View" });
   }
 
+  /** Click a column title to sort by it (titles with a "?" help icon are not an exact text). */
+  async sortBy(column: string): Promise<void> {
+    await this.table.header(column).getByText(column).first().click();
+  }
+
   /** Wait for the first page of rows to be rendered. */
   async expectLoaded(): Promise<void> {
     await this.table.expectLoaded();

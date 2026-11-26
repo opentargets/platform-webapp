@@ -4,14 +4,14 @@ import { SectionDataControls, SectionTable } from "./sectionDataControls";
 
 /** Columns of the pharmacogenetics table, in order. */
 export const PGX_HEADERS = [
-  "Genotype ID",
+  "Genotype ID?",
   "Drug(s)",
   "Drug response phenotype",
   "Drug response category",
   "Gene",
   "Directionality",
   "Direct drug target",
-  "Confidence level",
+  "Confidence level?",
   "Source",
   "Literature",
 ] as const;
@@ -74,8 +74,15 @@ export class PharmacogenomicsSection {
     return this.table.cell(row, PGX_COLUMN.level);
   }
 
-  /** The sortable title of a column header. */
+  /** The title of a column header: clicking it sorts the column. A help icon may follow the text. */
   sortLabel(header: string): Locator {
-    return this.table.headers.filter({ hasText: header }).getByText(header, { exact: true });
+    return this.table.headers
+      .filter({ hasText: header })
+      .getByText(new RegExp(`^${header.replace(/[()]/g, "\\$&")}\\??$`));
+  }
+
+  /** The arrow of an unsorted, sortable column (shown on hover) and of the sorted one. */
+  sortArrows(header: string): Locator {
+    return this.table.headers.filter({ hasText: header }).locator("svg[data-icon^='arrow-']");
   }
 }

@@ -12,6 +12,33 @@ const PRIORITISATION_DOCS = /^https:\/\/platform-docs\.opentargets\.org\/web-int
 const PRIORITISATION_IDS = PRIORITISATION_COLUMNS.map((column) => column.id);
 
 /**
+ * The tooltip every factor header shows (opentargets/issues#4391: harmonise all columns of
+ * the target prioritisation view with tooltips that increase interpretability). Written out
+ * here on purpose: a header whose tooltip is dropped, left empty or copied from another
+ * factor fails.
+ */
+const FACTOR_TOOLTIPS: Record<string, string> = {
+  maxClinicalStage: "Target is in clinical trials for any indication",
+  isInMembrane: "Target is annotated to be located in the cell membrane",
+  isSecreted: "Target is annotated to be secreted",
+  hasLigand: "Target binds a specific ligand",
+  hasSmallMoleculeBinder: "Target binds a small molecule",
+  hasPocket: "Target has predicted pockets",
+  mouseOrthologMaxIdentityPercentage: "Mouse orthologue maximum identity percentage",
+  hasHighQualityChemicalProbes: "Availability of high quality chemical probes for the target",
+  geneticConstraint: "Relative genetic constraint in natural populations derived from GnomAD",
+  mouseKOScore: "Availability of mouse knockout models for the target",
+  geneEssentiality: "Gene is defined as core essential by the DepMap portal",
+  hasSafetyEvent: "Target associated with a curated adverse event",
+  isCancerDriverGene: "Target is classified as an Oncogene and/or Tumor Suppressor Gene",
+  paralogMaxIdentityPercentage: "Paralog maximum identity percentage",
+  tissueSpecificity: "CELLEX calculation of tissue-specific target expression",
+  tissueDistribution: "Distribution of any detectable baseline expression for the target across tissues",
+  celltypeSpecificity: "CELLEX calculation of cell type-specific target expression",
+  celltypeDistribution: "Distribution of any detectable baseline expression for the target across cell types",
+};
+
+/**
  * The target prioritisation view of the associations table: the second view of the
  * display switch, kept in the `table` URL parameter. Same rows (targets of the disease,
  * ranked by association score), but the columns are prioritisation factors.
@@ -121,6 +148,92 @@ test.describe("Disease associations: target prioritisation view", () => {
     const label = await hasScore.getAttribute("aria-label");
     await hasScore.hover();
     await expect(page.getByRole("tooltip", { name: label as string })).toBeVisible();
+  });
+
+  test("every factor header explains its factor in a tooltip", async ({ page, testConfig }) => {
+    const aotf = new AssociationsTable(page);
+    await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
+    await aotf.expectLoaded(25);
+
+    expect(Object.keys(FACTOR_TOOLTIPS).sort(), "a tooltip is expected for every factor").toEqual(
+      [...PRIORITISATION_IDS].sort()
+    );
+    for (const column of PRIORITISATION_COLUMNS) {
+      await aotf.headerLabel(column.id).hover();
+      // The aggregation bar opens its own tooltip (the group name) beside the factor's.
+      await expect(
+        page.getByRole("tooltip").filter({ hasText: FACTOR_TOOLTIPS[column.id] }),
+        `${column.label} header tooltip`
+      ).toHaveText(FACTOR_TOOLTIPS[column.id]);
+      // Moving off the header closes the tooltip before the next one opens.
+      await page.mouse.move(0, 0);
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
+    }
+  });
+
+  test("a cell tooltip gives the score it shows, and an empty cell says No data", async ({ page, testConfig }) => {
+    const aotf = new AssociationsTable(page);
+    await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
+    await aotf.expectLoaded(25);
+
+    const row = aotf.row(0);
+    const factorCells = aotf.dataCells(row);
+    await expect(factorCells.first(), "the top target should have scored factors").toBeVisible();
+    const cells = await factorCells.evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        id: node.getAttribute("data-testid") ?? "",
+        score: node.getAttribute("data-score") ?? "",
+      }))
+    );
+    expect(cells.length).toBeGreaterThan(1);
+    for (const { id, score } of cells.slice(0, 3)) {
+      const cell = row.getByTestId(id);
+      await cell.hover();
+      await expect(page.getByRole("tooltip"), `${id} tooltip`).toHaveText(`Score: ${score}`);
+      await page.mouse.move(0, 0);
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
+    }
+
+    const empty = aotf.rows().locator("[data-testid^='empty-cell-']").first();
+    await expect(empty, "some factor of the first 25 targets has no data").toBeVisible();
+    await empty.hover();
+    await expect(page.getByRole("tooltip")).toHaveText("No data");
+  });
+
+  test("descendant-disease evidence is counted at full weight: the scores shown are the API's, none is down-weighted by the app", async ({
+    page,
+    testConfig,
+    graphqlMonitor,
+  }) => {
+    // opentargets/issues#3457: evidence from descendant (inherited) terms can be down-weighted
+    // with the API's `indirectWeight` (0 to 1, default 1). The app has no control for it and
+    // must not send one, so the table shows the default, full-weight scores. A change that
+    // sent a weight, or re-scored client side, would make the cells differ from the API.
+    const aotf = new AssociationsTable(page);
+    await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
+    await aotf.expectLoaded(25);
+    await graphqlMonitor.settle();
+
+    const firstPage = graphqlMonitor
+      .named("DiseaseAssociationsQuery")
+      .filter((request) => request.variables.index === 0 && request.data !== undefined);
+    expect(firstPage.length, "the first page of associations should have been requested").toBeGreaterThan(0);
+    const query = firstPage[0];
+    expect(query.variables, "the app should leave indirectWeight to the API default").not.toHaveProperty(
+      "indirectWeight"
+    );
+    type Row = { target: { approvedSymbol: string }; score: number };
+    const rows = (query.data as { disease: { associatedTargets: { rows: Row[] } } }).disease.associatedTargets.rows;
+    expect(rows.length).toBeGreaterThan(0);
+
+    const names = await aotf.rowNames();
+    for (const [index, { target, score }] of rows.slice(0, 25).entries()) {
+      expect(names[index], `row ${index} is the API's row ${index}`).toBe(target.approvedSymbol);
+      await expect(aotf.dataCell(aotf.row(index), "score"), `${target.approvedSymbol} association score`).toHaveAttribute(
+        "data-score",
+        score.toFixed(2)
+      );
+    }
   });
 
   test("the footer legend switches to the prioritisation indicator scale", async ({ page, testConfig }) => {

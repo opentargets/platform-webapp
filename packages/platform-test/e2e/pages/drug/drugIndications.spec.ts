@@ -562,4 +562,69 @@ test.describe("Drug page: Indications", () => {
       await indications.records.expectApiQuery("ClinicalRecordsQuery", "clinicalReportsIds");
     });
   });
+
+  test("a trial report lists the literature of every reference type, each with its Europe PMC link", async ({
+    page,
+    testConfig,
+    graphqlMonitor,
+  }) => {
+    // opentargets/issues#4489: `trialLiterature` is no longer a list of ids but of
+    // `{ id, referenceType }` (BACKGROUND, RESULT, DERIVED). The drawer must still list one
+    // publication per reference, whatever its type. WARFARIN / heart failure has a single
+    // phase III trial (CSP #442) whose references are of two different types.
+    const { smallMolecule } = drugIds(testConfig);
+    const indications = new IndicationsSection(page);
+    await openIndications(new DrugPage(page), indications, smallMolecule);
+    await indications.expectCards(PAGE_SIZE);
+    const total = await indications.master.total();
+    await indications.master.search("heart failure", total);
+    const card = indications.cards.filter({ has: page.getByRole("link", { name: "heart failure", exact: true }) });
+    await expect(card, "heart failure is one of the indications of the drug").toHaveCount(1);
+    await card.click();
+    await expect(card).toHaveAttribute("data-selected", "true");
+    await indications.stage("phase-3").click();
+    await expect(indications.stage("phase-3")).toHaveAttribute("data-selected", "true");
+
+    const report = indications.recordRows.filter({ hasText: "CSP #442" });
+    await expect(report, "the phase III trial CSP #442 is listed").toHaveCount(1);
+    await report.getByTestId("clinical-record-drawer-trigger").click();
+    const drawer = indications.recordDrawer;
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toContainText("CSP #442");
+
+    type Reference = { id: string; type: string };
+    await expect
+      .poll(async () => {
+        await graphqlMonitor.settle();
+        return graphqlMonitor.named("RecordDetailQuery").filter((request) => request.data !== undefined).length;
+      }, { message: "the report details should be requested and answered" })
+      .toBeGreaterThan(0);
+    const detail = graphqlMonitor.named("RecordDetailQuery").filter((request) => request.data !== undefined)[0];
+    const references = (detail.data as { clinicalReport: { trialLiterature: Reference[] } }).clinicalReport
+      .trialLiterature;
+
+    await test.step("the API returns references with a type", async () => {
+      expect(references.length, "the trial has references").toBeGreaterThan(1);
+      for (const reference of references) {
+        expect(reference.id, "a reference has a publication id").toMatch(/^\d+$/);
+        expect(["BACKGROUND", "RESULT", "DERIVED"], "a reference has a known type").toContain(reference.type);
+      }
+      expect(new Set(references.map((reference) => reference.type)).size, "of more than one type").toBeGreaterThan(1);
+    });
+
+    await test.step("the drawer lists one publication per reference, linked to Europe PMC", async () => {
+      await expect(drawer.getByText("Literature", { exact: true })).toBeVisible();
+      await expect(drawer.getByTestId(/^literature-entry-/), "one entry per reference").toHaveCount(references.length);
+      for (const { id, type } of references) {
+        const entry = drawer.getByTestId(`literature-entry-${id}`);
+        await expect(entry, `the ${type} reference ${id}`).toBeVisible();
+        await expect(entry.getByRole("link").first()).toHaveAttribute(
+          "href",
+          `https://europepmc.org/abstract/med/${id}`
+        );
+      }
+    });
+
+    await closeDrawer(drawer);
+  });
 });

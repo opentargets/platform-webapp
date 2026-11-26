@@ -36,7 +36,11 @@ export async function expectSectionLoaded(page: Page, sectionId: string): Promis
     section,
     `section "${sectionId}" should be rendered. If it is missing, either its query failed or the test entity no longer has this data.`
   ).toBeVisible({ timeout: SECTION_LOAD_TIMEOUT });
-  await section.scrollIntoViewIfNeeded();
+  // The section can be re-mounted while the page settles (after a back navigation, for
+  // instance), which detaches the element mid-scroll. Scroll again until it holds.
+  await expect(async () => {
+    await section.scrollIntoViewIfNeeded();
+  }, `section "${sectionId}" should scroll into view`).toPass({ timeout: SECTION_LOAD_TIMEOUT });
   await expect(
     section.locator(LOADING_INDICATORS),
     `section "${sectionId}" should finish loading`

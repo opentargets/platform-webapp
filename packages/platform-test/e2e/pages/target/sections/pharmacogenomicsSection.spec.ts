@@ -1,3 +1,4 @@
+import type { Page, Request } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
@@ -13,7 +14,9 @@ import {
 } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
 import { expectSections } from "../../../../utils/sections";
+import { VariantPage } from "../../../../POM/page/variant/variant";
 
+type ApiRow = { variantId: string | null; genotypeId: string | null; variantRsId: string | null };
 type PgxData = { target: { pharmacogenomics: { count: number } } };
 
 const NA = "N/A";
@@ -631,5 +634,113 @@ test.describe("Target pharmacogenetics section", () => {
 
     await expect(pgx.section).toHaveCount(0);
     await expect(target.summaryChip(targetWidget("pharmacogenetics"))).toHaveCSS("cursor", "auto");
+  });
+  /**
+   * What the API says about every pharmacogenetics row of a target, including the Platform
+   * `variantId` that the section's own query does not ask for. The table downloads every row,
+   * so the first-page request of the page tells which endpoint to ask.
+   */
+  async function apiRows(page: Page, ensgId: string, opened: Promise<Request>): Promise<ApiRow[]> {
+    const endpoint = (await opened).url();
+    const response = await page.request.post(endpoint, {
+      data: {
+        query: `query($id: String!, $size: Int!) { target(ensemblId: $id) { pharmacogenomics(page: { index: 0, size: $size }) { count rows { variantId genotypeId variantRsId } } } }`,
+        variables: { id: ensgId, size: 1000 },
+      },
+    });
+    expect(response.status()).toBe(200);
+    const { data } = (await response.json()) as { data: { target: { pharmacogenomics: { count: number; rows: ApiRow[] } } } };
+    expect(data.target.pharmacogenomics.rows, "the API should return every row").toHaveLength(
+      data.target.pharmacogenomics.count
+    );
+    return data.target.pharmacogenomics.rows;
+  }
+
+  const pgxRequest = (page: Page): Promise<Request> =>
+    page.waitForRequest(
+      (request) => request.method() === "POST" && (request.postData() ?? "").includes(`"operationName":"${TARGET_PGX_OPERATION}"`)
+    );
+
+  test("each row links to the Platform variant it is about, and a row without one has no link", async ({
+    page,
+    testConfig,
+  }) => {
+    // opentargets/issues#4263: link the variants of the pharmacogenetics table to their
+    // Platform variant page, using the `variantId` the API returns. EGFR has rows with a
+    // variant (genotype carrying the alternative allele) and rows without one (homozygous
+    // reference genotypes, which are not a variant).
+    const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
+    const pgx = new TargetPharmacogenomicsSection(page);
+
+    const opened = pgxRequest(page);
+    await new TargetPage(page).goto(ensgId);
+    await pgx.expectLoaded();
+    await pgx.table.expectLoaded();
+    const api = await apiRows(page, ensgId, opened);
+    await pgx.table.setPageSize(100);
+    await expect(pgx.table.rows, "all rows are on one page").toHaveCount(api.length);
+
+    // Rows are matched by what the table shows: rsID and genotype.
+    const expected = new Map<string, string | null>();
+    for (const row of api) {
+      const key = `${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`;
+      expect(expected.get(key) ?? row.variantId, `rows with the same rsID and genotype share their variant (${key})`).toBe(
+        row.variantId
+      );
+      expected.set(key, row.variantId);
+    }
+    expect([...expected.values()].some((variantId) => variantId !== null), "some rows have a variant").toBe(true);
+    expect([...expected.values()].some((variantId) => variantId === null), "some rows have none").toBe(true);
+
+    let withLink = 0;
+    let withoutLink = 0;
+    for (let index = 0; index < api.length; index++) {
+      const rsId = (await pgx.cell(index, "rsId").innerText()).trim();
+      const genotype = (await pgx.cell(index, "genotypeId").innerText()).replace(/\s+/g, "");
+      const key = `${rsId}|${genotype}`;
+      expect(expected.has(key), `row ${index} (${key}) is a row of the API`).toBe(true);
+      const variantId = expected.get(key);
+      const links = pgx.cell(index, "genotypeId").getByRole("link");
+      if (variantId) {
+        withLink++;
+        await expect(links, `${key} links to variant ${variantId}`).toHaveAttribute("href", `/variant/${variantId}`);
+      } else {
+        withoutLink++;
+        await expect(links, `${key} is not a Platform variant: no link`).toHaveCount(0);
+      }
+    }
+    expect(withLink, "rows with a variant were checked").toBeGreaterThan(0);
+    expect(withoutLink, "rows without a variant were checked").toBeGreaterThan(0);
+  });
+
+  test("following a variant link lands on the healthy page of that variant", async ({ page, testConfig }) => {
+    const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
+    const pgx = new TargetPharmacogenomicsSection(page);
+
+    const opened = pgxRequest(page);
+    await new TargetPage(page).goto(ensgId);
+    await pgx.expectLoaded();
+    await pgx.table.expectLoaded();
+    const api = await apiRows(page, ensgId, opened);
+    await pgx.table.setPageSize(100);
+    await expect(pgx.table.rows).toHaveCount(api.length);
+
+    // The first row of the table that has a Platform variant.
+    const variantByKey = new Map(api.map((row) => [`${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`, row.variantId]));
+    let target: { index: number; variantId: string } | undefined;
+    for (let index = 0; index < api.length && !target; index++) {
+      const rsId = (await pgx.cell(index, "rsId").innerText()).trim();
+      const genotype = (await pgx.cell(index, "genotypeId").innerText()).replace(/\s+/g, "");
+      const variantId = variantByKey.get(`${rsId}|${genotype}`);
+      if (variantId) target = { index, variantId };
+    }
+    expect(target, "a row with a Platform variant").toBeDefined();
+    const { index, variantId } = target as { index: number; variantId: string };
+
+    await pgx.cell(index, "genotypeId").getByRole("link").click();
+    const variantPage = new VariantPage(page);
+    await variantPage.expectOnVariantPage(variantId);
+    await variantPage.waitForVariantPageLoad();
+    await expect(variantPage.title, "the variant header shows the variant that was linked").toHaveText(variantId);
   });
 });

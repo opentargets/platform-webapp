@@ -1,217 +1,171 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { readFile } from "node:fs/promises";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
 
-/**
- * Interactor for Credible Set Variants section on Credible Set page
- * Section ID: variants
- * data-testid: section-variants
- */
+const POSITION = /^(\d+) - (\d+) of (\d+)$/;
+
+/** The "Variants" section of the credible set page: the fine-mapped locus table. */
 export class CredibleSetVariantsSection {
-  constructor(private page: Page) {}
+  static readonly id = "variants";
+  static readonly headers = [
+    "Variant",
+    "P-value",
+    "Beta",
+    "Standard error",
+    "LD (r²)",
+    "Posterior Probability",
+    "log(BF)",
+    "Predicted consequence",
+  ];
+  /** Column positions in the table. */
+  static readonly column = {
+    variant: 0,
+    pValue: 1,
+    beta: 2,
+    standardError: 3,
+    ld: 4,
+    posterior: 5,
+    logBf: 6,
+    consequence: 7,
+  } as const;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-variants']");
+  readonly section: Locator;
+
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, CredibleSetVariantsSection.id);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-variants']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get table(): Locator {
+    return this.section.getByTestId("ot-table");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  get headers(): Locator {
+    return this.table.locator("thead th");
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  get rows(): Locator {
+    return this.table.locator("tbody tr");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  cell(rowIndex: number, columnIndex: number): Locator {
+    return this.rows.nth(rowIndex).locator("td").nth(columnIndex);
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  /** The variant link of a row. */
+  variantLink(rowIndex: number): Locator {
+    return this.cell(rowIndex, CredibleSetVariantsSection.column.variant).getByRole("link");
   }
 
-  // Variant link
-  async getVariantLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/variant/']");
+  /** The "lead" chip, which only the lead variant's row carries. */
+  get leadChips(): Locator {
+    return this.rows.getByText("lead", { exact: true });
   }
 
-  async clickVariantLink(rowIndex: number): Promise<void> {
-    const link = await this.getVariantLink(rowIndex);
-    await link.click();
+  /** The ontology link of a row's predicted consequence. */
+  consequenceLink(rowIndex: number): Locator {
+    return this.cell(rowIndex, CredibleSetVariantsSection.column.consequence).getByRole("link");
   }
 
-  async getVariantId(rowIndex: number): Promise<string | null> {
-    const link = await this.getVariantLink(rowIndex);
-    return await link.textContent();
+  /** The trimmed text of one column for the rows on this page. */
+  async columnTexts(columnIndex: number): Promise<string[]> {
+    const texts = await this.rows.locator(`td:nth-child(${columnIndex + 1})`).allInnerTexts();
+    return texts.map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  async hasVariantLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getVariantLink(rowIndex);
-    return await link.isVisible().catch(() => false);
+  async rowTexts(): Promise<string[]> {
+    return (await this.rows.allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  // Lead variant badge
-  async isLeadVariant(rowIndex: number): Promise<boolean> {
-    const row = await this.getTableRow(rowIndex);
-    const leadBadge = row.locator("text=lead");
-    return await leadBadge.isVisible().catch(() => false);
+  // ---- controls ----
+
+  get pagePosition(): Locator {
+    return this.section.getByText(POSITION);
   }
 
-  // P-value
-  async getPValue(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(1);
-    return await cell.textContent();
+  get pageSizeSelect(): Locator {
+    return this.section.getByRole("combobox");
   }
 
-  // Beta
-  async getBeta(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
+  get firstPageButton(): Locator {
+    return this.section.getByRole("button", { name: "first page" });
   }
 
-  // Standard error
-  async getStandardError(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(3);
-    return await cell.textContent();
+  get previousPageButton(): Locator {
+    return this.section.getByRole("button", { name: "previous page" });
   }
 
-  // LD (r²)
-  async getLDR2(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(4);
-    return await cell.textContent();
+  get nextPageButton(): Locator {
+    return this.section.getByRole("button", { name: "next page" });
   }
 
-  // Posterior Probability
-  async getPosteriorProbability(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(5);
-    return await cell.textContent();
+  get columnsButton(): Locator {
+    return this.section.getByRole("button", { name: "Columns", exact: true });
   }
 
-  // log(BF)
-  async getLogBF(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(6);
-    return await cell.textContent();
+  get columnList(): Locator {
+    return this.page.getByRole("list", { name: "column-visibility-list" });
   }
 
-  // Predicted consequence link
-  async getPredictedConsequenceLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='identifiers.org/SO']");
+  get exportButton(): Locator {
+    return this.section.getByTestId("data-downloader").getByRole("button", { name: "Export" });
   }
 
-  async getPredictedConsequence(rowIndex: number): Promise<string | null> {
-    const link = await this.getPredictedConsequenceLink(rowIndex);
-    return await link.textContent();
+  get apiQueryButton(): Locator {
+    return this.section.getByRole("button", { name: "API query", exact: true });
   }
 
-  async hasPredictedConsequenceLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getPredictedConsequenceLink(rowIndex);
-    return await link.isVisible().catch(() => false);
+  /** Assert nothing in the table or its footer is loading. */
+  async expectSettled(): Promise<void> {
+    await expect(
+      this.section.locator(".MuiSkeleton-root, .MuiCircularProgress-root"),
+      "the table should finish loading"
+    ).toHaveCount(0);
   }
 
-  // Cell text by column index
-  async getCellText(rowIndex: number, columnIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(columnIndex);
-    return await cell.textContent();
+  async expectPosition(start: number, end: number, total: number): Promise<void> {
+    await expect(this.pagePosition).toHaveText(`${start} - ${end} of ${total}`);
   }
 
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
+  /** The total the footer reports. */
+  async total(): Promise<number> {
+    await expect(this.pagePosition).toHaveText(POSITION);
+    return Number((await this.pagePosition.innerText()).trim().split(" of ")[1]);
   }
 
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  async setPageSize(size: number): Promise<void> {
+    await this.pageSizeSelect.selectOption(String(size));
+    await expect(this.pageSizeSelect).toHaveValue(String(size));
   }
 
-  async clearSearch(): Promise<void> {
-    await this.getSearchInput().clear();
-    await this.waitForLoad();
+  /** Download through the Export menu in one format and return what was saved. */
+  async export(format: "Json" | "TSV"): Promise<{ filename: string; content: string }> {
+    await this.exportButton.click();
+    const menu = this.page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveText(["Json", "TSV"]);
+    await expect(menu).toContainText("Column settings and filters will not affect export");
+    const downloadPromise = this.page.waitForEvent("download");
+    await menu.getByRole("menuitem", { name: format, exact: true }).click();
+    const download = await downloadPromise;
+    const content = await readFile(await download.path(), "utf8");
+    await expect(menu, "the export menu closes after a format is chosen").toBeHidden();
+    return { filename: download.suggestedFilename(), content };
   }
 
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Next Page']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Previous Page']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
-  }
-
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
-  }
-
-  // Column visibility button
-  getColumnsButton(): Locator {
-    return this.getSection().locator("button:has-text('Columns')");
-  }
-
-  // Export button
-  getExportButton(): Locator {
-    return this.getSection().locator("button:has-text('Export')");
-  }
-
-  // API query button
-  getAPIQueryButton(): Locator {
-    return this.getSection().locator("button:has-text('API query')");
+  /** Open the API query drawer, check it holds this table's query, and close it. */
+  async expectApiQuery(): Promise<void> {
+    await this.apiQueryButton.click();
+    const drawer = this.page.getByTestId("api-playground-drawer");
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "GraphQL API documentation" })).toHaveAttribute(
+      "href",
+      "https://platform-docs.opentargets.org/data-access/graphql-api"
+    );
+    await expect(drawer).toContainText("VariantsQuery");
+    await drawer.getByTestId("drawer-close").click();
+    await expect(drawer).toBeHidden();
   }
 }

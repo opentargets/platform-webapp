@@ -11,7 +11,7 @@ export const E2G_HEADERS = [
   "Distance from start site (bp)",
   "Interval size (bp)",
   "Interval range",
-  "Score",
+  "Score?",
 ] as const;
 
 export const E2G_COLUMN = {
@@ -26,7 +26,7 @@ export const E2G_COLUMN = {
 } as const;
 
 /** GraphQL operation behind the section (packages/sections/src/variant/EnhancerToGenePredictions). */
-export const E2G_OPERATION = "EnhancerToGenePredictionsQuery";
+export const E2G_OPERATION = "VariantEnhancerToGenePredictionsQuery";
 export const E2G_PAGE_SIZE = 10;
 
 /**
@@ -67,9 +67,16 @@ export class EnhancerToGenePredictionsSection {
     return this.table.cell(row, E2G_COLUMN.study).getByRole("link");
   }
 
-  /** The sortable title of a column header. */
+  /** The title of a column header: clicking it sorts the column. A help icon may follow the text. */
   sortLabel(header: string): Locator {
-    return this.table.headers.filter({ hasText: header }).getByText(header, { exact: true });
+    return this.table.headers
+      .filter({ hasText: header })
+      .getByText(new RegExp(`^${header.replace(/[()]/g, "\\$&")}\\??$`));
+  }
+
+  /** The arrow of an unsorted, sortable column (shown on hover) and of the sorted one. */
+  sortArrows(header: string): Locator {
+    return this.table.headers.filter({ hasText: header }).locator("svg[data-icon^='arrow-']");
   }
 
   /** Numbers of one column on the current page, parsed from their formatted text. */
