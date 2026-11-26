@@ -1,11 +1,11 @@
 import { lazy } from "react";
-import { CredibleSet } from "@ot/constants";
+import type { CredibleSet } from "@ot/constants";
 
 export const definition = {
   id: "variants",
   name: "Credible Set Variants",
   shortName: "VA",
-  hasData: (data: CredibleSet) => (data.locus?.count || 0) > 0,
+  hasData: (data: Pick<CredibleSet, "locusView">) => (data.locusView?.count || 0) > 0,
 };
 
 export { default as Summary } from "./Summary";
