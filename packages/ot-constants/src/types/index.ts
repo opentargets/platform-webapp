@@ -7413,12 +7413,14 @@ export type TargetQtlCredibleSetsQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
   index?: Scalars['Int']['input'];
   size?: Scalars['Int']['input'];
+  sort?: Array<TargetCredibleSetsSort> | TargetCredibleSetsSort;
+  search?: InputMaybe<TargetCredibleSetsSearch>;
 }>;
 
 
-export type TargetQtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'CredibleSetPage', count: number, rows: Array<{ __typename?: 'CredibleSet', credibleSetId: string, leadPValueMantissa?: number | null, leadPValueExponent?: number | null, leadBeta?: number | null, fineMappingMethod: FineMappingMethod, confidence: number, isTransQtl: boolean, locusSize: number, leadVariant?: { __typename?: 'Variant', chromosome: Chromosome, position: number, referenceAllele: string, alternateAllele: string, id: string } | null, study?: { __typename?: 'Study', id: string, studyType: StudyType, condition?: string | null } | null }> } } | null };
+export type TargetQtlCredibleSetsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, approvedSymbol: string, credibleSets: { __typename?: 'TargetCredibleSetPage', count: number, rows: Array<{ __typename?: 'TargetCredibleSet', credibleSetId: string, pValueMantissa?: number | null, pValueExponent?: number | null, beta?: number | null, fineMappingMethod: FineMappingMethod, confidence: number, isTransQtl: boolean, leadVariantId: string, leadReferenceAllele: string, leadAlternateAllele: string, studyId: string, studyType: StudyType, condition?: string | null, locusSize: number }> } } | null };
 
-export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'CredibleSetPage', count: number } };
+export type TargetQtlCredibleSetsSummaryFragment = { __typename?: 'Target', credibleSets: { __typename?: 'TargetCredibleSetPage', count: number } };
 
 export type TargetSafetyQueryVariables = Exact<{
   ensemblId: Scalars['String']['input'];
@@ -8226,7 +8228,10 @@ export const TargetPharmacogenomicsSummaryFragment = gql`
     `;
 export const TargetQtlCredibleSetsSummaryFragment = gql`
     fragment TargetQTLCredibleSetsSummaryFragment on Target {
-  credibleSets(page: {size: 1, index: 0}) {
+  credibleSets: credibleSetsView(
+    studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+    page: {size: 1, index: 0}
+  ) {
     count
   }
 }
@@ -10526,32 +10531,31 @@ export const TargetPharmacogenomicsQueryDocument = gql`
 }
     `;
 export const TargetQtlCredibleSetsQueryDocument = gql`
-    query TargetQTLCredibleSetsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10) {
+    query TargetQTLCredibleSetsQuery($ensemblId: String!, $index: Int! = 0, $size: Int! = 10, $sort: [TargetCredibleSetsSort!]! = [], $search: TargetCredibleSetsSearch) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol
-    credibleSets(page: {index: $index, size: $size}) {
+    credibleSets: credibleSetsView(
+      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+      sort: $sort
+      search: $search
+      page: {index: $index, size: $size}
+    ) {
       count
       rows {
         credibleSetId
-        leadPValueMantissa
-        leadPValueExponent
-        leadBeta
+        pValueMantissa
+        pValueExponent
+        beta
         fineMappingMethod
         confidence
         isTransQtl
-        leadVariant {
-          id: variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        study {
-          id
-          studyType
-          condition
-        }
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
+        studyId
+        studyType
+        condition
         locusSize
       }
     }
