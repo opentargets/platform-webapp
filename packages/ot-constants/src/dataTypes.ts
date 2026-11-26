@@ -3,7 +3,7 @@ import { isPrivateDataType } from "./partnerPreviewUtils";
 const dataTypes = [
   {
     id: "genetic_association",
-    label: "Genetic associations",
+    label: "Genetic association",
     isPrivate: isPrivateDataType("genetic_association"),
   },
   {
@@ -18,12 +18,12 @@ const dataTypes = [
   },
   {
     id: "affected_pathway",
-    label: "Pathways & systems biology",
+    label: "Affected pathway",
     isPrivate: isPrivateDataType("affected_pathway"),
   },
   {
     id: "literature",
-    label: "Text mining",
+    label: "Literature",
     isPrivate: isPrivateDataType("literature"),
   },
   {
@@ -33,7 +33,7 @@ const dataTypes = [
   },
   {
     id: "animal_model",
-    label: "Animal models",
+    label: "Animal model",
     isPrivate: isPrivateDataType("animal_model"),
   },
   {

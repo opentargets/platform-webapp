@@ -9,7 +9,7 @@ export const definition = {
   shortName: "CB",
   hasData: (data: EvidenceData) => hasEvidence(data, "cancerBiomarkers", "cancerBiomarkersSummary"),
   isPrivate: isPrivateEvidenceSection(id),
-  dataType: dataTypesMap.affected_pathway,
+  dataType: dataTypesMap.somatic_mutation,
 };
 
 export { default as Summary } from "./Summary";
