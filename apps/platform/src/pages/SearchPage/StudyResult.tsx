@@ -12,7 +12,7 @@ function StudyResult({ data, highlights }) {
   const theme = useTheme();
 
   return (
-    <div style={{ marginBottom: "30px" }}>
+    <div data-testid="search-result-study" style={{ marginBottom: "30px" }}>
       <StyledLink to={`/study/${data.id}`}>
         <FontAwesomeIcon icon={faChartBar} color={theme.palette.primary.main} />{" "}
         <>{data.traitFromSource}</>

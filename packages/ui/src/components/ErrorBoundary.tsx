@@ -48,7 +48,14 @@ class ErrorBoundary extends Component {
     } = this.props;
 
     return hasError ? (
-      <Typography component="div" align="center" color="secondary" variant="caption">
+      <Typography
+        component="div"
+        align="center"
+        color="secondary"
+        variant="caption"
+        data-testid="error-boundary"
+        role="alert"
+      >
         {message}
       </Typography>
     ) : (

@@ -22,6 +22,7 @@ function EmptyPage({
 }: EmptyPageProps) {
   return (
     <Box
+      data-testid="not-found-page"
       sx={{
         minHeight: "500px",
         display: "flex",

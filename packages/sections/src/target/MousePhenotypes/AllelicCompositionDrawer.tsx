@@ -79,20 +79,25 @@ function AllelicCompositionDrawer({ biologicalModels }) {
 
   return (
     <>
-      <StyledButtonBase onClick={() => toggleOpen()}>
+      <StyledButtonBase onClick={() => toggleOpen()} data-testid="allelic-composition-trigger">
         <Typography variant="body2">
           {biologicalModels.length} {biologicalModels.length === 1 ? "model" : "models"}
         </Typography>
       </StyledButtonBase>
-      <StyledDrawer open={open} onClose={() => close()} anchor="right">
+      <StyledDrawer
+        open={open}
+        onClose={() => close()}
+        anchor="right"
+        data-testid="allelic-composition-drawer"
+      >
         <StyledTitle>
           Allelic composition
-          <IconButton onClick={() => close()}>
+          <IconButton onClick={() => close()} data-testid="drawer-close">
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </StyledTitle>
         {biologicalModels.map(model => (
-          <StyledPaper key={model.id} variant="outlined">
+          <StyledPaper key={model.id} variant="outlined" data-testid="allelic-composition-model">
             <Model model={model} />
           </StyledPaper>
         ))}

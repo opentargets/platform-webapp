@@ -12,7 +12,7 @@ const StyledLink = styled(Link)({
 function DrugResult({ data, highlights }) {
   const theme = useTheme();
   return (
-    <div style={{ marginBottom: "30px" }}>
+    <div data-testid="search-result-drug" style={{ marginBottom: "30px" }}>
       <StyledLink to={`/drug/${data.id}`}>
         <FontAwesomeIcon icon={faPrescriptionBottleAlt} color={theme.palette.primary.main} />{" "}
         {data.name}

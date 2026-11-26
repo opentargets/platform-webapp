@@ -19,7 +19,7 @@ function TargetResult({ data, highlights }) {
   );
 
   return (
-    <div style={{ marginBottom: "30px" }}>
+    <div data-testid="search-result-target" style={{ marginBottom: "30px" }}>
       <StyledLink to={`/target/${data.id}/associations`}>
         <FontAwesomeIcon icon={faDna} color={theme.palette.primary.main} /> {data.approvedSymbol}
       </StyledLink>

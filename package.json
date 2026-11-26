@@ -28,6 +28,7 @@
     "format:fix": "npx biome format --write .",
     "format:check": "npx biome ci",
     "dev:test:platform:e2e": "turbo run dev-test",
+    "e2e:publish": "yarn workspace platform-test e2e:publish",
     "dev:test:platform:e2e:smoke": "turbo run dev-test:smoke",
     "test:platform:e2e": "turbo run test:platform:e2e",
     "test:platform:e2e:smoke": "turbo run test:platform:e2e:smoke",

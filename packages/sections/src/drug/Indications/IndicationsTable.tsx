@@ -58,6 +58,8 @@ function IndicationsTable({
         return (
           <Box
             {...getPrefetchHandlers(row)}
+            data-testid="indication-card"
+            data-selected={isSelected ? "true" : "false"}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",

@@ -1,184 +1,123 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection } from "../Target/sectionWidgets";
+
+export type SubcellularSource = "hpa_main" | "hpa_additional" | "hpa_extracellular_location" | "uniprot";
+
+/** The SwissBioPics endpoint the cell diagram is downloaded from. */
+export const SWISSBIOPICS_API = /^https:\/\/www\.swissbiopics\.org\/+api\/9606\/sl\/[\d,]+$/;
 
 /**
- * Interactor for the Subcellular Location section on Target pages.
- *
- * Displays protein localization data from the Human Protein Atlas (HPA) and
- * UniProt, showing where in the cell the protein is found. Features include:
- * - **Cell diagram**: Visual representation of protein location
- * - **Location tabs**: HPA Main, HPA Additional, HPA Extracellular, UniProt
- * - **Confidence levels**: Reliability of localization data
- *
- * Important for understanding protein function and drug accessibility.
- *
- * @example
- * ```typescript
- * const location = new SubcellularLocationSection(page);
- * await location.waitForLoad();
- *
- * // Check visualization
- * const diagramVisible = await location.isCellDiagramVisible();
- *
- * // Switch between data sources
- * await location.clickHpaMainTab();
- * await location.clickUniprotTab();
- *
- * // Get location details
- * const locationCount = await location.getLocationCount();
- * const locationName = await location.getLocationName(0);
- * ```
- *
- * @category shared
- * @remarks Section ID: `subcellularlocation`
+ * Subcellular Location section of the target profile: one tab per data source, each with
+ * a SwissBioPics cell diagram and the list of locations it highlights.
  */
-export class SubcellularLocationSection {
-  constructor(private page: Page) {}
+export class SubcellularLocationSection extends ProfileSection {
+  static readonly SOURCE_LABELS: Record<SubcellularSource, string> = {
+    hpa_main: "HPA main location",
+    hpa_additional: "HPA additional location",
+    hpa_extracellular_location: "HPA extracellular location",
+    uniprot: "UniProt",
+  };
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-subcellularlocation']");
+  constructor(page: Page) {
+    super(page, "subcellularlocation");
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get tabList(): Locator {
+    return this.section.getByRole("tablist", { name: "Subcellular location sources" });
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-subcellularlocation']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get tabs(): Locator {
+    return this.tabList.getByRole("tab");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-subcellularlocation-header']");
+  tab(source: SubcellularSource): Locator {
+    return this.section.getByTestId(`subcellular-tab-${source}`);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  panel(source: SubcellularSource): Locator {
+    return this.section.getByTestId(`subcellular-tabpanel-${source}`);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  /** The heading above the list of locations: the name of the source. */
+  panelHeading(source: SubcellularSource): Locator {
+    return this.panel(source).getByRole("heading", { level: 6 });
   }
 
-  // Cell diagram visualization
-  getVisualization(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-visualization']");
+  /** The "Location for <id>" link to the source's record for this target. */
+  sourceRecordLink(source: SubcellularSource): Locator {
+    return this.panel(source).getByRole("link");
   }
 
-  getCellDiagram(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-cell-diagram']");
+  locationsList(source: SubcellularSource): Locator {
+    return this.panel(source).getByTestId("subcellular-locations-list");
   }
 
-  async isVisualizationVisible(): Promise<boolean> {
-    return await this.getVisualization()
-      .isVisible()
-      .catch(() => false);
+  locations(source: SubcellularSource): Locator {
+    return this.locationsList(source).getByTestId("subcellular-location-item");
   }
 
-  async isCellDiagramVisible(): Promise<boolean> {
-    return await this.getCellDiagram()
-      .isVisible()
-      .catch(() => false);
+  location(source: SubcellularSource, name: string): Locator {
+    return this.locations(source).filter({ hasText: new RegExp(`^${escapeRegExp(name)}$`) });
   }
 
-  // Tabs container
-  getTabs(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tabs']");
+  /** The area holding the cell diagram and its loading or error message. */
+  visualization(source: SubcellularSource): Locator {
+    return this.panel(source).getByTestId("subcellular-visualization");
   }
 
-  // Individual source tabs
-  getHpaMainTab(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tab-hpa_main']");
+  /** The SwissBioPics drawing itself. */
+  diagram(source: SubcellularSource): Locator {
+    return this.panel(source).getByTestId("subcellular-cell-diagram").locator("svg");
   }
 
-  getHpaAdditionalTab(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tab-hpa_additional']");
+  /** The part of the drawing for a UniProt subcellular location term, e.g. "0091" for SL-0091. */
+  cellPart(source: SubcellularSource, termCode: string): Locator {
+    return this.diagram(source).locator(`#SL${termCode}`);
   }
 
-  getHpaExtracellularTab(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tab-hpa_extracellular_location']");
+  /** Parts of the drawing the picture service marked as locations of this target. */
+  highlightedParts(source: SubcellularSource): Locator {
+    return this.diagram(source).locator(".subcell_present");
   }
 
-  getUniprotTab(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tab-uniprot']");
-  }
-
-  async clickHpaMainTab(): Promise<void> {
-    await this.getHpaMainTab().click();
-  }
-
-  async clickHpaAdditionalTab(): Promise<void> {
-    await this.getHpaAdditionalTab().click();
-  }
-
-  async clickHpaExtracellularTab(): Promise<void> {
-    await this.getHpaExtracellularTab().click();
-  }
-
-  async clickUniprotTab(): Promise<void> {
-    await this.getUniprotTab().click();
-  }
-
-  // Tab panels
-  getHpaMainPanel(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tabpanel-hpa_main']");
-  }
-
-  getHpaAdditionalPanel(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tabpanel-hpa_additional']");
-  }
-
-  getHpaExtracellularPanel(): Locator {
-    return this.getSection().locator(
-      "[data-testid='subcellular-tabpanel-hpa_extracellular_location']"
+  /** Assert a source's tab is the selected one and only its panel is shown. */
+  async expectActive(source: SubcellularSource): Promise<void> {
+    await expect(this.tab(source)).toHaveAttribute("aria-selected", "true");
+    await expect(this.tabs.and(this.page.locator("[aria-selected='true']"))).toHaveCount(1);
+    await expect(this.panel(source)).toBeVisible();
+    await expect(
+      this.section.getByTestId("subcellular-locations-list"),
+      "only the selected source's locations should be rendered"
+    ).toHaveCount(1);
+    await expect(this.locationsList(source)).toBeVisible();
+    await expect(this.panelHeading(source)).toHaveText(
+      SubcellularLocationSection.SOURCE_LABELS[source]
     );
   }
 
-  getUniprotPanel(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-tabpanel-uniprot']");
+  /** Assert the cell diagram of a source finished downloading and was drawn. */
+  async expectDiagramDrawn(source: SubcellularSource): Promise<void> {
+    await expect(
+      this.visualization(source).getByText("Loading cell diagram ..."),
+      "the cell diagram should finish loading"
+    ).toHaveCount(0);
+    await expect(
+      this.visualization(source).getByText("Problem downloading cell diagram"),
+      "the cell diagram should download"
+    ).toHaveCount(0);
+    await expect(this.diagram(source)).toBeVisible();
+    await expect(
+      this.diagram(source).locator("path").first(),
+      "the diagram should contain drawing"
+    ).toBeAttached();
   }
 
-  // Locations list
-  getLocationsList(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-locations-list']");
+  /** The names in a source's list, in display order. */
+  async locationNames(source: SubcellularSource): Promise<string[]> {
+    return (await this.locations(source).allInnerTexts()).map((text) => text.trim());
   }
+}
 
-  getLocationItems(): Locator {
-    return this.getSection().locator("[data-testid='subcellular-location-item']");
-  }
-
-  async getLocationCount(): Promise<number> {
-    return await this.getLocationItems().count();
-  }
-
-  getLocationItem(index: number): Locator {
-    return this.getLocationItems().nth(index);
-  }
-
-  async getLocationName(index: number): Promise<string | null> {
-    return await this.getLocationItem(index).textContent();
-  }
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

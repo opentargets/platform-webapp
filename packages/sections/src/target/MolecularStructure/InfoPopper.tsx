@@ -28,7 +28,7 @@ function InfoPopper() {
         open={tooltipOpen}
         slotProps={isClicked ? { tooltip: { sx: { borderColor: "#bbb" } } } : {}}
         title={
-          <Box onClick={handleClick} sx={{ cursor: "pointer" }}>
+          <Box data-testid="structure-info-content" onClick={handleClick} sx={{ cursor: "pointer" }}>
             <table style={{ borderSpacing: "0.3rem 0" }}>
               <tbody>
                 <tr>
@@ -72,6 +72,7 @@ function InfoPopper() {
         placement="top-end"
       >
         <Button
+          data-testid="structure-info-button"
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

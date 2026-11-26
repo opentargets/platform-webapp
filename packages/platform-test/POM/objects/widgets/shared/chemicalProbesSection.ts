@@ -1,132 +1,122 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { SectionDataControls, SectionTable } from "./sectionDataControls";
+
+/** Column order of the chemical probes table. The Quality header carries a "?" help icon. */
+export const CHEMICAL_PROBES_COLUMNS = [
+  "Probe ID",
+  "Quality?",
+  "Mechanism of action",
+  "Probe origin",
+  "Score",
+] as const;
+
+/** The labels the column picker and the export use for the same columns. */
+export const CHEMICAL_PROBES_COLUMN_LABELS = [
+  "Probe ID",
+  "Quality",
+  "Mechanism of action",
+  "Probe origin",
+  "Score",
+] as const;
+
+export const QUALITY_HEADER_TOOLTIP =
+  "Chemical probes selection based on the union of following criteria: compound belongs to one of the high-quality probe sets; use in Cells or Organisms rating ≥ 75%; P&D approved experimental probe; not labelled as obsolete.";
+
+const COLUMN = { id: 0, quality: 1, mechanism: 2, origin: 3, score: 4 } as const;
+
+export type ChemicalProbe = {
+  id: string;
+  control: string | null;
+  drugId: string | null;
+  isHighQuality: boolean;
+  mechanismOfAction: string[];
+  origin: string[];
+  probesDrugsScore: number | null;
+};
+
+export type ChemicalProbesData = { target: { id: string; chemicalProbes: ChemicalProbe[] } };
 
 /**
- * Interactor for the Chemical Probes section on Target pages.
- *
- * Displays high-quality chemical probes that can be used to investigate
- * target biology. Data is sourced from the Chemical Probes Portal and includes:
- * - **Probe names**: Identifiers with links to external resources
- * - **Quality ratings**: Probe quality assessments (e.g., "Best available", "Historical")
- * - **Mechanisms of action**: How the probe interacts with the target
- * - **Selectivity information**: Off-target effects and specificity data
- *
- * Chemical probes are small molecules designed to selectively modulate protein
- * function for research purposes.
- *
- * @example
- * ```typescript
- * const chemicalProbes = new ChemicalProbesSection(page);
- * await chemicalProbes.waitForLoad();
- *
- * // Check if probes are available
- * const hasProbes = await chemicalProbes.isTableVisible();
- *
- * // Search for specific probe
- * await chemicalProbes.search("JQ1");
- *
- * // Download probe data
- * await chemicalProbes.clickDataDownloader();
- * ```
- *
- * @category shared
- * @remarks Section ID: `chemicalprobes`
+ * The order the widget shows probes in: score, then quality, then experimental origin,
+ * all descending, keeping the API order between equals (see ChemicalProbes/Body.tsx).
  */
+export function inDisplayOrder(probes: readonly ChemicalProbe[]): ChemicalProbe[] {
+  const isExperimental = (probe: ChemicalProbe) =>
+    probe.origin.some((origin) => origin.toLowerCase() === "experimental");
+  return [...probes].sort(
+    (a, b) =>
+      (b.probesDrugsScore ?? Number.NEGATIVE_INFINITY) -
+        (a.probesDrugsScore ?? Number.NEGATIVE_INFINITY) ||
+      Number(b.isHighQuality) - Number(a.isHighQuality) ||
+      Number(isExperimental(b)) - Number(isExperimental(a))
+  );
+}
+
+/** The Chemical Probes widget of the target profile page. */
 export class ChemicalProbesSection {
-  constructor(private page: Page) {}
+  static readonly id = "chemicalprobes";
+  static readonly operation = "TargetChemicalProbesQuery";
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-chemicalprobes']");
+  readonly section: Locator;
+  readonly header: Locator;
+  readonly description: Locator;
+  readonly table: SectionTable;
+  readonly controls: SectionDataControls;
+
+  constructor(private readonly page: Page) {
+    this.section = sectionLocator(page, ChemicalProbesSection.id);
+    this.header = this.section.getByTestId("section-chemicalprobes-header");
+    this.description = this.section.getByTestId("section-description");
+    this.table = new SectionTable(this.section);
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  /** Assert the section is rendered with data and has finished loading. */
+  async expectLoaded(): Promise<void> {
+    await expectSectionLoaded(this.page, ChemicalProbesSection.id);
+    await expect(this.table.headers).toHaveText([...CHEMICAL_PROBES_COLUMNS]);
   }
 
-  /**
-   * Wait for the section to be visible
-   */
-  async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** The row of the probe with exactly this id (on the current page). */
+  rowForProbe(probeId: string): Locator {
+    return this.table.rows.filter({
+      has: this.page.locator("td:nth-child(1)").getByText(probeId, { exact: true }),
+    });
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-chemicalprobes-header']");
+  idCell(row: Locator): Locator {
+    return row.locator("td").nth(COLUMN.id);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  qualityCell(row: Locator): Locator {
+    return row.locator("td").nth(COLUMN.quality);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  mechanismCell(row: Locator): Locator {
+    return row.locator("td").nth(COLUMN.mechanism);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("[data-testid='ot-table']");
+  originCell(row: Locator): Locator {
+    return row.locator("td").nth(COLUMN.origin);
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  scoreCell(row: Locator): Locator {
+    return row.locator("td").nth(COLUMN.score);
   }
 
-  // Table search
-  getSearchInput(): Locator {
-    return this.getSection().locator("[data-testid='table-search-input']");
+  /** The "?" icon shown next to a probe id that has a control compound. */
+  controlHelpIcon(row: Locator): Locator {
+    return this.idCell(row).locator("sup");
   }
 
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** The "?" icon in the Quality column header. */
+  get qualityHeaderHelpIcon(): Locator {
+    return this.table.headers.nth(COLUMN.quality).locator("sup");
   }
 
-  // Data downloader
-  getDataDownloader(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
-  }
-
-  async clickDataDownloader(): Promise<void> {
-    await this.getDataDownloader().click();
-  }
-
-  // Pagination controls
-  getPaginationFirstButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-first-button']");
-  }
-
-  getPaginationPreviousButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  getPaginationNextButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPaginationLastButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-last-button']");
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.getPaginationFirstButton().click();
-  }
-
-  async goToPreviousPage(): Promise<void> {
-    await this.getPaginationPreviousButton().click();
-  }
-
-  async goToNextPage(): Promise<void> {
-    await this.getPaginationNextButton().click();
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.getPaginationLastButton().click();
+  /** The tooltip MUI renders in a portal while an element is hovered. */
+  get tooltip(): Locator {
+    return this.page.getByRole("tooltip");
   }
 }

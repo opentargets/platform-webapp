@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Interactor for the Association On-The-Fly (AOTF) Table component.
@@ -168,33 +168,12 @@ export class AotfTable {
 
     for (let i = 0; i < rowCount; i++) {
       const nameCell = this.getNameCell(i, prefix);
-      // Bounded timeout: if the row count shrinks after a filter change
-      // (e.g. this call raced ahead of waitForTableLoad), fail fast here
-      // instead of hanging until the whole test times out.
-      const text = await nameCell.textContent({ timeout: 5000 }).catch(() => null);
+      // Bounded timeout: a row that disappears fails here, with the locator in the message.
+      const text = await nameCell.textContent({ timeout: 5000 });
 
       if (text?.includes(geneSymbol)) {
         return i;
       }
-    }
-
-    return null;
-  }
-
-  // Wait for specific gene to appear in table
-  async waitForGeneInTable(
-    geneSymbol: string,
-    prefix: string = "core",
-    timeout: number = 10000
-  ): Promise<number | null> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeout) {
-      const rowIndex = await this.findRowIndexByGeneSymbol(geneSymbol, prefix);
-      if (rowIndex !== null) {
-        return rowIndex;
-      }
-      await this.page.waitForTimeout(500);
     }
 
     return null;
@@ -249,39 +228,14 @@ export class AotfTable {
     return (await this.getTable().locator(".MuiSkeleton-root").count()) > 0;
   }
 
-  // Wait for the table to load, or to finish re-fetching after a filter,
-  // sort, or facet change. Row cells swap to skeletons for the duration of
-  // the request, so waiting for those to clear - rather than a fixed sleep -
-  // is what actually guarantees the request has finished and re-rendered.
+  // Wait for the table to load, or to finish re-fetching after a filter, sort or facet
+  // change. Row cells render as skeletons while their data loads, so the wait is for the
+  // first row to be present and every skeleton to be gone.
   async waitForTableLoad(): Promise<void> {
-    await this.page.waitForSelector(".TAssociations", { state: "visible" });
-    await this.page.waitForSelector("[data-testid^='table-row-core']", { state: "visible" });
-
-    // A triggered refetch may not swap in skeletons immediately; give it a
-    // short window to appear, but don't fail the wait if it never does
-    // (e.g. the request had already resolved by the time we checked).
-    // Note: the options object must be the 3rd argument - passing it 2nd
-    // silently binds it as the page function's `arg` instead, so it stops
-    // being a real timeout and blocks until the whole test times out.
-    await this.page
-      .waitForFunction(
-        () => {
-          const table = document.querySelector(".TAssociations");
-          return !!table && table.querySelectorAll(".MuiSkeleton-root").length > 0;
-        },
-        undefined,
-        { timeout: 2000 }
-      )
-      .catch(() => {});
-
-    await this.page.waitForFunction(
-      () => {
-        const table = document.querySelector(".TAssociations");
-        return !!table && table.querySelectorAll(".MuiSkeleton-root").length === 0;
-      },
-      undefined,
-      { timeout: 20000 }
-    );
+    const timeout = 45_000;
+    await expect(this.getTable()).toBeVisible({ timeout });
+    await expect(this.getTableRows().first()).toBeVisible({ timeout });
+    await expect(this.getTable().locator(".MuiSkeleton-root")).toHaveCount(0, { timeout });
   }
 
   // Get all data cells with scores in a specific row

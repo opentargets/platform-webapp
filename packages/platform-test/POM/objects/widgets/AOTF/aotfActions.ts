@@ -1,263 +1,48 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * Interactor for AOTF (Association On-The-Fly) table action controls.
- *
- * Provides methods to interact with the AOTF table's control panel including:
- * - Name filtering
- * - Advanced facets/filters
- * - Column options and weight controls
- * - Export functionality
- * - Display mode switching (Associations/Prioritisation view)
- *
- * @example
- * ```typescript
- * const actions = new AotfActions(page);
- * await actions.searchByName("BRAF");
- * await actions.switchToPrioritisationView();
- * await actions.openExportMenu();
- * ```
- *
- * @category AOTF
+ * A thin helper still used by the target-associations and evidence-widgets specs.
+ * The disease controls specs use AssociationsTable (associationsTable.ts) instead.
+ * Nothing here sleeps or swallows an error.
  */
 export class AotfActions {
-  page: Page;
+  constructor(readonly page: Page) {}
 
-  constructor(page: Page) {
-    this.page = page;
-  }
-
-  // ==================
-  // Name Filter
-  // ==================
   getNameFilterInput(): Locator {
-    return this.page.locator("[data-testid='name-filter-input']");
+    return this.page.getByTestId("name-filter-input");
   }
 
   async searchByName(name: string): Promise<void> {
     await this.getNameFilterInput().fill(name);
+    await expect(this.getNameFilterInput()).toHaveValue(name);
+  }
+
+  /** Type a name and wait until the search chip shows it (the input is debounced). */
+  async applyNameFilterAndWaitForResults(name: string): Promise<void> {
+    await this.searchByName(name);
+    await expect(this.getActiveFilterChip("entity-search")).toBeVisible();
   }
 
   async clearNameFilter(): Promise<void> {
     await this.getNameFilterInput().clear();
-  }
-
-  async getNameFilterValue(): Promise<string> {
-    return await this.getNameFilterInput().inputValue();
-  }
-
-  // ==================
-  // Facets Search / Advanced Filters
-  // ==================
-  getFacetsSearchButton(): Locator {
-    return this.page.locator("[data-testid='facets-search-button']");
-  }
-
-  async openFacetsSearch(): Promise<void> {
-    await this.getFacetsSearchButton().click();
-  }
-
-  getFacetsPopover(): Locator {
-    return this.page.locator("[data-testid='facets-popover']");
-  }
-
-  async isFacetsPopoverOpen(): Promise<boolean> {
-    return await this.getFacetsPopover().isVisible();
-  }
-
-  // Data Uploader within Facets
-  getDataUploaderButton(): Locator {
-    return this.page.locator("[aria-label='Upload list of entities']");
-  }
-
-  async uploadData(filePath: string): Promise<void> {
-    const fileInput = this.page.locator("input[type='file']");
-    await fileInput.setInputFiles(filePath);
-  }
-
-  // Facet filter selections
-  getFacetFilterOption(): Locator {
-    return this.page.getByRole("combobox", { name: "Facet filter" });
-  }
-
-  async selectFacetFilter(optionValue: string): Promise<void> {
-    await this.getFacetFilterOption().click();
-    await this.page.locator(`[data-value='${optionValue}']`).click();
-  }
-
-  async closeFacetsPopover(): Promise<void> {
-    // Click outside the popover or use backdrop
-    await this.page.keyboard.press("Escape");
-  }
-
-  // ==================
-  // Column Options Menu
-  // ==================
-  getColumnOptionsButton(): Locator {
-    return this.page.locator("[data-testid='column-options-button']");
-  }
-
-  async openColumnOptions(): Promise<void> {
-    await this.getColumnOptionsButton().click();
-  }
-
-  getWeightsControlsContainer(): Locator {
-    return this.page.locator("[data-testid='weights-controls-container']");
-  }
-
-  async isColumnOptionsActive(): Promise<boolean> {
-    return await this.getWeightsControlsContainer().isVisible();
-  }
-
-  async closeColumnOptions(): Promise<void> {
-    const closeButton = this.page.locator(
-      "[data-testid='weights-controls-container'] [data-testid='close-weights-button']"
-    );
-    await closeButton.click();
-  }
-
-  // Weight slider controls
-  getWeightSlider(columnId: string): Locator {
-    return this.page.locator(`[data-testid='weight-slider-${columnId}']`);
-  }
-
-  async setColumnWeight(columnId: string, weight: number): Promise<void> {
-    const slider = this.getWeightSlider(columnId);
-    await slider.fill(weight.toString());
-  }
-
-  // Required checkbox controls
-  getRequiredCheckbox(columnId: string): Locator {
-    return this.page.locator(`[data-testid='required-checkbox-${columnId}']`);
-  }
-
-  async toggleRequiredCheckbox(columnId: string): Promise<void> {
-    await this.getRequiredCheckbox(columnId).click();
-  }
-
-  async isColumnRequired(columnId: string): Promise<boolean> {
-    return await this.getRequiredCheckbox(columnId).isChecked();
-  }
-
-  // ==================
-  // Export Menu
-  // ==================
-  getExportButton(): Locator {
-    return this.page.locator("[data-testid='export-button']");
-  }
-
-  async openExportMenu(): Promise<void> {
-    await this.getExportButton().click();
-  }
-
-  getExportPopover(): Locator {
-    return this.page.locator("[data-testid='export-popover']");
-  }
-
-  async isExportMenuOpen(): Promise<boolean> {
-    return await this.getExportPopover().isVisible();
-  }
-
-  // Export options
-  getDownloadDataOption(): Locator {
-    return this.page.getByText("Download data", { exact: true });
-  }
-
-  getApiPlaygroundOption(): Locator {
-    return this.page.getByText("API query", { exact: true });
-  }
-
-  async clickDownloadData(): Promise<void> {
-    await this.getDownloadDataOption().click();
-  }
-
-  async clickApiPlayground(): Promise<void> {
-    await this.getApiPlaygroundOption().click();
-  }
-
-  async closeExportMenu(): Promise<void> {
-    await this.page.keyboard.press("Escape");
-  }
-
-  // ==================
-  // Display Mode Switch
-  // ==================
-  getDisplayModeSwitch(): Locator {
-    return this.page.locator("[data-testid='display-mode-switch']");
-  }
-
-  getAssociationsViewButton(): Locator {
-    return this.page.locator("[data-testid='associations-view-button']");
+    await expect(this.getNameFilterInput()).toHaveValue("");
   }
 
   getPrioritisationViewButton(): Locator {
-    return this.page.locator("[data-testid='prioritisation-view-button']");
-  }
-
-  async switchToAssociationsView(): Promise<void> {
-    await this.getAssociationsViewButton().click();
+    return this.page.getByTestId("prioritisation-view-button");
   }
 
   async switchToPrioritisationView(): Promise<void> {
     await this.getPrioritisationViewButton().click();
-  }
-
-  async getCurrentDisplayMode(): Promise<string | null> {
-    const associationsButton = this.getAssociationsViewButton();
-    const ariaPressed = await associationsButton.getAttribute("aria-pressed");
-    return ariaPressed === "true" ? "associations" : "prioritisations";
-  }
-
-  // ==================
-  // Active Filters Panel
-  // ==================
-  getActiveFiltersPanel(): Locator {
-    return this.page.locator("[data-testid='active-filters-panel']");
+    await expect(this.getPrioritisationViewButton()).toHaveAttribute("aria-pressed", "true");
   }
 
   getActiveFilterChip(filterName: string): Locator {
-    return this.page.locator(`[data-testid='active-filter-chip-${filterName}']`);
+    return this.page.getByTestId(`active-filter-chip-${filterName}`);
   }
 
-  async removeActiveFilter(filterName: string): Promise<void> {
-    const chip = this.getActiveFilterChip(filterName);
-    const deleteButton = chip.locator("[data-icon='circle-xmark']");
-    await deleteButton.click();
-  }
-
-  async clearAllFilters(): Promise<void> {
-    const clearAllButton = this.page.locator("[data-testid='clear-all-filters-button']");
-    await clearAllButton.click();
-  }
-
-  async getActiveFiltersCount(): Promise<number> {
-    const chips = this.page.locator("[data-testid^='active-filter-chip-']");
-    return await chips.count();
-  }
-
-  async hasSortFilter(): Promise<boolean> {
-    const sortChip = this.page.locator("[data-testid='active-filter-chip-sort']");
-    return await sortChip.isVisible().catch(() => false);
-  }
-
-  async getSortFilterText(): Promise<string | null> {
-    const sortChip = this.page.locator("[data-testid='active-filter-chip-sort']");
-    return await sortChip.textContent();
-  }
-
-  // ==================
-  // Combined Actions
-  // ==================
-  async applyNameFilterAndWaitForResults(name: string): Promise<void> {
-    await this.searchByName(name);
-    // NameFilter debounces input by 300ms before triggering the search query
-    await this.page.waitForTimeout(300);
-  }
-
-  async openAndConfigureFacets(facetConfig: Record<string, string>): Promise<void> {
-    await this.openFacetsSearch();
-    for (const optionValue of Object.values(facetConfig)) {
-      await this.selectFacetFilter(optionValue);
-    }
+  /** The chip shown while the table is sorted by something other than the score. */
+  get sortFilterChip(): Locator {
+    return this.getActiveFilterChip("sort");
   }
 }

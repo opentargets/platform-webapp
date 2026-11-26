@@ -10,6 +10,18 @@ export interface TestConfig {
     alternatives?: {
       withWarnings: string;
       withAdverseEvents: string;
+      /** Small molecule with a ChEMBL structure image, cross references and child molecules */
+      smallMolecule?: string;
+      /** Salt form with a parent molecule and without pharmacogenetics */
+      withParentMolecule?: string;
+      /** Drug with more than one page of warnings and of adverse events */
+      withManyWarnings?: string;
+      /** Drug with several mechanisms of action, one of them with more than one target */
+      withMultipleMechanisms?: string;
+      /** Drug whose mechanism of action has no human target */
+      withNonHumanTarget?: string;
+      /** Drug with only the mechanisms of action and indications sections */
+      sparse?: string;
     };
   };
   variant: {
@@ -27,6 +39,28 @@ export interface TestConfig {
   target?: {
     primary?: string;
     alternatives?: string[];
+    /** Target with more than two pages of safety liabilities (drawers, effects, sources) */
+    withSafetyLiabilities?: string;
+    /** Target with more than one page of chemical probes (controls, low quality, N/A) */
+    withChemicalProbes?: string;
+    /** Target whose baseline expression is highly specific to a tissue and a cell type */
+    withSpecificExpression?: string;
+    /** Target with no drugs, no safety liabilities and no chemical probes (sections absent) */
+    withoutDrugsSafetyOrProbes?: string;
+    /** Target with several pages of pharmacogenetics rows (star alleles, genotypes, drawers) */
+    withPharmacogenomics?: string;
+    /** Target with more than one page of cancer hallmarks */
+    withManyCancerHallmarks?: string;
+    /** Non-coding target: no UniProt entry, description, hallmarks, mouse phenotypes or homologues */
+    nonCoding?: string;
+    /** Target with no literature and no molQTL credible sets (sections absent), and no synonyms */
+    withoutLiteratureOrQtl?: string;
+    /** Target flagged as a core essential gene by Cancer DepMap */
+    coreEssential?: string;
+    /** Target with a handful of publications (two pages of five) and a known earliest publication year */
+    withFewPublications?: string;
+    /** Target with pharmacogenetics rows both where it is and where it is not the direct drug target */
+    withDirectTargetPharmacogenomics?: string;
     aotfDiseases?: string[];
   };
   disease: {
@@ -49,33 +83,29 @@ export interface TestConfig {
     primary?: string;
     withGWASColoc?: string;
     withQTLColoc?: string;
+    /** A molQTL credible set (no L2G predictions) */
+    qtl?: string;
   };
 } /**
- * CSV row as array of strings (using indices instead of header names for resilience)
+ * CSV row structure from Google Sheet
  */
-export type CSVRow = string[];
 
-/**
- * Column indices for the Google Sheet CSV
- * Using indices instead of header names makes parsing resilient to column name changes
- * Update these indices if column order changes in the sheet
- */
-export const CSV_COLUMNS = {
-  TESTING_SCENARIO: 0,
-  DRUG_PAGE_PRIMARY: 1,
-  VARIANT_PRIMARY: 2,
-  VARIANT_WITH_PHARMACOGENETICS: 3,
-  VARIANT_WITH_QTL: 4,
-  TARGET_PRIMARY: 5,
-  TARGET_INCOMPLETE: 6,
-  TARGET_AOTF_DISEASES: 7,
-  DISEASE_PRIMARY: 8,
-  DISEASE_NAME: 10,
-  DISEASE_ALTERNATIVES: 11,
-  DISEASE_AOTF_GENES: 9,
-  STUDY_GWAS: 12,
-  STUDY_QTL: 13,
-  CREDIBLE_SET: 14,
-  CREDIBLE_SET_GWAS_COLOC: 15,
-  CREDIBLE_SET_QTL_COLOC: 16,
-} as const;
+export interface CSVRow {
+  "Testing Scenario": string;
+  drug_page_primary: string;
+  variant_primary: string;
+  variant_with_pharmacogenetics: string;
+  variant_with_qtl: string;
+  target_primary: string;
+  target_incomplete: string;
+  target_aotf_diseases: string;
+  disease_primary: string;
+  disease_name: string;
+  disease_alternatives: string;
+  disease_aotf_genes: string;
+  study_gwas: string;
+  study_qtl: string;
+  credible_set: string;
+  credible_set_GWAS_coloc: string;
+  credible_set_QTL_coloc: string;
+}

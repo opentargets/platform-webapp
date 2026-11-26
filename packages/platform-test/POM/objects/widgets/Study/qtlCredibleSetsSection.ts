@@ -1,142 +1,156 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
+export const QTL_COLUMNS = [
+  "Credible set",
+  "Lead variant",
+  "P-value",
+  "Beta",
+  "Fine-mapping method",
+  "Fine-mapping confidence",
+  "Credible set size",
+] as const;
+
+/**
+ * The "molQTL Credible Sets" section of a molQTL study page. It is an offset-paginated
+ * table (no search, no sorting): page size, first / previous / next, column picker, export
+ * and API query.
+ */
 export class QTLCredibleSetsSection {
-  page: Page;
+  static readonly id = "qtl-credible-sets";
 
-  constructor(page: Page) {
-    this.page = page;
+  readonly root: Locator;
+  /** Export, API query and column picker, shared with every other table. */
+  readonly controls: OtTable;
+
+  constructor(readonly page: Page) {
+    this.root = sectionLocator(page, QTLCredibleSetsSection.id);
+    this.controls = new OtTable(this.root);
   }
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-qtl-credible-sets']");
+  /** Assert the section is rendered, finished loading and the table shows rows. */
+  async expectLoaded(): Promise<void> {
+    await expectSectionLoaded(this.page, QTLCredibleSetsSection.id);
+    await expect(this.rows.first().locator("td").first()).not.toBeEmpty();
+    await expect(this.pageSizeSelect).toBeEnabled();
   }
 
-  /**
-   * Check if section is visible - waits for page loaders first
-   */
-  async isSectionVisible(): Promise<boolean> {
-    // First wait for any page-level skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const skeletons = document.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // No skeletons found
-      });
-
-    // Then check section visibility
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get title(): Locator {
+    return this.root.getByTestId("section-qtl-credible-sets-header");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-qtl-credible-sets-header']");
+  get description(): Locator {
+    return this.root.getByTestId("section-description");
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  get table(): Locator {
+    return this.root.locator("table");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  get headers(): Locator {
+    return this.table.locator("thead th");
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  get rows(): Locator {
+    return this.table.locator("tbody tr");
   }
 
-  getTableRows(): Locator {
-    return this.getTable().locator("tbody tr");
+  row(index: number): Locator {
+    return this.rows.nth(index);
   }
 
-  async getRowCount(): Promise<number> {
-    return await this.getTableRows().count();
+  cell(rowIndex: number, columnIndex: number): Locator {
+    return this.row(rowIndex).locator("td").nth(columnIndex);
   }
 
-  // Get cell data
-  getCell(rowIndex: number, columnIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("td").nth(columnIndex);
+  /** "View" link of a row, to the credible set page. */
+  credibleSetLink(rowIndex: number): Locator {
+    return this.row(rowIndex).locator("a[href^='/credible-set/']");
   }
 
-  async getCellText(rowIndex: number, columnIndex: number): Promise<string | null> {
-    return await this.getCell(rowIndex, columnIndex).textContent();
+  /** Lead variant link of a row, to the variant page. */
+  variantLink(rowIndex: number): Locator {
+    return this.row(rowIndex).locator("a[href^='/variant/']");
   }
 
-  // Get variant link
-  getVariantLink(rowIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("a[href*='/variant/']");
+  /** Text of every cell of a row, whitespace collapsed ("3.91 ×10 -7" style numbers). */
+  async rowText(rowIndex: number): Promise<string[]> {
+    const cells = await this.row(rowIndex).locator("td").allInnerTexts();
+    return cells.map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  async clickVariantLink(rowIndex: number): Promise<void> {
-    await this.getVariantLink(rowIndex).click();
+  async columnTexts(columnIndex: number): Promise<string[]> {
+    const texts = await this.rows.locator(`td:nth-child(${columnIndex + 1})`).allInnerTexts();
+    return texts.map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  async getVariantId(rowIndex: number): Promise<string | null> {
-    return await this.getVariantLink(rowIndex).textContent();
+  async allRowTexts(): Promise<string[]> {
+    return (await this.rows.allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  // Search/Filter
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[type='text']");
+  // ---- paging ----
+
+  get pageSizeSelect(): Locator {
+    return this.root.getByLabel("Rows per page:");
   }
 
-  async searchCredibleSet(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
+  get position(): Locator {
+    return this.root.getByText(/^\d+ - \d+ of \d+$/);
   }
 
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
+  get firstPageButton(): Locator {
+    return this.root.getByRole("button", { name: "first page" });
   }
 
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
+  get previousPageButton(): Locator {
+    return this.root.getByRole("button", { name: "previous page" });
   }
 
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
+  get nextPageButton(): Locator {
+    return this.root.getByRole("button", { name: "next page" });
   }
 
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
+  /** The total the footer reports. */
+  async total(): Promise<number> {
+    await expect(this.position).toHaveText(/^\d+ - \d+ of \d+$/);
+    return Number((await this.position.innerText()).split(" of ")[1]);
   }
 
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
+  async expectPosition(start: number, end: number, total: number): Promise<void> {
+    await expect(this.position).toHaveText(`${start} - ${end} of ${total}`);
   }
 
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
+  /** Assert which paging buttons are usable. The table has no "last page" button. */
+  async expectPaging(state: { back: boolean; forward: boolean }): Promise<void> {
+    for (const button of [this.firstPageButton, this.previousPageButton]) {
+      if (state.back) await expect(button).toBeEnabled();
+      else await expect(button).toBeDisabled();
+    }
+    if (state.forward) await expect(this.nextPageButton).toBeEnabled();
+    else await expect(this.nextPageButton).toBeDisabled();
   }
 
-  // Wait for section to load
-  async waitForSectionLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** Go to the next page and wait for the footer to show the new range. */
+  async goNext(start: number, end: number, total: number): Promise<void> {
+    await this.nextPageButton.click();
+    await this.expectPosition(start, end, total);
+    await expect(this.pageSizeSelect).toBeEnabled();
+  }
 
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-qtl-credible-sets']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // No skeletons found, section already loaded
-      });
+  async setPageSize(size: 10 | 25 | 100): Promise<void> {
+    await this.pageSizeSelect.selectOption(String(size));
+    await expect(this.pageSizeSelect).toHaveValue(String(size));
+    await expect(this.pageSizeSelect).toBeEnabled();
+  }
+
+  // ---- header tooltips ----
+
+  /** Hover the "?" marker of a column header and return the tooltip it shows. */
+  async hoverHeader(name: RegExp): Promise<Locator> {
+    await this.page.mouse.move(0, 0);
+    await expect(this.page.getByRole("tooltip"), "a previous tooltip should close").toHaveCount(0);
+    await this.headers.filter({ hasText: name }).locator("sup").hover();
+    return this.page.getByRole("tooltip");
   }
 }

@@ -1,120 +1,84 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { SECTION_LOAD_TIMEOUT, sectionTestId } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
-export class EvidenceSection {
-  page: Page;
+const LOADING_INDICATORS =
+  ".MuiSkeleton-root, .MuiCircularProgress-root, .MuiLinearProgress-root, [data-testid='section-loader']";
+const SECTION_ERRORS = "[data-testid='section-error'], [data-testid='error-boundary']";
 
-  constructor(page: Page) {
-    this.page = page;
+/**
+ * The detail panel the associations table opens under a row when a cell is clicked
+ * (SectionRender.tsx). It wraps one widget: an evidence widget in the associations view,
+ * a target profile widget in the prioritisation view.
+ *
+ * The wrapper (`evidence-section-<panelKey>`) is rendered as soon as the cell is clicked,
+ * but the widget inside renders nothing when its query fails or returns no data. So an
+ * open wrapper proves nothing: `expectLoaded` asserts the widget itself.
+ */
+export class EvidencePanel {
+  readonly root: Locator;
+
+  /**
+   * @param scope the associations table (or the page)
+   * @param panelKey the column id in the associations view, the column's `sectionId` in
+   *   the prioritisation view
+   */
+  constructor(
+    scope: Locator | Page,
+    readonly panelKey: string
+  ) {
+    this.root = scope.getByTestId(`evidence-section-${panelKey}`);
   }
 
-  // Get evidence section by section ID
-  getEvidenceSection(sectionId: string): Locator {
-    return this.page.locator(`[data-testid='evidence-section-${sectionId}']`);
+  /** The widget inside the panel, by its definition id. */
+  section(sectionId: string): Locator {
+    return this.root.getByTestId(sectionTestId(sectionId));
   }
 
-  // Check if evidence section is visible
-  async isEvidenceSectionVisible(sectionId: string): Promise<boolean> {
-    return await this.getEvidenceSection(sectionId)
-      .isVisible()
-      .catch(() => false);
+  title(sectionId: string): Locator {
+    return this.root.getByTestId(`${sectionTestId(sectionId)}-header`);
   }
 
-  // Wait for evidence section to appear
-  async waitForEvidenceSection(sectionId: string): Promise<void> {
-    const section = this.getEvidenceSection(sectionId);
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders within the section to disappear
-    await this.page
-      .waitForFunction(
-        (id) => {
-          const sect = document.querySelector(`[data-testid='evidence-section-${id}']`);
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        sectionId,
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // No skeletons found, section already loaded
-      });
+  get description(): Locator {
+    return this.root.getByTestId("section-description");
   }
 
-  // Get all visible evidence sections
-  getAllEvidenceSections(): Locator {
-    return this.page.locator("[data-testid^='evidence-section-']");
+  /** A table of the widget (OtTable). */
+  table(index = 0): OtTable {
+    return new OtTable(this.root, index);
   }
 
-  // Get count of visible evidence sections
-  async getEvidenceSectionCount(): Promise<number> {
-    return await this.getAllEvidenceSections().count();
+  /**
+   * Assert the panel is open and its widget has loaded data: rendered, no loader, no
+   * error, not the "No data available" placeholder, and titled.
+   */
+  async expectLoaded(sectionId: string): Promise<Locator> {
+    await expect(
+      this.root,
+      `the "${this.panelKey}" panel should open under the row`
+    ).toBeVisible({ timeout: SECTION_LOAD_TIMEOUT });
+    const section = this.section(sectionId);
+    await expect(
+      section,
+      `the "${sectionId}" widget should render inside the "${this.panelKey}" panel. An empty panel means its query failed or returned no data for a cell that has a score.`
+    ).toBeVisible({ timeout: SECTION_LOAD_TIMEOUT });
+    await expect(
+      this.root.locator(LOADING_INDICATORS),
+      `the "${sectionId}" widget should finish loading`
+    ).toHaveCount(0, { timeout: SECTION_LOAD_TIMEOUT });
+    await expect(
+      this.root.locator(SECTION_ERRORS),
+      `the "${sectionId}" widget should not show an error`
+    ).toHaveCount(0);
+    await expect(
+      this.root.getByTestId("section-no-data"),
+      `the "${sectionId}" widget should show data, not the empty placeholder`
+    ).toHaveCount(0);
+    await expect(this.title(sectionId), `the "${sectionId}" widget should have a title`).not.toBeEmpty();
+    return section;
   }
 
-  // Check if any evidence section is displayed
-  async hasAnyEvidenceSection(): Promise<boolean> {
-    const count = await this.getEvidenceSectionCount();
-    return count > 0;
-  }
-
-  // Close/collapse evidence section (if there's a close button)
-  async closeEvidenceSection(sectionId: string): Promise<void> {
-    const section = this.getEvidenceSection(sectionId);
-    const closeButton = section.locator("button[aria-label='close']").first();
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
-    }
-  }
-
-  // Check if loader is present in evidence section
-  getLoader(): Locator {
-    return this.page.locator("[data-testid='section-loader']");
-  }
-
-  async isLoaderVisible(): Promise<boolean> {
-    return await this.getLoader()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  async waitForLoaderToDisappear(): Promise<void> {
-    // Wait for the section-specific loader to disappear
-    try {
-      await this.getLoader().waitFor({ state: "hidden", timeout: 15000 });
-    } catch {
-      // Loader might not appear at all, which is fine
-    }
-
-    // Also wait for skeleton loaders to disappear. Note: the options object
-    // must be the 3rd argument here - passing it 2nd silently binds it as
-    // the page function's `arg` instead, turning this into an unbounded
-    // wait that blocks until the whole test times out.
-    await this.page
-      .waitForFunction(
-        () => {
-          const evidenceSections = document.querySelectorAll("[data-testid^='evidence-section-']");
-          for (const section of evidenceSections) {
-            const skeletons = section.querySelectorAll(".MuiSkeleton-root");
-            if (skeletons.length > 0) return false;
-          }
-          return true;
-        },
-        undefined,
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // No skeletons found
-      });
-  }
-
-  // Wait for section to fully load (section visible and no loader)
-  // Note: There is no error fallback UI - if there's an error, the section simply won't render
-  async waitForSectionLoad(sectionId: string): Promise<void> {
-    // Wait for section to appear (if this fails, it indicates an error state)
-    await this.waitForEvidenceSection(sectionId);
-
-    // Wait for loader to disappear
-    await this.waitForLoaderToDisappear();
+  async expectClosed(): Promise<void> {
+    await expect(this.root, `the "${this.panelKey}" panel should be closed`).toHaveCount(0);
   }
 }
