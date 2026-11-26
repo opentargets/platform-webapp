@@ -1,28 +1,30 @@
-query CrisprScreenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query CrisprScreenQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceCrisprScreenSort!]! = []
+  $search: EvidenceCrisprScreenSearch
+) {
   disease(efoId: $efoId) {
     id
-    CrisprScreenSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [crispr_screen]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        studyId
-        datatypeId
-        datasourceId
-        projectId
-        crisprScreenLibrary
-        studyOverview
-        cellType
-        literature
-        diseaseFromSource
-        diseaseFromSourceMappedId
-        contrast
-        targetFromSourceId
-        resourceScore
-        statisticalTestTail
-        phenotypicConsequenceScore
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      crisprScreen(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          studyId
+          projectId
+          crisprScreenLibrary
+          studyOverview
+          cellType
+          literature
+          diseaseFromSource
+          diseaseFromSourceMappedId
+          contrast
+          resourceScore
+          statisticalTestTail
+          phenotypicConsequenceScore
+        }
       }
     }
   }

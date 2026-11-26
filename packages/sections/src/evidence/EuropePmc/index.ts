@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Europe PMC",
   shortName: "EP",
-  hasData: (data: EvidenceData) => hasEvidence(data, "europePmc", "europePmc"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "europePmc"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 

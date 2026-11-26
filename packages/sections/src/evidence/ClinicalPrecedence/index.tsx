@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Clinical Precedence",
   shortName: "CP",
-  hasData: (data: EvidenceData) => hasEvidence(data, "clinicalPrecedence", "clinical_precedence"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "clinicalPrecedence"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 

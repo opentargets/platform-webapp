@@ -1,31 +1,32 @@
-query reactomeQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
-  target(ensemblId: $ensemblId) {
-    approvedSymbol
-  }
+query reactomeQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceReactomeSort!]! = []
+  $search: EvidenceReactomeSearch
+) {
   disease(efoId: $efoId) {
     id
-    reactomeSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [reactome]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      reactome(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          score
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          reactionName
+          reactionId
+          targetFromSourceId
+          pathways {
+            id
+            name
+          }
+          targetModulation
+          variantAminoacidDescriptions
+          literature
         }
-        diseaseFromSource
-        reactionName
-        reactionId
-        targetFromSourceId
-        pathways {
-          id
-          name
-        }
-        targetModulation
-        variantAminoacidDescriptions
-        literature
       }
     }
   }

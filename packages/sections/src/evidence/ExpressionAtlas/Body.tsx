@@ -1,17 +1,83 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, Tooltip, Link, ScientificNotation, OtTableServer, Typography } from "ui";
+import {
+  SectionItem,
+  Tooltip,
+  Link,
+  ScientificNotation,
+  OtTableServer,
+  type OtTableColumn,
+  Typography,
+} from "ui";
 
 import Description from "./Description";
 import { sentenceCase } from "@ot/utils";
-import EXPRESSION_ATLAS_QUERY from "./ExpressionAtlasQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import EXPRESSION_ATLAS_QUERY_DOCUMENT from "./ExpressionAtlasQuery.gql";
 import { definition } from ".";
-import { dataTypesMap, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  type EvidenceBodyProps,
+  type EvidenceExpressionAtlas,
+  type EvidenceExpressionAtlasSort,
+  EvidenceExpressionAtlasSortField,
+  type EvidenceExpressionAtlasSearch,
+  EvidenceExpressionAtlasSearchField,
+  SortDirection,
+} from "@ot/constants";
 
-const columns = [
+type ExpressionAtlasRow = Pick<
+  EvidenceExpressionAtlas,
+  | "diseaseId"
+  | "diseaseName"
+  | "diseaseFromSource"
+  | "contrast"
+  | "confidence"
+  | "studyOverview"
+  | "resourceScore"
+  | "log2FoldChangePercentileRank"
+  | "studyId"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { expressionAtlas: { count: number; rows: ExpressionAtlasRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceExpressionAtlasSort[];
+  search?: EvidenceExpressionAtlasSearch;
+};
+
+const EXPRESSION_ATLAS_QUERY = typedDocument<QueryData, QueryVariables>(
+  EXPRESSION_ATLAS_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+// production sorted this table by p-value, ascending
+const DEFAULT_SORT = {
+  id: "resourceScore",
+  field: EvidenceExpressionAtlasSortField.PValue,
+  desc: false,
+};
+
+const columns: OtTableColumn<ExpressionAtlasRow>[] = [
   {
-    id: "disease.name",
+    id: "diseaseName",
     label: "Disease/phenotype",
-    renderCell: ({ disease, diseaseFromSource }) => (
+    // Attach the Expression Atlas search fields to the first column.
+    searchFields: [
+      EvidenceExpressionAtlasSearchField.DiseaseName,
+      EvidenceExpressionAtlasSearchField.StudyId,
+      EvidenceExpressionAtlasSearchField.Contrast,
+      EvidenceExpressionAtlasSearchField.Confidence,
+    ],
+    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -25,8 +91,8 @@ const columns = [
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          {disease.name}
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          {diseaseName}
         </Link>
       </Tooltip>
     ),
@@ -35,11 +101,14 @@ const columns = [
     id: "studyId",
     label: "Experiment ID",
     enableHiding: false,
-    renderCell: ({ studyId }) => (
-      <Link external to={`http://www.ebi.ac.uk/gxa/experiments/${studyId}`}>
-        {studyId}
-      </Link>
-    ),
+    renderCell: ({ studyId }) =>
+      studyId ? (
+        <Link external to={`http://www.ebi.ac.uk/gxa/experiments/${studyId}`}>
+          {studyId}
+        </Link>
+      ) : (
+        naLabel
+      ),
   },
   {
     id: "contrast",
@@ -65,7 +134,7 @@ const columns = [
         }
         showHelpIcon
       >
-        {sentenceCase(confidence)}
+        {sentenceCase(confidence ?? "")}
       </Tooltip>
     ),
   },
@@ -73,6 +142,7 @@ const columns = [
     id: "log2FoldChangePercentileRank",
     label: "Percentile",
     numeric: true,
+    sortField: EvidenceExpressionAtlasSortField.Percentile,
   },
   {
     id: "resourceScore",
@@ -81,23 +151,31 @@ const columns = [
         <i>p</i>-value
       </>
     ),
-    renderCell: ({ resourceScore }) => <ScientificNotation number={resourceScore} />,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ resourceScore }) =>
+      resourceScore != null ? <ScientificNotation number={resourceScore} /> : naLabel,
     numeric: true,
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(EXPRESSION_ATLAS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -109,14 +187,15 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTableServer
+          <OtTableServer<ExpressionAtlasRow>
             query={EXPRESSION_ATLAS_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderFileStem={`expression-atlas-${ensgId}-${efoId}`}
-            dataPath="disease.expressionAtlasSummary"
+            dataPath="disease.evidenceViews.expressionAtlas"
             pageSize={PAGE_SIZE}
-            showGlobalFilter={false}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             variables={variables}
           />
         );

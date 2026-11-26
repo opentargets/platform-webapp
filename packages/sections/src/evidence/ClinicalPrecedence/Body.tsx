@@ -1,10 +1,10 @@
 import {
   Link,
   SectionItem,
-  Tooltip,
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTableServer,
+  type OtTableColumn,
   ClinicalRecordDrawer,
   Box,
   Typography,
@@ -12,63 +12,140 @@ import {
 import { useQuery } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightToBracket } from "@fortawesome/free-solid-svg-icons";
-import { clinicalStageCategories, naLabel, dataTypesMap, type EvidenceBodyProps } from "@ot/constants";
+import {
+  clinicalStageCategories,
+  naLabel,
+  dataTypesMap,
+  type EvidenceBodyProps,
+  type EvidenceClinicalPrecedence,
+  type EvidenceClinicalPrecedenceSort,
+  EvidenceClinicalPrecedenceSortField,
+  type EvidenceClinicalPrecedenceSearch,
+  EvidenceClinicalPrecedenceSearchField,
+  SortDirection,
+} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
-import CLINICAL_PRECEDENCE_QUERY from "./ClinicalPrecedence.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import CLINICAL_PRECEDENCE_QUERY_DOCUMENT from "./ClinicalPrecedence.gql";
 
-const exportColumns = [
+type ClinicalPrecedenceRow = Pick<
+  EvidenceClinicalPrecedence,
+  | "diseaseId"
+  | "diseaseName"
+  | "targetId"
+  | "targetApprovedSymbol"
+  | "drugId"
+  | "drugName"
+  | "drugTargetIds"
+  | "directionOnTarget"
+  | "directionOnTrait"
+  | "clinicalStage"
+  | "clinicalReportId"
+  | "studyStartDate"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { clinicalPrecedence: { count: number; rows: ClinicalPrecedenceRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceClinicalPrecedenceSort[];
+  search?: EvidenceClinicalPrecedenceSearch;
+};
+
+const CLINICAL_PRECEDENCE_QUERY = typedDocument<QueryData, QueryVariables>(
+  CLINICAL_PRECEDENCE_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+// production sorted this table by clinical stage, latest stage first
+const DEFAULT_SORT = {
+  id: "clinicalStage",
+  field: EvidenceClinicalPrecedenceSortField.ClinicalStage,
+  desc: true,
+};
+
+type StageCategories = Record<string, { index: number; label: string } | undefined>;
+const stageCategories: StageCategories = clinicalStageCategories;
+
+const exportColumns: OtTableColumn<ClinicalPrecedenceRow>[] = [
   {
+    id: "clinicalReportId",
     label: "clinicalReportId",
-    exportValue: row => row.clinicalReportId,
+    exportValue: (row: ClinicalPrecedenceRow) => row.clinicalReportId,
   },
   {
+    id: "diseaseId",
     label: "diseaseId",
-    exportValue: row => row.disease.id,
+    exportValue: (row: ClinicalPrecedenceRow) => row.diseaseId,
   },
   {
+    id: "diseaseName",
     label: "diseaseName",
-    exportValue: row => row.disease.name,
+    exportValue: (row: ClinicalPrecedenceRow) => row.diseaseName,
   },
   {
+    id: "targetId",
     label: "targetId",
-    exportValue: row => row.target.id,
+    exportValue: (row: ClinicalPrecedenceRow) => row.targetId,
   },
   {
+    id: "targetApprovedSymbol",
     label: "targetApprovedSymbol",
-    exportValue: row => row.target.approvedSymbol,
+    exportValue: (row: ClinicalPrecedenceRow) => row.targetApprovedSymbol,
   },
   {
+    id: "drugId",
     label: "drugId",
-    exportValue: row => row.drug.id,
+    exportValue: (row: ClinicalPrecedenceRow) => row.drugId,
   },
   {
+    id: "drugName",
     label: "drugName",
-    exportValue: row => row.drug.name,
+    exportValue: (row: ClinicalPrecedenceRow) => row.drugName,
   },
   {
+    id: "clinicalStage",
     label: "clinicalStage",
-    exportValue: row => row.clinicalStage,
+    exportValue: (row: ClinicalPrecedenceRow) => row.clinicalStage,
   },
   {
+    id: "startDate",
     label: "startDate",
-    exportValue: row => row.studyStartDate,
+    exportValue: (row: ClinicalPrecedenceRow) => row.studyStartDate,
   },
 ];
 
-const columns = [
+const columns: OtTableColumn<ClinicalPrecedenceRow>[] = [
   {
     id: "clinicalReportId",
     label: "Report",
     sticky: true,
     enableHiding: false,
+    // Attach the clinical precedence search fields to the first column.
+    searchFields: [
+      EvidenceClinicalPrecedenceSearchField.DiseaseName,
+      EvidenceClinicalPrecedenceSearchField.TargetApprovedSymbol,
+      EvidenceClinicalPrecedenceSearchField.DrugTargetSymbols,
+      EvidenceClinicalPrecedenceSearchField.DrugName,
+      EvidenceClinicalPrecedenceSearchField.DirectionOnTarget,
+      EvidenceClinicalPrecedenceSearchField.DirectionOnTrait,
+      EvidenceClinicalPrecedenceSearchField.ClinicalStage,
+      EvidenceClinicalPrecedenceSearchField.ClinicalReportId,
+      EvidenceClinicalPrecedenceSearchField.StudyStartDate,
+    ],
     renderCell: ({ clinicalReportId }) => {
       if (!clinicalReportId) return naLabel;
       return (
-        <Box  sx={{ display: "flex", justifyContent: "center" }}>
-          <ClinicalRecordDrawer
-            recordId={clinicalReportId}
-          >
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <ClinicalRecordDrawer recordId={clinicalReportId}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="body2">View</Typography>
               <FontAwesomeIcon size="sm" icon={faArrowRightToBracket} />
@@ -79,81 +156,46 @@ const columns = [
     },
   },
   {
-    id: "disease.name",
+    id: "diseaseName",
     label: "Disease/phenotype",
     enableHiding: false,
-    renderCell: ({ disease, cohortPhenotypes }) => {
-      let displayElement = naLabel;
-      if (disease)
-        displayElement = (
-          <Link asyncTooltip to={`/disease/${disease.id}`}>
-            {disease.name}
-          </Link>
-        );
-      if (cohortPhenotypes && cohortPhenotypes.length) {
-        displayElement = (
-          <Tooltip
-            showHelpIcon
-            title={
-              <Box>
-                <Typography variant="subtitle2" display="block" align="center">
-                  All reported phenotypes:
-                </Typography>
-                {cohortPhenotypes.map(e => (
-                  <div key={e}>{e}</div>
-                ))}
-              </Box>
-            }
-          >
-            {displayElement}
-          </Tooltip>
-        );
-      }
-      return displayElement;
-    },
+    renderCell: ({ diseaseId, diseaseName }) => (
+      <Link asyncTooltip to={`/disease/${diseaseId}`}>
+        {diseaseName}
+      </Link>
+    ),
   },
   {
     id: "target",
     label: "Targets",
     enableHiding: false,
-    renderCell: ({ target, drug }) => {
-      const mechanismsOfAction = drug.mechanismsOfAction || {};
-      const { rows = [] } = mechanismsOfAction;
-
-      let symbol = "";
-
-      const otherTargets = rows.reduce((acc, { targets }) => {
-        targets.forEach(({ id, approvedSymbol }) => {
-          if (id !== target.id) {
-            acc.add(id);
-          } else {
-            symbol = approvedSymbol;
-          }
-        });
-        return acc;
-      }, new Set());
-
-      if (symbol === "") {
-        const { approvedSymbol: targetSymbol } = target;
-        symbol = targetSymbol;
-      }
-
+    renderCell: ({ targetId, targetApprovedSymbol, drugTargetIds }) => {
+      const otherTargets = new Set(drugTargetIds.filter(drugTargetId => drugTargetId !== targetId));
       return (
         <>
-          <Link asyncTooltip to={`/target/${target.id}`}>{symbol}</Link>
+          <Link asyncTooltip to={`/target/${targetId}`}>
+            {targetApprovedSymbol}
+          </Link>
           {otherTargets.size > 0
             ? ` and ${otherTargets.size} other target${otherTargets.size > 1 ? "s" : ""}`
             : null}
         </>
       );
     },
-    filterValue: ({ target }) => target.approvedSymbol,
+    exportValue: ({ targetApprovedSymbol }) => targetApprovedSymbol,
   },
   {
-    id: "drug.name",
+    id: "drugName",
     label: "Drug",
     enableHiding: false,
-    renderCell: ({ drug }) => <Link asyncTooltip to={`/drug/${drug.id}`}>{drug.name}</Link>,
+    renderCell: ({ drugId, drugName }) =>
+      drugId ? (
+        <Link asyncTooltip to={`/drug/${drugId}`}>
+          {drugName}
+        </Link>
+      ) : (
+        naLabel
+      ),
   },
   {
     id: "directionOfVariantEffect",
@@ -164,8 +206,8 @@ const columns = [
       return (
         <Box sx={{ maxWidth: "140px" }}>
           <DirectionOfEffectIcon
-            variantEffect={directionOnTarget}
-            directionOnTrait={directionOnTrait}
+            variantEffect={directionOnTarget ?? ""}
+            directionOnTrait={directionOnTrait ?? ""}
           />
         </Box>
       );
@@ -174,42 +216,41 @@ const columns = [
   {
     id: "clinicalStage",
     label: "Stage",
-    comparator: (a, b) => {
-      return (clinicalStageCategories[a.clinicalStage]?.index ?? -1) -
-        (clinicalStageCategories[b.clinicalStage]?.index ?? -1);
-    },
-    renderCell: ({ clinicalStage }) => clinicalStageCategories[clinicalStage]?.label ?? naLabel,
-    filterValue: ({ clinicalStage }) => clinicalStageCategories[clinicalStage],
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ clinicalStage }) =>
+      (clinicalStage && stageCategories[clinicalStage]?.label) ?? naLabel,
+    exportValue: ({ clinicalStage }) =>
+      (clinicalStage && stageCategories[clinicalStage]?.label) ?? "",
   },
   {
     id: "studyStartDate",
     label: "Start Date",
     numeric: true,
-    comparator: (a, b) => {
-      return (new Date(a.studyStartDate).getTime() || -1) -
-        (new Date(b.studyStartDate).getTime() || -1);
-    },
-    renderCell: ({ studyStartDate }) => {
-      return studyStartDate ? new Date(studyStartDate).getFullYear() : naLabel;
-    },
-    filterValue: ({ studyStartDate }) => {
-      return studyStartDate ? new Date(studyStartDate).getFullYear() : "";
-    },
+    sortField: EvidenceClinicalPrecedenceSortField.StudyStartDate,
+    renderCell: ({ studyStartDate }) =>
+      studyStartDate ? new Date(studyStartDate).getFullYear() : naLabel,
+    exportValue: ({ studyStartDate }) =>
+      studyStartDate ? String(new Date(studyStartDate).getFullYear()) : "",
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
-
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const variables = { ensemblId: id.ensgId, efoId: id.efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CLINICAL_PRECEDENCE_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -220,15 +261,16 @@ function Body({ id, label, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<ClinicalPrecedenceRow>
           query={CLINICAL_PRECEDENCE_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem={`${id.ensgId}-${id.efoId}-clinical-precedence-evidence`}
-          dataPath="disease.clinical_precedence"
+          dataPath="disease.evidenceViews.clinicalPrecedence"
           pageSize={PAGE_SIZE}
-          showGlobalFilter={false}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           variables={variables}
         />
       )}
