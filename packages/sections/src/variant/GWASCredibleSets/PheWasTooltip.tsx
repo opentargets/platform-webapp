@@ -39,6 +39,7 @@ function PheWasTooltip({ studyLocusId, variantId }: { studyLocusId: string; vari
   return (
     <Box
       sx={{
+        width: 360,
         background: "#fffc",
         borderColor: "#ddd",
         borderWidth: "1px",
