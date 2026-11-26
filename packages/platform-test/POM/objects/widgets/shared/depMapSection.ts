@@ -17,7 +17,7 @@ export type DepMapExportRow = {
   cellLineName: string;
   diseaseFromSource: string;
   geneEffect: number;
-  expression: number;
+  expression: number | null;
   tissueName: string;
 };
 

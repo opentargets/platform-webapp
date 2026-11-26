@@ -444,7 +444,7 @@ test.describe("Target baseline expression section", () => {
       const name = (await expression.snapshot())[0].name;
       // the bar itself ignores the pointer; the hover lands on its tooltip wrapper
       await expression.bar(first, sorted).hover({ force: true });
-      const tooltip = expression.tooltip.filter({ hasText: "Median expression" });
+      const tooltip = expression.tooltip.filter({ hasText: "Median expression:" });
       await expect(tooltip).toContainText(`Tissue:${name}`);
       await expect(tooltip).toHaveText(/Median expression:[\d,.]+ \S+/);
     });

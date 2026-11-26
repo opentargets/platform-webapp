@@ -66,3 +66,4 @@ packages/platform-test/playwright-report/index.html
 apps/platform/migrations/
 packages/platform-test/e2e-results.json
 e2e-summary.md
+packages/platform-test/e2e-published-report/
