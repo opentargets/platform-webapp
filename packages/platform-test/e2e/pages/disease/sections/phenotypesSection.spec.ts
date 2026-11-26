@@ -254,7 +254,7 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
 
     const diseasePage = new DiseasePage(page);
     await phenotypes.cell(0, "Phenotype").getByRole("link").click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${id}(#[\\w-]+)?$`));
     await expect(diseasePage.title).toHaveText(phenotypeName(first));
   });
 

@@ -60,35 +60,47 @@ export async function waitForOperation<Data>(
  */
 export async function stubEuropePmc(page: Page): Promise<string[][]> {
   const searches: string[][] = [];
-  await page.route("https://www.ebi.ac.uk/europepmc/webservices/rest/searchPOST", async (route) => {
-    const query = new URLSearchParams(route.request().postData() ?? "").get("query") ?? "";
-    const ids = query
+  const answer = (ids: string[]) =>
+    JSON.stringify({
+      hitCount: ids.length,
+      resultList: {
+        result: ids.map((id) => ({
+          id,
+          source: "MED",
+          pmid: id,
+          title: `Stubbed publication ${id}`,
+          pubYear: "2017",
+          authorList: { author: [{ fullName: "Tester A", lastName: "Tester", initials: "A" }] },
+          journalInfo: { dateOfPublication: "2017", journal: { title: "Journal of Stubs" } },
+          pageInfo: "1-2",
+          abstractText: `Abstract of ${id}`,
+          inEPMC: "N",
+          inPMC: "N",
+          isOpenAccess: "N",
+        })),
+      },
+    });
+  const idsOf = (query: string) =>
+    query
       .split(" OR ")
       .map((part) => part.replace(/^ext_id:/, "").trim())
       .filter(Boolean);
+
+  await page.route("https://www.ebi.ac.uk/europepmc/webservices/rest/searchPOST", async (route) => {
+    const query = new URLSearchParams(route.request().postData() ?? "").get("query") ?? "";
+    const ids = idsOf(query);
     searches.push(ids);
+    await route.fulfill({ status: 200, contentType: "application/json", body: answer(ids) });
+  });
+  // The Europe PMC evidence section looks its page of publications up with a GET instead
+  // (not counted in the returned searches, which are those of the POST).
+  await page.route(/^https:\/\/www\.ebi\.ac\.uk\/europepmc\/webservices\/rest\/search\?/, async (route) => {
+    const query = new URL(route.request().url()).searchParams.get("query") ?? "";
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        hitCount: ids.length,
-        resultList: {
-          result: ids.map((id) => ({
-            id,
-            source: "MED",
-            pmid: id,
-            title: `Stubbed publication ${id}`,
-            pubYear: "2017",
-            authorList: { author: [{ fullName: "Tester A", lastName: "Tester", initials: "A" }] },
-            journalInfo: { dateOfPublication: "2017", journal: { title: "Journal of Stubs" } },
-            pageInfo: "1-2",
-            abstractText: `Abstract of ${id}`,
-            inEPMC: "N",
-            inPMC: "N",
-            isOpenAccess: "N",
-          })),
-        },
-      }),
+      headers: { "access-control-allow-origin": "*" },
+      body: answer(idsOf(query)),
     });
   });
   return searches;

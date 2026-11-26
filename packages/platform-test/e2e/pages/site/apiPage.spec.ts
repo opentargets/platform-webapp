@@ -208,13 +208,19 @@ test.describe("API page", () => {
 
     await api.loadExample("Drug annotation", "Find approval status and withdrawn and black-box warning for a specific drug", "drugApprovalWithdrawnWarningData");
     await api.run();
-    await expect(api.result).toContainText(/"count": [1-9]/, { timeout: 30_000 });
-    const before = await api.result.innerText();
+    await expect(api.result).toContainText('"id": "CHEMBL118"', { timeout: 30_000 });
+    await expect(api.result).toContainText('"drugWarnings"');
 
-    await api.loadExample("Search page", "Example query for KRAS", "searchEntity");
+    // GraphiQL reads the operation name of an edited query 100 ms after the edit, and a run in
+    // that window asks for the previous query's operation. Keeping the operation name makes the
+    // run correct whenever it happens; loading another example would not.
+    await api.queryEditor.click();
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.insertText('query drugApprovalWithdrawnWarningData { drug(chemblId: "CHEMBL25") { name id } }');
     await api.run();
-    await expect(api.result).toContainText(/"total": [1-9]/, { timeout: 30_000 });
-    expect(await api.result.innerText()).not.toBe(before);
+    await expect(api.result).toContainText('"id": "CHEMBL25"', { timeout: 30_000 });
+    await expect(api.result).not.toContainText('"id": "CHEMBL118"');
+    await expect(api.result).not.toContainText('"drugWarnings"');
   });
 
   test("a query the API rejects shows its error in the result pane", async ({ page, pageHealth }) => {

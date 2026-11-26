@@ -3,6 +3,13 @@ import type { MenuLink, MetaVersions } from "./siteData";
 
 const META_OPERATION = "DataVersion";
 const GRAPHQL_URL = /\/graphql$/;
+/**
+ * The Platform API's own GraphQL endpoint. A production build also posts the same
+ * `DataVersion` operation to the partner API to see whether the visitor may reach it (a
+ * 200 opens the "Partner Preview Platform" dialog), so a stub must not answer that one.
+ */
+const PARTNER_API_HOST = "api.partner-platform.opentargets.org";
+const isPlatformGraphQL = (url: URL): boolean => GRAPHQL_URL.test(url.pathname) && url.hostname !== PARTNER_API_HOST;
 
 function isMetaRequest(response: Response): boolean {
   const request = response.request();
@@ -23,7 +30,7 @@ export function waitForMeta(page: Page): Promise<MetaVersions> {
 
 /** Answer the `meta` query with these versions, whatever the API says. */
 export async function stubMeta(page: Page, versions: MetaVersions): Promise<void> {
-  await page.route(GRAPHQL_URL, async (route) => {
+  await page.route(isPlatformGraphQL, async (route) => {
     if (route.request().postDataJSON()?.operationName !== META_OPERATION) return route.fallback();
     await route.fulfill({
       contentType: "application/json",
@@ -41,7 +48,7 @@ export async function stubMeta(page: Page, versions: MetaVersions): Promise<void
 
 /** Make the `meta` query fail with a GraphQL error. */
 export async function failMeta(page: Page): Promise<void> {
-  await page.route(GRAPHQL_URL, async (route) => {
+  await page.route(isPlatformGraphQL, async (route) => {
     if (route.request().postDataJSON()?.operationName !== META_OPERATION) return route.fallback();
     await route.fulfill({
       contentType: "application/json",
