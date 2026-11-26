@@ -3,10 +3,11 @@ import { expect, test } from "../../../../fixtures";
 import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { CredibleSetEnhancerToGenePredictionsSection } from "../../../../POM/objects/widgets/CredibleSet/enhancerToGenePredictionsSection";
+import { isOrdered, opposite } from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
-const { column, operation } = CredibleSetEnhancerToGenePredictionsSection;
+const { column, defaultSort, operation, searchFields } = CredibleSetEnhancerToGenePredictionsSection;
 const PAGE_SIZE = 10;
 const NUMBER = /^\d{1,3}(,\d{3})*$/;
 const RANGE = /^chr(\d+|X|Y|MT)?:?\d*:?[\d,]*-?[\d,]*$/;
@@ -48,6 +49,30 @@ function toNumber(text: string): number {
   return Number(text.trim().replaceAll(",", ""));
 }
 
+/**
+ * Search for a term, check the query it sends, and return how many predictions match once
+ * the table has shown them (the footer count and the rows arrive together).
+ */
+async function searchFor(
+  e2g: CredibleSetEnhancerToGenePredictionsSection,
+  credibleSetId: string,
+  term: string
+): Promise<number> {
+  const before = await e2g.total();
+  const variables = await e2g.search(term);
+  expect(variables, "a search asks the server for the first page, keeping the sort").toEqual({
+    credibleSetId,
+    index: 0,
+    size: PAGE_SIZE,
+    sort: [defaultSort],
+    search: { text: term, fields: searchFields },
+  });
+  await expect.poll(() => e2g.total(), { message: "the footer should count the matches" }).not.toBe(before);
+  const total = await e2g.total();
+  await expect(e2g.rows).toHaveCount(Math.min(total, PAGE_SIZE));
+  return total;
+}
+
 test.describe("Credible set page: enhancer-to-gene predictions", () => {
   test("shows title, description naming the lead variant, and the column headers", async ({
     page,
@@ -71,6 +96,16 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
 
     await test.step("exact column headers", async () => {
       await expect(e2g.headers).toHaveText(CredibleSetEnhancerToGenePredictionsSection.headers);
+    });
+
+    await test.step("the toolbar offers search, columns, export and the API query", async () => {
+      await expect(e2g.table.searchInput).toHaveAttribute(
+        "placeholder",
+        CredibleSetEnhancerToGenePredictionsSection.searchPlaceholder
+      );
+      await expect(e2g.table.columnsButton).toBeVisible();
+      await expect(e2g.table.exportButton).toBeVisible();
+      await expect(e2g.table.apiQueryButton).toBeVisible();
     });
 
     await test.step("the Score header explains the E2G score", async () => {
@@ -139,54 +174,249 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
     });
   });
 
-  test("the best prediction comes first and the gene links go to target pages", async ({
+  test("opens on the first page, highest score first, and the gene links go to target pages", async ({
     page,
     testConfig,
+    graphqlMonitor,
   }) => {
-    const e2g = await open(page, credibleSets(testConfig).primary);
-    const scores = (await e2g.columnTexts(column.score)).map(Number);
-    expect(scores, "predictions arrive highest score first").toEqual([...scores].sort((a, b) => b - a));
-    expect(await e2g.columnTexts(column.gene), "GGCX is the gene this enhancer most confidently regulates").toContain(
-      "GGCX"
-    );
+    const credibleSetId = credibleSets(testConfig).primary;
+    const e2g = await open(page, credibleSetId);
+    await graphqlMonitor.settle();
+
+    await test.step("the first query asks for ten rows sorted by score, with no search", async () => {
+      const [first] = graphqlMonitor.named(operation);
+      expect(first.variables).toEqual({ credibleSetId, index: 0, size: PAGE_SIZE, sort: [defaultSort] });
+      expect(first.errors).toEqual([]);
+    });
+
+    await test.step("predictions arrive highest score first, and the Score header says so", async () => {
+      await e2g.expectColumnOrdered(column.score, "number", "DESCENDING");
+      await expect(e2g.table.header(/^Score/).locator("svg[data-icon='arrow-down']")).toHaveCount(1);
+    });
+
+    await test.step("GGCX is the gene this enhancer most confidently regulates", async () => {
+      expect(await e2g.columnTexts(column.gene)).toContain("GGCX");
+    });
   });
 
-  test("pages through the server: 16 predictions are 10 then 6", async ({ page, testConfig }) => {
-    const e2g = await open(page, credibleSets(testConfig).primary);
-    const total = await e2g.total();
-    expect(total, "the set has more than one page and less than two").toBeGreaterThan(PAGE_SIZE);
-    expect(total).toBeLessThanOrEqual(PAGE_SIZE * 2);
-    const firstPage = await e2g.table.rowTexts();
-    await e2g.expectOnFirstOfSeveralPages();
+  test.describe("pagination and page size", () => {
+    test("pages through the server: 16 predictions are 10 then 6", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      const total = await e2g.total();
+      expect(total, "the set has more than one page and less than two").toBeGreaterThan(PAGE_SIZE);
+      expect(total).toBeLessThanOrEqual(PAGE_SIZE * 2);
+      const firstPage = await e2g.table.rowTexts();
+      const firstScores = (await e2g.columnTexts(column.score)).map(Number);
+      await e2g.table.expectFirstPage();
 
-    await test.step("next asks for page 2 and shows the remainder", async () => {
-      const requested = await e2g.clickAndGetPageRequest(e2g.nextPageButton, operation);
-      expect(requested).toEqual({ index: 1, size: PAGE_SIZE });
-      await e2g.expectPosition(PAGE_SIZE + 1, total, total);
-      await expect(e2g.rows).toHaveCount(total - PAGE_SIZE);
-      await e2g.table.expectRowsChangedFrom(firstPage);
-      await e2g.expectOnLastPage();
+      await test.step("next asks for page 2, keeps the sort and shows the remainder", async () => {
+        const requested = await e2g.pageTo(e2g.table.nextPageButton, 1);
+        expect(requested).toEqual({ credibleSetId, index: 1, size: PAGE_SIZE, sort: [defaultSort] });
+        await e2g.expectPosition(PAGE_SIZE + 1, total, total);
+        await expect(e2g.rows).toHaveCount(total - PAGE_SIZE);
+        await e2g.table.expectRowsChangedFrom(firstPage);
+        await e2g.table.expectLastPage();
+      });
+
+      await test.step("page 2 continues after page 1: lower scores", async () => {
+        const secondScores = (await e2g.columnTexts(column.score)).map(Number);
+        expect(secondScores[0]).toBeLessThanOrEqual(firstScores[firstScores.length - 1]);
+        expect(isOrdered(secondScores, "DESCENDING")).toBe(true);
+      });
+
+      await test.step("previous returns to exactly the first page", async () => {
+        await e2g.table.previousPageButton.click();
+        await e2g.table.expectRowTexts(firstPage);
+        await e2g.table.expectFirstPage();
+      });
+
+      await test.step("last goes to the second page, first back to the first", async () => {
+        await e2g.table.lastPageButton.click();
+        await e2g.expectPosition(PAGE_SIZE + 1, total, total);
+        await e2g.table.firstPageButton.click();
+        await e2g.table.expectRowTexts(firstPage);
+      });
     });
 
-    await test.step("page 2 continues after page 1: lower scores", async () => {
-      const first = Math.min(...[...firstPage].map((text) => Number(text.split(" ").at(-1))));
-      const second = Math.max(...(await e2g.columnTexts(column.score)).map(Number));
-      expect(second).toBeLessThanOrEqual(first);
-    });
+    test("a page size of 25 asks for 25 rows and shows everything on one page", async ({ page, testConfig }) => {
+      const e2g = await open(page, credibleSets(testConfig).primary);
+      const total = await e2g.total();
+      await expect(e2g.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
+      await e2g.pageTo(e2g.table.nextPageButton, 1);
 
-    await test.step("previous returns to exactly the first page", async () => {
-      await e2g.previousPageButton.click();
-      await e2g.table.expectRowTexts(firstPage);
-      await e2g.expectOnFirstOfSeveralPages();
-    });
-
-    await test.step("a page size of 25 shows everything on one page", async () => {
-      await e2g.table.setPageSize(25);
+      const requested = await e2g.resize(25);
+      expect(requested).toMatchObject({ index: 0, size: 25, sort: [defaultSort] });
       await e2g.expectPosition(1, total, total);
       await expect(e2g.rows).toHaveCount(total);
-      await expect(e2g.firstPageButton).toBeDisabled();
-      await expect(e2g.previousPageButton).toBeDisabled();
-      await expect(e2g.nextPageButton).toBeDisabled();
+      await e2g.table.expectFirstPage(true);
+    });
+  });
+
+  test.describe("search", () => {
+    test("the search box asks the server to look in gene, tissue, interval type and study", async ({
+      page,
+      testConfig,
+    }) => {
+      const e2g = await open(page, credibleSets(testConfig).primary);
+      const variables = await e2g.search("GGCX");
+      expect(variables.search).toEqual({ text: "GGCX", fields: searchFields });
+    });
+
+    test("by gene symbol keeps only that gene's predictions", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      const all = await e2g.total();
+
+      const total = await searchFor(e2g, credibleSetId, "GGCX");
+      expect(total).toBeGreaterThan(1);
+      expect(total).toBeLessThan(all);
+      await e2g.expectPosition(1, total, total);
+      for (const gene of await e2g.columnTexts(column.gene)) expect(gene).toBe("GGCX");
+      await e2g.table.expectFirstPage(true);
+    });
+
+    test("by tissue name keeps only rows with that tissue", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      const all = await e2g.total();
+
+      const total = await searchFor(e2g, credibleSetId, "HCT116");
+      expect(total).toBeGreaterThan(0);
+      expect(total).toBeLessThan(all);
+      for (const tissue of await e2g.columnTexts(column.tissue)) expect(tissue).toBe("HCT116");
+    });
+
+    test("by study id finds that experiment", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      const study = (await e2g.studyLink(0).innerText()).trim();
+
+      const total = await searchFor(e2g, credibleSetId, study);
+      expect(total).toBeGreaterThan(0);
+      for (const found of await e2g.columnTexts(column.study)) expect(found).toBe(study);
+    });
+
+    test("a term nothing matches leaves an empty table, and clearing it restores the list", async ({
+      page,
+      testConfig,
+    }) => {
+      const e2g = await open(page, credibleSets(testConfig).primary);
+      const total = await e2g.total();
+      const firstPage = await e2g.table.rowTexts();
+
+      await e2g.search("zzz-no-prediction-matches-this");
+      await expect(e2g.table.pagePosition).toHaveText("1 - 0 of 0");
+      await expect(e2g.rows).toHaveCount(0);
+      await e2g.table.expectHeaders(CredibleSetEnhancerToGenePredictionsSection.headers);
+      await e2g.table.expectFirstPage(true);
+
+      await e2g.clearSearch();
+      await e2g.expectPosition(1, PAGE_SIZE, total);
+      await e2g.table.expectRowTexts(firstPage);
+      await e2g.table.expectFirstPage();
+    });
+
+    test("searching while on the second page goes back to the first page", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      await e2g.pageTo(e2g.table.nextPageButton, 1);
+      await expect(e2g.table.pagePosition).toHaveText(/^11 - 16 of 16$/);
+
+      const total = await searchFor(e2g, credibleSetId, "GGCX");
+      await e2g.expectPosition(1, total, total);
+    });
+  });
+
+  test.describe("sorting", () => {
+    for (const sortable of CredibleSetEnhancerToGenePredictionsSection.sortable) {
+      test(`${sortable.header} is sorted by the server${
+        sortable.kind === "unreadable" ? "" : " and the rows follow it"
+      }`, async ({ page, testConfig }) => {
+        const credibleSetId = credibleSets(testConfig).primary;
+        const e2g = await open(page, credibleSetId);
+        const total = await e2g.total();
+        const byDefault = await e2g.table.rowTexts();
+        const isDefault = sortable.key === defaultSort.key;
+        const readable = sortable.kind !== "unreadable";
+        await expect(e2g.sortIcon(sortable.header)).toHaveCount(1);
+
+        const first = await e2g.clickSort(sortable.header, sortable.key);
+        expect(first).toHaveLength(1);
+        const direction = first[0].direction;
+        if (isDefault) expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
+        await e2g.expectPosition(1, PAGE_SIZE, total);
+        if (readable) {
+          await e2g.table.expectRowsChangedFrom(byDefault);
+          await e2g.expectColumnOrdered(sortable.column, sortable.kind, direction);
+        }
+        const firstSorted = await e2g.table.rowTexts();
+
+        if (isDefault) {
+          // the column already sorted the table: the second click clears the sort
+          expect(await e2g.clickSort(sortable.header, null)).toEqual([]);
+          return;
+        }
+        const second = await e2g.clickSort(sortable.header, sortable.key);
+        expect(second[0].direction, "a second click reverses the order").toBe(opposite(direction));
+        await e2g.expectPosition(1, PAGE_SIZE, total);
+        if (readable) {
+          await e2g.table.expectRowsChangedFrom(firstSorted);
+          await e2g.expectColumnOrdered(sortable.column, sortable.kind, opposite(direction));
+        }
+      });
+    }
+
+    test("columns without a sort field have no sort control and clicking them leaves the table as it was", async ({
+      page,
+      testConfig,
+    }) => {
+      const e2g = await open(page, credibleSets(testConfig).primary);
+      const byDefault = await e2g.table.rowTexts();
+      for (const name of CredibleSetEnhancerToGenePredictionsSection.notSortable) {
+        await expect(e2g.sortIcon(name), `${name} has no sort arrow`).toHaveCount(0);
+      }
+      await e2g.table.clickHeader("Study");
+      await e2g.table.clickHeader("Interval range");
+      await expect(e2g.rows).toHaveCount(PAGE_SIZE);
+      await e2g.table.expectRowTexts(byDefault);
+    });
+
+    test("the order is global: page 2 continues where page 1 of the sorted list ends", async ({
+      page,
+      testConfig,
+    }) => {
+      const e2g = await open(page, credibleSets(testConfig).primary);
+      const total = await e2g.total();
+      const byDefault = await e2g.table.rowTexts();
+      const sort = await e2g.clickSort("Distance from start site (bp)", "DISTANCE_TO_TSS");
+      await e2g.table.expectRowsChangedFrom(byDefault);
+      await e2g.expectColumnOrdered(column.distance, "number", sort[0].direction);
+      const page1 = (await e2g.columnTexts(column.distance)).map(toNumber);
+      const page1Rows = await e2g.table.rowTexts();
+
+      const requested = await e2g.pageTo(e2g.table.nextPageButton, 1);
+      expect(requested.sort).toEqual(sort);
+      await e2g.expectPosition(PAGE_SIZE + 1, total, total);
+      await e2g.table.expectRowsChangedFrom(page1Rows);
+      await e2g.expectColumnOrdered(column.distance, "number", sort[0].direction);
+      const page2 = (await e2g.columnTexts(column.distance)).map(toNumber);
+      const lastOfPage1 = page1[page1.length - 1];
+      if (sort[0].direction === "DESCENDING") expect(page2[0]).toBeLessThanOrEqual(lastOfPage1);
+      else expect(page2[0]).toBeGreaterThanOrEqual(lastOfPage1);
+    });
+
+    test("search and sort work together: the matches are sorted", async ({ page, testConfig }) => {
+      const credibleSetId = credibleSets(testConfig).primary;
+      const e2g = await open(page, credibleSetId);
+      const total = await searchFor(e2g, credibleSetId, "GGCX");
+      const before = await e2g.table.rowTexts();
+
+      const sort = await e2g.clickSort("Interval size (bp)", "INTERVAL_SIZE");
+      await e2g.table.expectRowsChangedFrom(before);
+      await e2g.expectPosition(1, total, total);
+      await e2g.expectColumnOrdered(column.size, "number", sort[0].direction);
+      for (const gene of await e2g.columnTexts(column.gene)) expect(gene).toBe("GGCX");
     });
   });
 
@@ -214,7 +444,7 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
     });
   });
 
-  test("Export downloads every prediction as JSON and TSV", async ({ page, testConfig }) => {
+  test("Export downloads every prediction as JSON and TSV in the table's order", async ({ page, testConfig }) => {
     const credibleSetId = credibleSets(testConfig).primary;
     const e2g = await open(page, credibleSetId);
     const total = await e2g.total();
@@ -226,6 +456,13 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
       const rows = JSON.parse(text) as Record<string, string>[];
       expect(rows).toHaveLength(total);
       expect(rows.slice(0, PAGE_SIZE).map((row) => row.gene)).toEqual(genes);
+      expect(
+        isOrdered(
+          rows.map((row) => Number(row.score)),
+          "DESCENDING"
+        ),
+        "the file is in the table's order: highest score first"
+      ).toBe(true);
       expect(Object.keys(rows[0])).toEqual([
         "gene",
         "affectedTissueCell",
@@ -247,12 +484,40 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
     });
   });
 
-  test("the API query button opens the playground with this section's query", async ({
+  test("with a search and a sort active the exported file holds the matching predictions in that order", async ({
     page,
     testConfig,
   }) => {
-    const e2g = await open(page, credibleSets(testConfig).primary);
-    await e2g.expectApiQuery(operation);
+    const credibleSetId = credibleSets(testConfig).primary;
+    const e2g = await open(page, credibleSetId);
+    const total = await searchFor(e2g, credibleSetId, "GGCX");
+    const sort = await e2g.clickSort("Distance from start site (bp)", "DISTANCE_TO_TSS");
+    await e2g.expectColumnOrdered(column.distance, "number", sort[0].direction);
+
+    const { text } = await e2g.table.download("Json");
+    const rows = JSON.parse(text) as { gene: string; distanceFromStartSiteBp: string }[];
+    expect(rows, "one exported row per match").toHaveLength(total);
+    for (const row of rows) expect(row.gene).toBe("GGCX");
+    expect(
+      isOrdered(
+        rows.map((row) => Number(row.distanceFromStartSiteBp)),
+        sort[0].direction
+      ),
+      "the file follows the table's sort"
+    ).toBe(true);
+  });
+
+  test("the API query drawer holds the table query and the variables of the search and sort", async ({
+    page,
+    testConfig,
+  }) => {
+    const credibleSetId = credibleSets(testConfig).primary;
+    const e2g = await open(page, credibleSetId);
+    await e2g.expectApiQuery(['"key": "SCORE"', '"direction": "DESCENDING"']);
+
+    await searchFor(e2g, credibleSetId, "GGCX");
+    await e2g.clickSort("Distance from start site (bp)", "DISTANCE_TO_TSS");
+    await e2g.expectApiQuery(['"key": "DISTANCE_TO_TSS"', '"text": "GGCX"', '"BIOSAMPLE_ID"']);
   });
 
   test("a gene link opens that gene's target page", async ({ page, testConfig }) => {
@@ -270,9 +535,7 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
     expect(total).toBeLessThan(PAGE_SIZE);
     await e2g.expectPosition(1, total, total);
     await expect(e2g.rows).toHaveCount(total);
-    await expect(e2g.firstPageButton).toBeDisabled();
-    await expect(e2g.previousPageButton).toBeDisabled();
-    await expect(e2g.nextPageButton).toBeDisabled();
+    await e2g.table.expectFirstPage(true);
     await expect(e2g.description).toContainText(QTL_LEAD);
   });
 

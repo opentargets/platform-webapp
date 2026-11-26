@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { expect, type Locator, type Page } from "@playwright/test";
-import { sectionLocator } from "../../../../utils/sections";
-
-const POSITION = /^(\d+) - (\d+) of (\d+)$/;
+import type { Locator, Page } from "@playwright/test";
+import { ServerTableSection, type SortableColumn } from "./serverTableSection";
 
 /** The "Variants" section of the credible set page: the fine-mapped locus table. */
-export class CredibleSetVariantsSection {
+export class CredibleSetVariantsSection extends ServerTableSection {
   static readonly id = "variants";
+  static readonly operation = "VariantsQuery";
   /** The header cells as rendered: the "?" is the help icon of a column with a tooltip. */
   static readonly headers = [
     "Variant",
@@ -29,40 +27,35 @@ export class CredibleSetVariantsSection {
     logBf: 6,
     consequence: 7,
   } as const;
+  static readonly searchPlaceholder = "Search variant ID or consequence…";
+  /** What the search box asks the server to look in. */
+  static readonly searchFields = ["MOST_SEVERE_CONSEQUENCE_LABEL", "VARIANT_ID"];
+  /** The sort the table opens with. */
+  static readonly defaultSort = { key: "POSTERIOR_PROBABILITY", direction: "DESCENDING" } as const;
+  /**
+   * The columns the server can sort, with the sort key each one sends. Standard error is shown
+   * to three decimals, where every variant of the test credible sets reads the same, and LD is
+   * not available for them: neither can show its order, so their kind is "unreadable".
+   */
+  static readonly sortable: readonly SortableColumn[] = [
+    { header: "Variant", key: "VARIANT", column: 0, kind: "text" },
+    { header: "P-value", key: "P_VALUE", column: 1, kind: "pValue" },
+    { header: "Beta", key: "REPORTED_BETA", column: 2, kind: "number" },
+    { header: "Standard error", key: "REPORTED_STANDARD_ERROR", column: 3, kind: "unreadable" },
+    { header: "LD (r²)", key: "R2_OVERALL", column: 4, kind: "unreadable" },
+    { header: "Posterior Probability", key: "POSTERIOR_PROBABILITY", column: 5, kind: "number" },
+    { header: "log(BF)", key: "LOG_BAYES_FACTOR", column: 6, kind: "number" },
+  ];
+  /** The columns with no sort field: their titles are not controls. */
+  static readonly notSortable = ["Predicted consequence"];
 
-  readonly section: Locator;
-
-  constructor(readonly page: Page) {
-    this.section = sectionLocator(page, CredibleSetVariantsSection.id);
-  }
-
-  get description(): Locator {
-    return this.section.getByTestId("section-description");
-  }
-
-  get table(): Locator {
-    return this.section.getByTestId("ot-table");
-  }
-
-  get headers(): Locator {
-    return this.table.locator("thead th");
-  }
-
-  get rows(): Locator {
-    return this.table.locator("tbody tr");
-  }
-
-  row(rowIndex: number): Locator {
-    return this.rows.nth(rowIndex);
-  }
-
-  cell(rowIndex: number, columnIndex: number): Locator {
-    return this.rows.nth(rowIndex).locator("td").nth(columnIndex);
+  constructor(page: Page) {
+    super(page, CredibleSetVariantsSection.id, CredibleSetVariantsSection.operation);
   }
 
   /** The variant link of a row. */
   variantLink(rowIndex: number): Locator {
-    return this.cell(rowIndex, CredibleSetVariantsSection.column.variant).getByRole("link");
+    return this.link(rowIndex, CredibleSetVariantsSection.column.variant);
   }
 
   /** The "lead" chip, which only the lead variant's row carries. */
@@ -72,111 +65,13 @@ export class CredibleSetVariantsSection {
 
   /** The ontology link of a row's predicted consequence. */
   consequenceLink(rowIndex: number): Locator {
-    return this.cell(rowIndex, CredibleSetVariantsSection.column.consequence).getByRole("link");
+    return this.link(rowIndex, CredibleSetVariantsSection.column.consequence);
   }
 
-  /** The trimmed text of one column for the rows on this page. */
-  async columnTexts(columnIndex: number): Promise<string[]> {
-    const texts = await this.rows.locator(`td:nth-child(${columnIndex + 1})`).allInnerTexts();
-    return texts.map((text) => text.replace(/\s+/g, " ").trim());
-  }
-
-  async rowTexts(): Promise<string[]> {
-    return (await this.rows.allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());
-  }
-
-  // ---- controls ----
-
-  get pagePosition(): Locator {
-    return this.section.getByText(POSITION);
-  }
-
-  get pageSizeSelect(): Locator {
-    return this.section.getByRole("combobox");
-  }
-
-  get firstPageButton(): Locator {
-    return this.section.getByRole("button", { name: "first page" });
-  }
-
-  get previousPageButton(): Locator {
-    return this.section.getByRole("button", { name: "previous page" });
-  }
-
-  get nextPageButton(): Locator {
-    return this.section.getByRole("button", { name: "next page" });
-  }
-
-  get columnsButton(): Locator {
-    return this.section.getByRole("button", { name: "Columns", exact: true });
-  }
-
-  get columnList(): Locator {
-    return this.page.getByRole("list", { name: "column-visibility-list" });
-  }
-
-  get exportButton(): Locator {
-    return this.section.getByTestId("data-downloader").getByRole("button", { name: "Export" });
-  }
-
-  get apiQueryButton(): Locator {
-    return this.section.getByRole("button", { name: "API query", exact: true });
-  }
-
-  /** Assert nothing in the table or its footer is loading. */
-  async expectSettled(): Promise<void> {
-    await expect(
-      this.section.locator(".MuiSkeleton-root, .MuiCircularProgress-root"),
-      "the table should finish loading"
-    ).toHaveCount(0);
-  }
-
-  async expectPosition(start: number, end: number, total: number): Promise<void> {
-    await expect(this.pagePosition).toHaveText(`${start} - ${end} of ${total}`);
-  }
-
-  /** The total the footer reports. */
-  async total(): Promise<number> {
-    await expect(this.pagePosition).toHaveText(POSITION);
-    return Number((await this.pagePosition.innerText()).trim().split(" of ")[1]);
-  }
-
-  async setPageSize(size: number): Promise<void> {
-    await this.pageSizeSelect.selectOption(String(size));
-    await expect(this.pageSizeSelect).toHaveValue(String(size));
-  }
-
-  /** Download through the Export menu in one format and return what was saved. */
-  async export(format: "Json" | "TSV"): Promise<{ filename: string; content: string }> {
-    await this.exportButton.click();
-    const menu = this.page.getByRole("menu");
-    await expect(menu.getByRole("menuitem")).toHaveText(["Json", "TSV"]);
-    await expect(menu).toContainText("Column settings and filters will not affect export");
-    const downloadPromise = this.page.waitForEvent("download");
-    await menu.getByRole("menuitem", { name: format, exact: true }).click();
-    const download = await downloadPromise;
-    const content = await readFile(await download.path(), "utf8");
-    await expect(menu, "the export menu closes after a format is chosen").toBeHidden();
-    return { filename: download.suggestedFilename(), content };
-  }
-
-  /** Open the API query drawer, check it holds this table's query, and close it. */
-  async expectApiQuery(): Promise<void> {
-    // The playground downloads the API schema when it opens; its editor validates the query
-    // against that schema, so wait for it before closing the drawer.
-    const schema = this.page.waitForResponse(
-      (response) => response.request().postData()?.includes("IntrospectionQuery") ?? false
+  /** The variant ids on this page, without the "lead" chip. */
+  async variantIds(): Promise<string[]> {
+    return (await this.columnTexts(CredibleSetVariantsSection.column.variant)).map((text) =>
+      text.replace(/\s*lead$/, "")
     );
-    await this.apiQueryButton.click();
-    await schema;
-    const drawer = this.page.getByTestId("api-playground-drawer");
-    await expect(drawer).toBeVisible();
-    await expect(drawer.getByRole("link", { name: "GraphQL API documentation" })).toHaveAttribute(
-      "href",
-      "https://platform-docs.opentargets.org/data-access/graphql-api"
-    );
-    await expect(drawer).toContainText("VariantsQuery");
-    await drawer.getByTestId("drawer-close").click();
-    await expect(drawer).toBeHidden();
   }
 }
