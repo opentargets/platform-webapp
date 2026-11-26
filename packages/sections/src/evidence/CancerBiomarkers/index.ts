@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Cancer Biomarkers",
   shortName: "CB",
-  hasData: (data: EvidenceData) => hasEvidence(data, "cancerBiomarkers", "cancerBiomarkersSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "cancerBiomarkers"),
   isPrivate: isPrivateEvidenceSection(id),
   dataType: dataTypesMap.somatic_mutation,
 };
