@@ -85,33 +85,28 @@ const DEFAULT_SORT = {
   desc: false,
 };
 
-const sources = [
-  "Epi25 collaborative",
-  "Autism Sequencing Consortiuml",
-  "SCHEMA consortium",
-  "Genebass",
-  "AstraZeneca PheWAS Portal",
-];
-
 const getSource = (cohort?: string | null, project?: string | null) => {
   if (!cohort) return project;
   if (!project) return cohort;
   return `${cohort} (${project})`;
 };
 
-const getSourceLink = (project: string, targetId: string, urls: string[]) => {
-  if (project === "Epi25 collaborative") return `https://epi25.broadinstitute.org/gene/${targetId}`;
-  if (project === "Autism Sequencing Consortiuml")
-    return `https://asc.broadinstitute.org/gene/${targetId}`;
-  if (project === "SCHEMA consortium") return `https://schema.broadinstitute.org/gene/${targetId}`;
-  if (project === "Genebass")
-    return `https://app.genebass.org/gene/${targetId}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`;
-  if (project === "AstraZeneca PheWAS Portal") return urls[0];
-  if (project === "Autism Sequencing Consortium") return `https://asc.broadinstitute.org/gene/${targetId}`;
-  if (project === "AMP-PD") return `https://amp-pd.org/`;
-  if (project === "FinnGen") return `https://r12.finngen.fi/gene/{targetFromSourceId}`;
-  return "";
+// Link-outs for projects whose evidence carries no `urls`; the rest (AstraZeneca,
+// SCHEMA, BipEx, CVDI, ...) link to the `urls` the data provides
+const projectLinks: Record<string, (targetId: string) => string> = {
+  "Epi25 collaborative": (targetId) => `https://epi25.broadinstitute.org/gene/${targetId}`,
+  "Autism Sequencing Consortium": (targetId) => `https://asc.broadinstitute.org/gene/${targetId}`,
+  Genebass: (targetId) =>
+    `https://app.genebass.org/gene/${targetId}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`,
+  "AMP-PD": () => "https://amp-pd.org/",
+  FinnGen: (targetId) => `https://r12.finngen.fi/gene/${targetId}`,
 };
+
+const getSourceLink = (
+  project: string | null | undefined,
+  targetId: string,
+  urls: GeneBurdenRow["urls"]
+) => urls?.[0] ?? (project ? projectLinks[project]?.(targetId) : undefined) ?? "";
 
 const formatCount = (value?: number | null) =>
   typeof value === "number" ? value.toLocaleString() : naLabel;
@@ -164,9 +159,10 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<GeneBurden
     renderCell: ({ cohortId, projectId, targetId, urls }) => {
       if (!cohortId && !projectId) return naLabel;
       // the getSource() function handles cases where cohortId==null or projectId==null
-      if (!projectId || sources.indexOf(projectId) < 0) return getSource(cohortId, projectId);
+      const link = getSourceLink(projectId, targetId, urls);
+      if (!link) return getSource(cohortId, projectId);
       return (
-        <Link to={getSourceLink(projectId, targetId, urls)} external>
+        <Link to={link} external>
           {getSource(cohortId, projectId)}
         </Link>
       );
