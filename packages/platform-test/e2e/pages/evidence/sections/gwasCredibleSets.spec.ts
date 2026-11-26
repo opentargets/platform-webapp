@@ -385,7 +385,21 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
   test("the API query drawer is loaded with the section's query and target", async ({ page }) => {
     const { section } = await open(page, FEW);
+    // GraphiQL builds its schema from the introspection response; wait for it so that a schema it
+    // cannot parse is caught while the test is still running.
+    const schema = page.waitForResponse((response) =>
+      (response.request().postData() ?? "").includes("IntrospectionQuery")
+    );
     await section.controls.openApiQuery(EVIDENCE_GWAS_OPERATION, FEW.ensgId);
+    await schema;
+    // The documentation explorer is built from that schema: it explains the schema when the
+    // schema is valid and reports "Schema is invalid" when it is not.
+    await section.controls.apiQueryDrawer
+      .getByRole("button", { name: "Open Documentation Explorer" })
+      .click();
+    await expect(section.controls.apiQueryDrawer).toContainText(
+      "A GraphQL schema provides a root type for each kind of operation."
+    );
     await section.controls.closeApiQuery();
   });
 

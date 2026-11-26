@@ -59,7 +59,11 @@ export type EvidenceGeneBurdenRow = {
   studyCasesWithQualifyingVariants: number | null;
   studySampleSize: number | null;
   oddsRatio: number | null;
+  oddsRatioConfidenceIntervalLower: number | null;
+  oddsRatioConfidenceIntervalUpper: number | null;
   beta: number | null;
+  betaConfidenceIntervalLower: number | null;
+  betaConfidenceIntervalUpper: number | null;
   pValueMantissa: number;
   pValueExponent: number;
   literature: string[] | null;

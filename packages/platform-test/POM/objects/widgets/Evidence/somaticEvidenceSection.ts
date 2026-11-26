@@ -117,6 +117,36 @@ export class SomaticEvidenceSection {
     return this.table.cell(row, column).locator("sup");
   }
 
+  /**
+   * Open the API query drawer and assert it holds the section's operation and variables,
+   * and that the playground read the API's schema: its documentation explorer lists the
+   * root types instead of reporting an invalid schema. Then close the drawer.
+   */
+  async expectApiQuery(operationName: string, ensgId: string, efoId: string): Promise<void> {
+    const drawer = this.table.apiQueryDrawer;
+    await this.table.apiQueryButton.click();
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "GraphQL API documentation" })).toHaveAttribute(
+      "href",
+      "https://platform-docs.opentargets.org/data-access/graphql-api"
+    );
+    await expect(drawer, `the playground should hold the ${operationName} query`).toContainText(
+      operationName
+    );
+    await expect(drawer, "the playground should hold the section's variables").toContainText(
+      ensgId
+    );
+    await expect(drawer).toContainText(efoId);
+    await drawer.getByRole("button", { name: "Open Documentation Explorer" }).click();
+    await expect(
+      drawer.getByText("A GraphQL schema provides a root type for each kind of operation."),
+      "the playground should have read the API schema"
+    ).toBeVisible();
+    await expect(drawer.getByText(/schema is invalid/i)).toHaveCount(0);
+    await drawer.getByTestId("drawer-close").click();
+    await expect(drawer).toBeHidden();
+  }
+
   /** Assert the line above the table lists the target's roles in cancer, linked to Europe PMC. */
   async expectRoleInCancer(symbol: string, data: RoleInCancer): Promise<void> {
     const roles = (data.target.hallmarks?.attributes ?? []).filter(

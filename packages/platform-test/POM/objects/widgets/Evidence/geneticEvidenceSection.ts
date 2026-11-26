@@ -110,6 +110,8 @@ export class GeneticEvidenceSection {
 
   /** Hover a cell's help icon and return the tooltip it opens. */
   async openHelp(row: number, column: number): Promise<Locator> {
+    await this.page.mouse.move(0, 0);
+    await expect(this.tooltip, "an earlier tooltip should close").toHaveCount(0);
     await this.helpIcon(row, column).hover();
     await expect(this.tooltip, "the help icon should open a tooltip").toBeVisible();
     return this.tooltip;

@@ -467,6 +467,14 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     );
     await section.controls.openApiQuery(EVIDENCE_EVA_OPERATION, FEW.ensgId);
     await schema;
+    // The documentation explorer is built from that schema: it explains the schema when the
+    // schema is valid and reports "Schema is invalid" when it is not.
+    await section.controls.apiQueryDrawer
+      .getByRole("button", { name: "Open Documentation Explorer" })
+      .click();
+    await expect(section.controls.apiQueryDrawer).toContainText(
+      "A GraphQL schema provides a root type for each kind of operation."
+    );
     await section.controls.closeApiQuery();
   });
 

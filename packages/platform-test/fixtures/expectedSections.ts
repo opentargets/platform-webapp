@@ -384,6 +384,15 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
     "uniprot-variants",
   ],
 
+  // MECP2, syndromic X-linked intellectual disability Lubs type: only Genomics England, Gene2Phenotype and UniProt literature
+  "ENSG00000169057/MONDO_0010283": [
+    "europe-pmc",
+    "eva",
+    "gene2phenotype",
+    "genomics-england",
+    "uniprot-literature",
+  ],
+
   // NF1, neurofibromatosis type 1: every curated genetic source, many Genomics England and UniProt variant rows
   "ENSG00000196712/MONDO_0018975": [
     "clingen",

@@ -146,11 +146,12 @@ export async function expectPageSizes(
 /** Hide and restore a column through the column picker; `locked` columns cannot be hidden. */
 export async function expectColumnPicker(
   section: GeneticEvidenceSection,
-  headers: readonly string[],
+  pickerNames: readonly string[],
   locked: readonly string[],
   hide: string
 ): Promise<void> {
   const { table } = section;
+  const headers = pickerNames;
   const picker = await table.openColumnPicker();
   await expect(picker.getByRole("checkbox")).toHaveCount(headers.length);
   for (const name of headers) {

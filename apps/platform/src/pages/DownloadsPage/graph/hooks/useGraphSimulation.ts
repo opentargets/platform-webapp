@@ -198,7 +198,10 @@ export const useGraphSimulation = ({
       .selectAll('g.graph-node')
       .data(simNodes, (d: any) => d.id)
       .join((enter: any) => {
-        const g = enter.append('g').attr('class', 'graph-node');
+        const g = enter
+          .append('g')
+          .attr('class', 'graph-node')
+          .attr('data-testid', (d: any) => `graph-node-${d.id}`);
         // Outer ring, only shown while selected (see GRAPH_STYLES)
         g.append('rect').attr('class', 'node-ring');
         // Opaque base so edges running under the node don't show through

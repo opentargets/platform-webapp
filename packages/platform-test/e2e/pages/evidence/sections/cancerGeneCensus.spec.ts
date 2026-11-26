@@ -321,7 +321,7 @@ test.describe("Evidence page: Cancer Gene Census", () => {
     page,
   }) => {
     const { section } = await open(page);
-    await section.table.expectApiQuery(CGC_OPERATION);
+    await section.expectApiQuery(CGC_OPERATION, BRAF, MELANOMA);
   });
 
   test("an evidence page without Cancer Gene Census data has no such section", async ({ page }) => {

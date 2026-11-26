@@ -250,7 +250,7 @@ test.describe("Evidence page: IntOGen", () => {
 
   test("the API query drawer is loaded with the section's query", async ({ page }) => {
     const { section } = await open(page);
-    await section.table.expectApiQuery(INTOGEN_OPERATION);
+    await section.expectApiQuery(INTOGEN_OPERATION, BRAF, MELANOMA);
   });
 
   test("an evidence page without IntOGen data has no such section", async ({ page }) => {
