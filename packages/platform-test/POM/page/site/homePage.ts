@@ -88,6 +88,6 @@ export class HomePage {
 
   get scrollDownButton(): Locator {
     // The wrapper is zero pixels high; the icons inside it are what the user clicks.
-    return this.page.getByTestId("home-scroll-down").locator("svg").first();
+    return this.page.getByTestId("home-scroll-down").locator("svg").last();
   }
 }

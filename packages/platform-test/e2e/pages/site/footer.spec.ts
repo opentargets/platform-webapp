@@ -74,6 +74,7 @@ test.describe("Footer", () => {
 
   test("every footer address is absolute, so none can land on the 404 page", async ({ page }) => {
     await page.goto("/api");
+    await expect(new SiteShell(page).footerLink("Blog")).toBeVisible();
     const hrefs = await new SiteShell(page).footer.getByRole("link").evaluateAll((links) =>
       links.map((link) => link.getAttribute("href"))
     );
@@ -107,14 +108,14 @@ test.describe("Footer", () => {
       page,
     }) => {
       await stubMeta(page, {
-        data: { month: "1", year: "30", revision: "1" },
+        data: { month: "1", year: "25", revision: "1" },
         api: { month: "2", year: "3", revision: "4" },
       });
       await page.goto("/");
 
       await expect(new SiteShell(page).versionBlock).toContainText("API: 3.2.4");
       await expect(page.getByTestId("home-data-version")).toHaveText(
-        `Last update: ${MONTH_NAMES[0]} 2030 (30.1.1)`
+        `Last update: ${MONTH_NAMES[0]} 2025 (25.1.1)`
       );
     });
 

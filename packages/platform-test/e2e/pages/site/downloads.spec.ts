@@ -184,17 +184,29 @@ test.describe("Downloads page", () => {
       await expect(downloads.clearAllButton).toBeVisible();
     });
 
-    test("ignores case and spaces around the term", async ({ page }) => {
+    test("ignores case", async ({ page }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
+      const total = await downloads.totalDatasets();
       await downloads.search("colocalisation");
+      await expect(downloads.cards).not.toHaveCount(total);
       const shown = await downloads.shownCount();
+      expect(shown).toBeGreaterThan(0);
       await downloads.search("zzzqqq");
       await downloads.expectShown(0);
 
-      await downloads.search("  ColocALisation ");
+      await downloads.search("ColocALisation");
       await downloads.expectShown(shown);
       await expect(downloads.card("Colocalisation with colocPIP and eCAVIAR")).toBeVisible();
+    });
+
+    // A pasted term often carries spaces around it.
+    test("ignores spaces around the term", async ({ page }) => {
+      const downloads = new DownloadsPage(page);
+      await downloads.goto();
+      await downloads.search("  colocalisation ");
+      await expect(downloads.card("Colocalisation with colocPIP and eCAVIAR")).toBeVisible();
+      await expect(downloads.chip("Genetics")).not.toHaveAccessibleName("Genetics 0");
     });
 
     // The empty state says "Search looks at dataset names, ids and descriptions", and the chip
@@ -568,8 +580,7 @@ test.describe("Downloads page", () => {
       await test.step("AWS", async () => {
         await downloads.scriptTab("AWS CLI").click();
         await expect(downloads.scriptText).toContainText(/BASE="s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output"/);
-        await expect(downloads.scriptText).toContainText(TARGET.id);
-        await expect(downloads.scriptText).toContainText(DISEASE.id);
+        await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
         await expect(downloads.scriptText).toContainText("aws s3 cp");
         await expect(downloads.scriptText).toContainText("--no-sign-request");
       });
@@ -578,7 +589,7 @@ test.describe("Downloads page", () => {
         await downloads.scriptTab("Google Cloud CLI").click();
         await expect(downloads.scriptText).toContainText(/BASE="gs:\/\/open-targets-data-releases\/\d+\.\d+\/output"/);
         await expect(downloads.scriptText).toContainText("gcloud storage cp");
-        await expect(downloads.scriptText).toContainText(TARGET.id);
+        await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
         await expect(downloads.drawer).toContainText("You need to specify a billing project");
       });
 
@@ -586,14 +597,14 @@ test.describe("Downloads page", () => {
         await downloads.scriptTab("Rsync").click();
         await expect(downloads.scriptText).toContainText(/BASE="rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/);
         await expect(downloads.scriptText).toContainText("rsync -rpltvz");
-        await expect(downloads.scriptText).toContainText(DISEASE.id);
+        await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
       });
 
       await test.step("Wget", async () => {
         await downloads.scriptTab("Wget").click();
         await expect(downloads.scriptText).toContainText(/BASE="ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/);
         await expect(downloads.scriptText).toContainText("--cut-dirs=6");
-        await expect(downloads.scriptText).toContainText(TARGET.id);
+        await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
       });
     });
 
@@ -603,17 +614,15 @@ test.describe("Downloads page", () => {
       await downloads.addButton(downloads.card(TARGET.name)).click();
       await downloads.openBag(1);
       await expect(downloads.drawer.getByRole("heading", { name: "Access script · all 1 dataset" })).toBeVisible();
-      await expect(downloads.scriptText).toContainText(TARGET.id);
-      await expect(downloads.scriptText).not.toContainText(DISEASE.id);
+      await downloads.expectScriptDatasets([TARGET.id]);
 
       await downloads.closeBagButton.click();
       await downloads.addButton(downloads.card(DISEASE.name)).click();
       await downloads.openBag(2);
-      await expect(downloads.scriptText).toContainText(DISEASE.id);
+      await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
 
       await downloads.drawerRow(TARGET.name).getByRole("button", { name: "Remove" }).click();
-      await expect(downloads.scriptText).not.toContainText(TARGET.id);
-      await expect(downloads.scriptText).toContainText(DISEASE.id);
+      await downloads.expectScriptDatasets([DISEASE.id]);
     });
 
     test("the copy button puts the script on the clipboard", async ({ page, context }) => {
@@ -725,9 +734,14 @@ test.describe("Downloads page", () => {
       await pk.locator("svg").hover();
       await expect(page.getByRole("tooltip", { name: "Primary Key" })).toBeVisible();
 
-      // struct columns are followed by their indented sub-columns
-      await expect(table.getByRole("cell").filter({ hasText: /Struct/ }).first()).toBeVisible();
-      await expect(table.getByRole("cell").filter({ hasText: "│⎯│⎯" }).first()).toBeVisible();
+    });
+
+    test("struct columns are followed by their indented sub-columns", async ({ page }) => {
+      const downloads = new DownloadsPage(page);
+      await downloads.goto(`/downloads/${TARGET.id}/schema`);
+      const struct = downloads.schemaTable.getByRole("row").filter({ hasText: "│⎯genomicLocation" });
+      await expect(struct).toContainText("Struct");
+      await expect(downloads.schemaTable.getByRole("cell", { name: /^│⎯│⎯chromosome/ })).toBeVisible();
     });
 
     test("Access data opens the file locations and the scripts of one dataset", async ({ page }) => {
@@ -752,16 +766,23 @@ test.describe("Downloads page", () => {
       await dialog.getByRole("button", { name: "AWS", exact: true }).click();
       await expect(dialog).toContainText(/s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target/);
 
-      await dialog.getByRole("button", { name: "Wget" }).click();
-      await expect(dialog).toContainText("wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftp://ftp.ebi.ac.uk/pub/databases/opentargets/platform/");
-      await dialog.getByRole("button", { name: "Rsync" }).click();
-      await expect(dialog).toContainText("rsync -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/");
-      await dialog.getByRole("button", { name: "Google Cloud CLI" }).click();
-      await expect(dialog).toContainText("You need to specify a billing project");
-      await expect(dialog).toContainText("gcloud storage cp -r --billing-project");
-      await dialog.getByRole("button", { name: "AWS CLI" }).click();
-      await expect(dialog).toContainText("aws s3 cp --recursive --no-sign-request s3://");
     });
+
+    for (const script of [
+      { tab: "Rsync", command: /rsync -rpltvz --delete rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./ },
+      { tab: "Wget", command: /wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./ },
+      { tab: "Google Cloud CLI", command: /gcloud storage cp -r --billing-project \$\{PROJECT_ID\} gs:\/\/open-targets-data-releases\/\d+\.\d+\/output\/target\/ \./ },
+      { tab: "AWS CLI", command: /aws s3 cp --recursive --no-sign-request s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target\/ \./ },
+    ]) {
+      test(`the access dialog's ${script.tab} command downloads the dataset`, async ({ page }) => {
+        const downloads = new DownloadsPage(page);
+        await downloads.goto(`/downloads/${TARGET.id}/access`);
+        const dialog = downloads.datasetDialog;
+        await dialog.getByRole("button", { name: script.tab, exact: true }).click();
+        await expect(dialog.locator("code").last()).toHaveText(script.command);
+        if (script.tab === "Google Cloud CLI") await expect(dialog).toContainText("You need to specify a billing project");
+      });
+    }
 
     test("the dialog switches between Access and Schema and keeps the dataset", async ({ page }) => {
       const downloads = new DownloadsPage(page);
@@ -981,7 +1002,7 @@ test.describe("Downloads page", () => {
       await expect(panel).toBeHidden();
 
       await downloads.selectNode(TARGET.id, TARGET.name);
-      await downloads.selectedChip.getByRole("button", { name: "Clear selection" }).click();
+      await downloads.selectedChipClear.click();
       await expect(panel).toBeHidden();
       await expect(downloads.selectedChip).toHaveCount(0);
 
@@ -1036,9 +1057,9 @@ test.describe("Downloads page", () => {
       await downloads.gotoNetwork();
       const panel = await downloads.selectNode(DISEASE.id, DISEASE.name);
 
-      await downloads.addButton(panel.locator("div").filter({ has: panel.getByRole("link", { name: "Schema" }) }).last()).first().click();
+      await panel.getByRole("button", { name: `Add ${DISEASE.name} to bag` }).click();
       await downloads.expectBagCount(1);
-      await expect(downloads.node(DISEASE.id)).toHaveClass(/in-basket/);
+      await expect(panel.getByRole("button", { name: `Remove ${DISEASE.name} from bag` })).toHaveText("In bag");
 
       await panel.getByRole("link", { name: "Schema" }).click();
       await expect(page).toHaveURL(/\/downloads\/disease\/schema\?view=network$/);
@@ -1073,7 +1094,7 @@ test.describe("Downloads page", () => {
       const bagRadio = downloads.scopeRadio(/^Bag/);
       await expect(bagRadio).toHaveText("Bag");
       await expect(bagRadio).toHaveAttribute("aria-disabled", "true");
-      await bagRadio.click();
+      await bagRadio.click({ force: true });
       await expect(all).toHaveAttribute("aria-checked", "true");
       await expect(bagRadio).toHaveAttribute("aria-checked", "false");
 
@@ -1088,6 +1109,8 @@ test.describe("Downloads page", () => {
       await expect(all).toHaveAttribute("aria-checked", "false");
       await expect(downloads.page.getByText("1 dataset in your bag · 0 direct connections between them")).toBeVisible();
       await expect(downloads.legend).toContainText("In bag");
+      await expect(downloads.node(DISEASE.id)).toHaveClass(/in-basket/);
+      await expect(downloads.node(TARGET.id)).not.toHaveClass(/in-basket/);
 
       await all.click();
       await expect(all).toHaveAttribute("aria-checked", "true");
@@ -1109,19 +1132,24 @@ test.describe("Downloads page", () => {
       await expect(downloads.scopeRadio(/^Bag/)).toHaveText("Bag");
     });
 
-    test("the layout switch moves the nodes", async ({ page }) => {
+    test("has no layout switch: the nodes sit in category lanes", async ({ page }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
-      await expect(downloads.layoutRadio("Stacked")).toHaveAttribute("aria-checked", "true");
-      const stacked = await downloads.nodePositions();
-      expect(Object.keys(stacked).length).toBeGreaterThan(20);
+      await expect(downloads.scopeRadio("All datasets")).toBeVisible();
+      await expect(downloads.layoutSwitch).toHaveCount(0);
+      await expect(page.getByRole("radio", { name: /^(Radial|Stacked)$/ })).toHaveCount(0);
 
-      await downloads.layoutRadio("Radial").click();
-      await expect(downloads.layoutRadio("Radial")).toHaveAttribute("aria-checked", "true");
-      await expect(downloads.layoutRadio("Stacked")).toHaveAttribute("aria-checked", "false");
-      await expect.poll(async () => JSON.stringify(await downloads.nodePositions())).not.toBe(JSON.stringify(stacked));
-      const radial = await downloads.nodePositions();
-      expect(Object.keys(radial).sort()).toEqual(Object.keys(stacked).sort());
+      const lanes = await downloads.lanes.count();
+      expect(lanes, "one lane per category of the connected datasets").toBeGreaterThan(2);
+      await expect(downloads.legend.getByRole("listitem").filter({ hasText: /^(?!Category)/ })).not.toHaveCount(0);
+
+      const placed = await downloads.nodeLanes();
+      expect(placed.length).toBeGreaterThan(20);
+      for (const { id, lane } of placed) expect(lane, `${id} should sit inside a category lane`).not.toBeNull();
+      const byId = Object.fromEntries(placed.map((p) => [p.id, p.lane]));
+      expect(byId[`graph-node-${TARGET.id}`], "the target dataset is in the Target lane").toMatch(/^Target/);
+      expect(byId[`graph-node-${DISEASE.id}`]).toMatch(/Disease/);
+      expect(byId[`graph-node-${TARGET.id}`]).not.toBe(byId[`graph-node-${DISEASE.id}`]);
     });
 
     test("the zoom buttons change the scale of the canvas and Fit restores it", async ({ page }) => {
@@ -1147,10 +1175,13 @@ test.describe("Downloads page", () => {
       await downloads.gotoNetwork();
       await downloads.nodeBox(DISEASE.id).hover();
       await downloads.nodePopover(DISEASE.name).getByRole("button", { name: `Add ${DISEASE.name} to bag` }).click();
+      await downloads.scopeRadio(/^Bag/).click();
+      await expect(downloads.node(DISEASE.id)).toHaveClass(/in-basket/);
       await downloads.openBag(1);
       await expect(downloads.drawerRow(DISEASE.name)).toBeVisible();
       await downloads.drawerRow(DISEASE.name).getByRole("button", { name: "Remove" }).click();
       await expect(downloads.drawerRows).toHaveCount(0);
+      await downloads.expectBagCount(0);
       await expect(downloads.node(DISEASE.id)).not.toHaveClass(/in-basket/);
     });
   });

@@ -166,11 +166,13 @@ export class DownloadsPage {
 
   /** The toolbar's "Your data bag" button; its accessible name carries the count. */
   get bagButton(): Locator {
-    return this.page.getByRole("button", { name: /^Your data bag, \d+ datasets?$/ });
+    // includeHidden: while the drawer is open the page behind it is aria-hidden
+    return this.page.getByRole("button", { name: /^Your data bag, \d+ datasets?$/, includeHidden: true });
   }
 
   async expectBagCount(count: number): Promise<void> {
-    await expect(this.bagButton).toHaveAccessibleName(`Your data bag, ${plural(count, "dataset")}`);
+    // read from aria-label: while the drawer is open the page behind it is aria-hidden and has no computed name
+    await expect(this.bagButton).toHaveAttribute("aria-label", `Your data bag, ${plural(count, "dataset")}`);
   }
 
   get drawer(): Locator {
@@ -195,7 +197,7 @@ export class DownloadsPage {
   }
 
   get undoSnackbar(): Locator {
-    return this.page.getByText("Bag emptied", { exact: true }).first();
+    return this.page.getByRole("alert").filter({ hasText: "Bag emptied" });
   }
 
   get undoButton(): Locator {
@@ -221,6 +223,25 @@ export class DownloadsPage {
   /** The text of the access script currently shown in the drawer. */
   get scriptText(): Locator {
     return this.drawer.locator("pre");
+  }
+
+  /**
+   * Check which datasets the script lists: it names them one per line,
+   * `  target \` and `  disease |`, between `printf '%s\n' \` and the loop.
+   */
+  async expectScriptDatasets(ids: string[]): Promise<void> {
+    await expect
+      .poll(async () => {
+        const text = (await this.scriptText.innerText()).replace(/\u00a0/g, " ");
+        const lines = text.split("\n");
+        const start = lines.findIndex((line) => line.startsWith("printf '%s"));
+        const end = lines.findIndex((line) => line.startsWith("while read"));
+        return lines
+          .slice(start + 1, end)
+          .map((line) => /^\s*([a-z0-9_]+) [\\|]$/.exec(line)?.[1])
+          .filter((id): id is string => id !== undefined);
+      }, `the access script should list ${ids.join(", ")}`)
+      .toEqual(ids);
   }
 
   copyScriptButton(name: ScriptTab): Locator {
@@ -266,8 +287,36 @@ export class DownloadsPage {
     return this.page.getByRole("radiogroup", { name: "Datasets shown" }).getByRole("radio", { name });
   }
 
-  layoutRadio(name: "Stacked" | "Radial"): Locator {
-    return this.page.getByRole("radiogroup", { name: "Layout" }).getByRole("radio", { name });
+  get layoutSwitch(): Locator {
+    return this.page.getByRole("radiogroup", { name: "Layout" });
+  }
+
+  /** The category lane backgrounds the stacked layout draws behind the nodes. */
+  get lanes(): Locator {
+    return this.page.locator("g.graph-lane");
+  }
+
+  /** For each node, whether its position lies inside a lane band, with the lane's title. */
+  async nodeLanes(): Promise<{ id: string; lane: string | null }[]> {
+    return this.page.evaluate(() => {
+      const lanes = [...document.querySelectorAll("g.graph-lane")].map((g) => {
+        const rect = g.querySelector("rect");
+        return {
+          title: g.querySelector("text")?.textContent ?? "",
+          x: Number(rect?.getAttribute("x")),
+          y: Number(rect?.getAttribute("y")),
+          w: Number(rect?.getAttribute("width")),
+          h: Number(rect?.getAttribute("height")),
+        };
+      });
+      return [...document.querySelectorAll("g.graph-node")].map((node) => {
+        const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(node.getAttribute("transform") ?? "");
+        const x = Number(m?.[1]);
+        const y = Number(m?.[2]);
+        const lane = lanes.find((l) => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
+        return { id: node.getAttribute("data-testid") ?? "", lane: lane?.title ?? null };
+      });
+    });
   }
 
   get legend(): Locator {
@@ -287,13 +336,9 @@ export class DownloadsPage {
     return this.page.getByText(/^Selected: /);
   }
 
-  /** Node ids and their transforms, to tell whether a layout change moved them. */
-  async nodePositions(): Promise<Record<string, string>> {
-    return this.graphNodes.evaluateAll((nodes) =>
-      Object.fromEntries(
-        nodes.map((node) => [node.getAttribute("data-testid"), node.getAttribute("transform") ?? ""])
-      )
-    );
+  /** The x of the "Selected: ..." chip above the canvas. */
+  get selectedChipClear(): Locator {
+    return this.selectedChip.locator("xpath=..").getByRole("button", { name: "Clear selection" });
   }
 
   /** The zoom/pan transform of the whole canvas. */

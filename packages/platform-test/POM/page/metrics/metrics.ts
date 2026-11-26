@@ -1,100 +1,68 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export class MetricsPage {
-  page: Page;
+  readonly title: Locator;
+  readonly cardsContainer: Locator;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(readonly page: Page) {
+    this.title = page.getByTestId("metrics-page-title");
+    this.cardsContainer = page.getByTestId("metrics-cards");
   }
 
   async goto(): Promise<void> {
     await this.page.goto("/metrics");
-    await this.waitForPageLoad();
+    await expect(this.title).toBeVisible();
+    await expect(this.cardsContainer).toBeVisible();
   }
 
-  async waitForPageLoad(): Promise<void> {
-    await this.getTitle().waitFor({ state: "visible" });
-    await this.getCardsContainer().waitFor({ state: "visible" });
+  /** Direct children only: value and label sub-elements also have ids starting "metrics-card-". */
+  get cards(): Locator {
+    return this.cardsContainer.locator("> [data-testid^='metrics-card-']");
   }
 
-  // Page title
-  getTitle(): Locator {
-    return this.page.getByTestId("metrics-page-title");
-  }
-
-  async getTitleText(): Promise<string | null> {
-    return await this.getTitle().textContent();
-  }
-
-  // Metric cards
-  getCardsContainer(): Locator {
-    return this.page.getByTestId("metrics-cards");
-  }
-
-  getCards(): Locator {
-    // Direct children only: value/label sub-elements also start with "metrics-card-"
-    return this.getCardsContainer().locator("> [data-testid^='metrics-card-']");
-  }
-
-  async getCardCount(): Promise<number> {
-    return await this.getCards().count();
-  }
-
-  getCard(slug: string): Locator {
+  card(slug: string): Locator {
     return this.page.getByTestId(`metrics-card-${slug}`);
   }
 
-  async isCardVisible(slug: string): Promise<boolean> {
-    return await this.getCard(slug).isVisible();
+  cardValue(slug: string): Locator {
+    return this.card(slug).getByTestId("metrics-card-value");
   }
 
-  getCardValue(slug: string): Locator {
-    return this.getCard(slug).getByTestId("metrics-card-value");
+  cardLabel(slug: string): Locator {
+    return this.card(slug).getByTestId("metrics-card-label");
   }
 
-  async getCardValueText(slug: string): Promise<string | null> {
-    return await this.getCardValue(slug).textContent();
-  }
-
-  getCardLabel(slug: string): Locator {
-    return this.getCard(slug).getByTestId("metrics-card-label");
-  }
-
-  async getCardLabelText(slug: string): Promise<string | null> {
-    return await this.getCardLabel(slug).textContent();
-  }
-
-  // Metric widgets (chart sections)
-  getWidget(id: string): Locator {
+  widget(id: string): Locator {
     return this.page.getByTestId(`metrics-widget-${id}`);
   }
 
-  async isWidgetVisible(id: string): Promise<boolean> {
-    return await this.getWidget(id).isVisible();
-  }
-
-  getWidgetTitle(id: string): Locator {
+  widgetTitle(id: string): Locator {
     return this.page.getByTestId(`metrics-widget-${id}-title`);
   }
 
-  async getWidgetTitleText(id: string): Promise<string | null> {
-    return await this.getWidgetTitle(id).textContent();
-  }
-
-  getWidgetDescription(id: string): Locator {
+  widgetDescription(id: string): Locator {
     return this.page.getByTestId(`metrics-widget-${id}-description`);
   }
 
-  getWidgetContent(id: string): Locator {
+  widgetContent(id: string): Locator {
     return this.page.getByTestId(`metrics-widget-${id}-content`);
   }
 
-  // External documentation links within a widget description
-  getWidgetExternalLinks(id: string): Locator {
-    return this.getWidgetDescription(id).locator("a");
+  widgetLinks(id: string): Locator {
+    return this.widgetDescription(id).getByRole("link");
   }
 
-  async getWidgetExternalLinksCount(id: string): Promise<number> {
-    return await this.getWidgetExternalLinks(id).count();
+  /** The chart marks an Observable Plot exposes through aria-label. */
+  marks(id: string, ariaLabel: string): Locator {
+    return this.widgetContent(id).locator(`[aria-label='${ariaLabel}']`);
+  }
+
+  /** Axis tick labels of the Variants chart: one `text` per consequence. */
+  get consequenceLabels(): Locator {
+    return this.marks("variants", "y-axis tick label").locator("text");
+  }
+
+  get showMoreButton(): Locator {
+    return this.widgetContent("variants").getByRole("button", { name: /^Show (more|less)$/ });
   }
 }

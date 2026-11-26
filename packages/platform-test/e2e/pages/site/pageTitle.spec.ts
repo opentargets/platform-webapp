@@ -1,4 +1,5 @@
 import { expect, test } from "../../../fixtures";
+import { SearchPage } from "../../../POM/page/search/searchPage";
 import { drugFacts } from "../../../POM/page/drug/drugData";
 
 const APP = "Open Targets Platform";
@@ -30,8 +31,7 @@ test.describe("Document title", () => {
   });
 
   test("search page keeps the application title", async ({ page }) => {
-    await page.goto("/search?q=braf");
-    await expect(page.getByTestId("search-results-heading")).toContainText("BRAF");
+    await new SearchPage(page).goto({ q: "BRAF" });
     await expect(page).toHaveTitle(APP);
   });
 

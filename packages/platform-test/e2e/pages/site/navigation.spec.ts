@@ -1,5 +1,6 @@
 import { expect, test } from "../../../fixtures";
 import { MAIN_MENU, PARTNER_ONLY_MENU } from "../../../POM/page/site/siteData";
+import { SearchPage } from "../../../POM/page/search/searchPage";
 import { SiteShell } from "../../../POM/page/site/siteShell";
 
 test.describe("Header", () => {
@@ -101,6 +102,7 @@ test.describe("Header", () => {
       await page.goto("/api");
       await shell.openMenu();
 
+      await shell.menuItem("Metrics").focus();
       await page.keyboard.press("Tab");
       await expect(shell.menuItems).toHaveCount(0);
     });
@@ -115,8 +117,7 @@ test.describe("Header", () => {
       test(`"${item.name}" opens its page inside the app and closes the menu`, async ({ page }) => {
         const shell = new SiteShell(page);
         // Start from a page that is none of the targets, so the click has to change something.
-        await page.goto("/search?q=braf");
-        await expect(page.getByTestId("search-results-heading")).toContainText("BRAF");
+        await new SearchPage(page).goto({ q: "BRAF" });
         await shell.openMenu();
 
         await shell.menuItem(item.name).click();
@@ -144,7 +145,7 @@ test.describe("Header", () => {
     await page.goto("/projects");
 
     await expect(page.getByTestId("not-found-page")).toBeVisible();
-    await expect(page.getByText("This page could not be found.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "404: Page not found" })).toBeVisible();
     await expect(page).toHaveTitle("Open Targets Platform");
   });
 });

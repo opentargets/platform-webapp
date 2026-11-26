@@ -70,8 +70,9 @@ test.describe("Home page", () => {
     const TITLE: Record<SearchEntity, (label: string) => RegExp> = {
       target: (label) => new RegExp(`^Diseases associated with ${label} \\| Open Targets Platform$`),
       disease: () => /^Targets associated with .+ \| Open Targets Platform$/,
-      drug: (label) => new RegExp(`^${label} profile page \\| Open Targets Platform$`, "i"),
-      variant: (label) => new RegExp(`profile page \\| Open Targets Platform$`),
+      // The chip may show a trade name (VIAGRA) or an rsID for what the page names otherwise.
+      drug: () => /^.+ profile page \| Open Targets Platform$/,
+      variant: () => /^.+ profile page \| Open Targets Platform$/,
       study: (label) => new RegExp(`^${label} profile page \\| Open Targets Platform$`),
     };
 
@@ -281,6 +282,19 @@ test.describe("Home page", () => {
       await home.goto();
 
       await expect(home.dataVersion).toHaveText("Last update: March 2025 (25.3.2)");
+    });
+
+    test("names the month of any year the API reports", async ({ page }) => {
+      // The app builds the date as `new Date(year + 2000, month - 1)` from strings, which
+      // concatenates ("28" + 2000 = "282000") and is an invalid date from the year 28 on.
+      await stubMeta(page, {
+        data: { month: "1", year: "28", revision: "" },
+        api: { month: "1", year: "0", revision: "0" },
+      });
+      const home = new HomePage(page);
+      await home.goto();
+
+      await expect(home.dataVersion).toHaveText("Last update: January 2028 (28.1)");
     });
 
     test("is left out, with the rest of the page intact, when the version cannot be read", async ({
