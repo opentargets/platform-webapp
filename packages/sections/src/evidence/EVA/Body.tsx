@@ -21,6 +21,9 @@ import {
   variantConsequenceSource,
   type EvidenceBodyProps,
   type EvidenceEva,
+  type EvidenceEvaSort,
+  EvidenceEvaSortField,
+  SortDirection,
 } from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
@@ -29,6 +32,7 @@ import CLINVAR_QUERY_DOCUMENT from "./ClinvarQuery.gql";
 
 type ClinvarRow = Pick<
   EvidenceEva,
+  | "score"
   | "diseaseId"
   | "diseaseName"
   | "diseaseFromSource"
@@ -64,11 +68,17 @@ type QueryVariables = {
   efoId: string;
   index: number;
   size: number;
+  sort: EvidenceEvaSort[];
 };
 
-// The API has no sort for ClinVar other than its score (its default order) and no search.
 const CLINVAR_QUERY = typedDocument<QueryData, QueryVariables>(CLINVAR_QUERY_DOCUMENT);
 const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceEvaSortField.Score,
+  desc: true,
+};
 
 // the view returns "SO_0001583", ProtVar and identifiers.org expect "SO:0001583"
 const soId = (id: string) => id.replace("_", ":");
@@ -329,6 +339,14 @@ function getColumns(label: EvidenceBodyProps["label"]): OtTableColumn<ClinvarRow
         ),
     },
     {
+      id: "score",
+      label: "Score",
+      tooltip: "Evidence score, from 0 to 1",
+      numeric: true,
+      sortField: DEFAULT_SORT.field,
+      renderCell: ({ score }) => score.toFixed(2),
+    },
+    {
       id: "literature",
       label: "Literature",
       renderCell: ({ literature }) => {
@@ -355,7 +373,17 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CLINVAR_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
   const columns = getColumns(label);
 
@@ -375,6 +403,8 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
           dataDownloaderFileStem="eva-evidence"
           dataPath="disease.evidenceViews.eva"
           pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           // no search on the ClinVar view: a browser search would fetch every row
           showGlobalFilter={false}
           variables={variables}

@@ -17,6 +17,9 @@ import {
   naLabel,
   type EvidenceBodyProps,
   type EvidenceUniprotLiterature,
+  type EvidenceUniprotLiteratureSort,
+  EvidenceUniprotLiteratureSortField,
+  SortDirection,
   type EvidenceUniprotLiteratureSearch,
   EvidenceUniprotLiteratureSearchField,
 } from "@ot/constants";
@@ -25,6 +28,7 @@ import UNIPROT_LITERATURE_QUERY_DOCUMENT from "./UniprotLiteratureQuery.gql";
 
 type UniprotLiteratureRow = Pick<
   EvidenceUniprotLiterature,
+  | "score"
   | "diseaseId"
   | "diseaseName"
   | "diseaseFromSource"
@@ -45,14 +49,20 @@ type QueryVariables = {
   efoId: string;
   index: number;
   size: number;
+  sort: EvidenceUniprotLiteratureSort[];
   search?: EvidenceUniprotLiteratureSearch;
 };
 
-// The API has no sort for UniProt literature other than its score, which is its default order.
 const UNIPROT_LITERATURE_QUERY = typedDocument<QueryData, QueryVariables>(
   UNIPROT_LITERATURE_QUERY_DOCUMENT
 );
 const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceUniprotLiteratureSortField.Score,
+  desc: true,
+};
 
 const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<UniprotLiteratureRow>[] => [
   {
@@ -104,6 +114,14 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<UniprotLit
     renderCell: ({ confidence }) => (confidence ? sentenceCase(confidence) : naLabel),
   },
   {
+    id: "score",
+    label: "Score",
+    tooltip: "Evidence score, from 0 to 1",
+    numeric: true,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ score }) => score.toFixed(2),
+  },
+  {
     id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
@@ -131,7 +149,17 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(UNIPROT_LITERATURE_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns(label);
@@ -152,6 +180,8 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
             dataDownloaderFileStem={`UniProtLiterature-${ensgId}-${efoId}`}
             dataPath="disease.evidenceViews.uniprotLiterature"
             pageSize={PAGE_SIZE}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             variables={variables}
           />
         );

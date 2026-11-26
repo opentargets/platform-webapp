@@ -19,6 +19,9 @@ import {
   naLabel,
   type EvidenceBodyProps,
   type EvidenceGene2Phenotype,
+  type EvidenceGene2PhenotypeSort,
+  EvidenceGene2PhenotypeSortField,
+  SortDirection,
   type EvidenceGene2PhenotypeSearch,
   EvidenceGene2PhenotypeSearchField,
 } from "@ot/constants";
@@ -30,6 +33,7 @@ import { definition } from ".";
 
 type Gene2PhenotypeRow = Pick<
   EvidenceGene2Phenotype,
+  | "score"
   | "diseaseId"
   | "diseaseName"
   | "diseaseFromSource"
@@ -56,14 +60,20 @@ type QueryVariables = {
   efoId: string;
   index: number;
   size: number;
+  sort: EvidenceGene2PhenotypeSort[];
   search?: EvidenceGene2PhenotypeSearch;
 };
 
-// The API has no sort for Gene2Phenotype other than its score, which is its default order.
 const OPEN_TARGETS_GENETICS_QUERY = typedDocument<QueryData, QueryVariables>(
   OPEN_TARGETS_GENETICS_QUERY_DOCUMENT
 );
 const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceGene2PhenotypeSortField.Score,
+  desc: true,
+};
 
 const g2pUrl = (targetFromSourceId?: string | null, diseaseFromSource?: string | null) =>
   `https://www.ebi.ac.uk/gene2phenotype/search?query=${targetFromSourceId}-related%20${diseaseFromSource}`;
@@ -185,6 +195,14 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<Gene2Pheno
       ),
   },
   {
+    id: "score",
+    label: "Score",
+    tooltip: "Evidence score, from 0 to 1",
+    numeric: true,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ score }) => score.toFixed(2),
+  },
+  {
     id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
@@ -205,7 +223,17 @@ function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Eviden
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(OPEN_TARGETS_GENETICS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns({ symbol, name });
@@ -225,6 +253,8 @@ function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Eviden
           dataDownloaderFileStem={`${ensgId}-${efoId}-gene2phenotype`}
           dataPath="disease.evidenceViews.gene2Phenotype"
           pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           variables={variables}
         />
       )}

@@ -3,14 +3,16 @@ query OpenTargetsGeneticsQuery(
   $efoId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $sort: [EvidenceGene2PhenotypeSort!]! = []
   $search: EvidenceGene2PhenotypeSearch
 ) {
   disease(efoId: $efoId) {
     id
     evidenceViews(ensemblIds: [$ensemblId]) {
-      gene2Phenotype(page: { index: $index, size: $size }, search: $search) {
+      gene2Phenotype(page: { index: $index, size: $size }, sort: $sort, search: $search) {
         count
         rows {
+          score
           diseaseId
           diseaseName
           diseaseFromSource

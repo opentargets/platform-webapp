@@ -1,10 +1,17 @@
-query ClinvarQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query ClinvarQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceEvaSort!]! = []
+) {
   disease(efoId: $efoId) {
     id
     evidenceViews(ensemblIds: [$ensemblId]) {
-      eva(page: { index: $index, size: $size }) {
+      eva(page: { index: $index, size: $size }, sort: $sort) {
         count
         rows {
+          score
           diseaseId
           diseaseName
           diseaseFromSource

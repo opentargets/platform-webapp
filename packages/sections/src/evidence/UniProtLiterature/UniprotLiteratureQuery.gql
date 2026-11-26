@@ -3,14 +3,16 @@ query UniprotLiteratureQuery(
   $efoId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $sort: [EvidenceUniprotLiteratureSort!]! = []
   $search: EvidenceUniprotLiteratureSearch
 ) {
   disease(efoId: $efoId) {
     id
     evidenceViews(ensemblIds: [$ensemblId]) {
-      uniprotLiterature(page: { index: $index, size: $size }, search: $search) {
+      uniprotLiterature(page: { index: $index, size: $size }, sort: $sort, search: $search) {
         count
         rows {
+          score
           diseaseId
           diseaseName
           diseaseFromSource
