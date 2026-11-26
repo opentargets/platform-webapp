@@ -5,12 +5,14 @@ query MechanismsOfActionSectionQuery($chemblId: String!) {
       rows {
         mechanismOfAction
         targetName
+        curation
         targets {
           id
           approvedSymbol
         }
         references {
           source
+          ids
           urls
         }
       }
