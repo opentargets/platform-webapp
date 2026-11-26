@@ -70,15 +70,6 @@ const columns = [
     ),
   },
   {
-    id: "log2FoldChangeValue",
-    label: (
-      <>
-        Log<sub>2</sub> fold change
-      </>
-    ),
-    numeric: true,
-  },
-  {
     id: "log2FoldChangePercentileRank",
     label: "Percentile",
     numeric: true,

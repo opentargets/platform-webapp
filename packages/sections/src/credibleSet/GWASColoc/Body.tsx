@@ -1,35 +1,93 @@
 import {
   Link,
   SectionItem,
-  DisplayVariantId,
+  // DisplayVariantId,
   ScientificNotation,
-  OtTableOffsetPagination,
+  OtTableServer,
+  type OtTableColumn,
   Tooltip,
   Navigate,
 } from "ui";
-import { naLabel } from "@ot/constants";
+import {
+  type CredibleSetColocalisation,
+  type CredibleSetColocalisationsSearch,
+  CredibleSetColocalisationsSearchField,
+  type CredibleSetColocalisationsSort,
+  CredibleSetColocalisationsSortField,
+  naLabel,
+  SortDirection,
+} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
-import GWAS_COLOC_QUERY from "./GWASColocQuery.gql";
-import { mantissaExponentComparator, variantComparator, getStudyCategory } from "@ot/utils";
-import { type ReactElement, useState } from "react";
+import GWAS_COLOC_QUERY_DOCUMENT from "./GWASColocQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import { getStudyCategory } from "@ot/utils";
+import type { ReactElement } from "react";
+import { useQuery } from "@apollo/client";
 
-const columns = [
+type ColocalisationRow = Pick<
+  CredibleSetColocalisation,
+  | "otherCredibleSetId"
+  | "studyId"
+  | "projectId"
+  | "traitFromSource"
+  | "publicationFirstAuthor"
+  | "leadVariantId"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "numberColocalisingVariants"
+  | "colocalisationMethod"
+  | "h3"
+  | "h4"
+  | "clpp"
+  | "betaRatioSignAverage"
+>;
+
+type QueryData = {
+  credibleSet?: {
+    credibleSetId: string;
+    colocalisationView: { count: number; rows: ColocalisationRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  credibleSetId: string;
+  index: number;
+  size: number;
+  sort: CredibleSetColocalisationsSort[];
+  search?: CredibleSetColocalisationsSearch;
+};
+
+const GWAS_COLOC_QUERY = typedDocument<QueryData, QueryVariables>(GWAS_COLOC_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "h4",
+  field: CredibleSetColocalisationsSortField.H4,
+  desc: true,
+};
+
+const columns: OtTableColumn<ColocalisationRow>[] = [
   {
-    id: "otherStudyLocus.studyLocusId",
+    id: "otherCredibleSetId",
     label: "Credible set",
     enableHiding: false,
     sticky: true,
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      return <Navigate to={`/credible-set/${otherStudyLocus.studyLocusId}`} />;
+    // Attach the GWAS search fields to the first column; gene/tissue fields are for molQTL.
+    searchFields: [
+      CredibleSetColocalisationsSearchField.StudyId,
+      CredibleSetColocalisationsSearchField.TraitFromSource,
+      CredibleSetColocalisationsSearchField.PublicationFirstAuthor,
+      CredibleSetColocalisationsSearchField.LeadVariantId,
+    ],
+    renderCell: ({ otherCredibleSetId }) => {
+      if (!otherCredibleSetId) return naLabel;
+      return <Navigate to={`/credible-set/${otherCredibleSetId}`} />;
     },
   },
   {
-    id: "otherStudyLocus.study.id",
+    id: "studyId",
     label: "Study",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyId = otherStudyLocus?.study?.id;
+    renderCell: ({ studyId }) => {
       if (!studyId) return naLabel;
       return (
         <Link asyncTooltip to={`../study/${studyId}`}>
@@ -39,72 +97,51 @@ const columns = [
     },
   },
   {
-    id: "otherStudyLocus.study.traitFromSource",
+    id: "traitFromSource",
     label: "Reported trait",
-    renderCell: ({ otherStudyLocus }) => {
-      const trait = otherStudyLocus?.study?.traitFromSource;
-      if (!trait) return naLabel;
-      return trait;
-    },
+    renderCell: ({ traitFromSource }) => traitFromSource || naLabel,
   },
   {
-    id: "otherStudyLocus.study.publicationFirstAuthor",
+    id: "publicationFirstAuthor",
     label: "First author",
-    renderCell: ({ otherStudyLocus }) => {
-      const { projectId, publicationFirstAuthor } = otherStudyLocus?.study || {};
-      return getStudyCategory(projectId) === "FINNGEN"
+    renderCell: ({ projectId, publicationFirstAuthor }) =>
+      getStudyCategory(projectId) === "FINNGEN"
         ? "FinnGen"
-        : publicationFirstAuthor || naLabel;
-    },
-    exportValue: ({ otherStudyLocus }) => {
-      return otherStudyLocus?.study?.publicationFirstAuthor;
-    },
+        : publicationFirstAuthor || naLabel,
+    exportValue: ({ publicationFirstAuthor }) => publicationFirstAuthor,
   },
   {
-    id: "otherStudyLocus.variant.variantId",
+    id: "leadVariantId",
     label: "Lead Variant",
-    comparator: variantComparator(d => d?.otherStudyLocus?.variant),
-    sortable: true,
-    filterValue: ({ otherStudyLocus }) => {
-      const v = otherStudyLocus?.variant;
-      return `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`;
-    },
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      const { variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+    sortField: CredibleSetColocalisationsSortField.LeadVariant,
+    renderCell: ({ leadVariantId }) => {
+      if (!leadVariantId) return naLabel;
       return (
-        <Link asyncTooltip to={`/variant/${variantId}`}>
+        <Link asyncTooltip to={`/variant/${leadVariantId}`}>
+          {/* Restore DisplayVariantId when colocalisationView exposes the lead alleles.
           <DisplayVariantId
-            variantId={variantId}
-            referenceAllele={referenceAllele}
-            alternateAllele={alternateAllele}
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
             expand={false}
           />
+          */}
+          {leadVariantId}
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.variantId,
+    exportValue: ({ leadVariantId }) => leadVariantId,
   },
   {
     id: "pValue",
     label: "P-Value",
     numeric: true,
-    comparator: ({ otherStudyLocus: a }, { otherStudyLocus: b }) =>
-      mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
-      ),
-    sortable: true,
-    filterValue: false,
-    renderCell: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    sortField: CredibleSetColocalisationsSortField.PValue,
+    renderCell: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    exportValue: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
@@ -113,14 +150,12 @@ const columns = [
     id: "numberColocalisingVariants",
     label: "Colocalising Variants (n)",
     numeric: true,
-    filterValue: false,
-    comparator: (a, b) => a?.numberColocalisingVariants - b?.numberColocalisingVariants,
     renderCell: ({ numberColocalisingVariants }) => {
       return typeof numberColocalisingVariants === "number"
         ? numberColocalisingVariants.toLocaleString()
         : naLabel;
     },
-    sortable: true,
+    sortField: CredibleSetColocalisationsSortField.NumberColocalisingVariants,
   },
   {
     id: "betaRatioSignAverage",
@@ -136,12 +171,6 @@ const columns = [
           ? betaRatioSignAverage
           : betaRatioSignAverage.toFixed(2);
       return <Tooltip title={`Beta ratio sign average: ${displayValue}`}>{category}</Tooltip>;
-    },
-    filterValue: ({ betaRatioSignAverage }) => {
-      if (betaRatioSignAverage == null) return null;
-      if (betaRatioSignAverage <= -0.99) return "Opposite";
-      else if (betaRatioSignAverage >= 0.99) return "Same";
-      return "Inconclusive";
     },
     sortable: false,
     exportValue: ({ betaRatioSignAverage }) => {
@@ -160,9 +189,7 @@ const columns = [
         Posterior probability that the signals <b>do not</b> colocalise
       </>
     ),
-    filterValue: false,
-    comparator: (a, b) => a?.h3 - b?.h3,
-    sortable: true,
+    sortField: CredibleSetColocalisationsSortField.H3,
     renderCell: ({ h3 }) => {
       if (typeof h3 !== "number") return naLabel;
       return h3.toFixed(3);
@@ -173,9 +200,7 @@ const columns = [
     label: "H4",
     numeric: true,
     tooltip: "Posterior probability that the signals colocalise",
-    filterValue: false,
-    comparator: (a, b) => a?.h4 - b?.h4,
-    sortable: true,
+    sortField: DEFAULT_SORT.field,
     renderCell: ({ h4 }) => {
       if (typeof h4 !== "number") return naLabel;
       return h4.toFixed(3);
@@ -187,9 +212,7 @@ const columns = [
     tooltip:
       "The sum of the products of the fine-mapping posterior probabilities for overlapping variants between two study loci",
     numeric: true,
-    filterValue: false,
-    comparator: (a, b) => a?.clpp - b?.clpp,
-    sortable: true,
+    sortField: CredibleSetColocalisationsSortField.Clpp,
     renderCell: ({ clpp }) => {
       if (typeof clpp !== "number") return naLabel;
       return clpp.toFixed(3);
@@ -203,8 +226,20 @@ type BodyProps = {
 };
 
 function Body({ id, entity }: BodyProps): ReactElement {
-  const variables = { studyLocusId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const variables = { credibleSetId: id };
+  const request = useQuery(GWAS_COLOC_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
+  });
 
   return (
     <SectionItem
@@ -214,12 +249,13 @@ function Body({ id, entity }: BodyProps): ReactElement {
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTableOffsetPagination
+          <OtTableServer<ColocalisationRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-credibleSets`}
-            entity="credibleSet"
-            sectionName="colocalisation"
-            setInitialRequestData={setRequest}
+            dataPath="credibleSet.colocalisationView"
+            pageSize={PAGE_SIZE}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             columns={columns}
             query={GWAS_COLOC_QUERY}
             variables={variables}

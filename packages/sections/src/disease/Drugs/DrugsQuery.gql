@@ -1,7 +1,17 @@
-query drugsQuery($efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query drugsQuery(
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  # most advanced first; the cards have no sort control
+  $sort: [ClinicalIndicationSort!]! = [
+    { key: MAX_CLINICAL_STAGE, direction: DESCENDING }
+    { key: CLINICAL_REPORT_COUNT, direction: DESCENDING }
+  ]
+  $search: ClinicalIndicationSearch
+) {
   disease(efoId: $efoId) {
     name
-    drugAndClinicalCandidates(page: { index: $index, size: $size }) {
+    drugAndClinicalCandidates(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         id

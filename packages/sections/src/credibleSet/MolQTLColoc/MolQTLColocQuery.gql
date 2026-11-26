@@ -1,33 +1,32 @@
-query MolQTLColocQuery($studyLocusId: String!, $page: Page) {
-  credibleSet(studyLocusId: $studyLocusId) {
-    studyLocusId
-    molqtlcolocalisation: colocalisation(
-      filter: { studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl] }
-      page: $page
+query MolQTLColocQuery(
+  $credibleSetId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [CredibleSetColocalisationsSort!]! = []
+  $search: CredibleSetColocalisationsSearch
+) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    molqtlcolocalisation: colocalisationView(
+      studyTypes: [scsqtl, sceqtl, scpqtl, sctuqtl, sqtl, eqtl, pqtl, tuqtl]
+      page: { index: $index, size: $size }
+      sort: $sort
+      search: $search
     ) {
       count
       rows {
-        otherStudyLocus {
-          studyLocusId
-          isTransQtl
-          study {
-            id
-            studyType
-            projectId
-            traitFromSource
-            publicationFirstAuthor
-            condition
-          }
-          variant {
-            variantId
-            chromosome
-            position
-            referenceAllele
-            alternateAllele
-          }
-          pValueMantissa
-          pValueExponent
-        }
+        otherCredibleSetId
+        studyId
+        studyType
+        isTransQtl
+        targetId
+        targetApprovedSymbol
+        biosampleId
+        biosampleName
+        condition
+        leadVariantId
+        pValueMantissa
+        pValueExponent
         numberColocalisingVariants
         colocalisationMethod
         h3

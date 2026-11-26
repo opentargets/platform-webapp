@@ -160,7 +160,7 @@ function Plot({ data, width }) {
             method: {
               value: ({ method }) => {
                 if (!method) return null;
-                return VARIANT_EFFECT_METHODS[method]?.prettyName;
+                return VARIANT_EFFECT_METHODS[method]?.prettyName ?? method;
               },
               label: "Method:",
             },
@@ -197,7 +197,7 @@ function Plot({ data, width }) {
       tooltip.addEventListener("mouseenter", event => {
         popup = document.createElement("div");
         popup.classList.add("popup");
-        popup.textContent = VARIANT_EFFECT_METHODS[data[index].method].description;
+        popup.textContent = VARIANT_EFFECT_METHODS[data[index].method]?.description ?? "";
         popup.style.background = `${theme.palette.background.paper}`;
         popup.style.border = `1px solid ${theme.palette.grey[300]}`;
         popup.style.color = `${theme.palette.text.primary}`;

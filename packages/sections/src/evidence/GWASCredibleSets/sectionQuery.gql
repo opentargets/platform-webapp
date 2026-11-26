@@ -17,7 +17,7 @@ query EvidenceGWASCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index
           name
         }
         credibleSet {
-          studyLocusId
+          credibleSetId
           study {
             traitFromSource
             id
@@ -27,17 +27,17 @@ query EvidenceGWASCredibleSetsQuery($ensemblId: String!, $efoId: String!, $index
             pubmedId
             nSamples
           }
-          variant {
+          leadVariant {
             variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
-          beta
-          finemappingMethod
+          leadPValueMantissa
+          leadPValueExponent
+          leadBeta
+          fineMappingMethod
           confidence
         }
         score

@@ -1,40 +1,86 @@
-import { useState } from "react";
+import { useQuery } from "@apollo/client";
 import {
   Link,
   SectionItem,
   ScientificNotation,
   DisplayVariantId,
-  OtTableOffsetPagination,
+  OtTableServer,
+  type OtTableColumn,
   Box,
   Chip,
 } from "ui";
-import { naLabel } from "@ot/constants";
+import {
+  naLabel,
+  SortDirection,
+  type CredibleSetVariant,
+  type CredibleSetVariantsSearch,
+  CredibleSetVariantsSearchField,
+  type CredibleSetVariantsSort,
+  CredibleSetVariantsSortField,
+} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
-import VARIANTS_QUERY from "./VariantsQuery.gql";
-import { mantissaExponentComparator, variantComparator, identifiersOrgLink } from "@ot/utils";
+import VARIANTS_QUERY_DOCUMENT from "./VariantsQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import { identifiersOrgLink } from "@ot/utils";
+
+type VariantRow = Pick<
+  CredibleSetVariant,
+  | "variantId"
+  | "referenceAllele"
+  | "alternateAllele"
+  | "mostSevereConsequenceId"
+  | "mostSevereConsequenceLabel"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "reportedBeta"
+  | "reportedStandardError"
+  | "r2Overall"
+  | "posteriorProbability"
+  | "logBayesFactor"
+>;
+
+type QueryData = {
+  credibleSet?: {
+    credibleSetId: string;
+    locusView: { count: number; rows: VariantRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  credibleSetId: string;
+  index: number;
+  size: number;
+  sort: CredibleSetVariantsSort[];
+  search?: CredibleSetVariantsSearch;
+};
+
+const VARIANTS_QUERY = typedDocument<QueryData, QueryVariables>(VARIANTS_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "posteriorProbability",
+  field: CredibleSetVariantsSortField.PosteriorProbability,
+  desc: true,
+};
 
 type getColumnsType = {
   leadVariantId: string;
 };
 
-function formatVariantConsequenceLabel(label) {
+function formatVariantConsequenceLabel(label: string) {
   return label.replace(/_/g, " ");
 }
 
-function getColumns({ leadVariantId }: getColumnsType) {
+function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow>[] {
   return [
     {
-      id: "variant.variantId",
+      id: "variantId",
       label: "Variant",
       enableHiding: false,
-      comparator: variantComparator(d => d?.variant),
-      sortable: true,
-      filterValue: ({ variant: v }) =>
-        `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-      renderCell: ({ variant }) => {
-        if (!variant) return naLabel;
-        const { variantId, referenceAllele, alternateAllele } = variant;
+      sortField: CredibleSetVariantsSortField.Variant,
+      // For now, attach all search fields to the first column.
+      searchFields: Object.values(CredibleSetVariantsSearchField),
+      renderCell: ({ variantId, referenceAllele, alternateAllele }) => {
         const displayElement = (
           <Link asyncTooltip to={`/variant/${variantId}`}>
             <DisplayVariantId
@@ -55,21 +101,13 @@ function getColumns({ leadVariantId }: getColumnsType) {
         }
         return displayElement;
       },
-      exportValue: ({ variant }) => variant?.variantId,
+      exportValue: ({ variantId }) => variantId,
     },
     {
       id: "pValue",
       label: "P-value",
       numeric: true,
-      comparator: (a, b) =>
-        mantissaExponentComparator(
-          a?.pValueMantissa,
-          a?.pValueExponent,
-          b?.pValueMantissa,
-          b?.pValueExponent
-        ),
-      sortable: true,
-      filterValue: false,
+      sortField: CredibleSetVariantsSortField.PValue,
       renderCell: ({ pValueMantissa, pValueExponent }) => {
         if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number")
           return naLabel;
@@ -81,34 +119,33 @@ function getColumns({ leadVariantId }: getColumnsType) {
       },
     },
     {
-      id: "beta",
+      id: "reportedBeta",
       label: "Beta",
       numeric: true,
-      filterValue: false,
-      sortable: true,
-      tooltip: "Beta with respect to the ALT allele",
-      renderCell: ({ beta }) => {
-        if (typeof beta !== "number") return naLabel;
-        return beta.toPrecision(3);
+      sortField: CredibleSetVariantsSortField.ReportedBeta,
+      tooltip: "Beta with respect to the ALT allele, as reported by the source",
+      renderCell: ({ reportedBeta }) => {
+        if (typeof reportedBeta !== "number") return naLabel;
+        return reportedBeta.toPrecision(3);
       },
     },
     {
-      id: "standardError",
+      id: "reportedStandardError",
       label: "Standard error",
       numeric: true,
-      filterValue: false,
+      sortField: CredibleSetVariantsSortField.ReportedStandardError,
       tooltip:
         "Standard Error: Estimate of the standard deviation of the sampling distribution of the beta",
-      renderCell: ({ standardError }) => {
-        if (typeof standardError !== "number") return naLabel;
-        return standardError.toFixed(3);
+      renderCell: ({ reportedStandardError }) => {
+        if (typeof reportedStandardError !== "number") return naLabel;
+        return reportedStandardError.toFixed(3);
       },
     },
     {
       id: "r2Overall",
       label: "LD (r²)",
-      filterValue: false,
       numeric: true,
+      sortField: CredibleSetVariantsSortField.R2Overall,
       tooltip: "Linkage disequilibrium with the lead variant",
       renderCell: ({ r2Overall }) => {
         if (typeof r2Overall !== "number") return naLabel;
@@ -118,57 +155,42 @@ function getColumns({ leadVariantId }: getColumnsType) {
     {
       id: "posteriorProbability",
       label: "Posterior Probability",
-      filterValue: false,
       numeric: true,
       tooltip:
         "Posterior inclusion probability that this variant is causal within the fine-mapped credible set",
-      comparator: (rowA, rowB) => {
-        const aPosterior = rowA?.posteriorProbability;
-        const bPosterior = rowB?.posteriorProbability;
-        if (aPosterior === bPosterior) {
-          if (rowA?.variant.variantId === leadVariantId) return 1;
-          else if (rowB?.variant.variantId === leadVariantId) return -1;
-          return 0;
-        }
-        return aPosterior - bPosterior;
-      },
-      sortable: true,
+      sortField: DEFAULT_SORT.field,
       renderCell: ({ posteriorProbability }) => {
         if (typeof posteriorProbability !== "number") return naLabel;
         return posteriorProbability.toPrecision(3);
       },
     },
     {
-      id: "logBF",
+      id: "logBayesFactor",
       label: "log(BF)",
       numeric: true,
       tooltip:
         "Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal",
-      filterValue: false,
-      sortable: true,
-      renderCell: ({ logBF }) => {
-        if (typeof logBF !== "number") return naLabel;
-        return logBF.toPrecision(3);
+      sortField: CredibleSetVariantsSortField.LogBayesFactor,
+      renderCell: ({ logBayesFactor }) => {
+        if (typeof logBayesFactor !== "number") return naLabel;
+        return logBayesFactor.toPrecision(3);
       },
     },
     {
-      id: "variant.mostSevereConsequence.label",
+      id: "mostSevereConsequenceLabel",
       label: "Predicted consequence",
       tooltip: "Most severe consequence of the variant. Source: Ensembl VEP",
-
-      renderCell: ({ variant }) => {
-        const mostSevereConsequence = variant?.mostSevereConsequence;
-        if (!mostSevereConsequence) return naLabel;
-        const displayElement = (
-          <Link external to={identifiersOrgLink("SO", mostSevereConsequence.id.slice(3))}>
-            {formatVariantConsequenceLabel(mostSevereConsequence.label)}
+      renderCell: ({ mostSevereConsequenceId, mostSevereConsequenceLabel }) => {
+        if (!mostSevereConsequenceLabel) return naLabel;
+        const label = formatVariantConsequenceLabel(mostSevereConsequenceLabel);
+        if (!mostSevereConsequenceId) return label;
+        return (
+          <Link external to={identifiersOrgLink("SO", mostSevereConsequenceId.slice(3))}>
+            {label}
           </Link>
         );
-        return displayElement;
       },
-      exportValue: ({ variant }) => {
-        return variant?.mostSevereConsequence.label;
-      },
+      exportValue: ({ mostSevereConsequenceLabel }) => mostSevereConsequenceLabel,
     },
   ];
 }
@@ -180,8 +202,20 @@ type BodyProps = {
 };
 
 function Body({ id, leadVariantId, entity }: BodyProps) {
-  const variables = { studyLocusId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const variables = { credibleSetId: id };
+  const request = useQuery(VARIANTS_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
+  });
 
   const columns = getColumns({
     leadVariantId,
@@ -195,12 +229,14 @@ function Body({ id, leadVariantId, entity }: BodyProps) {
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTableOffsetPagination
+          <OtTableServer<VariantRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-credibleset`}
-            entity="credibleSet"
-            sectionName="locus"
-            setInitialRequestData={setRequest}
+            dataPath="credibleSet.locusView"
+            pageSize={PAGE_SIZE}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
+            globalFilterPlaceholderText="Search variant ID or consequence…"
             columns={columns}
             query={VARIANTS_QUERY}
             variables={variables}

@@ -9,6 +9,9 @@ import {
   type DrugPharmacogenomicsQueryVariables,
   naLabel,
   PHARM_GKB_COLOR,
+  PharmacogenomicsSearchField,
+  PharmacogenomicsSortField,
+  SortDirection,
   variantConsequenceSource,
 } from "@ot/constants";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
@@ -39,6 +42,16 @@ type PharmacogenomicsRow = NonNullable<
 >["pharmacogenomics"]["rows"][number];
 
 const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "evidenceLevel",
+  field: PharmacogenomicsSortField.EvidenceLevel,
+};
+// the drug is the page entity and has no column, so its fields are not searched
+const SEARCH_FIELDS = Object.values(PharmacogenomicsSearchField).filter(
+  (field) =>
+    field !== PharmacogenomicsSearchField.DrugIds &&
+    field !== PharmacogenomicsSearchField.DrugFromSources
+);
 
 const getLevelElementClassName = (level: string) => {
   switch (level) {
@@ -79,6 +92,8 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "gene",
       label: "Gene",
+      // For now, attach all search fields to the first column.
+      searchFields: SEARCH_FIELDS,
       renderCell: ({ target }) => {
         if (target) {
           return (
@@ -233,6 +248,7 @@ function Body({ id: chemblId, label: name, entity }: Props) {
     {
       id: "evidenceLevel",
       label: "Confidence Level",
+      sortField: DEFAULT_SORT.field,
       tooltip: (
         <>
           As defined by
@@ -294,7 +310,12 @@ function Body({ id: chemblId, label: name, entity }: Props) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(PHARMACOGENOMICS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
   });
 
   return (
@@ -310,6 +331,8 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           variables={variables}
           dataPath="drug.pharmacogenomics"
           pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order="asc"
           dataDownloader
           dataDownloaderFileStem={`${chemblId}-pharmacogenomics`}
         />

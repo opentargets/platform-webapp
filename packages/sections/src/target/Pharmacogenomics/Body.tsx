@@ -6,6 +6,9 @@ import { useTheme } from "@mui/material/styles";
 import {
   naLabel,
   PHARM_GKB_COLOR,
+  PharmacogenomicsSearchField,
+  PharmacogenomicsSortField,
+  SortDirection,
   type TargetBodyProps,
   type TargetPharmacogenomicsQuery,
   type TargetPharmacogenomicsQueryVariables,
@@ -40,6 +43,15 @@ type PharmacogenomicsRow = NonNullable<
 >["pharmacogenomics"]["rows"][number];
 
 const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "evidenceLevel",
+  field: PharmacogenomicsSortField.EvidenceLevel,
+};
+// the target is the page entity and has no column, so its field is not searched
+const SEARCH_FIELDS = Object.values(PharmacogenomicsSearchField).filter(
+  (field) =>
+    field !== PharmacogenomicsSearchField.TargetApprovedSymbol
+);
 
 const getLevelElementClassName = (level: string) => {
   switch (level) {
@@ -79,6 +91,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "variantRsId",
       label: "rsID",
+      // For now, attach all search fields to the first column.
+      searchFields: SEARCH_FIELDS,
       enableHiding: false,
       renderCell: ({ variantRsId }) =>
         variantRsId ? (
@@ -237,8 +251,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "evidenceLevel",
       label: "Confidence Level",
-      sortable: true,
-      comparator: (a, b) => a.evidenceLevel.localeCompare(b.evidenceLevel),
+      sortField: DEFAULT_SORT.field,
       tooltip: (
         <>
           As defined by
@@ -301,7 +314,12 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(PHARMACOGENOMICS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
   });
 
   return (
@@ -317,7 +335,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           variables={variables}
           dataPath="target.pharmacogenomics"
           pageSize={PAGE_SIZE}
-          sortBy="evidenceLevel"
+          sortBy={DEFAULT_SORT.id}
+          order="asc"
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-pharmacogenomics-${entity}`}
         />

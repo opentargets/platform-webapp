@@ -1,5 +1,6 @@
 import { expect, test } from "../../../../fixtures";
 import { CredibleSetVariantsSection } from "../../../../POM/objects/widgets/CredibleSet/variantsSection";
+import { CredibleSetPage } from "../../../../POM/page/credibleSet/credibleSet";
 
 test.describe("Credible Set Variants Section", () => {
   test.beforeEach(async ({ page, baseURL, testConfig }) => {
@@ -72,20 +73,15 @@ test.describe("Credible Set Variants Section", () => {
 
     if (isVisible) {
       await variantsSection.waitForLoad();
-      const rowCount = await variantsSection.getTableRows();
-
-      if (rowCount > 0) {
-        // At least one variant should be marked as lead
-        let hasLeadVariant = false;
-        for (let i = 0; i < rowCount; i++) {
-          const isLead = await variantsSection.isLeadVariant(i);
-          if (isLead) {
-            hasLeadVariant = true;
-            break;
-          }
-        }
-        expect(hasLeadVariant).toBe(true);
-      }
+      // The lead variant need not be on the first page when probabilities tie.
+      const credibleSetPage = new CredibleSetPage(page);
+      const leadVariantHref = await credibleSetPage.getLeadVariantLink().getAttribute("href");
+      const leadVariantId = leadVariantHref?.split("/variant/")[1] ?? "";
+      expect(leadVariantId).not.toBe("");
+      await variantsSection.search(leadVariantId);
+      await expect(
+        variantsSection.getTable().locator("tbody tr").filter({ hasText: "lead" })
+      ).toHaveCount(1);
     } else {
       test.skip();
     }

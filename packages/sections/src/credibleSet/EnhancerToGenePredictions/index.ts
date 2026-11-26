@@ -1,12 +1,12 @@
 import { lazy } from "react";
-import CredibleSet from "../CredibleSet";
+import type { CredibleSet } from "@ot/constants";
 
 export const definition = {
   id: "Enhancer_to_gene_predictions",
   name: "Enhancer-to-gene predictions",
   shortName: "EG",
   hasData: (data: CredibleSet) => {
-    return (data.variant?.enhancerToGene?.count || 0) > 0;
+    return (data.leadVariant?.enhancerToGene?.count || 0) > 0;
   },
 };
 

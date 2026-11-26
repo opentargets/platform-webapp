@@ -1,5 +1,5 @@
 fragment CredibleSetEnhancerToGenePredictionsSummaryFragment on CredibleSet {
-  variant {
+  leadVariant {
     enhancerToGene {
       count
     }

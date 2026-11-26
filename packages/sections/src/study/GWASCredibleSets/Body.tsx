@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client";
 import {
-  credsetConfidenceMap,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
   naLabel,
   SortDirection,
   type StudyCredibleSet,
@@ -32,7 +33,7 @@ import GWAS_CREDIBLE_SETS_QUERY_DOCUMENT from "./GWASCredibleSetsQuery.gql";
 
 type StudyRow = Pick<
   StudyCredibleSet,
-  | "studyLocusId"
+  | "credibleSetId"
   | "leadVariantId"
   | "leadReferenceAllele"
   | "leadAlternateAllele"
@@ -40,7 +41,7 @@ type StudyRow = Pick<
   | "pValueExponent"
   | "beta"
   | "locusSize"
-  | "finemappingMethod"
+  | "fineMappingMethod"
   | "confidence"
   | "topL2GGeneId"
   | "topL2GApprovedSymbol"
@@ -74,13 +75,13 @@ const DEFAULT_SORT = {
 
 const columns: OtTableColumn<StudyRow>[] = [
   {
-    id: "studyLocusId",
+    id: "credibleSetId",
     label: "Credible set",
     enableHiding: false,
     sticky: true,
     // For now, attach all search fields to the first column.
     searchFields: Object.values(StudyCredibleSetsSearchField),
-    renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+    renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
   },
   {
     id: "leadVariant",
@@ -128,8 +129,12 @@ const columns: OtTableColumn<StudyRow>[] = [
     },
   },
   {
-    id: "finemappingMethod",
+    id: "fineMappingMethod",
     label: "Fine-mapping method",
+    renderCell: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
+    exportValue: ({ fineMappingMethod }) =>
+      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
   },
   {
     id: "confidence",
@@ -150,8 +155,8 @@ const columns: OtTableColumn<StudyRow>[] = [
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
-        <Tooltip title={confidence} style="">
-          <ClinvarStars num={credsetConfidenceMap[confidence]} />
+        <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+          <ClinvarStars num={confidence} />
         </Tooltip>
       );
     },
@@ -193,12 +198,12 @@ const columns: OtTableColumn<StudyRow>[] = [
         for more information.
       </>
     ),
-    renderCell: ({ studyLocusId, topL2GGeneId, topL2GScore }) => {
+    renderCell: ({ credibleSetId, topL2GGeneId, topL2GScore }) => {
       if (!topL2GGeneId || typeof topL2GScore !== "number") return naLabel;
       return (
         <L2GScoreIndicator
           score={topL2GScore}
-          studyLocusId={studyLocusId}
+          credibleSetId={credibleSetId}
           targetId={topL2GGeneId}
         />
       );

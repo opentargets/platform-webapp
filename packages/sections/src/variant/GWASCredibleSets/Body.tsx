@@ -18,7 +18,8 @@ import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
 import PheWasPlot from "./PheWasPlot";
 import {
-  credsetConfidenceMap,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
   naLabel,
   SortDirection,
   VariantCredibleSetsSearchField,
@@ -42,14 +43,14 @@ const DEFAULT_SORT = {
 function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
   return [
     {
-      id: "studyLocusId",
+      id: "credibleSetId",
       label: "Credible set",
       sticky: true,
       enableHiding: false,
       // For now add all search fields to first column - if move to column-based
       // search, move these fields to their corresponding columns
       searchFields: Object.values(VariantCredibleSetsSearchField),
-      renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+      renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
     },
     {
       id: "leadVariant",
@@ -174,8 +175,12 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       exportValue: ({ posteriorProbability }) => posteriorProbability,
     },
     {
-      id: "finemappingMethod",
+      id: "fineMappingMethod",
       label: "Fine-mapping method",
+      renderCell: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod ?? naLabel,
+      exportValue: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
     },
     {
       id: "confidence",
@@ -196,8 +201,8 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       renderCell: ({ confidence }) => {
         if (!confidence) return naLabel;
         return (
-          <Tooltip title={confidence} style="">
-            <ClinvarStars num={credsetConfidenceMap[confidence]} />
+          <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+            <ClinvarStars num={confidence} />
           </Tooltip>
         );
       },
@@ -238,12 +243,12 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           for more information.
         </>
       ),
-      renderCell: ({ studyLocusId, topL2GGeneId, topL2GScore }) => {
+      renderCell: ({ credibleSetId, topL2GGeneId, topL2GScore }) => {
         if (!topL2GGeneId || typeof topL2GScore !== "number") return naLabel;
         return (
           <L2GScoreIndicator
             score={topL2GScore}
-            studyLocusId={studyLocusId}
+            credibleSetId={credibleSetId}
             targetId={topL2GGeneId}
           />
         );
