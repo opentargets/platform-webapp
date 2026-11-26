@@ -1,9 +1,7 @@
 fragment CancerGeneCensusSummary on Disease {
-  cancerGeneCensusSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [cancer_gene_census]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    cancerGeneCensus(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

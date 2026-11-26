@@ -11,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ geneBurdenSummary }) => {
-        const { count } = geneBurdenSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.geneBurden;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.genetic_association}

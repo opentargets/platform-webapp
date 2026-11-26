@@ -11,9 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data =>
-        `${data.gene2Phenotype.count} entr${data.gene2Phenotype.count === 1 ? "y" : "ies"}`
-      }
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.gene2Phenotype;
+        return `${count} ${count === 1 ? "entry" : "entries"}`;
+      }}
       subText={dataTypesMap.genetic_association}
     />
   );

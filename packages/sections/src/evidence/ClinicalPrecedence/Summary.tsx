@@ -11,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ clinical_precedence }) => {
-        const { count } = clinical_precedence;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.clinicalPrecedence;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.clinical}

@@ -1,13 +1,13 @@
 import { lazy } from "react";
 import { isPrivateEvidenceSection } from "@ot/constants";
-import { EvidenceData } from "../types";
+import { type EvidenceData, hasEvidence } from "../types";
 
 const id = "gwas_credible_sets";
 export const definition = {
   id,
   name: "GWAS associations",
   shortName: "GW",
-  hasData: (data: EvidenceData) => (data.gwasCredibleSets?.count || 0) > 0,
+  hasData: (data: EvidenceData) => hasEvidence(data, "gwasCredibleSets", "gwasCredibleSets"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 

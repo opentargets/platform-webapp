@@ -1,9 +1,7 @@
 fragment ClinGenSummaryFragment on Disease {
-  clingenSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [clingen]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    clingen(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

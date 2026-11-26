@@ -1,9 +1,7 @@
 fragment crisprSummary on Disease {
-  crisprSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [crispr]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    crispr(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

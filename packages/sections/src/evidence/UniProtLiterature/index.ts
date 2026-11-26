@@ -1,13 +1,13 @@
 import { lazy } from "react";
 import { isPrivateEvidenceSection } from "@ot/constants";
-import { EvidenceData } from "../types";
+import { type EvidenceData, hasEvidence } from "../types";
 
 const id = "uniprot_literature";
 export const definition = {
   id,
   name: "UniProt literature",
   shortName: "UL",
-  hasData: (data: EvidenceData) => (data.uniprotLiteratureSummary?.count || 0) > 0,
+  hasData: (data: EvidenceData) => hasEvidence(data, "uniprotLiterature", "uniprotLiteratureSummary"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 

@@ -11,8 +11,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ clingenSummary }) => {
-        const { count } = clingenSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.clingen;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.genetic_association}
