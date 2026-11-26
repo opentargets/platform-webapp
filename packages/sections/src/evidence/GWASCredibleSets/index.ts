@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "GWAS associations",
   shortName: "GW",
-  hasData: (data: EvidenceData) => hasEvidence(data, "gwasCredibleSets", "gwasCredibleSets"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "gwasCredibleSets"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
