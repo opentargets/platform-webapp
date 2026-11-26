@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "ClinVar",
   shortName: "CV",
-  hasData: (data: EvidenceData) => hasEvidence(data, "eva", "eva"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "eva"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
