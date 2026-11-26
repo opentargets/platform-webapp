@@ -33,9 +33,9 @@ export function getVariantGenomicRegion(chromosome?: string, position?: number) 
     end,
     initialZoom,
     regionVariables: {
-      chromosome: `chr${chromosome}`,
-      positionStart: start,
-      positionEnd: end,
+      chromosome: `chr${chromosome.toLowerCase()}`,
+      start,
+      end,
     },
   };
 }

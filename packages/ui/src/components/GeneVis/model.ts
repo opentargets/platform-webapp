@@ -12,10 +12,10 @@ export type GeneVisVariantRow = {
   posteriorProbability?: number;
   pValueMantissa?: number;
   pValueExponent?: number;
-  beta?: number;
-  standardError?: number;
+  reportedBeta?: number;
+  reportedStandardError?: number;
   r2Overall?: number;
-  logBF?: number;
+  logBayesFactor?: number;
 };
 
 export type GeneVisGeneHighlight = {
