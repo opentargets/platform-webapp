@@ -591,7 +591,12 @@ test.describe("Target associations: filters", () => {
 
     await aotf.requiredCheckbox("gwas_credible_sets").check();
     await aotf.expectTotalBelow(total);
-    await aotf.expectSortedBy("gwas_credible_sets");
+    // the order is still the overall association score; what changes is that every disease
+    // left has a value in the required data source
+    await aotf.expectSortedBy("score");
+    const shown = await aotf.rowNames();
+    expect(shown.length).toBeGreaterThan(0);
+    await expect(aotf.columnCells("gwas_credible_sets")).toHaveCount(shown.length);
     await expect(aotf.filterChip("column-options")).toBeVisible();
 
     await aotf.removeFilterChip("column-options");
