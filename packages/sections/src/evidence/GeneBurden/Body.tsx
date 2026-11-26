@@ -18,33 +18,25 @@ import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 
 import GENE_BURDEN_QUERY from "./GeneBurdenQuery.gql";
 
-const sources = [
-  "Epi25 collaborative",
-  "Autism Sequencing Consortiuml",
-  "SCHEMA consortium",
-  "Genebass",
-  "AstraZeneca PheWAS Portal",
-];
-
 const getSource = (cohort, project) => {
   if (!cohort) return project;
   if (!project) return cohort;
   return `${cohort} (${project})`;
 };
 
-const getSourceLink = (project, targetId, urls) => {
-  if (project === "Epi25 collaborative") return `https://epi25.broadinstitute.org/gene/${targetId}`;
-  if (project === "Autism Sequencing Consortiuml")
-    return `https://asc.broadinstitute.org/gene/${targetId}`;
-  if (project === "SCHEMA consortium") return `https://schema.broadinstitute.org/gene/${targetId}`;
-  if (project === "Genebass")
-    return `https://app.genebass.org/gene/${targetId}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`;
-  if (project === "AstraZeneca PheWAS Portal") return urls[0].url;
-  if (project === "Autism Sequencing Consortium") return `https://asc.broadinstitute.org/gene/${targetId}`;
-  if (project === "AMP-PD") return `https://amp-pd.org/`;
-  if (project === "FinnGen") return `https://r12.finngen.fi/gene/{targetFromSourceId}`;
-  return "";
+// Link-outs for projects whose evidence carries no `urls`; the rest (AstraZeneca,
+// SCHEMA, BipEx, CVDI, ...) link to the `urls` the data provides
+const projectLinks = {
+  "Epi25 collaborative": targetId => `https://epi25.broadinstitute.org/gene/${targetId}`,
+  "Autism Sequencing Consortium": targetId => `https://asc.broadinstitute.org/gene/${targetId}`,
+  Genebass: targetId =>
+    `https://app.genebass.org/gene/${targetId}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`,
+  "AMP-PD": () => "https://amp-pd.org/",
+  FinnGen: targetId => `https://r12.finngen.fi/gene/${targetId}`,
 };
+
+const getSourceLink = (project, targetId, urls) =>
+  urls?.[0]?.url ?? projectLinks[project]?.(targetId) ?? "";
 
 const getColumns = label => [
   {
@@ -76,9 +68,10 @@ const getColumns = label => [
     renderCell: ({ cohortId, projectId, target, urls }) => {
       if (!cohortId && !projectId) return naLabel;
       // the getSource() function handles cases where cohortId==null or projectId==null
-      if (sources.indexOf(projectId) < 0) return getSource(cohortId, projectId);
+      const link = getSourceLink(projectId, target.id, urls);
+      if (!link) return getSource(cohortId, projectId);
       return (
-        <Link to={getSourceLink(projectId, target.id, urls)} external>
+        <Link to={link} external>
           {getSource(cohortId, projectId)}
         </Link>
       );
