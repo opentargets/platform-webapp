@@ -5,79 +5,23 @@ import {
   SectionItem,
   PublicationsDrawer,
   OtTableServer,
-  type OtTableColumn,
   TableDrawer,
   Typography,
 } from "ui";
 
-import {
-  defaultRowsPerPageOptions,
-  naLabel,
-  type EvidenceBodyProps,
-  type EvidenceCancerBiomarkers,
-  type EvidenceCancerBiomarkersSearch,
-  EvidenceCancerBiomarkersSearchField,
-} from "@ot/constants";
+import { defaultRowsPerPageOptions, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import { epmcUrl } from "@ot/utils";
 import Description from "./Description";
 import BiomarkersDrawer from "./BiomarkersDrawer";
 import { definition } from ".";
 
-import { typedDocument } from "../../utils/typedDocument";
-import CANCER_BIOMARKERS_EVIDENCE_QUERY_DOCUMENT from "./CancerBiomarkersEvidence.gql";
+import CANCER_BIOMARKERS_EVIDENCE_QUERY from "./CancerBiomarkersEvidence.gql";
 
-type CancerBiomarkersRow = Pick<
-  EvidenceCancerBiomarkers,
-  | "diseaseId"
-  | "diseaseName"
-  | "diseaseFromSource"
-  | "biomarkerName"
-  | "biomarkerGeneticVariations"
-  | "biomarkerGeneExpressions"
-  | "drugId"
-  | "drugName"
-  | "drugFromSource"
-  | "drugResponseId"
-  | "drugResponseName"
-  | "confidence"
-  | "literature"
-  | "urls"
->;
-
-type QueryData = {
-  disease?: {
-    id: string;
-    evidenceViews: { cancerBiomarkers: { count: number; rows: CancerBiomarkersRow[] } };
-  } | null;
-};
-
-type QueryVariables = {
-  ensemblId: string;
-  efoId: string;
-  index: number;
-  size: number;
-  search?: EvidenceCancerBiomarkersSearch;
-};
-
-const CANCER_BIOMARKERS_EVIDENCE_QUERY = typedDocument<QueryData, QueryVariables>(
-  CANCER_BIOMARKERS_EVIDENCE_QUERY_DOCUMENT
-);
-const PAGE_SIZE = 10;
-
-const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<CancerBiomarkersRow>[] => [
+const getColumns = label => [
   {
-    id: "diseaseName",
+    id: "disease",
     label: "Disease",
-    // Attach the cancer biomarkers search fields to the first column.
-    searchFields: [
-      EvidenceCancerBiomarkersSearchField.DiseaseName,
-      EvidenceCancerBiomarkersSearchField.BiomarkerName,
-      EvidenceCancerBiomarkersSearchField.DrugName,
-      EvidenceCancerBiomarkersSearchField.DrugFromSource,
-      EvidenceCancerBiomarkersSearchField.DrugResponseName,
-      EvidenceCancerBiomarkersSearchField.Confidence,
-    ],
-    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
+    renderCell: ({ disease, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -91,8 +35,8 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<CancerBiom
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${diseaseId}`}>
-          {diseaseName}
+        <Link asyncTooltip to={`/disease/${disease.id}`}>
+          {disease.name}
         </Link>
       </Tooltip>
     ),
@@ -101,42 +45,35 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<CancerBiom
     id: "biomarkerName",
     label: "Biomarker",
     enableHiding: false,
-    renderCell: ({ biomarkerName, biomarkerGeneticVariations, biomarkerGeneExpressions }) => (
-      <BiomarkersDrawer
-        biomarkerName={biomarkerName}
-        geneticVariations={biomarkerGeneticVariations}
-        geneExpressions={biomarkerGeneExpressions}
-      />
+    renderCell: ({ biomarkerName, biomarkers }) => (
+      <BiomarkersDrawer biomarkerName={biomarkerName} biomarkers={biomarkers} />
     ),
   },
   {
     id: "drug",
     label: "Reported drug",
-    renderCell: ({ drugId, drugName, drugFromSource }) =>
-      drugId ? <Link to={`/drug/${drugId}`}>{drugName}</Link> : drugFromSource,
-    exportValue: ({ drugName, drugFromSource }) => drugName ?? drugFromSource ?? "",
+    renderCell: ({ drug, drugFromSource }) =>
+      drug ? <Link to={`/drug/${drug.id}`}>{drug.name}</Link> : drugFromSource,
+    filterValue: ({ drug, drugFromSource }) => (drug ? drug.name : drugFromSource),
   },
   {
     id: "drugResponse",
     label: "Drug response",
-    // the response name is only set when the response is a disease, e.g. "drug resistance"
-    renderCell: ({ drugResponseId, drugResponseName }) =>
-      drugResponseId && drugResponseName ? (
-        <Link to={`/disease/${drugResponseId}`}>{drugResponseName}</Link>
-      ) : (
-        naLabel
-      ),
-    exportValue: ({ drugResponseName }) => drugResponseName ?? "",
+    renderCell: ({ drugResponse }) =>
+      (drugResponse && <Link to={`/disease/${drugResponse.id}`}>{drugResponse.name}</Link>) ||
+      naLabel,
   },
   {
     id: "confidence",
     label: "Source",
     renderCell: ({ confidence, urls }) => {
-      const entries = urls.map(url => ({
-        url: url.url ?? "",
-        name: url.niceName ?? "",
-        group: "Sources",
-      }));
+      const entries = urls
+        ? urls.map(url => ({
+            url: url.url,
+            name: url.niceName,
+            group: "Sources",
+          }))
+        : [];
       return <TableDrawer entries={entries} message={confidence} />;
     },
   },
@@ -144,19 +81,24 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<CancerBiom
     id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
-      const entries = literature.map(id => ({
-        name: id,
-        url: epmcUrl(id),
-        group: "literature",
-      }));
+      const entries = literature
+        ? literature.map(id => ({
+            name: id,
+            url: epmcUrl(id),
+            group: "literature",
+          }))
+        : [];
 
       return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
     },
-    exportValue: ({ literature }) => literature.join(", "),
   },
 ];
 
-function Body({ id, label, entity }: EvidenceBodyProps) {
+type Props = EvidenceBodyProps;
+
+const PAGE_SIZE = 10;
+
+function Body({ id, label, entity }: Props) {
   const { ensgId, efoId } = id;
 
   const variables = { ensemblId: ensgId, efoId };
@@ -178,14 +120,15 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
       renderBody={() => {
         return (
-          <OtTableServer<CancerBiomarkersRow>
+          <OtTableServer
             query={CANCER_BIOMARKERS_EVIDENCE_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderFileStem={`cancer-biomarker-${ensgId}-${efoId}`}
-            dataPath="disease.evidenceViews.cancerBiomarkers"
+            dataPath="disease.cancerBiomarkersSummary"
             pageSize={PAGE_SIZE}
             pageSizeOptions={defaultRowsPerPageOptions}
+            showGlobalFilter={false}
             variables={variables}
           />
         );

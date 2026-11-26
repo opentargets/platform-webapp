@@ -10,71 +10,21 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableServer,
-  type OtTableColumn,
   Box,
   Typography,
 } from "ui";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
-import {
-  dataTypesMap,
-  clinvarStarMap,
-  naLabel,
-  type EvidenceBodyProps,
-  type EvidenceEvaSomatic,
-} from "@ot/constants";
+import { dataTypesMap, clinvarStarMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
 import Description from "./Description";
-import { typedDocument } from "../../utils/typedDocument";
-import EVA_SOMATIC_QUERY_DOCUMENT from "./EvaSomaticQuery.gql";
+import EVA_SOMATIC_QUERY from "./EvaSomaticQuery.gql";
 import { definition } from ".";
 
-type EvaSomaticRow = Pick<
-  EvidenceEvaSomatic,
-  | "diseaseId"
-  | "diseaseName"
-  | "diseaseFromSource"
-  | "cohortPhenotypes"
-  | "variantId"
-  | "variantHgvsId"
-  | "variantReferenceAllele"
-  | "variantAlternateAllele"
-  | "variantRsId"
-  | "directionOnTarget"
-  | "directionOnTrait"
-  | "studyId"
-  | "clinicalSignificances"
-  | "allelicRequirements"
-  | "alleleOrigins"
-  | "confidence"
-  | "literature"
->;
-
-type QueryData = {
-  disease?: {
-    id: string;
-    evidenceViews: { evaSomatic: { count: number; rows: EvaSomaticRow[] } };
-  } | null;
-  target?: {
-    id: string;
-    hallmarks: { attributes: { description: string; pmid?: number | null; name: string }[] };
-  } | null;
-};
-
-type QueryVariables = {
-  ensemblId: string;
-  efoId: string;
-  index: number;
-  size: number;
-};
-
-const EVA_SOMATIC_QUERY = typedDocument<QueryData, QueryVariables>(EVA_SOMATIC_QUERY_DOCUMENT);
-const PAGE_SIZE = 10;
-
-const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomaticRow>[] => [
+const getColumns = label => [
   {
-    id: "diseaseName",
+    id: "disease.name",
     label: "Disease/phenotype",
-    renderCell: ({ diseaseId, diseaseName, diseaseFromSource, cohortPhenotypes }) => (
+    renderCell: ({ disease, diseaseFromSource, cohortPhenotypes }) => (
       <Tooltip
         title={
           <>
@@ -85,7 +35,7 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
               {diseaseFromSource}
             </Typography>
 
-            {cohortPhenotypes.length > 1 ? (
+            {cohortPhenotypes?.length > 1 ? (
               <>
                 <Typography variant="subtitle2" display="block" align="center">
                   All reported phenotypes:
@@ -103,8 +53,8 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${diseaseId}`}>
-          {diseaseName}
+        <Link asyncTooltip to={`/disease/${disease.id}`}>
+          {disease.name}
         </Link>
       </Tooltip>
     ),
@@ -113,14 +63,15 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
     id: "variantId",
     label: "Variant",
     enableHiding: false,
-    renderCell: ({ variantId, variantReferenceAllele, variantAlternateAllele }) => {
-      if (!variantId) return naLabel;
+    renderCell: ({ variant }) => {
+      if (!variant) return naLabel;
+      const { id: variantId, referenceAllele, alternateAllele } = variant;
       return (
         <Link asyncTooltip to={`/variant/${variantId}`}>
           <DisplayVariantId
             variantId={variantId}
-            referenceAllele={variantReferenceAllele ?? ""}
-            alternateAllele={variantAlternateAllele ?? ""}
+            referenceAllele={referenceAllele}
+            alternateAllele={alternateAllele}
             expand={false}
           />
         </Link>
@@ -141,45 +92,49 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
       ) : (
         naLabel
       ),
+    filterValue: ({ variantRsId }) => `${variantRsId}`,
   },
   {
     id: "variantHgvsId",
     label: "HGVS ID",
-    renderCell: ({ variantHgvsId }) => variantHgvsId || naLabel,
+    renderCell: ({ variant }) => variant?.hgvsId || naLabel,
+    filterValue: ({ variant }) => `${variant?.hgvsId}`,
   },
   {
     id: "studyId",
     label: "ClinVar ID",
-    renderCell: ({ studyId }) =>
-      studyId ? (
-        <Link external to={`https://identifiers.org/clinvar.record/${studyId}`}>
-          {studyId}
-        </Link>
-      ) : (
-        naLabel
-      ),
+    renderCell: ({ studyId }) => (
+      <Link external to={`https://identifiers.org/clinvar.record/${studyId}`}>
+        {studyId}
+      </Link>
+    ),
   },
   {
     id: "clinicalSignificances",
     label: "Clinical significance",
     renderCell: ({ clinicalSignificances }) => {
-      if (clinicalSignificances.length === 0) return naLabel;
+      if (!clinicalSignificances) return naLabel;
+
       if (clinicalSignificances.length === 1) return sentenceCase(clinicalSignificances[0]);
-      return (
-        <ul
-          style={{
-            margin: 0,
-            padding: 0,
-            listStyle: "none",
-          }}
-        >
-          {clinicalSignificances.map(clinicalSignificance => (
-            <li key={clinicalSignificance}>{sentenceCase(clinicalSignificance)}</li>
-          ))}
-        </ul>
-      );
+
+      if (clinicalSignificances.length > 1)
+        return (
+          <ul
+            style={{
+              margin: 0,
+              padding: 0,
+              listStyle: "none",
+            }}
+          >
+            {clinicalSignificances.map(clinicalSignificance => (
+              <li key={clinicalSignificance}>{sentenceCase(clinicalSignificance)}</li>
+            ))}
+          </ul>
+        );
+
+      return naLabel;
     },
-    exportValue: ({ clinicalSignificances }) => clinicalSignificances.join(", "),
+    filterValue: ({ clinicalSignificances }) => clinicalSignificances.join(),
   },
   {
     id: "directionOfVariantEffect",
@@ -188,10 +143,7 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
     ),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
-        <DirectionOfEffectIcon
-          variantEffect={directionOnTarget ?? ""}
-          directionOnTrait={directionOnTrait ?? ""}
-        />
+        <DirectionOfEffectIcon variantEffect={directionOnTarget} directionOnTrait={directionOnTrait} />
       );
     },
   },
@@ -199,9 +151,9 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
     id: "allelicRequirements",
     label: "Allele origin",
     renderCell: ({ alleleOrigins, allelicRequirements }) => {
-      if (alleleOrigins.length === 0) return naLabel;
+      if (!alleleOrigins || alleleOrigins.length === 0) return naLabel;
 
-      if (allelicRequirements.length > 0)
+      if (allelicRequirements)
         return (
           <Tooltip
             title={
@@ -224,33 +176,32 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
 
       return alleleOrigins.map(a => sentenceCase(a)).join("; ");
     },
-    exportValue: ({ alleleOrigins }) => alleleOrigins.join(", "),
+    filterValue: ({ alleleOrigins }) => (alleleOrigins ? alleleOrigins.join() : ""),
   },
   {
-    id: "confidence",
     label: "Review status",
-    renderCell: ({ confidence }) =>
-      confidence ? (
-        <Tooltip title={confidence}>
-          <span>
-            <ClinvarStars num={clinvarStarMap[confidence]} />
-          </span>
-        </Tooltip>
-      ) : (
-        naLabel
-      ),
+    renderCell: ({ confidence }) => (
+      <Tooltip title={confidence}>
+        <span>
+          <ClinvarStars num={clinvarStarMap[confidence]} />
+        </span>
+      </Tooltip>
+    ),
   },
   {
-    id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
-      const literatureList = literature
-        .filter(id => id !== "NA")
-        .map(id => ({
-          name: id,
-          url: epmcUrl(id),
-          group: "literature",
-        }));
+      const literatureList =
+        literature?.reduce((acc, id) => {
+          if (id !== "NA") {
+            acc.push({
+              name: id,
+              url: epmcUrl(id),
+              group: "literature",
+            });
+          }
+          return acc;
+        }, []) || [];
 
       return (
         <PublicationsDrawer entries={literatureList} symbol={label.symbol} name={label.name} />
@@ -259,55 +210,51 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
   },
 ];
 
-const exportColumns: OtTableColumn<EvaSomaticRow>[] = [
+const exportColumns = [
   {
-    id: "diseaseId",
     label: "diseaseId",
-    exportValue: (row: EvaSomaticRow) => row.diseaseId,
+    exportValue: row => row.disease.id,
   },
   {
-    id: "diseaseName",
     label: "diseaseName",
-    exportValue: (row: EvaSomaticRow) => row.diseaseName,
+    exportValue: row => row.disease.name,
   },
   {
-    id: "variantId",
     label: "variantId",
-    exportValue: (row: EvaSomaticRow) => row.variantId,
+    exportValue: row => row.variantId,
   },
   {
-    id: "variantRsId",
     label: "variantRsId",
-    exportValue: (row: EvaSomaticRow) => row.variantRsId,
+    exportValue: row => row.variantRsId,
   },
   {
-    id: "variantHgvsId",
     label: "variantHgvsId",
-    exportValue: (row: EvaSomaticRow) => row.variantHgvsId,
+    exportValue: row => row.variantHgvsId,
   },
   {
-    id: "clinicalSignificances",
     label: "clinicalSignificances",
-    exportValue: (row: EvaSomaticRow) => row.clinicalSignificances,
+    exportValue: row => row.clinicalSignificances,
   },
   {
-    id: "allelicRequirements",
     label: "allelicRequirements",
-    exportValue: (row: EvaSomaticRow) => row.allelicRequirements,
+    exportValue: row => row.allelicRequirements,
   },
   {
-    id: "reviewStatus",
     label: "reviewStatus",
-    exportValue: (row: EvaSomaticRow) => row.confidence,
+    exportValue: row => row.confidence,
   },
+
   {
-    id: "literature",
     label: "literature",
-    exportValue: (row: EvaSomaticRow) => row.literature,
+    exportValue: row => row.literature,
   },
 ];
 
-function Body({ id, label, entity }: EvidenceBodyProps) {
+type Props = EvidenceBodyProps;
+
+const PAGE_SIZE = 10;
+
+function Body({ id, label, entity }: Props) {
   const { ensgId: ensemblId, efoId } = id;
   const variables = { ensemblId, efoId };
 
@@ -322,14 +269,14 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
   function getRoleInCancer() {
     if (!request.data) return null;
 
-    const attributes = request.data.target?.hallmarks.attributes ?? [];
-    let roleInCancerItems: { label: string; url?: string }[] = [{ label: "Unknown" }];
-    if (attributes.length > 0) {
-      roleInCancerItems = attributes
+    const { hallmarks } = request.data?.target;
+    let roleInCancerItems = [{ label: "Unknown" }];
+    if (hallmarks && hallmarks.attributes.length > 0) {
+      roleInCancerItems = hallmarks.attributes
         .filter(attribute => attribute.name === "role in cancer")
         .map(attribute => ({
           label: attribute.description,
-          url: epmcUrl(String(attribute.pmid)),
+          url: epmcUrl(attribute.pmid),
         }));
     }
 
@@ -356,15 +303,14 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
             {getRoleInCancer()}
           </Box>
 
-          <OtTableServer<EvaSomaticRow>
+          <OtTableServer
             query={EVA_SOMATIC_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderColumns={exportColumns}
             dataDownloaderFileStem="eva_somatic-evidence"
-            dataPath="disease.evidenceViews.evaSomatic"
+            dataPath="disease.eva_somatic"
             pageSize={PAGE_SIZE}
-            // no search on the ClinVar somatic view: a browser search would fetch every row
             showGlobalFilter={false}
             variables={variables}
           />

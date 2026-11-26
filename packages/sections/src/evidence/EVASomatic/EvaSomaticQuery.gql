@@ -1,28 +1,34 @@
 query EvaSomaticQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
-    evidenceViews(ensemblIds: [$ensemblId]) {
-      evaSomatic(page: { index: $index, size: $size }) {
-        count
-        rows {
-          diseaseId
-          diseaseName
-          diseaseFromSource
-          cohortPhenotypes
-          variantId
-          variantHgvsId
-          variantReferenceAllele
-          variantAlternateAllele
-          variantRsId
-          directionOnTarget
-          directionOnTrait
-          studyId
-          clinicalSignificances
-          allelicRequirements
-          alleleOrigins
-          confidence
-          literature
+    eva_somatic: evidences(
+      ensemblIds: [$ensemblId]
+      datasourceIds: [eva_somatic]
+      page: { index: $index, size: $size }
+    ) {
+      count
+      rows {
+        disease {
+          id
+          name
         }
+        variant {
+          id: variantId
+          hgvsId
+          referenceAllele
+          alternateAllele
+        }
+        directionOnTarget
+        directionOnTrait
+        diseaseFromSource
+        variantRsId
+        studyId
+        clinicalSignificances
+        allelicRequirements
+        alleleOrigins
+        confidence
+        literature
+        cohortPhenotypes
       }
     }
   }

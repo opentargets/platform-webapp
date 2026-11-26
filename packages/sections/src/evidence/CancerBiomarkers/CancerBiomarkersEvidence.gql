@@ -1,42 +1,50 @@
-query CancerBiomarkersQuery(
-  $ensemblId: String!
-  $efoId: String!
-  $index: Int! = 0
-  $size: Int! = 10
-  $search: EvidenceCancerBiomarkersSearch
-) {
+query CancerBiomarkersQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
-    evidenceViews(ensemblIds: [$ensemblId]) {
-      cancerBiomarkers(page: { index: $index, size: $size }, search: $search) {
-        count
-        rows {
-          diseaseId
-          diseaseName
-          diseaseFromSource
-          biomarkerName
-          biomarkerGeneticVariations {
-            id
+    cancerBiomarkersSummary: evidences(
+      ensemblIds: [$ensemblId]
+      datasourceIds: [cancer_biomarkers]
+      page: { index: $index, size: $size }
+    ) {
+      count
+      rows {
+        disease {
+          id
+          name
+        }
+        diseaseFromSource
+        biomarkerName
+        biomarkers {
+          geneticVariation {
+            geneticVariationId: id
             name
-            functionalConsequenceId
-            functionalConsequenceLabel
+            functionalConsequenceId: functionalConsequence {
+              id
+              label
+            }
           }
-          biomarkerGeneExpressions {
-            id
+          geneExpression {
             name
-            label
+            id {
+              id
+              label
+            }
           }
-          drugId
-          drugName
-          drugFromSource
-          drugResponseId
-          drugResponseName
-          confidence
-          literature
-          urls {
-            niceName
-            url
-          }
+        }
+        drugFromSource
+        drug {
+          id
+          name
+        }
+        drugResponse {
+          id
+          name
+        }
+        confidence
+        literature
+        urls {
+          niceName
+          url
         }
       }
     }
