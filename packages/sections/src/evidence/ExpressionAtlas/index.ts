@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Expression Atlas",
   shortName: "EA",
-  hasData: (data: EvidenceData) => hasEvidence(data, "expressionAtlas", "expressionAtlasSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "expressionAtlas"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
