@@ -35,9 +35,17 @@ type DrugsTableProps = {
   ensemblId: string;
   selectedRow: DrugRow | null;
   selectRow: (row: DrugRow | null) => void;
+  prefetchRecords: (row: DrugRow | null | undefined) => void;
+  getPrefetchHandlers: (row: DrugRow) => { onMouseEnter: () => void; onMouseLeave: () => void };
 };
 
-function DrugsTable({ ensemblId, selectedRow, selectRow }: DrugsTableProps) {
+function DrugsTable({
+  ensemblId,
+  selectedRow,
+  selectRow,
+  prefetchRecords,
+  getPrefetchHandlers,
+}: DrugsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -52,6 +60,7 @@ function DrugsTable({ ensemblId, selectedRow, selectRow }: DrugsTableProps) {
 
         return (
           <Box
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
@@ -200,6 +209,11 @@ function DrugsTable({ ensemblId, selectedRow, selectRow }: DrugsTableProps) {
           }
         }}
         showRowsPerPageControl={false}
+        stableHeight
+        // the first card of a page is selected when the page opens, so its reports
+        // are fetched along with the neighbouring pages
+        prefetchAdjacentPages
+        onPagePrefetched={(rows) => prefetchRecords(rows[0])}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

@@ -1,8 +1,13 @@
 import { Box } from "@mui/material";
+import useRatchetMinHeight from "../../hooks/useRatchetMinHeight";
 
 function ClinicalReportsMasterDetailFrame({ master, detail }: any) {
+  // the frame never shrinks, so a shorter list or detail does not move the page
+  const [frameRef, minHeight] = useRatchetMinHeight<HTMLDivElement>();
+
   return (
     <Box
+      ref={frameRef}
       sx={{
         display: "flex",
         alignItems: "stretch",
@@ -14,6 +19,7 @@ function ClinicalReportsMasterDetailFrame({ master, detail }: any) {
           padding: "0 !important",
         },
       }}
+      style={{ minHeight }}
     >
       <Box
         sx={{
