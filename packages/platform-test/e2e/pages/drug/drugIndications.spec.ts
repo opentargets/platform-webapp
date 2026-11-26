@@ -81,6 +81,10 @@ test.describe("Drug Indications Section", () => {
     // Select the first indication card
     await indicationsSection.selectIndicationCard(0);
 
+    // the default stage (Approval) lists regulatory reports only; trials start at Phase I
+    expect(await indicationsSection.getStageButton("Phase III")).not.toBeNull();
+    await indicationsSection.selectStage("Phase III");
+
     // Detail header should show report count for the selected entity
     const headerText = await indicationsSection.getDetailHeaderText();
     expect(headerText).not.toBeNull();
@@ -143,4 +147,32 @@ test.describe("Drug Indications Section", () => {
     // Close the drawer
     await indicationsSection.closeDrawer();
   });
+});
+
+// Pinned: its first indication has Phase III ClinicalTrials.gov reports on the API.
+// Drugs@FDA has no reports on the API yet, so only ClinicalTrials.gov is covered
+const DRUG_WITH_CLINICALTRIALS_REPORTS = "CHEMBL3353410";
+
+test.describe("Drug Indications Section - Record source links", () => {
+  test(
+    "ClinicalTrials.gov record drawer links to the source",
+    { tag: "@smoke" },
+    async ({ page }) => {
+      const indicationsSection = new IndicationsSection(page);
+      await new DrugPage(page).goToDrugPage(DRUG_WITH_CLINICALTRIALS_REPORTS);
+      await indicationsSection.waitForLoad();
+      await indicationsSection.selectIndicationCard(0);
+
+      // the default stage (Approval) lists regulatory reports only
+      expect(await indicationsSection.getStageButton("Phase III")).not.toBeNull();
+      await indicationsSection.selectStage("Phase III");
+
+      await expect(indicationsSection.getRecordRowBySource("ClinicalTrials.gov")).toBeVisible();
+      await indicationsSection.openRecordBySource("ClinicalTrials.gov");
+
+      const sourceLink = indicationsSection.getRecordDrawerSourceValue().locator("a");
+      await expect(sourceLink).toHaveText("ClinicalTrials.gov");
+      await expect(sourceLink).toHaveAttribute("href", "https://clinicaltrials.gov/");
+    }
+  );
 });

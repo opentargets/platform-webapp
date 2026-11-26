@@ -1,9 +1,7 @@
 fragment IntOgenSummaryFragment on Disease {
-  intOgen: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [intogen]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    intogen(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

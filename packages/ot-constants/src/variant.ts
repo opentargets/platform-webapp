@@ -216,7 +216,7 @@ export const DATASOURCES: DataSource[] = [
   { datasourceId: "eva_somatic", datasourceNiceName: "ClinVar-somatic" },
   { datasourceId: "gwas_credible_sets", datasourceNiceName: "GWAS credible sets" },
   { datasourceId: "mol_qtl", datasourceNiceName: "molQTL" },
-  { datasourceId: "pharmgkb", datasourceNiceName: "pharmgkb" },
+  { datasourceId: "clinpgx", datasourceNiceName: "ClinPGx" },
   { datasourceId: "uniprot_variants", datasourceNiceName: "UniProt Variants" },
 ];
 
@@ -253,6 +253,13 @@ const VARIANT_EFFECT_METHODS: Record<string, VariantEffectMethod> = {
     prettyName: "GERP",
     description:
       "Scores used to identify regions of the genome that are evolutionarily conserved and likely to be functionally important.",
+    docsUrl: "https://platform-docs.opentargets.org/variant#variant-effect",
+  },
+  "GPN-Star": {
+    methodName: "GPN-Star",
+    prettyName: "GPN-Star",
+    description:
+      "Genomic language model that scores how evolutionarily constrained a variant's position is, genome-wide.",
     docsUrl: "https://platform-docs.opentargets.org/variant#variant-effect",
   },
   LOFTEE: {

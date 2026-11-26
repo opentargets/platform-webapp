@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ evaSummary }) => {
-        const { count } = evaSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.eva;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.genetic_association}

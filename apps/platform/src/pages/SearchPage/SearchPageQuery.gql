@@ -15,6 +15,20 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [Entity
       keywords
       highlights
       object {
+        ... on Target {
+          id
+          approvedSymbol
+          functionDescriptions
+        }
+
+        ... on Variant {
+          id: variantId
+          variantDescription
+          referenceAllele
+          alternateAllele
+          rsIds
+        }
+
         ... on Study {
           id
           hasSumstats
@@ -27,9 +41,23 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [Entity
           credibleSets {
             credibleSetsCount: count
           }
+          biosample {
+            biosampleId
+            biosampleName
+          }
+          target {
+            id
+            approvedSymbol
+          }
         }
 
         ... on Disease {
+          id
+          name
+          description
+        }
+
+        ... on Drug {
           id
           name
           description
@@ -50,6 +78,30 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [Entity
       description
       keywords
       object {
+        ... on Target {
+          id
+          approvedSymbol
+          approvedName
+          functionDescriptions
+          biotype
+          proteinIds {
+            id
+            source
+          }
+        }
+        ... on Variant {
+          id: variantId
+          variantDescription
+          chromosome
+          position
+          referenceAllele
+          alternateAllele
+          rsIds
+          mostSevereConsequence {
+            id
+            label
+          }
+        }
         ... on Study {
           id
           hasSumstats
@@ -65,6 +117,30 @@ query SearchPageQuery($queryString: String!, $index: Int!, $entityNames: [Entity
           therapeuticAreas {
             id
             name
+          }
+        }
+        ... on Drug {
+          id
+          name
+          description
+          drugType
+          maximumClinicalStage
+          synonyms {
+            label
+            source
+          }
+          tradeNames {
+            label
+            source
+          }
+          indications {
+            rows {
+              id
+              disease {
+                id
+                name
+              }
+            }
           }
         }
       }

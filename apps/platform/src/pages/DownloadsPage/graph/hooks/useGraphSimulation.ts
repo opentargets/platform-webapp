@@ -12,13 +12,12 @@
  * used where the v7 typings disagree with the actual v5 runtime API.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { getDefaultLayoutConfig, getResponsiveLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
-import { computeRadialLayout } from '../utils/radialLayout';
+import { getDefaultLayoutConfig, ForceLayoutConfig } from '../utils/layoutConfig';
 import { computeStackedLayout, laneTitle, stackBounds, LaneBand } from '../utils/stackedLayout';
 import { computeFitTransform, GraphBounds } from '../utils/fitTransform';
-import { curvedEdgePath, ellipticalEdgePath } from '../utils/edgePath';
+import { ellipticalEdgePath } from '../utils/edgePath';
 import {
   GRAPH_STYLES,
   EDGE_COLOR,
@@ -26,12 +25,10 @@ import {
   CHECK_DOT_RADIUS,
   NODE_RADIUS,
   strokeOf,
-  getNodeHalfDiagonal,
   applyNodeGeometry,
   truncateLabel,
-  isLabelVisible,
 } from '../utils/graphVisuals';
-import { GraphNodeDatum, GraphLinkDatum, GraphCallbacks, GraphLayout } from '../types';
+import { GraphNodeDatum, GraphLinkDatum, GraphCallbacks } from '../types';
 
 interface UseGraphSimulationOptions {
   containerRef: React.RefObject<HTMLDivElement>;
@@ -45,8 +42,6 @@ interface UseGraphSimulationOptions {
   nodes: any[];
   edges: any[];
   layoutConfig?: ForceLayoutConfig;
-  /** Stacked category lanes (default) or radial hub-and-spoke */
-  layout?: GraphLayout;
 }
 
 export const useGraphSimulation = ({
@@ -61,10 +56,8 @@ export const useGraphSimulation = ({
   nodes,
   edges,
   layoutConfig,
-  layout = 'stacked',
 }: UseGraphSimulationOptions): boolean => {
   const [isReady, setIsReady] = useState(false);
-  const lastLayoutRef = useRef<GraphLayout>(layout);
 
   // useLayoutEffect so the initial fit transform (below) is applied before the
   // browser paints, instead of flashing at 1:1 scale and animating to the fit.
@@ -75,20 +68,11 @@ export const useGraphSimulation = ({
     setIsReady(false);
     d3.select(container).selectAll('*').remove();
 
-    // Remembered (dragged/settled) positions belong to the previous layout;
-    // switching layouts must move every node to its new target.
-    if (lastLayoutRef.current !== layout) {
-      positionsRef.current.clear();
-      lastLayoutRef.current = layout;
-    }
-
     // Mutable so `handleResize` (below) can re-lay-out for the new size
     // without reheating the simulation.
     let width = container.clientWidth || 800;
     let height = container.clientHeight || 600;
-    // Tighter collision padding on a narrow panel - based on this panel's
-    // own measured width, not the browser window (see getResponsiveLayoutConfig).
-    const config = { ...(layoutConfig || getDefaultLayoutConfig()), ...getResponsiveLayoutConfig(width) };
+    const config = layoutConfig || getDefaultLayoutConfig();
 
     const simNodes: GraphNodeDatum[] = nodes.map((n) => ({ ...n.data, x: 0, y: 0 }));
 
@@ -97,15 +81,11 @@ export const useGraphSimulation = ({
       .map((e) => ({ ...e.data }))
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
 
-    // Deterministic hub-and-spoke target positions (see radialLayout.ts) -
+    // Deterministic stacked-lane target positions (see stackedLayout.ts) -
     // seed every node straight at its target (or its last dragged/settled
     // position, so re-renders don't jump) rather than a random scatter, so
     // the graph paints already laid out instead of animating from chaos.
-    const stacked = layout === 'stacked';
-    const computeLayout = (w: number, h: number) =>
-      stacked
-        ? computeStackedLayout(simNodes, simLinks, w, h)
-        : { ...computeRadialLayout(simNodes, simLinks, w, h), lanes: [] as LaneBand[] };
+    const computeLayout = (w: number, h: number) => computeStackedLayout(simNodes, simLinks, w, h);
     let placement = computeLayout(width, height);
     boundsRef.current = stackBounds(placement.lanes);
     simNodes.forEach((n) => {
@@ -127,26 +107,16 @@ export const useGraphSimulation = ({
     svg.append('style').text(GRAPH_STYLES);
 
     const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
-    // Category bands behind everything, only populated by the stacked layout
+    // Category bands behind everything
     const laneGroup = zoomLayer.append('g').attr('class', 'lanes').style('pointer-events', 'none');
     const linkGroup = zoomLayer.append('g').attr('class', 'links');
     const nodeGroup = zoomLayer.append('g').attr('class', 'nodes');
-
-    // Assigned once the labels are built below; referenced by the zoom
-    // handler, which only ever runs after that (on user interaction).
-    let label: any = null;
 
     const zoom = (d3 as any)
       .zoom()
       .scaleExtent([0.1, 3])
       .on('zoom', function () {
-        const { transform } = (d3 as any).event;
-        zoomLayer.attr('transform', transform);
-        // Reveal the rest of the labels once zoomed in enough past the fit
-        const zoomMultiple = transform.k / (initialFitTransformRef.current?.k ?? transform.k);
-        label?.attr('display', (d: GraphNodeDatum) =>
-          stacked || isLabelVisible(d.degree, zoomMultiple) ? null : 'none'
-        );
+        zoomLayer.attr('transform', (d3 as any).event.transform);
       });
     (svg as any).call(zoom);
     zoomRef.current = zoom;
@@ -201,9 +171,6 @@ export const useGraphSimulation = ({
         const g = enter.append('g').attr('class', 'graph-node');
         // Outer ring, only shown while selected (see GRAPH_STYLES)
         g.append('rect').attr('class', 'node-ring');
-        // Opaque base so edges running under the node don't show through
-        // the translucent category fill above it
-        g.append('rect').attr('class', 'node-base');
         g.append('rect').attr('class', 'node-box');
         // Check dot at the top-right corner, only shown while in the bag
         const check = g.append('g').attr('class', 'node-check');
@@ -221,18 +188,16 @@ export const useGraphSimulation = ({
       });
 
     // Small rounded-rectangle per node (an ER-diagram table in miniature),
-    // filled with the category colour at low opacity and stroked in it. The
-    // size follows the node's visual state (default / in basket / selected)
-    // scaled by its degree (see graphVisuals.ts), so hubs read as much
-    // bigger boxes than leaves.
+    // filled with the solid category colour and stroked in it. The
+    // size follows the node's visual state only (default / in basket /
+    // selected, see graphVisuals.ts); connectivity is shown by the node's
+    // position in its lane, most connected first.
     node
       .select('rect.node-box')
       .attr('rx', NODE_RADIUS)
       .attr('ry', NODE_RADIUS)
       .attr('fill', strokeOf)
       .attr('stroke', strokeOf);
-
-    node.select('rect.node-base').attr('rx', NODE_RADIUS).attr('ry', NODE_RADIUS).attr('fill', '#fff');
 
     node
       .select('rect.node-ring')
@@ -242,20 +207,17 @@ export const useGraphSimulation = ({
       .attr('stroke', PRIMARY_DARK)
       .attr('stroke-width', 1.5);
 
-    // Labels sit below the box and are revealed progressively on zoom (see
-    // isLabelVisible in graphVisuals.ts); font/colour come from GRAPH_STYLES.
-    // The stacked layout reserves a cell per label, so there they always show.
-    label = node
+    // Labels sit to the right of the box, in the cell the layout reserves
+    // for them; font/colour come from GRAPH_STYLES.
+    node
       .select('text')
       .text((d: GraphNodeDatum) => truncateLabel(d.label))
-      .attr('text-anchor', 'middle')
-      .attr('display', (d: GraphNodeDatum) => (stacked || isLabelVisible(d.degree, 1) ? null : 'none'))
       .style('pointer-events', 'none')
       .style('user-select', 'none');
 
     // Everything starts in the resting state; useSelectionHighlight resizes
     // boxes in place as the mode/selection changes.
-    applyNodeGeometry(node, () => 'default', stacked ? 'right' : 'below');
+    applyNodeGeometry(node, () => 'default');
 
     node
       .on('click', function (d: GraphNodeDatum) {
@@ -278,12 +240,9 @@ export const useGraphSimulation = ({
     // `link` is kept purely so d3 resolves each link's string source/target
     // into references to the actual node objects (what the highlight hooks
     // and `updatePositions` below expect) - strength 0 means it never pulls
-    // nodes around; the radial layout above already decided where they go.
-    // `collide` is the only thing still allowed to move a node off its
-    // target, and only to nudge apart two nodes placed too close within the
-    // same hub sector.
-    // The stacked layout spaces its grid cells explicitly, so it needs no
-    // collision pass - one would only knock nodes out of their lanes.
+    // nodes around; the stacked layout above already decided where they go.
+    // It spaces its grid cells explicitly, so there is no collision pass -
+    // one would only knock nodes out of their lanes.
     const simulation = d3
       .forceSimulation<GraphNodeDatum>(simNodes)
       .force('link', d3.forceLink<GraphNodeDatum, GraphLinkDatum>(simLinks).id((d) => d.id).strength(0))
@@ -295,20 +254,13 @@ export const useGraphSimulation = ({
         'y',
         d3.forceY<GraphNodeDatum>((d) => placement.positions.get(d.id)?.y ?? height / 2).strength(0.85)
       )
-      .force(
-        'collide',
-        stacked
-          ? null
-          : d3.forceCollide<GraphNodeDatum>((d) => getNodeHalfDiagonal(d.degree) + config.collidePadding)
-      )
       .alphaDecay(config.alphaDecay)
       .velocityDecay(config.velocityDecay)
       .stop();
     simulationRef.current = simulation;
 
     // Pre-converge synchronously so the graph first paints already settled,
-    // instead of animating through the early iterations where any collided
-    // nodes are still being nudged apart.
+    // instead of animating into place.
     const preTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
     for (let i = 0; i < preTicks; i += 1) simulation.tick();
 
@@ -349,11 +301,10 @@ export const useGraphSimulation = ({
     drawLanes();
 
     const updatePositions = () => {
-      const pathBetween = stacked ? ellipticalEdgePath : curvedEdgePath;
       const edgePath = (d: any) => {
         const source = d.source as GraphNodeDatum;
         const target = d.target as GraphNodeDatum;
-        return pathBetween(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0);
+        return ellipticalEdgePath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0);
       };
       link.attr('d', edgePath);
       linkHit.attr('d', edgePath);
@@ -386,7 +337,7 @@ export const useGraphSimulation = ({
     setIsReady(true);
 
     // On every resize (window, split divider, or the card grid changing the
-    // panel's height) re-derive the radial layout for the new panel shape and
+    // panel's height) re-derive the stacked layout for the new panel shape and
     // re-fit to it - so the graph keeps adapting to the space available even
     // after the user has zoomed, panned, or dragged a node. The user's zoom
     // level is kept as a multiple of the auto-fit scale (so a zoomed-in view
@@ -449,7 +400,7 @@ export const useGraphSimulation = ({
       simulation.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, edges, layoutConfig, layout]);
+  }, [nodes, edges, layoutConfig]);
 
   return isReady;
 };

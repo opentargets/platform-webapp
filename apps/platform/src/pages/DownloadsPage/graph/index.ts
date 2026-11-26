@@ -16,4 +16,4 @@ export { useGraphLayout } from './hooks/useGraphLayout';
 // Utilities
 export { transformRecordSetToGraph } from './utils/dataTransformer';
 export { enrichNodesWithClassification } from './utils/nodeClassifier';
-export { getLayoutConfig, getResponsiveLayoutConfig, getDefaultLayoutConfig } from './utils/layoutConfig';
+export { getLayoutConfig, getDefaultLayoutConfig } from './utils/layoutConfig';

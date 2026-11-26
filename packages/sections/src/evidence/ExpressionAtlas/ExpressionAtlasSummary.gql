@@ -1,9 +1,7 @@
 fragment expressionAtlasSummary on Disease {
-  expressionAtlasSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [expression_atlas]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    expressionAtlas(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

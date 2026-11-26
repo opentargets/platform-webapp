@@ -10,59 +10,134 @@ import {
   DirectionOfEffectTooltip,
   DisplayVariantId,
   OtTableServer,
+  type OtTableColumn,
   Typography,
 } from "ui";
 import { epmcUrl, sentenceCase, identifiersOrgLink } from "@ot/utils";
-import { dataTypesMap, clinvarStarMap, naLabel, variantConsequenceSource, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  clinvarStarMap,
+  naLabel,
+  variantConsequenceSource,
+  type EvidenceBodyProps,
+  type EvidenceEva,
+  type EvidenceEvaSort,
+  EvidenceEvaSortField,
+  SortDirection,
+} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
-import CLINVAR_QUERY from "./ClinvarQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import CLINVAR_QUERY_DOCUMENT from "./ClinvarQuery.gql";
 
-const exportColumns = [
+type ClinvarRow = Pick<
+  EvidenceEva,
+  | "score"
+  | "diseaseId"
+  | "diseaseName"
+  | "diseaseFromSource"
+  | "cohortPhenotypes"
+  | "variantId"
+  | "variantHgvsId"
+  | "variantChromosome"
+  | "variantPosition"
+  | "variantReferenceAllele"
+  | "variantAlternateAllele"
+  | "variantRsId"
+  | "variantFunctionalConsequenceId"
+  | "variantFunctionalConsequenceLabel"
+  | "directionOnTarget"
+  | "directionOnTrait"
+  | "studyId"
+  | "clinicalSignificances"
+  | "allelicRequirements"
+  | "alleleOrigins"
+  | "confidence"
+  | "literature"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { eva: { count: number; rows: ClinvarRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceEvaSort[];
+};
+
+const CLINVAR_QUERY = typedDocument<QueryData, QueryVariables>(CLINVAR_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceEvaSortField.Score,
+  desc: true,
+};
+
+// the view returns "SO_0001583", ProtVar and identifiers.org expect "SO:0001583"
+const soId = (id: string) => id.replace("_", ":");
+const PROTVAR_CONSEQUENCES = ["SO:0001583", "SO:0001587"];
+
+const exportColumns: OtTableColumn<ClinvarRow>[] = [
   {
+    id: "diseaseId",
     label: "diseaseId",
-    exportValue: row => row.disease.id,
+    exportValue: (row: ClinvarRow) => row.diseaseId,
   },
   {
+    id: "diseaseName",
     label: "diseaseName",
-    exportValue: row => row.disease.name,
+    exportValue: (row: ClinvarRow) => row.diseaseName,
   },
   {
+    id: "variantId",
     label: "variantId",
-    exportValue: row => row.variant?.id,
+    exportValue: (row: ClinvarRow) => row.variantId,
   },
   {
+    id: "variantRsId",
     label: "variantRsId",
-    exportValue: row => row.variantRsId,
+    exportValue: (row: ClinvarRow) => row.variantRsId,
   },
   {
+    id: "variantHgvsId",
     label: "variantHgvsId",
-    exportValue: row => row.variantHgvsId,
+    exportValue: (row: ClinvarRow) => row.variantHgvsId,
   },
   {
+    id: "variantConsequence",
     label: "variantConsequence",
-    exportValue: row => row.variantFunctionalConsequence,
+    exportValue: (row: ClinvarRow) => row.variantFunctionalConsequenceLabel,
   },
   {
+    id: "clinicalSignificances",
     label: "clinicalSignificances",
-    exportValue: row => row.clinicalSignificances,
+    exportValue: (row: ClinvarRow) => row.clinicalSignificances,
   },
   {
+    id: "allelicRequirements",
     label: "allelicRequirements",
-    exportValue: row => row.alleleOrigins,
+    exportValue: (row: ClinvarRow) => row.alleleOrigins,
   },
   {
+    id: "reviewStatus",
     label: "reviewStatus",
-    exportValue: row => row.confidence,
+    exportValue: (row: ClinvarRow) => row.confidence,
   },
 ];
 
-function getColumns(label) {
+function getColumns(label: EvidenceBodyProps["label"]): OtTableColumn<ClinvarRow>[] {
   return [
     {
-      id: "disease.name",
+      id: "diseaseName",
       label: "Disease/phenotype",
-      renderCell: ({ disease, diseaseFromSource, cohortPhenotypes }) => (
+      renderCell: ({ diseaseId, diseaseName, diseaseFromSource, cohortPhenotypes }) => (
         <Tooltip
           title={
             <>
@@ -73,7 +148,7 @@ function getColumns(label) {
                 {diseaseFromSource}
               </Typography>
 
-              {cohortPhenotypes?.length > 1 ? (
+              {cohortPhenotypes.length > 1 ? (
                 <>
                   <Typography variant="subtitle2" display="block" align="center">
                     All reported phenotypes:
@@ -91,8 +166,8 @@ function getColumns(label) {
           }
           showHelpIcon
         >
-          <Link asyncTooltip to={`/disease/${disease.id}`}>
-            {disease.name}
+          <Link asyncTooltip to={`/disease/${diseaseId}`}>
+            {diseaseName}
           </Link>
         </Tooltip>
       ),
@@ -101,15 +176,14 @@ function getColumns(label) {
       id: "variantId",
       label: "Variant",
       enableHiding: false,
-      renderCell: ({ variant }) => {
-        if (!variant) return naLabel;
-        const { id: variantId, referenceAllele, alternateAllele } = variant;
+      renderCell: ({ variantId, variantReferenceAllele, variantAlternateAllele }) => {
+        if (!variantId) return naLabel;
         return (
           <Link asyncTooltip to={`/variant/${variantId}`}>
             <DisplayVariantId
               variantId={variantId}
-              referenceAllele={referenceAllele}
-              alternateAllele={alternateAllele}
+              referenceAllele={variantReferenceAllele ?? ""}
+              alternateAllele={variantAlternateAllele ?? ""}
               expand={false}
             />
           </Link>
@@ -134,8 +208,7 @@ function getColumns(label) {
     {
       id: "variantHgvsId",
       label: "HGVS ID",
-      renderCell: ({ variant }) => variant?.hgvsId || naLabel,
-      filterValue: ({ variant }) => `${variant?.hgvsId}`,
+      renderCell: ({ variantHgvsId }) => variantHgvsId || naLabel,
     },
     {
       id: "studyId",
@@ -152,39 +225,37 @@ function getColumns(label) {
     {
       id: "variantConsequence",
       label: "Variant Consequence",
-      renderCell: ({ variantFunctionalConsequence, variant }) => {
-        if (!variantFunctionalConsequence) return naLabel;
-        const {
-          chromosome,
-          position,
-          referenceAllele,
-          alternateAllele
-        } = variant ?? {};
+      renderCell: ({
+        variantFunctionalConsequenceId,
+        variantFunctionalConsequenceLabel,
+        variantId,
+        variantChromosome,
+        variantPosition,
+        variantReferenceAllele,
+        variantAlternateAllele,
+      }) => {
+        if (!variantFunctionalConsequenceId) return naLabel;
+        const consequenceId = soId(variantFunctionalConsequenceId);
         return (
           <div style={{ display: "flex", gap: "5px" }}>
-            {variantFunctionalConsequence && (
-              <LabelChip
-                label={variantConsequenceSource.VEP.label}
-                value={sentenceCase(variantFunctionalConsequence.label)}
-                tooltip={variantConsequenceSource.VEP.tooltip}
-                to={identifiersOrgLink("SO", variantFunctionalConsequence.id.slice(3))}
-              />
-            )}
-            {variant &&
-              (variantFunctionalConsequence.id === "SO:0001583" ||
-                variantFunctionalConsequence.id === "SO:0001587") && (
+            <LabelChip
+              label={variantConsequenceSource.VEP.label}
+              value={sentenceCase(variantFunctionalConsequenceLabel) ?? undefined}
+              tooltip={variantConsequenceSource.VEP.tooltip}
+              to={identifiersOrgLink("SO", consequenceId.slice(3))}
+            />
+            {variantId && PROTVAR_CONSEQUENCES.includes(consequenceId) && (
               <LabelChip
                 label={variantConsequenceSource.ProtVar.label}
-                to={`https://www.ebi.ac.uk/ProtVar/query?chromosome=${chromosome}&genomic_position=${position}&reference_allele=${referenceAllele}&alternative_allele=${alternateAllele}`}
+                to={`https://www.ebi.ac.uk/ProtVar/query?chromosome=${variantChromosome}&genomic_position=${variantPosition}&reference_allele=${variantReferenceAllele}&alternative_allele=${variantAlternateAllele}`}
                 tooltip={variantConsequenceSource.ProtVar.tooltip}
               />
             )}
           </div>
         );
       },
-      filterValue: ({ variantFunctionalConsequence }) => (
-        sentenceCase(variantFunctionalConsequence?.label ?? "")
-      ),
+      exportValue: ({ variantFunctionalConsequenceLabel }) =>
+        sentenceCase(variantFunctionalConsequenceLabel ?? ""),
     },
     {
       id: "directionOfVariantEffect",
@@ -194,18 +265,17 @@ function getColumns(label) {
       renderCell: ({ directionOnTarget, directionOnTrait }) => {
         return (
           <DirectionOfEffectIcon
-            variantEffect={directionOnTarget}
-            directionOnTrait={directionOnTrait}
+            variantEffect={directionOnTarget ?? ""}
+            directionOnTrait={directionOnTrait ?? ""}
           />
         );
       },
     },
     {
       id: "clinicalSignificances",
-      filterValue: ({ clinicalSignificances }) => clinicalSignificances.join(),
       label: "Clinical significance",
       renderCell: ({ clinicalSignificances }) => {
-        if (!clinicalSignificances) return naLabel;
+        if (clinicalSignificances.length === 0) return naLabel;
         if (clinicalSignificances.length === 1) return sentenceCase(clinicalSignificances[0]);
         return (
           <ul
@@ -221,14 +291,15 @@ function getColumns(label) {
           </ul>
         );
       },
+      exportValue: ({ clinicalSignificances }) => clinicalSignificances.join(", "),
     },
     {
       id: "allelicRequirements",
       label: "Allele origin",
       renderCell: ({ alleleOrigins, allelicRequirements }) => {
-        if (!alleleOrigins || alleleOrigins.length === 0) return naLabel;
+        if (alleleOrigins.length === 0) return naLabel;
 
-        if (allelicRequirements)
+        if (allelicRequirements.length > 0)
           return (
             <Tooltip
               title={
@@ -251,33 +322,41 @@ function getColumns(label) {
 
         return alleleOrigins.map(a => sentenceCase(a)).join("; ");
       },
-      filterValue: ({ alleleOrigins }) => (alleleOrigins ? alleleOrigins.join() : ""),
+      exportValue: ({ alleleOrigins }) => alleleOrigins.join(", "),
     },
     {
       id: "confidence",
       label: "Review status",
-      renderCell: ({ confidence }) => (
-        <Tooltip title={confidence}>
-          <span>
-            <ClinvarStars num={clinvarStarMap[confidence]} />
-          </span>
-        </Tooltip>
-      ),
+      renderCell: ({ confidence }) =>
+        confidence ? (
+          <Tooltip title={confidence}>
+            <span>
+              <ClinvarStars num={clinvarStarMap[confidence]} />
+            </span>
+          </Tooltip>
+        ) : (
+          naLabel
+        ),
     },
     {
+      id: "score",
+      label: "Score",
+      tooltip: "Evidence score, from 0 to 1",
+      numeric: true,
+      sortField: DEFAULT_SORT.field,
+      renderCell: ({ score }) => score.toFixed(2),
+    },
+    {
+      id: "literature",
       label: "Literature",
       renderCell: ({ literature }) => {
-        const literatureList =
-          literature?.reduce((acc, id) => {
-            if (id !== "NA") {
-              acc.push({
-                name: id,
-                url: epmcUrl(id),
-                group: "literature",
-              });
-            }
-            return acc;
-          }, []) || [];
+        const literatureList = literature
+          .filter(id => id !== "NA")
+          .map(id => ({
+            name: id,
+            url: epmcUrl(id),
+            group: "literature",
+          }));
 
         return (
           <PublicationsDrawer entries={literatureList} symbol={label.symbol} name={label.name} />
@@ -287,18 +366,24 @@ function getColumns(label) {
   ];
 }
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId: ensemblId, efoId } = id;
   const variables = { ensemblId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CLINVAR_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
   const columns = getColumns(label);
 
@@ -310,14 +395,17 @@ function Body({ id, label, entity }: Props) {
       request={request}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<ClinvarRow>
           query={CLINVAR_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem="eva-evidence"
-          dataPath="disease.eva"
+          dataPath="disease.evidenceViews.eva"
           pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
+          // no search on the ClinVar view: a browser search would fetch every row
           showGlobalFilter={false}
           variables={variables}
         />

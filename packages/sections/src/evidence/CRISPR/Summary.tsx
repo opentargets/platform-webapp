@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ crisprSummary }) => {
-        const { count } = crisprSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.crispr;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.affected_pathway}

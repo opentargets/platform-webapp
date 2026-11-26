@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ uniprotVariantsSummary }) => {
-        const { count } = uniprotVariantsSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.uniprotVariants;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.genetic_association}

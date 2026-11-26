@@ -4,13 +4,15 @@
  *
  * Node visual states (see the Datasets page spec, "Network: node visual states"):
  *
- * | State      | Box    | Fill | Stroke                       | Label             | Opacity |
- * | Default    | 14×10  | .35  | 1px category                 | mono 9px grey700  | 1       |
- * | Faded      | same   | same | same                         | same              | .15     |
- * | In bag  | 18×13  | .6   | 1px category + check dot     | bold grey900      | 1       |
- * | Selected   | 22×16  | .6   | 2px primary.dark + outer ring| bold grey900      | 1       |
+ * | State      | Box    | Stroke                       | Label             | Opacity |
+ * | Default    | 24×17  | 1px category                 | mono 12px grey700 | 1       |
+ * | Faded      | same   | same                         | same              | .15     |
+ * | In bag     | 29×21  | 1px category + check dot     | bold grey900      | 1       |
+ * | Selected   | 34×24  | 2px primary.dark + outer ring| bold grey900      | 1       |
  *
- * The layout is computed once from a fixed footprint (`LAYOUT_FOOTPRINT`) and
+ * The box is filled with the solid category colour in every state.
+ *
+ * The layout is computed once from fixed cell sizes (see stackedLayout.ts) and
  * never changes with state, so toggling basket mode or a selection only
  * restyles nodes in place.
  */
@@ -29,7 +31,7 @@ const GREY_900 = '#212121';
 
 export const GRAPH_STYLES = `
   .graph-node { cursor: pointer; transition: opacity 0.2s ease; }
-  .graph-node .node-box { fill-opacity: 0.35; stroke-width: 1px; transition: fill-opacity 0.2s ease; }
+  .graph-node .node-box { stroke-width: 1px; }
   .graph-node .node-ring, .graph-node .node-check { display: none; }
   .graph-node text {
     font-family: ${MONO_FONT};
@@ -40,16 +42,10 @@ export const GRAPH_STYLES = `
     stroke-width: 3px;
     stroke-linejoin: round;
   }
-  /* Labels hidden by the progressive reveal come back for anything in focus */
-  .graph-node:hover text,
-  .graph-node.selected text,
-  .graph-node.neighbour text,
-  .graph-node.in-basket text { display: inline !important; }
   .graph-node.faded { opacity: 0.15; }
-  .graph-node.in-basket .node-box { fill-opacity: 0.6; }
   .graph-node.in-basket .node-check { display: inline; }
   .graph-node.in-basket text, .graph-node.selected text { font-weight: 700; fill: ${GREY_900}; }
-  .graph-node.selected .node-box { fill-opacity: 0.6; stroke: ${PRIMARY_DARK} !important; stroke-width: 2px; }
+  .graph-node.selected .node-box { stroke: ${PRIMARY_DARK} !important; stroke-width: 2px; }
   .graph-node.selected .node-ring { display: inline; }
 
   .graph-lane rect { fill-opacity: 0.07; }
@@ -75,66 +71,18 @@ export const GRAPH_STYLES = `
 
 export type NodeVisualState = 'default' | 'basket' | 'selected';
 
-/** Box size for a degree-1 node in each state; `getDegreeScale` grows it with connectivity */
+/** Box size in each state. Every node is the same size: degree is shown by lane order (see stackedLayout.ts) */
 export const NODE_BOX: Record<NodeVisualState, { width: number; height: number }> = {
   default: { width: 24, height: 17 },
   basket: { width: 29, height: 21 },
   selected: { width: 34, height: 24 },
 };
-
-/** Degree at which the size scale stops growing */
-const DEGREE_CAP = 40;
-/** Size multiplier of the most connected nodes relative to a degree-1 node */
-const MAX_DEGREE_SCALE = 2.8;
-
-/**
- * Degree-driven size multiplier: 1 for a leaf, rising with the square root
- * of degree (so area tracks connectivity) to MAX_DEGREE_SCALE at DEGREE_CAP.
- * Hubs like target/disease read as much bigger than evidence leaves.
- */
-export const getDegreeScale = (degree: number | undefined): number => {
-  const d = Math.min(Math.max((degree ?? 1) - 1, 0), DEGREE_CAP);
-  return 1 + (MAX_DEGREE_SCALE - 1) * Math.sqrt(d / DEGREE_CAP);
-};
-
-/** Drawn box size for a node in a given state, scaled by its degree */
-export const getNodeBox = (
-  state: NodeVisualState,
-  degree: number | undefined
-): { width: number; height: number } => {
-  const scale = getDegreeScale(degree);
-  return { width: Math.round(NODE_BOX[state].width * scale), height: Math.round(NODE_BOX[state].height * scale) };
-};
 export const NODE_RADIUS = 3;
 /** Gap between the selected box and its outer ring */
 export const SELECT_RING_OFFSET = 4;
 export const CHECK_DOT_RADIUS = 6;
-/** Space between the bottom of the box and the label baseline */
-const LABEL_GAP = 13;
-/** Space between the right edge of the box and a label beside it (stacked layout) */
+/** Space between the right edge of the box and the label beside it */
 const LABEL_SIDE_GAP = 8;
-
-/** Where a node's label sits: below the box (radial) or to its right (stacked columns) */
-export type LabelPlacement = 'below' | 'right';
-
-/**
- * Footprint reserved per degree-1 node by the radial layout and the
- * collision force, scaled by degree like the box. Sized to the box plus
- * breathing room rather than to the label (labels are revealed
- * progressively, see `isLabelVisible`), so the boxes themselves fill the
- * canvas once the view is fitted. Independent of the node's visual state so
- * selecting or basketing a node never moves anything.
- */
-const LAYOUT_FOOTPRINT = { width: 36, height: 28 };
-
-/** Radius of the circle around a node's layout footprint - what spacing/collision checks use. */
-export const getNodeHalfDiagonal = (degree?: number): number => {
-  const scale = getDegreeScale(degree);
-  return Math.sqrt(((LAYOUT_FOOTPRINT.width * scale) / 2) ** 2 + ((LAYOUT_FOOTPRINT.height * scale) / 2) ** 2);
-};
-
-export const getLabelOffset = (state: NodeVisualState, degree: number | undefined): number =>
-  getNodeBox(state, degree).height / 2 + LABEL_GAP;
 
 /**
  * Size a node group's box, ring, check dot and label for its visual state.
@@ -143,12 +91,11 @@ export const getLabelOffset = (state: NodeVisualState, degree: number | undefine
  */
 export const applyNodeGeometry = (
   nodeSel: any,
-  stateOf: (d: GraphNodeDatum) => NodeVisualState,
-  labelPlacement: LabelPlacement = 'below'
+  stateOf: (d: GraphNodeDatum) => NodeVisualState
 ) => {
-  const box = (d: GraphNodeDatum) => getNodeBox(stateOf(d), d.degree);
+  const box = (d: GraphNodeDatum) => NODE_BOX[stateOf(d)];
   nodeSel
-    .selectAll('rect.node-box, rect.node-base')
+    .select('rect.node-box')
     .attr('width', (d: GraphNodeDatum) => box(d).width)
     .attr('height', (d: GraphNodeDatum) => box(d).height)
     .attr('x', (d: GraphNodeDatum) => -box(d).width / 2)
@@ -162,33 +109,13 @@ export const applyNodeGeometry = (
   nodeSel
     .select('g.node-check')
     .attr('transform', (d: GraphNodeDatum) => `translate(${box(d).width / 2}, ${-box(d).height / 2})`);
-  if (labelPlacement === 'right') {
-    nodeSel
-      .select('text')
-      .attr('text-anchor', 'start')
-      .attr('x', (d: GraphNodeDatum) => box(d).width / 2 + LABEL_SIDE_GAP)
-      .attr('dy', 4);
-  } else {
-    nodeSel
-      .select('text')
-      .attr('text-anchor', 'middle')
-      .attr('x', 0)
-      .attr('dy', (d: GraphNodeDatum) => getLabelOffset(stateOf(d), d.degree));
-  }
+  // The label runs to the right of the box, like a list row
+  nodeSel
+    .select('text')
+    .attr('text-anchor', 'start')
+    .attr('x', (d: GraphNodeDatum) => box(d).width / 2 + LABEL_SIDE_GAP)
+    .attr('dy', 4);
 };
-
-/**
- * Progressive label reveal: at the fitted view only well-connected nodes are
- * labelled; the rest appear once the user zooms in past LABEL_REVEAL_ZOOM
- * times the fit scale. Hovered, selected, neighbour and in-basket nodes are
- * always labelled through GRAPH_STYLES, whatever the zoom.
- */
-export const LABEL_REVEAL_ZOOM = 1.5;
-export const LABEL_REVEAL_DEGREE = 6;
-
-/** Whether a node's label is visible at the given zoom, expressed as a multiple of the fit scale */
-export const isLabelVisible = (degree: number | undefined, zoomMultiple: number): boolean =>
-  (degree ?? 0) >= LABEL_REVEAL_DEGREE || zoomMultiple >= LABEL_REVEAL_ZOOM;
 
 const CHARS_PER_LABEL = 20;
 

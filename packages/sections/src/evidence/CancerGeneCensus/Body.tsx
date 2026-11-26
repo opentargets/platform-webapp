@@ -7,80 +7,132 @@ import {
   SectionItem,
   PublicationsDrawer,
   OtTableServer,
+  type OtTableColumn,
   Box,
   List,
   ListItem,
   Typography,
 } from "ui";
 
-import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  type EvidenceBodyProps,
+  type EvidenceCancerGeneCensus,
+  type EvidenceCancerGeneCensusMutation,
+  type EvidenceCancerGeneCensusSort,
+  EvidenceCancerGeneCensusSortField,
+  type EvidenceCancerGeneCensusSearch,
+  EvidenceCancerGeneCensusSearchField,
+  SortDirection,
+} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, identifiersOrgLink, sentenceCase } from "@ot/utils";
 
 import { definition } from ".";
 
-import CANCER_GENE_CENSUS_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import CANCER_GENE_CENSUS_QUERY_DOCUMENT from "./sectionQuery.gql";
 
-const samplePercent = item => (item.numberSamplesWithMutationType / item.numberSamplesTested) * 100;
+type CancerGeneCensusRow = Pick<
+  EvidenceCancerGeneCensus,
+  "diseaseId" | "diseaseName" | "mutatedSamples" | "literature"
+>;
 
-const getMaxPercent = row => {
-  if (row.mutatedSamples) return Math.max(...row.mutatedSamples.map(item => samplePercent(item)));
-  return null;
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { cancerGeneCensus: { count: number; rows: CancerGeneCensusRow[] } };
+  } | null;
+  target?: {
+    id: string;
+    hallmarks: { attributes: { description: string; pmid?: number | null; name: string }[] };
+  } | null;
 };
 
-const getColumns = label => [
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceCancerGeneCensusSort[];
+  search?: EvidenceCancerGeneCensusSearch;
+};
+
+const CANCER_GENE_CENSUS_QUERY = typedDocument<QueryData, QueryVariables>(
+  CANCER_GENE_CENSUS_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+// production sorted this table by mutated samples, ascending
+const DEFAULT_SORT = {
+  id: "mutatedSamples",
+  field: EvidenceCancerGeneCensusSortField.MutatedSamples,
+  desc: false,
+};
+
+const samplePercent = (item: EvidenceCancerGeneCensusMutation) =>
+  ((item.numberSamplesWithMutationType ?? 0) / (item.numberSamplesTested ?? 1)) * 100;
+
+const sortBySamplePercent = (mutatedSamples: EvidenceCancerGeneCensusMutation[]) =>
+  mutatedSamples.slice().sort((a, b) => samplePercent(b) - samplePercent(a));
+
+const getColumns = (
+  label: EvidenceBodyProps["label"]
+): OtTableColumn<CancerGeneCensusRow>[] => [
   {
-    id: "disease.name",
+    id: "diseaseName",
     label: "Disease/phenotype",
     enableHiding: false,
-    renderCell: ({ disease }) => (
-      <Link asyncTooltip to={`/disease/${disease.id}`}>
-        {disease.name}
+    // Attach the Cancer Gene Census search fields to the first column.
+    searchFields: [
+      EvidenceCancerGeneCensusSearchField.DiseaseName,
+      EvidenceCancerGeneCensusSearchField.MutationTypes,
+      EvidenceCancerGeneCensusSearchField.Literature,
+    ],
+    renderCell: ({ diseaseId, diseaseName }) => (
+      <Link asyncTooltip to={`/disease/${diseaseId}`}>
+        {diseaseName}
       </Link>
     ),
   },
   {
     id: "mutationType",
-    propertyPath: "mutatedSamples.functionalConsequence",
     label: "Mutation type",
     enableHiding: false,
     renderCell: ({ mutatedSamples }) => {
-      if (!mutatedSamples) return naLabel;
-      const sortedMutatedSamples = mutatedSamples
-        .slice()
-        .sort((a, b) => samplePercent(b) - samplePercent(a));
+      if (mutatedSamples.length === 0) return naLabel;
       return (
         <List style={{ padding: 0 }}>
-          {sortedMutatedSamples.map(mutatedSample => (
-            <ListItem key={mutatedSample.functionalConsequence.id} style={{ padding: ".25rem 0" }}>
+          {sortBySamplePercent(mutatedSamples).map(mutatedSample => (
+            <ListItem key={mutatedSample.functionalConsequenceId} style={{ padding: ".25rem 0" }}>
               <Link
                 external
-                to={identifiersOrgLink("SO", mutatedSample.functionalConsequence.id.slice(3))}
+                to={identifiersOrgLink(
+                  "SO",
+                  (mutatedSample.functionalConsequenceId ?? "").slice(3)
+                )}
               >
-                {sentenceCase(mutatedSample.functionalConsequence.label)}
+                {sentenceCase(mutatedSample.functionalConsequenceLabel ?? "")}
               </Link>
             </ListItem>
           ))}
         </List>
       );
     },
-    filterValue: ({ mutatedSamples }) =>
-      (mutatedSamples || [])
-        .map(mutatedSample => sentenceCase(mutatedSample.functionalConsequence.label))
-        .join(),
+    exportValue: ({ mutatedSamples }) =>
+      mutatedSamples
+        .map(mutatedSample => sentenceCase(mutatedSample.functionalConsequenceLabel ?? ""))
+        .join(", "),
   },
   {
     id: "mutatedSamples",
-    propertyPath: "mutatedSamples.numberSamplesWithMutationType",
     label: "Mutated / Total samples",
+    sortField: DEFAULT_SORT.field,
     renderCell: ({ mutatedSamples }) => {
-      if (!mutatedSamples) return naLabel;
-      const sortedMutatedSamples = mutatedSamples
-        .slice()
-        .sort((a, b) => samplePercent(b) - samplePercent(a));
+      if (mutatedSamples.length === 0) return naLabel;
       return (
         <List style={{ padding: 0 }}>
-          {sortedMutatedSamples.map(item => {
+          {sortBySamplePercent(mutatedSamples).map(item => {
             const percent = samplePercent(item);
 
             return (
@@ -95,38 +147,32 @@ const getColumns = label => [
         </List>
       );
     },
-    comparator: (a, b) => getMaxPercent(a) - getMaxPercent(b),
+    exportValue: ({ mutatedSamples }) =>
+      mutatedSamples
+        .map(item => `${item.numberSamplesWithMutationType}/${item.numberSamplesTested}`)
+        .join(", "),
   },
   {
     id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
-      const literatureList =
-        literature?.reduce((acc, id) => {
-          if (id === "NA") return acc;
-
-          return [
-            ...acc,
-            {
-              name: id,
-              url: epmcUrl(id),
-              group: "literature",
-            },
-          ];
-        }, []) || [];
+      const literatureList = literature
+        .filter(id => id !== "NA")
+        .map(id => ({
+          name: id,
+          url: epmcUrl(id),
+          group: "literature",
+        }));
 
       return (
         <PublicationsDrawer entries={literatureList} symbol={label.symbol} name={label.name} />
       );
     },
+    exportValue: ({ literature }) => literature.join(", "),
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
 
   const variables = { ensemblId: ensgId, efoId };
@@ -134,7 +180,17 @@ function Body({ id, label, entity }: Props) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CANCER_GENE_CENSUS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns(label);
@@ -147,13 +203,14 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} diseaseName={label.name} />}
       renderBody={() => {
+        const attributes = request.data?.target?.hallmarks.attributes ?? [];
         const roleInCancerItems =
-          request.data?.target.hallmarks && request.data?.target.hallmarks.attributes.length > 0
-            ? request.data?.target.hallmarks.attributes
+          attributes.length > 0
+            ? attributes
                 .filter(attribute => attribute.name === "role in cancer")
                 .map(attribute => ({
                   label: attribute.description,
-                  url: epmcUrl(attribute.pmid),
+                  url: epmcUrl(String(attribute.pmid)),
                 }))
             : [{ label: "Unknown" }];
 
@@ -165,14 +222,15 @@ function Body({ id, label, entity }: Props) {
               </Typography>
               <ChipList items={roleInCancerItems} />
             </Box>
-            <OtTableServer
+            <OtTableServer<CancerGeneCensusRow>
               query={CANCER_GENE_CENSUS_QUERY}
               columns={columns}
               dataDownloader
               dataDownloaderFileStem={`cancer-gene-census-${ensgId}-${efoId}`}
-              dataPath="disease.cancerGeneCensusSummary"
+              dataPath="disease.evidenceViews.cancerGeneCensus"
               pageSize={PAGE_SIZE}
-              showGlobalFilter={false}
+              sortBy={DEFAULT_SORT.id}
+              order={DEFAULT_SORT.desc ? "desc" : "asc"}
               variables={variables}
             />
           </>

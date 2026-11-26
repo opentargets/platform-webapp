@@ -1,35 +1,97 @@
-import { useState } from "react";
 import {
   Link,
   SectionItem,
-  DisplayVariantId,
+  // DisplayVariantId,
   ScientificNotation,
-  OtTableOffsetPagination,
+  OtTableServer,
+  type OtTableColumn,
   Tooltip,
   Navigate,
   Chip,
 } from "ui";
-import { naLabel } from "@ot/constants";
+import {
+  type CredibleSetColocalisation,
+  type CredibleSetColocalisationsSearch,
+  CredibleSetColocalisationsSearchField,
+  type CredibleSetColocalisationsSort,
+  CredibleSetColocalisationsSortField,
+  naLabel,
+  SortDirection,
+} from "@ot/constants";
 import { definition } from ".";
 import Description from "./Description";
-import MOLQTL_COLOC_QUERY from "./MolQTLColocQuery.gql";
-import { mantissaExponentComparator, variantComparator } from "@ot/utils";
+import MOLQTL_COLOC_QUERY_DOCUMENT from "./MolQTLColocQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import { getStudyTypeDisplay } from "@ot/utils";
+import type { ReactElement } from "react";
+import { useQuery } from "@apollo/client";
 
-const columns = [
+type ColocalisationRow = Pick<
+  CredibleSetColocalisation,
+  | "otherCredibleSetId"
+  | "studyId"
+  | "studyType"
+  | "isTransQtl"
+  | "targetId"
+  | "targetApprovedSymbol"
+  | "biosampleId"
+  | "biosampleName"
+  | "condition"
+  | "leadVariantId"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "numberColocalisingVariants"
+  | "colocalisationMethod"
+  | "h3"
+  | "h4"
+  | "clpp"
+  | "betaRatioSignAverage"
+>;
+
+type QueryData = {
+  credibleSet?: {
+    credibleSetId: string;
+    molqtlcolocalisation: { count: number; rows: ColocalisationRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  credibleSetId: string;
+  index: number;
+  size: number;
+  sort: CredibleSetColocalisationsSort[];
+  search?: CredibleSetColocalisationsSearch;
+};
+
+const MOLQTL_COLOC_QUERY = typedDocument<QueryData, QueryVariables>(MOLQTL_COLOC_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "h4",
+  field: CredibleSetColocalisationsSortField.H4,
+  desc: true,
+};
+
+const columns: OtTableColumn<ColocalisationRow>[] = [
   {
-    id: "otherStudyLocus.studyLocusId",
+    id: "otherCredibleSetId",
     label: "Credible set",
     sticky: true,
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      return <Navigate to={`/credible-set/${otherStudyLocus.studyLocusId}`} />;
+    // Attach the molQTL search fields to the first column.
+    searchFields: [
+      CredibleSetColocalisationsSearchField.StudyId,
+      CredibleSetColocalisationsSearchField.TargetApprovedSymbol,
+      CredibleSetColocalisationsSearchField.BiosampleName,
+      CredibleSetColocalisationsSearchField.LeadVariantId,
+    ],
+    renderCell: ({ otherCredibleSetId }) => {
+      if (!otherCredibleSetId) return naLabel;
+      return <Navigate to={`/credible-set/${otherCredibleSetId}`} />;
     },
   },
   {
-    id: "otherStudyLocus.study.id",
+    id: "studyId",
     label: "Study",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyId = otherStudyLocus?.study?.id;
+    renderCell: ({ studyId }) => {
       if (!studyId) return naLabel;
       return (
         <Link asyncTooltip to={`../study/${studyId}`}>
@@ -39,87 +101,87 @@ const columns = [
     },
   },
   {
-    id: "otherStudyLocus.study.studyType",
+    id: "studyType",
     label: "Type",
-    renderCell: ({ otherStudyLocus }) => {
-      const studyType = otherStudyLocus?.study?.studyType;
+    renderCell: ({ studyType, isTransQtl }) => {
       if (!studyType) return naLabel;
       return (
         <>
-          {studyType}{" "}
-          {otherStudyLocus.isTransQtl && <Chip label="trans" />}
+          {getStudyTypeDisplay(studyType)}{" "}
+          {isTransQtl && <Chip label="trans" />}
         </>
       );
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const studyType = otherStudyLocus?.study?.studyType;
-      if (!studyType) return naLabel;
-      return `${studyType}, isTrans:${otherStudyLocus.isTrans}`;
-    },
+    exportValue: ({ studyType, isTransQtl }) =>
+      studyType ? `${studyType}, isTrans:${isTransQtl}` : naLabel,
   },
   {
-    id: "otherStudyLocus.study.target.approvedSymbol",
+    id: "targetApprovedSymbol",
     label: "Affected gene",
-    renderCell: () => "?API?",
-    exportValue: () => "?API?",
-  },
-
-  {
-    id: "otherStudyLocus.study.biosample.biosampleName",
-    label: "Affected tissue/cell",
-    renderCell: () => "?API?",
-    exportValue: () => "?API?",
-  },
-  {
-    id: "otherStudyLocus.study.condition",
-    label: "Condition",
-    renderCell: ({ otherStudyLocus }) => otherStudyLocus?.study?.condition || naLabel,
-  },
-  {
-    id: "otherStudyLocus.variant.variantId",
-    label: "Lead Variant",
-    comparator: variantComparator(d => d?.otherStudyLocus?.variant),
-    sortable: true,
-    filterValue: ({ otherStudyLocus }) => {
-      const v = otherStudyLocus?.variant;
-      return `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`;
-    },
-    renderCell: ({ otherStudyLocus }) => {
-      if (!otherStudyLocus?.variant) return naLabel;
-      const { variantId, referenceAllele, alternateAllele } = otherStudyLocus.variant;
+    renderCell: ({ targetId, targetApprovedSymbol }) => {
+      const label = targetApprovedSymbol || targetId;
+      if (!label) return naLabel;
+      if (!targetId) return label;
       return (
-        <Link asyncTooltip to={`/variant/${variantId}`}>
-          <DisplayVariantId
-            variantId={variantId}
-            referenceAllele={referenceAllele}
-            alternateAllele={alternateAllele}
-            expand={false}
-          />
+        <Link asyncTooltip to={`/target/${targetId}`}>
+          {label}
         </Link>
       );
     },
-    exportValue: ({ otherStudyLocus }) => otherStudyLocus?.variant?.variantId,
+    exportValue: ({ targetApprovedSymbol, targetId }) => targetApprovedSymbol || targetId || "",
+  },
+  {
+    id: "biosampleName",
+    label: "Affected tissue/cell",
+    renderCell: ({ biosampleId, biosampleName }) => {
+      const label = biosampleName || biosampleId;
+      if (!label) return naLabel;
+      if (!biosampleId) return label;
+      return (
+        <Link external to={`https://www.ebi.ac.uk/ols4/search?q=${biosampleId}`}>
+          {label}
+        </Link>
+      );
+    },
+    exportValue: ({ biosampleName, biosampleId }) => biosampleName || biosampleId || "",
+  },
+  {
+    id: "condition",
+    label: "Condition",
+    renderCell: ({ condition }) => condition || naLabel,
+  },
+  {
+    id: "leadVariantId",
+    label: "Lead Variant",
+    sortField: CredibleSetColocalisationsSortField.LeadVariant,
+    renderCell: ({ leadVariantId }) => {
+      if (!leadVariantId) return naLabel;
+      return (
+        <Link asyncTooltip to={`/variant/${leadVariantId}`}>
+          {/* Restore DisplayVariantId when colocalisationView exposes the lead alleles.
+          <DisplayVariantId
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
+            expand={false}
+          />
+          */}
+          {leadVariantId}
+        </Link>
+      );
+    },
+    exportValue: ({ leadVariantId }) => leadVariantId,
   },
   {
     id: "pValue",
     label: "P-Value",
     numeric: true,
-    comparator: ({ otherStudyLocus: a }, { otherStudyLocus: b }) =>
-      mantissaExponentComparator(
-        a?.pValueMantissa,
-        a?.pValueExponent,
-        b?.pValueMantissa,
-        b?.pValueExponent
-      ),
-    sortable: true,
-    filterValue: false,
-    renderCell: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    sortField: CredibleSetColocalisationsSortField.PValue,
+    renderCell: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ otherStudyLocus }) => {
-      const { pValueMantissa, pValueExponent } = otherStudyLocus ?? {};
+    exportValue: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
@@ -127,15 +189,13 @@ const columns = [
   {
     id: "numberColocalisingVariants",
     label: "Colocalising Variants (n)",
-    filterValue: false,
     numeric: true,
-    comparator: (a, b) => a?.numberColocalisingVariants - b?.numberColocalisingVariants,
-    sortable: true,
     renderCell: ({ numberColocalisingVariants }) => {
       return typeof numberColocalisingVariants === "number"
         ? numberColocalisingVariants.toLocaleString()
         : naLabel;
     },
+    sortField: CredibleSetColocalisationsSortField.NumberColocalisingVariants,
   },
   {
     id: "betaRatioSignAverage",
@@ -152,12 +212,6 @@ const columns = [
           : betaRatioSignAverage.toFixed(2);
       return <Tooltip title={`Beta ratio sign average: ${displayValue}`}>{category}</Tooltip>;
     },
-    filterValue: ({ betaRatioSignAverage }) => {
-      if (betaRatioSignAverage == null) return null;
-      if (betaRatioSignAverage <= -0.99) return "Opposite";
-      else if (betaRatioSignAverage >= 0.99) return "Same";
-      return "Inconclusive";
-    },
     sortable: false,
     exportValue: ({ betaRatioSignAverage }) => {
       if (betaRatioSignAverage == null) return null;
@@ -169,15 +223,13 @@ const columns = [
   {
     id: "h3",
     label: "H3",
+    numeric: true,
     tooltip: (
       <>
         Posterior probability that the signals <b>do not</b> colocalise
       </>
     ),
-    filterValue: false,
-    numeric: true,
-    comparator: (a, b) => a?.h3 - b?.h3,
-    sortable: true,
+    sortField: CredibleSetColocalisationsSortField.H3,
     renderCell: ({ h3 }) => {
       if (typeof h3 !== "number") return naLabel;
       return h3.toFixed(3);
@@ -186,11 +238,9 @@ const columns = [
   {
     id: "h4",
     label: "H4",
-    tooltip: "Posterior probability that the signals colocalise",
-    filterValue: false,
     numeric: true,
-    comparator: (a, b) => a?.h4 - b?.h4,
-    sortable: true,
+    tooltip: "Posterior probability that the signals colocalise",
+    sortField: DEFAULT_SORT.field,
     renderCell: ({ h4 }) => {
       if (typeof h4 !== "number") return naLabel;
       return h4.toFixed(3);
@@ -201,10 +251,8 @@ const columns = [
     label: "CLPP",
     tooltip:
       "The sum of the products of the fine-mapping posterior probabilities for overlapping variants between two study loci",
-    filterValue: false,
     numeric: true,
-    comparator: (a, b) => a?.clpp - b?.clpp,
-    sortable: true,
+    sortField: CredibleSetColocalisationsSortField.Clpp,
     renderCell: ({ clpp }) => {
       if (typeof clpp !== "number") return naLabel;
       return clpp.toFixed(3);
@@ -213,13 +261,25 @@ const columns = [
 ];
 
 type BodyProps = {
-  studyLocusId: string;
+  id: string;
   entity: string;
 };
 
-function Body({ id, entity }: BodyProps) {
-  const variables = { studyLocusId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+function Body({ id, entity }: BodyProps): ReactElement {
+  const variables = { credibleSetId: id };
+  const request = useQuery(MOLQTL_COLOC_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
+  });
 
   return (
     <SectionItem
@@ -229,12 +289,13 @@ function Body({ id, entity }: BodyProps) {
       renderDescription={() => <Description />}
       renderBody={() => {
         return (
-          <OtTableOffsetPagination
+          <OtTableServer<ColocalisationRow>
             dataDownloader
             dataDownloaderFileStem={`${id}-credibleSets`}
-            entity="credibleSet"
-            sectionName="molqtlcolocalisation"
-            setInitialRequestData={setRequest}
+            dataPath="credibleSet.molqtlcolocalisation"
+            pageSize={PAGE_SIZE}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             columns={columns}
             query={MOLQTL_COLOC_QUERY}
             variables={variables}

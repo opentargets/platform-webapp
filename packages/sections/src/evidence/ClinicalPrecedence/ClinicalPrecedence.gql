@@ -1,39 +1,30 @@
-query ClinicalPrecedence($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query ClinicalPrecedence(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceClinicalPrecedenceSort!]! = []
+  $search: EvidenceClinicalPrecedenceSearch
+) {
   disease(efoId: $efoId) {
     id
-    clinical_precedence: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [clinical_precedence]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      clinicalPrecedence(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          targetId
+          targetApprovedSymbol
+          drugId
+          drugName
+          drugTargetIds
+          directionOnTarget
+          directionOnTrait
+          clinicalStage
+          clinicalReportId
+          studyStartDate
         }
-        target {
-          id
-          approvedSymbol
-        }
-        drug {
-          id
-          name
-          mechanismsOfAction {
-            rows {
-              targets {
-                id
-                approvedSymbol
-              }
-            }
-          }
-        }
-        directionOnTarget
-        directionOnTrait
-        clinicalStage
-        clinicalReportId
-        studyStartDate
-
       }
     }
   }

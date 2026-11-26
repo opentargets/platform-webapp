@@ -2,24 +2,18 @@ query VariantGWASCredibleSetsPlotQuery($variantId: String!) {
   variant(variantId: $variantId) {
     referenceAllele
     alternateAllele
-    gwasCredibleSets: credibleSets(
-      filter: { studyTypes: [gwas] }
-      page: { index: 0, size: 50000 }
+    credibleSetsView(
+      studyTypes: [gwas]
+      page: { index: 0, size: 10000 }
     ) {
       rows {
-        studyLocusId
+        credibleSetId
         pValueMantissa
         pValueExponent
         beta
-        variant {
-          variantId
-        }
-        study {
-          diseases {
-            therapeuticAreas {
-              id
-            }
-          }
+        leadVariantId
+        diseaseTherapeuticAreas {
+          id
         }
       }
     }

@@ -41,6 +41,8 @@ function Body({ id: efoId, label: name, entity }: Props) {
     recordsByStage,
     maxClinicalStage,
     loadingRecords,
+    prefetchRecords,
+    getPrefetchHandlers,
   } = useClinicalReportsMasterDetail<DrugRow>({
     getClinicalReportsIds,
     getMaxClinicalStage,
@@ -60,7 +62,13 @@ function Body({ id: efoId, label: name, entity }: Props) {
           <ClinicalReportsMasterDetailFrame
             master={
               count > 0 && (
-                <DrugsTable efoId={efoId} selectedRow={selectedRow} selectRow={selectRow} />
+                <DrugsTable
+                  efoId={efoId}
+                  selectedRow={selectedRow}
+                  selectRow={selectRow}
+                  prefetchRecords={prefetchRecords}
+                  getPrefetchHandlers={getPrefetchHandlers}
+                />
               )
             }
             detail={

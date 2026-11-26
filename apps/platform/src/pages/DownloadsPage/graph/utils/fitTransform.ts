@@ -12,8 +12,7 @@ export const computeFitTransform = (
   simNodes: { x?: number; y?: number }[],
   width: number,
   height: number,
-  // Clears a node's box and the label of a labelled hub below it (see
-  // graphVisuals.ts), not just its center point
+  // Clears a node's box, not just its center point
   padding = 64,
   // Anything drawn beyond the nodes that must stay in view (the stacked
   // layout's lane bands)
@@ -28,10 +27,7 @@ export const computeFitTransform = (
 
   const graphWidth = Math.max(maxX - minX, 1);
   const graphHeight = Math.max(maxY - minY, 1);
-  // Always fits every node in view - labels are hidden by default (see
-  // useGraphSimulation's zoom handler) and only reveal progressively as the
-  // user zooms in, so there's no always-visible text here for a small scale
-  // to render unreadably, unlike when this used to floor out at a minimum.
+  // Always fits every node in view
   const scale = Math.min(3, Math.max(0.1, Math.min(width / graphWidth, height / graphHeight)));
   const translateX = width / 2 - scale * (minX + graphWidth / 2);
   const translateY = height / 2 - scale * (minY + graphHeight / 2);

@@ -22,19 +22,18 @@ const MIGRATED_DOCUMENTS = [
   "apps/platform/src/components/GeneEnrichmentAnalysis/api/*.gql",
   "packages/sections/src/disease/{Bibliography,Drugs,GWASStudies,Ontology,Phenotypes}/*.gql",
   "packages/sections/src/drug/**/*.gql",
-  // OverlappingVariants and TargetGenomicRegion stay out: the new API has no
-  // proteinCodingCoordinates or region query yet. Two globs because a single brace
-  // list this long exceeds the 255-byte limit of a path component
+  // OverlappingVariants stays out: the API has no Target.proteinCodingCoordinates.
+  // Two globs because a single brace list this long exceeds the 255-byte limit of
+  // a path component
   "packages/sections/src/target/{BaselineExpression,Bibliography,CancerHallmarks,ChemicalProbes,ComparativeGenomics,DepMap,Drugs,GeneOntology,GeneticConstraint}/*.gql",
-  "packages/sections/src/target/{MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,Tractability}/*.gql",
+  "packages/sections/src/target/{MolecularInteractions,MolecularStructure,MousePhenotypes,Pathways,Pharmacogenomics,QTLCredibleSets,Safety,SubcellularLocation,TargetGenomicRegion,Tractability}/*.gql",
   "packages/ui/src/components/ClinicalReports/*.gql",
   "apps/platform/src/pages/{VariantPage,StudyPage,CredibleSetPage,EvidencePage}/**/*.gql",
   "packages/sections/src/study/**/*.gql",
-  // VariantGenomicRegion and CredibleSetGenomicRegion stay out (no region query yet), as
-  // do the PPP evidence widgets OTCRISPR, OTEncore and OTValidation (their datasources
-  // are missing from the API's Datasource enum)
-  "packages/sections/src/variant/{EVA,EnhancerToGenePredictions,GWASCredibleSets,MolecularStructure,Pharmacogenomics,QTLCredibleSets,UniProtVariants,VariantEffect,VariantEffectPredictor}/*.gql",
-  "packages/sections/src/credibleSet/{EnhancerToGenePredictions,GWASColoc,Locus2Gene,MolQTLColoc,Variants}/*.gql",
+  // The PPP evidence widgets OTCRISPR, OTEncore and OTValidation stay out (their
+  // datasources are missing from the API's Datasource enum)
+  "packages/sections/src/variant/{EVA,EnhancerToGenePredictions,GWASCredibleSets,MolecularStructure,Pharmacogenomics,QTLCredibleSets,UniProtVariants,VariantEffect,VariantEffectPredictor,VariantGenomicRegion}/*.gql",
+  "packages/sections/src/credibleSet/**/*.gql",
   "packages/sections/src/evidence/{CancerBiomarkers,CancerGeneCensus,ClinGen,ClinicalPrecedence,CRISPR,CRISPRScreen,EuropePmc,EVA,EVASomatic,ExpressionAtlas}/*.gql",
   "packages/sections/src/evidence/{Gene2Phenotype,GeneBurden,GenomicsEngland,GWASCredibleSets,Impc,IntOgen,Orphanet,Reactome,UniProtLiterature,UniProtVariants}/*.gql",
 ].map((glob) => resolve(__dirname, "../..", glob));

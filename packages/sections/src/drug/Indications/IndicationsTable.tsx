@@ -4,6 +4,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   clinicalStageCategories,
+  DrugIndicationSearchField,
   type IndicationsQuery,
   type IndicationsQueryVariables,
 } from "@ot/constants";
@@ -32,9 +33,17 @@ type IndicationsTableProps = {
   chemblId: string;
   selectedRow: IndicationRow | null;
   selectRow: (row: IndicationRow | null) => void;
+  prefetchRecords: (row: IndicationRow | null | undefined) => void;
+  getPrefetchHandlers: (row: IndicationRow) => { onMouseEnter: () => void; onMouseLeave: () => void };
 };
 
-function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTableProps) {
+function IndicationsTable({
+  chemblId,
+  selectedRow,
+  selectRow,
+  prefetchRecords,
+  getPrefetchHandlers,
+}: IndicationsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -42,11 +51,13 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
     {
       id: "indicationCard",
       label: "",
+      searchFields: [DrugIndicationSearchField.DiseaseName],
       renderCell: (row) => {
         const { disease, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
         return (
           <Box
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
@@ -120,8 +131,6 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
           </Box>
         );
       },
-      filterValue: (row) =>
-        `${row.disease?.name ?? ""} ${stageCategories[row.maxClinicalStage]?.label ?? ""}`,
     },
   ];
 
@@ -180,7 +189,7 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
         dataDownloaderFileStem="clinical-indications"
         dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        globalFilterPlaceholderText="Search..."
+        globalFilterPlaceholderText="Search indications..."
         getSelectedRows={(rowsInfo: Row<IndicationRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
@@ -196,6 +205,11 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
           }
         }}
         showRowsPerPageControl={false}
+        stableHeight
+        // the first card of a page is selected when the page opens, so its reports
+        // are fetched along with the neighbouring pages
+        prefetchAdjacentPages
+        onPagePrefetched={(rows) => prefetchRecords(rows[0])}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

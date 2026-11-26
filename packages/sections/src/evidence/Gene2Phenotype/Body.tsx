@@ -8,26 +8,91 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTableServer,
+  type OtTableColumn,
   List,
   ListItem,
   Typography,
 } from "ui";
 
-import { dataTypesMap, naLabel, type EvidenceBodyProps } from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  type EvidenceBodyProps,
+  type EvidenceGene2Phenotype,
+  type EvidenceGene2PhenotypeSort,
+  EvidenceGene2PhenotypeSortField,
+  SortDirection,
+  type EvidenceGene2PhenotypeSearch,
+  EvidenceGene2PhenotypeSearchField,
+} from "@ot/constants";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
-import OPEN_TARGETS_GENETICS_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import OPEN_TARGETS_GENETICS_QUERY_DOCUMENT from "./sectionQuery.gql";
 import { definition } from ".";
 
-const g2pUrl = (targetFromSourceId, diseaseFromSource) =>
+type Gene2PhenotypeRow = Pick<
+  EvidenceGene2Phenotype,
+  | "score"
+  | "diseaseId"
+  | "diseaseName"
+  | "diseaseFromSource"
+  | "allelicRequirements"
+  | "confidence"
+  | "studyId"
+  | "targetFromSourceId"
+  | "variantFunctionalConsequenceId"
+  | "variantFunctionalConsequenceLabel"
+  | "literature"
+  | "directionOnTarget"
+  | "directionOnTrait"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { gene2Phenotype: { count: number; rows: Gene2PhenotypeRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceGene2PhenotypeSort[];
+  search?: EvidenceGene2PhenotypeSearch;
+};
+
+const OPEN_TARGETS_GENETICS_QUERY = typedDocument<QueryData, QueryVariables>(
+  OPEN_TARGETS_GENETICS_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceGene2PhenotypeSortField.Score,
+  desc: true,
+};
+
+const g2pUrl = (targetFromSourceId?: string | null, diseaseFromSource?: string | null) =>
   `https://www.ebi.ac.uk/gene2phenotype/search?query=${targetFromSourceId}-related%20${diseaseFromSource}`;
 
-const getColumns = label => [
+const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<Gene2PhenotypeRow>[] => [
   {
-    id: "disease.name",
+    id: "diseaseName",
     label: "Disease/phenotype",
     enableHiding: false,
-    renderCell: ({ disease, diseaseFromSource }) => (
+    // Attach the Gene2Phenotype search fields to the first column.
+    searchFields: [
+      EvidenceGene2PhenotypeSearchField.DiseaseName,
+      EvidenceGene2PhenotypeSearchField.DiseaseFromSource,
+      EvidenceGene2PhenotypeSearchField.VariantFunctionalConsequenceLabel,
+      EvidenceGene2PhenotypeSearchField.AllelicRequirements,
+      EvidenceGene2PhenotypeSearchField.StudyId,
+      EvidenceGene2PhenotypeSearchField.Confidence,
+    ],
+    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -41,8 +106,8 @@ const getColumns = label => [
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          {disease.name}
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          {diseaseName}
         </Link>
       </Tooltip>
     ),
@@ -50,19 +115,20 @@ const getColumns = label => [
   {
     id: "variantFunctionalConsequence",
     label: "Functional consequence",
-    renderCell: ({ variantFunctionalConsequence }) =>
-      variantFunctionalConsequence ? (
+    renderCell: ({ variantFunctionalConsequenceId, variantFunctionalConsequenceLabel }) =>
+      variantFunctionalConsequenceId ? (
         <Link
           external
-          to={`http://www.sequenceontology.org/browser/current_svn/term/${variantFunctionalConsequence.id}`}
+          // the view returns "SO_0001583", the browser expects "SO:0001583"
+          to={`http://www.sequenceontology.org/browser/current_svn/term/${variantFunctionalConsequenceId.replace("_", ":")}`}
         >
-          {sentenceCase(variantFunctionalConsequence.label)}
+          {sentenceCase(variantFunctionalConsequenceLabel)}
         </Link>
       ) : (
         naLabel
       ),
-    filterValue: ({ variantFunctionalConsequence }) =>
-      sentenceCase(variantFunctionalConsequence?.label),
+    exportValue: ({ variantFunctionalConsequenceLabel }) =>
+      sentenceCase(variantFunctionalConsequenceLabel),
   },
   {
     id: "directionOfVariantEffect",
@@ -71,7 +137,7 @@ const getColumns = label => [
     ),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
-        <DirectionOfEffectIcon variantEffect={directionOnTarget} directionOnTrait={directionOnTrait} />
+        <DirectionOfEffectIcon variantEffect={directionOnTarget ?? ""} directionOnTrait={directionOnTrait ?? ""} />
       );
     },
   },
@@ -79,7 +145,7 @@ const getColumns = label => [
     id: "allelicRequirements",
     label: "Allelic requirement",
     renderCell: ({ allelicRequirements }) => {
-      if (allelicRequirements && allelicRequirements.length > 1) {
+      if (allelicRequirements.length > 1) {
         return (
           <List>
             {allelicRequirements.map(item => (
@@ -88,13 +154,13 @@ const getColumns = label => [
           </List>
         );
       }
-      if (allelicRequirements && allelicRequirements.length === 1) {
+      if (allelicRequirements.length === 1) {
         return sentenceCase(allelicRequirements[0]);
       }
 
       return naLabel;
     },
-    filterValue: ({ allelicRequirements }) => allelicRequirements.join(),
+    exportValue: ({ allelicRequirements }) => allelicRequirements.join(", "),
   },
   {
     id: "studyId",
@@ -129,32 +195,45 @@ const getColumns = label => [
       ),
   },
   {
+    id: "score",
+    label: "Score",
+    tooltip: "Evidence score, from 0 to 1",
+    numeric: true,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ score }) => score.toFixed(2),
+  },
+  {
     id: "literature",
     label: "Literature",
     renderCell: ({ literature }) => {
-      const entries = literature
-        ? literature.map(id => ({
-            name: id,
-            url: epmcUrl(id),
-            group: "literature",
-          }))
-        : [];
+      const entries = literature.map(id => ({
+        name: id,
+        url: epmcUrl(id),
+        group: "literature",
+      }));
       return <PublicationsDrawer entries={entries} symbol={label.symbol} name={label.name} />;
     },
+    exportValue: ({ literature }) => literature.join(", "),
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props) {
+function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: EvidenceBodyProps) {
   const variables = { ensemblId: ensgId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(OPEN_TARGETS_GENETICS_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns({ symbol, name });
@@ -167,14 +246,15 @@ function Body({ id: { ensgId, efoId }, label: { symbol, name }, entity }: Props)
       entity={entity}
       renderDescription={() => <Description symbol={symbol} name={name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<Gene2PhenotypeRow>
           query={OPEN_TARGETS_GENETICS_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`${ensgId}-${efoId}-gene2phenotype`}
-          dataPath="disease.gene2Phenotype"
+          dataPath="disease.evidenceViews.gene2Phenotype"
           pageSize={PAGE_SIZE}
-          showGlobalFilter={false}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           variables={variables}
         />
       )}

@@ -1,36 +1,25 @@
-query EuropePMCQuery(
-  $ensemblId: String!
-  $efoId: String!
-  $index: Int! = 0
-  $size: Int! = 10
-) {
+query EuropePMCQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
-    europePmc: evidences(
-      ensemblIds: [$ensemblId]
-      page: { index: $index, size: $size }
-      datasourceIds: [europepmc]
-    ) {
-      count
-      rows {
-        disease {
-          name
-          id
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      europePmc(page: { index: $index, size: $size }) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          literature
+          pmcIds
+          publicationYear
+          textMiningSentences {
+            tStart
+            tEnd
+            dStart
+            dEnd
+            section
+            text
+          }
+          resourceScore
         }
-        target {
-          approvedSymbol
-          id
-        }
-        literature
-        textMiningSentences {
-          tStart
-          tEnd
-          dStart
-          dEnd
-          section
-          text
-        }
-        resourceScore
       }
     }
   }

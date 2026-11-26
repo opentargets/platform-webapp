@@ -138,6 +138,27 @@ export class TargetPage {
   }
 
   /**
+   * Get the "UniProt:" label block (rendered only when the target has protein ids)
+   */
+  getUniProtLabel(): Locator {
+    return this.page.getByTestId("header-external-links-uniprot");
+  }
+
+  /**
+   * Get the "RNAcentral:" label block (rendered only when the target has an RNAcentral xref)
+   */
+  getRNAcentralLabel(): Locator {
+    return this.page.getByTestId("header-external-links-rnacentral");
+  }
+
+  /**
+   * Get all RNAcentral external links
+   */
+  getRNAcentralLinks(): Locator {
+    return this.getRNAcentralLabel().locator('a[href*="identifiers.org/rnacentral:"]');
+  }
+
+  /**
    * Get the GeneCards external link
    */
   getGeneCardsLink(): Locator {

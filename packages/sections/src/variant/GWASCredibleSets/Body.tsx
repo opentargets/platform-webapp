@@ -10,21 +10,23 @@ import {
   Navigate,
   Box,
   Chip,
+  Typography,
 } from "ui";
 import { definition } from ".";
 import Description from "./Description";
 import GWAS_CREDIBLE_SETS_TABLE_QUERY from "./GWASCredibleSetsTableQuery.gql";
 import { Fragment } from "react/jsx-runtime";
-// import PheWasPlot from "./PheWasPlot";
+import PheWasPlot from "./PheWasPlot";
 import {
-  credsetConfidenceMap,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
   naLabel,
   SortDirection,
   VariantCredibleSetsSearchField,
   VariantCredibleSetsSortField,
 } from "@ot/constants";
 import { useQuery } from "@apollo/client";
-// import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
+import GWAS_CREDIBLE_SETS_PLOT_QUERY from "./GWASCredibleSetsPlotQuery.gql";
 
 type getColumnsType = {
   id: string;
@@ -41,14 +43,14 @@ const DEFAULT_SORT = {
 function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
   return [
     {
-      id: "studyLocusId",
+      id: "credibleSetId",
       label: "Credible set",
       sticky: true,
       enableHiding: false,
       // For now add all search fields to first column - if move to column-based
       // search, move these fields to their corresponding columns
       searchFields: Object.values(VariantCredibleSetsSearchField),
-      renderCell: ({ studyLocusId }) => <Navigate to={`/credible-set/${studyLocusId}`} />,
+      renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
     },
     {
       id: "leadVariant",
@@ -173,8 +175,12 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       exportValue: ({ posteriorProbability }) => posteriorProbability,
     },
     {
-      id: "finemappingMethod",
+      id: "fineMappingMethod",
       label: "Fine-mapping method",
+      renderCell: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod ?? naLabel,
+      exportValue: ({ fineMappingMethod }) =>
+        fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
     },
     {
       id: "confidence",
@@ -195,8 +201,8 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       renderCell: ({ confidence }) => {
         if (!confidence) return naLabel;
         return (
-          <Tooltip title={confidence} style="">
-            <ClinvarStars num={credsetConfidenceMap[confidence]} />
+          <Tooltip title={credsetConfidenceLabels[confidence]} style="">
+            <ClinvarStars num={confidence} />
           </Tooltip>
         );
       },
@@ -237,12 +243,12 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
           for more information.
         </>
       ),
-      renderCell: ({ studyLocusId, topL2GGeneId, topL2GScore }) => {
+      renderCell: ({ credibleSetId, topL2GGeneId, topL2GScore }) => {
         if (!topL2GGeneId || typeof topL2GScore !== "number") return naLabel;
         return (
           <L2GScoreIndicator
             score={topL2GScore}
-            studyLocusId={studyLocusId}
+            credibleSetId={credibleSetId}
             targetId={topL2GGeneId}
           />
         );
@@ -296,13 +302,11 @@ function Body({ id, entity }: BodyProps) {
           alternateAllele={request.data?.variant.alternateAllele}
         />
       )}
-      // renderChart={() => {
-      //   return (
-      //     <Box mb={1} ml={2}>
-      //       <Plot variantId={id} />
-      //     </Box>
-      //   );
-      // }}
+      renderChart={() => (
+        <Box mb={1} ml={2}>
+          <Plot variantId={id} />
+        </Box>
+      )}
       renderBody={() => {
         const columns = getColumns({
           id,
@@ -327,20 +331,28 @@ function Body({ id, entity }: BodyProps) {
   );
 }
 
-// function Plot({ variantId }: { variantId: string }) {
-//   const { data, loading } = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
-//     variables: { variantId },
-//   });
-//
-//   return (
-//     <PheWasPlot
-//       loading={loading}
-//       data={data?.variant?.gwasCredibleSets?.rows}
-//       pageId={variantId}
-//       pageReferenceAllele={data?.variant?.referenceAllele}
-//       pageAlternateAllele={data?.variant?.alternateAllele}
-//     />
-//   );
-// }
+function Plot({ variantId }: { variantId: string }) {
+  const { data, loading, error } = useQuery(GWAS_CREDIBLE_SETS_PLOT_QUERY, {
+    variables: { variantId },
+  });
+
+  if (error) {
+    return (
+      <Typography  align="center" mt={1}>
+        Unable to load the GWAS credible sets plot
+      </Typography>
+    );
+  }
+
+  return (
+    <PheWasPlot
+      loading={loading}
+      data={data?.variant?.credibleSetsView?.rows}
+      pageId={variantId}
+      pageReferenceAllele={data?.variant?.referenceAllele}
+      pageAlternateAllele={data?.variant?.alternateAllele}
+    />
+  );
+}
 
 export default Body;

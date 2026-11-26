@@ -11,18 +11,20 @@
  * of it, and the least connected at the outer edges, so the busiest arcs
  * stay short and the sparse categories don't sit between them.
  *
+ * Within a lane, datasets are ordered by degree (most connected first, ties
+ * alphabetical); that order, not the box size, is what conveys connectivity -
+ * every box is the same size. The order runs down a sub-column, then on to
+ * the next one.
+ *
  * A lane that holds more datasets than the panel's aspect ratio comfortably
  * stacks is split into several sub-columns; the rows-per-sub-column count is
  * picked so the whole stack's aspect ratio lands as close as possible to the
  * panel's, and the fit transform (see fitTransform.ts) scales the result
  * into view.
- *
- * The alternative is the radial hub-and-spoke layout in `radialLayout.ts`;
- * `useGraphSimulation` switches between the two on the `layout` option.
  */
 
 import { GraphLinkDatum, GraphNodeDatum } from '../types';
-import { getLinkEndpointId, getNodeBox, truncateLabel } from './graphVisuals';
+import { getLinkEndpointId, NODE_BOX, truncateLabel } from './graphVisuals';
 
 export interface LaneBand {
   category: string;
@@ -59,21 +61,19 @@ const LANE_PAD_X = 12;
 const LANE_PAD_BOTTOM = 14;
 const LANE_GAP = 20;
 const ROW_GAP = 10;
-/** Smallest row a node takes, so leaves don't pack tighter than their label's line height */
+/** Smallest row a node takes, so rows don't pack tighter than their label's line height */
 const MIN_ROW_HEIGHT = 18;
 
-/** Width of the widest box in the group at its largest (selected) size, so a selection never overlaps its label */
-const widestBox = (group: GraphNodeDatum[]): number =>
-  group.reduce((m, n) => Math.max(m, getNodeBox('selected', n.degree).width), 0);
-const rowHeight = (n: GraphNodeDatum): number =>
-  Math.max(getNodeBox('default', n.degree).height, MIN_ROW_HEIGHT) + ROW_GAP;
+/** Box column width: the largest (selected) size, so a selection never overlaps its label */
+const BOX_WIDTH = NODE_BOX.selected.width;
+const ROW_HEIGHT = Math.max(NODE_BOX.default.height, MIN_ROW_HEIGHT) + ROW_GAP;
+/** A sub-column's width: the box, then its label */
+const CELL_WIDTH = BOX_WIDTH + LABEL_GAP + LABEL_WIDTH;
 
 interface Lane {
   category: string;
   color: string;
   nodes: GraphNodeDatum[];
-  boxWidth: number;
-  cellWidth: number;
 }
 
 /**
@@ -120,18 +120,11 @@ const buildLanes = (nodes: GraphNodeDatum[], edges: GraphLinkDatum[]): Lane[] =>
   });
   return orderCentreOut(byCategory, edges).map((category) => {
     const group = byCategory.get(category) ?? [];
-    // Hubs first, then alphabetical, so the busiest nodes sit at a lane's top
+    // Most connected first, then alphabetical: position in the lane is how degree reads
     const sorted = [...group].sort(
       (a, b) => (b.degree ?? 0) - (a.degree ?? 0) || a.label.localeCompare(b.label)
     );
-    const boxWidth = widestBox(sorted);
-    return {
-      category,
-      color: sorted[0]?.color ?? '#999',
-      nodes: sorted,
-      boxWidth,
-      cellWidth: boxWidth + LABEL_GAP + LABEL_WIDTH,
-    };
+    return { category, color: sorted[0]?.color ?? '#999', nodes: sorted };
   });
 };
 
@@ -142,19 +135,16 @@ const subColumns = (lane: Lane, rows: number): GraphNodeDatum[][] => {
   return out;
 };
 
-const columnHeight = (column: GraphNodeDatum[]): number => column.reduce((h, n) => h + rowHeight(n), 0);
-
 const laneWidth = (lane: Lane, rows: number): number =>
-  Math.max(1, Math.ceil(lane.nodes.length / rows)) * lane.cellWidth + LANE_PAD_X * 2;
+  Math.max(1, Math.ceil(lane.nodes.length / rows)) * CELL_WIDTH + LANE_PAD_X * 2;
 
 const stackWidth = (lanes: Lane[], rows: number): number =>
   lanes.reduce((w, lane) => w + laneWidth(lane, rows), 0) + LANE_GAP * (lanes.length - 1);
 
 const stackHeight = (lanes: Lane[], rows: number): number =>
-  lanes.reduce(
-    (h, lane) => Math.max(h, ...subColumns(lane, rows).map(columnHeight)),
-    0
-  ) + LANE_TITLE_ROOM + LANE_PAD_BOTTOM;
+  lanes.reduce((h, lane) => Math.max(h, Math.min(lane.nodes.length, rows) * ROW_HEIGHT), 0) +
+  LANE_TITLE_ROOM +
+  LANE_PAD_BOTTOM;
 
 /** The rows-per-sub-column count whose stack aspect ratio is closest to the panel's */
 const pickRows = (lanes: Lane[], width: number, height: number): number => {
@@ -194,12 +184,9 @@ export const computeStackedLayout = (
     const right = left + laneWidth(lane, rows);
     subColumns(lane, rows).forEach((column, c) => {
       // the box sits at the sub-column's left, its label runs to the right
-      const x = left + LANE_PAD_X + c * lane.cellWidth + lane.boxWidth / 2;
-      let cursor = top + LANE_TITLE_ROOM;
-      column.forEach((n) => {
-        const h = rowHeight(n);
-        positions.set(n.id, { x, y: cursor + (h - ROW_GAP) / 2 });
-        cursor += h;
+      const x = left + LANE_PAD_X + c * CELL_WIDTH + BOX_WIDTH / 2;
+      column.forEach((n, r) => {
+        positions.set(n.id, { x, y: top + LANE_TITLE_ROOM + r * ROW_HEIGHT + (ROW_HEIGHT - ROW_GAP) / 2 });
       });
     });
     const band = { category: lane.category, color: lane.color, top, bottom, left, right };

@@ -11,7 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => `${data.impc.count} entr${data.impc.count === 1 ? "y" : "ies"}`}
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.impc;
+        return `${count} ${count === 1 ? "entry" : "entries"}`;
+      }}
       subText={dataTypesMap.animal_model}
     />
   );

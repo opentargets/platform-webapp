@@ -4,6 +4,11 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tooltip, Link, Drawer, IconButton, Paper, Typography, ButtonBase } from "ui";
 import { sentenceCase } from "@ot/utils";
+import {
+  naLabel,
+  type EvidenceCancerBiomarkersGeneExpression,
+  type EvidenceCancerBiomarkersGeneticVariation,
+} from "@ot/constants";
 
 const StyledButtonBase = styled(ButtonBase)(({ theme }) => ({
   color: `${theme.palette.primary.main} !important`,
@@ -42,7 +47,20 @@ const StyledBiomarkerItem = styled("div")({
   marginBottom: "8px",
 });
 
-function BiomarkersDrawer({ biomarkerName, biomarkers }) {
+// the view returns "SO_0001777" / "GO_0010628", identifiers.org expects "SO:0001777"
+const curie = (id: string) => id.replace("_", ":");
+
+type BiomarkersDrawerProps = {
+  biomarkerName?: string | null;
+  geneticVariations: EvidenceCancerBiomarkersGeneticVariation[];
+  geneExpressions: EvidenceCancerBiomarkersGeneExpression[];
+};
+
+function BiomarkersDrawer({
+  biomarkerName,
+  geneticVariations,
+  geneExpressions,
+}: BiomarkersDrawerProps) {
   const [open, setOpen] = useState(false);
 
   function toggleOpen() {
@@ -53,8 +71,8 @@ function BiomarkersDrawer({ biomarkerName, biomarkers }) {
     setOpen(false);
   }
 
-  if (biomarkers.length === 0) {
-    return "N/A";
+  if (geneticVariations.length === 0 && geneExpressions.length === 0) {
+    return naLabel;
   }
 
   return (
@@ -71,40 +89,41 @@ function BiomarkersDrawer({ biomarkerName, biomarkers }) {
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </StyledTitle>
-        {biomarkers.geneticVariation ? (
+        {geneticVariations.length > 0 ? (
           <StyledPaper variant="outlined">
             <Typography variant="subtitle2" paragraph>
               Variant:
             </Typography>
-            {biomarkers.geneticVariation.map(variant => (
+            {geneticVariations.map(variant => (
               <StyledBiomarkerItem key={variant.name}>
                 <div>
-                  {variant.name}{" "}
-                  {variant.geneticVariationId ? `(ID: ${variant.geneticVariationId})` : null}
+                  {variant.name} {variant.id ? `(ID: ${variant.id})` : null}
                 </div>
                 {variant.functionalConsequenceId ? (
                   <Link
                     external
-                    to={`https://identifiers.org/${variant.functionalConsequenceId.id}`}
+                    to={`https://identifiers.org/${curie(variant.functionalConsequenceId)}`}
                   >
-                    {sentenceCase(variant.functionalConsequenceId.label)}
+                    {sentenceCase(variant.functionalConsequenceLabel ?? "")}
                   </Link>
                 ) : null}
               </StyledBiomarkerItem>
             ))}
           </StyledPaper>
         ) : null}
-        {biomarkers.geneExpression && biomarkers.geneExpression.length > 0 ? (
+        {geneExpressions.length > 0 ? (
           <StyledPaper variant="outlined">
             <Typography variant="subtitle2" paragraph>
               Gene expression:
             </Typography>
-            {biomarkers.geneExpression.map(expression => (
+            {geneExpressions.map(expression => (
               <StyledBiomarkerItem key={expression.name}>
                 <div>{expression.name}</div>
-                <Link external to={`https://identifiers.org/${expression.id.id}`}>
-                  {expression.id.label}
-                </Link>
+                {expression.id ? (
+                  <Link external to={`https://identifiers.org/${curie(expression.id)}`}>
+                    {expression.label}
+                  </Link>
+                ) : null}
               </StyledBiomarkerItem>
             ))}
           </StyledPaper>
