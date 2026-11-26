@@ -1,9 +1,6 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
-import {
-  stubEuropePmc,
-  waitForOperation,
-} from "../../../../POM/objects/widgets/shared/sectionDataControls";
+import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import {
   TRACTABILITY_MODALITIES,
   TractabilitySection,
@@ -15,12 +12,6 @@ type TractabilityData = {
 
 /** Target profile > Tractability (packages/sections/src/target/Tractability). */
 test.describe("Target tractability section", () => {
-  // Other sections of the page query Europe PMC from the browser; keep that third party
-  // out of these tests (see stubEuropePmc).
-  test.beforeEach(async ({ page }) => {
-    await stubEuropePmc(page);
-  });
-
   test("shows its title, description and documentation link", async ({ page, testConfig }) => {
     const tractability = new TractabilitySection(page);
     await page.goto(`/target/${testConfig.target?.primary}`);

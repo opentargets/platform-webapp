@@ -18,7 +18,7 @@ import { associationTargets, TargetAssociations } from "../../../POM/objects/wid
 const DOCS = "https://platform-docs.opentargets.org/evidence#";
 const DISEASE_ID = /^(MONDO|EFO|OTAR|HP|Orphanet|OBA|GO|NCIT|DOID|MP)_\w+$/;
 
-/** The data columns of the exported file, in order: symbol-less, a disease table has "name". */
+/** The text of a downloaded file. */
 async function downloadedText(download: Download): Promise<string> {
   return readFileSync(await download.path(), "utf8");
 }
@@ -28,7 +28,7 @@ async function clickAndDownload(aotf: TargetAssociations, button: Locator): Prom
   return download;
 }
 
-/** The variables of an evidence query for a target and a disease, when a request is one. */
+/** Whether a request is an evidence query for this target and this disease. */
 function isEvidenceRequestFor(request: Request, ensgId: string, efoId: string): boolean {
   if (request.method() !== "POST") return false;
   const data = request.postData() ?? "";
