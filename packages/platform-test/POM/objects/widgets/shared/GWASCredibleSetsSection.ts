@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { VariantCredibleSetsTable } from "./variantCredibleSetsTable";
 
 export const GWAS_HEADERS = [
@@ -8,12 +8,12 @@ export const GWAS_HEADERS = [
   "Disease/phenotype",
   "Study",
   "P-value",
-  "Beta",
-  "Posterior probability",
+  "Beta?",
+  "Posterior probability?",
   "Fine-mapping method",
-  "Fine-mapping confidence",
-  "Top L2G",
-  "L2G score",
+  "Fine-mapping confidence?",
+  "Top L2G?",
+  "L2G score?",
   "Credible set size",
 ] as const;
 
@@ -40,7 +40,12 @@ export class GWASCredibleSetsSection extends VariantCredibleSetsTable {
   }
 
   /** The clickable L2G score of a row (opens the popover). */
-  l2gTrigger(rowIndex: number) {
-    return this.cell(rowIndex, "l2gScore").getByLabel("Advanced options");
+  l2gTrigger(rowIndex: number): Locator {
+    return this.cell(rowIndex, "l2gScore").getByTestId("l2g-score-trigger");
+  }
+
+  /** The popover with the locus-to-gene features of the credible set. */
+  get l2gPopover(): Locator {
+    return this.page.getByTestId("l2g-popover");
   }
 }

@@ -10,9 +10,9 @@ export const QTL_HEADERS = [
   "Affected tissue/cell",
   "Condition",
   "P-value",
-  "Beta",
-  "Posterior probability",
-  "Fine-mapping confidence",
+  "Beta?",
+  "Posterior probability?",
+  "Fine-mapping confidence?",
   "Fine-mapping method",
   "Credible set size",
 ] as const;
@@ -38,5 +38,4 @@ export class QTLCredibleSetsSection extends VariantCredibleSetsTable {
       size: 12,
     });
   }
-
 }
