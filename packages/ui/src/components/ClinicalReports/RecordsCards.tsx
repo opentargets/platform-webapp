@@ -13,6 +13,9 @@ import StageFilter from "./StageFilter";
 
 function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selectedEntity }) {
   const records = recordsProp || {};
+  // reports of the previous selection: they stay on display, dimmed, while the
+  // next ones load, so the panel does not collapse between two selections
+  const showingPrevious = loading && !!recordsProp;
   const [selectedStage, setSelectedStage] = useState(null);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
     setSelectedStage(initStage);
   }, [maxClinicalStage, records]);
 
-  const showLoading = useDelayedFlag(loading);
+  const showLoading = useDelayedFlag(loading && !showingPrevious);
 
   const nRecords = sum(
     Object.keys(records).map((k) => (records as any)[k]),
@@ -41,7 +44,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
   const columns = [
     {
       id: "trial",
-      label: !loading && (
+      label: (!loading || showingPrevious) && (
         <StageFilter
           records={records}
           setSelectedStage={setSelectedStage}
@@ -190,7 +193,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
     );
   }
 
-  if (!selectedStage || (loading && !showLoading)) return null;
+  if (!selectedStage || (loading && !showingPrevious)) return null;
 
   const rows = records[selectedStage]?.toSorted((a: any, b: any) => {
     return new Date(b.trialStartDate).getTime() - new Date(a.trialStartDate).getTime();
@@ -201,9 +204,13 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
   return (
     <>
       <Box
+        aria-busy={showingPrevious}
         sx={{
           position: "relative",
           mr: { md: 0, lg: 4, xl: 6 },
+          opacity: showingPrevious ? 0.5 : 1,
+          pointerEvents: showingPrevious ? "none" : undefined,
+          transition: "opacity 150ms",
           "& th": {
             position: "relative !important",
             padding: "0 !important",

@@ -41,6 +41,8 @@ function Body({ id: ensemblId, label: name, entity }: Props) {
     recordsByStage,
     maxClinicalStage,
     loadingRecords,
+    prefetchRecords,
+    getPrefetchHandlers,
   } = useClinicalReportsMasterDetail<DrugRow>({
     getClinicalReportsIds,
     getMaxClinicalStage,
@@ -64,6 +66,8 @@ function Body({ id: ensemblId, label: name, entity }: Props) {
                   ensemblId={ensemblId}
                   selectedRow={selectedRow}
                   selectRow={selectRow}
+                  prefetchRecords={prefetchRecords}
+                  getPrefetchHandlers={getPrefetchHandlers}
                 />
               )
             }
