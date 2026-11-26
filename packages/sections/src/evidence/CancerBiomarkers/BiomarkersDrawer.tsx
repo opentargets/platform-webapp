@@ -64,10 +64,15 @@ function BiomarkersDrawer({ biomarkerName, biomarkers }) {
           <Typography variant="body2"> {biomarkerName}</Typography>
         </StyledButtonBase>
       </Tooltip>
-      <StyledDrawer open={open} onClose={() => close()} anchor="right">
+      <StyledDrawer
+        open={open}
+        onClose={() => close()}
+        anchor="right"
+        data-testid="biomarkers-drawer"
+      >
         <StyledTitle>
           Biomarker
-          <IconButton onClick={() => close()}>
+          <IconButton onClick={() => close()} data-testid="drawer-close">
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </StyledTitle>

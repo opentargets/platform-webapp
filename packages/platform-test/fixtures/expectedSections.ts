@@ -370,6 +370,49 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   ],
 
   // Evidence: MIR1302-2HG in melanoma (both exist, no evidence between them)
+  // MECP2, neurodevelopmental disorder: every curated genetic source, several rows each
+  "ENSG00000169057/MONDO_0700092": [
+    "clingen",
+    "europe-pmc",
+    "eva",
+    "gene2phenotype",
+    "genomics-england",
+    "impc",
+    "orphanet",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // NF1, neurofibromatosis type 1: every curated genetic source, many Genomics England and UniProt variant rows
+  "ENSG00000196712/MONDO_0018975": [
+    "clingen",
+    "europe-pmc",
+    "eva",
+    "eva-somatic",
+    "gene2phenotype",
+    "genomics-england",
+    "orphanet",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // CFTR, cystic fibrosis: curated sources except Gene2Phenotype
+  "ENSG00000001626/MONDO_0009061": [
+    "clingen",
+    "clinical-precedence",
+    "europe-pmc",
+    "eva",
+    "gene-burden",
+    "genomics-england",
+    "gwas-credible-sets",
+    "impc",
+    "orphanet",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
   "ENSG00000243485/MONDO_0005105": [],
 
   // Study: GWAS

@@ -99,12 +99,12 @@ export class SomaticEvidenceSection {
 
   /** The "<symbol> role in cancer:" label (absent on the biomarkers section). */
   get roleInCancerLabel(): Locator {
-    return this.section.getByText("role in cancer:");
+    return this.section.getByTestId("role-in-cancer").getByText("role in cancer:");
   }
 
   /** The chips after the label, one per "role in cancer" hallmark. */
   get roleInCancerChips(): Locator {
-    return this.section.locator("[data-testid^='chip-item-']");
+    return this.section.getByTestId("role-in-cancer").locator("[data-testid^='chip-item-']");
   }
 
   /** The literature cell of a row: a drawer trigger, or N/A when the row cites nothing. */
