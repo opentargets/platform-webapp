@@ -36,6 +36,18 @@ fragment CredibleSetProfileHeaderFragment on CredibleSet {
       id
       name
     }
+    backgroundTraits {
+      id
+      name
+    }
+    target {
+      id
+      approvedSymbol
+    }
+    biosample {
+      biosampleId
+      biosampleName
+    }
     publicationJournal
     pubmedId
     nSamples
