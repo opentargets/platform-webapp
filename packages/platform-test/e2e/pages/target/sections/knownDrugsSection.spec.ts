@@ -3,6 +3,7 @@ import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   CLINICAL_STAGES,
+  DRUGS_PAGE_SIZE,
   type ClinicalRecord,
   type ClinicalRecordsData,
   type ClinicalStageKey,
@@ -21,7 +22,7 @@ import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections"
 
 type Opened = {
   drugs: TargetDrugsSection;
-  /** The drug rows of the API response, in the API's order. */
+  /** The drug rows of the first page of the API response, in the API's order. */
   rows: TargetDrugRow[];
   /** `drugAndClinicalCandidates.count`: how many drugs the target has in total. */
   count: number;
@@ -50,9 +51,23 @@ async function openDrugs(page: Page, targetId: string | undefined): Promise<Open
   );
   await page.goto(`/target/${targetId}`);
   const { data, variables } = await drugsResponse;
-  expect(variables).toEqual({ ensemblId: targetId });
+  // the cards are a server-paged table: the first page, most advanced stage first
+  expect(variables).toEqual({
+    ensemblId: targetId,
+    index: 0,
+    size: DRUGS_PAGE_SIZE,
+    sort: [
+      { key: "MAX_CLINICAL_STAGE", direction: "DESCENDING" },
+      { key: "CLINICAL_REPORT_COUNT", direction: "DESCENDING" },
+    ],
+  });
   const { rows, count } = data.target.drugAndClinicalCandidates;
-  expect(rows.length, "the API should return drugs for this target").toBeGreaterThan(1);
+  expect(rows.length, "the API should return a page of drugs for this target").toBe(
+    Math.min(DRUGS_PAGE_SIZE, count)
+  );
+  expect(count, "the target should have more than one page of drugs").toBeGreaterThan(
+    DRUGS_PAGE_SIZE
+  );
   const records = (await recordsResponse).data.clinicalReports;
   expect(records.length, "the API should return the selected drug's reports").toBeGreaterThan(0);
   await drugs.expectLoaded();
@@ -85,7 +100,7 @@ test.describe("Target drugs and clinical candidates section", () => {
       "href",
       "https://www.ebi.ac.uk/chembl/"
     );
-    await expect(drugs.searchInput).toHaveAttribute("placeholder", "Search...");
+    await expect(drugs.searchInput).toHaveAttribute("placeholder", "Search drugs...");
     await expect(drugs.cardsControls.exportButton).toHaveText("Export");
     await expect(drugs.recordsControls.exportButton).toHaveText("Export");
   });
@@ -110,49 +125,101 @@ test.describe("Target drugs and clinical candidates section", () => {
     }
   });
 
-  test("orders the cards by most advanced stage, then by number of reports", async ({
-    page,
-    testConfig,
-  }) => {
-    const { drugs, rows } = await openDrugs(page, testConfig.target?.primary);
-    const byName = new Map(rows.map((row) => [row.drug.name, row]));
-    await expect(drugs.cards).toHaveCount(rows.length);
-
-    const names = await drugs.cards.getByRole("link").allInnerTexts();
-    const shown = names.map((name) => {
-      const row = byName.get(name);
-      expect(row, `the card "${name}" should be a drug of the API response`).toBeDefined();
-      return row as TargetDrugRow;
-    });
-    for (let index = 1; index < shown.length; index++) {
-      const previous = shown[index - 1];
-      const current = shown[index];
-      const stageDifference =
-        stageIndex(previous.maxClinicalStage) - stageIndex(current.maxClinicalStage);
-      expect(
-        stageDifference > 0 ||
-          (stageDifference === 0 &&
-            previous.clinicalReports.length >= current.clinicalReports.length),
-        `"${previous.drug.name}" (${previous.maxClinicalStage}, ${previous.clinicalReports.length} reports) should come before "${current.drug.name}" (${current.maxClinicalStage}, ${current.clinicalReports.length} reports)`
-      ).toBe(true);
-    }
-    expect(
-      new Set(shown.map(({ maxClinicalStage }) => maxClinicalStage)).size,
-      "the drugs should span several stages, or the order proves nothing"
-    ).toBeGreaterThan(1);
-  });
-
-  test("lists every drug the target has, not only the first page of the API", async ({
+  test("orders the cards by most advanced stage, then by number of reports, across pages", async ({
     page,
     testConfig,
   }) => {
     const { drugs, rows, count } = await openDrugs(page, testConfig.target?.primary);
+    const byName = new Map(rows.map((row) => [row.drug.name, row]));
+    await expect(drugs.cards).toHaveCount(rows.length);
 
+    // the server sorts; the cards of the first page are in the order of its response
+    const names = await drugs.cards.getByRole("link").allInnerTexts();
+    expect(names).toEqual(rows.map(({ drug }) => drug.name));
+    const shown = names.map((name) => byName.get(name) as TargetDrugRow);
+    const expectInOrder = (sequence: { stage: string; reports: number; name: string }[]) => {
+      for (let index = 1; index < sequence.length; index++) {
+        const previous = sequence[index - 1];
+        const current = sequence[index];
+        const stageDifference = stageIndex(previous.stage) - stageIndex(current.stage);
+        expect(
+          stageDifference > 0 || (stageDifference === 0 && previous.reports >= current.reports),
+          `"${previous.name}" (${previous.stage}, ${previous.reports} reports) should come before "${current.name}" (${current.stage}, ${current.reports} reports)`
+        ).toBe(true);
+      }
+    };
+    const firstPage = shown.map((row) => ({
+      stage: row.maxClinicalStage,
+      reports: row.clinicalReports.length,
+      name: row.drug.name,
+    }));
+    expectInOrder(firstPage);
+
+    // the order continues on the next page: its cards are read back from the screen
+    await drugs.cardsPagination.nextPageButton.click();
+    await drugs.cardsPagination.expectPosition(`11 - ${Math.min(20, count)} of ${count}`, {
+      canGoBack: true,
+      canGoForward: count > 20,
+    });
+    const secondPage = await drugs.cardDetails();
+    expect(secondPage.length).toBe(Math.min(10, count - 10));
+    expectInOrder([firstPage[firstPage.length - 1], ...secondPage]);
     expect(
-      rows.length,
-      `the API counts ${count} drugs for this target, so the widget's query should fetch ${count}`
-    ).toBe(count);
-    await expect(drugs.cards).toHaveCount(count);
+      new Set([...firstPage, ...secondPage].map(({ stage }) => stage)).size,
+      "the drugs should span several stages, or the order proves nothing"
+    ).toBeGreaterThan(1);
+  });
+
+  test("pages the drugs ten cards at a time and selects the first card of each page", async ({
+    page,
+    testConfig,
+  }) => {
+    const { drugs, rows, count } = await openDrugs(page, testConfig.target?.primary);
+    const { cardsPagination: pagination } = drugs;
+    const pageCount = Math.ceil(count / DRUGS_PAGE_SIZE);
+    const lastPageSize = count - (pageCount - 1) * DRUGS_PAGE_SIZE;
+
+    await test.step("first page", async () => {
+      await pagination.expectPosition(`1 - ${DRUGS_PAGE_SIZE} of ${count}`, {
+        canGoBack: false,
+        canGoForward: true,
+      });
+      await expect(drugs.cards).toHaveCount(DRUGS_PAGE_SIZE);
+      await expect(drugs.card(rows[0].drug.name)).toHaveAttribute("data-selected", "true");
+    });
+    const firstPage = await drugs.cards.getByRole("link").allInnerTexts();
+
+    await test.step("next page shows other drugs and selects the first of them", async () => {
+      await pagination.nextPageButton.click();
+      await pagination.expectPosition(
+        `${DRUGS_PAGE_SIZE + 1} - ${Math.min(2 * DRUGS_PAGE_SIZE, count)} of ${count}`,
+        { canGoBack: true, canGoForward: pageCount > 2 }
+      );
+      await expect(drugs.cards).toHaveCount(Math.min(DRUGS_PAGE_SIZE, count - DRUGS_PAGE_SIZE));
+      const secondPage = await drugs.cards.getByRole("link").allInnerTexts();
+      for (const name of secondPage) expect(firstPage, `"${name}" is on page 1`).not.toContain(name);
+      await expect(drugs.selectedCards).toHaveCount(1);
+      await expect(drugs.cards.first()).toHaveAttribute("data-selected", "true");
+      await expect(drugs.recordsSummary).toContainText(`for ${secondPage[0]}`);
+    });
+
+    await test.step("last page", async () => {
+      await pagination.lastPageButton.click();
+      await pagination.expectPosition(
+        `${(pageCount - 1) * DRUGS_PAGE_SIZE + 1} - ${count} of ${count}`,
+        { canGoBack: true, canGoForward: false }
+      );
+      await expect(drugs.cards).toHaveCount(lastPageSize);
+    });
+
+    await test.step("first page again", async () => {
+      await pagination.firstPageButton.click();
+      await pagination.expectPosition(`1 - ${DRUGS_PAGE_SIZE} of ${count}`, {
+        canGoBack: false,
+        canGoForward: true,
+      });
+      await expect(drugs.cards.getByRole("link")).toHaveText(firstPage);
+    });
   });
 
   test("selects the first drug on load and shows its reports by clinical stage", async ({
@@ -411,42 +478,55 @@ test.describe("Target drugs and clinical candidates section", () => {
     });
   });
 
-  test("search narrows the cards by drug name or stage, and resets", async ({
-    page,
-    testConfig,
-  }) => {
-    const { drugs, rows } = await openDrugs(page, testConfig.target?.primary);
+  test("search asks the server for drugs by name, and resets", async ({ page, testConfig }) => {
+    const { drugs, rows, count } = await openDrugs(page, testConfig.target?.primary);
     await expect(drugs.cards).toHaveCount(rows.length);
 
     await test.step("a drug name", async () => {
-      const term = rows[0].drug.name;
-      const matching = rows.filter(({ drug }) => drug.name.includes(term));
-      expect(matching.length).toBeLessThan(rows.length);
-      await drugs.searchInput.fill(term.toLowerCase());
-      await expect(drugs.cards).toHaveCount(matching.length);
-      for (const { drug } of matching) await expect(drugs.card(drug.name)).toHaveCount(1);
-    });
+      const term = rows[0].drug.name.toLowerCase();
+      const searched = drugs.waitForPage((variables) => variables.search?.text === term);
+      await drugs.searchInput.fill(term);
+      const { data, variables } = await searched;
+      // only the drug name is searched, and the search starts again from the first page
+      expect(variables.search).toEqual({ text: term, fields: ["DRUG_NAME"] });
+      expect(variables.index).toBe(0);
+      const found = data.target.drugAndClinicalCandidates;
+      expect(found.count, "the term is a drug of the target").toBeGreaterThan(0);
+      expect(found.count, "the search should narrow the drugs").toBeLessThan(count);
+      expect(found.rows.map(({ drug }) => drug.name.toLowerCase())).toContain(term);
+      for (const { drug } of found.rows) expect(drug.name.toLowerCase()).toContain(term);
 
-    await test.step("a stage label", async () => {
-      // "Approval" is a substring of no other stage label
-      const matching = rows.filter(({ maxClinicalStage }) => maxClinicalStage === "APPROVAL");
-      expect(matching.length, "the target should have drugs at the Approval stage").toBeGreaterThan(0);
-      expect(matching.length).toBeLessThan(rows.length);
-      await drugs.searchInput.fill("Approval");
-      await expect(drugs.cards).toHaveCount(matching.length);
-      await expect(drugs.cards.filter({ hasText: "Max stage:Approval" })).toHaveCount(
-        matching.length
+      await expect(drugs.cards).toHaveCount(found.rows.length);
+      for (const { drug } of found.rows) await expect(drugs.card(drug.name)).toHaveCount(1);
+      await expect(drugs.cardsPagination.position).toHaveText(
+        `1 - ${found.rows.length} of ${found.count}`
       );
     });
 
-    await test.step("a term nothing matches leaves no card", async () => {
-      await drugs.searchInput.fill("zzzz-no-such-drug");
+    await test.step("a stage label is not searched", async () => {
+      const searched = drugs.waitForPage((variables) => variables.search?.text === "Approval");
+      await drugs.searchInput.fill("Approval");
+      const { data } = await searched;
+      expect(
+        rows.some(({ maxClinicalStage }) => maxClinicalStage === "APPROVAL"),
+        "the target has drugs at the Approval stage, so only the name is being searched"
+      ).toBe(true);
+      expect(data.target.drugAndClinicalCandidates.count).toBe(0);
       await expect(drugs.cards).toHaveCount(0);
     });
 
-    await test.step("clearing the search restores every card", async () => {
+    await test.step("a term nothing matches leaves no card", async () => {
+      const searched = drugs.waitForPage((variables) => variables.search?.text === "zzzz-no-such-drug");
+      await drugs.searchInput.fill("zzzz-no-such-drug");
+      expect((await searched).data.target.drugAndClinicalCandidates.count).toBe(0);
+      await expect(drugs.cards).toHaveCount(0);
+    });
+
+    await test.step("clearing the search restores the first page", async () => {
       await drugs.searchInput.fill("");
       await expect(drugs.cards).toHaveCount(rows.length);
+      await expect(drugs.cards.getByRole("link")).toHaveText(rows.map(({ drug }) => drug.name));
+      await expect(drugs.cardsPagination.position).toHaveText(`1 - ${DRUGS_PAGE_SIZE} of ${count}`);
     });
   });
 
@@ -460,8 +540,11 @@ test.describe("Target drugs and clinical candidates section", () => {
     await expect(page.getByTestId("profile-page-header-text")).toHaveText(row.drug.name);
   });
 
-  test("exports the drug list as JSON and TSV", async ({ page, testConfig }) => {
-    const { drugs, rows } = await openDrugs(page, testConfig.target?.primary);
+  test("exports every drug of the target as JSON and TSV, not only the page shown", async ({
+    page,
+    testConfig,
+  }) => {
+    const { drugs, rows, count } = await openDrugs(page, testConfig.target?.primary);
     const expected = rows.map((row) => ({
       drugName: row.drug.name,
       drugId: row.drug.id,
@@ -474,17 +557,22 @@ test.describe("Target drugs and clinical candidates section", () => {
     await test.step("JSON", async () => {
       const { filename, rows: exported } = await drugs.cardsControls.downloadJson();
       expect(filename).toBe("drugs-and-clinical-candidates.json");
-      expect([...(exported as typeof expected)].sort(byDrugId)).toEqual([...expected].sort(byDrugId));
+      expect(exported, "the export covers every page of drugs").toHaveLength(count);
+      expect(new Set(exported.map(({ drugId }) => drugId)).size).toBe(count);
+      const exportedById = new Map(exported.map((row) => [row.drugId, row]));
+      for (const row of [...expected].sort(byDrugId)) {
+        expect(exportedById.get(row.drugId)).toEqual(row);
+      }
     });
 
     await test.step("TSV", async () => {
       const { filename, header, lines } = await drugs.cardsControls.downloadTsv();
       expect(filename).toBe("drugs-and-clinical-candidates.tsv");
       expect(header).toEqual(["drugName", "drugId", "maxClinicalStage", "reportCount"]);
-      expect(lines).toHaveLength(expected.length);
-      expect(lines.map(([, drugId]) => drugId).sort()).toEqual(
-        expected.map(({ drugId }) => drugId).sort()
-      );
+      expect(lines).toHaveLength(count);
+      const drugIds = lines.map(([, drugId]) => drugId);
+      expect(new Set(drugIds).size).toBe(count);
+      for (const { drugId } of expected) expect(drugIds).toContain(drugId);
     });
   });
 

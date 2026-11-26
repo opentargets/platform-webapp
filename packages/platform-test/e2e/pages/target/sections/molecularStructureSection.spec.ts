@@ -276,48 +276,56 @@ test.describe("Target profile: Molecular Structure section", () => {
     expect((await controls.table.columnTexts(0)).at(-1)).toBe(ascending[0]);
   });
 
-  test("sorts by resolution, keeping structures without one apart from the numbers", async ({
+  test("sorts by resolution: worst first on the first click, best first on the second", async ({
     page,
     testConfig,
   }) => {
+    // Numeric columns sort descending first. Rows without a number sit at the ends: the AlphaFold
+    // prediction shows "N/A" and NMR structures show "-".
     const structure = new MolecularStructureSection(page);
     const { controls } = structure;
     const NUMERIC = /^\d+(\.\d+)? [\u00C5\u212B]$/;
+    const numbersOf = (texts: string[]) => {
+      const numbers = texts.filter((text) => NUMERIC.test(text));
+      for (const text of texts) expect(NUMERIC.test(text) || ["N/A", "-"].includes(text), text).toBe(true);
+      return numbers.map((text) => Number.parseFloat(text));
+    };
 
     await page.goto(`/target/${testConfig.target?.primary}`);
     await structure.expectLoaded();
     await structure.expectTableLoaded();
     const initial = await controls.table.columnTexts(2);
 
-    await test.step("ascending: structures without a resolution, then the best resolution first", async () => {
+    await test.step("first click: descending, the worst resolution first", async () => {
       await structure.sortHeader("Resolution").click();
       await expect
         .poll(async () => controls.table.columnTexts(2), { message: "sorting should reorder the rows" })
         .not.toEqual(initial);
-      const resolutions = await controls.table.columnTexts(2);
-      for (const resolution of resolutions) {
-        expect(NUMERIC.test(resolution) || ["N/A", "-"].includes(resolution), resolution).toBe(true);
-      }
-      const firstNumber = resolutions.findIndex((resolution) => NUMERIC.test(resolution));
-      expect(firstNumber, "the first page should reach the structures with a resolution").toBeGreaterThan(
-        -1
-      );
-      const numbers = resolutions.slice(firstNumber);
-      for (const resolution of numbers) expect(resolution).toMatch(NUMERIC);
-      const values = numbers.map((resolution) => Number.parseFloat(resolution));
-      expect(values).toEqual([...values].sort((a, b) => a - b));
+      const values = numbersOf(await controls.table.columnTexts(2));
+      expect(values.length, "the first page should reach structures with a resolution").toBeGreaterThan(3);
+      expect(values).toEqual([...values].sort((a, b) => b - a));
+      await controls.lastPageButton.click();
+      await controls.expectLastPage();
+      const lastPage = await controls.table.columnTexts(2);
+      expect(lastPage.at(-1), "structures without a resolution end the list").toBe("-");
+      await controls.firstPageButton.click();
+      await controls.expectFirstPage();
     });
 
-    await test.step("descending: the worst resolution first", async () => {
-      const ascending = await controls.table.columnTexts(2);
+    await test.step("second click: ascending, the best resolution first", async () => {
+      const descending = await controls.table.columnTexts(2);
       await structure.sortHeader("Resolution").click();
       await expect
         .poll(async () => controls.table.columnTexts(2), { message: "sorting should reorder the rows" })
-        .not.toEqual(ascending);
-      const resolutions = await controls.table.columnTexts(2);
-      for (const resolution of resolutions) expect(resolution).toMatch(NUMERIC);
-      const values = resolutions.map((resolution) => Number.parseFloat(resolution));
-      expect(values).toEqual([...values].sort((a, b) => b - a));
+        .not.toEqual(descending);
+      const texts = await controls.table.columnTexts(2);
+      const values = numbersOf(texts);
+      expect(values.length).toBeGreaterThan(3);
+      expect(values).toEqual([...values].sort((a, b) => a - b));
+      expect(texts[0], "structures without a resolution come first").toBe("-");
+      await controls.lastPageButton.click();
+      await controls.expectLastPage();
+      expect((await controls.table.columnTexts(2)).at(-1)).toBe("N/A");
     });
   });
 
@@ -356,7 +364,9 @@ test.describe("Target profile: Molecular Structure section", () => {
     await test.step("by ID", async () => {
       await controls.search(id);
       await expect(controls.table.cell(0, 0)).toHaveText(id);
-      expect(await controls.total()).toBeLessThan(total);
+      await expect
+        .poll(async () => controls.total(), { message: "the search should narrow the list" })
+        .toBeLessThan(total);
     });
 
     await test.step("a term nothing matches", async () => {

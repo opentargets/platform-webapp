@@ -45,6 +45,18 @@ export type TargetDrugsData = {
   target: { drugAndClinicalCandidates: { count: number; rows: TargetDrugRow[] } };
 };
 
+/** The variables the drugs query is sent with: the table pages and sorts on the server. */
+export type TargetDrugsVariables = {
+  ensemblId: string;
+  index: number;
+  size: number;
+  sort: { key: string; direction: string }[];
+  search?: { text: string; fields: string[] };
+};
+
+/** How many drug cards a page holds (DRUGS_PAGE_SIZE in packages/sections/src/target/Drugs). */
+export const DRUGS_PAGE_SIZE = 10;
+
 export type ClinicalRecord = {
   id: string;
   clinicalStage: ClinicalStageKey;
@@ -81,6 +93,8 @@ export class TargetDrugsSection {
   readonly selectedCards: Locator;
   readonly searchInput: Locator;
   readonly cardsControls: SectionDataControls;
+  /** The cards' pagination ("1 - 10 of 26" and the four buttons). */
+  readonly cardsPagination: SectionTable;
 
   /** The clinical reports of the selected drug (right). */
   readonly records: Locator;
@@ -99,6 +113,15 @@ export class TargetDrugsSection {
     this.searchInput = this.section.getByTestId("table-search-input");
     // the cards' export / API query pair comes first in the section, the reports' second
     this.cardsControls = new SectionDataControls(page, this.section, 0);
+    // the OtTableServer block that holds the cards: the innermost block with both the search
+    // box and the cards, so it excludes the reports' own table
+    this.cardsPagination = new SectionTable(
+      this.section
+        .locator("div")
+        .filter({ has: page.getByTestId("table-search-input") })
+        .filter({ has: page.getByTestId("drug-card") })
+        .last()
+    );
 
     this.records = this.section.getByTestId("clinical-records");
     this.recordsSummary = this.records.getByTestId("clinical-records-summary");
@@ -117,6 +140,19 @@ export class TargetDrugsSection {
   /** The card of the drug with exactly this name. */
   card(drugName: string): Locator {
     return this.cards.filter({ has: this.page.getByRole("link", { name: drugName, exact: true }) });
+  }
+
+  /** Name, max stage and report count of every card on screen, read back from the cards. */
+  async cardDetails(): Promise<{ name: string; stage: ClinicalStageKey; reports: number }[]> {
+    const texts = await this.cards.allInnerTexts();
+    return texts.map((text) => {
+      const match = /^(.+?)\s*Max stage:\s*(.+?)\s*(\d+) reports?$/s.exec(text.trim());
+      expect(match, `the card "${text}" should read name, max stage and report count`).not.toBeNull();
+      const [, name, label, reports] = match as RegExpExecArray;
+      const stage = CLINICAL_STAGES.find((candidate) => candidate.label === label);
+      expect(stage, `"${label}" should be a clinical stage label`).toBeDefined();
+      return { name, stage: (stage as { key: ClinicalStageKey }).key, reports: Number(reports) };
+    });
   }
 
   cardLink(card: Locator): Locator {
@@ -139,6 +175,33 @@ export class TargetDrugsSection {
 
   get recordDrawer(): Locator {
     return this.page.getByTestId("clinical-record-drawer");
+  }
+
+  /**
+   * Start waiting for the response of the drugs query that satisfies `matches`, which gets
+   * the variables the page sent. Call it BEFORE the action that issues the query.
+   */
+  async waitForPage(
+    matches: (variables: TargetDrugsVariables) => boolean
+  ): Promise<{ data: TargetDrugsData; variables: TargetDrugsVariables }> {
+    const response = await this.page.waitForResponse(
+      (candidate) => {
+        const body = candidate.request().postData();
+        if (candidate.request().method() !== "POST" || !body?.includes('"query"')) return false;
+        const request = JSON.parse(body) as {
+          operationName?: string;
+          variables?: TargetDrugsVariables;
+        };
+        return request.operationName === TargetDrugsSection.operation && !!request.variables &&
+          matches(request.variables);
+      },
+      { timeout: 60_000 }
+    );
+    expect(response.status(), "the drugs query should answer with HTTP 200").toBe(200);
+    const body = (await response.json()) as { data: TargetDrugsData; errors?: unknown[] };
+    expect(body.errors, "the drugs query should not return GraphQL errors").toBeUndefined();
+    const variables = JSON.parse(response.request().postData() ?? "{}").variables;
+    return { data: body.data, variables };
   }
 
   /** Select a drug and wait until the right-hand side shows that drug's reports. */
