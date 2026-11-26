@@ -1,0 +1,13 @@
+# Generated documentation
+docs/widgets-api/
+
+# Test results
+test-results/
+playwright-report/
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local

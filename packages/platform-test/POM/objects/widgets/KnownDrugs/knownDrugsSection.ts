@@ -1,5 +1,24 @@
 import type { Locator, Page } from "@playwright/test";
 
+/**
+ * Interactor for the Known Drugs / Clinical Precedence section.
+ *
+ * Displays drugs that have been used to treat a disease or target,
+ * including clinical trial information and approval status.
+ * Supports searching, filtering, and pagination.
+ *
+ * @example
+ * ```typescript
+ * const drugs = new ClinicalPrecedenceSection(page);
+ * await drugs.waitForSectionLoad();
+ * const rowCount = await drugs.getRowCount();
+ * const drugName = await drugs.getDrugName(0);
+ * await drugs.searchDrug("aspirin");
+ * ```
+ *
+ * @category KnownDrugs
+ * @remarks Section ID: `knowndrugs`
+ */
 export class ClinicalPrecedenceSection {
   page: Page;
 

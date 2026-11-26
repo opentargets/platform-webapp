@@ -1,5 +1,23 @@
 import type { Locator, Page } from "@playwright/test";
 
+/**
+ * Interactor for the Bibliography section widget.
+ *
+ * Displays literature references and publications related to a target, disease,
+ * or drug. Supports searching through literature, pagination, and external
+ * PubMed links.
+ *
+ * @example
+ * ```typescript
+ * const biblio = new BibliographySection(page);
+ * await biblio.waitForSectionLoad();
+ * const count = await biblio.getLiteratureCount();
+ * await biblio.searchLiterature("BRAF mutation");
+ * ```
+ *
+ * @category Bibliography
+ * @remarks Section ID: `bibliography`
+ */
 export class BibliographySection {
   page: Page;
 

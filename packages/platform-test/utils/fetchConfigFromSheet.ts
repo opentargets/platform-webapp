@@ -1,9 +1,11 @@
 import Papa from "papaparse";
 import type { CSVRow, TestConfig } from "../types";
+import { CSV_COLUMNS } from "../types";
 import { csvRowToTestConfig } from "./csvRowToTestConfig";
 
 /**
  * Fetch test configuration from Google Sheet CSV URL
+ * Uses column indices instead of header names for resilience against column name changes
  */
 export async function fetchConfigFromSheet(
   url: string,
@@ -24,23 +26,30 @@ export async function fetchConfigFromSheet(
     }
 
     const csvText = await response.text();
+    // Parse without headers - we'll use indices instead for resilience
     const parseResult = Papa.parse<CSVRow>(csvText, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
     });
 
     if (parseResult.errors.length > 0) {
       console.error("CSV parsing errors:", parseResult.errors);
     }
 
-    const rows = parseResult.data;
+    // Skip the header row (index 0) and get data rows
+    const rows = parseResult.data.slice(1);
 
-    // Find the row matching the scenario name
-    const matchingRow = rows.find((row) => row["Testing Scenario"] === scenarioName);
+    // Find the row matching the scenario name using the TESTING_SCENARIO column index
+    const matchingRow = rows.find(
+      (row) => row[CSV_COLUMNS.TESTING_SCENARIO]?.trim() === scenarioName
+    );
     if (!matchingRow) {
+      const availableScenarios = rows
+        .map((r) => r[CSV_COLUMNS.TESTING_SCENARIO])
+        .filter(Boolean)
+        .join(", ");
       console.error(
-        `Scenario "${scenarioName}" not found in CSV. Available scenarios: ${rows.map((r) => r["Testing Scenario"]).join(", ")}`
+        `Scenario "${scenarioName}" not found in CSV. Available scenarios: ${availableScenarios}`
       );
       return null;
     }

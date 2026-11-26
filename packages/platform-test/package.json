@@ -8,15 +8,21 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.36.2",
+    "@types/node": "^25.2.0",
     "@types/papaparse": "^5.5.2",
     "dotenv": "^17.2.3",
-    "start-server-and-test": "^2.0.4"
+    "start-server-and-test": "^2.0.4",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.28.16",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "dev-test": "playwright test",
     "dev-test:smoke": "playwright test --grep @smoke",
     "test:platform:e2e": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test\"",
-    "test:platform:e2e:smoke": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test --grep @smoke\""
+    "test:platform:e2e:smoke": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test --grep @smoke\"",
+    "docs:test_interactors": "typedoc",
+    "docs:test_interactors:serve": "yarn docs:test_interactors && npx serve docs/widgets-api"
   },
   "keywords": [],
   "author": "",

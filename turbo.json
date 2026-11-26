@@ -41,6 +41,13 @@
     "build-ppp": {
       "dependsOn": ["^build"],
       "outputs": ["bundle-platform/**"]
+    },
+    "docs:test_interactors": {
+      "outputs": ["docs/widgets-api/**"]
+    },
+    "docs:test_interactors:serve": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

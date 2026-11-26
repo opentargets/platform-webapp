@@ -51,25 +51,31 @@ export interface TestConfig {
     withQTLColoc?: string;
   };
 } /**
- * CSV row structure from Google Sheet
+ * CSV row as array of strings (using indices instead of header names for resilience)
  */
+export type CSVRow = string[];
 
-export interface CSVRow {
-  "Testing Scenario": string;
-  drug_page_primary: string;
-  variant_primary: string;
-  variant_with_pharmacogenetics: string;
-  variant_with_qtl: string;
-  target_primary: string;
-  target_incomplete: string;
-  target_aotf_diseases: string;
-  disease_primary: string;
-  disease_name: string;
-  disease_alternatives: string;
-  disease_aotf_genes: string;
-  study_gwas: string;
-  study_qtl: string;
-  credible_set: string;
-  credible_set_GWAS_coloc: string;
-  credible_set_QTL_coloc: string;
-}
+/**
+ * Column indices for the Google Sheet CSV
+ * Using indices instead of header names makes parsing resilient to column name changes
+ * Update these indices if column order changes in the sheet
+ */
+export const CSV_COLUMNS = {
+  TESTING_SCENARIO: 0,
+  DRUG_PAGE_PRIMARY: 1,
+  VARIANT_PRIMARY: 2,
+  VARIANT_WITH_PHARMACOGENETICS: 3,
+  VARIANT_WITH_QTL: 4,
+  TARGET_PRIMARY: 5,
+  TARGET_INCOMPLETE: 6,
+  TARGET_AOTF_DISEASES: 7,
+  DISEASE_PRIMARY: 8,
+  DISEASE_NAME: 10,
+  DISEASE_ALTERNATIVES: 11,
+  DISEASE_AOTF_GENES: 9,
+  STUDY_GWAS: 12,
+  STUDY_QTL: 13,
+  CREDIBLE_SET: 14,
+  CREDIBLE_SET_GWAS_COLOC: 15,
+  CREDIBLE_SET_QTL_COLOC: 16,
+} as const;
