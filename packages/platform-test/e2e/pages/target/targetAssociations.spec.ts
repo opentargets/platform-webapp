@@ -318,7 +318,12 @@ test.describe("Target associations: pagination", () => {
 
   test("a page beyond the last one shows the empty state, not stale rows", async ({ page, testConfig }) => {
     const aotf = new TargetAssociations(page);
-    await page.goto(TargetAssociations.targetPath(associationTargets(testConfig).primary, { page: "99999" }));
+    const { primary } = associationTargets(testConfig);
+    // The target does have associations: only the page asked for is out of range.
+    await aotf.gotoTarget(primary);
+    await aotf.nextPageButton.click();
+    await aotf.expectUrlParam("page", "1");
+    await page.goto(TargetAssociations.targetPath(primary, { page: "99999" }));
 
     await expect(aotf.noResults).toBeVisible({ timeout: 45_000 });
     await expect(aotf.noResults.getByRole("heading")).toHaveText("No results found");

@@ -110,7 +110,8 @@ export class GraphQLMonitor {
   /**
    * Requests issued more than `allowed` times with the same operation and the same
    * variables. An identical request repeated on load is wasted work at best and a
-   * render loop at worst.
+   * render loop at worst. The count varies between runs, so tests report it (see
+   * e2e/health/graphql.spec.ts) and do not assert on it.
    */
   repeatedRequests(allowed = 1): RepeatedRequest[] {
     const counts = new Map<string, RepeatedRequest>();

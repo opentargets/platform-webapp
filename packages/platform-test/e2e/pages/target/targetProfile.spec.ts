@@ -1,6 +1,7 @@
 import { expect, test } from "../../../fixtures";
 import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { ProfileHeader } from "../../../POM/objects/components/ProfileHeader/profileHeader";
+import { expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
 import {
   requireTarget,
   TARGET_WIDGETS,
@@ -311,8 +312,12 @@ test.describe("Target profile", () => {
       });
 
       await test.step("hidden again back at the top", async () => {
-        await page.keyboard.press("Home");
-        await expect(target.symbol).toBeInViewport();
+        // The jump above scrolls smoothly and a key press during that scroll is lost,
+        // so the key is pressed again until the page is back at the top.
+        await expect(async () => {
+          await page.keyboard.press("Home");
+          await expect(target.symbol).toBeInViewport({ timeout: 1_000 });
+        }).toPass();
         await expect(target.stickyHeader).toHaveCount(0);
       });
     });
@@ -324,7 +329,7 @@ test.describe("Target profile", () => {
       testConfig,
     }) => {
       const ensgId = requireTarget(testConfig, "nonCoding");
-      const { symbol, name, chromosome } = targetIdentity(ensgId);
+      const { symbol, name, chromosome, rnacentralIds = [] } = targetIdentity(ensgId);
       const sectionsWithData = expectedSectionsFor(ensgId);
       const target = new TargetPage(page);
       const profile = new ProfileHeader(page);
@@ -333,8 +338,19 @@ test.describe("Target profile", () => {
 
       await expect(target.symbol).toHaveText(symbol);
       await expect(target.name).toHaveText(name);
-      await expect(target.externalLinks.getByRole("link")).toHaveText([ensgId, symbol, symbol]);
+      await expect(target.externalLinks.getByRole("link")).toHaveText([
+        ensgId,
+        ...rnacentralIds,
+        symbol,
+        symbol,
+      ]);
       await expect(target.uniprotLinks.getByRole("link")).toHaveCount(0);
+      await expect(target.rnacentralLinks).toContainText("RNAcentral:");
+      const rnacentral = target.rnacentralLinks.getByRole("link");
+      await expect(rnacentral).toHaveText(rnacentralIds);
+      for (const [index, id] of rnacentralIds.entries()) {
+        await expectExternalLink(rnacentral.nth(index), `https://identifiers.org/rnacentral:${id}`);
+      }
 
       await expect(profile.targetDescription).toHaveText("No description available");
       await expect(profile.targetDescriptionToggle).toHaveCount(0);
@@ -351,21 +367,44 @@ test.describe("Target profile", () => {
       }
     });
 
-    test("a non-coding target does not show a UniProt label with no accession", async ({
+    test("a non-coding target links RNAcentral instead of UniProt", async ({
       page,
       testConfig,
     }) => {
       const ensgId = requireTarget(testConfig, "nonCoding");
-      const { symbol } = targetIdentity(ensgId);
+      const { symbol, rnacentralIds = [] } = targetIdentity(ensgId);
       const target = new TargetPage(page);
 
       await target.goto(ensgId);
 
-      await expect(target.externalLinks.getByRole("link")).toHaveText([ensgId, symbol, symbol]);
+      await expect(target.externalLinks.getByRole("link")).toHaveText([
+        ensgId,
+        ...rnacentralIds,
+        symbol,
+        symbol,
+      ]);
       await expect(
         target.externalLinks,
         "a target without a reviewed UniProt entry should not show an empty \"UniProt:\" label"
       ).not.toContainText("UniProt");
+      await expect(target.uniprotLinks).toHaveCount(0);
+      await expect(target.rnacentralLinks.getByRole("link")).toHaveText(rnacentralIds);
+    });
+
+    test("a protein-coding target links UniProt and no RNAcentral", async ({
+      page,
+      testConfig,
+    }) => {
+      const ensgId = requireTarget(testConfig, "primary");
+      const { uniprotIds } = targetIdentity(ensgId);
+      const target = new TargetPage(page);
+
+      await target.goto(ensgId);
+
+      await expect(target.uniprotLinks).toContainText("UniProt:");
+      await expect(target.uniprotLinks.getByRole("link")).toHaveText([...uniprotIds]);
+      await expect(target.rnacentralLinks).toHaveCount(0);
+      await expect(target.externalLinks).not.toContainText("RNAcentral");
     });
 
     test("a target with no synonyms, literature or credible sets renders only what it has", async ({

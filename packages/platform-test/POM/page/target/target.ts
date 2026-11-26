@@ -93,6 +93,11 @@ export class TargetPage {
     return this.externalLinks.getByTestId("header-external-links-uniprot");
   }
 
+  /** The RNAcentral cross-reference in the header (non-coding targets only). */
+  get rnacentralLinks(): Locator {
+    return this.externalLinks.getByTestId("header-external-links-rnacentral");
+  }
+
   // ---------------------------------------------------------------------- tabs
 
   get profileTab(): Locator {
