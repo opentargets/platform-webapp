@@ -7,7 +7,7 @@ query VariantGWASCredibleSetsPlotQuery($variantId: String!) {
       page: { index: 0, size: 10000 }
     ) {
       rows {
-        studyLocusId
+        credibleSetId
         pValueMantissa
         pValueExponent
         beta

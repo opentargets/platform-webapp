@@ -246,8 +246,8 @@ function renderChart({
 function renderTooltip(datum) {
   return (
     <PheWasTooltip
-      key={`${datum.studyLocusId}-${datum._pageId}`}
-      studyLocusId={datum.studyLocusId}
+      key={`${datum.credibleSetId}-${datum._pageId}`}
+      credibleSetId={datum.credibleSetId}
       variantId={datum._pageId}
     />
   );
