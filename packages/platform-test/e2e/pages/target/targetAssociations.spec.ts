@@ -528,11 +528,26 @@ test.describe("Target associations: filters", () => {
       await expect(aotf.filterChips.filter({ hasText: "cancer" })).toBeVisible();
     });
 
-    await test.step("reset all clears the facet", async () => {
+    await test.step("the facet chip restores the full list", async () => {
+      await aotf.dismissOverlay(aotf.facetsPopover);
+      await aotf.removeFilterChip(aotf.urlParam("facets")?.split("~")[0] as string);
+      await aotf.expectUrlParam("facets", "");
+      await aotf.expectTotal(total);
+      await aotf.expectRowNames(unfiltered);
+    });
+
+    await test.step("reset all clears the facet and the measurement exclusion", async () => {
+      await aotf.openFacets();
+      await aotf.facetSearchInput.fill("cancer");
+      await aotf.facetOptions.filter({ hasText: /^cancer\s*in Disease$/ }).click();
+      await aotf.expectTotalBelow(total);
       await aotf.dismissOverlay(aotf.facetsPopover);
       await aotf.clearAllFiltersButton.click();
       await aotf.expectUrlParam("facets", "");
-      await aotf.expectTotal(total);
+      await expect(aotf.excludeMeasurementsChip).toHaveCount(0);
+      await expect
+        .poll(async () => (await aotf.displayedRange()).total, { timeout: 45_000 })
+        .toBeGreaterThan(total);
     });
   });
 
