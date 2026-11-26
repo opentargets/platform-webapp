@@ -1,15 +1,8 @@
 import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { naLabel, therapeuticPriorities } from "@ot/constants";
-import {
-  DisplayVariantId,
-  ObsPlot,
-  TooltipRow,
-  TooltipTable,
-  Box,
-  Skeleton,
-  Typography,
-} from "ui";
+import { DisplayVariantId, ObsPlot, Skeleton, Typography } from "ui";
+import PheWasTooltip from "./PheWasTooltip";
 
 const palette = [
   "#27B4AE",
@@ -39,21 +32,28 @@ function PheWasPlot({
 
   if (loading) return <Skeleton height={height} />;
 
-  if (originalData == null) return null;
-
   const data = structuredClone(
-    originalData.filter((d) => {
-      return d.leadPValueMantissa != null && d.leadPValueExponent != null && d.leadVariant != null;
+    (originalData ?? []).filter((d) => {
+      return (
+        Number.isFinite(d.pValueMantissa) &&
+        d.pValueMantissa > 0 &&
+        Number.isFinite(d.pValueExponent) &&
+        d.leadVariantId != null
+      );
     })
   );
-  if (data.length === 0) return null;
+  if (data.length === 0) {
+    return (
+       <Typography  align="center" mt={1}>
+        No data available for this plot
+      </Typography>
+    );
+  }
 
   function getTherapeuticArea(row) {
     let bestId = null;
     let bestRank = Infinity;
-    const areaIds = row.study.diseases.flatMap((d) => {
-      return d.therapeuticAreas.map((area: { id: string }) => area.id);
-    });
+    const areaIds = (row.diseaseTherapeuticAreas ?? []).map((area: { id: string }) => area.id);
     for (const id of areaIds) {
       const rank = therapeuticPriorities[id]?.rank;
       if (rank < bestRank) {
@@ -71,7 +71,7 @@ function PheWasPlot({
   const diseaseGroups = new Map();
   for (const row of data) {
     row._pageId = pageId;
-    row._y = Math.log10(row.leadPValueMantissa) + row.leadPValueExponent;
+    row._y = Math.log10(row.pValueMantissa) + row.pValueExponent;
     yMin = Math.min(yMin, row._y);
     const { id, name } = getTherapeuticArea(row);
     row._therapeuticAreaId = id;
@@ -178,7 +178,7 @@ function renderChart({
     width,
     height,
     marginLeft: 80,
-    marginRight: 50,
+    marginRight: 90,
     marginTop: 30,
     marginBottom: 130,
     style: { fontSize: "11px", fontWeight: "500" },
@@ -229,14 +229,14 @@ function renderChart({
         x: (d) => d._x,
         y: (d) => d._y,
         r: 2.55,
-        symbol: (d) => (d.leadBeta == null ? "circle" : "triangle"),
+        symbol: (d) => (d.beta == null ? "circle" : "triangle"),
         stroke: (d) => palette[xIntervals.get(d._therapeuticAreaId).index],
         fill: (d) =>
-          d.leadVariant.variantId === pageId
+          d.leadVariantId === pageId
             ? palette[xIntervals.get(d._therapeuticAreaId).index]
             : background,
         strokeWidth: 1.3,
-        rotate: (d) => (d.leadBeta < 0 ? 180 : 0),
+        rotate: (d) => (d.beta < 0 ? 180 : 0),
         className: "obs-tooltip",
       }),
     ],
@@ -245,29 +245,10 @@ function renderChart({
 
 function renderTooltip(datum) {
   return (
-    <Box
-      sx={{
-        background: "#fffc",
-        borderColor: "#ddd",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderRadius: "0.2rem",
-        padding: "0.25em 0.5rem",
-      }}
-    >
-      <TooltipTable>
-        {/* Detailed tooltip content will be restored with its own request. */}
-        <TooltipRow label="Credible set">
-          {datum.credibleSetId}
-        </TooltipRow>
-        <TooltipRow label="Lead variant">
-          {datum.leadVariant?.variantId ?? naLabel}
-        </TooltipRow>
-        <TooltipRow label="P-value">
-          {datum.leadPValueMantissa}x10{datum.leadPValueExponent}
-        </TooltipRow>
-        <TooltipRow label="Beta">{datum.leadBeta?.toPrecision(3) ?? naLabel}</TooltipRow>
-      </TooltipTable>
-    </Box>
+    <PheWasTooltip
+      key={`${datum.studyLocusId}-${datum._pageId}`}
+      studyLocusId={datum.studyLocusId}
+      variantId={datum._pageId}
+    />
   );
 }
