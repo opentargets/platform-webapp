@@ -75,7 +75,7 @@ test.describe("Credible Set Variants Section", () => {
       await variantsSection.waitForLoad();
       // The lead variant need not be on the first page when probabilities tie.
       const credibleSetPage = new CredibleSetPage(page);
-      const leadVariantHref = await credibleSetPage.getLeadVariantLink().getAttribute("href");
+      const leadVariantHref = await credibleSetPage.leadVariantLink.getAttribute("href");
       const leadVariantId = leadVariantHref?.split("/variant/")[1] ?? "";
       expect(leadVariantId).not.toBe("");
       await variantsSection.search(leadVariantId);
