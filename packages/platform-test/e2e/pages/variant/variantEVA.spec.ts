@@ -92,7 +92,8 @@ test.describe("Variant page: ClinVar (EVA)", () => {
     await test.step("one page: the footer reads 1 - 1 of 1 with every pagination button disabled", async () => {
       await section.table.expectPosition("1 - 1 of 1", { canGoBack: false, canGoForward: false });
       await expect(section.table.searchInput).toHaveCount(0);
-      await expect(section.table.pageSizeSelect).toHaveCount(0);
+      await expect(section.table.pageSizeSelect).toHaveValue("10");
+      await expect(section.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
     });
   });
 
@@ -200,6 +201,22 @@ test.describe("Variant page: ClinVar (EVA)", () => {
       await expect
         .poll(async () => (await table.rows.allInnerTexts()).map((text) => text.trim()))
         .toEqual(firstPage);
+    });
+  });
+
+  test("a larger page size shows more records on one page", async ({ page }) => {
+    const { section, evidences } = await open(page, MANY);
+    await section.setPageSize(25);
+    await section.table.expectRowCount(25);
+    await section.table.expectPosition(`1 - 25 of ${evidences.count}`, {
+      canGoBack: false,
+      canGoForward: true,
+    });
+    await section.setPageSize(100);
+    await section.table.expectRowCount(evidences.count);
+    await section.table.expectPosition(`1 - ${evidences.count} of ${evidences.count}`, {
+      canGoBack: false,
+      canGoForward: false,
     });
   });
 

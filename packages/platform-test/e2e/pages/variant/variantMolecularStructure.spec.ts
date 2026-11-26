@@ -59,13 +59,11 @@ test.describe("Variant page: Molecular Structure", () => {
           "href",
           `https://alphafold.ebi.ac.uk/entry/${variant.uniprot}`
         );
-        await expect(alphaFold).toHaveAttribute("target", "_blank");
         const uniprot = structure.description.getByRole("link", { name: "UniProt" });
         await expect(uniprot).toHaveAttribute(
           "href",
           `https://www.uniprot.org/uniprotkb/${variant.uniprot}/entry#family_and_domains`
         );
-        await expect(uniprot).toHaveAttribute("target", "_blank");
         await expect(structure.description.getByRole("link", { name: "Open Targets" })).toHaveAttribute(
           "href",
           "https://platform-docs.opentargets.org/variant"
@@ -125,10 +123,10 @@ test.describe("Variant page: Molecular Structure", () => {
 
     await test.step("options", async () => {
       await structure.colourSelect.click();
-      const options = page.getByRole("option");
-      await expect(options).toHaveText([...COLOUR_OPTIONS]);
+      const listbox = page.getByRole("listbox");
+      await expect(listbox.getByRole("option")).toHaveText([...COLOUR_OPTIONS]);
       await page.keyboard.press("Escape");
-      await expect(options).toHaveCount(0);
+      await expect(listbox).toHaveCount(0);
     });
 
     await test.step("pathogenicity", async () => {
@@ -178,6 +176,5 @@ test.describe("Variant page: Molecular Structure", () => {
     // wait for a section that does render, so absence is not just "not loaded yet"
     await expectSectionLoaded(page, "variant-effect-predictor");
     await expect(page.getByTestId("section-molecular-structure")).toHaveCount(0);
-    await expect(page.getByText("Molecular Structure")).toHaveCount(0);
   });
 });

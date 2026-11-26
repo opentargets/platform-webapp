@@ -91,7 +91,8 @@ test.describe("Variant page: UniProt variants", () => {
         canGoForward: false,
       });
       await expect(section.table.searchInput).toHaveCount(0);
-      await expect(section.table.pageSizeSelect).toHaveCount(0);
+      await expect(section.table.pageSizeSelect).toHaveValue("10");
+      await expect(section.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
     });
   });
 

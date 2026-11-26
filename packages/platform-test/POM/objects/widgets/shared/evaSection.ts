@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { sectionLocator } from "../../../../utils/sections";
 import { SectionDataControls, SectionTable } from "./sectionDataControls";
 
@@ -75,5 +75,11 @@ export class EVASection {
 
   literatureTrigger(row: number): Locator {
     return this.table.cell(row, EVA_COLUMN.literature).getByTestId("publications-drawer-trigger");
+  }
+
+  /** Choose a rows-per-page value and assert the select shows it. */
+  async setPageSize(size: number): Promise<void> {
+    await this.table.pageSizeSelect.selectOption(String(size));
+    await expect(this.table.pageSizeSelect).toHaveValue(String(size));
   }
 }

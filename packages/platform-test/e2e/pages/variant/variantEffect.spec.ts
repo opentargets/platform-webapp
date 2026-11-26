@@ -14,7 +14,10 @@ type EffectData = { variant: { variantEffect: Effect[] } };
 
 // Display names of the methods the app describes (VARIANT_EFFECT_METHODS). A method it does
 // not know is shown under the name the API gives it.
-const PRETTY: Record<string, string> = { VEP: "Ensembl VEP", LossOfFunctionCuration: "LoF curation" };
+const PRETTY: Record<string, string> = {
+  VEP: "Ensembl VEP",
+  LossOfFunctionCuration: "LoF curation",
+};
 const pretty = (method: string): string => PRETTY[method] ?? method;
 const DOCS = "https://platform-docs.opentargets.org/variant#variant-effect";
 
@@ -46,36 +49,37 @@ async function open(page: import("@playwright/test").Page, variantId: string) {
 }
 
 test.describe("Variant page: Variant effect (in-silico predictors)", () => {
-  test("shows title, description and the chart first", { tag: "@smoke" }, async ({
-    page,
-    testConfig,
-  }) => {
-    const { section } = await open(page, testConfig.variant.withMolecularStructure);
+  test(
+    "shows title, description and the chart first",
+    { tag: "@smoke" },
+    async ({ page, testConfig }) => {
+      const { section } = await open(page, testConfig.variant.withMolecularStructure);
 
-    await test.step("title and description", async () => {
-      await expect(section.title).toHaveText("Variant effect");
-      await expect(section.description).toContainText(
-        "Predicted and curated functional effect of 19_44908822_C_T. Source Ensembl VEP, gnomAD, OTAR2075."
-      );
-      for (const [name, href] of [
-        ["Ensembl VEP,", "https://www.ensembl.org/tools/vep"],
-        ["gnomAD,", "https://gnomad.broadinstitute.org/"],
-        ["OTAR2075.", "https://home.opentargets.org/node/1967"],
-      ]) {
-        const link = section.description.getByRole("link", { name });
-        await expect(link).toHaveAttribute("href", href);
-      }
-    });
+      await test.step("title and description", async () => {
+        await expect(section.title).toHaveText("Variant effect");
+        await expect(section.description).toContainText(
+          "Predicted and curated functional effect of 19_44908822_C_T. Source Ensembl VEP, gnomAD, OTAR2075."
+        );
+        for (const [name, href] of [
+          ["Ensembl VEP,", "https://www.ensembl.org/tools/vep"],
+          ["gnomAD,", "https://gnomad.broadinstitute.org/"],
+          ["OTAR2075.", "https://home.opentargets.org/node/1967"],
+        ]) {
+          const link = section.description.getByRole("link", { name });
+          await expect(link).toHaveAttribute("href", href);
+        }
+      });
 
-    await test.step("chart is the default view", async () => {
-      await expect(section.chartButton).toHaveAttribute("aria-pressed", "true");
-      await expect(section.tableButton).toHaveAttribute("aria-pressed", "false");
-      await expect(section.chart).toBeVisible();
-      await expect(section.section.getByTestId("ot-table")).toHaveCount(0);
-      await expect(section.chartButton).toContainText("Visualisation");
-      await expect(section.tableButton).toContainText("Table view");
-    });
-  });
+      await test.step("chart is the default view", async () => {
+        await expect(section.chartButton).toHaveAttribute("aria-pressed", "true");
+        await expect(section.tableButton).toHaveAttribute("aria-pressed", "false");
+        await expect(section.chart).toBeVisible();
+        await expect(section.section.getByTestId("ot-table")).toHaveCount(0);
+        await expect(section.chartButton).toContainText("Visualisation");
+        await expect(section.tableButton).toContainText("Table view");
+      });
+    }
+  );
 
   test("table lists every method with formatted prediction, score and normalised score", async ({
     page,
@@ -84,7 +88,9 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
     await section.showTable();
     const expected = expectedRows(effects);
-    expect(expected.length, "the APOE variant has several in-silico predictions").toBeGreaterThan(3);
+    expect(expected.length, "the APOE variant has several in-silico predictions").toBeGreaterThan(
+      3
+    );
 
     await test.step("exact column headers", async () => {
       await section.table.expectHeaders(VariantEffectSection.headers);
@@ -110,7 +116,9 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
 
     await test.step("a method the API has no assessment for shows N/A", async () => {
       const missing = effects.filter((effect) => effect.assessment === null);
-      expect(missing.length, "GERP and FoldX have no assessment for this variant").toBeGreaterThan(0);
+      expect(missing.length, "GERP and FoldX have no assessment for this variant").toBeGreaterThan(
+        0
+      );
       for (const effect of missing) {
         const row = section.table.rows.filter({ hasText: pretty(effect.method as string) });
         await expect(row.locator("td").nth(1)).toHaveText("N/A");
@@ -118,7 +126,10 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     });
 
     await test.step("search narrows the rows to the matching methods", async () => {
-      await expect(section.table.searchInput).toHaveAttribute("placeholder", "Search all columns...");
+      await expect(section.table.searchInput).toHaveAttribute(
+        "placeholder",
+        "Search all columns..."
+      );
       await section.table.search("gerp");
       await expect(section.table.rows).toHaveCount(1);
       await expect(section.table.row(0)).toContainText("GERP");
@@ -142,7 +153,9 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     await row.locator("sup").hover();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText("Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP.");
+    await expect(tooltip).toContainText(
+      "Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP."
+    );
     await expect(tooltip.getByRole("link", { name: "here" })).toHaveAttribute("href", DOCS);
     await page.mouse.move(0, 0);
     await expect(tooltip).toBeHidden();
@@ -193,7 +206,9 @@ test.describe("Variant page: Variant effect (in-silico predictors)", () => {
     const names = expectedRows(effects).map((row) => row[0]);
     await section.methodHelpMarks.nth(names.indexOf("Ensembl VEP")).hover();
     const popup = page.locator("body > div.popup");
-    await expect(popup).toContainText("Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP.");
+    await expect(popup).toContainText(
+      "Pathogenicity score derived from the most severe consequence term provided by Ensembl VEP."
+    );
     await page.mouse.move(0, 0);
     await expect(popup).toHaveCount(0);
   });

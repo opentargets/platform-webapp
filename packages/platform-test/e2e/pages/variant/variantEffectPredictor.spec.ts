@@ -22,51 +22,54 @@ async function open(page: Page, variantId: string) {
 const toNumber = (text: string): number => Number(text.replace(/,/g, ""));
 
 test.describe("Variant page: Transcript consequences", () => {
-  test("shows title, description, exact columns and the first page", { tag: "@smoke" }, async ({
-    page,
-    testConfig,
-  }) => {
-    const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
-    expect(count, "the APOE variant has several pages of consequences").toBeGreaterThan(2 * PAGE_SIZE);
-
-    await test.step("title and description", async () => {
-      await expect(section.title).toHaveText("Transcript consequences");
-      await expect(section.description).toContainText(
-        "Variant consequence prediction for transcripts in the genomic region of 19_44908822_C_T. Source: Ensembl VEP"
+  test(
+    "shows title, description, exact columns and the first page",
+    { tag: "@smoke" },
+    async ({ page, testConfig }) => {
+      const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
+      expect(count, "the APOE variant has several pages of consequences").toBeGreaterThan(
+        2 * PAGE_SIZE
       );
-      const link = section.description.getByRole("link", { name: "Ensembl VEP" });
-      await expect(link).toHaveAttribute("href", "https://www.ensembl.org/tools/vep");
-    });
 
-    await section.table.expectHeaders(VariantEffectPredictorSection.headers);
-    await expect(section.table.rows).toHaveCount(PAGE_SIZE);
-    await section.table.expectPosition(1, PAGE_SIZE, count);
-    await section.table.expectFirstPage();
-    await expect(section.table.searchInput).toBeVisible();
-    await expect(section.table.pageSizeSelect).toHaveValue(String(PAGE_SIZE));
+      await test.step("title and description", async () => {
+        await expect(section.title).toHaveText("Transcript consequences");
+        await expect(section.description).toContainText(
+          "Variant consequence prediction for transcripts in the genomic region of 19_44908822_C_T. Source: Ensembl VEP"
+        );
+        const link = section.description.getByRole("link", { name: "Ensembl VEP" });
+        await expect(link).toHaveAttribute("href", "https://www.ensembl.org/tools/vep");
+      });
 
-    await test.step("every row has a gene, a consequence, an impact and numeric distances", async () => {
-      for (let i = 0; i < PAGE_SIZE; i++) {
-        const link = section.geneLink(i);
-        await expect(link).toHaveAttribute("href", /\/target\/ENSG\d{11}$/);
-        await expect(link).not.toBeEmpty();
-        await expect(section.table.cell(i, 1)).not.toBeEmpty();
-        await expect(section.table.cell(i, 2)).toHaveText(/^(high|moderate|low|modifier)$/);
-        await expect(section.table.cell(i, 3)).toHaveText(/^-?[\d,]+$|^N\/A$/);
-        await expect(section.table.cell(i, 4)).toHaveText(/^-?[\d,]+$|^N\/A$/);
-      }
-    });
+      await section.table.expectHeaders(VariantEffectPredictorSection.headers);
+      await expect(section.table.rows).toHaveCount(PAGE_SIZE);
+      await section.table.expectPosition(1, PAGE_SIZE, count);
+      await section.table.expectFirstPage();
+      await expect(section.table.searchInput).toBeVisible();
+      await expect(section.table.pageSizeSelect).toHaveValue(String(PAGE_SIZE));
 
-    await test.step("the first row is the APOE missense variant, R176C", async () => {
-      const first = section.table.row(0);
-      await expect(section.geneLink(0)).toHaveText("APOE");
-      await expect(first).toContainText("protein coding");
-      await expect(first).toContainText("missense variant");
-      await expect(first).toContainText("R176C");
-      await expect(section.table.cell(0, 2)).toHaveText("moderate");
-      await expect(section.table.cell(0, 3)).toHaveText("0");
-    });
-  });
+      await test.step("every row has a gene, a consequence, an impact and numeric distances", async () => {
+        for (let i = 0; i < PAGE_SIZE; i++) {
+          const link = section.geneLink(i);
+          await expect(link).toHaveAttribute("href", /\/target\/ENSG\d{11}$/);
+          await expect(link).not.toBeEmpty();
+          await expect(section.table.cell(i, 1)).not.toBeEmpty();
+          await expect(section.table.cell(i, 2)).toHaveText(/^(high|moderate|low|modifier)$/);
+          await expect(section.table.cell(i, 3)).toHaveText(/^-?[\d,]+$|^N\/A$/);
+          await expect(section.table.cell(i, 4)).toHaveText(/^-?[\d,]+$|^N\/A$/);
+        }
+      });
+
+      await test.step("the first row is the APOE missense variant, R176C", async () => {
+        const first = section.table.row(0);
+        await expect(section.geneLink(0)).toHaveText("APOE");
+        await expect(first).toContainText("protein coding");
+        await expect(first).toContainText("missense variant");
+        await expect(first).toContainText("R176C");
+        await expect(section.table.cell(0, 2)).toHaveText("moderate");
+        await expect(section.table.cell(0, 3)).toHaveText("0");
+      });
+    }
+  );
 
   test("a gene's tooltip links to its transcript and protein and the consequence links to Sequence Ontology", async ({
     page,
@@ -184,10 +187,14 @@ test.describe("Variant page: Transcript consequences", () => {
       await table.clickHeader("Gene");
       await expect
         .poll(async () => {
-          const symbols = await table.columnTexts(0).then((texts) =>
-            texts.map((text) => text.replace(/\s*protein coding$/, "").replace(/\s*\?$/, ""))
+          const symbols = await table
+            .columnTexts(0)
+            .then((texts) =>
+              texts.map((text) => text.replace(/\s*protein coding$/, "").replace(/\s*\?$/, ""))
+            );
+          return symbols.every(
+            (symbol, i) => i === 0 || symbols[i - 1].toLowerCase() <= symbol.toLowerCase()
           );
-          return symbols.every((symbol, i) => i === 0 || symbols[i - 1].toLowerCase() <= symbol.toLowerCase());
         })
         .toBe(true);
     });
@@ -249,10 +256,7 @@ test.describe("Variant page: Transcript consequences", () => {
     });
   });
 
-  test("exports every consequence, not just the visible page", async ({
-    page,
-    testConfig,
-  }) => {
+  test("exports every consequence, not just the visible page", async ({ page, testConfig }) => {
     const { section, count } = await open(page, testConfig.variant.withMolecularStructure);
 
     await test.step("JSON holds the whole dataset", async () => {
@@ -277,10 +281,7 @@ test.describe("Variant page: Transcript consequences", () => {
 
   test("the API query drawer holds the section's query", async ({ page, testConfig }) => {
     const { section } = await open(page, testConfig.variant.withMolecularStructure);
-    await section.controls.openApiQuery(
-      VariantEffectPredictorSection.operation,
-      "19_44908822_C_T"
-    );
+    await section.controls.openApiQuery(VariantEffectPredictorSection.operation, "19_44908822_C_T");
     await section.controls.closeApiQuery();
   });
 
