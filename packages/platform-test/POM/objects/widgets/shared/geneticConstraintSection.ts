@@ -1,120 +1,108 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection, TableControls } from "../Target/sectionWidgets";
 
-/**
- * Interactor for Genetic Constraint section on Target page
- * Displays constraint metrics from gnomAD
- */
-export class GeneticConstraintSection {
-  constructor(private page: Page) {}
+/** What the "Constraint metrics" cell of one row shows, parsed. */
+export type ConstraintMetrics = {
+  /** "Z" for synonymous and missense, "pLI" for a pLoF row that has an assessment. */
+  scoreName: string;
+  score: number;
+  oe: number;
+  oeLower: number;
+  oeUpper: number;
+};
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-geneticconstraint']");
+const NUMBER = String.raw`-?\d+(?:\.\d+)?(?:e[+-]?\d+)?`;
+const METRICS = new RegExp(
+  String.raw`^(Z|pLI) = (${NUMBER})\s*o/e = (${NUMBER}) \((${NUMBER}) - (${NUMBER})\)`
+);
+
+/** Genetic Constraint section of the target profile: gnomAD constraint per variant category. */
+export class GeneticConstraintSection extends ProfileSection {
+  static readonly COLUMNS = [
+    "Category",
+    /^Expected SNVs\s*\?$/,
+    /^Observed SNVs\s*\?$/,
+    "Constraint metrics",
+  ];
+  /** The rows gnomAD provides, in the order the table shows them. */
+  static readonly CATEGORIES = ["Synonymous", "Missense", "pLoF"];
+  /** The label the app gives each assessment score (filled circles out of five). */
+  static readonly ASSESSMENT_LABELS: Record<number, string> = {
+    5: "very high constraint",
+    4: "high constraint",
+    3: "medium constraint",
+    2: "low constraint",
+    1: "very low constraint",
+    0: "very low constraint",
+  };
+
+  readonly controls: TableControls;
+
+  constructor(page: Page) {
+    super(page, "geneticconstraint");
+    this.controls = new TableControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  /** The row for a category ("Synonymous", "Missense" or "pLoF"). */
+  row(category: string): Locator {
+    return this.controls.rows.filter({
+      has: this.page.locator("td:first-child", { hasText: new RegExp(`^${category}$`) }),
+    });
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-geneticconstraint']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  expected(category: string): Locator {
+    return this.row(category).locator("td").nth(1);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  observed(category: string): Locator {
+    return this.row(category).locator("td").nth(2);
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  metrics(category: string): Locator {
+    return this.row(category).locator("td").nth(3);
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  /** The "?" in a column header; hovering it explains the column. */
+  headerHelp(columnName: string): Locator {
+    return this.controls.table.header(columnName).locator("sup");
   }
 
-  // Constraint type (pLI, LOEUF, etc.)
-  async getConstraintType(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const typeCell = row.locator("td").first();
-    return await typeCell.textContent();
+  /** The "N/5 <label>" link to the gene on gnomAD, shown in the pLoF row. */
+  get assessmentLink(): Locator {
+    return this.metrics("pLoF").getByRole("link");
   }
 
-  // Observed value
-  async getObservedValue(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const obsCell = row.locator("td").nth(2);
-    return await obsCell.textContent();
+  get assessmentCircles(): Locator {
+    return this.metrics("pLoF").getByTestId("constraint-assessment-circles");
   }
 
-  // Expected value
-  async getExpectedValue(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const expCell = row.locator("td").nth(1);
-    return await expCell.textContent();
+  get filledCircles(): Locator {
+    return this.assessmentCircles.getByTestId("constraint-circle-filled");
   }
 
-  // O/E ratio
-  async getOERatio(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const oeCell = row.locator("td").nth(3);
-    return await oeCell.textContent();
+  get emptyCircles(): Locator {
+    return this.assessmentCircles.getByTestId("constraint-circle-empty");
   }
 
-  // Score/pLI value
-  async getScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const scoreCell = row.locator("td").last();
-    return await scoreCell.textContent();
+  /** The "?" next to "Constraint assessment". */
+  get assessmentHelp(): Locator {
+    return this.metrics("pLoF").locator("sup");
   }
 
-  // gnomAD link
-  getGnomadLink(): Locator {
-    return this.getSection().locator("a[href*='gnomad']");
-  }
-
-  async hasGnomadLink(): Promise<boolean> {
-    return await this.getGnomadLink()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  async clickGnomadLink(): Promise<void> {
-    await this.getGnomadLink().click();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** Assert a metrics cell has the documented format and return its numbers. */
+  async readMetrics(category: string): Promise<ConstraintMetrics> {
+    await expect(
+      this.metrics(category),
+      `${category} metrics should read "<Z|pLI> = n  o/e = n (n - n)"`
+    ).toHaveText(METRICS);
+    const text = (await this.metrics(category).innerText()).replace(/\s+/g, " ").trim();
+    const match = METRICS.exec(text) as RegExpExecArray;
+    return {
+      scoreName: match[1],
+      score: Number(match[2]),
+      oe: Number(match[3]),
+      oeLower: Number(match[4]),
+      oeUpper: Number(match[5]),
+    };
   }
 }

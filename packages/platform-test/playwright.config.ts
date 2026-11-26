@@ -1,57 +1,64 @@
 import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config();
+const isCI = !!process.env.CI;
+const workers = process.env.PLAYWRIGHT_WORKERS ? Number(process.env.PLAYWRIGHT_WORKERS) : 4;
+
+/* Video replays. A video is kept only for a failed test, in CI, which keeps the
+ * published report small. PLAYWRIGHT_VIDEO=retain-on-failure does the same locally;
+ * PLAYWRIGHT_VIDEO=on records every test. */
+type VideoMode = "off" | "on" | "retain-on-failure" | "on-first-retry";
+const video = (process.env.PLAYWRIGHT_VIDEO as VideoMode | undefined) ?? (isCI ? "retain-on-failure" : "off");
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: "./e2e",
-  /* Run tests in files in parallel */
+  globalSetup: "./globalSetup.ts",
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Use 6 workers in CI for faster execution */
-  workers: process.env.CI ? 6 : 10,
-  /* Increase timeout for CI environments */
-  timeout: process.env.CI ? 60000 : 80000,
-  /* Default expect() timeout is 5000ms, which doesn't leave enough headroom for
-   * lazy-loaded route chunks to fetch on a cold page load (page components are
-   * now code-split), on top of normal query latency. */
+  /* A committed test.only would silently skip the rest of the suite. */
+  forbidOnly: isCI,
+  /* One retry in CI, to capture a trace. A test that passes only on retry is reported
+   * as flaky; it is not a clean pass. */
+  retries: isCI ? 1 : 0,
+  /* The app talks to a live API: more parallel pages mean slower responses, not a
+   * faster run. Override with PLAYWRIGHT_WORKERS. */
+  workers,
+  timeout: 90_000,
   expect: {
-    timeout: 10000,
+    /* Covers a cold lazy-loaded route chunk plus a slow query. */
+    timeout: 20_000,
   },
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  reporter: isCI
+    ? [
+        ["list"],
+        ["github"],
+        ["html", { open: "never" }],
+        /* Read by the workflow to summarise the run on the pull request. */
+        ["json", { outputFile: "e2e-results.json" }],
+      ]
+    : [["list"], ["html", { open: "never" }]],
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:3000",
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
+    actionTimeout: 20_000,
+    navigationTimeout: 45_000,
+    trace: isCI ? "on-first-retry" : "retain-on-failure",
+    screenshot: "only-on-failure",
+    video,
   },
-
-  /* Configure projects for major browsers */
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-
-  /* Run your local dev server before starting the tests */
+  /* Run the local dev server unless a deployed URL was given. */
   webServer: process.env.PLAYWRIGHT_TEST_BASE_URL
     ? undefined
     : {
         command: "yarn --cwd ../.. dev:platform",
         url: "http://127.0.0.1:3000",
-        reuseExistingServer: true, // Since we would not want to start a new server and we are using netlify deploy preview URL anyway
+        reuseExistingServer: true,
+        timeout: 180_000,
       },
 });

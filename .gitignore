@@ -64,3 +64,5 @@ packages/platform-test/playwright-report/index.html
 
 # local API migration notes and generated schema diffs
 apps/platform/migrations/
+packages/platform-test/e2e-results.json
+e2e-summary.md

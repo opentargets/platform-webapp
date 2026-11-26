@@ -93,6 +93,7 @@ function ApiPlaygroundDrawer({
         open={open}
         onClose={(e) => close(e)}
         anchor="right"
+        data-testid="api-playground-drawer"
       >
         <Box
           sx={{
@@ -106,7 +107,7 @@ function ApiPlaygroundDrawer({
           }}
         >
           API query
-          <IconButton onClick={(e) => close(e)}>
+          <IconButton onClick={(e) => close(e)} data-testid="drawer-close">
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </Box>

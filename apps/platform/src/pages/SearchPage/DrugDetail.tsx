@@ -12,7 +12,7 @@ const StyledLink = styled(Link)({
 
 function DrugDetail({ data }) {
   return (
-    <CardContent>
+    <CardContent data-testid="search-top-hit-drug">
       <Typography color="primary" variant="h5">
         <Link to={`/drug/${data.id}`}>{data.name}</Link>
       </Typography>

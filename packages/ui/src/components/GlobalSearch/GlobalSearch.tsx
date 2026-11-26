@@ -50,6 +50,7 @@ function GlobalSearch({ isHomePage }) {
       <SearchButton
         isHomePage={isHomePage}
         type="button"
+        data-testid="global-search-button"
         onClick={() => {
           setOpen(true);
         }}
@@ -72,6 +73,7 @@ function GlobalSearch({ isHomePage }) {
             </Typography>
           </Box>
           <Box
+            data-testid="global-search-shortcut"
             sx={{
               typography: "caption",
               fontWeight: "bold",

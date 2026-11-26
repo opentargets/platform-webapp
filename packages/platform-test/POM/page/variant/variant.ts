@@ -1,6 +1,7 @@
-import type { Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionTestId } from "../../../utils/sections";
 
+/** The variant profile page, /variant/:varId. */
 export class VariantPage {
   page: Page;
   originalURL: string;
@@ -11,7 +12,7 @@ export class VariantPage {
   }
 
   /**
-   * Navigate to a variant page by variant ID
+   * Open a variant page and wait for its header to show the variant id.
    * @param variantId - Variant ID in format: chromosome_position_ref_alt (e.g., "1_154453788_C_T")
    */
   async goToVariantPage(variantId: string): Promise<void> {
@@ -19,88 +20,59 @@ export class VariantPage {
     await this.waitForVariantPageLoad();
   }
 
-  /**
-   * Wait for the variant page to load
-   */
+  /** Wait until the header block shows a title and the profile header has its data. */
   async waitForVariantPageLoad(): Promise<void> {
-    await this.page.waitForSelector("[data-testid='profile-page-header-block']", {
-      state: "visible",
-    });
-    // Wait for any section loaders to disappear
-    await this.page
-      .waitForSelector("[data-testid='section-loader']", {
-        state: "hidden",
-        timeout: WIDGET_LOAD_TIMEOUT,
-      })
-      .catch(() => {
-        // If no loader found, that's fine - means sections loaded quickly
-      });
+    await expect(this.headerBlock).toBeVisible();
+    await expect(this.title, "the variant header should show the variant id").not.toBeEmpty();
+    await expect(this.page.getByTestId("profile-header")).toBeVisible();
   }
 
-  /**
-   * Get variant ID from the page header
-   */
-  async getVariantIdFromHeader(): Promise<string | null> {
-    const headerTitle = this.page.locator("[data-testid='profile-page-header-text']");
-    return await headerTitle.textContent();
+  get headerBlock(): Locator {
+    return this.page.getByTestId("profile-page-header-block");
   }
 
-  /**
-   * Navigate to variant page from a credible set link
-   * @param variantId - Variant ID to navigate to
-   */
-  async goToVariantPageFromCredibleSet(variantId: string): Promise<void> {
-    const variantLink = this.page.locator(`a[href*="/variant/${variantId}"]`).first();
-    await variantLink.click();
-    await this.waitForVariantPageLoad();
+  /** The variant id (or its DEL / INS short form) in the page header. */
+  get title(): Locator {
+    return this.page.getByTestId("profile-page-header-text");
   }
 
-  /**
-   * Navigate to variant page from any table that has variant links
-   * @param variantId - Variant ID to navigate to
-   */
-  async goToVariantPageFromTable(variantId: string): Promise<void> {
-    const variantLink = this.page.locator(`a[href*="/variant/${variantId}"]`).first();
-    await variantLink.click();
-    await this.waitForVariantPageLoad();
+  /** Alias kept for existing specs: the header title locator. */
+  getVariantIdFromHeader(): Locator {
+    return this.title;
   }
 
-  /**
-   * Check if the variant page is currently displayed
-   */
-  async isVariantPage(): Promise<boolean> {
-    const url = this.page.url();
-    return url.includes("/variant/");
+  get profileTab(): Locator {
+    return this.page.getByRole("tab", { name: "Profile" });
   }
 
-  /**
-   * Wait for a specific section to finish loading
-   * @param sectionTestId - The test-id of the section (e.g., 'section-gwas-credible-sets')
-   */
-  async waitForSectionToLoad(sectionTestId: string): Promise<void> {
-    const section = this.page.locator(`[data-testid='${sectionTestId}']`);
+  get notFound(): Locator {
+    return this.page.getByTestId("not-found-page");
+  }
 
-    // Wait for section to be visible
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** The external link group of a cross reference, e.g. "Ensembl", in the header. */
+  crossReferences(label: string): Locator {
+    return this.page.getByTestId(`header-external-links-${label.toLowerCase()}`);
+  }
 
-    // Wait for any skeleton loaders within the section to disappear
-    const skeletons = section.locator(".MuiSkeleton-root");
-    const hasSkeletons = await skeletons
-      .count()
-      .then((count) => count > 0)
-      .catch(() => false);
+  get allCrossReferenceGroups(): Locator {
+    return this.page.locator("[data-testid^='header-external-links-']");
+  }
 
-    if (hasSkeletons) {
-      await this.page.waitForFunction(
-        (testId) => {
-          const sect = document.querySelector(`[data-testid='${testId}']`);
-          if (!sect) return false;
-          const skels = sect.querySelectorAll(".MuiSkeleton-root");
-          return skels.length === 0;
-        },
-        sectionTestId,
-        { timeout: 15000 }
-      );
-    }
+  /** Assert the browser is on this variant's page. */
+  async expectOnVariantPage(variantId?: string): Promise<void> {
+    await expect(this.page).toHaveURL(
+      variantId ? new RegExp(`/variant/${variantId}(\\?.*)?(#.*)?$`) : /\/variant\/[^/]+/
+    );
+  }
+
+  section(sectionId: string): Locator {
+    return this.page.getByTestId(sectionTestId(sectionId));
+  }
+
+  /** Wait for a section to be visible and to have finished loading. */
+  async waitForSectionToLoad(sectionTestIdValue: string): Promise<void> {
+    const section = this.page.getByTestId(sectionTestIdValue);
+    await expect(section).toBeVisible();
+    await expect(section.locator(".MuiSkeleton-root")).toHaveCount(0);
   }
 }

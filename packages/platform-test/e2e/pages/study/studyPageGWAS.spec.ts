@@ -1,509 +1,501 @@
-import { test } from "../../../fixtures";
-import { StudyProfileHeader } from "../../../POM/objects/components/StudyProfileHeader/studyProfileHeader";
-import { SharedTraitStudiesSection } from "../../../POM/objects/widgets/Study/sharedTraitStudiesSection";
-import { GWASCredibleSetsSection } from "../../../POM/objects/widgets/shared/GWASCredibleSetsSection";
-import { StudyPage } from "../../../POM/page/study/study";
+import { expectedSectionsFor } from "../../../fixtures/expectedSections";
+import { expect, test } from "../../../fixtures";
+import { GwasStudyHeader } from "../../../POM/objects/components/StudyProfileHeader/gwasStudyHeader";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
+import { GWAS_STUDY_SECTIONS, GwasStudyPage } from "../../../POM/page/study/gwasStudy";
+import {
+  GWAS_STUDIES,
+  MYOCARDIAL_INFARCTION,
+  SUMSTAT_LABELS,
+  UNKNOWN_STUDY_ID,
+} from "../../../POM/page/study/studyData";
+import { expectSectionLoaded, expectSections } from "../../../utils/sections";
 
-test.describe("Study Page - GWAS Study", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const studyPage = new StudyPage(page);
-    // await studyPage.goToStudyPageFromGWASWidgetOnDiseasePage(testConfig.disease.primary);
-    await studyPage.goToStudyPage(baseURL ?? "", testConfig.study.gwas.primary);
-    await studyPage.waitForStudyPageLoad();
+const parseNumber = (text: string): number => Number(text.replace(/[^\d.]/g, ""));
+
+/**
+ * The GWAS study profile page: its header, which sections it renders, the cards and
+ * sticky bar that navigate between them, links out and the routes that must 404.
+ * The two sections have their own specs.
+ */
+test.describe("Study page: GWAS study", () => {
+  // The PubMed drawer asks Europe PMC for the publication. That third-party service
+  // throttles, so it is stubbed: these tests depend only on the app and its own API.
+  test.beforeEach(async ({ page }) => {
+    await stubEuropePmc(page);
   });
 
-  test.describe("GWAS Study Profile Header", () => {
-    test(
-      "Profile header is visible and displays study information",
-      { tag: "@smoke" },
-      async ({ page }) => {
-        const profileHeader = new StudyProfileHeader(page);
-        await profileHeader.waitForProfileHeaderLoad();
+  test("renders the header and every expected section @smoke", async ({ page, testConfig }) => {
+    const study = testConfig.study.gwas.primary;
+    expect(study).toBe(GWAS_STUDIES.primary.id);
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(study);
 
-        const isVisible = await profileHeader.isProfileHeaderVisible();
-        test.expect(isVisible).toBe(true);
+    await expect(page).toHaveTitle(`${study} profile page | Open Targets Platform`);
+    await expectSections(page, expectedSectionsFor(study));
+    await expect(studyPage.page.getByTestId("profile-header")).toBeVisible();
+
+    await test.step("every section has loaded with its own title, in profile order", async () => {
+      for (const section of GWAS_STUDY_SECTIONS) {
+        await expectSectionLoaded(page, section.id);
+        await expect(studyPage.sectionTitle(section.id)).toHaveText(section.name);
       }
+      const rendered = await page
+        .locator("section[data-testid^='section-']")
+        .evaluateAll((sections) => sections.map((section) => section.getAttribute("data-testid")));
+      expect(rendered).toEqual(GWAS_STUDY_SECTIONS.map((section) => `section-${section.id}`));
+    });
+  });
+
+  test("has a single, selected Profile tab that links to the study", async ({
+    page,
+    testConfig,
+  }) => {
+    const study = testConfig.study.gwas.primary;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(study);
+
+    await expect(page.getByRole("tab")).toHaveText(["Profile"]);
+    await expect(studyPage.profileTab).toHaveAttribute("aria-selected", "true");
+    await expect(studyPage.profileTab).toHaveAttribute("href", `/study/${study}`);
+  });
+
+  test("the header shows the study, its trait, publication and sample sizes", async ({
+    page,
+    testConfig,
+  }) => {
+    const facts = GWAS_STUDIES.primary;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+    await expect(header.root).toBeVisible();
+
+    await test.step("type, reported trait and disease", async () => {
+      await expect(header.studyType).toHaveText("Study type: GWAS");
+      await expect(header.reportedTrait).toHaveText(`Reported trait: ${facts.traitFromSource}`);
+      await expect(header.diseases).toHaveText(`Disease or phenotype: ${MYOCARDIAL_INFARCTION.name}`);
+      await expect(header.diseases.getByRole("link")).toHaveAttribute(
+        "href",
+        `/disease/${MYOCARDIAL_INFARCTION.id}`
+      );
+    });
+
+    await test.step("publication: first author, journal and year, and the PubMed id", async () => {
+      await expect(header.publication).toHaveText(/^Publication: .+ et al\. .+ \((19|20)\d{2}\)$/);
+      await expect(header.pubmed).toHaveText(/^PubMed: \d+$/);
+    });
+
+    await test.step("sample size, cases and controls add up", async () => {
+      await expect(header.sampleSize).toHaveText(/^Sample size: [\d,]+ \(cohorts: [^)]+\)/);
+      const sampleSize = parseNumber((await header.sampleSize.innerText()).split("(")[0]);
+      const cases = parseNumber(await header.nCases.innerText());
+      const controls = parseNumber(await header.nControls.innerText());
+      await expect(header.nCases).toHaveText(/^N cases: [\d,]+$/);
+      await expect(header.nControls).toHaveText(/^N controls: [\d,]+$/);
+      expect(cases, "a case/control study has cases").toBeGreaterThan(0);
+      expect(cases + controls, "cases and controls make up the sample").toBe(sampleSize);
+    });
+
+    await test.step("the cohorts are those of the study", async () => {
+      await expect(header.sampleSize).toContainText("(cohorts: MVP)");
+    });
+
+    await test.step("a study without an analysis flag shows no Analysis field", async () => {
+      await expect(header.analysis).toHaveCount(0);
+    });
+  });
+
+  test("the sample size tooltip gives the initial sample size", async ({ page, testConfig }) => {
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    await header.sampleSize.locator("sup").hover();
+    const tooltip = page.getByRole("tooltip");
+    await expect(tooltip).toContainText("Initial sample size");
+    await expect(tooltip).toContainText(/\d[\d,]* .*ancestry cases, [\d,]+ .*ancestry controls/);
+    await page.mouse.move(0, 0);
+    await expect(tooltip).toBeHidden();
+  });
+
+  test("the LD populations are shown as chips with their share of the sample", async ({
+    page,
+    testConfig,
+  }) => {
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    await expect(header.ldChips).toHaveCount(1);
+    await expect(header.ldChip("nfe")).toContainText("NFE");
+    await expect(header.ldChip("nfe")).toContainText("100%");
+    await header.ldChip("nfe").hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "LD reference population: non-Finnish Europeans"
+    );
+  });
+
+  test("a multi-ancestry study lists its LD populations from largest to smallest and they total 100%", async ({
+    page,
+  }) => {
+    const facts = GWAS_STUDIES.multiAncestry;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    await expect(header.ldChips).toHaveCount(4);
+    const shares = await header.ldChips.evaluateAll((chips) =>
+      chips.map((chip) => ({
+        id: (chip.getAttribute("data-testid") ?? "").replace("chip-ld-population-", ""),
+        label: chip.querySelector("[data-testid='label-chip-label']")?.textContent ?? "",
+        value: Number.parseFloat(
+          chip.querySelector("[data-testid='label-chip-value']")?.textContent ?? "NaN"
+        ),
+      }))
+    );
+    expect(shares.map(({ id }) => id).sort()).toEqual(["afr", "amr", "eas", "nfe"]);
+    for (const { id, label } of shares) expect(label).toBe(id.toUpperCase());
+    const values = shares.map(({ value }) => value);
+    expect(values, "largest first").toEqual([...values].sort((a, b) => b - a));
+    expect(values[0], "European ancestry dominates this study").toBe(
+      shares.find(({ id }) => id === "nfe")?.value
+    );
+    // Each share is rounded to a whole percent, so the total is within a rounding step of 100.
+    const total = values.reduce((a, b) => a + b, 0);
+    expect(total).toBeGreaterThanOrEqual(98);
+    expect(total).toBeLessThanOrEqual(102);
+  });
+
+  test("the summary statistics popover lists the harmonised QC values", async ({
+    page,
+    testConfig,
+  }) => {
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    await expect(header.summaryStatistics).toHaveText(/^Summary statistics: Available/);
+    await expect(header.popover).toBeHidden();
+    await header.summaryStatisticsTrigger.click();
+    await expect(header.popover).toBeVisible();
+    await expect(header.popover).toContainText("Harmonised summary statistics");
+
+    const rows = header.popover.locator("tbody tr");
+    await expect(rows).toHaveCount(SUMSTAT_LABELS.length);
+    const labels = (await rows.locator("td:first-child").allInnerTexts()).map((text) =>
+      text.replace(/\?$/, "").trim()
+    );
+    expect(labels.sort()).toEqual([...SUMSTAT_LABELS].sort());
+    const values = await rows.locator("td:last-child").allInnerTexts();
+    for (const value of values) expect(value.trim()).toMatch(/^-?[\d,.]+(e-?\d+)?$/);
+
+    await test.step("significant variants never exceed the total harmonised variants", async () => {
+      const valueOf = async (label: string) => {
+        const row = rows.filter({ hasText: label }).filter({ hasNotText: `${label} SE` });
+        return parseNumber((await row.first().locator("td:last-child").innerText()).trim());
+      };
+      expect(await valueOf("Total variants")).toBeGreaterThan(await valueOf("Significant variants"));
+    });
+
+    await test.step("a row's label has a tooltip that explains it", async () => {
+      await rows.filter({ hasText: "Total variants" }).locator("sup").hover();
+      await expect(page.getByRole("tooltip")).toHaveText("Number of harmonised variants");
+    });
+
+    await page.keyboard.press("Escape");
+    await expect(header.popover).toBeHidden();
+  });
+
+  test("the QC warnings popover lists the study's quality control messages", async ({
+    page,
+    testConfig,
+  }) => {
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    await expect(header.qcWarnings).toHaveText("QC warnings");
+    await header.qcWarningsTrigger.click();
+    await expect(header.popover.getByRole("listitem")).toHaveText([
+      /^Study has non empty or zero nCases, nControls & nSamples with matching sum$/,
+    ]);
+    await page.keyboard.press("Escape");
+    await expect(header.popover).toBeHidden();
+  });
+
+  test("the PubMed id opens the publications drawer for that id and closes again", async ({
+    page,
+    testConfig,
+  }) => {
+    const searches = await stubEuropePmc(page);
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    const pubmedId = (await header.pubmed.innerText()).replace("PubMed:", "").trim();
+    expect(pubmedId).toMatch(/^\d+$/);
+    await expect(header.pubmedDrawerTrigger).toHaveText(pubmedId);
+    await header.pubmedDrawerTrigger.click();
+
+    const drawer = header.publicationsDrawer;
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toContainText("Publications");
+    await expect(drawer).toContainText(`Stubbed publication ${pubmedId}`);
+    expect(searches.at(-1)).toEqual([pubmedId]);
+
+    await drawer.getByTestId("drawer-close").click();
+    await expect(drawer).toBeHidden();
+  });
+
+  test("the disease link in the header goes to the disease page, and back returns", async ({
+    page,
+    testConfig,
+  }) => {
+    const study = testConfig.study.gwas.primary;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(study);
+
+    await header.diseases.getByRole("link", { name: MYOCARDIAL_INFARCTION.name }).click();
+    await expect(page).toHaveURL(new RegExp(`/disease/${MYOCARDIAL_INFARCTION.id}$`));
+    await expect(studyPage.title).toHaveText(MYOCARDIAL_INFARCTION.name);
+
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/study/${study}$`));
+    await expect(studyPage.title).toHaveText(study);
+    await expectSectionLoaded(page, "gwas-credible-sets");
+
+    await page.goForward();
+    await expect(studyPage.title).toHaveText(MYOCARDIAL_INFARCTION.name);
+  });
+
+  test("the links under the title name the disease and the source of the study", async ({
+    page,
+    testConfig,
+  }) => {
+    const facts = GWAS_STUDIES.primary;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+
+    await expect(studyPage.diseaseLinks).toHaveText([MYOCARDIAL_INFARCTION.name]);
+    await expect(studyPage.diseaseLinks).toHaveAttribute(
+      "href",
+      `../disease/${MYOCARDIAL_INFARCTION.id}`
+    );
+    const source = studyPage.sourceLink(facts.source.label);
+    await expect(source).toHaveAttribute("href", facts.source.href);
+  });
+
+  test("the header does not show placeholder text", async ({ page, testConfig }) => {
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+    await expect(header.studyType).toBeVisible();
+
+    await expect(header.root, "the header shows a '?API?' placeholder for fields it cannot fill").not.toContainText(
+      "?API?"
+    );
+    await expect(header.backgroundTrait).toHaveCount(0);
+  });
+
+  test("a study without summary statistics says so and still lists its warnings", async ({
+    page,
+  }) => {
+    const facts = GWAS_STUDIES.noSumstatsNoCredibleSets;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    await expect(header.summaryStatistics).toHaveText("Summary statistics: Not Available");
+    await expect(header.summaryStatisticsTrigger).toHaveCount(0);
+    await expect(header.reportedTrait).toHaveText(`Reported trait: ${facts.traitFromSource}`);
+    await expect(header.ldChips).toHaveCount(3);
+
+    await header.qcWarningsTrigger.click();
+    await expect(header.popover.getByRole("listitem")).toContainText([
+      "Harmonized summary statistics are not available or empty",
+      "Study has non empty or zero nCases, nControls & nSamples with matching sum",
+    ]);
+  });
+
+  test("a study without credible sets renders only the shared trait studies, and its summary card is inactive", async ({
+    page,
+  }) => {
+    const facts = GWAS_STUDIES.noSumstatsNoCredibleSets;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+    await expectSectionLoaded(page, "shared-trait-studies");
+
+    await expect(studyPage.section("gwas-credible-sets")).toHaveCount(0);
+    await expect(studyPage.summaryCards).toHaveCount(2);
+    await expect(studyPage.summaryCard("gwas_credible_sets")).toContainText("GWAS Credible Sets");
+  });
+
+  test("a FinnGen study links to FinnGen and has no publication", async ({ page }) => {
+    const facts = GWAS_STUDIES.finngen;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    await expect(header.reportedTrait).toHaveText(`Reported trait: ${facts.traitFromSource}`);
+    await expect(studyPage.sourceLink(facts.source.label)).toHaveAttribute("href", facts.source.href);
+    await expect(studyPage.traitLinks("Trait")).toHaveText([MYOCARDIAL_INFARCTION.name]);
+    await expect(header.publication).toHaveCount(0);
+    await expect(header.sampleSize).toContainText("(cohorts: FinnGen)");
+    await expect(header.ldChip("fin")).toContainText("100%");
+    await expect(
+      header.summaryStatistics,
+      "summary statistics without QC values are just 'Available'"
+    ).toHaveText("Summary statistics: Available");
+    await expect(header.summaryStatisticsTrigger).toHaveCount(0);
+  });
+
+  test("a study with zero cases and controls hides both fields", async ({ page }) => {
+    const facts = GWAS_STUDIES.noCases;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    await expect(header.sampleSize).toHaveText(/^Sample size: [\d,]+ \(cohorts: UKB\)/);
+    await expect(header.nCases).toHaveCount(0);
+    await expect(header.nControls).toHaveCount(0);
+    await header.qcWarningsTrigger.click();
+    await expect(header.popover).toContainText(
+      "Study has non empty or zero nSamples with empty nCases and nControls"
+    );
+  });
+
+  test("a study with an analysis flag shows it", async ({ page }) => {
+    const facts = GWAS_STUDIES.withAnalysisFlag;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    await expect(header.analysis).toHaveText("Analysis: wgsGWAS");
+  });
+
+  test("a study linked to two diseases links to both", async ({ page }) => {
+    const facts = GWAS_STUDIES.twoDiseases;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(facts.id);
+    await expectSections(page, expectedSectionsFor(facts.id));
+
+    const names = facts.diseases.map(({ name }) => name);
+    await expect(studyPage.diseaseLinks).toHaveText(names);
+    await expect(header.diseases).toHaveText(`Disease or phenotype: ${names.join(", ")}`);
+    for (const [index, disease] of facts.diseases.entries()) {
+      await expect(studyPage.diseaseLinks.nth(index)).toHaveAttribute(
+        "href",
+        `../disease/${disease.id}`
+      );
+    }
+  });
+
+  test("summary cards list both sections and jump to the one clicked", async ({
+    page,
+    testConfig,
+  }) => {
+    const study = testConfig.study.gwas.primary;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(study);
+    await expectSections(page, expectedSectionsFor(study));
+
+    await expect(studyPage.summaryCards).toHaveCount(GWAS_STUDY_SECTIONS.length);
+    for (const section of GWAS_STUDY_SECTIONS) {
+      await expect(studyPage.summaryCard(section.anchor)).toContainText(section.name);
+      await expect(studyPage.summaryCard(section.anchor)).toContainText(section.shortName);
+    }
+
+    const target = GWAS_STUDY_SECTIONS[1];
+    await studyPage.summaryCard(target.anchor).click();
+    await expect(page).toHaveURL(new RegExp(`/study/${study}#${target.anchor}$`));
+    await expect(studyPage.sectionTitle(target.id)).toBeInViewport();
+  });
+
+  test("the sticky header names the study and links to its source", async ({
+    page,
+    testConfig,
+  }) => {
+    const facts = GWAS_STUDIES.primary;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(testConfig.study.gwas.primary);
+    await expectSections(page, expectedSectionsFor(facts.id));
+    await expect(studyPage.stickyHeader, "hidden at the top of the page").toHaveCount(0);
+
+    await studyPage.section("shared-trait-studies").scrollIntoViewIfNeeded();
+    const sticky = studyPage.stickyHeader;
+    await expect(sticky).toBeVisible();
+    await expect(sticky).toContainText(facts.id);
+    await expect(sticky.getByRole("link", { name: facts.source.label })).toHaveAttribute(
+      "href",
+      facts.source.href
     );
 
-    test("Study type is displayed correctly as GWAS", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-
-      const studyType = await profileHeader.getStudyType();
-      test.expect(studyType).toContain("GWAS");
-    });
-
-    test("Reported trait is visible and has content", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-
-      const isVisible = await profileHeader.isReportedTraitVisible();
-      test.expect(isVisible).toBe(true);
-
-      const reportedTrait = await profileHeader.getReportedTrait();
-      test.expect(reportedTrait).toBeTruthy();
-      test.expect(reportedTrait?.length).toBeGreaterThan(0);
-    });
-
-    test("Disease or phenotype field displays when disease data exists", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isDiseaseFieldVisible();
-
-      if (isVisible) {
-        const diseases = await profileHeader.getDiseases();
-        test.expect(diseases.length).toBeGreaterThan(0);
-
-        // Verify first disease has text
-        test.expect(diseases[0]).toBeTruthy();
-      }
-    });
-
-    test("Can click disease link and navigate to disease page", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isDiseaseFieldVisible();
-
-      if (isVisible) {
-        const diseases = await profileHeader.getDiseases();
-
-        if (diseases.length > 0) {
-          // Click on the disease link
-          await profileHeader.clickDiseaseLink(0);
-
-          // Wait for navigation to disease page
-          await page.waitForURL("**/disease/**");
-
-          // Verify we're on a disease page
-          test.expect(page.url()).toContain("/disease/");
-        }
-      }
-    });
-
-    test("Background trait is displayed when available", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isBackgroundTraitVisible();
-
-      if (isVisible) {
-        const backgroundTraits = await profileHeader.getBackgroundTraits();
-        test.expect(backgroundTraits.length).toBeGreaterThan(0);
-      } else {
-        test.skip(true, "No background traits available for this study");
-      }
-    });
-
-    test("Publication information is displayed", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isPublicationVisible();
-      console.log("isVisible:", isVisible);
-      if (isVisible) {
-        const publication = await profileHeader.getPublication();
-        test.expect(publication).toBeTruthy();
-      }
-    });
-
-    test("PubMed ID is displayed when available", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isPubMedVisible();
-
-      if (isVisible) {
-        const pubmedId = await profileHeader.getPubMedId();
-        test.expect(pubmedId).toBeTruthy();
-        test.expect(pubmedId).toMatch(/\d+/); // Should contain numbers
-      }
-    });
-
-    test("Summary statistics availability is indicated", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const summaryStatsText = await profileHeader.getSummaryStatsText();
-      test.expect(summaryStatsText).toBeTruthy();
-
-      // Check if summary stats are available or not
-      const isAvailable = await profileHeader.isSummaryStatsAvailable();
-      if (isAvailable) {
-        test.expect(summaryStatsText).not.toContain("Not Available");
-
-        // Check if there's a popover for detailed stats
-        const hasPopover = await profileHeader.hasSummaryStatsPopover();
-        if (hasPopover) {
-          await profileHeader.clickSummaryStatsPopover();
-          await page.waitForTimeout(300);
-
-          // Verify popover appeared
-          const popover = page.locator("[data-testid='detail-popover-content']");
-          const isPopoverVisible = await popover.isVisible().catch(() => false);
-          test.expect(isPopoverVisible).toBe(true);
-        }
-      } else {
-        test.expect(summaryStatsText).toContain("Not Available");
-      }
-    });
-
-    test("QC warnings are displayed when present", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-
-      const hasWarnings = await profileHeader.hasQCWarnings();
-
-      if (hasWarnings) {
-        await profileHeader.clickQCWarnings();
-        await page.waitForTimeout(300);
-
-        // Verify warnings popover appeared
-        const popover = page.locator("[data-testid='detail-popover-content']");
-        const isPopoverVisible = await popover.isVisible().catch(() => false);
-        test.expect(isPopoverVisible).toBe(true);
-      } else {
-        test.skip(true, "No QC warnings available for this study");
-      }
-    });
-
-    test("Sample size is displayed", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isSampleSizeVisible();
-
-      if (isVisible) {
-        const sampleSize = await profileHeader.getSampleSize();
-        test.expect(sampleSize).toBeTruthy();
-      }
-    });
-
-    test("N cases is displayed when available", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isNCasesVisible();
-
-      if (isVisible) {
-        const nCases = await profileHeader.getNCases();
-        test.expect(nCases).toBeTruthy();
-        test.expect(nCases).toMatch(/\d/); // Should contain at least one digit
-      }
-    });
-
-    test("N controls is displayed when available", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isNControlsVisible();
-
-      if (isVisible) {
-        const nControls = await profileHeader.getNControls();
-        test.expect(nControls).toBeTruthy();
-        test.expect(nControls).toMatch(/\d/); // Should contain at least one digit
-      }
-    });
-
-    test("Analysis flags are displayed when available", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const isVisible = await profileHeader.isAnalysisVisible();
-
-      if (isVisible) {
-        const analysis = await profileHeader.getAnalysis();
-        test.expect(analysis).toBeTruthy();
-      }
-    });
-
-    test("Population chips display LD reference populations", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      const chipCount = await profileHeader.getPopulationChipsCount();
-
-      if (chipCount > 0) {
-        // Check first population chip
-        const label = await profileHeader.getPopulationChipLabel(0);
-        const value = await profileHeader.getPopulationChipValue(0);
-
-        test.expect(label).toBeTruthy();
-        test.expect(value).toMatch(/\d+%/); // Should be a percentage
-
-        // Hover to see tooltip
-        await profileHeader.hoverPopulationChip(0);
-        await page.waitForTimeout(300);
-      }
-    });
-
-    test("QTL-specific fields are not visible for GWAS studies", async ({ page }) => {
-      const profileHeader = new StudyProfileHeader(page);
-      await profileHeader.waitForProfileHeaderLoad();
-
-      // QTL-specific fields should not be visible
-      const projectVisible = await profileHeader.isProjectFieldVisible();
-      const affectedGeneVisible = await profileHeader.isAffectedGeneVisible();
-      const affectedCellVisible = await profileHeader.isAffectedCellTissueVisible();
-      const conditionVisible = await profileHeader.isConditionVisible();
-
-      test.expect(projectVisible).toBe(false);
-      test.expect(affectedGeneVisible).toBe(false);
-      test.expect(affectedCellVisible).toBe(false);
-      test.expect(conditionVisible).toBe(false);
-    });
+    await sticky.getByTestId("sticky-section-selector").click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveText(
+      GWAS_STUDY_SECTIONS.map((section) => new RegExp(`${section.name}$`))
+    );
+    await menu.getByRole("menuitem", { name: "GWAS Credible Sets" }).click();
+    await expect(menu).toBeHidden();
+    await expect(page).toHaveURL(new RegExp(`/study/${facts.id}#gwas_credible_sets$`));
+    await expect(studyPage.sectionTitle("gwas-credible-sets")).toBeInViewport();
   });
 
-  test.describe("GWAS Credible Sets Section", () => {
-    test("GWAS Credible Sets section is visible", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
+  test("a deep link with a section hash scrolls to that section", async ({ page, testConfig }) => {
+    const study = testConfig.study.gwas.primary;
+    const studyPage = new GwasStudyPage(page);
+    await studyPage.goto(study, "#shared_trait_studies");
 
-      const isVisible = await gwasCredibleSets.isSectionVisible();
-      test.expect(isVisible).toBe(true);
-
-      if (isVisible) {
-        await gwasCredibleSets.waitForSectionLoad();
-
-        const title = await gwasCredibleSets.getSectionTitle();
-        test.expect(title).toBeTruthy();
-      }
-    });
-
-    test("Credible sets link is clickable in the table", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
-      await gwasCredibleSets.waitForSectionLoad();
-
-      const isTableVisible = await gwasCredibleSets.isTableVisible();
-
-      if (isTableVisible) {
-        const rowCount = await gwasCredibleSets.getRowCount();
-
-        if (rowCount > 0) {
-          const credibleSetId = await gwasCredibleSets.getCredibleSetId(0);
-          test.expect(credibleSetId).toBeTruthy();
-
-          // Click credible set link
-          await gwasCredibleSets.clickCredibleSetLink(0);
-          await page.waitForURL("**/credible-set/**");
-
-          // Verify we're on the correct credible set page using URL
-          test.expect(page.url()).toContain("/credible-set/");
-          test.expect(page.url()).toContain(credibleSetId);
-        }
-      }
-    });
-
-    test("GWAS Credible Sets table displays data", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
-      await gwasCredibleSets.waitForSectionLoad();
-
-      const isTableVisible = await gwasCredibleSets.isTableVisible();
-
-      if (isTableVisible) {
-        const rowCount = await gwasCredibleSets.getRowCount();
-        test.expect(rowCount).toBeGreaterThan(0);
-
-        // Check first row has data
-        const firstCellText = await gwasCredibleSets.getCellText(0, 0);
-        test.expect(firstCellText).toBeTruthy();
-      }
-    });
-
-    test("Can click variant link in GWAS Credible Sets table", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
-      await gwasCredibleSets.waitForSectionLoad();
-
-      const isTableVisible = await gwasCredibleSets.isTableVisible();
-
-      if (isTableVisible) {
-        const rowCount = await gwasCredibleSets.getRowCount();
-
-        if (rowCount > 0) {
-          const variantId = await gwasCredibleSets.getVariantId(0);
-          test.expect(variantId).toBeTruthy();
-
-          // Click variant link
-          await gwasCredibleSets.clickVariantLink(0);
-          await page.waitForURL("**/variant/**");
-
-          // Verify we're on variant page
-          test.expect(page.url()).toContain("/variant/");
-        }
-      }
-    });
-
-    test("Can paginate through GWAS Credible Sets table", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
-      await gwasCredibleSets.waitForSectionLoad();
-
-      const isTableVisible = await gwasCredibleSets.isTableVisible();
-
-      if (isTableVisible) {
-        const isNextEnabled = await gwasCredibleSets.isNextPageEnabled();
-
-        if (isNextEnabled) {
-          // Get first page data
-          const firstPageData = await gwasCredibleSets.getCellText(0, 1);
-
-          // Go to next page
-          await gwasCredibleSets.clickNextPage();
-          await gwasCredibleSets.waitForSectionLoad();
-
-          // Get second page data
-          const secondPageData = await gwasCredibleSets.getCellText(0, 1);
-
-          // Data should be different
-          test.expect(firstPageData).not.toBe(secondPageData);
-
-          // Go back
-          const isPrevEnabled = await gwasCredibleSets.isPreviousPageEnabled();
-          if (isPrevEnabled) {
-            await gwasCredibleSets.clickPreviousPage();
-            await gwasCredibleSets.waitForSectionLoad();
-          }
-        }
-      }
-    });
-
-    test("Can search in GWAS Credible Sets table", async ({ page }) => {
-      const gwasCredibleSets = new GWASCredibleSetsSection(page);
-      await gwasCredibleSets.waitForSectionLoad();
-
-      const isTableVisible = await gwasCredibleSets.isTableVisible();
-
-      if (isTableVisible) {
-        const rowCount = await gwasCredibleSets.getRowCount();
-
-        if (rowCount > 0) {
-          // Get a variant ID to search for
-          const variantId = await gwasCredibleSets.getVariantId(0);
-
-          if (variantId) {
-            // Search for it
-            await gwasCredibleSets.searchCredibleSet(variantId);
-            await gwasCredibleSets.waitForSectionLoad();
-
-            // Verify filtered results
-            const filteredRowCount = await gwasCredibleSets.getRowCount();
-            test.expect(filteredRowCount).toBeGreaterThan(0);
-          }
-        }
-      }
-    });
+    await expectSectionLoaded(page, "shared-trait-studies");
+    await expect(studyPage.sectionTitle("shared-trait-studies")).toBeInViewport();
+    await expect(page).toHaveURL(new RegExp(`/study/${study}#shared_trait_studies$`));
   });
 
-  test.describe("Shared Trait Studies Section", () => {
-    test("Shared Trait Studies section is visible for GWAS studies", async ({ page }) => {
-      const sharedTraitStudies = new SharedTraitStudiesSection(page);
+  test("reloading keeps the study, its header and its sections", async ({ page, testConfig }) => {
+    const study = testConfig.study.gwas.primary;
+    const studyPage = new GwasStudyPage(page);
+    const header = new GwasStudyHeader(page);
+    await studyPage.goto(study);
+    await expectSections(page, expectedSectionsFor(study));
 
-      const isVisible = await sharedTraitStudies.isSectionVisible();
-
-      if (isVisible) {
-        await sharedTraitStudies.waitForSectionLoad();
-
-        const title = await sharedTraitStudies.getSectionTitle();
-        test.expect(title).toBeTruthy();
-      }
-    });
-
-    test("Shared Trait Studies table displays related studies", async ({ page }) => {
-      const sharedTraitStudies = new SharedTraitStudiesSection(page);
-
-      const isVisible = await sharedTraitStudies.isSectionVisible();
-
-      if (isVisible) {
-        await sharedTraitStudies.waitForSectionLoad();
-
-        const isTableVisible = await sharedTraitStudies.isTableVisible();
-
-        if (isTableVisible) {
-          const rowCount = await sharedTraitStudies.getRowCount();
-          test.expect(rowCount).toBeGreaterThan(0);
-
-          // Check first row has study ID
-          const studyId = await sharedTraitStudies.getStudyId(0);
-          test.expect(studyId).toBeTruthy();
-        }
-      }
-    });
-
-    test("Can navigate to another study from Shared Trait Studies table", async ({ page }) => {
-      const sharedTraitStudies = new SharedTraitStudiesSection(page);
-
-      const isVisible = await sharedTraitStudies.isSectionVisible();
-
-      if (isVisible) {
-        await sharedTraitStudies.waitForSectionLoad();
-
-        const isTableVisible = await sharedTraitStudies.isTableVisible();
-
-        if (isTableVisible) {
-          const rowCount = await sharedTraitStudies.getRowCount();
-
-          if (rowCount > 0) {
-            // Click study link
-            await sharedTraitStudies.clickStudyLink(0);
-            await page.waitForURL("**/study/**");
-
-            // Verify we're on a different study page
-            test.expect(page.url()).toContain("/study/");
-          }
-        }
-      }
-    });
-
-    test("Can navigate to disease from Shared Trait Studies table", async ({ page }) => {
-      const sharedTraitStudies = new SharedTraitStudiesSection(page);
-
-      const isVisible = await sharedTraitStudies.isSectionVisible();
-
-      if (isVisible) {
-        await sharedTraitStudies.waitForSectionLoad();
-
-        const isTableVisible = await sharedTraitStudies.isTableVisible();
-
-        if (isTableVisible) {
-          const rowCount = await sharedTraitStudies.getRowCount();
-
-          if (rowCount > 0) {
-            const diseaseName = await sharedTraitStudies.getDiseaseName(0);
-
-            if (diseaseName) {
-              // Click disease link
-              await sharedTraitStudies.clickDiseaseLink(0);
-              await page.waitForURL("**/disease/**");
-
-              // Verify we're on disease page
-              test.expect(page.url()).toContain("/disease/");
-            }
-          }
-        }
-      }
-    });
-
-    test("Can paginate Shared Trait Studies", async ({ page }) => {
-      const section = new SharedTraitStudiesSection(page);
-      await section.waitForSectionLoad();
-      await test.expect(section.getStudyLink(0)).toBeVisible();
-      test.skip(!(await section.isNextPageEnabled()), "Study has only one page of related studies");
-      const firstStudy = (await section.getStudyLink(0).textContent()) ?? "";
-      await section.clickNextPage();
-      await test.expect(section.getStudyLink(0)).not.toHaveText(firstStudy);
-      await test.expect(section.getPreviousPageButton()).toBeEnabled();
-    });
+    await page.reload();
+    await expect(studyPage.title).toHaveText(study);
+    await expect(header.studyType).toHaveText("Study type: GWAS");
+    await expectSections(page, expectedSectionsFor(study));
   });
 
-  //   test.describe("Study Page Navigation", () => {
-  //     test("Profile tab is active by default", async ({ page }) => {
-  //       const studyPage = new StudyPage(page);
+  test("a study id that does not exist shows the 404 page", async ({ page, pageHealth }) => {
+    pageHealth.allow(/404 page is displayed/, "opens a study that does not exist", "error-ui");
+    const studyPage = new GwasStudyPage(page);
+    await page.goto(`/study/${UNKNOWN_STUDY_ID}`);
 
-  //       const isActive = await studyPage.isProfileTabActive();
-  //       test.expect(isActive).toBe(true);
-  //     });
+    await expect(studyPage.notFound).toBeVisible();
+    await expect(studyPage.notFound.getByRole("heading", { name: "404: Page not found" })).toBeVisible();
+    await expect(studyPage.notFound.getByRole("link", { name: "Go back to Home Page" })).toHaveAttribute(
+      "href",
+      "/"
+    );
+    await expect(studyPage.title, "no study header on the 404 page").toHaveCount(0);
+    await expect(page.locator("section[data-testid^='section-']")).toHaveCount(0);
+  });
 
-  //     // test("Study page displays correct study ID in header", async ({ page }) => {
-  //     //   const studyPage = new StudyPage(page);
+  test("an unknown sub-route of a study shows the 404 page", async ({
+    page,
+    pageHealth,
+    testConfig,
+  }) => {
+    pageHealth.allow(/404 page is displayed/, "opens a study sub-route that does not exist", "error-ui");
+    const studyPage = new GwasStudyPage(page);
+    await page.goto(`/study/${testConfig.study.gwas.primary}/this-tab-does-not-exist`);
 
-  //     //   const studyId = await studyPage.getStudyIdFromHeader();
-  //     //   test.expect(studyId).toContain(GWAS_STUDY_ID);
-  //     // });
-  //   });
+    await expect(studyPage.notFound).toBeVisible();
+  });
 });

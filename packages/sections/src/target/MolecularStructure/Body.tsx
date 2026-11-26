@@ -149,7 +149,12 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
 
 function NoRows({ children }) {
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", fontStyle: "italic" }}>{children}</Box>
+    <Box
+      data-testid="structure-status"
+      sx={{ display: "flex", justifyContent: "center", fontStyle: "italic" }}
+    >
+      {children}
+    </Box>
   );
 }
 

@@ -1,125 +1,67 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection, TableControls } from "../Target/sectionWidgets";
+
+/** Column headers of the mouse phenotypes table, in order. */
+export const MOUSE_PHENOTYPES_COLUMNS = [
+  "Mouse gene",
+  "Phenotype",
+  "Category",
+  "Allelic composition",
+] as const;
+
+export const MOUSE_PHENOTYPE_COLUMN = { gene: 0, phenotype: 1, category: 2, models: 3 } as const;
+
+/** GraphQL operation behind the section (packages/sections/src/target/MousePhenotypes). */
+export const MOUSE_PHENOTYPES_OPERATION = "TargetMousePhenotypesQuery";
 
 /**
- * Interactor for Mouse Phenotypes section on Target page
- * Displays phenotypes observed in mouse models with gene knockouts
+ * Target profile > Mouse Phenotypes: a server-paginated table. A row with several
+ * categories opens them in a drawer; the allelic composition cell opens the mouse models.
  */
-export class MousePhenotypesSection {
-  constructor(private page: Page) {}
+export class MousePhenotypesSection extends ProfileSection {
+  readonly table: TableControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-mousephenotypes']");
+  constructor(page: Page) {
+    super(page, "mousePhenotypes");
+    this.table = new TableControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  cell(row: number, column: keyof typeof MOUSE_PHENOTYPE_COLUMN): Locator {
+    return this.table.rows.nth(row).locator("td").nth(MOUSE_PHENOTYPE_COLUMN[column]);
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-mousephenotypes']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  /** Every cell of one column on the current page. */
+  column(column: keyof typeof MOUSE_PHENOTYPE_COLUMN): Locator {
+    return this.table.rows.locator(`td:nth-child(${MOUSE_PHENOTYPE_COLUMN[column] + 1})`);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  /** The "N categories" buttons on the current page (rows with more than one category). */
+  get categoryDrawerTriggers(): Locator {
+    return this.column("category").getByTestId("table-drawer");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The drawer listing the categories of a phenotype. */
+  get categoryDrawer(): Locator {
+    return this.page.getByTestId("table-drawer-panel");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  /** The "N model(s)" buttons on the current page. */
+  get modelsDrawerTriggers(): Locator {
+    return this.column("models").getByTestId("allelic-composition-trigger");
   }
 
-  // Phenotype class/category
-  async getPhenotypeCategory(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const categoryCell = row.locator("td").nth(2);
-    return await categoryCell.textContent();
+  /** The drawer listing the mouse models behind a phenotype. */
+  get modelsDrawer(): Locator {
+    return this.page.getByTestId("allelic-composition-drawer");
   }
 
-  // Phenotype label
-  async getPhenotypeLabel(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const labelCell = row.locator("td").nth(1);
-    return await labelCell.textContent();
+  /** One card per mouse model in the open drawer. */
+  get modelCards(): Locator {
+    return this.modelsDrawer.getByTestId("allelic-composition-model");
   }
 
-  // Phenotype link (MP ontology)
-  async getPhenotypeLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("td").nth(1).locator("a");
-  }
-
-  async hasPhenotypeLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getPhenotypeLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  async clickPhenotypeLink(rowIndex: number): Promise<void> {
-    const link = await this.getPhenotypeLink(rowIndex);
-    await link.click();
-  }
-
-  // Biological models drawer
-  async getBiologicalModelsDrawer(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("button, span").filter({ hasText: /model/i });
-  }
-
-  async hasBiologicalModelsDrawer(rowIndex: number): Promise<boolean> {
-    const drawer = await this.getBiologicalModelsDrawer(rowIndex);
-    return await drawer.isVisible().catch(() => false);
-  }
-
-  async clickBiologicalModelsDrawer(rowIndex: number): Promise<void> {
-    const drawer = await this.getBiologicalModelsDrawer(rowIndex);
-    await drawer.click();
-  }
-
-  // MGI link
-  getMGILinks(): Locator {
-    return this.getSection().locator("a[href*='MGI']");
-  }
-
-  async hasMGILinks(): Promise<boolean> {
-    return (await this.getMGILinks().count()) > 0;
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  async closeDrawer(drawer: Locator): Promise<void> {
+    await drawer.getByTestId("drawer-close").click();
+    await expect(drawer, "the drawer should close").toBeHidden();
   }
 }

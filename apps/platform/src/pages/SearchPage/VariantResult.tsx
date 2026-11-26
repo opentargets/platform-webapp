@@ -12,7 +12,7 @@ function VariantResult({ data, highlights }) {
   const theme = useTheme();
 
   return (
-    <div style={{ marginBottom: "30px" }}>
+    <div data-testid="search-result-variant" style={{ marginBottom: "30px" }}>
       <StyledLink to={`/variant/${data.id}`}>
         <FontAwesomeIcon icon={faMapPin} color={theme.palette.primary.main} />{" "}
         <DisplayVariantId

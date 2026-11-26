@@ -34,6 +34,7 @@ function GlobalSearchEntityFilter() {
               <>
                 <Checkbox
                   checked={getAllFilter()}
+                  data-testid="entity-filter-all"
                   role=""
                   onChange={onAllFilterClick}
                   inputProps={{ "aria-label": "controlled" }}

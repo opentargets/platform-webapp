@@ -100,6 +100,8 @@ function StageFilter({ records, selectedStage, setSelectedStage, maxStage }: any
             </Box>
             <Box
               component={hasRecords ? "button" : "div"}
+              data-testid={`stage-filter-${stage.toLowerCase().replace(/_/g, "-")}`}
+              data-selected={stage === selectedStage ? "true" : "false"}
               sx={{
                 borderRadius: isWithdrawnIndex ? 0 : `${circleWidth / 2}px`,
                 boxShadow: (theme: any) =>

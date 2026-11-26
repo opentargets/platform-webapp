@@ -1,195 +1,192 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { LegacyTable, ProfileSection, TableControls } from "../Target/sectionWidgets";
+
+export type InteractionSource = "intact" | "signor" | "reactome" | "string";
+
+/** Sources that show a list of interactors next to the evidence of the selected one. */
+export type EvidenceSource = Exclude<InteractionSource, "string">;
+
+const INTERACTOR_HEADER = /^Interactor\s*B\s*Alt ID$/;
+const EVIDENCE_ENTRIES_HEADER = "Interaction evidence entries";
+const INTERACTION_HEADER = /^Interaction\s*Host organism$/;
 
 /**
- * Interactor for Molecular Interactions section on Target page
- * Displays protein-protein interactions with tabs for different sources (IntAct, Signor, Reactome, String)
- * Uses only data-testid selectors for reliable, predictable testing
+ * Molecular Interactions section of the target profile. One tab per source database;
+ * IntAct, Signor and Reactome show the interactors and, for the selected interactor, its
+ * evidence; String shows a heatmap of evidence scores.
  */
-export class MolecularInteractionsSection {
-  constructor(private page: Page) {}
+export class MolecularInteractionsSection extends ProfileSection {
+  static readonly SOURCES: readonly InteractionSource[] = ["intact", "signor", "reactome", "string"];
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-interactions']");
+  static readonly TAB_LABELS: Record<InteractionSource, RegExp> = {
+    intact: /^IntAct\s*\d+ molecular interactions$/,
+    signor: /^Signor\s*\d+ directional, causal interactions$/,
+    reactome: /^Reactome\s*\d+ pathway-based interactions$/,
+    string: /^String\s*\d+ functional interactions$/,
+  };
+
+  static readonly INTERACTOR_COLUMNS: Record<InteractionSource, readonly (string | RegExp)[]> = {
+    intact: [INTERACTOR_HEADER, "Score", "Biological role", EVIDENCE_ENTRIES_HEADER],
+    signor: [INTERACTOR_HEADER, "Biological role", EVIDENCE_ENTRIES_HEADER],
+    reactome: [INTERACTOR_HEADER, EVIDENCE_ENTRIES_HEADER],
+    string: [
+      "Interactor B",
+      /^Overall\s*interaction score$/,
+      "Neighbourhood",
+      "Gene fusion",
+      "Co-occurrance",
+      "Co-expression",
+      "Experiments",
+      "Databases",
+      "Text mining",
+      "Homology",
+    ],
+  };
+
+  static readonly EVIDENCE_COLUMNS: Record<EvidenceSource, readonly (string | RegExp)[]> = {
+    intact: ["Identifier", INTERACTION_HEADER, "Detection methods", "Publication"],
+    signor: ["Identifier", INTERACTION_HEADER, "Detection methods", "Publication"],
+    reactome: ["ID", INTERACTION_HEADER, "Detection methods", "Publication"],
+  };
+
+  constructor(page: Page) {
+    super(page, "interactions");
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get tabs(): Locator {
+    return this.section.getByTestId("interactions-tabs").getByRole("tab");
   }
 
-  /**
-   * Wait for the section to be visible
-   */
-  async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-    await this.getTable()
-      .waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT })
-      .catch(() => {});
+  tab(source: InteractionSource): Locator {
+    return this.section.getByTestId(`interactions-tab-${source}`);
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-interactions-header']");
+  /** The body of a source's tab. Only the selected source has one. */
+  content(source: InteractionSource): Locator {
+    return this.section.getByTestId(`interactions-content-${source}`);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  /** The interactors table of a source (for String, its only table). */
+  interactors(source: InteractionSource): TableControls {
+    const scope =
+      source === "string"
+        ? this.content(source)
+        : this.content(source).getByTestId("interactions-interactors");
+    return new TableControls(this.page, scope);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  /** The evidence table of the interactor selected in a source's interactors table. */
+  evidence(source: EvidenceSource): LegacyTable {
+    return new LegacyTable(this.page, this.content(source).getByTestId("interactions-evidence"));
   }
 
-  // Tabs container
-  getTabs(): Locator {
-    return this.getSection().locator("[data-testid='interactions-tabs']");
+  interactorsTitle(source: EvidenceSource): Locator {
+    return this.content(source).getByTestId("interactions-interactors-title");
   }
 
-  // Individual tabs
-  getIntactTab(): Locator {
-    return this.getSection().locator("[data-testid='interactions-tab-intact']");
+  evidenceTitle(source: EvidenceSource): Locator {
+    return this.content(source).getByTestId("interactions-evidence-title");
   }
 
-  getSignorTab(): Locator {
-    return this.getSection().locator("[data-testid='interactions-tab-signor']");
+  /** The interactor's name: a link to its target page, or to UniProt when it is not a target. */
+  interactorLink(source: InteractionSource, rowIndex: number): Locator {
+    return this.interactors(source).table.cell(rowIndex, 0).getByRole("link").first();
   }
 
-  getReactomeTab(): Locator {
-    return this.getSection().locator("[data-testid='interactions-tab-reactome']");
+  /** The "Alt ID" link to the interactor's UniProt entry (not shown for String). */
+  altIdLink(source: EvidenceSource, rowIndex: number): Locator {
+    return this.interactors(source).table.cell(rowIndex, 0).getByRole("link").nth(1);
   }
 
-  getStringTab(): Locator {
-    return this.getSection().locator("[data-testid='interactions-tab-string']");
+  /** The "Interaction evidence entries" cell: the number of evidence rows of an interactor. */
+  evidenceCountCell(source: EvidenceSource, rowIndex: number): Locator {
+    return this.interactors(source).table.row(rowIndex).locator("td").last();
   }
 
-  async clickIntactTab(): Promise<void> {
-    await this.getIntactTab().click();
-    await this.waitForLoad();
+  /** The A or B participant icon in a cell; hovering it shows that participant's value. */
+  participantIcon(cell: Locator, participant: "A" | "B"): Locator {
+    return cell.getByText(participant, { exact: true });
   }
 
-  async clickSignorTab(): Promise<void> {
-    await this.getSignorTab().click();
-    await this.waitForLoad();
+  /** The heatmap squares of a String row, one per evidence channel. */
+  stringScoreCells(rowIndex: number): Locator {
+    return this.interactors("string").table.row(rowIndex).locator("td span[title]");
   }
 
-  async clickReactomeTab(): Promise<void> {
-    await this.getReactomeTab().click();
-    await this.waitForLoad();
+  get stringLegendLink(): Locator {
+    return this.content("string").getByRole("link", { name: "Score" });
   }
 
-  async clickStringTab(): Promise<void> {
-    await this.getStringTab().click();
-    await this.waitForLoad();
+  /** Assert the tab counts have loaded and return the number of interactions a tab reports. */
+  async tabCount(source: InteractionSource): Promise<number> {
+    await expect(this.tab(source), `the ${source} tab should show its label and count`).toHaveText(
+      MolecularInteractionsSection.TAB_LABELS[source]
+    );
+    const text = await this.tab(source).innerText();
+    return Number((/\d+/.exec(text) as RegExpExecArray)[0]);
   }
 
-  // Tab content containers
-  getIntactContent(): Locator {
-    return this.getSection().locator("[data-testid='interactions-content-intact']");
+  /** Assert a source's tab is selected and its content, and no other source's, is shown. */
+  async expectActive(source: InteractionSource): Promise<void> {
+    await expect(this.tab(source)).toHaveAttribute("aria-selected", "true");
+    await expect(this.content(source)).toBeVisible();
+    for (const other of MolecularInteractionsSection.SOURCES) {
+      if (other !== source) await expect(this.content(other)).toHaveCount(0);
+    }
+    await this.interactors(source).expectLoaded();
   }
 
-  getSignorContent(): Locator {
-    return this.getSection().locator("[data-testid='interactions-content-signor']");
+  /** Click a source's tab and wait for its table. */
+  async open(source: InteractionSource): Promise<void> {
+    await this.tab(source).click();
+    await this.expectActive(source);
   }
 
-  getReactomeContent(): Locator {
-    return this.getSection().locator("[data-testid='interactions-content-reactome']");
+  /** Select an interactor by clicking its row (away from the links, which navigate). */
+  async selectInteractor(source: EvidenceSource, rowIndex: number): Promise<void> {
+    await this.evidenceCountCell(source, rowIndex).click();
   }
 
-  getStringContent(): Locator {
-    return this.getSection().locator("[data-testid='interactions-content-string']");
-  }
-
-  async isIntactContentVisible(): Promise<boolean> {
-    return await this.getIntactContent()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  async isSignorContentVisible(): Promise<boolean> {
-    return await this.getSignorContent()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  async isReactomeContentVisible(): Promise<boolean> {
-    return await this.getReactomeContent()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  async isStringContentVisible(): Promise<boolean> {
-    return await this.getStringContent()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  // Table (present in most tabs)
-  // The Molecular Interactions section uses plain table elements without data-testid
-  getTable(): Locator {
-    return this.getSection().locator("table").first();
-  }
-
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  // Table search
-  getSearchInput(): Locator {
-    return this.getSection().locator(
-      "[data-testid='table-search-input'], input[placeholder*='Search']"
+  /** The name shown for each interactor on the current page. */
+  async interactorNames(source: InteractionSource): Promise<string[]> {
+    return this.interactors(source).rows.evaluateAll((rows) =>
+      rows.map((row) => row.querySelector("td a")?.textContent?.trim() ?? "")
     );
   }
 
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** The number in a row's "Interaction evidence entries" cell. */
+  async evidenceCount(source: EvidenceSource, rowIndex: number): Promise<number> {
+    await expect(this.evidenceCountCell(source, rowIndex)).toHaveText(/^\d+$/);
+    return Number(await this.evidenceCountCell(source, rowIndex).innerText());
   }
 
-  // Data downloader
-  getDataDownloader(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
+  /**
+   * Assert the evidence panel shows the evidence of one interactor: its name in the
+   * heading and exactly `count` evidence rows (ten per page).
+   */
+  async expectEvidenceOf(
+    source: EvidenceSource,
+    targetSymbol: string,
+    interactor: string,
+    count: number
+  ): Promise<void> {
+    await expect(this.evidenceTitle(source)).toHaveText(
+      new RegExp(`^Interaction evidence of\\s*${targetSymbol}\\s*A\\s*\\+ ${escapeRegExp(interactor)}\\s*B$`)
+    );
+    const evidence = this.evidence(source);
+    if (count > 10) {
+      await expect(evidence.pagePosition).toHaveText(`1–10 of ${count}`);
+      await expect(evidence.rows).toHaveCount(10);
+    } else {
+      await expect(evidence.rows).toHaveCount(count);
+      await expect(
+        evidence.pagePosition,
+        "a table that fits on one page has no pagination"
+      ).toHaveCount(0);
+    }
   }
+}
 
-  async clickDataDownloader(): Promise<void> {
-    await this.getDataDownloader().click();
-  }
-
-  // Pagination controls
-  getPaginationFirstButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-first-button']");
-  }
-
-  getPaginationPreviousButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  getPaginationNextButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPaginationLastButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-last-button']");
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.getPaginationFirstButton().click();
-  }
-
-  async goToPreviousPage(): Promise<void> {
-    await this.getPaginationPreviousButton().click();
-  }
-
-  async goToNextPage(): Promise<void> {
-    await this.getPaginationNextButton().click();
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.getPaginationLastButton().click();
-  }
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

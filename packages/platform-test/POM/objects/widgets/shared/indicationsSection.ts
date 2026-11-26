@@ -1,375 +1,178 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionTable } from "../Drug/sectionTable";
+
+const CARD_TEXT = /^(.+?)\s*Max stage:\s*(.+?)\s*(\d+) reports?$/s;
+const SUMMARY_TEXT = /^(\d+) reports? for (.+)$/s;
+
+export type IndicationCard = {
+  /** Disease name */
+  name: string;
+  /** Disease id, from the card's link */
+  diseaseId: string;
+  /** Label of the indication's maximum clinical stage */
+  stage: string;
+  /** Number of clinical reports */
+  reports: number;
+};
 
 /**
- * Interactor for Clinical Indications section (Master-Detail layout)
- *
- * Structure:
- * - Master panel (left): IndicationsTable - list of indication cards
- * - Detail panel (right): RecordsCards - clinical reports for selected indication
- * - StageFilter - visual pipeline showing clinical stages
+ * Drug page: Indications section. A master-detail layout: the list of indications on
+ * the left (a server-paginated, server-searched table of cards), and on the right the
+ * clinical reports of the selected indication, filtered by clinical stage.
  */
 export class IndicationsSection {
-  constructor(private page: Page) {}
+  static readonly id = "indications";
+  readonly section: Locator;
+  /** The list of indications. */
+  readonly master: SectionTable;
+  /** The clinical reports of the selected indication. */
+  readonly records: SectionTable;
 
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-indications']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, IndicationsSection.id);
+    this.master = new SectionTable(this.section, 0);
+    this.records = new SectionTable(this.recordsPanel, 0);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders, table visible)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-indications']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
-
-    // Wait for master table to be present
-    await this.getMasterTable()
-      .waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT })
-      .catch(() => {});
+  /** The indication cards of the current page. */
+  get cards(): Locator {
+    return this.section.getByTestId("indication-card");
   }
 
-  /**
-   * Get the master table (left panel with indication cards)
-   */
-  getMasterTable(): Locator {
-    return this.getSection().locator("table").first();
+  card(index: number): Locator {
+    return this.cards.nth(index);
   }
 
-  /**
-   * Get all indication card rows in the master table
-   */
-  async getMasterTableRows(): Promise<number> {
-    const tbody = this.getMasterTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The card whose reports the detail panel shows. */
+  get selectedCard(): Locator {
+    return this.section.locator("[data-testid='indication-card'][data-selected='true']");
   }
 
-  /**
-   * Get a specific indication card row
-   */
-  async getMasterTableRow(index: number): Promise<Locator> {
-    const tbody = this.getMasterTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  /** The detail panel: summary line, stage filter and reports. */
+  get recordsPanel(): Locator {
+    return this.section.getByTestId("clinical-records");
   }
 
-  /**
-   * Get the indication card container within a row
-   */
-  async getIndicationCard(rowIndex: number): Promise<Locator> {
-    const row = await this.getMasterTableRow(rowIndex);
-    return row.locator("td").first();
+  /** "277 reports for breast cancer" */
+  get recordsSummary(): Locator {
+    return this.section.getByTestId("clinical-records-summary");
   }
 
-  /**
-   * Get indication (disease) link from a card
-   */
-  async getIndicationLink(rowIndex: number): Promise<Locator> {
-    const card = await this.getIndicationCard(rowIndex);
-    return card.locator("a[href*='/disease/']");
+  /** Every slot of the stage filter, with or without reports. */
+  get stageSlots(): Locator {
+    return this.recordsPanel.locator("[data-testid^='stage-filter-']");
   }
 
-  /**
-   * Click the indication link (navigates to disease page)
-   */
-  async clickIndicationLink(rowIndex: number): Promise<void> {
-    const link = await this.getIndicationLink(rowIndex);
-    await link.click();
+  /** The stages that have reports: only these can be selected. */
+  get stageButtons(): Locator {
+    return this.recordsPanel.locator("button[data-testid^='stage-filter-']");
   }
 
-  /**
-   * Get indication name from a card
-   */
-  async getIndicationName(rowIndex: number): Promise<string | null> {
-    const link = await this.getIndicationLink(rowIndex);
-    return await link.textContent();
+  stage(key: string): Locator {
+    return this.recordsPanel.getByTestId(`stage-filter-${key}`);
   }
 
-  /**
-   * Get max clinical stage text from a card
-   */
-  async getMaxStageFromCard(rowIndex: number): Promise<string | null> {
-    const card = await this.getIndicationCard(rowIndex);
-    // The max stage is shown as "Max stage: <label>"
-    const maxStageText = await card.textContent();
-    const match = maxStageText?.match(/Max stage:\s*(.+?)(?:\d+\s*report|$)/);
-    return match ? match[1].trim() : null;
+  get selectedStage(): Locator {
+    return this.recordsPanel.locator("[data-testid^='stage-filter-'][data-selected='true']");
   }
 
-  /**
-   * Get report count from a card
-   */
-  async getReportCountFromCard(rowIndex: number): Promise<number> {
-    const card = await this.getIndicationCard(rowIndex);
-    const text = await card.textContent();
-    const match = text?.match(/(\d+)\s*reports?/);
-    return match ? parseInt(match[1], 10) : 0;
+  /** The reports of the selected stage on the current page. */
+  get recordRows(): Locator {
+    return this.recordsPanel.getByTestId("clinical-record");
+  }
+
+  /** The title of a report; clicking it opens the report drawer. */
+  recordTitle(index: number): Locator {
+    return this.recordRows.nth(index).getByTestId("clinical-record-drawer-trigger");
+  }
+
+  get recordDrawer(): Locator {
+    return this.page.getByTestId("clinical-record-drawer");
+  }
+
+  /** Assert the list shows `count` indication cards and has finished loading. */
+  async expectCards(count: number): Promise<void> {
+    await expect(this.cards, `the list should show ${count} indication(s)`).toHaveCount(count);
+    await expect(
+      this.master.table.locator(".MuiSkeleton-root"),
+      "the list should finish loading"
+    ).toHaveCount(0);
+  }
+
+  /** Read one card after asserting it has the full card layout. */
+  async cardInfo(index: number): Promise<IndicationCard> {
+    const card = this.card(index);
+    await expect(card, "an indication card shows name, max stage and report count").toHaveText(
+      CARD_TEXT
+    );
+    const link = card.getByRole("link");
+    await expect(link).toHaveAttribute("href", /^\/disease\/[A-Za-z]+_\d+$/);
+    const href = (await link.getAttribute("href")) ?? "";
+    const match = CARD_TEXT.exec((await card.innerText()).trim());
+    if (!match) throw new Error(`indication card ${index} changed while it was being read`);
+    return {
+      name: match[1].trim(),
+      diseaseId: href.replace("/disease/", ""),
+      stage: match[2].trim(),
+      reports: Number(match[3]),
+    };
+  }
+
+  /** Read every card of the current page. */
+  async allCards(): Promise<IndicationCard[]> {
+    const count = await this.cards.count();
+    const cards: IndicationCard[] = [];
+    for (let index = 0; index < count; index++) cards.push(await this.cardInfo(index));
+    return cards;
   }
 
   /**
-   * Click an indication card to select it (loads reports in detail panel)
+   * Assert the detail panel shows the reports of this indication: the summary line
+   * names it with its report count and links to its disease page, and the reports
+   * have loaded.
    */
-  async selectIndicationCard(rowIndex: number): Promise<void> {
-    const card = await this.getIndicationCard(rowIndex);
-    await card.click();
-    // Wait for detail panel to update
-    await this.waitForDetailPanelLoad();
+  async expectDetailFor(card: IndicationCard): Promise<void> {
+    await expect(
+      this.recordsSummary,
+      `the detail panel should show the reports of "${card.name}"`
+    ).toHaveText(`${card.reports} ${card.reports > 1 ? "reports" : "report"} for ${card.name}`);
+    await expect(this.recordsSummary.getByRole("link", { name: card.name })).toHaveAttribute(
+      "href",
+      `/disease/${card.diseaseId}`
+    );
+    await expect(this.selectedStage, "one stage should be selected").toHaveCount(1);
+    await expect(this.recordRows.first(), "the reports should be listed").toBeVisible();
   }
 
-  /**
-   * Check if an indication card is currently selected
-   */
-  async isIndicationCardSelected(rowIndex: number): Promise<boolean> {
-    const card = await this.getIndicationCard(rowIndex);
-    // Selected cards have a primary color left border
-    const borderColor = await card.evaluate((el) => {
-      const style = window.getComputedStyle(el.querySelector("div") || el);
-      return style.borderLeftColor;
-    });
-    // Check for non-transparent/non-white border (indicates selection)
-    return borderColor !== "rgba(0, 0, 0, 0)" && borderColor !== "rgb(255, 255, 255)";
+  /** The number of reports each stage button shows, keyed by the stage's test-id suffix. */
+  async stageCounts(): Promise<Record<string, number>> {
+    await expect(this.stageButtons.first()).toBeVisible();
+    const entries = await this.stageButtons.evaluateAll((buttons) =>
+      buttons.map((button) => [
+        (button.getAttribute("data-testid") ?? "").replace("stage-filter-", ""),
+        Number(button.textContent),
+      ])
+    );
+    return Object.fromEntries(entries) as Record<string, number>;
   }
 
-  /**
-   * Get the detail panel (right panel with clinical reports)
-   */
-  getDetailPanel(): Locator {
-    // The detail panel contains the StageFilter and records table
-    // It's the second major panel in the master-detail layout
-    return this.getSection().locator("table").nth(1);
+  /** The test-id suffix of the selected stage. */
+  async selectedStageKey(): Promise<string> {
+    await expect(this.selectedStage).toHaveCount(1);
+    const testId = (await this.selectedStage.getAttribute("data-testid")) ?? "";
+    return testId.replace("stage-filter-", "");
   }
 
-  /**
-   * Wait for detail panel to load after selecting an indication
-   */
-  async waitForDetailPanelLoad(): Promise<void> {
-    // Wait for loading indicator to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-indications']");
-          if (!sect) return false;
-          const loadingIndicators = sect.querySelectorAll(".MuiCircularProgress-root");
-          return loadingIndicators.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {});
-  }
-
-  /**
-   * Get the detail header text (e.g., "X reports for <entity>")
-   */
-  async getDetailHeaderText(): Promise<string | null> {
-    const section = this.getSection();
-    // Look for the subtitle that contains "reports for"
-    const header = section.locator("h6:has-text('reports for'), p:has-text('reports for')").first();
-    return await header.textContent().catch(() => null);
-  }
-
-  /**
-   * Get the entity link in the detail header
-   */
-  getDetailEntityLink(): Locator {
-    return this.getSection().locator("a[href*='/disease/']").nth(1);
-  }
-
-  // ========================
-  // Stage Filter (Pipeline visualization)
-  // ========================
-
-  /**
-   * Get all stage filter buttons/circles
-   */
-  getStageFilterButtons(): Locator {
-    // Stage filter buttons are buttons within the header area
-    return this.getSection().locator("th button");
-  }
-
-  /**
-   * Get a specific stage button by stage name
-   */
-  async getStageButton(stageName: string): Promise<Locator | null> {
-    const buttons = this.getStageFilterButtons();
-    const count = await buttons.count();
-    for (let i = 0; i < count; i++) {
-      const button = buttons.nth(i);
-      const parent = button.locator("xpath=ancestor::div[1]");
-      const text = await parent
-        .locator("span")
-        .first()
-        .textContent()
-        .catch(() => "");
-      if (text?.toLowerCase().includes(stageName.toLowerCase())) {
-        return button;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Click a stage filter to show reports for that stage
-   */
-  async selectStage(stageName: string): Promise<void> {
-    const button = await this.getStageButton(stageName);
-    if (button) {
-      await button.click();
-      await this.page.waitForTimeout(300); // Brief wait for filter update
-    }
-  }
-
-  /**
-   * Get count of reports for a specific stage from the stage filter
-   */
-  async getStageReportCount(stageName: string): Promise<number> {
-    const button = await this.getStageButton(stageName);
-    if (!button) return 0;
-    const text = await button.textContent();
-    return text ? parseInt(text, 10) : 0;
-  }
-
-  /**
-   * Get the records table in the detail panel
-   */
-  getRecordsTable(): Locator {
-    return this.getSection().locator("table").nth(1);
-  }
-
-  /**
-   * Get count of record rows in the detail panel
-   */
-  async getRecordsCount(): Promise<number> {
-    const tbody = this.getRecordsTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
-  }
-
-  /**
-   * Get a specific record row
-   */
-  async getRecordRow(index: number): Promise<Locator> {
-    const tbody = this.getRecordsTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
-  }
-
-  /**
-   * Get record title from a row
-   */
-  async getRecordTitle(rowIndex: number): Promise<string | null> {
-    const row = await this.getRecordRow(rowIndex);
-    // Title is the first part (clickable, opens drawer)
-    const title = row.locator("td p").first();
-    return await title.textContent();
-  }
-
-  /**
-   * Get record source from a row
-   */
-  async getRecordSource(rowIndex: number): Promise<string | null> {
-    const row = await this.getRecordRow(rowIndex);
-    const text = await row.textContent();
-    // Source appears before "Status:" if present
-    // Pattern: <title> <source> Status: <status> Start: <year>
-    return text || null;
-  }
-
-  /**
-   * Click a record title to open the detail drawer
-   */
-  async clickRecordTitle(rowIndex: number): Promise<void> {
-    const row = await this.getRecordRow(rowIndex);
-    const title = row.locator("td p").first();
-    await title.click();
-  }
-
-  /**
-   * Check if the record drawer is open
-   */
-  async isDrawerOpen(): Promise<boolean> {
-    const drawer = this.page.locator(".MuiDrawer-root");
-    return await drawer.isVisible().catch(() => false);
-  }
-
-  /**
-   * Close the record drawer
-   */
-  async closeDrawer(): Promise<void> {
-    // Click outside or press Escape
-    await this.page.keyboard.press("Escape");
-    await this.page.waitForTimeout(300);
-  }
-
-  /**
-   * Get the search input in the master table
-   */
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  /**
-   * Search/filter indications
-   */
-  async search(searchTerm: string): Promise<void> {
-    const searchInput = this.getSearchInput();
-    await searchInput.fill(searchTerm);
-    await this.page.waitForTimeout(500); // Wait for filter to apply
-  }
-
-  /**
-   * Clear search input
-   */
-  async clearSearch(): Promise<void> {
-    const searchInput = this.getSearchInput();
-    await searchInput.clear();
-    await this.page.waitForTimeout(500);
-  }
-
-  /**
-   * @deprecated Use getMasterTable() instead
-   */
-  getTable(): Locator {
-    return this.getMasterTable();
-  }
-
-  /**
-   * @deprecated Use getMasterTableRows() instead
-   */
-  async getTableRows(): Promise<number> {
-    return this.getMasterTableRows();
-  }
-
-  /**
-   * @deprecated Use getMasterTableRow() instead
-   */
-  async getTableRow(index: number): Promise<Locator> {
-    return this.getMasterTableRow(index);
-  }
-
-  /**
-   * @deprecated Max phase is now part of the card, use getMaxStageFromCard() instead
-   */
-  async getMaxPhase(rowIndex: number): Promise<string | null> {
-    return this.getMaxStageFromCard(rowIndex);
+  /** The summary line parsed into its count and disease name. */
+  async summary(): Promise<{ reports: number; name: string }> {
+    await expect(this.recordsSummary).toHaveText(SUMMARY_TEXT);
+    const match = SUMMARY_TEXT.exec((await this.recordsSummary.innerText()).trim());
+    if (!match) throw new Error("the reports summary changed while it was being read");
+    return { reports: Number(match[1]), name: match[2].trim() };
   }
 }

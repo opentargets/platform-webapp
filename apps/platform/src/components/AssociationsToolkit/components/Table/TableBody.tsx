@@ -90,6 +90,7 @@ function getFocusSection(
 function EmptyMessage() {
   return (
     <Box
+      data-testid="associations-no-results"
       sx={{
         width: "auto",
         px: 5,

@@ -48,7 +48,13 @@ function ConstraintAssessment({ ensemblId, symbol, upperBin6 }: ConstraintAssess
   const circles: ReactNode[] = [];
 
   for (let i = 0; i < 5; i++) {
-    circles.push(<span key={i} style={5 - upperBin6 > i ? filledStyle : notFilledStyle} />);
+    circles.push(
+      <span
+        key={i}
+        data-testid={5 - upperBin6 > i ? "constraint-circle-filled" : "constraint-circle-empty"}
+        style={5 - upperBin6 > i ? filledStyle : notFilledStyle}
+      />
+    );
   }
 
   return (
@@ -60,7 +66,7 @@ function ConstraintAssessment({ ensemblId, symbol, upperBin6 }: ConstraintAssess
         <span style={titleStyle}>Constraint assessment</span>
       </Tooltip>
 
-      <div>{circles}</div>
+      <div data-testid="constraint-assessment-circles">{circles}</div>
       <Link external to={`https://gnomad.broadinstitute.org/gene/${ensemblId}`}>
         {5 - upperBin6}/5 {upperBin6Map[upperBin6]}
       </Link>

@@ -1,230 +1,182 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * Target Page Object Model
- * Handles navigation and interactions on the Target page
+ * The widgets of the target profile, in the order the app renders them
+ * (apps/platform/src/pages/TargetPage/Profile.tsx).
+ *
+ * - `id` is the widget definition id: the DOM id of the section and the URL hash.
+ * - `section` is the section id used by fixtures/expectedSections.ts
+ *   (the section's data-testid without "section-").
+ * - `summary` is the data-testid of the summary chip.
+ */
+export const TARGET_WIDGETS = [
+  { id: "drugs", section: "drugs", summary: "summary-drugs", name: "Drugs and Clinical Candidates", shortName: "DC" },
+  { id: "tractability", section: "tractability", summary: "summary-tractability", name: "Tractability", shortName: "TR" },
+  { id: "safety", section: "safety", summary: "summary-safety", name: "Safety", shortName: "S" },
+  { id: "pharmacogenetics", section: "pharmacogenetics", summary: "summary-pharmacogenetics", name: "Pharmacogenetics", shortName: "PGx" },
+  { id: "qtl_credible_sets", section: "qtl-credible-sets", summary: "summary-qtlcrediblesets", name: "molQTL Credible Sets", shortName: "QT" },
+  { id: "chemicalProbes", section: "chemicalprobes", summary: "summary-chemicalprobes", name: "Chemical Probes", shortName: "CP" },
+  { id: "baselineExpression", section: "baselineexpression", summary: "summary-baselineexpression", name: "Baseline Expression", shortName: "BE" },
+  { id: "depMapEssentiality", section: "depmapessentiality", summary: "summary-depmapessentiality", name: "Cancer DepMap", shortName: "DM" },
+  { id: "subcellularLocation", section: "subcellularlocation", summary: "summary-subcellularlocation", name: "Subcellular Location", shortName: "SL" },
+  { id: "geneOntology", section: "geneontology", summary: "summary-geneontology", name: "Gene Ontology", shortName: "GO" },
+  { id: "geneticConstraint", section: "geneticconstraint", summary: "summary-geneticconstraint", name: "Genetic Constraint", shortName: "GC" },
+  { id: "molecularStructure", section: "molecularstructure", summary: "summary-molecularstructure", name: "Molecular Structure", shortName: "MS" },
+  { id: "interactions", section: "interactions", summary: "summary-interactions", name: "Molecular Interactions", shortName: "MI" },
+  { id: "pathways", section: "pathways", summary: "summary-pathways", name: "Pathways", shortName: "PW" },
+  { id: "cancerHallmarks", section: "cancerhallmarks", summary: "summary-cancerhallmarks", name: "Cancer Hallmarks", shortName: "CH" },
+  { id: "mousePhenotypes", section: "mousephenotypes", summary: "summary-mousephenotypes", name: "Mouse Phenotypes", shortName: "MP" },
+  { id: "compGenomics", section: "compgenomics", summary: "summary-compgenomics", name: "Comparative Genomics", shortName: "CG" },
+  { id: "bibliography", section: "bibliography", summary: "summary-bibliography", name: "Bibliography", shortName: "B" },
+] as const;
+
+export type TargetWidget = (typeof TARGET_WIDGETS)[number];
+
+/** The widget with this section id. Throws for an id the target profile does not have. */
+export function targetWidget(section: string): TargetWidget {
+  const widget = TARGET_WIDGETS.find((candidate) => candidate.section === section);
+  if (!widget) throw new Error(`The target profile has no widget with section id "${section}"`);
+  return widget;
+}
+
+/**
+ * The target page shell: the header above the tabs, the Associated diseases / Profile
+ * tabs, the summary chips, the sticky header and the 404 page.
+ *
+ * Getters return Locators; methods act and assert the effect of the action.
  */
 export class TargetPage {
-  page: Page;
-  originalURL: string;
+  constructor(readonly page: Page) {}
 
-  constructor(page: Page) {
-    this.page = page;
-    this.originalURL = page.url();
-  }
+  // ---------------------------------------------------------------- navigation
 
-  /**
-   * Navigate to a target page by Ensembl ID
-   * @param ensgId - Ensembl gene ID (e.g., "ENSG00000157764")
-   */
-  async goToTargetPage(ensgId: string): Promise<void> {
+  /** Open the profile tab of a target and wait for its header. */
+  async goto(ensgId: string): Promise<void> {
     await this.page.goto(`/target/${ensgId}`);
-    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
-      state: "visible",
-    });
+    await expect(this.symbol, "the target page header should render").toBeVisible();
+  }
+
+  /** Open the profile tab of a target at one of its sections, as a shared link would. */
+  async gotoSection(ensgId: string, widgetId: string): Promise<void> {
+    await this.page.goto(`/target/${ensgId}#${widgetId}`);
+    await expect(this.symbol, "the target page header should render").toBeVisible();
+  }
+
+  /** Open the associated diseases tab of a target directly. */
+  async gotoAssociations(ensgId: string): Promise<void> {
+    await this.page.goto(`/target/${ensgId}/associations`);
+    await expect(this.symbol, "the target page header should render").toBeVisible();
+  }
+
+  // -------------------------------------------------------------------- header
+
+  get header(): Locator {
+    return this.page.getByTestId("profile-page-header-block");
+  }
+
+  /** The approved symbol, the page's main title. */
+  get symbol(): Locator {
+    return this.page.getByTestId("profile-page-header-text");
+  }
+
+  /** The approved name, next to the symbol. */
+  get name(): Locator {
+    return this.header.getByRole("heading", { level: 5 });
+  }
+
+  get externalLinks(): Locator {
+    return this.header.getByTestId("external-links");
+  }
+
+  /** The UniProt cross-references in the header (reviewed accessions only). */
+  get uniprotLinks(): Locator {
+    return this.externalLinks.getByTestId("header-external-links-uniprot");
+  }
+
+  // ---------------------------------------------------------------------- tabs
+
+  get profileTab(): Locator {
+    return this.page.getByRole("tab", { name: "Profile", exact: true });
+  }
+
+  get associationsTab(): Locator {
+    return this.page.getByRole("tab", { name: "Associated diseases", exact: true });
+  }
+
+  /** Click the Associated diseases tab and assert the route and the selected tab changed. */
+  async openAssociationsTab(ensgId: string): Promise<void> {
+    await this.associationsTab.click();
+    await expect(this.page).toHaveURL(new RegExp(`/target/${ensgId}/associations$`));
+    await expect(this.associationsTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.profileTab).toHaveAttribute("aria-selected", "false");
+  }
+
+  /** Click the Profile tab and assert the route and the selected tab changed. */
+  async openProfileTab(ensgId: string): Promise<void> {
+    await this.profileTab.click();
+    await expect(this.page).toHaveURL(new RegExp(`/target/${ensgId}$`));
+    await expect(this.profileTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.associationsTab).toHaveAttribute("aria-selected", "false");
+  }
+
+  // ------------------------------------------------------------- summary chips
+
+  /** Every summary chip, in page order. */
+  get summaryChips(): Locator {
+    return this.page.locator("[data-testid^='summary-']");
+  }
+
+  summaryChip(widget: TargetWidget): Locator {
+    return this.page.getByTestId(widget.summary);
   }
 
   /**
-   * Get the URL for the profile page (removes /associations if present)
+   * Assert which summary chips are active. A chip whose widget has data is clickable
+   * (pointer cursor); one without data is greyed out and keeps the default cursor.
    */
-  getProfilePageUrl(): string {
-    return this.originalURL.replace(/\/associations$/, "");
+  async expectActiveSummaryChips(sectionsWithData: readonly string[]): Promise<void> {
+    for (const widget of TARGET_WIDGETS) {
+      const hasData = sectionsWithData.includes(widget.section);
+      await expect(
+        this.summaryChip(widget),
+        `summary chip "${widget.name}" should be ${hasData ? "active (the target has this data)" : "inactive (the target has no such data)"}`
+      ).toHaveCSS("cursor", hasData ? "pointer" : "auto");
+    }
   }
 
-  /**
-   * Navigate to the profile tab
-   */
-  async goToProfilePage(): Promise<void> {
-    await this.page.goto(this.getProfilePageUrl());
-    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
-      state: "visible",
-    });
+  /** Click a summary chip and assert the page scrolled to its section and recorded it in the URL. */
+  async followSummaryChip(widget: TargetWidget): Promise<void> {
+    await this.summaryChip(widget).click();
+    await expect(this.page).toHaveURL(new RegExp(`#${widget.id}$`));
+    await expect(
+      this.page.getByTestId(`section-${widget.section}-header`),
+      `the "${widget.name}" section should be scrolled into view`
+    ).toBeInViewport();
   }
 
-  /**
-   * Navigate to the associations tab
-   */
-  async goToAssociationsPage(): Promise<void> {
-    const baseUrl = this.getProfilePageUrl();
-    await this.page.goto(`${baseUrl}/associations`);
-    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
-      state: "visible",
-    });
+  // ------------------------------------------------------------- sticky header
+
+  /** The bar pinned to the top once the tabs have scrolled out of view. */
+  get stickyHeader(): Locator {
+    return this.page.getByTestId("sticky-profile-header");
   }
 
-  // Tab navigation
-  /**
-   * Get the Profile tab element
-   */
-  getProfileTab(): Locator {
-    return this.page.locator("[role='tab']").filter({ hasText: /profile/i });
+  /** The control in the sticky header that names the section in view and opens the section menu. */
+  get stickySectionSelector(): Locator {
+    return this.stickyHeader.getByTestId("sticky-section-selector");
   }
 
-  /**
-   * Get the Associated diseases tab element
-   */
-  getAssociationsTab(): Locator {
-    return this.page.locator("[role='tab']").filter({ hasText: /associated diseases/i });
+  get stickySectionMenu(): Locator {
+    return this.page.getByRole("menu");
   }
 
-  /**
-   * Click on the Profile tab
-   */
-  async clickProfileTab(): Promise<void> {
-    await this.getProfileTab().click();
-    await this.page.waitForURL(/\/target\/[^/]+$/);
-    await expect(this.getProfileTab()).toHaveAttribute("aria-selected", "true");
+  get stickySectionFilter(): Locator {
+    return this.page.getByPlaceholder("Filter widgets...");
   }
 
-  /**
-   * Click on the Associated diseases tab
-   */
-  async clickAssociationsTab(): Promise<void> {
-    await this.getAssociationsTab().click();
-    await this.page.waitForURL(/\/target\/[^/]+\/associations/);
-    await expect(this.getAssociationsTab()).toHaveAttribute("aria-selected", "true");
-  }
+  // ----------------------------------------------------------------- not found
 
-  /**
-   * Check if Profile tab is active
-   */
-  async isProfileTabActive(): Promise<boolean> {
-    const tab = this.getProfileTab();
-    const isSelected = await tab.getAttribute("aria-selected");
-    return isSelected === "true";
-  }
-
-  /**
-   * Check if Associations tab is active
-   */
-  async isAssociationsTabActive(): Promise<boolean> {
-    const tab = this.getAssociationsTab();
-    const isSelected = await tab.getAttribute("aria-selected");
-    return isSelected === "true";
-  }
-
-  // External links in header
-  /**
-   * Get the Ensembl external link
-   */
-  getEnsemblLink(): Locator {
-    return this.page.locator('a[href*="identifiers.org/ensembl"]');
-  }
-
-  /**
-   * Get the Ensembl link href attribute
-   */
-  async getEnsemblLinkHref(): Promise<string | null> {
-    return await this.getEnsemblLink().getAttribute("href");
-  }
-
-  /**
-   * Get all UniProt external links
-   */
-  getUniProtLinks(): Locator {
-    return this.page.locator('a[href*="identifiers.org/uniprot"]');
-  }
-
-  /**
-   * Get the count of UniProt links
-   */
-  async getUniProtLinksCount(): Promise<number> {
-    return await this.getUniProtLinks().count();
-  }
-
-  /**
-   * Get the first UniProt link href attribute
-   */
-  async getFirstUniProtLinkHref(): Promise<string | null> {
-    return await this.getUniProtLinks().first().getAttribute("href");
-  }
-
-  /**
-   * Get the GeneCards external link
-   */
-  getGeneCardsLink(): Locator {
-    return this.page.locator('a[href*="genecards.org"]');
-  }
-
-  /**
-   * Get the GeneCards link href attribute
-   */
-  async getGeneCardsLinkHref(): Promise<string | null> {
-    return await this.getGeneCardsLink().getAttribute("href");
-  }
-
-  /**
-   * Get the HGNC external link
-   */
-  getHGNCLink(): Locator {
-    return this.page.locator('a[href*="identifiers.org/hgnc.symbol"]');
-  }
-
-  /**
-   * Get the HGNC link href attribute
-   */
-  async getHGNCLinkHref(): Promise<string | null> {
-    return await this.getHGNCLink().getAttribute("href");
-  }
-
-  /**
-   * Get all external links in the header
-   */
-  getExternalLinks(): Locator {
-    return this.page.locator("[data-testid='external-links'] a");
-  }
-
-  /**
-   * Get the count of all external links
-   */
-  async getExternalLinksCount(): Promise<number> {
-    return await this.getExternalLinks().count();
-  }
-
-  // Page header elements
-  /**
-   * Get the target symbol (main title) in the header
-   */
-  getTargetSymbol(): Locator {
-    return this.page.locator("[data-testid='profile-page-header-text']");
-  }
-
-  /**
-   * Get the target symbol text
-   */
-  async getTargetSymbolText(): Promise<string | null> {
-    return await this.getTargetSymbol().textContent();
-  }
-
-  /**
-   * Get the target name (subtitle) in the header
-   */
-  getTargetName(): Locator {
-    return this.page.locator("[data-testid='profile-page-header-block'] h5");
-  }
-
-  /**
-   * Get the target name text
-   */
-  async getTargetNameText(): Promise<string | null> {
-    return await this.getTargetName().textContent();
-  }
-
-  /**
-   * Wait for the target page to load completely
-   */
-  async waitForPageLoad(): Promise<void> {
-    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
-      state: "visible",
-    });
-  }
-
-  /**
-   * Check if the page has loaded (header is visible)
-   */
-  async isPageLoaded(): Promise<boolean> {
-    return await this.getTargetSymbol()
-      .isVisible()
-      .catch(() => false);
+  get notFoundPage(): Locator {
+    return this.page.getByTestId("not-found-page");
   }
 }

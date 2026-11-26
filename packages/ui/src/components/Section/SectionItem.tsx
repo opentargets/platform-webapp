@@ -98,7 +98,7 @@ function SectionItem({
     if (selectedView === VIEW.table) return renderBody();
     if (selectedView === VIEW.chart && renderChart) return renderChart();
     // if (!loading && !hasData && showEmptySection)
-    return <NoData> No data available for this {entity}. </NoData>;
+    return <NoData data-testid="section-no-data"> No data available for this {entity}. </NoData>;
   }
 
   return (

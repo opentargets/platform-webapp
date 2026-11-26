@@ -126,7 +126,12 @@ function TableCell({
   if (!hasValue)
     return (
       <Tooltip title="No data" arrow disableHoverListener={false}>
-        <ScoreElement backgroundColor={backgroundColor} borderColor={borderColor} shape={shape} />
+        <ScoreElement
+          data-testid={`empty-cell-${cell.column?.id ?? "legend"}`}
+          backgroundColor={backgroundColor}
+          borderColor={borderColor}
+          shape={shape}
+        />
       </Tooltip>
     );
 

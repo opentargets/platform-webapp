@@ -239,7 +239,13 @@ const GtexVariability = forwardRef(function GtexVariability({ data }, ref) {
   }
 
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" height={height} width={width} ref={ref}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={height}
+      width={width}
+      ref={ref}
+      data-testid="gtex-variability-plot"
+    >
       <text x={margin.left} y="15" fill={theme.palette.grey[700]} fontSize="14">
         Normalised expression (RPKM)
       </text>
