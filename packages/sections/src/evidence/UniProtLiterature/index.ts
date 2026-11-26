@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "UniProt literature",
   shortName: "UL",
-  hasData: (data: EvidenceData) => hasEvidence(data, "uniprotLiterature", "uniprotLiteratureSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "uniprotLiterature"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
