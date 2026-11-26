@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Gene2Phenotype",
   shortName: "GP",
-  hasData: (data: EvidenceData) => hasEvidence(data, "gene2Phenotype", "gene2Phenotype"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "gene2Phenotype"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 

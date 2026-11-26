@@ -3,36 +3,27 @@ query OpenTargetsGeneticsQuery(
   $efoId: String!
   $index: Int! = 0
   $size: Int! = 10
+  $search: EvidenceGene2PhenotypeSearch
 ) {
   disease(efoId: $efoId) {
     id
-    gene2Phenotype: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [gene2phenotype]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        id
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      gene2Phenotype(page: { index: $index, size: $size }, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          allelicRequirements
+          confidence
+          studyId
+          targetFromSourceId
+          variantFunctionalConsequenceId
+          variantFunctionalConsequenceLabel
+          literature
+          directionOnTarget
+          directionOnTrait
         }
-        diseaseFromSource
-        allelicRequirements
-        confidence
-        studyId
-        targetFromSourceId
-        target {
-          approvedSymbol
-        }
-        variantFunctionalConsequence {
-          id
-          label
-        }
-        literature
-        directionOnTarget
-        directionOnTrait
       }
     }
   }
