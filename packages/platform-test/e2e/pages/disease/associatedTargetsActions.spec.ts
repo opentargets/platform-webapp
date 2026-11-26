@@ -404,13 +404,13 @@ test.describe("Disease associations: uploading a list of targets", () => {
       const ids = (aotf.urlParam("uploaded") as string).split(",");
       expect(ids).toHaveLength(6);
       for (const id of ids) expect(id).toMatch(ENSEMBL_ID);
-      await aotf.expectSortedBy("score");
     });
 
     await test.step("the All bar unfolds the list under the uploaded rows", async () => {
       await aotf.bodyIndicator("core").click();
       await expect(aotf.rows("core")).toHaveCount(25);
       await expect(aotf.rows("uploaded")).toHaveCount(6);
+      await aotf.expectSortedBy("score");
     });
 
     await test.step("the bin removes the upload", async () => {

@@ -60,15 +60,35 @@ const IGNORED_CONSOLE_ERRORS: { pattern: RegExp; reason: string }[] = [
     reason: "Browser echo of a failed request; reported as request-failed/http-error instead",
   },
   {
+    pattern: /^Access to fetch at 'https:\/\/api\.partner-platform\.opentargets\.org\//,
+    reason: "The partner-access probe being refused for a visitor outside the partner network",
+  },
+  {
     pattern: /^GraphQL Error: /,
     reason: "The app's Apollo error link echo; reported as graphql-error instead",
   },
 ];
 
+/**
+ * On a production build of the public site the app asks the partner API once whether the
+ * visitor can reach it (ot-utils `testPPPaccess`). For anyone outside the partner network
+ * that request is refused by design, so it is not a failure of the page.
+ */
+const PARTNER_ACCESS_PROBE_HOST = "api.partner-platform.opentargets.org";
+
+function isPartnerAccessProbe(url: string): boolean {
+  try {
+    return new URL(url).hostname === PARTNER_ACCESS_PROBE_HOST;
+  } catch {
+    return false;
+  }
+}
+
 const ABORTED = /ERR_ABORTED|NS_BINDING_ABORTED|cancelled|Load cannot follow more than/i;
 
 function isGraphQLRequest(request: Request): boolean {
   if (request.method() !== "POST") return false;
+  if (isPartnerAccessProbe(request.url())) return false;
   const body = request.postData();
   if (!body) return false;
   return body.includes('"query"');

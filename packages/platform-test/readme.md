@@ -350,3 +350,32 @@ PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000 yarn playwright test --grep @smok
 PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000 yarn playwright test <file> --repeat-each=3
 yarn typecheck
 ```
+
+## Sharing a run with the team
+
+There are two ways to get a report other people can open. Both keep a screenshot, a
+trace and a video for each failed test, and both are scoped to one branch.
+
+**CI, on every pull request.** The `Tests: E2E` workflow runs against the branch's deploy
+preview and publishes the report to `https://e2e-report-<branch>--ot-platform.netlify.app`.
+It comments on the pull request with the counts, the failed tests and the link. A pull
+request that changes `packages/platform-test` runs the full suite; any other runs
+`@smoke`.
+
+**From your machine, before or between pushes.**
+
+```bash
+yarn e2e:publish                  # the whole suite
+yarn e2e:publish e2e/pages/drug   # only these specs
+yarn e2e:publish --grep @smoke    # any Playwright argument is passed through
+```
+
+This tests the deploy preview of the branch you have checked out
+(`https://<branch>--ot-platform.netlify.app`) and publishes the report to
+`https://e2e-local-<branch>--ot-platform.netlify.app`. Publishing again replaces that
+branch's report and leaves every other branch alone. The branch needs an open pull
+request, so that its preview exists; use `--base-url http://localhost:3000` to test a
+local server instead, and `--no-publish` to only build the report.
+
+It needs the Netlify CLI logged in to an account on the Open Targets team:
+`npm install -g netlify-cli && netlify login`.

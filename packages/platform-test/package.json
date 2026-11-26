@@ -14,6 +14,7 @@
   },
   "scripts": {
     "typecheck": "npx --no-install tsc --noEmit -p .",
+    "e2e:publish": "node scripts/publishReport.mjs",
     "dev-test": "playwright test",
     "dev-test:smoke": "playwright test --grep @smoke",
     "test:platform:e2e": "start-server-and-test \"(cd ../../apps/platform && yarn run serve)\" http://localhost:4173 \"playwright test\"",

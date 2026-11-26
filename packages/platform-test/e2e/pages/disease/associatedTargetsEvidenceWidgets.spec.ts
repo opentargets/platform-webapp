@@ -22,7 +22,7 @@ test.describe("Disease associations: evidence widgets", () => {
     { tag: "@smoke" },
     async ({ page, testConfig }) => {
       const aotf = new AssociationsTable(page);
-      const gene = testConfig.disease.aotfGenes[0];
+      const gene = "IL6";
       await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
       const row = aotf.rowByName(gene);
       await expect(row, `${gene} should be listed for the disease`).toHaveCount(1);
@@ -45,7 +45,7 @@ test.describe("Disease associations: evidence widgets", () => {
       page,
       testConfig,
     }) => {
-      expect(testConfig.disease.aotfGenes).toContain(gene);
+      expect(testConfig.disease.aotfGenes ?? []).toContain(gene);
       const aotf = new AssociationsTable(page);
       await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
       const row = aotf.rowByName(gene);
@@ -102,7 +102,7 @@ test.describe("Disease associations: evidence widgets", () => {
 
   test("clicking another cell of the row replaces the open widget", async ({ page, testConfig }) => {
     const aotf = new AssociationsTable(page);
-    const gene = testConfig.disease.aotfGenes[0];
+    const gene = "ADRB1";
     await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
     const row = aotf.rowByName(gene);
     await expect(row).toHaveCount(1);
@@ -122,7 +122,7 @@ test.describe("Disease associations: evidence widgets", () => {
 
   test("a cell without a value opens nothing", async ({ page, testConfig }) => {
     const aotf = new AssociationsTable(page);
-    const gene = testConfig.disease.aotfGenes[0];
+    const gene = "IL6";
     await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
     const row = aotf.rowByName(gene);
     await expect(row).toHaveCount(1);
@@ -133,5 +133,22 @@ test.describe("Disease associations: evidence widgets", () => {
     await aotf.emptyCell(row, empty!.id).click();
     await expect(aotf.openPanels).toHaveCount(0);
     await expect(aotf.emptyCell(row, empty!.id)).toBeVisible();
+  });
+
+  test("the open widget is kept in the URL and restored on reload", async ({ page, testConfig }) => {
+    const aotf = new AssociationsTable(page);
+    const gene = "ADRB1";
+    await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
+    const row = aotf.rowByName(gene);
+    await expect(row).toHaveCount(1);
+    const column = dataSourceColumn("clinical_precedence");
+
+    await aotf.openPanel(row, column.id, { panelKey: column.id, sectionId: column.sectionId });
+    await aotf.expectUrlParam("focus", new RegExp(`^core\\|ENSG\\d+\\|${column.id}\\+${column.id}$`));
+
+    await page.reload();
+    await aotf.expectLoaded();
+    await aotf.panel(column.id).expectLoaded(column.sectionId);
+    await expect(aotf.openPanels).toHaveCount(1);
   });
 });
