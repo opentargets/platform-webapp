@@ -216,9 +216,16 @@ function ProfileHeader() {
                 ))}
               </Field>
             )}
-            <Field loading={loading} title="Background trait">
-              ?API?
-            </Field>
+            {study?.backgroundTraits?.length > 0 && (
+              <Field loading={loading} title="Background trait">
+                {study.backgroundTraits.map(({ id, name }, index) => (
+                  <Fragment key={id}>
+                    {index > 0 ? ", " : null}
+                    <Link to={`../disease/${id}`}>{name}</Link>
+                  </Fragment>
+                ))}
+              </Field>
+            )}
           </>
         )}
         {study?.studyType !== "gwas" && (
@@ -228,12 +235,21 @@ function ProfileHeader() {
                 {study?.projectId?.replace(/_/gi, " ")}
               </Field>
             )}
-            <Field loading={loading} title="Affected gene">
-              ?API?
-            </Field>
-            <Field loading={loading} title="Affected cell/tissue">
-              ?API?
-            </Field>
+            {study?.target?.id && (
+              <Field loading={loading} title="Affected gene">
+                <Link to={`../target/${study.target.id}`}>{study.target.approvedSymbol}</Link>
+              </Field>
+            )}
+            {study?.biosample?.biosampleId && (
+              <Field loading={loading} title="Affected cell/tissue">
+                <Link
+                  external
+                  to={`https://www.ebi.ac.uk/ols4/search?q=${study.biosample.biosampleId}`}
+                >
+                  {study.biosample.biosampleName}
+                </Link>
+              </Field>
+            )}
           </>
         )}
         {study?.publicationFirstAuthor && (

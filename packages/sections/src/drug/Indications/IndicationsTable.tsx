@@ -33,9 +33,17 @@ type IndicationsTableProps = {
   chemblId: string;
   selectedRow: IndicationRow | null;
   selectRow: (row: IndicationRow | null) => void;
+  prefetchRecords: (row: IndicationRow | null | undefined) => void;
+  getPrefetchHandlers: (row: IndicationRow) => { onMouseEnter: () => void; onMouseLeave: () => void };
 };
 
-function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTableProps) {
+function IndicationsTable({
+  chemblId,
+  selectedRow,
+  selectRow,
+  prefetchRecords,
+  getPrefetchHandlers,
+}: IndicationsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -51,6 +59,7 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
           <Box
             data-testid="indication-card"
             data-selected={isSelected ? "true" : "false"}
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
@@ -198,6 +207,11 @@ function IndicationsTable({ chemblId, selectedRow, selectRow }: IndicationsTable
           }
         }}
         showRowsPerPageControl={false}
+        stableHeight
+        // the first card of a page is selected when the page opens, so its reports
+        // are fetched along with the neighbouring pages
+        prefetchAdjacentPages
+        onPagePrefetched={(rows) => prefetchRecords(rows[0])}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

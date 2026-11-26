@@ -3,6 +3,7 @@ import { styled } from "@mui/material/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrescriptionBottleAlt } from "@fortawesome/free-solid-svg-icons";
 import { parseDrugLabels } from "@ot/utils";
+import { clinicalStageCategories } from "@ot/constants";
 
 import { LongText, Chip, Link, LongList } from "ui";
 
@@ -28,7 +29,9 @@ function DrugDetail({ data }) {
       <Typography sx={{ fontWeight: 500 }} variant="subtitle1">
         Maximum Clinical Stage
       </Typography>
-      <Typography variant="body2">{data.maximumClinicalStage}</Typography>
+      <Typography variant="body2">
+        {clinicalStageCategories[data.maximumClinicalStage]?.label ?? data.maximumClinicalStage}
+      </Typography>
       {data.indications && data.indications.rows.length > 0 && (
         <>
           <Typography sx={{ fontWeight: 500 }} variant="subtitle1">

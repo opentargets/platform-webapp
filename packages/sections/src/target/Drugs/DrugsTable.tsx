@@ -1,38 +1,59 @@
-import { useMemo } from "react";
-import { Link, OtTable, Box, Typography } from "ui";
+import { faArrowDown, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { clinicalStageCategories } from "@ot/constants";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faArrowDown } from "@fortawesome/free-solid-svg-icons";
-import DRUGS_QUERY from "./DrugsQuery.gql";
+import {
+  ClinicalTargetSearchField,
+  clinicalStageCategories,
+  type TargetDrugsQuery,
+  type TargetDrugsQueryVariables,
+} from "@ot/constants";
+import type { Row } from "@tanstack/react-table";
+import type { MouseEvent } from "react";
+import { Box, Link, type OtTableColumn, OtTableServer, Typography } from "ui";
+import { typedDocument } from "../../utils/typedDocument";
+import DRUGS_QUERY_DOCUMENT from "./DrugsQuery.gql";
 
-const onLinkClick = (e) => {
+export const DRUGS_QUERY = typedDocument<TargetDrugsQuery, TargetDrugsQueryVariables>(
+  DRUGS_QUERY_DOCUMENT
+);
+
+export type DrugRow = NonNullable<
+  TargetDrugsQuery["target"]
+>["drugAndClinicalCandidates"]["rows"][number];
+
+type StageCategory = { index: number; label: string };
+const stageCategories: Record<string, StageCategory | undefined> = clinicalStageCategories;
+
+const onLinkClick = (e: MouseEvent<HTMLAnchorElement>) => {
   e.stopPropagation();
 };
 
-function stageAndRecordCountComparator(a, b) {
-  if (a.maxClinicalStage === b.maxClinicalStage) {
-    return a.clinicalReports?.length - b.clinicalReports?.length;
-  }
-  return (
-    (clinicalStageCategories)[a.maxClinicalStage]?.index -
-    (clinicalStageCategories)[b.maxClinicalStage]?.index
-  );
-}
+export const DRUGS_PAGE_SIZE = 10;
 
-function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
+type DrugsTableProps = {
+  ensemblId: string;
+  selectedRow: DrugRow | null;
+  selectRow: (row: DrugRow | null) => void;
+  prefetchRecords: (row: DrugRow | null | undefined) => void;
+  getPrefetchHandlers: (row: DrugRow) => { onMouseEnter: () => void; onMouseLeave: () => void };
+};
+
+function DrugsTable({
+  ensemblId,
+  selectedRow,
+  selectRow,
+  prefetchRecords,
+  getPrefetchHandlers,
+}: DrugsTableProps) {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
-  const sortedRows = useMemo(() => {
-    return structuredClone(rows).sort(stageAndRecordCountComparator).reverse();
-  }, [rows]);
-
-  const columns = [
+  const columns: OtTableColumn<DrugRow>[] = [
     {
       id: "drugCard",
       label: "",
+      searchFields: [ClinicalTargetSearchField.DrugName],
       renderCell: (row) => {
         const { drug, maxClinicalStage, clinicalReports } = row;
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
@@ -41,6 +62,7 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
           <Box
             data-testid="drug-card"
             data-selected={isSelected ? "true" : "false"}
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",
@@ -72,11 +94,9 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
                 whiteSpace: "nowrap",
               }}
             >
-              <span onClick={onLinkClick}>
-                <Link asyncTooltip to={`/drug/${drug.id}`}>
-                  {drug.name}
-                </Link>
-              </span>
+              <Link asyncTooltip to={`/drug/${drug.id}`} onClick={onLinkClick}>
+                {drug.name}
+              </Link>
             </Typography>
 
             <Box
@@ -89,7 +109,7 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
                 <Typography variant="caption">Max stage:</Typography>
                 <Typography variant="caption" sx={{ fontSize: 13 }}>
-                  {(clinicalStageCategories)[maxClinicalStage].label}
+                  {stageCategories[maxClinicalStage]?.label ?? maxClinicalStage}
                 </Typography>
               </Box>
 
@@ -118,30 +138,14 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
           </Box>
         );
       },
-      sortable: true,
-      comparator: stageAndRecordCountComparator,
-      filterValue: (row) => {
-        return `${row.drug?.name ?? ""} ${(clinicalStageCategories)[row.maxClinicalStage]?.label ?? ""}`;
-      },
     },
   ];
 
-  const dataDownloaderColoumns = [
-    {
-      id: "drugName",
-      exportValue: (row) => row.drug?.name,
-    },
-    {
-      id: "drugId",
-      exportValue: (row) => row.drug?.id,
-    },
-    {
-      id: "maxClinicalStage",
-    },
-    {
-      id: "reportCount",
-      exportValue: (row) => row.clinicalReports?.length,
-    },
+  const dataDownloaderColumns: OtTableColumn<DrugRow>[] = [
+    { id: "drugName", label: "Drug name", exportValue: (row) => row.drug?.name },
+    { id: "drugId", label: "Drug id", exportValue: (row) => row.drug?.id },
+    { id: "maxClinicalStage", label: "Max clinical stage" },
+    { id: "reportCount", label: "Report count", exportValue: (row) => row.clinicalReports?.length },
   ];
 
   return (
@@ -181,24 +185,24 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
         }),
       }}
     >
-      <OtTable
-        showGlobalFilter
-        globalFilterPlaceholderText="Search..."
+      <OtTableServer<DrugRow>
         columns={columns}
-        rows={sortedRows}
-        query={DRUGS_QUERY.loc?.source?.body}
+        query={DRUGS_QUERY}
         variables={{ ensemblId }}
+        dataPath="target.drugAndClinicalCandidates"
+        pageSize={DRUGS_PAGE_SIZE}
         dataDownloader
         dataDownloaderFileStem="drugs-and-clinical-candidates"
-        dataDownloaderColumns={dataDownloaderColoumns}
+        dataDownloaderColumns={dataDownloaderColumns}
         showColumnVisibilityControl={false}
-        getSelectedRows={(rowsInfo) => {
+        globalFilterPlaceholderText="Search drugs..."
+        getSelectedRows={(rowsInfo: Row<DrugRow>[]) => {
           if (!(rowsInfo?.length > 0)) return;
 
-          const selectedOriginalRows = rowsInfo.map(r => r.original).filter(Boolean);
+          const selectedOriginalRows = rowsInfo.map((r) => r.original).filter(Boolean);
           if (!selectedOriginalRows.length) return;
           const nextRow =
-            selectedOriginalRows.find(r => r.id !== selectedRow?.id) ?? selectedOriginalRows[0];
+            selectedOriginalRows.find((r) => r.id !== selectedRow?.id) ?? selectedOriginalRows[0];
 
           if (!nextRow?.id) return;
 
@@ -206,11 +210,12 @@ function DrugsTable({ ensemblId, rows, selectedRow, selectRow, loading }) {
             selectRow(nextRow);
           }
         }}
-        loading={loading}
-        sortBy="drugCard"
-        order="desc"
         showRowsPerPageControl={false}
-        showPaginationAlways={false}
+        stableHeight
+        // the first card of a page is selected when the page opens, so its reports
+        // are fetched along with the neighbouring pages
+        prefetchAdjacentPages
+        onPagePrefetched={(rows) => prefetchRecords(rows[0])}
         wrapControls={{ rowGap: 4, pr: { sm: 0, md: 1 }, ml: { sm: 0, md: -1 } }}
       />
     </Box>

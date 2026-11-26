@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import CredibleSet from "../CredibleSet";
+import type { CredibleSet } from "@ot/constants";
 
 export const definition = {
   id: "Enhancer_to_gene_predictions",
