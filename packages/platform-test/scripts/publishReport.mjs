@@ -41,7 +41,7 @@ const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /* What gets published: index.html (the overview) and report/ (the Playwright report). */
 const publishDir = resolve(packageDir, "e2e-published-report");
 const reportDir = resolve(publishDir, "report");
-const resultsFile = resolve(publishDir, "results.json");
+
 const NETLIFY_SITE = process.env.E2E_NETLIFY_SITE || "ot-platform";
 /* Netlify limits an alias to 37 characters. */
 const ALIAS_LIMIT = 37;
@@ -141,7 +141,6 @@ if (!baseUrlOption && !prNumber) {
   fail(`Branch "${branch}" has no open pull request, so it has no deploy preview. Open one, or pass --pr <number> or --base-url <url>.`);
 }
 const baseUrl = baseUrlOption ?? `https://deploy-preview-${prNumber}--ot-platform.netlify.app`;
-const subject = prOption ? `pull request #${prOption}` : branch;
 const defaultAlias = prOption ? `${REPORT_PREFIX}pr-${prOption}` : `${REPORT_PREFIX}${previewAlias(branch)}`;
 const reportAlias = (aliasOption ?? defaultAlias).slice(0, ALIAS_LIMIT).replace(/-+$/, "");
 const reportUrl = `https://${reportAlias}--ot-platform.netlify.app`;
@@ -156,7 +155,7 @@ console.log(publish ? `Report:   ${reportUrl}\n` : "Report:   not published (--n
 rmSync(publishDir, { recursive: true, force: true });
 mkdirSync(publishDir, { recursive: true });
 
-const run = spawnSync("yarn", ["playwright", "test", "--reporter=list,html,json", ...args], {
+const run = spawnSync("yarn", ["playwright", "test", "--reporter=list,html", ...args], {
   cwd: packageDir,
   stdio: "inherit",
   env: {
@@ -165,23 +164,22 @@ const run = spawnSync("yarn", ["playwright", "test", "--reporter=list,html,json"
     PLAYWRIGHT_VIDEO: process.env.PLAYWRIGHT_VIDEO ?? "retain-on-failure",
     PLAYWRIGHT_HTML_OUTPUT_DIR: reportDir,
     PLAYWRIGHT_HTML_OPEN: "never",
-    PLAYWRIGHT_JSON_OUTPUT_NAME: resultsFile,
   },
 });
 const testsExitCode = run.status ?? 1;
 
-if (!existsSync(resolve(reportDir, "index.html")) || !existsSync(resultsFile)) {
+if (!existsSync(resolve(reportDir, "index.html"))) {
   fail("Playwright did not produce a report, so there is nothing to publish.");
 }
 
 const overview = buildOverview({
-  resultsFile,
-  branch: subject === branch ? branch : `${branch} tests, ${subject}`,
+  reportIndexFile: resolve(reportDir, "index.html"),
+  branch,
+  prNumber,
   baseUrl,
-  ranAt: new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC",
+  ranAt: `${new Date().toISOString().replace("T", " ").slice(0, 16)} UTC`,
 });
 writeFileSync(resolve(publishDir, "index.html"), overview.html);
-rmSync(resultsFile);
 const { counts } = overview;
 console.log(`\n${counts.total} tests: ${counts.passed} passed, ${counts.failed} failed${counts.flaky ? `, ${counts.flaky} flaky` : ""}.`);
 
