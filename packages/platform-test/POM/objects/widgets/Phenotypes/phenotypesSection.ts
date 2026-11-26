@@ -1,87 +1,62 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
+export const PHENOTYPE_COLUMNS = [
+  "Qualifier",
+  "Phenotype",
+  "Aspect",
+  "Frequency",
+  "Onset",
+  "Modifier",
+  "Sex",
+  "Evidence",
+  "Source",
+  "References",
+] as const;
+
+export type PhenotypeColumn = (typeof PHENOTYPE_COLUMNS)[number];
+
+/**
+ * Disease page: Clinical signs and symptoms ("phenotypes") section. A server-paginated
+ * table with one row per (phenotype, evidence) pair.
+ */
 export class PhenotypesSection {
-  page: Page;
+  static readonly id = "phenotypes";
+  readonly section: Locator;
+  readonly table: OtTable;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, PhenotypesSection.id);
+    this.table = new OtTable(this.section);
   }
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-phenotypes']");
+  get title(): Locator {
+    return this.section.getByTestId("section-phenotypes-header");
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection().isVisible();
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-phenotypes-header']");
+  /** The cell of a named column in a row of the current page. */
+  cell(rowIndex: number, column: PhenotypeColumn): Locator {
+    return this.table.cell(rowIndex, PHENOTYPE_COLUMNS.indexOf(column));
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  /** Every cell of a named column on the current page. */
+  columnCells(column: PhenotypeColumn): Locator {
+    return this.table.rows.locator(`td:nth-child(${PHENOTYPE_COLUMNS.indexOf(column) + 1})`);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  /** The drawer a row's "N references" button opens. */
+  get drawer(): Locator {
+    return this.page.getByTestId("table-drawer-panel");
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  getTableRows(): Locator {
-    return this.getTable().locator("tbody tr");
-  }
-
-  async getRowCount(): Promise<number> {
-    return await this.getTableRows().count();
-  }
-
-  // Get phenotype data
-  getPhenotypeCell(rowIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("td").first();
-  }
-
-  async getPhenotypeName(rowIndex: number): Promise<string | null> {
-    return await this.getPhenotypeCell(rowIndex).textContent();
-  }
-
-  // Search/Filter
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[type='text']");
-  }
-
-  async searchPhenotype(phenotypeName: string): Promise<void> {
-    await this.getSearchInput().fill(phenotypeName);
-  }
-
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-  }
-
-  // Wait for section to load
-  async waitForSectionLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible" });
-    await this.page.waitForTimeout(500);
+  /** Close the drawer with its close button and assert it is gone. */
+  async closeDrawer(): Promise<void> {
+    await this.drawer.getByTestId("drawer-close").click();
+    await expect(this.drawer, "the drawer should close").toBeHidden();
   }
 }

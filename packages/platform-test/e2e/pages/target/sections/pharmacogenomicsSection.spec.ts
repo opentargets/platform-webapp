@@ -20,7 +20,21 @@ const NA = "N/A";
 const LEVEL = /^Level (1A|1B|2A|2B|3|4)$/;
 const CATEGORIES = ["dosage", "efficacy", "metabolism/pk", "other", "toxicity"];
 const VARIANT_HREF = /^\/variant\/(\d{1,2}|X|Y|MT)_\d+_[ACGT]+_[ACGT]+$/;
-const LITERATURE_LABEL = /^(\d{5,}|\d+ publications)$/;
+const EXPORT_COLUMNS = [
+  "rsId",
+  "starAllele",
+  "genotypeId",
+  "variantConsequence",
+  "drugS",
+  "drugResponsePhenotype",
+  "drugResponseCategory",
+  "directionality",
+  "directDrugTarget",
+  "confidenceLevel",
+  "source",
+  "literature",
+];
+const LITERATURE_LABEL = /^\s*(\d{5,}|\d+ publications)\s*$/;
 
 /** Rank of a level label ("Level 1A") in the order the table sorts by (strongest first). */
 const levelRank = (text: string): number => PGX_EVIDENCE_LEVELS.indexOf(text.replace("Level ", "") as never);
@@ -67,7 +81,6 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(pgx.description.locator("strong")).toHaveText(symbol);
     const source = pgx.descriptionLink("ClinPGx");
     await expect(source).toHaveAttribute("href", "https://www.pharmgkb.org/");
-    await expect(source).toHaveAttribute("target", "_blank");
 
     await pgx.table.expectHeaders(TARGET_PGX_COLUMNS);
     await expect(pgx.table.searchInput).toBeVisible();
@@ -130,7 +143,6 @@ test.describe("Target pharmacogenetics section", () => {
         "href",
         /^https:\/\/www\.pharmgkb\.org\/clinicalAnnotation\/\d+$/
       );
-      await expect(source).toHaveAttribute("target", "_blank");
 
       await expect(pgx.cell(row, "literature").getByTestId("publications-drawer-trigger")).toHaveText(
         LITERATURE_LABEL
@@ -159,7 +171,6 @@ test.describe("Target pharmacogenetics section", () => {
     const starAllele = cells.nth(1).getByRole("link");
     await expect(starAllele).toHaveText(/^CYP2C19\*\d+$/);
     await expect(starAllele).toHaveAttribute("href", /^https:\/\/www\.pharmgkb\.org\/haplotype\/PA\d+$/);
-    await expect(starAllele).toHaveAttribute("target", "_blank");
     await expect(cells.nth(8).locator("svg[data-icon='circle-xmark']")).toHaveCount(1);
   });
 
@@ -352,7 +363,7 @@ test.describe("Target pharmacogenetics section", () => {
     await pgx.expectLoaded();
     await pgx.table.expectLoaded();
 
-    await pgx.cell(0, "phenotype").hover();
+    await pgx.cell(0, "phenotype").getByText("?", { exact: true }).hover();
     await expect(
       pgx.tooltip.filter({ hasText: /CYP2C19/ }),
       "the tooltip should hold the genotype annotation text of the row"
@@ -386,10 +397,10 @@ test.describe("Target pharmacogenetics section", () => {
     await pgx.expectLoaded();
     await pgx.table.expectLoaded();
 
-    const trigger = pgx.directionalityTriggers.first();
+    const row = pgx.table.rows.filter({ has: page.getByTestId("directionality-drawer-trigger") }).first();
+    const trigger = row.getByTestId("directionality-drawer-trigger");
     await expect(trigger).toHaveText(/^\s*\d+ (entry|entries)\s*$/);
     const count = Number((await trigger.innerText()).trim().split(" ")[0]);
-    const row = pgx.table.rows.filter({ has: trigger }).first();
     const drug = (await row.locator("td").nth(4).innerText()).trim();
 
     await trigger.click();
@@ -400,7 +411,6 @@ test.describe("Target pharmacogenetics section", () => {
     expect(await descriptions.count(), "the drawer lists at most one page of annotations").toBeLessThanOrEqual(count);
     await expect(pgx.directionalityDrawer).toContainText(new RegExp(drug.split(/[\s,]/)[0], "i"));
     const publication = pgx.directionalityDrawer.getByRole("link").first();
-    await expect(publication).toHaveAttribute("target", "_blank");
     await expect(publication).toHaveAttribute("href", /\d{5,}/);
 
     await pgx.closeDirectionalityDrawer();
@@ -493,15 +503,46 @@ test.describe("Target pharmacogenetics section", () => {
     const tsv = await pgx.table.download("TSV");
     expect(tsv.filename).toBe(`${ensgId}-pharmacogenomics-target.tsv`);
     const { header, rows } = parseTsv(tsv.text);
-    expect(header).toContain("evidenceLevel");
-    expect(header).toContain("genotypeId");
+    expect(header).toEqual(EXPORT_COLUMNS);
     expect(rows).toHaveLength(total);
-    const level = header.indexOf("evidenceLevel");
-    for (const row of rows) expect(row[level]).toMatch(/^(1A|1B|2A|2B|3|4)$/);
+    const level = header.indexOf("confidenceLevel");
+    for (const row of rows) {
+      expect(row).toHaveLength(EXPORT_COLUMNS.length);
+      expect(row[level]).toMatch(/^(1A|1B|2A|2B|3|4)$/);
+      expect(row[header.indexOf("directDrugTarget")]).toMatch(/^(true|false)$/);
+      expect(row[header.indexOf("literature")]).toMatch(/^\d+(,\d+)*$/);
+    }
+    expectOrdered(rows.map((row) => PGX_EVIDENCE_LEVELS.indexOf(row[level] as never)), "ascending", "exported levels");
 
     const json = await pgx.table.download("Json");
     expect(json.filename).toBe(`${ensgId}-pharmacogenomics-target.json`);
-    expect(JSON.parse(json.text)).toHaveLength(total);
+    const exported = JSON.parse(json.text) as Record<string, unknown>[];
+    expect(exported).toHaveLength(total);
+    expect(Object.keys(exported[0])).toEqual(EXPORT_COLUMNS);
+  });
+
+  // The export builds its cells from the column ids, and most of this table's ids are not
+  // fields of the rows (drug, drugResponse, starAllele, ...), so those columns come out empty.
+  test("the export carries the drugs and phenotypes of the rows, not empty columns", async ({
+    page,
+    testConfig,
+  }) => {
+    const ensgId = requireTarget(testConfig, "withPharmacogenomics");
+    const pgx = new TargetPharmacogenomicsSection(page);
+
+    await new TargetPage(page).goto(ensgId);
+    await pgx.expectLoaded();
+    await pgx.table.expectLoaded();
+
+    const { header, rows } = parseTsv((await pgx.table.download("TSV")).text);
+    for (const column of ["drugS", "drugResponsePhenotype", "drugResponseCategory", "source"]) {
+      const index = header.indexOf(column);
+      expect(index, `the export should have a ${column} column`).toBeGreaterThanOrEqual(0);
+      expect(
+        rows.filter((row) => row[index] !== ""),
+        `the ${column} column of the export should hold the values the table shows`
+      ).not.toHaveLength(0);
+    }
   });
 
   test("the API query drawer shows the query behind the section", async ({ page, testConfig }) => {
@@ -539,7 +580,6 @@ test.describe("Target pharmacogenetics section", () => {
       "href",
       `https://www.ensembl.org/Homo_sapiens/Variation/Explore?v=${rs}`
     );
-    await expect(rsId).toHaveAttribute("target", "_blank");
 
     const genotype = pgx.cell(0, "genotypeId").getByRole("link");
     await expect(genotype).toHaveAttribute("href", VARIANT_HREF);

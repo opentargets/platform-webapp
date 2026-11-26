@@ -256,6 +256,12 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Disease: Huntington disease (the only one of these with clinical signs and symptoms)
   MONDO_0007739: ["ontology", "drugs", "phenotypes", "gwasstudies", "bibliography"],
 
+  // Disease: Marfan syndrome (many pages of clinical signs and symptoms, onset and modifier terms; no drugs)
+  MONDO_0007947: ["ontology", "phenotypes", "gwasstudies", "bibliography"],
+
+  // Disease: juvenile Huntington disease (a leaf of the ontology: no children, no phenotypes, drugs or GWAS)
+  MONDO_0016621: ["ontology", "bibliography"],
+
   // Disease: genetic, familial or congenital disease (OTAR therapeutic area: no drugs, GWAS,
   // synonyms or cross references)
   OTAR_0000018: ["ontology", "bibliography"],
