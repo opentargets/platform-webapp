@@ -47,7 +47,9 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
     <SectionItem
       definition={definition}
       entity={entity}
-      request={request}
+      // visibility comes from the summary data: the GTEx tab data has another shape,
+      // and switching tabs must not hide the section
+      request={{ ...request, data: requestSummary.data }}
       showContentLoading={true}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => (
