@@ -73,7 +73,7 @@ function BasketDrawer({ open, onClose, rows, locationURLs, onRemove, onEmpty }: 
             component="h2"
             sx={theme => ({ fontSize: "1.2rem", fontWeight: 700, color: theme.palette.grey[800], m: 0 })}
           >
-            Your data bag
+            Your data bundle
           </Typography>
           <Typography sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}>
             {n} {noun}
