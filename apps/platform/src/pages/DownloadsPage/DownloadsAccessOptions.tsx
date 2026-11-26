@@ -97,11 +97,9 @@ function HttpLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
       <CodeBlock textToCopy={link}>
-        <span data-testid="access-browse-link">
-          <Link to={link} external>
-            {link}
-          </Link>
-        </span>
+        <Link to={link} external data-testid="access-browse-link">
+          {link}
+        </Link>
       </CodeBlock>
     </Box>
   );

@@ -283,8 +283,8 @@ export const useGraphSimulation = ({
         .data(placement.lanes, (d: any) => d.category)
         .join((enter: any) => {
           const g = enter.append('g').attr('class', 'graph-lane').attr('data-testid', 'graph-lane');
-          g.append('rect').attr('rx', 4).attr('ry', 4);
-          g.append('text');
+          g.append('rect').attr('rx', 4).attr('ry', 4).attr('data-testid', 'graph-lane-band');
+          g.append('text').attr('data-testid', 'graph-lane-title');
           return g;
         });
       lane

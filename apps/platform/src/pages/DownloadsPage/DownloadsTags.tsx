@@ -48,17 +48,16 @@ function LibrariesTag() {
           <Box>
             Our scripts and schema conforms to Croissant. This is a standard format for dataset
             metadata.{" "}
-            <span data-testid="tag-read-more">
-              <Link to={state.downloadsData?.conformsTo} external>
-                {" "}
-                Read more
-              </Link>
-            </span>
+            <Link to={state.downloadsData?.conformsTo} external data-testid="tag-read-more">
+              {" "}
+              Read more
+            </Link>
             {/* <Divider /> */}
             <Box sx={{ pt: 1 }}>
-              <Box data-testid="croissant-download">
-                <Link onClick={saveMetadata}> Download Croissant metadata</Link>
-              </Box>
+              <Link onClick={saveMetadata} data-testid="croissant-download">
+                {" "}
+                Download Croissant metadata
+              </Link>
             </Box>
           </Box>
         }
@@ -89,11 +88,13 @@ function VersionTag() {
         title={`Current version: ${state.downloadsData?.version}`}
         body={
           <Box>
-            <span data-testid="tag-read-more">
-              <Link to={"https://platform-docs.opentargets.org/release-notes"} external>
-                Read more
-              </Link>
-            </span>{" "}
+            <Link
+              to={"https://platform-docs.opentargets.org/release-notes"}
+              external
+              data-testid="tag-read-more"
+            >
+              Read more
+            </Link>{" "}
             on release highlights for the Open Targets Platform{" "}
           </Box>
         }
@@ -158,11 +159,13 @@ function FormatsTag() {
         body={
           <Box>
             Read about this format{" "}
-            <span data-testid="tag-read-more">
-              <Link to={"https://parquet.apache.org/docs/overview/"} external>
-                here.
-              </Link>
-            </span>
+            <Link
+              to={"https://parquet.apache.org/docs/overview/"}
+              external
+              data-testid="tag-read-more"
+            >
+              here.
+            </Link>
           </Box>
         }
       >

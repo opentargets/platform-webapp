@@ -68,11 +68,11 @@ export class DownloadsPage {
   }
 
   get tagReadMoreLink(): Locator {
-    return this.tagPopover.getByTestId("tag-read-more").getByRole("link");
+    return this.tagPopover.getByTestId("tag-read-more");
   }
 
   get croissantDownloadLink(): Locator {
-    return this.tagPopover.getByTestId("croissant-download").getByRole("link");
+    return this.tagPopover.getByTestId("croissant-download");
   }
 
   get publicationsDrawer(): Locator {
@@ -426,14 +426,31 @@ export class DownloadsPage {
   }
 
   get schemaRows(): Locator {
-    return this.schemaTable.getByTestId("schema-row");
+    return this.schemaTable.getByTestId(/^schema-row-/);
   }
 
-  /** The row of the column of that name (top-level or nested; nested names repeat rarely). */
-  schemaRow(columnName: string): Locator {
-    return this.schemaRows.filter({
-      has: this.page.getByTestId("schema-column-name").filter({ hasText: new RegExp(`^(│⎯)+${columnName}\\s*$`) }),
-    });
+  /** The foreign key mark of a schema row; hovering it names the dataset it points to. */
+  schemaForeignKey(columnPath: string): Locator {
+    return this.schemaRow(columnPath).getByTestId("schema-foreign-key");
+  }
+
+  /** The primary key mark of a schema row. */
+  schemaPrimaryKey(columnPath: string): Locator {
+    return this.schemaRow(columnPath).getByTestId("schema-primary-key");
+  }
+
+  /** The row of a column, by its dotted path: `id`, or `genomicLocation.chromosome` for a nested one. */
+  schemaRow(columnPath: string): Locator {
+    return this.schemaTable.getByTestId(`schema-row-${columnPath}`);
+  }
+
+  /** The name cell of a column's row: the name behind one `│⎯` per level of nesting. */
+  schemaRowName(columnPath: string): Locator {
+    return this.schemaRow(columnPath).getByTestId("schema-column-name");
+  }
+
+  schemaRowType(columnPath: string): Locator {
+    return this.schemaRow(columnPath).getByTestId("schema-column-type");
   }
 
   get schemaKeyTooltip(): Locator {
@@ -467,7 +484,7 @@ export class DownloadsPage {
   }
 
   get browseLink(): Locator {
-    return this.accessLocations.getByTestId("access-browse-link").getByRole("link");
+    return this.accessLocations.getByTestId("access-browse-link");
   }
 
   // ---- network view --------------------------------------------------------------------
@@ -532,9 +549,9 @@ export class DownloadsPage {
   async nodeLanes(): Promise<{ id: string; lane: string | null }[]> {
     return this.page.evaluate(() => {
       const lanes = [...document.querySelectorAll("[data-testid='graph-lane']")].map((g) => {
-        const rect = g.querySelector("rect");
+        const rect = g.querySelector("[data-testid='graph-lane-band']");
         return {
-          title: g.querySelector("text")?.textContent ?? "",
+          title: g.querySelector("[data-testid='graph-lane-title']")?.textContent ?? "",
           x: Number(rect?.getAttribute("x")),
           y: Number(rect?.getAttribute("y")),
           w: Number(rect?.getAttribute("width")),
@@ -624,6 +641,15 @@ export class DownloadsPage {
 
   connectedRow(id: string): Locator {
     return this.panel.getByTestId(`connected-row-${id}`);
+  }
+
+  connectedRowName(id: string): Locator {
+    return this.connectedRow(id).getByTestId("connected-item-name");
+  }
+
+  /** The header button of a category group: it collapses and expands the group's rows. */
+  connectedGroupToggle(group: Locator): Locator {
+    return group.getByTestId("connected-header-toggle");
   }
 
   connectedRowSelect(id: string): Locator {

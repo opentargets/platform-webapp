@@ -59,7 +59,7 @@ function DownloadsSchemaBuilder({ data }) {
   );
 }
 
-function buildSchema(obj, delimiter = "") {
+function buildSchema(obj, delimiter = "", path = "") {
   let schema = <></>;
 
   const DIVIDER = `${delimiter}│⎯`;
@@ -69,9 +69,11 @@ function buildSchema(obj, delimiter = "") {
     const dataType = getDataType(column);
     const isPrimaryKey = isPrimaryColumn(column, obj.key);
     const isForeignKey = isForeignColumn(column);
+    // dotted path of the column, e.g. `genomicLocation.chromosome`
+    const columnPath = path ? `${path}.${column.name}` : column.name;
 
     currentElement = (
-      <tr data-testid="schema-row">
+      <tr data-testid={`schema-row-${columnPath}`}>
         <StickyTd data-testid="schema-column-name">
           <Box sx={{ display: "flex", gap: 2 }}>
             {DIVIDER}
@@ -88,7 +90,7 @@ function buildSchema(obj, delimiter = "") {
       </tr>
     );
     if (dataType.includes("Struct")) {
-      const nestedSchema = buildSchema(column, `${delimiter}│⎯`);
+      const nestedSchema = buildSchema(column, `${delimiter}│⎯`, columnPath);
       currentElement = (
         <>
           {currentElement}
