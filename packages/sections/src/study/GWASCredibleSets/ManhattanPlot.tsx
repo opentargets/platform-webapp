@@ -1,26 +1,12 @@
 import { useTheme } from "@mui/material";
 import * as PlotLib from "@observablehq/plot";
 import { chromosomeInfo, type StudyCredibleSet } from "@ot/constants";
-import {
-  Box,
-  Link,
-  Navigate,
-  ObsPlot,
-  ScientificNotation,
-  Skeleton,
-  TooltipRow,
-  TooltipTable,
-  Typography,
-} from "ui";
+import { ObsPlot, Skeleton, Typography } from "ui";
+import ManhattanTooltip from "./ManhattanTooltip";
 
 export type ManhattanPlotRow = Pick<
   StudyCredibleSet,
-  | "credibleSetId"
-  | "leadVariantId"
-  | "leadChromosome"
-  | "leadPosition"
-  | "pValueMantissa"
-  | "pValueExponent"
+  "credibleSetId" | "leadChromosome" | "leadPosition" | "pValueMantissa" | "pValueExponent"
 >;
 
 type PlotRow = ManhattanPlotRow & {
@@ -213,32 +199,7 @@ function ManhattanPlot({
 export default ManhattanPlot;
 
 function renderTooltip(datum: PlotRow) {
-  return (
-    <Box
-      sx={{
-        background: "#fffc",
-        borderColor: "#ddd",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderRadius: "0.2rem",
-        padding: "0.25em 0.5rem",
-      }}
-    >
-      <TooltipTable>
-        <TooltipRow label="Credible set">
-          <Box display="flex">
-            <Navigate to={`/credible-set/${datum.credibleSetId}`} />
-          </Box>
-        </TooltipRow>
-        <TooltipRow label="Lead variant">
-          <Link to={`/variant/${datum.leadVariantId}`}>{datum.leadVariantId}</Link>
-        </TooltipRow>
-        <TooltipRow label="P-value">
-          <ScientificNotation number={[datum.pValueMantissa, datum.pValueExponent]} dp={2} />
-        </TooltipRow>
-      </TooltipTable>
-    </Box>
-  );
+  return <ManhattanTooltip key={datum.credibleSetId} credibleSetId={datum.credibleSetId} />;
 }
 
 let genomeLength = 0;

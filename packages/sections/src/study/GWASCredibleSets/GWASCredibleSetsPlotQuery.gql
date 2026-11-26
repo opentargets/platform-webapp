@@ -3,7 +3,6 @@ query StudyGWASCredibleSetsPlotQuery($studyId: String!) {
     credibleSetsView(page: { index: 0, size: 10000 }) {
       rows {
         credibleSetId
-        leadVariantId
         leadChromosome
         leadPosition
         pValueMantissa
