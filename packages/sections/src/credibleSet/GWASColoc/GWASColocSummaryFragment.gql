@@ -1,5 +1,5 @@
 fragment GWASColocSummaryFragment on CredibleSet {
-  colocalisation(filter: { studyTypes: [gwas] }, page: { size: 1, index: 0 }) {
+  colocalisationView(studyTypes: [gwas], page: { size: 1, index: 0 }) {
     count
   }
 }

@@ -1,27 +1,28 @@
-query GWASColocQuery($credibleSetId: String!, $page: Page) {
+query GWASColocQuery(
+  $credibleSetId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [CredibleSetColocalisationsSort!]! = []
+  $search: CredibleSetColocalisationsSearch
+) {
   credibleSet(credibleSetId: $credibleSetId) {
     credibleSetId
-    colocalisation(filter: { studyTypes: [gwas] }, page: $page) {
+    colocalisationView(
+      studyTypes: [gwas]
+      page: { index: $index, size: $size }
+      sort: $sort
+      search: $search
+    ) {
       count
       rows {
-        otherCredibleSet {
-          credibleSetId
-          study {
-            id
-            projectId
-            traitFromSource
-            publicationFirstAuthor
-          }
-          leadVariant {
-            variantId
-            chromosome
-            position
-            referenceAllele
-            alternateAllele
-          }
-          leadPValueMantissa
-          leadPValueExponent
-        }
+        otherCredibleSetId
+        studyId
+        projectId
+        traitFromSource
+        publicationFirstAuthor
+        leadVariantId
+        pValueMantissa
+        pValueExponent
         numberColocalisingVariants
         colocalisationMethod
         h3
