@@ -47,8 +47,12 @@ function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         },
       })}
     >
-      <ToggleButton value="cards">Cards</ToggleButton>
-      <ToggleButton value="network">Network</ToggleButton>
+      <ToggleButton value="cards" data-testid="view-toggle-cards">
+        Cards
+      </ToggleButton>
+      <ToggleButton value="network" data-testid="view-toggle-network">
+        Network
+      </ToggleButton>
     </ToggleButtonGroup>
   );
 }

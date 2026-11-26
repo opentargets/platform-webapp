@@ -80,6 +80,7 @@ function SearchField({ width = 260 }: SearchFieldProps) {
         }}
         placeholder="Search datasets"
         aria-label="Search datasets"
+        data-testid="search-input"
         sx={theme => ({
           flex: 1,
           minWidth: 0,
@@ -100,6 +101,7 @@ function SearchField({ width = 260 }: SearchFieldProps) {
           type="button"
           onClick={clear}
           aria-label="Clear search"
+          data-testid="search-clear"
           sx={theme => ({
             display: "inline-flex",
             border: 0,

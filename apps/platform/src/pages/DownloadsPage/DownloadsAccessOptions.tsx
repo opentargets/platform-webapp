@@ -68,14 +68,22 @@ function DownloadsAccessOptions({ data, locationUrl, version }: DownloadsAccessO
 
   return (
     <>
-      <Box tabIndex={-1} sx={{ wordBreak: "break-all", typography: "subtitle2", mt: 1, mb: 4 }}>
+      <Box
+        tabIndex={-1}
+        data-testid="access-locations"
+        sx={{ wordBreak: "break-all", typography: "subtitle2", mt: 1, mb: 4 }}
+      >
         <Typography mb={1} variant="body1">
           File Location:{" "}
         </Typography>
         <BtnGroup btnGroup={getFilteredData({ allDataObj: LOCATION_MAP, containedInArray })} />
       </Box>
 
-      <Box tabIndex={-1} sx={{ wordBreak: "break-all", typography: "subtitle2", mb: 4 }}>
+      <Box
+        tabIndex={-1}
+        data-testid="access-scripts"
+        sx={{ wordBreak: "break-all", typography: "subtitle2", mb: 4 }}
+      >
         <Typography mb={1} variant="body1">
           Access Script:{" "}
         </Typography>
@@ -89,9 +97,11 @@ function HttpLocation({ link }: { link: string }) {
   return (
     <Box sx={{ p: 2 }}>
       <CodeBlock textToCopy={link}>
-        <Link to={link} external>
-          {link}
-        </Link>
+        <span data-testid="access-browse-link">
+          <Link to={link} external>
+            {link}
+          </Link>
+        </span>
       </CodeBlock>
     </Box>
   );

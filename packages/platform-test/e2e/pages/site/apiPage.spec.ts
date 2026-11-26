@@ -8,56 +8,56 @@ const EXAMPLES = [
     description: "Find targets associated with a specific disease or phenotype",
     operation: "associatedTargets",
     entity: "MONDO_0005005",
-    result: /"associatedTargets"|"associations"/,
+    result: /"score": [0-9.]*[1-9]/,
   },
   {
     group: "Target-disease association",
     description: "Find diseases and phenotypes associated with a specific target",
     operation: "associatedDiseases",
     entity: "ENSG00000127318",
-    result: /"approvedSymbol"/,
+    result: /"score": [0-9.]*[1-9]/,
   },
   {
     group: "Target-disease evidence",
     description: "Explore evidence that supports a specific target-disease association",
     operation: "targetDiseaseEvidence",
     entity: "MONDO_0018908",
-    result: /"name"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Target annotation",
     description: "Find tractability and safety information for a specific target",
     operation: "targetAnnotation",
     entity: "ENSG00000169083",
-    result: /"approvedSymbol"/,
+    result: /"modality": "[A-Z]+"/,
   },
   {
     group: "Target annotation",
     description: "Explore molQTL credible sets for INSL6, including the ones from OTAR projects studies",
     operation: "QTLCredibleSetsQuery",
     entity: "ENSG00000120210",
-    result: /"approvedSymbol"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Disease annotation",
     description: "Find clinical signs and symptoms for a specific disease",
     operation: "diseaseAnnotation",
     entity: "MONDO_0018874",
-    result: /"name"/,
+    result: /"aspect": "[A-Z]"/,
   },
   {
     group: "Disease annotation",
     description: "GWAS associated with a specified disease",
     operation: "GWASStudiesQuery",
     entity: "MONDO_0008383",
-    result: /"count"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Drug annotation",
     description: "Find approval status and withdrawn and black-box warning for a specific drug",
     operation: "drugApprovalWithdrawnWarningData",
     entity: "CHEMBL118",
-    result: /"name"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Variant annotation",
@@ -65,35 +65,35 @@ const EXAMPLES = [
       "Credible sets from quantitative trait loci associated with molecular traits containing a specified variant",
     operation: "QTLCredibleSetsQuery",
     entity: "19_44908822_C_T",
-    result: /"variantId"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Study annotation",
     description: "Information about a specified study",
     operation: "SharedTraitStudiesQuery",
     entity: "GCST90204201",
-    result: /"count"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Credible set Annotation",
     description: "Colocalisation metrics for overlapping GWAS credible sets",
     operation: "GWASColocQuery",
     entity: "118db6d05cf67fe7668ee7bac1170fd3",
-    result: /"count"/,
+    result: /"count": [1-9]/,
   },
   {
     group: "Search page",
     description: "Example query for KRAS",
     operation: "searchEntity",
     entity: "KRAS",
-    result: /"hits"/,
+    result: /"total": [1-9]/,
   },
   {
     group: "Search page",
     description: "Example query to get how many entries there are in each entity category for PCSK9",
     operation: "searchTargetAggregations",
     entity: "PCSK9",
-    result: /"aggregations"/,
+    result: /"total": [1-9]/,
   },
 ];
 
@@ -208,12 +208,12 @@ test.describe("API page", () => {
 
     await api.loadExample("Drug annotation", "Find approval status and withdrawn and black-box warning for a specific drug", "drugApprovalWithdrawnWarningData");
     await api.run();
-    await expect(api.result).toContainText('"data"', { timeout: 30_000 });
+    await expect(api.result).toContainText(/"count": [1-9]/, { timeout: 30_000 });
     const before = await api.result.innerText();
 
     await api.loadExample("Search page", "Example query for KRAS", "searchEntity");
     await api.run();
-    await expect(api.result).toContainText('"hits"', { timeout: 30_000 });
+    await expect(api.result).toContainText(/"total": [1-9]/, { timeout: 30_000 });
     expect(await api.result.innerText()).not.toBe(before);
   });
 

@@ -12,115 +12,207 @@ export const DOWNLOADS_CATEGORIES = [
 ] as const;
 export type DownloadsCategory = (typeof DOWNLOADS_CATEGORIES)[number];
 
-export type ScriptTab = "AWS CLI" | "Google Cloud CLI" | "Rsync" | "Wget";
-export const SCRIPT_TABS: ScriptTab[] = ["AWS CLI", "Google Cloud CLI", "Rsync", "Wget"];
+/** Script tools of the access dialogs and of the bag, by the id of their tab. */
+export type ScriptTool = "aws" | "gcp" | "rsync" | "wget";
+export const SCRIPT_TOOLS: ScriptTool[] = ["aws", "gcp", "rsync", "wget"];
+/** Where a dataset can be browsed, by the id of the tab in the access dialog. */
+export type LocationTab = "http-location" | "ftp-location" | "gcp-location" | "aws-location";
 
 /** Where the page stores the bag between visits (see context/basketStorage.ts). */
 export const BASKET_STORAGE_KEY = "ot.downloads.basket";
+/** Set once the one-time "Added to your bag" coach mark has been shown. */
+export const COACH_MARK_STORAGE_KEY = "ot.downloads.basketCoachSeen";
 
 const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-/** The data downloads page, /downloads: dataset cards, bag, network view and the dataset dialogs. */
+/**
+ * The data downloads page, /downloads: dataset cards, bag, network view and the dataset
+ * dialogs. Everything is found by test id; datasets are addressed by their id
+ * (`target`, `disease`...) so a test never depends on order or text.
+ */
 export class DownloadsPage {
   constructor(readonly page: Page) {}
 
   /** Open the page (optionally with a query string or as a dialog route) and wait for the datasets. */
   async goto(path = "/downloads"): Promise<void> {
     await this.page.goto(path);
-    await expect(this.heading, "the downloads page should show its title").toBeVisible();
+    await expect(this.title, "the downloads page should show its title").toBeVisible();
     await expect(this.counter, "the dataset counter should show once the datasets have loaded").toBeVisible();
   }
 
   /** The Network view has no counter: wait for the graph instead. */
   async gotoNetwork(path = "/downloads?view=network"): Promise<void> {
     await this.page.goto(path);
-    await expect(this.heading).toBeVisible();
+    await expect(this.title).toBeVisible();
     await expect(this.graphNodes.first()).toBeVisible();
   }
 
-  get heading(): Locator {
-    return this.page.getByRole("heading", { level: 1 });
+  get title(): Locator {
+    return this.page.getByTestId("downloads-title");
+  }
+
+  get description(): Locator {
+    return this.page.getByTestId("downloads-description");
   }
 
   // ---- header tags ---------------------------------------------------------------------
 
-  tag(name: "Cite Us" | "Croissant" | "Parquet"): Locator {
-    if (name === "Cite Us") return this.page.getByTestId("publications-drawer-trigger");
-    return this.page.getByRole("button", { name });
+  tag(name: "cite-us" | "croissant" | "parquet" | "version"): Locator {
+    return this.page.getByTestId(`tag-${name}`);
   }
 
-  /** The version chip, e.g. "26.12". */
-  get versionTag(): Locator {
-    return this.page.getByRole("button", { name: /^\d+\.\d+$/ });
+  /** The popover of the tag that is open. */
+  get tagPopover(): Locator {
+    return this.page.getByTestId("tag-popover");
+  }
+
+  get tagReadMoreLink(): Locator {
+    return this.tagPopover.getByTestId("tag-read-more").getByRole("link");
+  }
+
+  get croissantDownloadLink(): Locator {
+    return this.tagPopover.getByTestId("croissant-download").getByRole("link");
+  }
+
+  get publicationsDrawer(): Locator {
+    return this.page.getByTestId("publications-drawer");
+  }
+
+  get publicationEntries(): Locator {
+    return this.publicationsDrawer.getByTestId(/^literature-entry-/);
   }
 
   // ---- toolbar -------------------------------------------------------------------------
 
   get searchBox(): Locator {
-    return this.page.getByRole("searchbox", { name: "Search datasets" });
+    return this.page.getByTestId("search-input");
   }
 
   get clearSearchButton(): Locator {
-    return this.page.getByRole("button", { name: "Clear search", exact: true });
+    return this.page.getByTestId("search-clear");
   }
 
   get clearAllButton(): Locator {
-    return this.page.getByRole("button", { name: "Clear all", exact: true });
+    return this.page.getByTestId("clear-all-button");
   }
 
   /** "12 of 64": datasets shown of all datasets. */
   get counter(): Locator {
-    return this.page.getByText(/^\d+ of \d+$/);
+    return this.page.getByTestId("dataset-counter");
   }
 
-  get categoryGroup(): Locator {
-    return this.page.getByRole("group", { name: "Filter by category" });
+  get categoryFilters(): Locator {
+    return this.page.getByTestId("category-filters");
   }
 
   chip(category: string): Locator {
-    return this.categoryGroup.getByRole("checkbox", { name: new RegExp(`^${category} \\d+$`) });
+    return this.page.getByTestId(`category-filter-${slug(category)}`);
   }
 
   get chips(): Locator {
-    return this.categoryGroup.getByRole("checkbox");
+    return this.categoryFilters.getByTestId(/^category-filter-/);
+  }
+
+  chipCount(category: string): Locator {
+    return this.chip(category).getByTestId("chip-count");
+  }
+
+  get chipTooltip(): Locator {
+    return this.page.getByTestId("category-tooltip");
   }
 
   get cardsToggle(): Locator {
-    return this.page.getByRole("button", { name: "Cards", exact: true });
+    return this.page.getByTestId("view-toggle-cards");
   }
 
   get networkToggle(): Locator {
-    return this.page.getByRole("button", { name: "Network", exact: true });
+    return this.page.getByTestId("view-toggle-network");
   }
 
   // ---- cards ---------------------------------------------------------------------------
 
   get cards(): Locator {
-    return this.page.getByRole("article");
+    return this.page.getByTestId(/^dataset-card-/);
   }
 
-  card(name: string): Locator {
-    return this.page.getByRole("article", { name, exact: true });
+  card(id: string): Locator {
+    return this.page.getByTestId(`dataset-card-${id}`);
   }
 
-  cardId(card: Locator): Locator {
-    return card.locator("xpath=.//h3/following-sibling::div[1]");
+  cardName(id: string): Locator {
+    return this.card(id).getByTestId("dataset-name");
   }
 
-  schemaLink(card: Locator): Locator {
-    return card.getByRole("link", { name: "Schema" });
+  cardId(id: string): Locator {
+    return this.card(id).getByTestId("dataset-id");
   }
 
-  accessLink(card: Locator): Locator {
-    return card.getByRole("link", { name: "Access data" });
+  cardDescription(id: string): Locator {
+    return this.card(id).getByTestId("dataset-description");
   }
 
-  /** The Add / In bag button of a card or panel. */
-  addButton(scope: Locator): Locator {
-    return scope.getByRole("button", { name: /^(Add|Remove) .* (to|from) bag$/ });
+  cardCategories(id: string): Locator {
+    return this.card(id).getByTestId("dataset-category");
   }
 
-  /** "Associations 12" style numbers in the counter: how many datasets match right now. */
+  cardSchemaLink(id: string): Locator {
+    return this.card(id).getByTestId("dataset-schema-link");
+  }
+
+  cardAccessLink(id: string): Locator {
+    return this.card(id).getByTestId("dataset-access-link");
+  }
+
+  /** The Add / In bag button of a card. */
+  cardToggle(id: string): Locator {
+    return this.card(id).getByTestId("basket-toggle");
+  }
+
+  /** The "more" / "hide" toggle of a long description. */
+  cardDescriptionToggle(id: string): Locator {
+    return this.card(id).getByTestId("long-text-toggle");
+  }
+
+  /** The id of every dataset card on the page, in page order. */
+  async cardIds(): Promise<string[]> {
+    return this.cards.evaluateAll((cards) =>
+      cards.map((card) => (card.getAttribute("data-testid") ?? "").replace(/^dataset-card-/, ""))
+    );
+  }
+
+  /** What every card on the page shows: name, id, categories, links and the amount of description text. */
+  async cardFacts(): Promise<
+    { testId: string; name: string; id: string; categories: string[]; schemaHref: string; accessHref: string; descriptionLength: number }[]
+  > {
+    return this.cards.evaluateAll((cards) =>
+      cards.map((card) => {
+        const text = (testId: string) => card.querySelector(`[data-testid='${testId}']`)?.textContent ?? "";
+        const href = (testId: string) => card.querySelector(`[data-testid='${testId}']`)?.getAttribute("href") ?? "";
+        return {
+          testId: card.getAttribute("data-testid") ?? "",
+          name: text("dataset-name"),
+          id: text("dataset-id"),
+          categories: [...card.querySelectorAll("[data-testid='dataset-category']")].map((c) => c.textContent ?? ""),
+          schemaHref: href("dataset-schema-link"),
+          accessHref: href("dataset-access-link"),
+          descriptionLength: text("dataset-description").length,
+        };
+      })
+    );
+  }
+
+  /** The categories named on the cards, and the ones the filter chips offer (lower case, dashes). */
+  async categorySlugs(): Promise<{ onCards: string[]; onChips: string[] }> {
+    const onCards = new Set<string>();
+    for (const card of await this.cardFacts()) for (const c of card.categories) onCards.add(slug(c));
+    const onChips = await this.chips.evaluateAll((chips) =>
+      chips.map((chip) => (chip.getAttribute("data-testid") ?? "").replace(/^category-filter-/, ""))
+    );
+    return { onCards: [...onCards], onChips };
+  }
+
+  /** The number of datasets the counter says are shown. */
   async shownCount(): Promise<number> {
     const text = (await this.counter.textContent()) ?? "";
     const match = /^(\d+) of (\d+)$/.exec(text);
@@ -135,7 +227,7 @@ export class DownloadsPage {
     await expect(this.cards).toHaveCount(shown);
   }
 
-  /** Total number of datasets: read from the counter, and checked against the cards on an unfiltered page. */
+  /** Total number of datasets, read from the counter. */
   async totalDatasets(): Promise<number> {
     const text = (await this.counter.textContent()) ?? "";
     const total = Number(/of (\d+)$/.exec(text)?.[1]);
@@ -151,78 +243,140 @@ export class DownloadsPage {
   // ---- empty states and results bar ---------------------------------------------------
 
   get emptyState(): Locator {
-    return this.page.getByRole("status").filter({ has: this.page.getByRole("heading", { level: 3 }) });
+    return this.page.getByTestId("empty-state");
+  }
+
+  get emptyStateTitle(): Locator {
+    return this.page.getByTestId("empty-state-title");
+  }
+
+  get emptyStateBody(): Locator {
+    return this.page.getByTestId("empty-state-body");
+  }
+
+  get emptyStateAction(): Locator {
+    return this.page.getByTestId("empty-state-action");
   }
 
   get resultsSummary(): Locator {
-    return this.page.locator("p").filter({ has: this.page.locator("b") });
+    return this.page.getByTestId("results-summary");
   }
 
   get addAllButton(): Locator {
-    return this.page.getByRole("button", { name: /^(\+ Add all \d+ to bag|All in bag)$/ });
+    return this.page.getByTestId("add-all-button");
   }
 
   // ---- bag -----------------------------------------------------------------------------
 
-  /** The toolbar's "Your data bag" button; its accessible name carries the count. */
+  /** The toolbar's "Your data bundle" button; its accessible name carries the count. */
   get bagButton(): Locator {
-    // includeHidden: while the drawer is open the page behind it is aria-hidden
-    return this.page.getByRole("button", { name: /^Your data bag, \d+ datasets?$/, includeHidden: true });
+    return this.page.getByTestId("basket-button");
+  }
+
+  get bagBadge(): Locator {
+    return this.page.getByTestId("basket-count");
   }
 
   async expectBagCount(count: number): Promise<void> {
     // read from aria-label: while the drawer is open the page behind it is aria-hidden and has no computed name
-    await expect(this.bagButton).toHaveAttribute("aria-label", `Your data bag, ${plural(count, "dataset")}`);
+    await expect(this.bagButton).toHaveAttribute("aria-label", `Your data bundle, ${plural(count, "dataset")}`);
+    if (count === 0) await expect(this.bagBadge).toHaveCount(0);
+    else await expect(this.bagBadge).toHaveText(String(count));
   }
 
   get drawer(): Locator {
-    // the drawer's dialog element carries no accessible name, so it is found by its heading
-    return this.page.getByRole("dialog").filter({ has: this.page.getByRole("heading", { name: "Your data bag", level: 2 }) });
+    return this.page.getByTestId("basket-drawer");
+  }
+
+  get drawerTitle(): Locator {
+    return this.drawer.getByTestId("basket-drawer-title");
+  }
+
+  get drawerCount(): Locator {
+    return this.drawer.getByTestId("basket-drawer-count");
+  }
+
+  get drawerListTitle(): Locator {
+    return this.drawer.getByTestId("basket-list-title");
   }
 
   get drawerRows(): Locator {
-    return this.drawer.getByRole("listitem");
+    return this.drawer.getByTestId(/^basket-row-/);
   }
 
-  drawerRow(name: string): Locator {
-    return this.drawerRows.filter({ hasText: name });
+  drawerRow(id: string): Locator {
+    return this.drawer.getByTestId(`basket-row-${id}`);
+  }
+
+  drawerRowName(id: string): Locator {
+    return this.drawerRow(id).getByTestId("basket-item-name");
+  }
+
+  drawerRowSchemaLink(id: string): Locator {
+    return this.drawerRow(id).getByTestId("basket-item-schema");
+  }
+
+  drawerRowRemove(id: string): Locator {
+    return this.drawerRow(id).getByTestId("basket-item-remove");
   }
 
   get emptyBagButton(): Locator {
-    return this.drawer.getByRole("button", { name: "Empty bag" });
+    return this.drawer.getByTestId("basket-empty-button");
   }
 
   get closeBagButton(): Locator {
-    return this.drawer.getByRole("button", { name: "Close bag" });
+    return this.drawer.getByTestId("basket-drawer-close");
   }
 
   get undoSnackbar(): Locator {
-    return this.page.getByRole("alert").filter({ hasText: "Bag emptied" });
+    return this.page.getByTestId("undo-snackbar");
   }
 
   get undoButton(): Locator {
-    return this.page.getByRole("button", { name: "Undo", exact: true });
+    return this.page.getByTestId("undo-button");
   }
 
   /** Open the bag drawer and check it lists `count` datasets. */
   async openBag(count: number): Promise<void> {
     await this.bagButton.click();
     await expect(this.drawer).toBeVisible();
-    await expect(this.drawer.getByText(plural(count, "dataset"), { exact: true })).toBeVisible();
+    await expect(this.drawerCount).toHaveText(plural(count, "dataset"));
     await expect(this.drawerRows).toHaveCount(count);
   }
 
   get coachMark(): Locator {
-    return this.page.getByRole("dialog").filter({ has: this.page.getByRole("heading", { name: "Added to your bag" }) });
+    return this.page.getByTestId("basket-coach-mark");
   }
 
-  scriptTab(name: ScriptTab): Locator {
-    return this.drawer.getByRole("button", { name, exact: true });
+  get coachMarkOpenButton(): Locator {
+    return this.page.getByTestId("basket-coach-open");
+  }
+
+  get coachMarkDismissButton(): Locator {
+    return this.page.getByTestId("basket-coach-dismiss");
+  }
+
+  // ---- access script of the bag --------------------------------------------------------
+
+  get scriptTitle(): Locator {
+    return this.drawer.getByTestId("access-script-title");
+  }
+
+  scriptTab(tool: ScriptTool): Locator {
+    return this.drawer.getByTestId(`btn-group-tab-${tool}`);
   }
 
   /** The text of the access script currently shown in the drawer. */
   get scriptText(): Locator {
-    return this.drawer.locator("pre");
+    return this.drawer.getByTestId("access-script-text");
+  }
+
+  get copyScriptButton(): Locator {
+    return this.drawer.getByTestId("access-script-copy");
+  }
+
+  get copyTooltip(): Locator {
+    return this.page.getByTestId("copy-tooltip");
   }
 
   /**
@@ -232,7 +386,7 @@ export class DownloadsPage {
   async expectScriptDatasets(ids: string[]): Promise<void> {
     await expect
       .poll(async () => {
-        const text = (await this.scriptText.innerText()).replace(/\u00a0/g, " ");
+        const text = (await this.scriptText.innerText()).replace(/ /g, " ");
         const lines = text.split("\n");
         const start = lines.findIndex((line) => line.startsWith("printf '%s"));
         const end = lines.findIndex((line) => line.startsWith("while read"));
@@ -244,33 +398,91 @@ export class DownloadsPage {
       .toEqual(ids);
   }
 
-  copyScriptButton(name: ScriptTab): Locator {
-    return this.drawer.getByRole("button", { name: `Copy ${name} script` });
-  }
-
   // ---- schema / access dialog ---------------------------------------------------------
 
   get datasetDialog(): Locator {
-    return this.page.getByRole("dialog", { name: /^Dataset: / });
+    return this.page.getByTestId("dataset-dialog");
+  }
+
+  get dialogTitle(): Locator {
+    return this.datasetDialog.getByTestId("dataset-dialog-title");
   }
 
   get dialogSwitchButton(): Locator {
-    return this.datasetDialog.getByRole("button", { name: /^(Show Schema|Access Data)$/ });
+    return this.datasetDialog.getByTestId("dataset-dialog-switch");
   }
 
   get dialogCloseButton(): Locator {
-    return this.datasetDialog.getByRole("button", { name: "Close", exact: true });
+    return this.datasetDialog.getByTestId("dataset-dialog-close");
   }
 
   /** The columns of a schema dialog. */
   get schemaTable(): Locator {
-    return this.datasetDialog.getByRole("table");
+    return this.datasetDialog.getByTestId("schema-table");
+  }
+
+  get schemaHeaders(): Locator {
+    return this.schemaTable.getByTestId("schema-header");
+  }
+
+  get schemaRows(): Locator {
+    return this.schemaTable.getByTestId("schema-row");
+  }
+
+  /** The row of the column of that name (top-level or nested; nested names repeat rarely). */
+  schemaRow(columnName: string): Locator {
+    return this.schemaRows.filter({
+      has: this.page.getByTestId("schema-column-name").filter({ hasText: new RegExp(`^(│⎯)+${columnName}\\s*$`) }),
+    });
+  }
+
+  get schemaKeyTooltip(): Locator {
+    return this.page.getByTestId("schema-key-tooltip");
+  }
+
+  get accessLocations(): Locator {
+    return this.datasetDialog.getByTestId("access-locations");
+  }
+
+  get accessScripts(): Locator {
+    return this.datasetDialog.getByTestId("access-scripts");
+  }
+
+  locationTab(tab: LocationTab): Locator {
+    return this.accessLocations.getByTestId(`btn-group-tab-${tab}`);
+  }
+
+  accessScriptTab(tool: ScriptTool): Locator {
+    return this.accessScripts.getByTestId(`btn-group-tab-${tool}`);
+  }
+
+  /** The location currently shown in the dialog. */
+  get locationCode(): Locator {
+    return this.accessLocations.getByTestId("code-block");
+  }
+
+  /** The command currently shown in the dialog. */
+  get scriptCode(): Locator {
+    return this.accessScripts.getByTestId("code-block");
+  }
+
+  get browseLink(): Locator {
+    return this.accessLocations.getByTestId("access-browse-link").getByRole("link");
   }
 
   // ---- network view --------------------------------------------------------------------
 
+  get networkView(): Locator {
+    return this.page.getByTestId("network-view");
+  }
+
+  /** The canvas area that holds the graph and the details panel. */
+  get canvas(): Locator {
+    return this.page.getByTestId("network-canvas");
+  }
+
   get graphNodes(): Locator {
-    return this.page.locator("g.graph-node");
+    return this.page.getByTestId(/^graph-node-(?!box$)/);
   }
 
   /** The node of a dataset, by dataset id. */
@@ -280,26 +492,46 @@ export class DownloadsPage {
 
   /** The visible box of a node: the part of it that takes clicks and hovers. */
   nodeBox(id: string): Locator {
-    return this.node(id).locator("rect.node-box");
+    return this.node(id).getByTestId("graph-node-box");
   }
 
-  scopeRadio(name: "All datasets" | RegExp): Locator {
-    return this.page.getByRole("radiogroup", { name: "Datasets shown" }).getByRole("radio", { name });
+  get scopeAll(): Locator {
+    return this.page.getByTestId("network-scope-all");
   }
 
-  get layoutSwitch(): Locator {
-    return this.page.getByRole("radiogroup", { name: "Layout" });
+  get scopeBag(): Locator {
+    return this.page.getByTestId("network-scope-basket");
   }
 
-  /** The category lane backgrounds the stacked layout draws behind the nodes. */
+  /** The group that holds the scope switch: it is the only switch above the canvas. */
+  get scopeSwitch(): Locator {
+    return this.page.getByTestId("network-scope");
+  }
+
+  get hint(): Locator {
+    return this.page.getByTestId("network-hint");
+  }
+
+  get legend(): Locator {
+    return this.page.getByTestId("network-legend");
+  }
+
+  legendItem(category: string): Locator {
+    return this.page.getByTestId(`legend-item-${slug(category)}`);
+  }
+
+  get legendItems(): Locator {
+    return this.legend.getByTestId(/^legend-item-/);
+  }
+
   get lanes(): Locator {
-    return this.page.locator("g.graph-lane");
+    return this.page.getByTestId("graph-lane");
   }
 
-  /** For each node, whether its position lies inside a lane band, with the lane's title. */
+  /** For each node, the title of the lane band its position lies in (null when it lies in none). */
   async nodeLanes(): Promise<{ id: string; lane: string | null }[]> {
     return this.page.evaluate(() => {
-      const lanes = [...document.querySelectorAll("g.graph-lane")].map((g) => {
+      const lanes = [...document.querySelectorAll("[data-testid='graph-lane']")].map((g) => {
         const rect = g.querySelector("rect");
         return {
           title: g.querySelector("text")?.textContent ?? "",
@@ -309,52 +541,152 @@ export class DownloadsPage {
           h: Number(rect?.getAttribute("height")),
         };
       });
-      return [...document.querySelectorAll("g.graph-node")].map((node) => {
-        const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(node.getAttribute("transform") ?? "");
-        const x = Number(m?.[1]);
-        const y = Number(m?.[2]);
-        const lane = lanes.find((l) => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
-        return { id: node.getAttribute("data-testid") ?? "", lane: lane?.title ?? null };
-      });
+      return [...document.querySelectorAll("[data-testid^='graph-node-']:not([data-testid='graph-node-box'])")].map(
+        (node) => {
+          const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(node.getAttribute("transform") ?? "");
+          const x = Number(m?.[1]);
+          const y = Number(m?.[2]);
+          const lane = lanes.find((l) => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
+          return { id: node.getAttribute("data-testid") ?? "", lane: lane?.title ?? null };
+        }
+      );
     });
   }
 
-  get legend(): Locator {
-    return this.page.getByRole("list", { name: "Legend" });
-  }
-
-  /** The docked details panel of the selected node. */
-  panel(label: string): Locator {
-    return this.page.getByRole("complementary", { name: `${label} details` });
-  }
-
-  get panels(): Locator {
-    return this.page.getByRole("complementary");
-  }
-
   get selectedChip(): Locator {
-    return this.page.getByText(/^Selected: /);
+    return this.page.getByTestId("network-selected-chip");
   }
 
-  /** The x of the "Selected: ..." chip above the canvas. */
   get selectedChipClear(): Locator {
-    return this.selectedChip.locator("xpath=..").getByRole("button", { name: "Clear selection" });
+    return this.page.getByTestId("network-selected-clear");
+  }
+
+  get zoomIn(): Locator {
+    return this.page.getByTestId("network-zoom-in");
+  }
+
+  get zoomOut(): Locator {
+    return this.page.getByTestId("network-zoom-out");
+  }
+
+  get zoomFit(): Locator {
+    return this.page.getByTestId("network-zoom-fit");
   }
 
   /** The zoom/pan transform of the whole canvas. */
   get zoomLayer(): Locator {
-    return this.page.locator("g.zoom-layer");
+    return this.page.getByTestId("network-zoom-layer");
   }
 
-  nodePopover(label: string): Locator {
-    return this.page.getByRole("dialog", { name: `${label} preview` });
+  // ---- details panel of the selected node ---------------------------------------------
+
+  /** The docked details panel of the selected node (there is at most one). */
+  get panel(): Locator {
+    return this.page.getByTestId("node-panel");
+  }
+
+  get panelName(): Locator {
+    return this.panel.getByTestId("node-panel-name");
+  }
+
+  get panelId(): Locator {
+    return this.panel.getByTestId("node-panel-id");
+  }
+
+  get panelType(): Locator {
+    return this.panel.getByTestId("node-panel-type");
+  }
+
+  get panelClose(): Locator {
+    return this.panel.getByTestId("node-panel-close");
+  }
+
+  get panelSchemaLink(): Locator {
+    return this.panel.getByTestId("dataset-schema-link");
+  }
+
+  get panelAccessLink(): Locator {
+    return this.panel.getByTestId("dataset-access-link");
+  }
+
+  /** The Add / In bag button of the selected node itself (the first in the panel). */
+  get panelToggle(): Locator {
+    return this.panel.getByTestId("basket-toggle").first();
+  }
+
+  get connectedTitle(): Locator {
+    return this.panel.getByTestId("node-panel-connected-title");
+  }
+
+  get connectedRows(): Locator {
+    return this.panel.getByTestId(/^connected-row-/);
+  }
+
+  connectedRow(id: string): Locator {
+    return this.panel.getByTestId(`connected-row-${id}`);
+  }
+
+  connectedRowSelect(id: string): Locator {
+    return this.connectedRow(id).getByTestId("connected-item-select");
+  }
+
+  get connectedFilter(): Locator {
+    return this.panel.getByTestId("connected-filter");
+  }
+
+  get connectedToggleAll(): Locator {
+    return this.panel.getByTestId("connected-toggle-all");
+  }
+
+  connectedGroup(category: string): Locator {
+    return this.panel.getByTestId(`connected-group-${slug(category)}`);
+  }
+
+  get connectedGroups(): Locator {
+    return this.panel.getByTestId(/^connected-group-/);
+  }
+
+  /** The ids of the datasets the panel lists as connected, in list order. */
+  async connectedIds(): Promise<string[]> {
+    return this.connectedRows.evaluateAll((rows) =>
+      rows.map((row) => (row.getAttribute("data-testid") ?? "").replace(/^connected-row-/, ""))
+    );
   }
 
   /** Select a node by clicking it and wait for its details panel. */
-  async selectNode(id: string, label: string): Promise<Locator> {
+  async selectNode(id: string, name: string): Promise<void> {
     await this.nodeBox(id).click();
-    const panel = this.panel(label);
-    await expect(panel).toBeVisible();
-    return panel;
+    await expect(this.panel).toBeVisible();
+    await expect(this.panelName).toHaveText(name);
+    await expect(this.panelId).toHaveText(id);
+  }
+
+  // ---- hover preview ------------------------------------------------------------------
+
+  get nodePopover(): Locator {
+    return this.page.getByTestId("node-popover");
+  }
+
+  get popoverName(): Locator {
+    return this.nodePopover.getByTestId("node-popover-name");
+  }
+
+  get popoverSchemaLink(): Locator {
+    return this.nodePopover.getByTestId("dataset-schema-link");
+  }
+
+  get popoverAccessLink(): Locator {
+    return this.nodePopover.getByTestId("dataset-access-link");
+  }
+
+  get popoverToggle(): Locator {
+    return this.nodePopover.getByTestId("basket-toggle");
+  }
+
+  /** Hover a node and wait for its preview. */
+  async previewNode(id: string, name: string): Promise<void> {
+    await this.nodeBox(id).hover();
+    await expect(this.nodePopover).toBeVisible();
+    await expect(this.popoverName).toHaveText(name);
   }
 }

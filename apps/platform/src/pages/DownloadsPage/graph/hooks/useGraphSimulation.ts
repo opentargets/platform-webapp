@@ -106,7 +106,7 @@ export const useGraphSimulation = ({
 
     svg.append('style').text(GRAPH_STYLES);
 
-    const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
+    const zoomLayer = svg.append('g').attr('class', 'zoom-layer').attr('data-testid', 'network-zoom-layer');
     // Category bands behind everything
     const laneGroup = zoomLayer.append('g').attr('class', 'lanes').style('pointer-events', 'none');
     const linkGroup = zoomLayer.append('g').attr('class', 'links');
@@ -174,7 +174,7 @@ export const useGraphSimulation = ({
           .attr('data-testid', (d: any) => `graph-node-${d.id}`);
         // Outer ring, only shown while selected (see GRAPH_STYLES)
         g.append('rect').attr('class', 'node-ring');
-        g.append('rect').attr('class', 'node-box');
+        g.append('rect').attr('class', 'node-box').attr('data-testid', 'graph-node-box');
         // Check dot at the top-right corner, only shown while in the bag
         const check = g.append('g').attr('class', 'node-check');
         check.append('circle').attr('r', CHECK_DOT_RADIUS).attr('fill', PRIMARY_DARK).attr('stroke', '#fff').attr('stroke-width', 1);
@@ -282,7 +282,7 @@ export const useGraphSimulation = ({
         .selectAll('g.graph-lane')
         .data(placement.lanes, (d: any) => d.category)
         .join((enter: any) => {
-          const g = enter.append('g').attr('class', 'graph-lane');
+          const g = enter.append('g').attr('class', 'graph-lane').attr('data-testid', 'graph-lane');
           g.append('rect').attr('rx', 4).attr('ry', 4);
           g.append('text');
           return g;

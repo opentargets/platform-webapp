@@ -48,19 +48,24 @@ function LibrariesTag() {
           <Box>
             Our scripts and schema conforms to Croissant. This is a standard format for dataset
             metadata.{" "}
-            <Link to={state.downloadsData?.conformsTo} external>
-              {" "}
-              Read more
-            </Link>
+            <span data-testid="tag-read-more">
+              <Link to={state.downloadsData?.conformsTo} external>
+                {" "}
+                Read more
+              </Link>
+            </span>
             {/* <Divider /> */}
             <Box sx={{ pt: 1 }}>
-              <Link onClick={saveMetadata}> Download Croissant metadata</Link>
+              <Box data-testid="croissant-download">
+                <Link onClick={saveMetadata}> Download Croissant metadata</Link>
+              </Box>
             </Box>
           </Box>
         }
       >
         <Chip
           clickable
+          data-testid="tag-croissant"
           label={
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {" "}
@@ -84,15 +89,18 @@ function VersionTag() {
         title={`Current version: ${state.downloadsData?.version}`}
         body={
           <Box>
-            <Link to={"https://platform-docs.opentargets.org/release-notes"} external>
-              Read more
-            </Link>{" "}
+            <span data-testid="tag-read-more">
+              <Link to={"https://platform-docs.opentargets.org/release-notes"} external>
+                Read more
+              </Link>
+            </span>{" "}
             on release highlights for the Open Targets Platform{" "}
           </Box>
         }
       >
         <Chip
           clickable
+          data-testid="tag-version"
           label={
             <>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -125,6 +133,7 @@ function DOITag() {
         customLabel={
           <Chip
             component="span"
+            data-testid="tag-cite-us"
             label={
               <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 {" "}
@@ -149,13 +158,16 @@ function FormatsTag() {
         body={
           <Box>
             Read about this format{" "}
-            <Link to={"https://parquet.apache.org/docs/overview/"} external>
-              here.
-            </Link>
+            <span data-testid="tag-read-more">
+              <Link to={"https://parquet.apache.org/docs/overview/"} external>
+                here.
+              </Link>
+            </span>
           </Box>
         }
       >
         <Chip
+          data-testid="tag-parquet"
           label={
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {" "}
@@ -171,7 +183,7 @@ function FormatsTag() {
   );
 }
 
-function TagsDialog({ title = "", body = "", children = <></> }) {
+function TagsDialog({ title = "", body = "", children = <></>, testId = "tag-popover" }) {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
   const id = open ? "simple-popper" : undefined;
@@ -193,6 +205,7 @@ function TagsDialog({ title = "", body = "", children = <></> }) {
       </span>
       <Popover
         id={id}
+        data-testid={testId}
         open={open}
         anchorEl={anchorEl}
         onClose={handleClose}

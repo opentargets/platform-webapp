@@ -49,6 +49,7 @@ const LongText = ({
           <Box
             component="span"
             sx={{ color: "primary.main", cursor: "pointer" }}
+            data-testid="long-text-toggle"
             onClick={() => setShowMore(!showMore)}
           >
             {showMore ? " hide" : (displayText ?? " show more")}

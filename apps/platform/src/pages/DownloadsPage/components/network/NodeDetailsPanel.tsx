@@ -41,6 +41,7 @@ function NodeDetailsPanel({ node, neighbours, inBasket, onToggleBasket, onAddAll
     <Box
       component="aside"
       aria-label={`${node.label} details`}
+      data-testid="node-panel"
       sx={theme => ({
         position: "absolute",
         top: 0,
@@ -66,23 +67,33 @@ function NodeDetailsPanel({ node, neighbours, inBasket, onToggleBasket, onAddAll
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <CategoryDot category={node.type} />
-          <Typography component="span" sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600], flex: 1 })}>
+          <Typography
+            component="span"
+            data-testid="node-panel-type"
+            sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600], flex: 1 })}
+          >
             {node.type}
           </Typography>
-          <IconButton size="small" onClick={onClose} aria-label="Clear selection" sx={{ m: -0.5 }}>
+          <IconButton
+            size="small"
+            onClick={onClose}
+            aria-label="Clear selection"
+            data-testid="node-panel-close"
+            sx={{ m: -0.5 }}
+          >
             <FontAwesomeIcon icon={faXmark} style={{ fontSize: 14 }} />
           </IconButton>
         </Box>
         <Box>
-          <Typography component="h3" sx={theme => ({ fontSize: "1.125rem", fontWeight: 700, lineHeight: 1.3, color: theme.palette.grey[800], m: 0 })}>
+          <Typography component="h3" data-testid="node-panel-name" sx={theme => ({ fontSize: "1.125rem", fontWeight: 700, lineHeight: 1.3, color: theme.palette.grey[800], m: 0 })}>
             {node.label}
           </Typography>
-          <Typography component="div" sx={theme => ({ fontFamily: MONO_FONT, fontSize: ".75rem", color: theme.palette.grey[500] })}>
+          <Typography component="div" data-testid="node-panel-id" sx={theme => ({ fontFamily: MONO_FONT, fontSize: ".75rem", color: theme.palette.grey[500] })}>
             {node.id}
           </Typography>
         </Box>
         {node.description && (
-          <Typography sx={theme => ({ fontSize: ".8125rem", lineHeight: 1.5, color: theme.palette.grey[700] })}>
+          <Typography data-testid="node-panel-description" sx={theme => ({ fontSize: ".8125rem", lineHeight: 1.5, color: theme.palette.grey[700] })}>
             {node.description}
           </Typography>
         )}
@@ -97,7 +108,7 @@ function NodeDetailsPanel({ node, neighbours, inBasket, onToggleBasket, onAddAll
         <GroupedConnectedList neighbours={neighbours} inBasket={inBasket} onToggleBasket={onToggleBasket} onAddAll={onAddAll} onSelect={onSelect} />
       ) : (
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <Typography component="h4" sx={theme => ({ ...sectionLabelSx(theme), m: 0, padding: "12px 18px 6px" })}>
+          <Typography component="h4" data-testid="node-panel-connected-title" sx={theme => ({ ...sectionLabelSx(theme), m: 0, padding: "12px 18px 6px" })}>
             Connected datasets · {neighbours.length}
           </Typography>
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
@@ -125,6 +136,7 @@ export function ConnectedRow({ node, inBasket, onToggleBasket, onSelect, indente
   return (
     <Box
       component="li"
+      data-testid={`connected-row-${node.id}`}
       sx={theme => ({
         display: "flex",
         alignItems: "center",
@@ -139,6 +151,7 @@ export function ConnectedRow({ node, inBasket, onToggleBasket, onSelect, indente
         component="button"
         type="button"
         onClick={() => onSelect(node.id)}
+        data-testid="connected-item-select"
         sx={{
           flex: 1,
           minWidth: 0,
@@ -152,10 +165,10 @@ export function ConnectedRow({ node, inBasket, onToggleBasket, onSelect, indente
           "&:hover .connected-name": { textDecoration: "underline" },
         }}
       >
-        <Typography className="connected-name" component="div" sx={theme => ({ fontSize: ".8125rem", fontWeight: 500, color: theme.palette.grey[800], overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" })}>
+        <Typography className="connected-name" component="div" data-testid="connected-item-name" sx={theme => ({ fontSize: ".8125rem", fontWeight: 500, color: theme.palette.grey[800], overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" })}>
           {node.label}
         </Typography>
-        <Typography component="div" sx={theme => ({ fontFamily: MONO_FONT, fontSize: ".6875rem", color: theme.palette.grey[500] })}>
+        <Typography component="div" data-testid="connected-item-id" sx={theme => ({ fontFamily: MONO_FONT, fontSize: ".6875rem", color: theme.palette.grey[500] })}>
           {node.id}
         </Typography>
       </Box>
@@ -211,13 +224,14 @@ function GroupedConnectedList({ neighbours, inBasket, onToggleBasket, onAddAll, 
   return (
     <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, padding: "12px 18px 6px" }}>
-        <Typography component="h4" sx={theme => ({ ...sectionLabelSx(theme), m: 0, flex: 1 })}>
+        <Typography component="h4" data-testid="node-panel-connected-title" sx={theme => ({ ...sectionLabelSx(theme), m: 0, flex: 1 })}>
           Connected datasets · {neighbours.length}
         </Typography>
         <Box
           component="button"
           type="button"
           onClick={() => setAll(anyExpanded)}
+          data-testid="connected-toggle-all"
           sx={theme => ({ border: 0, padding: 0, background: "none", cursor: "pointer", font: "inherit", fontSize: ".75rem", color: theme.palette.primary.main, "&:hover": { textDecoration: "underline" } })}
         >
           {anyExpanded ? "Collapse all" : "Expand all"}
@@ -245,6 +259,7 @@ function GroupedConnectedList({ neighbours, inBasket, onToggleBasket, onAddAll, 
           onChange={e => setFilter(e.target.value)}
           placeholder="Filter connections"
           aria-label="Filter connections"
+          data-testid="connected-filter"
           sx={theme => ({ flex: 1, minWidth: 0, border: 0, outline: "none", background: "transparent", font: "inherit", fontSize: ".8125rem", color: theme.palette.text.primary, "&::-webkit-search-cancel-button": { display: "none" } })}
         />
       </Box>
@@ -256,7 +271,7 @@ function GroupedConnectedList({ neighbours, inBasket, onToggleBasket, onAddAll, 
           const collapsed = !q && isCollapsed(category, nodes.length);
           const missing = nodes.filter(n => !inBasket(n.id)).map(n => n.id);
           return (
-            <Box key={category}>
+            <Box key={category} data-testid={`connected-group-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
               <ConnectedGroupHeader
                 category={category}
                 count={nodes.length}
@@ -310,6 +325,7 @@ export function ConnectedGroupHeader({ category, count, collapsed, onToggle, mis
         type="button"
         onClick={onToggle}
         aria-expanded={!collapsed}
+        data-testid="connected-header-toggle"
         sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 1, border: 0, padding: 0, background: "none", cursor: "pointer", font: "inherit", color: "inherit", textAlign: "left" }}
       >
         <FontAwesomeIcon icon={collapsed ? faChevronRight : faChevronDown} style={{ fontSize: 9, width: 10 }} aria-hidden />
@@ -327,6 +343,7 @@ export function ConnectedGroupHeader({ category, count, collapsed, onToggle, mis
         onClick={onAddAll}
         disabled={missingCount === 0}
         aria-label={`Add all ${category} connections to bag`}
+        data-testid="connected-header-add-all"
         sx={theme => ({
           border: 0,
           padding: 0,

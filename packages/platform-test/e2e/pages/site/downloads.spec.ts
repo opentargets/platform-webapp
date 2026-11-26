@@ -219,7 +219,8 @@ test.describe("Downloads page", () => {
       await expect(downloads.chip("Drug")).not.toHaveAccessibleName("Drug 0");
     });
 
-    // Typing the same term again right after clearing it must search again.
+    // Typing the same term again right after clearing it must search again. Known app bug:
+    // the debounced value has not changed yet, so SearchField never dispatches the second search.
     test("a term typed again right after clearing is applied", async ({ page }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
@@ -453,7 +454,7 @@ test.describe("Downloads page", () => {
       await downloads.addButton(downloads.card(DISEASE.name)).click();
       await downloads.openBag(2);
 
-      await expect(downloads.drawer.getByRole("heading", { level: 2 })).toHaveText("Your data bag");
+      await expect(downloads.drawer.getByRole("heading", { level: 2 })).toHaveText("Your data bundle");
       await expect(downloads.drawer.getByRole("heading", { name: "Datasets · file location" })).toBeVisible();
       await expect(downloads.drawerRows.nth(0)).toContainText(TARGET.name);
       await expect(downloads.drawerRows.nth(1)).toContainText(DISEASE.name);
