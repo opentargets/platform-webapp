@@ -161,17 +161,29 @@ test.describe("Target comparative genomics section", () => {
     await genomics.table.expectPosition(1, total, total);
 
     const homologyTypes = new RegExp(`^\\s*(${HOMOLOGY_TYPES.join("|")})\\s*$`);
-    for (let row = 0; row < total; row++) {
-      await expect(genomics.cell(row, "species")).toHaveText(/^\s*[A-Z][A-Za-z /()-]+\s*$/);
-      await expect(genomics.cell(row, "homologyType")).toHaveText(homologyTypes);
-      const homologue = genomics.cell(row, "homologue").getByRole("link");
-      await expect(homologue).toHaveText(/^\S+$/);
-      await expect(homologue).toHaveAttribute("href", ENSEMBL_GENE_URL);
-      for (const column of ["queryIdentity", "targetIdentity"] as const) {
-        await expect(genomics.cell(row, column)).toHaveText(IDENTITY);
-        const identity = Number((await genomics.cell(row, column).innerText()).trim());
-        expect(identity).toBeGreaterThan(0);
-        expect(identity).toBeLessThanOrEqual(100);
+    // read the whole page of rows in one go: a per-cell assertion on 100+ rows is slow
+    const rows = await genomics.table.rows.evaluateAll((trs) =>
+      trs.map((tr) => {
+        const cells = Array.from(tr.querySelectorAll("td"));
+        const link = cells[2]?.querySelector("a");
+        return {
+          cells: cells.map((cell) => (cell.textContent ?? "").trim()),
+          href: link?.getAttribute("href") ?? "",
+          linkText: (link?.textContent ?? "").trim(),
+        };
+      })
+    );
+    expect(rows).toHaveLength(total);
+    for (const row of rows) {
+      expect(row.cells, "each row has the five columns").toHaveLength(5);
+      expect(row.cells[0]).toMatch(/^[A-Z][A-Za-z /()-]+$/);
+      expect(row.cells[1]).toMatch(homologyTypes);
+      expect(row.linkText).toMatch(/^\S+$/);
+      expect(row.href).toMatch(ENSEMBL_GENE_URL);
+      for (const text of [row.cells[3], row.cells[4]]) {
+        expect(text).toMatch(IDENTITY);
+        expect(Number(text)).toBeGreaterThan(0);
+        expect(Number(text)).toBeLessThanOrEqual(100);
       }
     }
 

@@ -84,6 +84,9 @@ function isPartnerAccessProbe(url: string): boolean {
   }
 }
 
+/** How long `collect()` waits for GraphQL response bodies still being read. */
+const BODY_READ_GRACE_MS = 5_000;
+
 const ABORTED = /ERR_ABORTED|NS_BINDING_ABORTED|cancelled|Load cannot follow more than/i;
 
 function isGraphQLRequest(request: Request): boolean {
@@ -148,7 +151,12 @@ export class PageHealth {
 
   /** Wait for response bodies still being read, then look for error UI on screen. */
   async collect(): Promise<Problem[]> {
-    await Promise.all([...this.pending]);
+    // A response whose body never arrives (the request was still streaming when the test
+    // ended) must not hold the test open: give the bodies in flight a moment, then move on.
+    await Promise.race([
+      Promise.all([...this.pending]),
+      new Promise((resolve) => setTimeout(resolve, BODY_READ_GRACE_MS)),
+    ]);
     if (!this.page.isClosed()) {
       for (const [name, selector] of Object.entries(ERROR_UI_SELECTORS)) {
         const count = await this.page.locator(selector).count();
@@ -269,6 +277,8 @@ export class PageHealth {
 
   private onRequestFailed = (request: Request): void => {
     const failure = request.failure()?.errorText ?? "unknown failure";
+    // Blocked on purpose by the noDeployPreviewToolbar fixture.
+    if (/\/\.netlify\/scripts\/cdp(\?|$)/.test(request.url())) return;
     // Requests cancelled by a navigation or by the test ending are not failures.
     if (ABORTED.test(failure)) return;
     if (isGraphQLRequest(request)) {

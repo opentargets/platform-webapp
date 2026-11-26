@@ -14,6 +14,8 @@ type TestFixtures = {
   pageHealth: PageHealth;
   /** Applies OT_E2E_FAULT, when set, to check that the tests fail on a broken page. */
   faultInjection: void;
+  /** Keeps Netlify's "Collaborate on this Deploy Preview" toolbar off the page. */
+  noDeployPreviewToolbar: void;
   graphqlMonitor: GraphQLMonitor;
 };
 
@@ -44,6 +46,18 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         });
       }
       if (unexpected.length > 0) throw new Error(formatProblems(unexpected));
+    },
+    { auto: true },
+  ],
+
+  noDeployPreviewToolbar: [
+    async ({ page }, use) => {
+      // Netlify injects this toolbar into every deploy preview. It sits over the bottom of
+      // the viewport and intercepts clicks meant for the app; it is not part of the app.
+      await page.route(/\/\.netlify\/scripts\/cdp(\?|$)|^https:\/\/netlify-cdp-loader\.netlify\.app\//, (route) =>
+        route.abort()
+      );
+      await use();
     },
     { auto: true },
   ],

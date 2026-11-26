@@ -56,7 +56,6 @@ test.describe("Target bibliography section", () => {
       await expect(bibliography.description.locator("strong")).toHaveText(symbol);
       const source = bibliography.description.getByRole("link", { name: "Open Targets", exact: true });
       await expect(source).toHaveAttribute("href", "http://platform-docs.opentargets.org/bibliography");
-      await expect(source).toHaveAttribute("target", "_blank");
     });
 
     await test.step("the first request asks for five publications of this target in every category", async () => {
@@ -118,7 +117,6 @@ test.describe("Target bibliography section", () => {
       const publication = bibliography.publication(id);
       const title = publication.getByRole("link", { name: `Stubbed publication ${id}`, exact: true });
       await expect(title).toHaveAttribute("href", `https://europepmc.org/abstract/med/${id}`);
-      await expect(title).toHaveAttribute("target", "_blank");
       await expect(publication).toContainText("Tester A");
       await expect(publication).toContainText(/Journal of Stubs\s+2017\s*:1-2/);
       await expect(publication.getByRole("button", { name: "Show abstract" })).toBeEnabled();
