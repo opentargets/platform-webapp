@@ -346,6 +346,9 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
     // pages of a local search or sort are cut from the whole dataset
     if (localMode && allRows) return;
     const currentRequest = ++requestId.current;
+    // cancels the request on the network once a newer one supersedes it (a
+    // further keystroke in the search, another page or sort) or the table unmounts
+    const controller = new AbortController();
     setState((prev) => ({ ...prev, loading: true }));
     client
       .query<Record<string, unknown>>({
@@ -356,6 +359,7 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
           size: pagination.pageSize,
         },
         fetchPolicy: "cache-first",
+        context: { fetchOptions: { signal: controller.signal } },
       })
       .then((response) => {
         if (currentRequest !== requestId.current) return;
@@ -386,8 +390,15 @@ function OtTableServer<Row extends object, ServerRow extends object = Row>({
       })
       .catch((error: Error) => {
         if (currentRequest !== requestId.current) return;
+        if (controller.signal.aborted) {
+          // cancelled without a newer page request (the rows now come from the
+          // downloaded dataset): not an error, the table is just no longer loading
+          setState((prev) => ({ ...prev, loading: false }));
+          return;
+        }
         setState({ rows: [], count: 0, loading: false, initialLoading: false, error });
       });
+    return () => controller.abort();
   }, [
     client,
     query,
