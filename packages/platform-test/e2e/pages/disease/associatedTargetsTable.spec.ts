@@ -379,6 +379,8 @@ test.describe("Disease associations: table", () => {
       testConfig,
     }) => {
       const aotf = new AssociationsTable(page);
+      // The disease has targets, so the empty state below comes from the page, not from the data.
+      await aotf.gotoDisease(testConfig.disease.primary);
       await page.goto(AssociationsTable.diseasePath(testConfig.disease.primary, { page: "99999" }));
 
       await expect(aotf.noResults).toBeVisible({ timeout: 45_000 });
