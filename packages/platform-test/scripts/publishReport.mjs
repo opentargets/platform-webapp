@@ -31,11 +31,11 @@
  *   npm install -g netlify-cli && netlify login
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildOverview } from "./buildOverview.mjs";
+import { buildOverview, writeOverview } from "./buildOverview.mjs";
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /* What gets published: index.html (the overview) and report/ (the Playwright report). */
@@ -179,7 +179,7 @@ const overview = buildOverview({
   baseUrl,
   ranAt: `${new Date().toISOString().replace("T", " ").slice(0, 16)} UTC`,
 });
-writeFileSync(resolve(publishDir, "index.html"), overview.html);
+writeOverview(publishDir, overview);
 const { counts } = overview;
 console.log(`\n${counts.total} tests: ${counts.passed} passed, ${counts.failed} failed${counts.flaky ? `, ${counts.flaky} flaky` : ""}.`);
 
