@@ -661,17 +661,13 @@ test.describe("Target pharmacogenetics section", () => {
       (request) => request.method() === "POST" && (request.postData() ?? "").includes(`"operationName":"${TARGET_PGX_OPERATION}"`)
     );
 
-  test("each row links to the Platform variant it is about, and a row without one has no link", async ({
-    page,
-    testConfig,
-  }) => {
-    // opentargets/issues#4263: link the variants of the pharmacogenetics table to their
-    // Platform variant page, using the `variantId` the API returns. EGFR has rows with a
-    // variant (genotype carrying the alternative allele) and rows without one (homozygous
-    // reference genotypes, which are not a variant).
-    const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
+  /**
+   * Open the target with all its rows on one page and sort the API's rows into those with a
+   * Platform variant (rsID|genotype -> variant ids) and those without. A multi-allelic
+   * genotype (T,TCA) has one variant per alternative allele, hence a set.
+   */
+  async function openWithApiVariants(page: Page, ensgId: string) {
     const pgx = new TargetPharmacogenomicsSection(page);
-
     const opened = pgxRequest(page);
     await new TargetPage(page).goto(ensgId);
     await pgx.expectLoaded();
@@ -680,37 +676,61 @@ test.describe("Target pharmacogenetics section", () => {
     await pgx.table.setPageSize(100);
     await expect(pgx.table.rows, "all rows are on one page").toHaveCount(api.length);
 
-    // Rows are matched by what the table shows: rsID and genotype.
-    const expected = new Map<string, string | null>();
+    const withVariant = new Map<string, Set<string>>();
+    const withoutVariant = new Set<string>();
     for (const row of api) {
       const key = `${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`;
-      expect(expected.get(key) ?? row.variantId, `rows with the same rsID and genotype share their variant (${key})`).toBe(
-        row.variantId
-      );
-      expected.set(key, row.variantId);
+      if (row.variantId === null) withoutVariant.add(key);
+      else withVariant.set(key, (withVariant.get(key) ?? new Set()).add(row.variantId));
     }
-    expect([...expected.values()].some((variantId) => variantId !== null), "some rows have a variant").toBe(true);
-    expect([...expected.values()].some((variantId) => variantId === null), "some rows have none").toBe(true);
+    expect([...withVariant.keys()].filter((key) => withoutVariant.has(key)), "a row is a variant or it is not").toEqual([]);
+    expect(withVariant.size, "some rows have a variant").toBeGreaterThan(0);
+    expect(withoutVariant.size, "some rows have none").toBeGreaterThan(0);
 
-    let withLink = 0;
-    let withoutLink = 0;
-    for (let index = 0; index < api.length; index++) {
+    /** The rsID|genotype key of a row of the table, as the table shows it. */
+    const keyOf = async (index: number): Promise<string> => {
       const rsId = (await pgx.cell(index, "rsId").innerText()).trim();
       const genotype = (await pgx.cell(index, "genotypeId").innerText()).replace(/\s+/g, "");
-      const key = `${rsId}|${genotype}`;
-      expect(expected.has(key), `row ${index} (${key}) is a row of the API`).toBe(true);
-      const variantId = expected.get(key);
+      return `${rsId}|${genotype}`;
+    };
+    return { pgx, api, withVariant, withoutVariant, keyOf };
+  }
+
+  // opentargets/issues#4263: the variants of the pharmacogenetics table link to their Platform
+  // variant page, using the `variantId` the API returns. EGFR has rows with a variant and rows
+  // without one (homozygous reference genotypes, which are not a variant).
+  test("a row with a Platform variant links to /variant/<that variant's id>", async ({ page, testConfig }) => {
+    const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
+    const { pgx, api, withVariant, keyOf } = await openWithApiVariants(page, ensgId);
+
+    let checked = 0;
+    for (let index = 0; index < api.length; index++) {
+      const key = await keyOf(index);
+      const variants = withVariant.get(key);
+      if (!variants) continue;
+      checked++;
       const links = pgx.cell(index, "genotypeId").getByRole("link");
-      if (variantId) {
-        withLink++;
-        await expect(links, `${key} links to variant ${variantId}`).toHaveAttribute("href", `/variant/${variantId}`);
-      } else {
-        withoutLink++;
-        await expect(links, `${key} is not a Platform variant: no link`).toHaveCount(0);
-      }
+      await expect(links, `${key} has one link`).toHaveCount(1);
+      const href = (await links.getAttribute("href")) ?? "";
+      expect([...variants], `${key} should link to one of its variants, not to ${href}`).toContain(
+        href.replace("/variant/", "")
+      );
     }
-    expect(withLink, "rows with a variant were checked").toBeGreaterThan(0);
-    expect(withoutLink, "rows without a variant were checked").toBeGreaterThan(0);
+    expect(checked, "rows with a variant were checked").toBeGreaterThan(0);
+  });
+
+  test("a row without a Platform variant shows no variant link", async ({ page, testConfig }) => {
+    const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
+    const { pgx, api, withoutVariant, keyOf } = await openWithApiVariants(page, ensgId);
+
+    let checked = 0;
+    for (let index = 0; index < api.length; index++) {
+      const key = await keyOf(index);
+      if (!withoutVariant.has(key)) continue;
+      checked++;
+      await expect(pgx.cell(index, "genotypeId").getByRole("link"), `${key} is not a Platform variant: no link`).toHaveCount(0);
+    }
+    expect(checked, "rows without a variant were checked").toBeGreaterThan(0);
   });
 
   test("following a variant link lands on the healthy page of that variant", async ({ page, testConfig }) => {
@@ -726,7 +746,9 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(pgx.table.rows).toHaveCount(api.length);
 
     // The first row of the table that has a Platform variant.
-    const variantByKey = new Map(api.map((row) => [`${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`, row.variantId]));
+    const variantByKey = new Map(
+      api.flatMap((row) => (row.variantId ? [[`${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`, row.variantId] as const] : []))
+    );
     let target: { index: number; variantId: string } | undefined;
     for (let index = 0; index < api.length && !target; index++) {
       const rsId = (await pgx.cell(index, "rsId").innerText()).trim();

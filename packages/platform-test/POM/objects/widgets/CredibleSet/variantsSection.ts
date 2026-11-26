@@ -7,15 +7,16 @@ const POSITION = /^(\d+) - (\d+) of (\d+)$/;
 /** The "Variants" section of the credible set page: the fine-mapped locus table. */
 export class CredibleSetVariantsSection {
   static readonly id = "variants";
+  /** The header cells as rendered: the "?" is the help icon of a column with a tooltip. */
   static readonly headers = [
     "Variant",
     "P-value",
-    "Beta",
-    "Standard error",
-    "LD (r²)",
-    "Posterior Probability",
-    "log(BF)",
-    "Predicted consequence",
+    "Beta?",
+    "Standard error?",
+    "LD (r²)?",
+    "Posterior Probability?",
+    "log(BF)?",
+    "Predicted consequence?",
   ];
   /** Column positions in the table. */
   static readonly column = {
@@ -49,6 +50,10 @@ export class CredibleSetVariantsSection {
 
   get rows(): Locator {
     return this.table.locator("tbody tr");
+  }
+
+  row(rowIndex: number): Locator {
+    return this.rows.nth(rowIndex);
   }
 
   cell(rowIndex: number, columnIndex: number): Locator {
@@ -157,7 +162,13 @@ export class CredibleSetVariantsSection {
 
   /** Open the API query drawer, check it holds this table's query, and close it. */
   async expectApiQuery(): Promise<void> {
+    // The playground downloads the API schema when it opens; its editor validates the query
+    // against that schema, so wait for it before closing the drawer.
+    const schema = this.page.waitForResponse(
+      (response) => response.request().postData()?.includes("IntrospectionQuery") ?? false
+    );
     await this.apiQueryButton.click();
+    await schema;
     const drawer = this.page.getByTestId("api-playground-drawer");
     await expect(drawer).toBeVisible();
     await expect(drawer.getByRole("link", { name: "GraphQL API documentation" })).toHaveAttribute(

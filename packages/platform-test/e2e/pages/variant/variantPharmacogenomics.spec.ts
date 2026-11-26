@@ -234,42 +234,46 @@ test.describe("Variant page: Pharmacogenetics", () => {
     });
   });
 
-  test("pages through every row, the last page holds the remainder", async ({ page }) => {
+  test("pages through every row: the second page is the last, previous and first return to the start", async ({
+    page,
+  }) => {
     const { section, pgx } = await open(page, PON1);
     const table = section.table;
     const total = pgx.count;
+    expect(total, "two pages of rows").toBeGreaterThan(PGX_PAGE_SIZE);
+    expect(total).toBeLessThanOrEqual(2 * PGX_PAGE_SIZE);
     const firstPage = await table.rows.allInnerTexts();
     await table.expectPosition(`1 - ${PGX_PAGE_SIZE} of ${total}`, {
       canGoBack: false,
       canGoForward: true,
     });
 
-    await test.step("the next page shows other rows, with equal or weaker evidence", async () => {
+    await test.step("the next page shows other rows, with equal or weaker evidence, and is the last", async () => {
       const before = (await levelRanks(section)).at(-1) as number;
       await table.nextPageButton.click();
-      await expect(table.position).toHaveText(
-        `${PGX_PAGE_SIZE + 1} - ${Math.min(2 * PGX_PAGE_SIZE, total)} of ${total}`
-      );
-      await expect.poll(async () => table.rows.allInnerTexts()).not.toEqual(firstPage);
-      expect((await levelRanks(section))[0]).toBeGreaterThanOrEqual(before);
-    });
-
-    await test.step("the last page disables forward navigation", async () => {
-      await table.lastPageButton.click();
-      const lastStart = Math.floor((total - 1) / PGX_PAGE_SIZE) * PGX_PAGE_SIZE + 1;
-      await table.expectPosition(`${lastStart} - ${total} of ${total}`, {
+      await table.expectPosition(`${PGX_PAGE_SIZE + 1} - ${total} of ${total}`, {
         canGoBack: true,
         canGoForward: false,
       });
-      await table.expectRowCount(total - lastStart + 1);
+      await expect.poll(async () => table.rows.allInnerTexts()).not.toEqual(firstPage);
+      await table.expectRowCount(total - PGX_PAGE_SIZE);
+      expect((await levelRanks(section))[0]).toBeGreaterThanOrEqual(before);
     });
 
-    await test.step("the first page returns the start", async () => {
-      await table.firstPageButton.click();
+    await test.step("previous page returns the start", async () => {
+      await table.previousPageButton.click();
       await table.expectPosition(`1 - ${PGX_PAGE_SIZE} of ${total}`, {
         canGoBack: false,
         canGoForward: true,
       });
+      await expect.poll(async () => table.rows.allInnerTexts()).toEqual(firstPage);
+    });
+
+    await test.step("last page then first page", async () => {
+      await table.lastPageButton.click();
+      await expect(table.position).toHaveText(`${PGX_PAGE_SIZE + 1} - ${total} of ${total}`);
+      await table.firstPageButton.click();
+      await expect(table.position).toHaveText(`1 - ${PGX_PAGE_SIZE} of ${total}`);
       await expect.poll(async () => table.rows.allInnerTexts()).toEqual(firstPage);
     });
   });
@@ -415,13 +419,13 @@ test.describe("Variant page: Pharmacogenetics", () => {
     const json = await section.controls.downloadJson();
     expect(json.filename).toBe(`${PON1}-pharmacogenetics-variant.json`);
     expect(json.rows).toHaveLength(pgx.count);
-    expect(JSON.stringify(json.rows)).toContain("CLOPIDOGREL");
+    expect(JSON.stringify(json.rows)).toContain("clopidogrel (CHEMBL");
 
     const tsv = await section.controls.downloadTsv();
     expect(tsv.filename).toBe(`${PON1}-pharmacogenetics-variant.tsv`);
     expect(tsv.header).toEqual([
       "genotypeId",
-      "drugs",
+      "drugS",
       "drugResponsePhenotype",
       "drugResponseCategory",
       "gene",

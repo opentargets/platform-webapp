@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { OtTable } from "../../../../utils/table";
 import { sectionLocator, sectionTestId } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
 /**
  * Variant page, the two credible-set sections ("GWAS Credible Sets" and "QTL Credible

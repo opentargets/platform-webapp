@@ -205,6 +205,40 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Target: HOTAIR (lncRNA without any protein annotation, Gene Ontology included)
   ENSG00000228630: ["qtl-credible-sets", "baselineexpression", "mousephenotypes", "bibliography"],
 
+  // Target: WDR5 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
+  ENSG00000196363: [
+    "tractability",
+    "qtl-credible-sets",
+    "chemicalprobes",
+    "baselineexpression",
+    "depmapessentiality",
+    "subcellularlocation",
+    "geneontology",
+    "geneticconstraint",
+    "molecularstructure",
+    "interactions",
+    "pathways",
+    "compgenomics",
+    "bibliography",
+  ],
+
+  // Target: ATAD2 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
+  ENSG00000156802: [
+    "tractability",
+    "qtl-credible-sets",
+    "chemicalprobes",
+    "baselineexpression",
+    "depmapessentiality",
+    "subcellularlocation",
+    "geneontology",
+    "geneticconstraint",
+    "molecularstructure",
+    "interactions",
+    "pathways",
+    "compgenomics",
+    "bibliography",
+  ],
+
   // Target: CYP2C19 (pharmacogenetics; no drugs, no cancer hallmarks)
   ENSG00000165841: [
     "tractability",

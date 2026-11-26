@@ -79,17 +79,13 @@ test.describe("Variant page: molQTL Credible Sets", () => {
         );
         await expect(section.cell(row, "leadVariant")).toContainText(VARIANT_ID);
         await expect(section.link(row, "study")).toHaveAttribute("href", /^\/study\/.+/);
-        await expect(section.cell(row, "type")).toHaveText(
-          /^(sc)?(e|s|p|tu)QTL\s*(trans)?\s*$/i
-        );
+        await expect(section.cell(row, "type")).toHaveText(/^(sc)?(e|s|p|tu)QTL\s*(trans)?\s*$/i);
         await expect(section.link(row, "gene")).toHaveAttribute("href", /^\/target\/ENSG\d{11}$/);
         await expect(section.cell(row, "tissue")).not.toHaveText(/^\s*$/);
         await expect(section.cell(row, "condition")).not.toHaveText(/^\s*$/);
         await expect(section.cell(row, "pValue")).toHaveText(/^\d+\.\d+×10\s*-\d+$/);
         await expect(section.cell(row, "beta")).toHaveText(/^(-?\d+\.\d+(e-?\d+)?|-?\d+|N\/A)$/);
-        await expect(section.cell(row, "posteriorProbability")).toHaveText(
-          /^(0\.\d+|1\.00|N\/A)$/
-        );
+        await expect(section.cell(row, "posteriorProbability")).toHaveText(/^(0\.\d+|1\.00|N\/A)$/);
         await expect(section.cell(row, "method")).toHaveText(/^(SuSiE|SuSiE-inf|PICS)$/);
         await expect(section.cell(row, "size")).toHaveText(/^[\d,]+$/);
       });
@@ -268,9 +264,7 @@ test.describe("Variant page: molQTL Credible Sets", () => {
       const section = await openSection(page, IL6R);
       await section.sortBy("Posterior probability");
       await expect
-        .poll(async () =>
-          directionOf(numbersOf(await section.columnTexts("posteriorProbability")))
-        )
+        .poll(async () => directionOf(numbersOf(await section.columnTexts("posteriorProbability"))))
         .toMatch(/^(ascending|descending)$/);
     });
 
@@ -279,7 +273,9 @@ test.describe("Variant page: molQTL Credible Sets", () => {
       await section.table.clickHeader("Credible set size");
       await expect
         .poll(async () =>
-          directionOf((await section.columnTexts("size")).map((size) => Number(size.replace(/,/g, ""))))
+          directionOf(
+            (await section.columnTexts("size")).map((size) => Number(size.replace(/,/g, "")))
+          )
         )
         .toMatch(/^(ascending|descending)$/);
     });

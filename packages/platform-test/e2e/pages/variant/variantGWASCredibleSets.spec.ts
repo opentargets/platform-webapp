@@ -93,9 +93,7 @@ test.describe("Variant page: GWAS Credible Sets", () => {
         await expect(section.link(row, "study")).toHaveAttribute("href", /^\/study\/.+/);
         await expect(section.cell(row, "pValue")).toHaveText(/^\d+\.\d+×10\s*-\d+$/);
         await expect(section.cell(row, "beta")).toHaveText(/^(-?\d+\.\d+(e-?\d+)?|-?\d+|N\/A)$/);
-        await expect(section.cell(row, "posteriorProbability")).toHaveText(
-          /^(0\.\d+|1\.00|N\/A)$/
-        );
+        await expect(section.cell(row, "posteriorProbability")).toHaveText(/^(0\.\d+|1\.00|N\/A)$/);
         await expect(section.cell(row, "method")).toHaveText(/^(SuSiE|SuSiE-inf|PICS|N\/A)$/);
         await expect(section.cell(row, "size")).toHaveText(/^[\d,]+$/);
       });
@@ -169,9 +167,10 @@ test.describe("Variant page: GWAS Credible Sets", () => {
       await table.expectRowsChangedFrom(first);
       await expect(table.rows).toHaveCount(PAGE_SIZE);
       const second = await table.rowTexts();
-      expect(second.filter((row) => first.includes(row)), "page 2 repeats nothing of page 1").toEqual(
-        []
-      );
+      expect(
+        second.filter((row) => first.includes(row)),
+        "page 2 repeats nothing of page 1"
+      ).toEqual([]);
       await expect(table.firstPageButton).toBeEnabled();
       await expect(table.previousPageButton).toBeEnabled();
 
@@ -233,7 +232,9 @@ test.describe("Variant page: GWAS Credible Sets", () => {
 
       await section.table.search(other);
       await expect
-        .poll(async () => (await section.columnTexts("leadVariant")).every((l) => l.includes(other)))
+        .poll(async () =>
+          (await section.columnTexts("leadVariant")).every((l) => l.includes(other))
+        )
         .toBe(true);
       await expect(section.table.rows.first()).toContainText(other);
       expect(await section.table.total()).toBeGreaterThan(0);
@@ -313,9 +314,9 @@ test.describe("Variant page: GWAS Credible Sets", () => {
 
       await section.table.nextPageButton.click();
       await expect(section.table.pagePosition).toHaveText(/^11 - 20 of \d+$/);
-      await expect.poll(async () => (await pValues(section))[0]).toBeGreaterThanOrEqual(
-        page1[page1.length - 1]
-      );
+      await expect
+        .poll(async () => (await pValues(section))[0])
+        .toBeGreaterThanOrEqual(page1[page1.length - 1]);
       expect(directionOf(await pValues(section))).toMatch(/^(ascending|constant)$/);
     });
 
@@ -558,9 +559,7 @@ test.describe("Variant page: GWAS Credible Sets", () => {
     await expect(sectionLocator(page, GWASCredibleSetsSection.id)).toHaveCount(0);
   });
 
-  test("every section the variant should have is rendered with the GWAS one", async ({
-    page,
-  }) => {
+  test("every section the variant should have is rendered with the GWAS one", async ({ page }) => {
     await new VariantPage(page).goToVariantPage(APOE);
     await expectSections(page, expectedSectionsFor(APOE));
   });

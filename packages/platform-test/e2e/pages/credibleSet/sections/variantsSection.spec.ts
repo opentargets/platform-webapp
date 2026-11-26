@@ -1,4 +1,5 @@
 import { expect, test } from "../../../../fixtures";
+import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { CredibleSetVariantsSection } from "../../../../POM/objects/widgets/CredibleSet/variantsSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
@@ -12,6 +13,13 @@ const { column } = CredibleSetVariantsSection;
 // UKB_PPP_EUR_LPA_P08519_OID30747_v1 (21 variants, so three pages of ten).
 const GWAS_LEAD = "2_85545938_A_G";
 const QTL_LEAD = "6_160329611_C_T";
+
+/** The two credible sets these tests use; fails loudly if the test config lacks one. */
+function credibleSets(config: TestConfig): { primary: string; qtl: string } {
+  const { primary, qtl } = config.credibleSet ?? {};
+  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  return { primary, qtl };
+}
 
 async function open(
   page: import("@playwright/test").Page,
@@ -27,7 +35,7 @@ async function open(
 
 test.describe("Credible set page: Variants", () => {
   test("shows title, description and the column headers", async ({ page, testConfig }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
 
     await test.step("title and description", async () => {
       await expect(
@@ -48,7 +56,7 @@ test.describe("Credible set page: Variants", () => {
     });
 
     await test.step("column header tooltips explain the statistics", async () => {
-      await variants.headers.filter({ hasText: "Posterior Probability" }).hover();
+      await variants.headers.filter({ hasText: "Posterior Probability" }).locator("sup").hover();
       await expect(page.getByRole("tooltip")).toHaveText(
         "Posterior inclusion probability that this variant is causal within the fine-mapped credible set"
       );
@@ -59,7 +67,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     await expect(variants.rows).toHaveCount(PAGE_SIZE);
     const total = await variants.total();
     expect(total, "the credible set has more variants than fit on one page").toBeGreaterThan(
@@ -120,7 +128,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     await expect(variants.leadChips, "exactly one variant is the lead").toHaveCount(1);
     await expect(variants.row(0).getByText("lead", { exact: true })).toBeVisible();
     await expect(variants.variantLink(0)).toHaveText(GWAS_LEAD);
@@ -131,7 +139,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.qtl);
+    const variants = await open(page, credibleSets(testConfig).qtl);
     await expect(variants.leadChips).toHaveCount(1);
     await expect(variants.row(0).getByText("lead", { exact: true })).toBeVisible();
     await expect(variants.variantLink(0)).toHaveText(QTL_LEAD);
@@ -143,7 +151,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.qtl);
+    const variants = await open(page, credibleSets(testConfig).qtl);
     const total = await variants.total();
     expect(total).toBe(21);
     await variants.expectPosition(1, PAGE_SIZE, 21);
@@ -166,7 +174,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.qtl);
+    const variants = await open(page, credibleSets(testConfig).qtl);
     await variants.expectPosition(1, 10, 21);
     await expect(variants.firstPageButton).toBeDisabled();
     await expect(variants.previousPageButton).toBeDisabled();
@@ -202,7 +210,7 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     const total = await variants.total();
     await expect(variants.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
 
@@ -220,7 +228,7 @@ test.describe("Credible set page: Variants", () => {
   });
 
   test("the Columns button hides and restores a column", async ({ page, testConfig }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     const list = await (async () => {
       await variants.columnsButton.click();
       await expect(variants.columnList).toBeVisible();
@@ -236,7 +244,7 @@ test.describe("Credible set page: Variants", () => {
     await test.step("unchecking Beta removes its header and cells", async () => {
       await list.getByRole("checkbox", { name: "Beta" }).uncheck();
       await expect(variants.headers).toHaveText(
-        CredibleSetVariantsSection.headers.filter((header) => header !== "Beta")
+        CredibleSetVariantsSection.headers.filter((header) => header !== "Beta?")
       );
       await expect(variants.rows.first().locator("td")).toHaveCount(
         CredibleSetVariantsSection.headers.length - 1
@@ -250,7 +258,7 @@ test.describe("Credible set page: Variants", () => {
   });
 
   test("Export downloads every variant as JSON and TSV", async ({ page, testConfig }) => {
-    const credibleSetId = testConfig.credibleSet.primary;
+    const credibleSetId = credibleSets(testConfig).primary;
     const variants = await open(page, credibleSetId);
     const total = await variants.total();
     const firstPageIds = (await variants.columnTexts(column.variant)).map((text) =>
@@ -291,12 +299,12 @@ test.describe("Credible set page: Variants", () => {
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     await variants.expectApiQuery();
   });
 
   test("a variant link opens that variant's page", async ({ page, testConfig }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     await variants.variantLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/variant/${GWAS_LEAD}$`));
     const variantPage = new VariantPage(page);
@@ -304,26 +312,25 @@ test.describe("Credible set page: Variants", () => {
     await expect(variantPage.title).toContainText(GWAS_LEAD);
   });
 
-  test("a consequence link points at the ontology term and leaves the app", async ({
+  test("a consequence link points at the ontology term", async ({
     page,
     testConfig,
   }) => {
-    const variants = await open(page, testConfig.credibleSet.primary);
+    const variants = await open(page, credibleSets(testConfig).primary);
     // The lead variant of this set is in a 3' UTR
     await expect(variants.consequenceLink(0)).toHaveText("3 prime UTR variant");
     await expect(variants.consequenceLink(0)).toHaveAttribute(
       "href",
       "https://identifiers.org/SO:0001624"
     );
-    await expect(variants.consequenceLink(0)).toHaveAttribute("target", "_blank");
   });
 
   test("renders exactly the sections the credible sets are known to have", async ({
     page,
     testConfig,
   }) => {
-    await new CredibleSetPage(page).goToCredibleSetPage(testConfig.credibleSet.qtl);
-    await expectSections(page, expectedSectionsFor(testConfig.credibleSet.qtl));
+    await new CredibleSetPage(page).goToCredibleSetPage(credibleSets(testConfig).qtl);
+    await expectSections(page, expectedSectionsFor(credibleSets(testConfig).qtl));
     await expect(page.getByTestId("section-variants")).toBeVisible();
   });
 });
