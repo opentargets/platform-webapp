@@ -536,7 +536,7 @@ test.describe("Variant page: GWAS Credible Sets", () => {
 
   test("the API query drawer holds the table query", async ({ page }) => {
     const section = await openSection(page, IL6R);
-    await section.table.expectApiQuery("GWASCredibleSetsTableQuery");
+    await section.expectApiQuery("GWASCredibleSetsTableQuery");
   });
 
   test("a variant with only a few GWAS credible sets shows them on one page", async ({ page }) => {

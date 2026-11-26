@@ -420,7 +420,7 @@ test.describe("Variant page: molQTL Credible Sets", () => {
 
   test("the API query drawer holds the table query", async ({ page }) => {
     const section = await openSection(page, IL6R);
-    await section.table.expectApiQuery("VariantQTLCredibleSetsQuery");
+    await section.expectApiQuery("VariantQTLCredibleSetsQuery");
   });
 
   test("every section the variant should have is rendered with the molQTL one", async ({

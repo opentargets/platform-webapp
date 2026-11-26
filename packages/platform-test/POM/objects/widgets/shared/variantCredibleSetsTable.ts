@@ -54,6 +54,21 @@ export abstract class VariantCredibleSetsTable {
     await this.table.header(column).getByText(column).first().click();
   }
 
+  /**
+   * Open the API query drawer, check it holds the operation and close it. The playground
+   * loads the API schema by introspection when it opens; the test waits for that response
+   * so a schema the playground cannot build fails the test every time, not by timing.
+   */
+  async expectApiQuery(operationName: string): Promise<void> {
+    const introspection = this.page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        (response.request().postData() ?? "").includes("IntrospectionQuery")
+    );
+    await this.table.expectApiQuery(operationName);
+    await (await introspection).finished();
+  }
+
   /** Wait for the first page of rows to be rendered. */
   async expectLoaded(): Promise<void> {
     await this.table.expectLoaded();
