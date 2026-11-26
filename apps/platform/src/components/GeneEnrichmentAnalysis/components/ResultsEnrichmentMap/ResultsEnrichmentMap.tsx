@@ -202,6 +202,7 @@ function ResultsEnrichmentMapContent({ results, genes, diseaseId }: ResultsEnric
         data={modalData}
         onClose={() => setModalOpen(false)}
         diseaseId={diseaseId}
+        genes={genes}
       />
     </Paper>
   );

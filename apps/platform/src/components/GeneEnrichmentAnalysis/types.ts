@@ -53,6 +53,8 @@ export interface Gene {
   id?: string;
   symbol: string;
   globalScore: number;
+  /** Ensembl ID when known (AOTF path); used to link genes to their target page */
+  id?: string;
 }
 
 /**

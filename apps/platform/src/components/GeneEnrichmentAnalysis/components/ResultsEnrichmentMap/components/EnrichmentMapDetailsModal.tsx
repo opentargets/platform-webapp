@@ -17,7 +17,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faCheck} from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useMemo } from "react";
 import { useApolloClient } from "@apollo/client";
-import { getGeneTargetUrl, buildGeneToTargetIdMapping, buildAOTFLink, getTargetIdsFromMapping } from "../utils/geneMapping";
+import {
+  getGeneTargetUrl,
+  buildGeneToTargetIdMapping,
+  buildAOTFLink,
+  getTargetIdsFromMapping,
+  mappingFromGenes,
+} from "../utils/geneMapping";
+import type { Gene } from "../../../types";
 
 interface NodeData {
   id: string;
@@ -52,12 +59,23 @@ interface EnrichmentMapDetailsModalProps {
   data: NodeData | EdgeData | null;
   onClose: () => void;
   diseaseId?: string; // Optional disease ID for AOTF links
+  genes?: Gene[]; // Input genes of the run; their Ensembl IDs seed the target links
 }
 
 /**
  * Node Details Content Component
  */
-function NodeDetailsContent({ data, diseaseId, geneToTargetIdMapping }: { data: NodeData; diseaseId?: string; geneToTargetIdMapping?: Map<string, string> }) {
+function NodeDetailsContent({
+  data,
+  diseaseId,
+  geneToTargetIdMapping,
+  resolving,
+}: {
+  data: NodeData;
+  diseaseId?: string;
+  geneToTargetIdMapping?: Map<string, string>;
+  resolving?: boolean;
+}) {
   return (
     <>
       <Box>
@@ -112,7 +130,13 @@ function NodeDetailsContent({ data, diseaseId, geneToTargetIdMapping }: { data: 
 
       {data?.pathwayGenes && data.pathwayGenes.length > 0 && (
         <Box>
-          <GeneList title="Pathway Genes" genes={Array.isArray(data.pathwayGenes) ? data.pathwayGenes : data.pathwayGenes.split(",") || []} diseaseId={diseaseId} geneToTargetIdMapping={geneToTargetIdMapping} />
+          <GeneList
+            title="Pathway Genes"
+            genes={Array.isArray(data.pathwayGenes) ? data.pathwayGenes : data.pathwayGenes.split(",") || []}
+            diseaseId={diseaseId}
+            geneToTargetIdMapping={geneToTargetIdMapping}
+            resolving={resolving}
+          />
         </Box>
       )}
     </>
@@ -123,9 +147,17 @@ type GeneListProps = {
   genes: string[];
   diseaseId?: string;
   geneToTargetIdMapping?: Map<string, string>;
+  /** True while symbols are still being resolved to target IDs */
+  resolving?: boolean;
 };
 
-export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: GeneListProps & { title: string }) {
+export function GeneList({
+  title,
+  genes,
+  diseaseId,
+  geneToTargetIdMapping,
+  resolving = false,
+}: GeneListProps & { title: string }) {
   const [copied, setCopied] = useState(false);
   const filteredGenes = useMemo(() => genes.filter((gene) => gene.trim() !== ""), [genes]);
 
@@ -141,11 +173,15 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
     }
   };
 
-    const handleViewInAOTF = () => {
-        const targetIds = getTargetIdsFromMapping(filteredGenes || [], geneToTargetIdMapping || new Map());
-        const aotfLink = buildAOTFLink(diseaseId || "", targetIds);
-        window.open(aotfLink, "_blank");
-    };
+  const aotfLink = useMemo(() => {
+    const targetIds = getTargetIdsFromMapping(filteredGenes, geneToTargetIdMapping || new Map());
+    // Only link when at least one gene resolved to a target; otherwise nothing could be pinned
+    return targetIds.length > 0 ? buildAOTFLink(diseaseId, targetIds) : null;
+  }, [filteredGenes, geneToTargetIdMapping, diseaseId]);
+
+  const handleViewInAOTF = () => {
+    if (aotfLink) window.open(aotfLink, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <Box>
@@ -203,10 +239,19 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
       >
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
           {filteredGenes.map((gene, idx) => {
-            const targetUrl = getGeneTargetUrl(
-              gene,
-              geneToTargetIdMapping || new Map()
-            );
+            const targetUrl = getGeneTargetUrl(gene, geneToTargetIdMapping || new Map());
+
+            // No Ensembl ID resolved: render a plain chip rather than a broken /target/<symbol> link
+            if (!targetUrl) {
+              return (
+                <Tooltip
+                  key={`${gene}-${idx}`}
+                  title={resolving ? "Resolving target…" : "No matching target found"}
+                >
+                  <Chip label={gene} variant="filled" size="small" component="span" />
+                </Tooltip>
+              );
+            }
 
             return (
               <MuiLink
@@ -237,7 +282,7 @@ export function GeneList({ title, genes, diseaseId, geneToTargetIdMapping }: Gen
         </Box>
       </Box>
 
-      {diseaseId && filteredGenes.length > 0 && (
+      {aotfLink && (
         <Button
           onClick={handleViewInAOTF}
           size="small"
@@ -258,10 +303,12 @@ function EdgeDetailsContent({
   data,
   geneToTargetIdMapping,
   diseaseId,
+  resolving,
 }: {
   data: EdgeData;
   geneToTargetIdMapping?: Map<string, string>;
   diseaseId?: string;
+  resolving?: boolean;
 }) {
 
   return (
@@ -297,7 +344,13 @@ function EdgeDetailsContent({
 
       <Divider />
 
-      <GeneList title="Shared Genes" genes={data.sharedGenes || []} diseaseId={diseaseId} geneToTargetIdMapping={geneToTargetIdMapping} />
+      <GeneList
+        title="Shared Genes"
+        genes={data.sharedGenes || []}
+        diseaseId={diseaseId}
+        geneToTargetIdMapping={geneToTargetIdMapping}
+        resolving={resolving}
+      />
 
       <Box>
         <Typography variant="caption" color="text.secondary">
@@ -320,20 +373,28 @@ export function EnrichmentMapDetailsModal({
   data,
   onClose,
   diseaseId,
+  genes,
 }: EnrichmentMapDetailsModalProps) {
   const apolloClient = useApolloClient();
+  // IDs we already know from the run's input genes; no round trip needed for these
+  const knownMapping = useMemo(() => mappingFromGenes(genes), [genes]);
   const [geneToTargetIdMapping, setGeneToTargetIdMapping] = useState<Map<string, string>>(
-    new Map()
+    knownMapping
   );
+  const [resolving, setResolving] = useState(false);
 
   // Lazy-load gene mapping when modal opens with edge data
   useEffect(() => {
-    if (!open  || !data || (!(data as EdgeData).sharedGenes && !(data as NodeData).pathwayGenes)) {
+    if (!open || !data || (!(data as EdgeData).sharedGenes && !(data as NodeData).pathwayGenes)) {
       return;
     }
 
+    let cancelled = false;
+    setGeneToTargetIdMapping(knownMapping);
+
     const buildMapping = async () => {
       if (!apolloClient) return;
+      setResolving(true);
       let sharedGenes: string[] = [];
       if( type === "edge") {
         sharedGenes = (data as EdgeData).sharedGenes || [];
@@ -351,12 +412,18 @@ export function EnrichmentMapDetailsModal({
       } else {
         sharedGenes = [];
       }
-      const mapping = await buildGeneToTargetIdMapping(apolloClient, sharedGenes);
-      setGeneToTargetIdMapping(mapping);
+      const mapping = await buildGeneToTargetIdMapping(apolloClient, sharedGenes, knownMapping);
+      if (!cancelled) {
+        setGeneToTargetIdMapping(mapping);
+        setResolving(false);
+      }
     };
 
     buildMapping();
-  }, [open, type, data, apolloClient]);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, type, data, apolloClient, knownMapping]);
 
   if (!data) return null;
 
@@ -373,7 +440,12 @@ export function EnrichmentMapDetailsModal({
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
           {isNode && (data as NodeData).pathway && (
-            <NodeDetailsContent data={data as NodeData} diseaseId={diseaseId} geneToTargetIdMapping={geneToTargetIdMapping} />
+            <NodeDetailsContent
+              data={data as NodeData}
+              diseaseId={diseaseId}
+              geneToTargetIdMapping={geneToTargetIdMapping}
+              resolving={resolving}
+            />
           )}
 
           {isEdge && (data as EdgeData).sharedGenes && (
@@ -381,6 +453,7 @@ export function EnrichmentMapDetailsModal({
               data={data as EdgeData}
               geneToTargetIdMapping={geneToTargetIdMapping}
               diseaseId={diseaseId}
+              resolving={resolving}
             />
           )}
         </Box>

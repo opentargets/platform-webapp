@@ -54,7 +54,10 @@ export async function analyzeGsea({
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ genes }),
+    // The API only knows symbol + score; drop client-side fields such as `id`
+    body: JSON.stringify({
+      genes: genes.map(({ symbol, globalScore }) => ({ symbol, globalScore })),
+    }),
   });
 
   if (!response.ok) {
