@@ -6,13 +6,13 @@ query QTLCredibleSetsQuery {
     ) {
       count
       rows {
-        studyLocusId
-        pValueMantissa
-        pValueExponent
-        beta
-        finemappingMethod
+        credibleSetId
+        leadPValueMantissa
+        leadPValueExponent
+        leadBeta
+        fineMappingMethod
         confidence
-        variant {
+        leadVariant {
           variantId
           chromosome
         }
@@ -34,9 +34,7 @@ query QTLCredibleSetsQuery {
             posteriorProbability
           }
         }
-        locusSize: locus {
-          count
-        }
+        locusSize
       }
     }
   }
