@@ -4,7 +4,7 @@ test("scratch", async ({ page, pageHealth }) => {
   pageHealth.allow(/./, "scratch", "page-error");
   const req = await stubGtexPortal(page);
   page.on("console", (m) => console.log("CONSOLE", m.type(), m.text().slice(0, 300)));
-  page.on("pageerror", (e) => console.log("PAGEERR", e.message));
+  page.on("pageerror", (e) => console.log("PAGEERR", e.stack));
   await page.goto("/target/ENSG00000157764");
   const s = page.getByTestId("section-baselineexpression");
   await expect(s).toBeVisible({ timeout: 60000 });
