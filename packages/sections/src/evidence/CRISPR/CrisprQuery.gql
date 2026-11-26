@@ -1,24 +1,27 @@
-query CrisprQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query CrisprQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceCrisprSort!]! = []
+  $search: EvidenceCrisprSearch
+) {
   disease(efoId: $efoId) {
     id
-    crisprSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [crispr]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      crispr(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          diseaseCellLines {
+            name
+            id
+          }
+          diseaseFromSource
+          resourceScore
+          literature
         }
-        diseaseCellLines {
-          name
-          id
-        }
-        diseaseFromSource
-        resourceScore
-        literature
       }
     }
   }

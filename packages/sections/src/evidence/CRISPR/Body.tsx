@@ -1,31 +1,75 @@
 import { useQuery } from "@apollo/client";
-import { SectionItem, TableDrawer, OtTableServer, Link } from "ui";
+import { SectionItem, TableDrawer, OtTableServer, type OtTableColumn, Link } from "ui";
 
-import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  type EvidenceBodyProps,
+  type EvidenceCrispr,
+  type EvidenceCrisprSort,
+  EvidenceCrisprSortField,
+  type EvidenceCrisprSearch,
+  EvidenceCrisprSearchField,
+  SortDirection,
+} from "@ot/constants";
 import Description from "./Description";
 import { definition } from ".";
 
-import CRISPR_QUERY from "./CrisprQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import CRISPR_QUERY_DOCUMENT from "./CrisprQuery.gql";
 
-const columns = [
+type CrisprRow = Pick<
+  EvidenceCrispr,
+  "diseaseId" | "diseaseName" | "diseaseCellLines" | "diseaseFromSource" | "resourceScore" | "literature"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { crispr: { count: number; rows: CrisprRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceCrisprSort[];
+  search?: EvidenceCrisprSearch;
+};
+
+const CRISPR_QUERY = typedDocument<QueryData, QueryVariables>(CRISPR_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score, which is the priority score / 100
+const DEFAULT_SORT = {
+  id: "resourceScore",
+  field: EvidenceCrisprSortField.Score,
+  desc: true,
+};
+
+const columns: OtTableColumn<CrisprRow>[] = [
   {
-    id: "disease.name",
+    id: "diseaseName",
     label: "Disease/phenotype",
     enableHiding: false,
-    renderCell: ({ disease }) => (
-      <Link asyncTooltip to={`/disease/${disease.id}`}>
-        {disease.name}
+    // Attach the CRISPR search fields to the first column.
+    searchFields: [EvidenceCrisprSearchField.DiseaseName, EvidenceCrisprSearchField.DiseaseFromSource],
+    renderCell: ({ diseaseId, diseaseName }) => (
+      <Link asyncTooltip to={`/disease/${diseaseId}`}>
+        {diseaseName}
       </Link>
     ),
   },
   {
+    id: "diseaseFromSource",
     label: "Reported disease/phenotype",
     enableHiding: false,
     renderCell: ({ diseaseCellLines, diseaseFromSource }) => {
-      if (!diseaseCellLines) return naLabel;
+      if (diseaseCellLines.length === 0) return naLabel;
 
       const cellLines = diseaseCellLines.map(line => ({
-        name: line.name,
+        name: line.name ?? "",
         url: `https://cellmodelpassports.sanger.ac.uk/passports/${line.id}`,
         group: "Cancer Cell Lines",
       }));
@@ -37,20 +81,17 @@ const columns = [
         />
       );
     },
-    filterValue: ({ diseaseFromSource }) => diseaseFromSource,
+    exportValue: ({ diseaseFromSource }) => diseaseFromSource ?? "",
   },
   {
     id: "resourceScore",
     label: "Priority score",
-    renderCell: ({ resourceScore }) => resourceScore.toFixed(3),
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ resourceScore }) => resourceScore?.toFixed(3) ?? naLabel,
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
 
   const variables = { ensemblId: ensgId, efoId };
@@ -58,7 +99,17 @@ function Body({ id, label, entity }: Props) {
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(CRISPR_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -70,14 +121,15 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTableServer
+          <OtTableServer<CrisprRow>
             query={CRISPR_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderFileStem={`crispr-evidence-${ensgId}-${efoId}`}
-            dataPath="disease.crisprSummary"
+            dataPath="disease.evidenceViews.crispr"
             pageSize={PAGE_SIZE}
-            showGlobalFilter={false}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             variables={variables}
           />
         );

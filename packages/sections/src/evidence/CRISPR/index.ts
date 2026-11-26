@@ -7,7 +7,7 @@ export const definition = {
   id,
   name: "Project Score",
   shortName: "PS",
-  hasData: (data: EvidenceData) => hasEvidence(data, "crispr", "crisprSummary"),
+  hasData: (data: EvidenceData) => hasEvidence(data, "crispr"),
   isPrivate: isPrivateEvidenceSection(id),
 };
 
