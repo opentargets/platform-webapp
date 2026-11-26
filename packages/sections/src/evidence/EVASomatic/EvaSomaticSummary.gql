@@ -1,9 +1,7 @@
 fragment evaSomaticSummary on Disease {
-  eva_somatic: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [eva_somatic]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    evaSomatic(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

@@ -11,9 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data =>
-        `${data.gwasCredibleSets.count} entr${data.gwasCredibleSets.count === 1 ? "y" : "ies"}`
-      }
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.gwasCredibleSets;
+        return `${count} ${count === 1 ? "entry" : "entries"}`;
+      }}
       subText={dataTypesMap.genetic_association}
     />
   );

@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ cancerGeneCensusSummary }) => {
-        const { count } = cancerGeneCensusSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.cancerGeneCensus;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.somatic_mutation}

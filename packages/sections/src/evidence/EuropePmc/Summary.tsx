@@ -11,9 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data =>
-        `${data.europePmc.count} entr${data.europePmc.count === 1 ? "y" : "ies"}`
-      }
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.europePmc;
+        return `${count} ${count === 1 ? "entry" : "entries"}`;
+      }}
       subText={dataTypesMap.literature}
     />
   );

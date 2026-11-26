@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ eva_somatic }) => {
-        const { count } = eva_somatic;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.evaSomatic;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.somatic_mutation}

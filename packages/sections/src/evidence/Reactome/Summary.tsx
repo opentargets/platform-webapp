@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ reactomeSummary }) => {
-        const { count } = reactomeSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.reactome;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.affected_pathway}
