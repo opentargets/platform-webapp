@@ -165,26 +165,29 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await test.step("aspect", async () => {
       const aspect = expected[0].evidence.aspect ?? "";
       expect(Object.keys(ASPECTS)).toContain(aspect);
-      await phenotypes.cell(0, "Aspect").getByText(aspect).hover();
-      await expect(tooltip).toHaveText(`Sub-ontology: ${aspect} (${ASPECTS[aspect]})`);
+      await phenotypes.helpIcon(0, "Aspect").hover();
+      await expect(tooltip.filter({ hasText: "Sub-ontology:" })).toHaveText(
+        `Sub-ontology: ${aspect} (${ASPECTS[aspect]})`
+      );
     });
 
     await test.step("evidence type", async () => {
       const type = expected[0].evidence.evidenceType ?? "";
       expect(["IEA", "PCS", "TAS"]).toContain(type);
-      await phenotypes.cell(0, "Evidence").getByText(type).hover();
-      await expect(tooltip).toContainText(
-        { IEA: "Inferred from Electronic Annotations", PCS: "Published Clinical Study", TAS: "Traceable Author Statement" }[
-          type as "IEA" | "PCS" | "TAS"
-        ]
-      );
+      await phenotypes.helpIcon(0, "Evidence").hover();
+      const meaning = {
+        IEA: "Inferred from Electronic Annotations",
+        PCS: "Published Clinical Study",
+        TAS: "Traceable Author Statement",
+      }[type as "IEA" | "PCS" | "TAS"];
+      await expect(tooltip.filter({ hasText: meaning })).toBeVisible();
     });
 
     await test.step("phenotype description", async () => {
       const described = expected.findIndex(({ phenotype }) => phenotype.phenotypeHPO?.description);
       expect(described, "a phenotype on the first page has a description").toBeGreaterThanOrEqual(0);
       const description = expected[described].phenotype.phenotypeHPO?.description ?? "";
-      await phenotypes.cell(described, "Phenotype").getByText(phenotypeName(expected[described].phenotype)).hover();
+      await phenotypes.helpIcon(described, "Phenotype").hover();
       await expect(tooltip.filter({ hasText: "Description:" })).toHaveText(
         `Description: ${description}`
       );
@@ -334,7 +337,7 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await test.step("a term nothing contains leaves no rows", async () => {
       await table.search("zzzz-no-such-phenotype");
       await expect(table.rows).toHaveCount(0);
-      await expect(table.pagePosition).toHaveText("0 - 0 of 0");
+      await expect(table.pagePosition).toHaveText(/ of 0$/);
     });
 
     await test.step("clearing the search brings the first page back", async () => {
@@ -359,25 +362,12 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     }
   });
 
-  test("sorting a column orders every phenotype, not just the page", async ({ page }) => {
+  test("no column is sortable: clicking a header leaves the rows as they are", async ({ page }) => {
     const { phenotypes } = await openPhenotypes(page, MARFAN.id);
-    const table = phenotypes.table;
-    const names = async () => (await phenotypes.columnCells("Phenotype").allInnerTexts()).map(withoutHelpIcon);
-    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
-    const unsorted = await names();
-
-    await table.clickHeader("Phenotype");
-    await expect.poll(names).not.toEqual(unsorted);
-    const ascending = await names();
-    expect(ascending).toEqual([...ascending].sort((a, b) => collator.compare(a, b)));
-    // the first page of an ascending sort of ALL phenotypes starts below the unsorted first page
-    expect(collator.compare(ascending[0], unsorted[0])).toBeLessThanOrEqual(0);
-
-    await table.clickHeader("Phenotype");
-    await expect.poll(names).not.toEqual(ascending);
-    const descending = await names();
-    expect(descending).toEqual([...descending].sort((a, b) => collator.compare(b, a)));
-    expect(collator.compare(descending[0], ascending[0])).toBeGreaterThan(0);
+    const before = await phenotypes.table.rowTexts();
+    await phenotypes.table.clickHeader("Phenotype");
+    await phenotypes.table.clickHeader("Frequency");
+    await phenotypes.table.expectRowTexts(before);
   });
 
   test("the column picker hides and restores columns, but not the phenotype", async ({ page }) => {
@@ -403,10 +393,19 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     expect(json.filename).toBe(`${HUNTINGTON.id}-phenotypes.json`);
     const parsed = JSON.parse(json.text) as Record<string, string>[];
     expect(parsed.length, "one record per phenotype and evidence").toBeGreaterThanOrEqual(rows.length);
-    expect(Object.keys(parsed[0])).toEqual(
-      expect.arrayContaining(["qualifierNot", "phenotypeHPO", "aspect", "frequency", "evidenceType"])
-    );
-    expect(parsed.map((row) => row.phenotypeHPO)).toContain("Seizure");
+    expect(Object.keys(parsed[0])).toEqual([
+      "qualifierNot",
+      "phenotype",
+      "aspect",
+      "frequency",
+      "onset",
+      "modifier",
+      "sex",
+      "evidence",
+      "source",
+      "references",
+    ]);
+    expect(parsed.map((row) => row.phenotype)).toContain("Seizure");
 
     const tsv = await table.download("TSV");
     expect(tsv.filename).toBe(`${HUNTINGTON.id}-phenotypes.tsv`);
@@ -470,18 +469,22 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     });
   });
 
-  test("a disease with no phenotypes does not render the section or its summary", async ({ page }) => {
+  test("a disease with no phenotypes does not render the section, though its chip is listed", async ({
+    page,
+  }) => {
     const disease = new DiseasePage(page);
     await disease.goto(WITHOUT.id);
     await expectSections(page, expectedSectionsFor(WITHOUT.id));
     await expect(disease.section(PhenotypesSection.id)).toHaveCount(0);
-    await expect(disease.summaryCard(PhenotypesSection.id)).toHaveCount(0);
+    await expect(disease.summaryCard(PhenotypesSection.id)).toContainText("Clinical signs and symptoms");
   });
 
-  test("the summary chip of a disease with phenotypes shows how many there are", async ({ page }) => {
-    const { api } = await openPhenotypes(page, HUNTINGTON.id);
+  test("the summary chip jumps to the section", async ({ page }) => {
+    const { phenotypes } = await openPhenotypes(page, MARFAN.id);
     const disease = new DiseasePage(page);
-    await expect(disease.summaryCard(PhenotypesSection.id)).toContainText(String(api.count));
+    await disease.summaryCard(PhenotypesSection.id).click();
+    await expect(page).toHaveURL(/#phenotypes$/);
+    await expect(phenotypes.title).toBeInViewport();
   });
 
   test("Open Targets Projects is partner-only: not on the public profile, not even requested", async ({

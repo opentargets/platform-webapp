@@ -75,11 +75,6 @@ export class TargetPharmacogenomicsSection extends ProfileSection {
     return (await this.column(column).allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());
   }
 
-  /** The "N entries" buttons of the Directionality column on the current page. */
-  get directionalityTriggers(): Locator {
-    return this.column("directionality").getByTestId("directionality-drawer-trigger");
-  }
-
   get directionalityDrawer(): Locator {
     return this.page.getByTestId("directionality-drawer");
   }

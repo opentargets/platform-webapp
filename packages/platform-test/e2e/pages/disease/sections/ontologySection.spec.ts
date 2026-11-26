@@ -74,6 +74,10 @@ test.describe("Disease page: Ontology", () => {
       }
       // the disease is named in the legend, next to its colour
       await expect(ontology.legendText(MI.name)).toBeVisible();
+      // and the graph draws the disease, its four descendants and its three ancestors
+      await expect(ontology.nodeLinks).toHaveCount(
+        1 + Object.keys(MI.descendants).length + Object.keys(MI.ancestors).length
+      );
     });
   });
 

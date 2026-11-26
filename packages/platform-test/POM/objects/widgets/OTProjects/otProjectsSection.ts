@@ -16,6 +16,6 @@ export class OTProjectsSection {
 
   /** The chip in the summary grid above the sections. */
   get summaryCard(): Locator {
-    return this.page.getByTestId(`summary-${OTProjectsSection.id}`);
+    return this.page.getByTestId(`summary-${OTProjectsSection.id.toLowerCase()}`);
   }
 }

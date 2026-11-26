@@ -1,117 +1,236 @@
 import { expect, test } from "../../../fixtures";
 import { VariantEffectSection } from "../../../POM/objects/widgets/Variant/variantEffectSection";
+import { waitForOperation } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { VariantPage } from "../../../POM/page/variant/variant";
 
-test.describe("Variant Effect Section", () => {
-  let variantPage: VariantPage;
-  let variantEffectSection: VariantEffectSection;
+type Effect = {
+  method: string | null;
+  assessment: string | null;
+  score: number | null;
+  assessmentFlag: string | null;
+  normalisedScore: number | null;
+};
+type EffectData = { variant: { variantEffect: Effect[] } };
 
-  test.beforeEach(async ({ page, testConfig }) => {
-    variantPage = new VariantPage(page);
-    variantEffectSection = new VariantEffectSection(page);
+// Display names of the methods the app describes (VARIANT_EFFECT_METHODS). A method it does
+// not know is shown under the name the API gives it.
+const PRETTY: Record<string, string> = { VEP: "Ensembl VEP", LossOfFunctionCuration: "LoF curation" };
+const pretty = (method: string): string => PRETTY[method] ?? method;
+const DOCS = "https://platform-docs.opentargets.org/variant#variant-effect";
 
-    // Navigate to a variant with variant effect data
-    await variantPage.goToVariantPage(testConfig.variant.primary);
+/** What the table must show for the API rows: sorted by display name, formatted as the app does. */
+function expectedRows(effects: Effect[]): string[][] {
+  return effects
+    .filter((effect) => effect.method !== null)
+    .sort((a, b) => pretty(a.method as string).localeCompare(pretty(b.method as string)))
+    .map((effect) => [
+      pretty(effect.method as string),
+      effect.assessment ?? "N/A",
+      effect.score === null ? "N/A" : effect.score.toPrecision(3),
+      effect.normalisedScore === null ? "N/A" : effect.normalisedScore.toFixed(3),
+    ]);
+}
 
-    // Wait for the section to fully load
-    await variantEffectSection.waitForLoad();
+/** Open a variant and return its section together with the rows the API answered. */
+async function open(page: import("@playwright/test").Page, variantId: string) {
+  const answer = waitForOperation<EffectData>(page, VariantEffectSection.operation);
+  await new VariantPage(page).goToVariantPage(variantId);
+  const { data, variables } = await answer;
+  expect(variables.variantId).toBe(variantId);
+  const section = new VariantEffectSection(page);
+  await section.expectLoaded();
+  return { section, effects: data.variant.variantEffect };
+}
+
+test.describe("Variant page: Variant effect (in-silico predictors)", () => {
+  test("shows title, description and the chart first", { tag: "@smoke" }, async ({
+    page,
+    testConfig,
+  }) => {
+    const { section } = await open(page, testConfig.variant.withMolecularStructure);
+
+    await test.step("title and description", async () => {
+      await expect(section.title).toHaveText("Variant effect");
+      await expect(section.description).toContainText(
+        "Predicted and curated functional effect of 19_44908822_C_T. Source Ensembl VEP, gnomAD, OTAR2075."
+      );
+      for (const [name, href] of [
+        ["Ensembl VEP,", "https://www.ensembl.org/tools/vep"],
+        ["gnomAD,", "https://gnomad.broadinstitute.org/"],
+        ["OTAR2075.", "https://home.opentargets.org/node/1967"],
+      ]) {
+        const link = section.description.getByRole("link", { name });
+        await expect(link).toHaveAttribute("href", href);
+        await expect(link).toHaveAttribute("target", "_blank");
+      }
+    });
+
+    await test.step("chart is the default view", async () => {
+      await expect(section.chartButton).toHaveAttribute("aria-pressed", "true");
+      await expect(section.tableButton).toHaveAttribute("aria-pressed", "false");
+      await expect(section.chart).toBeVisible();
+      await expect(section.section.getByTestId("ot-table")).toHaveCount(0);
+      await expect(section.chartButton).toContainText("Chart");
+      await expect(section.tableButton).toContainText("Table view");
+    });
   });
 
-  test("Variant Effect section is visible", async () => {
-    expect(await variantEffectSection.isSectionVisible()).toBe(true);
+  test("table lists every method with formatted prediction, score and normalised score", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
+    await section.showTable();
+    const expected = expectedRows(effects);
+    expect(expected.length, "the APOE variant has several in-silico predictions").toBeGreaterThan(3);
+
+    await test.step("exact column headers", async () => {
+      await section.table.expectHeaders(VariantEffectSection.headers);
+    });
+
+    await test.step("one row per method, sorted by display name, values as the API reports", async () => {
+      await expect(section.table.rows).toHaveCount(expected.length);
+      await section.table.expectRowTexts(expected.map((row) => row.join(" ")));
+      const names = await section.table.columnTexts(0);
+      expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+      expect(new Set(names).size, "no method is listed twice").toBe(names.length);
+    });
+
+    await test.step("scores are numbers, normalised scores lie between 0 and 1", async () => {
+      for (const score of await section.table.columnTexts(2)) {
+        expect(score).toMatch(/^-?\d+(\.\d+)?$|^N\/A$/);
+      }
+      for (const score of await section.table.columnTexts(3)) {
+        expect(score).toMatch(/^[01]\.\d{3}$|^N\/A$/);
+      }
+    });
+
+    await test.step("a method the API has no assessment for shows N/A", async () => {
+      const missing = effects.filter((effect) => effect.assessment === null);
+      expect(missing.length, "GERP and FoldX have no assessment for this variant").toBeGreaterThan(0);
+      for (const effect of missing) {
+        const row = section.table.rows.filter({ hasText: pretty(effect.method as string) });
+        await expect(row.locator("td").nth(1)).toHaveText("N/A");
+      }
+    });
+
+    await test.step("no search, pagination or page size on this client-side table", async () => {
+      await expect(section.table.searchInput).toHaveCount(0);
+      await expect(section.table.pageSizeSelect).toHaveCount(0);
+    });
   });
 
-  test("Variant Effect table displays data", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
-
-    const rowCount = await variantEffectSection.getTableRows();
-
-    expect(rowCount).toBeGreaterThan(0);
+  test("a method name explains itself in a tooltip linking to the docs", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section } = await open(page, testConfig.variant.withMolecularStructure);
+    await section.showTable();
+    const row = section.table.rows.filter({ hasText: "Ensembl VEP" });
+    await row.getByText("Ensembl VEP").hover();
+    const tooltip = page.getByRole("tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText("Ensembl Variant Effect Predictor");
+    await expect(tooltip.getByRole("link", { name: "here" })).toHaveAttribute("href", DOCS);
+    await page.mouse.move(0, 0);
+    await expect(tooltip).toBeHidden();
   });
 
-  test("Method names are displayed in table", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
+  test("chart draws one dot per method and the view toggles back and forth", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
+    const methods = effects.filter((effect) => effect.method !== null);
 
-    const methodName = await variantEffectSection.getMethodName(0);
+    await test.step("a dot and a help mark per method, labelled with display names", async () => {
+      await expect(section.dots).toHaveCount(methods.length);
+      await expect(section.methodHelpMarks).toHaveCount(methods.length);
+      await expect(section.chart.getByText("Ensembl VEP", { exact: true })).toBeVisible();
+      await expect(section.chart.getByText("Likely benign")).toBeVisible();
+      await expect(section.chart.getByText("Likely deleterious")).toBeVisible();
+    });
 
-    expect(methodName).not.toBeNull();
-    expect(methodName).not.toBe("");
+    await test.step("table, then chart again", async () => {
+      await section.showTable();
+      await expect(section.table.rows).toHaveCount(methods.length);
+      await section.showChart();
+      await expect(section.dots).toHaveCount(methods.length);
+    });
   });
 
-  test("Predictions are displayed in table", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
-
-    const prediction = await variantEffectSection.getPrediction(0);
-
-    expect(prediction).not.toBeNull();
+  test("hovering a dot shows that method's prediction", async ({ page, testConfig }) => {
+    const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
+    const sift = effects.find((effect) => effect.method === "SIFT");
+    expect(sift?.assessment, "SIFT has an assessment for this variant").toBeTruthy();
+    // the plot draws one dot per method in the order the table lists them
+    const names = expectedRows(effects).map((row) => row[0]);
+    await section.dots.nth(names.indexOf("SIFT")).hover();
+    const tip = section.chart.locator("g[aria-label='tip']");
+    await expect(tip).toContainText("Method:");
+    await expect(tip).toContainText("SIFT");
+    await expect(tip).toContainText(`Assessment:${sift?.assessment}`.replace(":", ":"), {
+      useInnerText: true,
+    });
   });
 
-  test("Scores are displayed in table", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
-
-    const score = await variantEffectSection.getScore(0);
-
-    expect(score).not.toBeNull();
+  test("hovering the ? next to a method name describes the method", async ({
+    page,
+    testConfig,
+  }) => {
+    const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
+    const names = expectedRows(effects).map((row) => row[0]);
+    await section.methodHelpMarks.nth(names.indexOf("Ensembl VEP")).hover();
+    const popup = page.locator("body > div.popup");
+    await expect(popup).toContainText("Ensembl Variant Effect Predictor");
+    await page.mouse.move(0, 0);
+    await expect(popup).toHaveCount(0);
   });
 
-  test("Normalised scores are displayed in table", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
+  test("chart and table export the same rows as JSON and TSV", async ({ page, testConfig }) => {
+    const { section, effects } = await open(page, testConfig.variant.withMolecularStructure);
+    const expected = expectedRows(effects);
 
-    const normScore = await variantEffectSection.getNormalisedScore(0);
+    await test.step("chart export", async () => {
+      const { filename, rows } = await section.controls.downloadJson();
+      expect(filename).toBe("variant-effect-plot.json");
+      expect(rows).toHaveLength(expected.length);
+    });
 
-    expect(normScore).not.toBeNull();
+    await section.showTable();
+    await test.step("table export", async () => {
+      const { filename, rows } = await section.controls.downloadJson();
+      expect(filename).toBe("19_44908822_C_T-variant-effect.json");
+      expect(rows.map((row) => row.Method)).toEqual(expected.map((row) => row[0]));
+      const tsv = await section.controls.downloadTsv();
+      expect(tsv.header).toEqual([...VariantEffectSection.headers]);
+      expect(tsv.lines).toHaveLength(expected.length);
+    });
+
+    await test.step("API query drawer holds the section's query", async () => {
+      await section.controls.openApiQuery(VariantEffectSection.operation, "19_44908822_C_T");
+      await section.controls.closeApiQuery();
+    });
   });
 
-  test("Can switch to chart view", async () => {
-    // Chart view is already default, but explicitly switch for clarity
-    await variantEffectSection.switchToChartView();
-
-    // Verify chart is active
-    expect(await variantEffectSection.isChartViewActive()).toBe(true);
-
-    // Verify chart is visible
-    expect(await variantEffectSection.isChartVisible()).toBe(true);
+  test("a variant with only two predictors lists just those", async ({ page, testConfig }) => {
+    const { section, effects } = await open(page, testConfig.variant.primary);
+    expect(effects.map((effect) => effect.method).sort()).toEqual(["GPN-Star", "VEP"]);
+    await expect(section.dots).toHaveCount(2);
+    await section.showTable();
+    await section.table.expectHeaders(VariantEffectSection.headers);
+    await section.table.expectRowTexts(expectedRows(effects).map((row) => row.join(" ")));
+    await expect(section.table.cell(0, 0)).toHaveText("Ensembl VEP");
+    await expect(section.table.cell(0, 1)).toHaveText("intron_variant");
+    await expect(section.table.cell(1, 0)).toHaveText("GPN-Star");
   });
 
-  test("Can switch back to table view from chart view", async () => {
-    // Chart is default, so just switch to table
-    await variantEffectSection.switchToTableView();
-
-    // Verify table view is active
-    expect(await variantEffectSection.isTableViewActive()).toBe(true);
-
-    // Verify table is visible
-    const rowCount = await variantEffectSection.getTableRows();
-    expect(rowCount).toBeGreaterThan(0);
-  });
-
-  test("Chart view displays visualization", async () => {
-    // Chart is default view
-    const isChartVisible = await variantEffectSection.isChartVisible();
-
-    expect(isChartVisible).toBe(true);
-  });
-
-  test("All rows have complete data", async () => {
-    // Switch to table view first (chart is default)
-    await variantEffectSection.switchToTableView();
-
-    const rowCount = await variantEffectSection.getTableRows();
-
-    // Check first 3 rows for complete data
-    const rowsToCheck = Math.min(3, rowCount);
-
-    for (let i = 0; i < rowsToCheck; i++) {
-      const methodName = await variantEffectSection.getMethodName(i);
-      const prediction = await variantEffectSection.getPrediction(i);
-
-      expect(methodName).not.toBeNull();
-      expect(prediction).not.toBeNull();
-    }
+  test("a long deletion lists VEP and GERP", async ({ page }) => {
+    const { section, effects } = await open(page, "1_916631_AGAGCCGGCCCT_A");
+    expect(effects.map((effect) => effect.method).sort()).toEqual(["GERP", "VEP"]);
+    await section.showTable();
+    await section.table.expectRowTexts(expectedRows(effects).map((row) => row.join(" ")));
+    await expect(section.table.cell(0, 0)).toHaveText("Ensembl VEP");
+    await expect(section.table.cell(1, 0)).toHaveText("GERP");
   });
 });

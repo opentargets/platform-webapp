@@ -44,6 +44,11 @@ export class PhenotypesSection {
     return this.table.cell(rowIndex, PHENOTYPE_COLUMNS.indexOf(column));
   }
 
+  /** The "?" a tooltip-bearing cell shows next to its value; hovering it opens the tooltip. */
+  helpIcon(rowIndex: number, column: PhenotypeColumn): Locator {
+    return this.cell(rowIndex, column).locator("sup");
+  }
+
   /** Every cell of a named column on the current page. */
   columnCells(column: PhenotypeColumn): Locator {
     return this.table.rows.locator(`td:nth-child(${PHENOTYPE_COLUMNS.indexOf(column) + 1})`);
