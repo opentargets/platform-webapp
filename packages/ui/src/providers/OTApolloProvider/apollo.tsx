@@ -27,6 +27,13 @@ export const createApolloClient = (config: Config) => {
         ScoredComponent: {
           keyFields: ["componentId", "score"],
         },
+        // Score's `id` is the datasource/datatype id, not an entity id: it repeats on
+        // every association row with a different score. Normalizing it (which Apollo
+        // does even when `id` is aliased) makes every row share one `Score:<id>`
+        // object, so a whole table column shows the same value.
+        Score: {
+          keyFields: false,
+        },
         Indications: {
           keyFields: [],
         },
