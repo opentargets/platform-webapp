@@ -143,11 +143,11 @@ const exportColumns = [
   },
   {
     label: "Functional consequence",
-    exportValue: row => sentenceCase(row.variantFunctionalConsequence.label),
+    exportValue: row => sentenceCase(row.variantFunctionalConsequence?.label),
   },
   {
     label: "Functional consequence ID",
-    exportValue: row => row.variantFunctionalConsequence.id,
+    exportValue: row => row.variantFunctionalConsequence?.id,
   },
   {
     label: "Confidence",
