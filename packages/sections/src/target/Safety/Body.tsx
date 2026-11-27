@@ -104,7 +104,7 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
           <>
             {circleUpData ? (
               <Tooltip title={<EffectTooltipContent effect={circleUpData} />}>
-                <span style={{ marginRight: "10px" }}>
+                <span data-testid="safety-effect-up-active" style={{ marginRight: "10px" }}>
                   <FontAwesomeIcon
                     color={theme.palette.primary.main}
                     icon={faArrowAltCircleUp}
@@ -114,6 +114,7 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
               </Tooltip>
             ) : (
               <FontAwesomeIcon
+                data-testid="safety-effect-up-inactive"
                 color={theme.palette.grey[300]}
                 icon={faArrowAltCircleUp}
                 size="lg"
@@ -122,7 +123,7 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
             )}
             {circleDownData ? (
               <Tooltip title={<EffectTooltipContent effect={circleDownData} />}>
-                <span>
+                <span data-testid="safety-effect-down-active">
                   <FontAwesomeIcon
                     color={theme.palette.primary.main}
                     icon={faArrowAltCircleDown}
@@ -132,6 +133,7 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
               </Tooltip>
             ) : (
               <FontAwesomeIcon
+                data-testid="safety-effect-down-inactive"
                 color={theme.palette.grey[300]}
                 icon={faArrowAltCircleDown}
                 size="lg"

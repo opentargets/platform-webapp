@@ -162,7 +162,9 @@ export function DateFilter() {
             alignItems: "center",
           }}
         >
-          <DateIndicator>{valueLabelFormat(filterDate[0])}</DateIndicator>
+          <DateIndicator data-testid="literature-date-start">
+            {valueLabelFormat(filterDate[0])}
+          </DateIndicator>
           <OTSlider
             size="small"
             style={{ width: 275 }}
@@ -174,7 +176,9 @@ export function DateFilter() {
             max={numberOfMonths}
             valueLabelFormat={valueLabelFormat}
           />
-          <DateIndicator>{valueLabelFormat(filterDate[1])}</DateIndicator>
+          <DateIndicator data-testid="literature-date-end">
+            {valueLabelFormat(filterDate[1])}
+          </DateIndicator>
         </FormControl>
       </FormGroup>
     </div>

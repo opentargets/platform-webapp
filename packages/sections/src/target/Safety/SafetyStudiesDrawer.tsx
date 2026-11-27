@@ -56,15 +56,24 @@ function SafetyStudiesDrawer({ studies }: { studies: Study[] }) {
         <Typography variant="body2">{studies.length} studies</Typography>
       </StyledButtonBase>
 
-      <StyledDrawer open={open} onClose={() => close()} anchor="right">
+      <StyledDrawer
+        open={open}
+        onClose={() => close()}
+        anchor="right"
+        data-testid="safety-studies-drawer-panel"
+      >
         <StyledTitle>
           Experimental studies
-          <IconButton onClick={() => close()}>
+          <IconButton onClick={() => close()} data-testid="drawer-close">
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </StyledTitle>
         {studies.map((study) => (
-          <StyledPaper key={study.name ?? study.description} variant="outlined">
+          <StyledPaper
+            key={study.name ?? study.description}
+            variant="outlined"
+            data-testid="safety-study"
+          >
             <Typography variant="h6" gutterBottom>
               Study:
             </Typography>
