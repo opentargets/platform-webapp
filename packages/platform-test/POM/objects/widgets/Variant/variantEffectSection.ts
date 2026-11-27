@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { OtTable } from "../../../../utils/table";
 import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 import { SectionDataControls } from "../shared/sectionDataControls";
 
 /** The "Variant effect" section (in_silico_predictors) of the variant page. */

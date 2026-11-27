@@ -50,7 +50,12 @@ export function comparable(texts: readonly string[], kind: SortKind): (number | 
     case "number":
       return texts.map(parseNumber);
     case "text":
-      return texts.map((text) => text.replace(/\s+/g, " ").replace(/ lead$/, "").trim());
+      return texts.map((text) =>
+        text
+          .replace(/\s+/g, " ")
+          .replace(/ lead$/, "")
+          .trim()
+      );
     case "unreadable":
       return [];
   }
@@ -144,7 +149,9 @@ export class ServerTableSection {
       const body = request.postData() ?? "";
       if (request.method() !== "POST" || !body.includes(this.operation)) return false;
       const parsed = JSON.parse(body) as { operationName?: string; variables?: TableVariables };
-      return parsed.operationName === this.operation && !!parsed.variables && matches(parsed.variables);
+      return (
+        parsed.operationName === this.operation && !!parsed.variables && matches(parsed.variables)
+      );
     });
     await action();
     return ((await sent).postDataJSON() as { variables: TableVariables }).variables;
@@ -198,7 +205,11 @@ export class ServerTableSection {
    * Assert the rows on this page run in `direction` in a column. Polls: the sorted page
    * arrives after the footer.
    */
-  async expectColumnOrdered(columnIndex: number, kind: SortKind, direction: SortDirection): Promise<void> {
+  async expectColumnOrdered(
+    columnIndex: number,
+    kind: SortKind,
+    direction: SortDirection
+  ): Promise<void> {
     await expect
       .poll(
         async () => {
@@ -247,9 +258,10 @@ export class ServerTableSection {
       "href",
       "https://platform-docs.opentargets.org/data-access/graphql-api"
     );
-    await expect(drawer, `the playground should hold the ${this.operation} operation`).toContainText(
-      this.operation
-    );
+    await expect(
+      drawer,
+      `the playground should hold the ${this.operation} operation`
+    ).toContainText(this.operation);
     for (const text of variableText) {
       await expect(drawer, `the playground variables should hold ${text}`).toContainText(text);
     }

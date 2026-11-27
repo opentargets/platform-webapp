@@ -54,8 +54,9 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     async ({ page }, use) => {
       // Netlify injects this toolbar into every deploy preview. It sits over the bottom of
       // the viewport and intercepts clicks meant for the app; it is not part of the app.
-      await page.route(/\/\.netlify\/scripts\/cdp(\?|$)|^https:\/\/netlify-cdp-loader\.netlify\.app\//, (route) =>
-        route.abort()
+      await page.route(
+        /\/\.netlify\/scripts\/cdp(\?|$)|^https:\/\/netlify-cdp-loader\.netlify\.app\//,
+        (route) => route.abort()
       );
       await use();
     },

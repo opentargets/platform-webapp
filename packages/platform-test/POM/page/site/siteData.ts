@@ -1,4 +1,4 @@
-import { searchSuggestions, type Suggestion } from "../../../../ot-constants/src/searchSuggestions";
+import { type Suggestion, searchSuggestions } from "../../../../ot-constants/src/searchSuggestions";
 import type { SearchEntity } from "../search/searchData";
 
 /**
@@ -12,14 +12,23 @@ export type MenuLink = { name: string; href: string; external: boolean };
 /** The main menu of a public deployment, in the order the header shows it. */
 export const MAIN_MENU: readonly MenuLink[] = [
   { name: "Metrics", href: "/metrics", external: false },
-  { name: "Documentation", href: "https://platform-docs.opentargets.org/getting-started", external: true },
+  {
+    name: "Documentation",
+    href: "https://platform-docs.opentargets.org/getting-started",
+    external: true,
+  },
   { name: "Data downloads", href: "/downloads", external: false },
   { name: "API", href: "/api", external: false },
   { name: "Community", href: "https://community.opentargets.org/", external: true },
 ];
 
 /** Menu entries that only the Partner Preview Platform shows. */
-export const PARTNER_ONLY_MENU = ["Projects", "GSEA Analysis", "PPP Documentation", "Contact us"] as const;
+export const PARTNER_ONLY_MENU = [
+  "Projects",
+  "GSEA Analysis",
+  "PPP Documentation",
+  "Contact us",
+] as const;
 
 export type FooterSection = { heading: string; links: readonly { label: string; href: string }[] };
 
@@ -83,12 +92,21 @@ export const HELP_PANELS: readonly { label: string; href: string }[] = [
   { label: "Download all of our open datasets", href: "/downloads" },
   { label: "Access data with our GraphQL API", href: "/api" },
   { label: "Check out our Platform documentation", href: "https://platform-docs.opentargets.org/" },
-  { label: "Read our latest Platform publications", href: "https://platform-docs.opentargets.org/citation" },
+  {
+    label: "Read our latest Platform publications",
+    href: "https://platform-docs.opentargets.org/citation",
+  },
   { label: "Join the Open Targets Community", href: "https://community.opentargets.org/" },
 ];
 
 /** Entities of the suggestion chips, in the order the home page lists them (two each). */
-export const CHIP_ENTITIES: readonly SearchEntity[] = ["target", "disease", "drug", "variant", "study"];
+export const CHIP_ENTITIES: readonly SearchEntity[] = [
+  "target",
+  "disease",
+  "drug",
+  "variant",
+  "study",
+];
 
 const POOLS: Record<SearchEntity, readonly Suggestion[]> = {
   target: searchSuggestions.targets,
@@ -106,7 +124,13 @@ export function suggestionFor(entity: SearchEntity, id: string): Suggestion | un
 /** Entity of a chip link, read from its route. */
 export function entityOfHref(href: string): SearchEntity {
   const entity = href.split("/")[1];
-  if (entity === "target" || entity === "disease" || entity === "drug" || entity === "variant" || entity === "study")
+  if (
+    entity === "target" ||
+    entity === "disease" ||
+    entity === "drug" ||
+    entity === "variant" ||
+    entity === "study"
+  )
     return entity;
   throw new Error(`"${href}" is not an entity route`);
 }

@@ -1,7 +1,7 @@
-import type { TestConfig } from "../../types";
-import { expectedSectionsFor } from "../../fixtures/expectedSections";
 import { expect, test } from "../../fixtures";
+import { expectedSectionsFor } from "../../fixtures/expectedSections";
 import { stubEuropePmc } from "../../POM/objects/widgets/shared/sectionDataControls";
+import type { TestConfig } from "../../types";
 import { expectSections } from "../../utils/sections";
 
 /**

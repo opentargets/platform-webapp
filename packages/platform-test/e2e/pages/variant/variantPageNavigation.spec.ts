@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { expect, test } from "../../../fixtures";
+import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { VariantPage } from "../../../POM/page/variant/variant";
 import { VARIANTS } from "../../../POM/page/variant/variantData";
 import { expectSectionLoaded, expectSections } from "../../../utils/sections";

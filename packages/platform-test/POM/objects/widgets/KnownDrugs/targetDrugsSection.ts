@@ -147,7 +147,10 @@ export class TargetDrugsSection {
     const texts = await this.cards.allInnerTexts();
     return texts.map((text) => {
       const match = /^(.+?)\s*Max stage:\s*(.+?)\s*(\d+) reports?$/s.exec(text.trim());
-      expect(match, `the card "${text}" should read name, max stage and report count`).not.toBeNull();
+      expect(
+        match,
+        `the card "${text}" should read name, max stage and report count`
+      ).not.toBeNull();
       const [, name, label, reports] = match as RegExpExecArray;
       const stage = CLINICAL_STAGES.find((candidate) => candidate.label === label);
       expect(stage, `"${label}" should be a clinical stage label`).toBeDefined();
@@ -202,7 +205,8 @@ export class TargetDrugsSection {
     return this.waitForOperation<ClinicalRecordsData, { clinicalReportsIds: string[] }>(
       TargetDrugsSection.recordsOperation,
       ({ clinicalReportsIds: sent }) =>
-        sent.length === clinicalReportsIds.length && sent.every((id, i) => id === clinicalReportsIds[i])
+        sent.length === clinicalReportsIds.length &&
+        sent.every((id, i) => id === clinicalReportsIds[i])
     );
   }
 
@@ -215,7 +219,11 @@ export class TargetDrugsSection {
         const body = candidate.request().postData();
         if (candidate.request().method() !== "POST" || !body?.includes('"query"')) return false;
         const request = JSON.parse(body) as { operationName?: string; variables?: Variables };
-        return request.operationName === operationName && !!request.variables && matches(request.variables);
+        return (
+          request.operationName === operationName &&
+          !!request.variables &&
+          matches(request.variables)
+        );
       },
       { timeout: 60_000 }
     );

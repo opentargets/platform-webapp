@@ -27,7 +27,8 @@ const MI = {
     MONDO_0004781: "acute myocardial infarction",
     MONDO_0006652: "anterolateral myocardial infarction",
     MONDO_0006803: "inferior myocardial infarction",
-    EFO_0008584: "Subsequent ST elevation (STEMI) and non-ST elevation (NSTEMI) myocardial infarction",
+    EFO_0008584:
+      "Subsequent ST elevation (STEMI) and non-ST elevation (NSTEMI) myocardial infarction",
   } as Record<string, string>,
   ancestors: {
     MONDO_0024643: "myocardial disorder",
@@ -69,7 +70,14 @@ test.describe("Disease page: Ontology", () => {
     await test.step("the graph is named after the disease and has a legend and an axis", async () => {
       await expect(ontology.graph).toBeVisible();
       await expect(ontology.graph).toHaveAccessibleName(`Ontology subgraph of ${MI.name}`);
-      for (const text of ["therapeutic area", "disease", "descendants", "ancestors", "GENERAL", "SPECIFIC"]) {
+      for (const text of [
+        "therapeutic area",
+        "disease",
+        "descendants",
+        "ancestors",
+        "GENERAL",
+        "SPECIFIC",
+      ]) {
         await expect(ontology.legendText(text)).toBeVisible();
       }
       // the disease is named in the legend, next to its colour
@@ -151,7 +159,9 @@ test.describe("Disease page: Ontology", () => {
     expect(data.disease.id).toBe(childId);
 
     await expectSectionLoaded(page, OntologySection.id);
-    await expect(ontology.graph).toHaveAccessibleName(`Ontology subgraph of ${MI.descendants[childId]}`);
+    await expect(ontology.graph).toHaveAccessibleName(
+      `Ontology subgraph of ${MI.descendants[childId]}`
+    );
     // the page we came from is now one of its ancestors, and it links back
     const nodes = await ontology.nodes();
     expect(nodes.find((node) => node.id === MI.id)).toMatchObject({
@@ -167,7 +177,9 @@ test.describe("Disease page: Ontology", () => {
     await expect(ontology.graph).toHaveAccessibleName(`Ontology subgraph of ${MI.name}`);
   });
 
-  test("clicking an ancestor opens its page, where the disease is a descendant", async ({ page }) => {
+  test("clicking an ancestor opens its page, where the disease is a descendant", async ({
+    page,
+  }) => {
     const ontology = new OntologySection(page);
     const disease = new DiseasePage(page);
     await openOntology(page, MI.id);
@@ -200,12 +212,19 @@ test.describe("Disease page: Ontology", () => {
 
     const nodes = await ontology.nodes();
     expect(nodes.filter((node) => node.role === "descendant")).toHaveLength(0);
-    expect(nodes.filter((node) => node.role === "disease").map((node) => node.id)).toEqual([LEAF.id]);
-    expect(nodes.filter((node) => node.role === "ancestor").map((node) => node.id).sort()).toEqual(
+    expect(nodes.filter((node) => node.role === "disease").map((node) => node.id)).toEqual([
+      LEAF.id,
+    ]);
+    expect(
+      nodes
+        .filter((node) => node.role === "ancestor")
+        .map((node) => node.id)
+        .sort()
+    ).toEqual([...disease.ancestors].sort());
+    // the second request resolves names for every ancestor
+    expect(resolved.diseases.rows.map((row) => row.id).sort()).toEqual(
       [...disease.ancestors].sort()
     );
-    // the second request resolves names for every ancestor
-    expect(resolved.diseases.rows.map((row) => row.id).sort()).toEqual([...disease.ancestors].sort());
     for (const row of resolved.diseases.rows) {
       expect(nodes.find((node) => node.id === row.id)?.name).toBe(row.name);
     }
@@ -224,9 +243,12 @@ test.describe("Disease page: Ontology", () => {
     expect(nodes.filter((node) => node.role === "disease")).toEqual([
       expect.objectContaining({ id: THERAPEUTIC_AREA.id, name: THERAPEUTIC_AREA.name }),
     ]);
-    expect(nodes.filter((node) => node.role === "descendant").map((node) => node.id).sort()).toEqual(
-      disease.children.map((child) => child.id).sort()
-    );
+    expect(
+      nodes
+        .filter((node) => node.role === "descendant")
+        .map((node) => node.id)
+        .sort()
+    ).toEqual(disease.children.map((child) => child.id).sort());
     expect(new Set(nodes.map((node) => node.id)).size, "no term is drawn twice").toBe(nodes.length);
     // the graph grows with the number of terms rather than clipping them
     const box = await ontology.graph.boundingBox();

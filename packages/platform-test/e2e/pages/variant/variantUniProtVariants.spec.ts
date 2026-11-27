@@ -52,9 +52,7 @@ test.describe("Variant page: UniProt variants", () => {
 
     await test.step("title and description link to the UniProt entry", async () => {
       await expect(section.title).toHaveText("UniProt variants");
-      await expect(section.description).toContainText(
-        "Literature-based curation associating"
-      );
+      await expect(section.description).toContainText("Literature-based curation associating");
       await expect(section.description).toContainText(APOE);
       await expect(section.description).toContainText("to a disease/phenotype. Source:");
       const link = section.description.getByRole("link", { name: `UniProt (${accession})` });

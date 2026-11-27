@@ -9,7 +9,8 @@ const GRAPHQL_URL = /\/graphql$/;
  * 200 opens the "Partner Preview Platform" dialog), so a stub must not answer that one.
  */
 const PARTNER_API_HOST = "api.partner-platform.opentargets.org";
-const isPlatformGraphQL = (url: URL): boolean => GRAPHQL_URL.test(url.pathname) && url.hostname !== PARTNER_API_HOST;
+const isPlatformGraphQL = (url: URL): boolean =>
+  GRAPHQL_URL.test(url.pathname) && url.hostname !== PARTNER_API_HOST;
 
 function isMetaRequest(response: Response): boolean {
   const request = response.request();
@@ -108,7 +109,10 @@ export class SiteShell {
   async expectMenu(expected: readonly MenuLink[]): Promise<void> {
     await expect(this.menuItems).toHaveText(expected.map((item) => item.name));
     for (const item of expected) {
-      await expect(this.menuItem(item.name).getByRole("link"), item.name).toHaveAttribute("href", item.href);
+      await expect(this.menuItem(item.name).getByRole("link"), item.name).toHaveAttribute(
+        "href",
+        item.href
+      );
     }
   }
 

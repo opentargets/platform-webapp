@@ -3,8 +3,18 @@ import { sectionTestId } from "../../../utils/sections";
 
 /** Section ids of the GWAS study profile page, in the order the page renders them. */
 export const GWAS_STUDY_SECTIONS = [
-  { id: "gwas-credible-sets", name: "GWAS Credible Sets", shortName: "GW", anchor: "gwas_credible_sets" },
-  { id: "shared-trait-studies", name: "Shared Trait Studies", shortName: "ST", anchor: "shared_trait_studies" },
+  {
+    id: "gwas-credible-sets",
+    name: "GWAS Credible Sets",
+    shortName: "GW",
+    anchor: "gwas_credible_sets",
+  },
+  {
+    id: "shared-trait-studies",
+    name: "Shared Trait Studies",
+    shortName: "ST",
+    anchor: "shared_trait_studies",
+  },
 ] as const;
 
 /** The study profile page, /study/:studyId. */

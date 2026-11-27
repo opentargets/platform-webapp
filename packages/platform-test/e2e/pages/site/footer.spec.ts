@@ -11,7 +11,8 @@ import { SiteShell, stubMeta, waitForMeta } from "../../../POM/page/site/siteShe
 
 const FOOTER_HEADINGS = ["About", "Help", "Follow us", "Partners", "About Open Targets"];
 /** Links in the footer: every section's, the licence's two, the four social icons. */
-const FOOTER_LINK_COUNT = FOOTER_SECTIONS.reduce((n, section) => n + section.links.length, 0) + 2 + FOOTER_SOCIAL.length;
+const FOOTER_LINK_COUNT =
+  FOOTER_SECTIONS.reduce((n, section) => n + section.links.length, 0) + 2 + FOOTER_SOCIAL.length;
 
 test.describe("Footer", () => {
   const routes = [
@@ -33,25 +34,33 @@ test.describe("Footer", () => {
       await test.step("each link has its label and address", async () => {
         for (const section of FOOTER_SECTIONS) {
           for (const link of section.links) {
-            await expect(shell.footerLink(link.label), `${section.heading}: ${link.label}`).toHaveAttribute(
-              "href",
-              link.href
-            );
+            await expect(
+              shell.footerLink(link.label),
+              `${section.heading}: ${link.label}`
+            ).toHaveAttribute("href", link.href);
           }
         }
       });
 
       await test.step("the social icons link to the four networks", async () => {
         for (const social of FOOTER_SOCIAL) {
-          await expect(shell.footerSocialLink(social.name), social.name).toHaveAttribute("href", social.href);
+          await expect(shell.footerSocialLink(social.name), social.name).toHaveAttribute(
+            "href",
+            social.href
+          );
         }
       });
 
       await test.step("the licence line names the platform and CC0", async () => {
         await expect(shell.footer).toContainText("Open Targets Platform is marked with CC0 1.0");
-        await expect(shell.footerLink("Open Targets Platform")).toHaveAttribute("href", FOOTER_LICENSE.platformHref);
+        await expect(shell.footerLink("Open Targets Platform")).toHaveAttribute(
+          "href",
+          FOOTER_LICENSE.platformHref
+        );
         await expect(
-          shell.footer.getByRole("link", { name: "Read more about creative commons license on this link" })
+          shell.footer.getByRole("link", {
+            name: "Read more about creative commons license on this link",
+          })
         ).toHaveAttribute("href", FOOTER_LICENSE.cc0Href);
         await expect(shell.footer.getByRole("img", { name: /cc0 license image/ })).toHaveCount(2);
       });
@@ -69,15 +78,16 @@ test.describe("Footer", () => {
 
     await expect(shell.footerLink("Contact us")).toHaveCount(0);
     await expect(shell.footer.locator("a[href^='mailto']")).toHaveCount(0);
-    for (const name of PARTNER_ONLY_MENU) await expect(shell.footer.getByText(name, { exact: true }), name).toHaveCount(0);
+    for (const name of PARTNER_ONLY_MENU)
+      await expect(shell.footer.getByText(name, { exact: true }), name).toHaveCount(0);
   });
 
   test("every footer address is absolute, so none can land on the 404 page", async ({ page }) => {
     await page.goto("/api");
     await expect(new SiteShell(page).footerLink("Blog")).toBeVisible();
-    const hrefs = await new SiteShell(page).footer.getByRole("link").evaluateAll((links) =>
-      links.map((link) => link.getAttribute("href"))
-    );
+    const hrefs = await new SiteShell(page).footer
+      .getByRole("link")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
     expect(hrefs).toHaveLength(FOOTER_LINK_COUNT);
     for (const href of hrefs) expect(href, "footer address").toMatch(/^https?:\/\//);
   });
@@ -89,7 +99,9 @@ test.describe("Footer", () => {
       await page.goto("/api");
       const { api } = await meta;
 
-      await expect(shell.versionBlock).toContainText(`API: ${api.year}.${api.month}.${api.revision}`);
+      await expect(shell.versionBlock).toContainText(
+        `API: ${api.year}.${api.month}.${api.revision}`
+      );
       await expect(shell.versionBlock).toContainText(/^UI:/);
       await expect(shell.versionBlock).toHaveText(/^UI:\s*\S*\s*API:\s*\d+\.\d+\.\d+$/);
     });
@@ -123,10 +135,14 @@ test.describe("Footer", () => {
       const shell = new SiteShell(page);
       const meta = waitForMeta(page);
       await page.goto(`/drug/${testConfig.drug.primary}`);
-      await expect(page).toHaveTitle(`${drugFacts(testConfig.drug.primary).name} profile page | Open Targets Platform`);
+      await expect(page).toHaveTitle(
+        `${drugFacts(testConfig.drug.primary).name} profile page | Open Targets Platform`
+      );
       const { api } = await meta;
 
-      await expect(shell.versionBlock).toContainText(`API: ${api.year}.${api.month}.${api.revision}`);
+      await expect(shell.versionBlock).toContainText(
+        `API: ${api.year}.${api.month}.${api.revision}`
+      );
     });
   });
 });

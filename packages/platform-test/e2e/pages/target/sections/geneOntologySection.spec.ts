@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { GeneOntologySection } from "../../../../POM/objects/widgets/shared/geneOntologySection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
 import { EDGE_TARGETS, targetFacts } from "../../../../POM/objects/widgets/Target/targetFacts";
@@ -18,7 +18,9 @@ test.describe("Target profile: Gene Ontology section", () => {
     await geneOntology.expectLoaded();
 
     await expect(geneOntology.title).toHaveText("Gene Ontology");
-    await expect(geneOntology.description).toHaveText(`Annotations for ${symbol}. Source: UniProt.`);
+    await expect(geneOntology.description).toHaveText(
+      `Annotations for ${symbol}. Source: UniProt.`
+    );
     await expect(geneOntology.descriptionLink("UniProt")).toHaveAttribute(
       "href",
       "https://www.uniprot.org/"
@@ -84,7 +86,8 @@ test.describe("Target profile: Gene Ontology section", () => {
     // The drawer asks Europe PMC, which can take close to a minute. Answer it with the
     // publication that was asked for, so the test depends only on the app and its API.
     await page.route("https://www.ebi.ac.uk/europepmc/webservices/rest/searchPOST", (route) => {
-      const ids = decodeURIComponent(route.request().postData() ?? "").match(/ext_id:(\d+)/gi) ?? [];
+      const ids =
+        decodeURIComponent(route.request().postData() ?? "").match(/ext_id:(\d+)/gi) ?? [];
       return route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -441,7 +444,9 @@ test.describe("Target profile: Gene Ontology section", () => {
     await geneOntology.expectLoaded();
     await controls.expectLoaded();
 
-    await expect(geneOntology.description).toHaveText(`Annotations for ${symbol}. Source: UniProt.`);
+    await expect(geneOntology.description).toHaveText(
+      `Annotations for ${symbol}. Source: UniProt.`
+    );
     const total = await controls.total();
     expect(total).toBeGreaterThan(0);
     expect(total).toBeLessThanOrEqual(100);

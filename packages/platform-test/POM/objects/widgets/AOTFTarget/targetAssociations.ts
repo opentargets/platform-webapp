@@ -75,7 +75,9 @@ export function associationTargets(testConfig: {
   const primary = testConfig.target?.primary;
   const other = testConfig.target?.alternatives?.[0];
   if (!primary || !other) {
-    throw new Error("fixtures/testConfig.ts needs target.primary and one target.alternatives entry");
+    throw new Error(
+      "fixtures/testConfig.ts needs target.primary and one target.alternatives entry"
+    );
   }
   return { primary, other };
 }

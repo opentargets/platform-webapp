@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   DEPMAP_EXPORT_COLUMNS,
   DepMapSection,
@@ -61,7 +61,9 @@ test.describe("Target profile: Cancer DepMap section", () => {
     await expect(depMap.plot.locator("g[aria-label='bar'] rect")).toHaveCount(tissues.length);
 
     await test.step("dots are coloured by gene effect", async () => {
-      const dependencies = rows.filter((row) => row.geneEffect < DepMapSection.DEPENDENCY_THRESHOLD);
+      const dependencies = rows.filter(
+        (row) => row.geneEffect < DepMapSection.DEPENDENCY_THRESHOLD
+      );
       expect(dependencies.length, "BRAF has some dependent cell lines").toBeGreaterThan(0);
       expect(dependencies.length).toBeLessThan(rows.length);
       await expect(depMap.dependencyDots).toHaveCount(dependencies.length);
@@ -116,7 +118,9 @@ test.describe("Target profile: Cancer DepMap section", () => {
     ).toBeGreaterThan(typed.length / 2);
   });
 
-  test("the exported TSV has a header and the same number of rows as the JSON", async ({ page }) => {
+  test("the exported TSV has a header and the same number of rows as the JSON", async ({
+    page,
+  }) => {
     const depMap = await open(page, PRIMARY);
     const json = await depMap.exportedRows();
     const tsv = await depMap.controls.downloadTsv();
@@ -153,7 +157,9 @@ test.describe("Target profile: Cancer DepMap section", () => {
       const rows = await depMap.exportedRows();
       const isolated = await depMap.isolatedDotIndexes();
       const isDependency = (geneEffect: number) => geneEffect < DepMapSection.DEPENDENCY_THRESHOLD;
-      const index = isolated.find((i) => isDependency(rows[i].geneEffect) === (kind === "dependency"));
+      const index = isolated.find(
+        (i) => isDependency(rows[i].geneEffect) === (kind === "dependency")
+      );
       expect(index, `an unambiguous ${kind} dot exists`).toBeDefined();
       const row = rows[index as number];
 
@@ -206,12 +212,16 @@ test.describe("Target profile: Cancer DepMap section", () => {
     const depMap = new DepMapSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest records this target as without DepMap data").not.toContain(
-      "depmapessentiality"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest records this target as without DepMap data"
+    ).not.toContain("depmapessentiality");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
     await expect(depMap.section).toHaveCount(0);
-    await expect(target.summaryChip(targetWidget("depmapessentiality"))).toHaveCSS("cursor", "auto");
+    await expect(target.summaryChip(targetWidget("depmapessentiality"))).toHaveCSS(
+      "cursor",
+      "auto"
+    );
   });
 });

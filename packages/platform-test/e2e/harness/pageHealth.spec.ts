@@ -8,7 +8,9 @@ import { expect, test } from "../../fixtures";
 test.describe("Page health guard", () => {
   test("a healthy page records no problems @smoke", async ({ page, pageHealth }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /Open Targets Platform/ }).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Open Targets Platform/ }).first()
+    ).toBeVisible();
     expect(await pageHealth.collect()).toEqual([]);
   });
 
@@ -89,7 +91,11 @@ test.describe("Page health guard", () => {
   });
 
   test("records the 404 page as error UI @smoke", async ({ page, pageHealth }) => {
-    pageHealth.allow(/404 page is displayed/, "this test opens a route that does not exist", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "this test opens a route that does not exist",
+      "error-ui"
+    );
     await page.goto("/this-route-does-not-exist");
     await expect(page.getByTestId("not-found-page")).toBeVisible();
     await pageHealth.collect();

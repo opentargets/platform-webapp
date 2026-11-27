@@ -1,9 +1,9 @@
 import { expect, test } from "../../../fixtures";
 import { DrugHeader } from "../../../POM/objects/components/DrugHeader/drugHeader";
 import { expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { type DrugIds, drugFacts, drugIds } from "../../../POM/page/drug/drugData";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 /** Where each cross reference of the header must point. */
 const CROSS_REFERENCE_URL: Record<string, (id: string) => string> = {
@@ -62,7 +62,9 @@ test.describe("Drug page header", () => {
 
       await test.step("description, molecule type and max stage", async () => {
         await expect(header.description).toContainText(
-          new RegExp(`^Description\\s*${facts.moleculeType} drug with a maximum clinical stage of ${facts.maxStage}`)
+          new RegExp(
+            `^Description\\s*${facts.moleculeType} drug with a maximum clinical stage of ${facts.maxStage}`
+          )
         );
         await expect(header.moleculeType).toHaveText(`Molecule type: ${facts.moleculeType}`);
         await expect(header.maxStage).toHaveText(`Max stage: ${facts.maxStage}`);
@@ -110,10 +112,9 @@ test.describe("Drug page header", () => {
     await expect(header.synonymsToggle).toHaveText("... [ show more ]");
     const collapsed = await header.synonymChips.allInnerTexts();
     expect(new Set(collapsed).size, "synonyms are de-duplicated").toBe(VISIBLE_CHIPS);
-    expect(
-      collapsed,
-      "synonyms are listed alphabetically"
-    ).toEqual([...collapsed].sort((a, b) => a.localeCompare(b)));
+    expect(collapsed, "synonyms are listed alphabetically").toEqual(
+      [...collapsed].sort((a, b) => a.localeCompare(b))
+    );
 
     await header.synonymsToggle.click();
     await expect(header.synonymsToggle).toHaveText("[ hide ]");
@@ -152,9 +153,7 @@ test.describe("Drug page header", () => {
 
     await header.tradeNamesToggle.click();
     await expect(header.tradeNamesToggle).toHaveText("[ hide ]");
-    await expect
-      .poll(() => header.tradeNameChips.count())
-      .toBeGreaterThan(VISIBLE_CHIPS);
+    await expect.poll(() => header.tradeNameChips.count()).toBeGreaterThan(VISIBLE_CHIPS);
 
     await header.tradeNamesToggle.click();
     await expect(header.tradeNameChips).toHaveCount(VISIBLE_CHIPS);
@@ -167,36 +166,27 @@ test.describe("Drug page header", () => {
     const { sparse } = drugIds(testConfig);
     const header = new DrugHeader(page);
     const drugPage = new DrugPage(page);
-
-    {
-      await drugPage.goto(sparse);
-      await expect(header.moleculeType).toBeVisible();
-      await expect(header.synonymChips).toHaveText([
-        "XL-092 FUMARATE",
-        "XL092 fumarate",
-        "Zanzalintinib fumarate",
-        "Zanzalintinib hemifumarate",
-      ]);
-      await expect(header.synonymsToggle).toHaveCount(0);
-      await expect(header.tradeNames).toHaveCount(0);
-    }
+    await drugPage.goto(sparse);
+    await expect(header.moleculeType).toBeVisible();
+    await expect(header.synonymChips).toHaveText([
+      "XL-092 FUMARATE",
+      "XL092 fumarate",
+      "Zanzalintinib fumarate",
+      "Zanzalintinib hemifumarate",
+    ]);
+    await expect(header.synonymsToggle).toHaveCount(0);
+    await expect(header.tradeNames).toHaveCount(0);
   });
 
-  test("a drug with a single trade name has no trade-name toggle", async ({
-    page,
-    testConfig,
-  }) => {
+  test("a drug with a single trade name has no trade-name toggle", async ({ page, testConfig }) => {
     const { smallMolecule } = drugIds(testConfig);
     const header = new DrugHeader(page);
     const drugPage = new DrugPage(page);
-
-    {
-      await drugPage.goto(smallMolecule);
-      await expect(header.title).toHaveText(drugFacts(smallMolecule).name);
-      await expect(header.tradeNameChips).toHaveText(["Choice"]);
-      await expect(header.tradeNamesToggle).toHaveCount(0);
-      await expect(header.synonymsToggle).toHaveText("... [ show more ]");
-    }
+    await drugPage.goto(smallMolecule);
+    await expect(header.title).toHaveText(drugFacts(smallMolecule).name);
+    await expect(header.tradeNameChips).toHaveText(["Choice"]);
+    await expect(header.tradeNamesToggle).toHaveCount(0);
+    await expect(header.synonymsToggle).toHaveText("... [ show more ]");
   });
 
   test("a small molecule shows its chemical structure, which enlarges and closes", async ({
@@ -255,7 +245,9 @@ test.describe("Drug page header", () => {
     const header = new DrugHeader(page);
     await new DrugPage(page).goto(primary);
 
-    await expect(header.moleculeType).toHaveText(`Molecule type: ${drugFacts(primary).moleculeType}`);
+    await expect(header.moleculeType).toHaveText(
+      `Molecule type: ${drugFacts(primary).moleculeType}`
+    );
     await expect(header.synonymChips).toHaveCount(VISIBLE_CHIPS);
     // ChEMBL answers 404 for the image of an antibody, and the box is dropped.
     await expect(header.structureButton).toHaveCount(0);

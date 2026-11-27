@@ -1,11 +1,14 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
-import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
+import {
+  isOrdered,
+  opposite,
+} from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetVariantsSection } from "../../../../POM/objects/widgets/CredibleSet/variantsSection";
-import { isOrdered, opposite } from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
 import { VariantPage } from "../../../../POM/page/variant/variant";
+import type { TestConfig } from "../../../../types";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
 const PAGE_SIZE = 10;
@@ -19,7 +22,8 @@ const QTL_LEAD = "6_160329611_C_T";
 /** The two credible sets these tests use; fails loudly if the test config lacks one. */
 function credibleSets(config: TestConfig): { primary: string; qtl: string } {
   const { primary, qtl } = config.credibleSet ?? {};
-  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  if (!primary || !qtl)
+    throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
   return { primary, qtl };
 }
 
@@ -50,14 +54,19 @@ async function searchFor(
     sort: [defaultSort],
     search: { text: term, fields: searchFields },
   });
-  await expect.poll(() => variants.total(), { message: "the footer should count the matches" }).not.toBe(before);
+  await expect
+    .poll(() => variants.total(), { message: "the footer should count the matches" })
+    .not.toBe(before);
   const total = await variants.total();
   await expect(variants.rows).toHaveCount(Math.min(total, PAGE_SIZE));
   return total;
 }
 
 test.describe("Credible set page: Variants", () => {
-  test("shows title, description, the column headers and the table controls", async ({ page, testConfig }) => {
+  test("shows title, description, the column headers and the table controls", async ({
+    page,
+    testConfig,
+  }) => {
     const variants = await open(page, credibleSets(testConfig).primary);
 
     await test.step("title and description", async () => {
@@ -68,7 +77,9 @@ test.describe("Credible set page: Variants", () => {
       await expect(variants.description).toHaveText(
         "Set of variants with 95% probability of containing the causal variant. Source: Open Targets"
       );
-      await expect(variants.description.getByRole("link", { name: "Open Targets" })).toHaveAttribute(
+      await expect(
+        variants.description.getByRole("link", { name: "Open Targets" })
+      ).toHaveAttribute(
         "href",
         "https://platform-docs.opentargets.org/credible-set#credible-set-variants"
       );
@@ -120,15 +131,20 @@ test.describe("Credible set page: Variants", () => {
 
     await test.step("the first query asks for ten rows sorted by posterior probability, with no search", async () => {
       const [first] = graphqlMonitor.named(operation);
-      expect(first.variables).toEqual({ credibleSetId, index: 0, size: PAGE_SIZE, sort: [defaultSort] });
+      expect(first.variables).toEqual({
+        credibleSetId,
+        index: 0,
+        size: PAGE_SIZE,
+        sort: [defaultSort],
+      });
       expect(first.errors).toEqual([]);
     });
 
     await test.step("the rows run from the most probable down, and the header says so", async () => {
       await variants.expectColumnOrdered(column.posterior, "number", "DESCENDING");
-      await expect(variants.table.header(/^Posterior Probability/).locator("svg[data-icon='arrow-down']")).toHaveCount(
-        1
-      );
+      await expect(
+        variants.table.header(/^Posterior Probability/).locator("svg[data-icon='arrow-down']")
+      ).toHaveCount(1);
     });
   });
 
@@ -139,7 +155,9 @@ test.describe("Credible set page: Variants", () => {
     const variants = await open(page, credibleSets(testConfig).primary);
     await expect(variants.rows).toHaveCount(PAGE_SIZE);
     const total = await variants.total();
-    expect(total, "the credible set has more variants than fit on one page").toBeGreaterThan(PAGE_SIZE);
+    expect(total, "the credible set has more variants than fit on one page").toBeGreaterThan(
+      PAGE_SIZE
+    );
     await variants.expectPosition(1, PAGE_SIZE, total);
 
     await test.step("variant column: id links to the variant page, once each", async () => {
@@ -165,7 +183,9 @@ test.describe("Credible set page: Variants", () => {
       }
       for (const text of await variants.columnTexts(column.ld)) {
         // LD is not available for every credible set: either a number from 0 to 1 or N/A
-        expect(text === "N/A" || (Number(text) >= 0 && Number(text) <= 1), `LD "${text}"`).toBe(true);
+        expect(text === "N/A" || (Number(text) >= 0 && Number(text) <= 1), `LD "${text}"`).toBe(
+          true
+        );
       }
     });
 
@@ -188,7 +208,10 @@ test.describe("Credible set page: Variants", () => {
     });
   });
 
-  test("marks the lead variant, which comes first in the GWAS credible set", async ({ page, testConfig }) => {
+  test("marks the lead variant, which comes first in the GWAS credible set", async ({
+    page,
+    testConfig,
+  }) => {
     const variants = await open(page, credibleSets(testConfig).primary);
     await expect(variants.leadChips, "exactly one variant is the lead").toHaveCount(1);
     await expect(variants.row(0).getByText("lead", { exact: true })).toBeVisible();
@@ -196,7 +219,10 @@ test.describe("Credible set page: Variants", () => {
     await expect(variants.variantLink(0)).toHaveAttribute("href", `/variant/${GWAS_LEAD}`);
   });
 
-  test("the lead variant of the pQTL credible set is the most probable one", async ({ page, testConfig }) => {
+  test("the lead variant of the pQTL credible set is the most probable one", async ({
+    page,
+    testConfig,
+  }) => {
     const variants = await open(page, credibleSets(testConfig).qtl);
     await expect(variants.leadChips).toHaveCount(1);
     await expect(variants.row(0).getByText("lead", { exact: true })).toBeVisible();
@@ -219,7 +245,9 @@ test.describe("Credible set page: Variants", () => {
       const longAllele = "6_160311014_GTTTTGTGACAGAGTCTTGCT_G";
       const link = page.locator(`a[href="/variant/${longAllele}"]`);
       await expect(link).toHaveCount(1);
-      await expect(link, "the long allele is not spelled out in the cell").not.toHaveText(longAllele);
+      await expect(link, "the long allele is not spelled out in the cell").not.toHaveText(
+        longAllele
+      );
       await expect(link).toContainText("6_160311014");
     });
   });
@@ -237,11 +265,18 @@ test.describe("Credible set page: Variants", () => {
 
       const second = await test.step("next asks for page 2 and keeps the sort", async () => {
         const requested = await variants.pageTo(variants.table.nextPageButton, 1);
-        expect(requested).toEqual({ credibleSetId, index: 1, size: PAGE_SIZE, sort: [defaultSort] });
+        expect(requested).toEqual({
+          credibleSetId,
+          index: 1,
+          size: PAGE_SIZE,
+          sort: [defaultSort],
+        });
         await variants.expectPosition(11, 20, 21);
         await expect(variants.rows).toHaveCount(10);
         await variants.table.expectRowsChangedFrom(first);
-        await expect(variants.leadChips, "the lead variant is only on the first page").toHaveCount(0);
+        await expect(variants.leadChips, "the lead variant is only on the first page").toHaveCount(
+          0
+        );
         await expect(variants.table.firstPageButton).toBeEnabled();
         await expect(variants.table.previousPageButton).toBeEnabled();
         return variants.table.rowTexts();
@@ -311,7 +346,10 @@ test.describe("Credible set page: Variants", () => {
       await variants.table.expectFirstPage(true);
     });
 
-    test("by consequence keeps only variants with that consequence", async ({ page, testConfig }) => {
+    test("by consequence keeps only variants with that consequence", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const variants = await open(page, credibleSetId);
       const all = await variants.total();
@@ -344,7 +382,10 @@ test.describe("Credible set page: Variants", () => {
       await variants.table.expectFirstPage();
     });
 
-    test("searching while on a later page goes back to the first page", async ({ page, testConfig }) => {
+    test("searching while on a later page goes back to the first page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).qtl;
       const variants = await open(page, credibleSetId);
       await variants.pageTo(variants.table.nextPageButton, 1);
@@ -373,12 +414,14 @@ test.describe("Credible set page: Variants", () => {
         const first = await variants.clickSort(sortable.header, sortable.key);
         expect(first).toHaveLength(1);
         const direction = first[0].direction;
-        if (isDefault) expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
+        if (isDefault)
+          expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
         await variants.expectPosition(1, PAGE_SIZE, total);
         if (readable) {
           // log(BF) ranks the variants like the default posterior probability does, so its
           // first click, which runs the same way, shows the same rows
-          if (sortable.key !== "LOG_BAYES_FACTOR") await variants.table.expectRowsChangedFrom(byDefault);
+          if (sortable.key !== "LOG_BAYES_FACTOR")
+            await variants.table.expectRowsChangedFrom(byDefault);
           await variants.expectColumnOrdered(sortable.column, sortable.kind, direction);
         }
         const firstSorted = await variants.table.rowTexts();
@@ -431,7 +474,10 @@ test.describe("Credible set page: Variants", () => {
       await variants.table.expectRowsChangedFrom(page1Rows);
       await variants.expectColumnOrdered(column.variant, "text", "ASCENDING");
       const page2 = await variants.variantIds();
-      expect(page2[0] >= page1[page1.length - 1], "page 2 starts at or after where page 1 ended").toBe(true);
+      expect(
+        page2[0] >= page1[page1.length - 1],
+        "page 2 starts at or after where page 1 ended"
+      ).toBe(true);
     });
 
     test("search and sort work together: the matches are sorted", async ({ page, testConfig }) => {
@@ -455,7 +501,9 @@ test.describe("Credible set page: Variants", () => {
     const list = await variants.table.openColumnPicker();
 
     await test.step("every column is listed; the variant column cannot be hidden", async () => {
-      await expect(list.getByRole("checkbox")).toHaveCount(CredibleSetVariantsSection.headers.length);
+      await expect(list.getByRole("checkbox")).toHaveCount(
+        CredibleSetVariantsSection.headers.length
+      );
       await expect(list.getByRole("checkbox", { name: "Variant" })).toBeDisabled();
       await expect(list.getByRole("checkbox", { name: "Beta" })).toBeChecked();
     });
@@ -563,10 +611,16 @@ test.describe("Credible set page: Variants", () => {
     const variants = await open(page, credibleSets(testConfig).primary);
     // The lead variant of this set is in a 3' UTR
     await expect(variants.consequenceLink(0)).toHaveText("3 prime UTR variant");
-    await expect(variants.consequenceLink(0)).toHaveAttribute("href", "https://identifiers.org/SO:0001624");
+    await expect(variants.consequenceLink(0)).toHaveAttribute(
+      "href",
+      "https://identifiers.org/SO:0001624"
+    );
   });
 
-  test("renders exactly the sections the credible sets are known to have", async ({ page, testConfig }) => {
+  test("renders exactly the sections the credible sets are known to have", async ({
+    page,
+    testConfig,
+  }) => {
     const { qtl } = credibleSets(testConfig);
     await new CredibleSetPage(page).goToCredibleSetPage(qtl);
     await expectSections(page, expectedSectionsFor(qtl));

@@ -3,7 +3,12 @@ import { PublicationsDrawer } from "../Target/publicationsDrawer";
 import { ProfileSection, TableControls } from "../Target/sectionWidgets";
 
 /** Column headers of the hallmarks table, in order. */
-export const CANCER_HALLMARKS_COLUMNS = ["Hallmark", "Effect", "Description", "Publications"] as const;
+export const CANCER_HALLMARKS_COLUMNS = [
+  "Hallmark",
+  "Effect",
+  "Description",
+  "Publications",
+] as const;
 
 export const HALLMARK_COLUMN = { hallmark: 0, effect: 1, description: 2, publications: 3 } as const;
 

@@ -1,8 +1,8 @@
 import { expect, test } from "../../../fixtures";
-import type { TestConfig } from "../../../types";
 import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DISEASE_SECTIONS, DiseasePage } from "../../../POM/page/disease/disease";
+import type { TestConfig } from "../../../types";
 import { expectSectionLoaded, expectSections } from "../../../utils/sections";
 
 /**
@@ -37,10 +37,20 @@ const DISEASES = {
     description: "Huntington disease (HD) is a rare neurodegenerative disorder",
     xrefs: [
       { source: "mesh", label: "MeSH", ids: ["D006816"], stem: "https://identifiers.org/mesh:" },
-      { source: "meddra", label: "MedDRA", ids: ["10070668"], stem: "https://identifiers.org/meddra:" },
+      {
+        source: "meddra",
+        label: "MedDRA",
+        ids: ["10070668"],
+        stem: "https://identifiers.org/meddra:",
+      },
       { source: "ncit", label: "NCIt", ids: ["C82342"], stem: "https://identifiers.org/ncit:" },
       { source: "omim", label: "OMIM", ids: ["143100"], stem: "https://www.omim.org/entry/" },
-      { source: "orphanet", label: "Orphanet", ids: ["399"], stem: "https://identifiers.org/orphanet:" },
+      {
+        source: "orphanet",
+        label: "Orphanet",
+        ids: ["399"],
+        stem: "https://identifiers.org/orphanet:",
+      },
       { source: "umls", label: "UMLS", ids: ["C0020179"], stem: "https://identifiers.org/umls:" },
     ],
     synonymCount: 45,
@@ -60,7 +70,8 @@ function primaryDisease(testConfig: TestConfig): { efoId: string; name: string }
   return { efoId: primary, name };
 }
 
-const efoUrl = (efoId: string) => `https://www.ebi.ac.uk/ols4/ontologies/efo/terms?short_form=${efoId}`;
+const efoUrl = (efoId: string) =>
+  `https://www.ebi.ac.uk/ols4/ontologies/efo/terms?short_form=${efoId}`;
 
 test.describe("Disease page shell", () => {
   // Every disease page mounts the Bibliography section, which asks Europe PMC for publication
@@ -111,7 +122,9 @@ test.describe("Disease page shell", () => {
     await disease.goto(efoId);
 
     await expect(disease.title).toHaveText(DISEASES.MONDO_0007254.name);
-    await expect(page).toHaveTitle(`${DISEASES.MONDO_0007254.name} profile page | Open Targets Platform`);
+    await expect(page).toHaveTitle(
+      `${DISEASES.MONDO_0007254.name} profile page | Open Targets Platform`
+    );
     await expectSections(page, expectedSectionsFor(efoId));
     for (const sectionId of expectedSectionsFor(efoId)) {
       await expectSectionLoaded(page, sectionId);
@@ -141,7 +154,10 @@ test.describe("Disease page shell", () => {
       await expectSectionLoaded(page, sectionId);
     }
     for (const missing of ["drugs", "phenotypes", "gwasstudies"]) {
-      await expect(disease.section(missing), `"${missing}" has no data for this disease`).toHaveCount(0);
+      await expect(
+        disease.section(missing),
+        `"${missing}" has no data for this disease`
+      ).toHaveCount(0);
     }
     await expect(disease.description).toContainText("A disease caused by genetic modifications");
     await expect(disease.synonyms, "no synonyms block when there are no synonyms").toHaveCount(0);
@@ -210,9 +226,7 @@ test.describe("Disease page shell", () => {
     await expect(disease.synonymChip("heart attack")).toBeVisible();
   });
 
-  test("a long synonym list expands with show more and collapses with hide", async ({
-    page,
-  }) => {
+  test("a long synonym list expands with show more and collapses with hide", async ({ page }) => {
     const disease = new DiseasePage(page);
     await disease.goto("MONDO_0005068");
 
@@ -331,7 +345,10 @@ test.describe("Disease page shell", () => {
     });
   });
 
-  test("the associations route opens directly and survives a reload", async ({ page, testConfig }) => {
+  test("the associations route opens directly and survives a reload", async ({
+    page,
+    testConfig,
+  }) => {
     const { efoId, name } = primaryDisease(testConfig);
     const disease = new DiseasePage(page);
     await disease.gotoAssociations(efoId);
@@ -458,12 +475,15 @@ test.describe("Disease page shell", () => {
     for (const section of DISEASE_SECTIONS) {
       const item = menu.getByRole("menuitem", { name: section.name });
       if (present.has(section.id)) {
-        await expect(item, `"${section.name}" has data, so it must be selectable`).not.toHaveAttribute(
+        await expect(
+          item,
+          `"${section.name}" has data, so it must be selectable`
+        ).not.toHaveAttribute("aria-disabled", "true");
+      } else {
+        await expect(item, `"${section.name}" has no data`).toHaveAttribute(
           "aria-disabled",
           "true"
         );
-      } else {
-        await expect(item, `"${section.name}" has no data`).toHaveAttribute("aria-disabled", "true");
       }
     }
   });
@@ -474,11 +494,12 @@ test.describe("Disease page shell", () => {
     await page.goto(`/disease/${MISSING_DISEASE}`);
 
     await expect(disease.notFound).toBeVisible();
-    await expect(disease.notFound.getByRole("heading", { name: "404: Page not found" })).toBeVisible();
-    await expect(disease.notFound.getByRole("link", { name: "Documentation", exact: true })).toHaveAttribute(
-      "href",
-      /^https:\/\/platform-docs\.opentargets\.org/
-    );
+    await expect(
+      disease.notFound.getByRole("heading", { name: "404: Page not found" })
+    ).toBeVisible();
+    await expect(
+      disease.notFound.getByRole("link", { name: "Documentation", exact: true })
+    ).toHaveAttribute("href", /^https:\/\/platform-docs\.opentargets\.org/);
     await expect(disease.title, "no disease header on the 404 page").toHaveCount(0);
     await expect(disease.tabs).toHaveCount(0);
     await expect(page.locator("section[data-testid^='section-']")).toHaveCount(0);

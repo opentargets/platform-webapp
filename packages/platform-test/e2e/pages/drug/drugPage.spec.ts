@@ -1,11 +1,11 @@
-import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { expect, test } from "../../../fixtures";
+import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { DrugHeader } from "../../../POM/objects/components/DrugHeader/drugHeader";
 import { MechanismsOfActionSection } from "../../../POM/objects/widgets/shared/mechanismsOfActionSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DRUG_SECTIONS, DrugPage } from "../../../POM/page/drug/drug";
 import { type DrugIds, drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded, expectSections } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 /**
  * The drug profile page as a whole: which sections each drug renders, the summary
@@ -26,7 +26,9 @@ test.describe("Drug page", () => {
     await drugPage.goto(primary);
 
     await expect(drugPage.title).toHaveText(drugFacts(primary).name);
-    await expect(page).toHaveTitle(`${drugFacts(primary).name} profile page | Open Targets Platform`);
+    await expect(page).toHaveTitle(
+      `${drugFacts(primary).name} profile page | Open Targets Platform`
+    );
     await expectSections(page, expectedSectionsFor(primary));
 
     await test.step("every section has loaded with its own title", async () => {
@@ -68,7 +70,10 @@ test.describe("Drug page", () => {
     });
   }
 
-  test("has a single, selected Profile tab that links to the drug", async ({ page, testConfig }) => {
+  test("has a single, selected Profile tab that links to the drug", async ({
+    page,
+    testConfig,
+  }) => {
     const { primary } = drugIds(testConfig);
     const drugPage = new DrugPage(page);
     await drugPage.goto(primary);
@@ -143,7 +148,8 @@ test.describe("Drug page", () => {
       const present = new Set(expectedSectionsFor(chemblId));
       for (const section of DRUG_SECTIONS) {
         const item = menu.getByRole("menuitem", { name: section.name });
-        if (present.has(section.id)) await expect(item).not.toHaveAttribute("aria-disabled", "true");
+        if (present.has(section.id))
+          await expect(item).not.toHaveAttribute("aria-disabled", "true");
         else await expect(item).toHaveAttribute("aria-disabled", "true");
       }
     });
@@ -151,7 +157,10 @@ test.describe("Drug page", () => {
     await test.step("the filter narrows the menu and a choice scrolls to the section", async () => {
       const menu = page.getByRole("menu");
       await menu.getByPlaceholder("Filter widgets...").fill("pharmaco");
-      await expect(menu.getByRole("menuitem")).toHaveText([/Pharmacogenetics$/, /Pharmacovigilance$/]);
+      await expect(menu.getByRole("menuitem")).toHaveText([
+        /Pharmacogenetics$/,
+        /Pharmacovigilance$/,
+      ]);
       await menu.getByRole("menuitem", { name: "Pharmacovigilance" }).click();
       await expect(menu).toBeHidden();
       await expect(page).toHaveURL(new RegExp(`/drug/${chemblId}#adverseEvents$`));
@@ -211,11 +220,12 @@ test.describe("Drug page", () => {
     await page.goto("/drug/CHEMBL0000000000");
 
     await expect(drugPage.notFound).toBeVisible();
-    await expect(drugPage.notFound.getByRole("heading", { name: "404: Page not found" })).toBeVisible();
-    await expect(drugPage.notFound.getByRole("link", { name: "Go back to Home Page" })).toHaveAttribute(
-      "href",
-      "/"
-    );
+    await expect(
+      drugPage.notFound.getByRole("heading", { name: "404: Page not found" })
+    ).toBeVisible();
+    await expect(
+      drugPage.notFound.getByRole("link", { name: "Go back to Home Page" })
+    ).toHaveAttribute("href", "/");
     await expect(drugPage.title, "no drug header on the 404 page").toHaveCount(0);
     await expect(page.locator("section[data-testid^='section-']")).toHaveCount(0);
   });
@@ -238,7 +248,11 @@ test.describe("Drug page", () => {
     pageHealth,
     testConfig,
   }) => {
-    pageHealth.allow(/404 page is displayed/, "opens a drug sub-route that does not exist", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "opens a drug sub-route that does not exist",
+      "error-ui"
+    );
     const drugPage = new DrugPage(page);
     await page.goto(`/drug/${drugIds(testConfig).primary}/this-tab-does-not-exist`);
 

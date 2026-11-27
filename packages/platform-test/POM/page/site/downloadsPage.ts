@@ -38,7 +38,10 @@ export class DownloadsPage {
   async goto(path = "/downloads"): Promise<void> {
     await this.page.goto(path);
     await expect(this.title, "the downloads page should show its title").toBeVisible();
-    await expect(this.counter, "the dataset counter should show once the datasets have loaded").toBeVisible();
+    await expect(
+      this.counter,
+      "the dataset counter should show once the datasets have loaded"
+    ).toBeVisible();
   }
 
   /** The Network view has no counter: wait for the graph instead. */
@@ -183,17 +186,29 @@ export class DownloadsPage {
 
   /** What every card on the page shows: name, id, categories, links and the amount of description text. */
   async cardFacts(): Promise<
-    { testId: string; name: string; id: string; categories: string[]; schemaHref: string; accessHref: string; descriptionLength: number }[]
+    {
+      testId: string;
+      name: string;
+      id: string;
+      categories: string[];
+      schemaHref: string;
+      accessHref: string;
+      descriptionLength: number;
+    }[]
   > {
     return this.cards.evaluateAll((cards) =>
       cards.map((card) => {
-        const text = (testId: string) => card.querySelector(`[data-testid='${testId}']`)?.textContent ?? "";
-        const href = (testId: string) => card.querySelector(`[data-testid='${testId}']`)?.getAttribute("href") ?? "";
+        const text = (testId: string) =>
+          card.querySelector(`[data-testid='${testId}']`)?.textContent ?? "";
+        const href = (testId: string) =>
+          card.querySelector(`[data-testid='${testId}']`)?.getAttribute("href") ?? "";
         return {
           testId: card.getAttribute("data-testid") ?? "",
           name: text("dataset-name"),
           id: text("dataset-id"),
-          categories: [...card.querySelectorAll("[data-testid='dataset-category']")].map((c) => c.textContent ?? ""),
+          categories: [...card.querySelectorAll("[data-testid='dataset-category']")].map(
+            (c) => c.textContent ?? ""
+          ),
           schemaHref: href("dataset-schema-link"),
           accessHref: href("dataset-access-link"),
           descriptionLength: text("dataset-description").length,
@@ -205,7 +220,8 @@ export class DownloadsPage {
   /** The categories named on the cards, and the ones the filter chips offer (lower case, dashes). */
   async categorySlugs(): Promise<{ onCards: string[]; onChips: string[] }> {
     const onCards = new Set<string>();
-    for (const card of await this.cardFacts()) for (const c of card.categories) onCards.add(slug(c));
+    for (const card of await this.cardFacts())
+      for (const c of card.categories) onCards.add(slug(c));
     const onChips = await this.chips.evaluateAll((chips) =>
       chips.map((chip) => (chip.getAttribute("data-testid") ?? "").replace(/^category-filter-/, ""))
     );
@@ -222,7 +238,8 @@ export class DownloadsPage {
 
   /** Wait until the counter says `shown of total` and exactly that many cards are on the page. */
   async expectShown(shown: number, total?: number): Promise<void> {
-    if (total === undefined) await expect(this.counter).toHaveText(new RegExp(`^${shown} of \\d+$`));
+    if (total === undefined)
+      await expect(this.counter).toHaveText(new RegExp(`^${shown} of \\d+$`));
     else await expect(this.counter).toHaveText(`${shown} of ${total}`);
     await expect(this.cards).toHaveCount(shown);
   }
@@ -231,7 +248,9 @@ export class DownloadsPage {
   async totalDatasets(): Promise<number> {
     const text = (await this.counter.textContent()) ?? "";
     const total = Number(/of (\d+)$/.exec(text)?.[1]);
-    expect(total, `the counter "${text}" should end with the number of datasets`).toBeGreaterThan(0);
+    expect(total, `the counter "${text}" should end with the number of datasets`).toBeGreaterThan(
+      0
+    );
     return total;
   }
 
@@ -279,7 +298,10 @@ export class DownloadsPage {
 
   async expectBagCount(count: number): Promise<void> {
     // read from aria-label: while the drawer is open the page behind it is aria-hidden and has no computed name
-    await expect(this.bagButton).toHaveAttribute("aria-label", `Your data bundle, ${plural(count, "dataset")}`);
+    await expect(this.bagButton).toHaveAttribute(
+      "aria-label",
+      `Your data bundle, ${plural(count, "dataset")}`
+    );
     if (count === 0) await expect(this.bagBadge).toHaveCount(0);
     else await expect(this.bagBadge).toHaveText(String(count));
   }
@@ -385,16 +407,19 @@ export class DownloadsPage {
    */
   async expectScriptDatasets(ids: string[]): Promise<void> {
     await expect
-      .poll(async () => {
-        const text = (await this.scriptText.innerText()).replace(/ /g, " ");
-        const lines = text.split("\n");
-        const start = lines.findIndex((line) => line.startsWith("printf '%s"));
-        const end = lines.findIndex((line) => line.startsWith("while read"));
-        return lines
-          .slice(start + 1, end)
-          .map((line) => /^\s*([a-z0-9_]+) [\\|]$/.exec(line)?.[1])
-          .filter((id): id is string => id !== undefined);
-      }, `the access script should list ${ids.join(", ")}`)
+      .poll(
+        async () => {
+          const text = (await this.scriptText.innerText()).replace(/ /g, " ");
+          const lines = text.split("\n");
+          const start = lines.findIndex((line) => line.startsWith("printf '%s"));
+          const end = lines.findIndex((line) => line.startsWith("while read"));
+          return lines
+            .slice(start + 1, end)
+            .map((line) => /^\s*([a-z0-9_]+) [\\|]$/.exec(line)?.[1])
+            .filter((id): id is string => id !== undefined);
+        },
+        `the access script should list ${ids.join(", ")}`
+      )
       .toEqual(ids);
   }
 
@@ -558,15 +583,17 @@ export class DownloadsPage {
           h: Number(rect?.getAttribute("height")),
         };
       });
-      return [...document.querySelectorAll("[data-testid^='graph-node-']:not([data-testid='graph-node-box'])")].map(
-        (node) => {
-          const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(node.getAttribute("transform") ?? "");
-          const x = Number(m?.[1]);
-          const y = Number(m?.[2]);
-          const lane = lanes.find((l) => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
-          return { id: node.getAttribute("data-testid") ?? "", lane: lane?.title ?? null };
-        }
-      );
+      return [
+        ...document.querySelectorAll(
+          "[data-testid^='graph-node-']:not([data-testid='graph-node-box'])"
+        ),
+      ].map((node) => {
+        const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(node.getAttribute("transform") ?? "");
+        const x = Number(m?.[1]);
+        const y = Number(m?.[2]);
+        const lane = lanes.find((l) => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
+        return { id: node.getAttribute("data-testid") ?? "", lane: lane?.title ?? null };
+      });
     });
   }
 

@@ -3,10 +3,20 @@ import { sectionTestId } from "../../../utils/sections";
 
 /** Section ids of the drug profile page, in the order the page renders them. */
 export const DRUG_SECTIONS = [
-  { id: "mechanismsofaction", name: "Mechanisms of Action", shortName: "MA", anchor: "mechanismsOfAction" },
+  {
+    id: "mechanismsofaction",
+    name: "Mechanisms of Action",
+    shortName: "MA",
+    anchor: "mechanismsOfAction",
+  },
   { id: "indications", name: "Indications", shortName: "I", anchor: "Indications" },
   { id: "drugwarnings", name: "Drug Warnings", shortName: "DW", anchor: "drugWarnings" },
-  { id: "pharmacogenetics", name: "Pharmacogenetics", shortName: "PGx", anchor: "pharmacogenetics" },
+  {
+    id: "pharmacogenetics",
+    name: "Pharmacogenetics",
+    shortName: "PGx",
+    anchor: "pharmacogenetics",
+  },
   { id: "adverseevents", name: "Pharmacovigilance", shortName: "PV", anchor: "adverseEvents" },
   { id: "bibliography", name: "Bibliography", shortName: "B", anchor: "bibliography" },
 ] as const;

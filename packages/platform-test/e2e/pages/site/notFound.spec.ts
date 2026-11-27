@@ -6,7 +6,10 @@ import { ErrorPages } from "../../../POM/page/site/errorPages";
  * or is malformed for each kind of entity page.
  */
 test.describe("404 page", () => {
-  test("an unknown route shows the 404 page with its links @smoke", async ({ page, pageHealth }) => {
+  test("an unknown route shows the 404 page with its links @smoke", async ({
+    page,
+    pageHealth,
+  }) => {
     pageHealth.allow(/404 page is displayed/, "opens a route that does not exist", "error-ui");
     const errors = new ErrorPages(page);
     await page.goto("/this-route-does-not-exist");
@@ -14,22 +17,35 @@ test.describe("404 page", () => {
     await expect(errors.notFound).toBeVisible();
     await expect(errors.notFoundHeading).toBeVisible();
     await expect(errors.notFound).toContainText("We can't find the page you're looking for.");
-    await expect(errors.documentationLink).toHaveAttribute("href", /^https:\/\/platform-docs\.opentargets\.org/);
-    await expect(errors.communityLink).toHaveAttribute("href", /^https:\/\/community\.opentargets\.org/);
+    await expect(errors.documentationLink).toHaveAttribute(
+      "href",
+      /^https:\/\/platform-docs\.opentargets\.org/
+    );
+    await expect(errors.communityLink).toHaveAttribute(
+      "href",
+      /^https:\/\/community\.opentargets\.org/
+    );
     await expect(errors.homeLink).toHaveAttribute("href", "/");
     await expect(errors.routeError).toHaveCount(0);
     await expect(errors.profileContent).toHaveCount(0);
   });
 
   test("a deeply nested unknown route shows the 404 page", async ({ page, pageHealth }) => {
-    pageHealth.allow(/404 page is displayed/, "opens a nested route that does not exist", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "opens a nested route that does not exist",
+      "error-ui"
+    );
     const errors = new ErrorPages(page);
     await page.goto("/a/b/c/d?x=1#frag");
 
     await expect(errors.notFoundHeading).toBeVisible();
   });
 
-  test("the home link of the 404 page leads to a healthy home page", async ({ page, pageHealth }) => {
+  test("the home link of the 404 page leads to a healthy home page", async ({
+    page,
+    pageHealth,
+  }) => {
     pageHealth.allow(/404 page is displayed/, "opens a route that does not exist", "error-ui");
     const errors = new ErrorPages(page);
     await page.goto("/this-route-does-not-exist");
@@ -59,8 +75,15 @@ test.describe("404 page", () => {
       ["a well-formed id that does not exist", missing],
       ["a malformed id", malformed],
     ] as const) {
-      test(`${kind}: ${what} shows the 404 page and the home link works`, async ({ page, pageHealth }) => {
-        pageHealth.allow(/404 page is displayed/, `opens a ${kind} that does not exist`, "error-ui");
+      test(`${kind}: ${what} shows the 404 page and the home link works`, async ({
+        page,
+        pageHealth,
+      }) => {
+        pageHealth.allow(
+          /404 page is displayed/,
+          `opens a ${kind} that does not exist`,
+          "error-ui"
+        );
         const errors = new ErrorPages(page);
         await page.goto(path);
 

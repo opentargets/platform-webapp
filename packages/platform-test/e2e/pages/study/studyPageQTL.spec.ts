@@ -1,11 +1,11 @@
 import { expect, test } from "../../../fixtures";
 import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { QTLStudyHeader } from "../../../POM/objects/components/StudyProfileHeader/qtlStudyHeader";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import {
   QTL_COLUMNS,
   QTLCredibleSetsSection,
 } from "../../../POM/objects/widgets/Study/qtlCredibleSetsSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections, sectionLocator } from "../../../utils/sections";
 
 const PQTL = {

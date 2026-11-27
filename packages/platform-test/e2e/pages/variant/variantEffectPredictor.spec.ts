@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../fixtures";
-import { VariantEffectPredictorSection } from "../../../POM/objects/widgets/shared/variantEffectPredictorSection";
 import { waitForOperation } from "../../../POM/objects/widgets/shared/sectionDataControls";
+import { VariantEffectPredictorSection } from "../../../POM/objects/widgets/shared/variantEffectPredictorSection";
 import { VariantPage } from "../../../POM/page/variant/variant";
 
 const PAGE_SIZE = VariantEffectPredictorSection.pageSize;

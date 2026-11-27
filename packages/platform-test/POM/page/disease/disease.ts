@@ -54,7 +54,10 @@ export class DiseasePage {
 
   /** Wait for the header to show a disease name. */
   async waitForPageLoad(): Promise<void> {
-    await expect(this.title, "the disease page header should show the disease name").not.toBeEmpty();
+    await expect(
+      this.title,
+      "the disease page header should show the disease name"
+    ).not.toBeEmpty();
   }
 
   async openProfileTab(): Promise<void> {

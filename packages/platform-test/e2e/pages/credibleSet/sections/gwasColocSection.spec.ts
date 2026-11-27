@@ -1,11 +1,14 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
-import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { GWASColocSection } from "../../../../POM/objects/widgets/CredibleSet/gwasColocSection";
-import { isOrdered, opposite } from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
+import {
+  isOrdered,
+  opposite,
+} from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
 import { VariantPage } from "../../../../POM/page/variant/variant";
+import type { TestConfig } from "../../../../types";
 import { expectSectionLoaded, expectSections, sectionLocator } from "../../../../utils/sections";
 
 const { column, defaultSort, searchFields } = GWASColocSection;
@@ -17,7 +20,8 @@ const DIRECTIONS = ["Same", "Opposite", "Inconclusive", "N/A"];
 /** The credible sets these tests use; fails loudly if the test config lacks one. */
 function credibleSets(config: TestConfig): { primary: string; qtl: string } {
   const { primary, qtl } = config.credibleSet ?? {};
-  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  if (!primary || !qtl)
+    throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
   return { primary, qtl };
 }
 
@@ -34,7 +38,11 @@ async function open(page: Page, credibleSetId: string): Promise<GWASColocSection
  * Search for a term, check the query it sends, and return how many colocalisations match
  * once the table has shown them (the footer count and the rows arrive together).
  */
-async function searchFor(coloc: GWASColocSection, credibleSetId: string, term: string): Promise<number> {
+async function searchFor(
+  coloc: GWASColocSection,
+  credibleSetId: string,
+  term: string
+): Promise<number> {
   const before = await coloc.total();
   const variables = await coloc.search(term);
   expect(variables, "a search asks the server for the first page, keeping the sort").toEqual({
@@ -44,14 +52,19 @@ async function searchFor(coloc: GWASColocSection, credibleSetId: string, term: s
     sort: [defaultSort],
     search: { text: term, fields: searchFields },
   });
-  await expect.poll(() => coloc.total(), { message: "the footer should count the matches" }).not.toBe(before);
+  await expect
+    .poll(() => coloc.total(), { message: "the footer should count the matches" })
+    .not.toBe(before);
   const total = await coloc.total();
   await expect(coloc.rows).toHaveCount(Math.min(total, PAGE_SIZE));
   return total;
 }
 
 test.describe("Credible set page: GWAS colocalisation", () => {
-  test("shows title, description, the column headers and the table controls", async ({ page, testConfig }) => {
+  test("shows title, description, the column headers and the table controls", async ({
+    page,
+    testConfig,
+  }) => {
     const coloc = await open(page, credibleSets(testConfig).primary);
 
     await test.step("title and description", async () => {
@@ -70,7 +83,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
     });
 
     await test.step("the toolbar offers search, columns, export and the API query", async () => {
-      await expect(coloc.table.searchInput).toHaveAttribute("placeholder", GWASColocSection.searchPlaceholder);
+      await expect(coloc.table.searchInput).toHaveAttribute(
+        "placeholder",
+        GWASColocSection.searchPlaceholder
+      );
       await expect(coloc.table.columnsButton).toBeVisible();
       await expect(coloc.table.exportButton).toBeVisible();
       await expect(coloc.table.apiQueryButton).toBeVisible();
@@ -78,7 +94,8 @@ test.describe("Credible set page: GWAS colocalisation", () => {
 
     await test.step("header tooltips explain Directionality, H3, H4 and CLPP", async () => {
       const tooltips: Record<string, string> = {
-        Directionality: "Effect directionality based on the ratio of betas between the two credible sets",
+        Directionality:
+          "Effect directionality based on the ratio of betas between the two credible sets",
         H3: "Posterior probability that the signals do not colocalise",
         H4: "Posterior probability that the signals colocalise",
         CLPP: "The sum of the products of the fine-mapping posterior probabilities for overlapping variants between two study loci",
@@ -137,11 +154,14 @@ test.describe("Credible set page: GWAS colocalisation", () => {
     for (let index = 0; index < PAGE_SIZE; index += 1) {
       await test.step(`row ${index + 1}`, async () => {
         await expect(coloc.credibleSetLink(index)).toHaveText("View");
-        await expect(coloc.credibleSetLink(index)).toHaveAttribute("href", /^\/credible-set\/[0-9a-f]{32}$/);
-        await expect(coloc.credibleSetLink(index), "a set never colocalises with itself").not.toHaveAttribute(
+        await expect(coloc.credibleSetLink(index)).toHaveAttribute(
           "href",
-          `/credible-set/${primary}`
+          /^\/credible-set\/[0-9a-f]{32}$/
         );
+        await expect(
+          coloc.credibleSetLink(index),
+          "a set never colocalises with itself"
+        ).not.toHaveAttribute("href", `/credible-set/${primary}`);
         await expect(coloc.studyLink(index)).toHaveAttribute("href", /^\/study\/\S+$/);
         await expect(coloc.studyLink(index)).toHaveText(/^\S+$/);
         await expect(coloc.cell(index, column.trait)).toHaveText(/\S/);
@@ -209,7 +229,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
 
     await test.step("a missing ratio shows N/A, not Inconclusive", async () => {
       await expect(
-        coloc.rows.locator(`td:nth-child(${column.directionality + 1})`).filter({ hasText: /^N\/A$/ }).first()
+        coloc.rows
+          .locator(`td:nth-child(${column.directionality + 1})`)
+          .filter({ hasText: /^N\/A$/ })
+          .first()
       ).toBeVisible();
     });
   });
@@ -317,7 +340,9 @@ test.describe("Credible set page: GWAS colocalisation", () => {
 
       const variables = await coloc.search("prostate");
       expect(variables.search).toEqual({ text: "prostate", fields: searchFields });
-      expect(variables.search?.fields, "the p-value and H4 columns are not searched").not.toContain("H4");
+      expect(variables.search?.fields, "the p-value and H4 columns are not searched").not.toContain(
+        "H4"
+      );
     });
 
     test("by first author keeps only that author's colocalisations, over all pages", async ({
@@ -332,13 +357,15 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       expect(total).toBeGreaterThan(PAGE_SIZE);
       expect(total).toBeLessThan(all);
       await coloc.expectPosition(1, PAGE_SIZE, total);
-      for (const author of await coloc.columnTexts(column.author)) expect(author).toContain("Verma");
+      for (const author of await coloc.columnTexts(column.author))
+        expect(author).toContain("Verma");
 
       await test.step("the next page of the matches holds matches too", async () => {
         const requested = await coloc.pageTo(coloc.table.nextPageButton, 1);
         expect(requested.search).toEqual({ text: "Verma", fields: searchFields });
         await coloc.expectPosition(PAGE_SIZE + 1, PAGE_SIZE * 2, total);
-        for (const author of await coloc.columnTexts(column.author)) expect(author).toContain("Verma");
+        for (const author of await coloc.columnTexts(column.author))
+          expect(author).toContain("Verma");
       });
     });
 
@@ -355,7 +382,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       }
     });
 
-    test("by lead variant id keeps only credible sets led by that variant", async ({ page, testConfig }) => {
+    test("by lead variant id keeps only credible sets led by that variant", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const variantId = (await coloc.leadVariantLink(0).innerText()).trim();
@@ -397,7 +427,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       await coloc.table.expectFirstPage();
     });
 
-    test("searching while on a later page goes back to the first page", async ({ page, testConfig }) => {
+    test("searching while on a later page goes back to the first page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       await coloc.pageTo(coloc.table.nextPageButton, 1);
@@ -411,7 +444,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
 
   test.describe("sorting", () => {
     for (const sortable of GWASColocSection.sortable) {
-      test(`${sortable.header} is sorted by the server and the rows follow it`, async ({ page, testConfig }) => {
+      test(`${sortable.header} is sorted by the server and the rows follow it`, async ({
+        page,
+        testConfig,
+      }) => {
         const credibleSetId = credibleSets(testConfig).primary;
         const coloc = await open(page, credibleSetId);
         const total = await coloc.total();
@@ -422,7 +458,8 @@ test.describe("Credible set page: GWAS colocalisation", () => {
         const first = await coloc.clickSort(sortable.header, sortable.key);
         expect(first).toHaveLength(1);
         const direction = first[0].direction;
-        if (isDefault) expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
+        if (isDefault)
+          expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
         await coloc.table.expectRowsChangedFrom(byDefault);
         await coloc.expectPosition(1, PAGE_SIZE, total);
         await coloc.expectColumnOrdered(sortable.column, sortable.kind, direction);
@@ -495,7 +532,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       );
     });
 
-    test("search and sort work together: the matches are sorted, on every page", async ({ page, testConfig }) => {
+    test("search and sort work together: the matches are sorted, on every page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const total = await searchFor(coloc, credibleSetId, "prostate");
@@ -532,7 +572,9 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       await list.getByRole("checkbox", { name: "Reported trait" }).uncheck();
       await expect(coloc.headers).toHaveCount(GWASColocSection.headers.length - 1);
       await expect(coloc.headers.filter({ hasText: "Reported trait" })).toHaveCount(0);
-      await expect(coloc.rows.first().locator("td")).toHaveCount(GWASColocSection.headers.length - 1);
+      await expect(coloc.rows.first().locator("td")).toHaveCount(
+        GWASColocSection.headers.length - 1
+      );
     });
 
     await test.step("checking it again brings it back in place", async () => {
@@ -556,7 +598,12 @@ test.describe("Credible set page: GWAS colocalisation", () => {
         const rows = JSON.parse(text) as Record<string, unknown>[];
         expect(rows).toHaveLength(total);
         expect(rows.slice(0, PAGE_SIZE).map((row) => row.study)).toEqual(firstPageStudies);
-        expect(isOrdered(rows.map((row) => row.h4 as number), "DESCENDING")).toBe(true);
+        expect(
+          isOrdered(
+            rows.map((row) => row.h4 as number),
+            "DESCENDING"
+          )
+        ).toBe(true);
         expect(Object.keys(rows[0])).toEqual([
           "credibleSet",
           "study",
@@ -591,7 +638,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const total = await searchFor(coloc, credibleSetId, "prostate");
-      const sort = await coloc.clickSort("Colocalising Variants (n)", "NUMBER_COLOCALISING_VARIANTS");
+      const sort = await coloc.clickSort(
+        "Colocalising Variants (n)",
+        "NUMBER_COLOCALISING_VARIANTS"
+      );
       await coloc.expectColumnOrdered(column.variants, "number", sort[0].direction);
 
       const { text } = await coloc.table.download("Json");
@@ -621,7 +671,10 @@ test.describe("Credible set page: GWAS colocalisation", () => {
     await coloc.expectApiQuery(['"key": "P_VALUE"', '"text": "Verma"', '"TRAIT_FROM_SOURCE"']);
   });
 
-  test("the credible set link opens the colocalising credible set", async ({ page, testConfig }) => {
+  test("the credible set link opens the colocalising credible set", async ({
+    page,
+    testConfig,
+  }) => {
     const coloc = await open(page, credibleSets(testConfig).primary);
     const href = await coloc.credibleSetLink(0).getAttribute("href");
     await coloc.credibleSetLink(0).click();
@@ -649,10 +702,16 @@ test.describe("Credible set page: GWAS colocalisation", () => {
     await expect(variantPage.title).toContainText(variantId.split("_")[1]);
   });
 
-  test("a credible set with few colocalisations fits on two short pages", async ({ page, testConfig }) => {
+  test("a credible set with few colocalisations fits on two short pages", async ({
+    page,
+    testConfig,
+  }) => {
     const coloc = await open(page, credibleSets(testConfig).qtl);
     const total = await coloc.total();
-    expect(total, "the pQTL credible set has a handful of GWAS colocalisations").toBeLessThanOrEqual(25);
+    expect(
+      total,
+      "the pQTL credible set has a handful of GWAS colocalisations"
+    ).toBeLessThanOrEqual(25);
     expect(total).toBeGreaterThan(PAGE_SIZE);
 
     await coloc.expectPosition(1, PAGE_SIZE, total);

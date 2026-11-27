@@ -1,6 +1,6 @@
 import { expect, test } from "../../../fixtures";
-import { MAIN_MENU, PARTNER_ONLY_MENU } from "../../../POM/page/site/siteData";
 import { SearchPage } from "../../../POM/page/search/searchPage";
+import { MAIN_MENU, PARTNER_ONLY_MENU } from "../../../POM/page/site/siteData";
 import { SiteShell } from "../../../POM/page/site/siteShell";
 
 test.describe("Header", () => {
@@ -46,7 +46,9 @@ test.describe("Header", () => {
       await input.fill(testConfig.disease.name as string);
       await page.getByTestId("top-hit-list-result-item").first().click();
 
-      await expect(page).toHaveURL(new RegExp(`/disease/${testConfig.disease.primary}/associations$`));
+      await expect(page).toHaveURL(
+        new RegExp(`/disease/${testConfig.disease.primary}/associations$`)
+      );
       await expect(page.getByTestId("global-search-dialog")).toHaveCount(0);
     });
 
@@ -128,7 +130,9 @@ test.describe("Header", () => {
       });
     }
 
-    test("on a narrow screen the small logo replaces the title and the menu keeps every entry", async ({ page }) => {
+    test("on a narrow screen the small logo replaces the title and the menu keeps every entry", async ({
+      page,
+    }) => {
       await page.setViewportSize({ width: 420, height: 800 });
       const shell = new SiteShell(page);
       await page.goto("/api");
@@ -140,8 +144,15 @@ test.describe("Header", () => {
     });
   });
 
-  test("a partner-only page is not reachable on the public platform", async ({ page, pageHealth }) => {
-    pageHealth.allow(/404 page is displayed/, "the test opens a partner-only route on the public platform", "error-ui");
+  test("a partner-only page is not reachable on the public platform", async ({
+    page,
+    pageHealth,
+  }) => {
+    pageHealth.allow(
+      /404 page is displayed/,
+      "the test opens a partner-only route on the public platform",
+      "error-ui"
+    );
     await page.goto("/projects");
 
     await expect(page.getByTestId("not-found-page")).toBeVisible();

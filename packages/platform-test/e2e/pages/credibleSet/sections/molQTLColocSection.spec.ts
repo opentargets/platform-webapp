@@ -1,11 +1,14 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
-import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { MolQTLColocSection } from "../../../../POM/objects/widgets/CredibleSet/molQTLColocSection";
-import { isOrdered, opposite } from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
+import {
+  isOrdered,
+  opposite,
+} from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
 import { VariantPage } from "../../../../POM/page/variant/variant";
+import type { TestConfig } from "../../../../types";
 import { expectSectionLoaded, expectSections, sectionLocator } from "../../../../utils/sections";
 
 const { column, defaultSort, operation, searchFields } = MolQTLColocSection;
@@ -18,7 +21,8 @@ const STUDY_TYPE = new RegExp(`^(${MolQTLColocSection.studyTypes.join("|")})\\s*
 /** The credible sets these tests use; fails loudly if the test config lacks one. */
 function credibleSets(config: TestConfig): { primary: string; qtl: string } {
   const { primary, qtl } = config.credibleSet ?? {};
-  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  if (!primary || !qtl)
+    throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
   return { primary, qtl };
 }
 
@@ -35,7 +39,11 @@ async function open(page: Page, credibleSetId: string): Promise<MolQTLColocSecti
  * Search for a term, check the query it sends, and return how many colocalisations match
  * once the table has shown them (the footer count and the rows arrive together).
  */
-async function searchFor(coloc: MolQTLColocSection, credibleSetId: string, term: string): Promise<number> {
+async function searchFor(
+  coloc: MolQTLColocSection,
+  credibleSetId: string,
+  term: string
+): Promise<number> {
   const before = await coloc.total();
   const variables = await coloc.search(term);
   expect(variables, "a search asks the server for the first page, keeping the sort").toEqual({
@@ -45,7 +53,9 @@ async function searchFor(coloc: MolQTLColocSection, credibleSetId: string, term:
     sort: [defaultSort],
     search: { text: term, fields: searchFields },
   });
-  await expect.poll(() => coloc.total(), { message: "the footer should count the matches" }).not.toBe(before);
+  await expect
+    .poll(() => coloc.total(), { message: "the footer should count the matches" })
+    .not.toBe(before);
   const total = await coloc.total();
   await expect(coloc.rows).toHaveCount(Math.min(total, PAGE_SIZE));
   return total;
@@ -79,11 +89,16 @@ async function rowsOfHundred(page: Page, coloc: MolQTLColocSection): Promise<Col
 }
 
 test.describe("Credible set page: molQTL colocalisation", () => {
-  test("shows title, description, the column headers and the table controls", async ({ page, testConfig }) => {
+  test("shows title, description, the column headers and the table controls", async ({
+    page,
+    testConfig,
+  }) => {
     const coloc = await open(page, credibleSets(testConfig).primary);
 
     await test.step("title and description", async () => {
-      await expect(page.getByTestId("section-molqtl-coloc-header")).toHaveText("MolQTL Colocalisation");
+      await expect(page.getByTestId("section-molqtl-coloc-header")).toHaveText(
+        "MolQTL Colocalisation"
+      );
       await expect(coloc.description).toHaveText(
         "Colocalisation metrics for overlapping credible sets from molecular QTL studies. Source: Open Targets"
       );
@@ -98,7 +113,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
     });
 
     await test.step("the toolbar offers search, columns, export and the API query", async () => {
-      await expect(coloc.table.searchInput).toHaveAttribute("placeholder", MolQTLColocSection.searchPlaceholder);
+      await expect(coloc.table.searchInput).toHaveAttribute(
+        "placeholder",
+        MolQTLColocSection.searchPlaceholder
+      );
       await expect(coloc.table.columnsButton).toBeVisible();
       await expect(coloc.table.exportButton).toBeVisible();
       await expect(coloc.table.apiQueryButton).toBeVisible();
@@ -130,7 +148,12 @@ test.describe("Credible set page: molQTL colocalisation", () => {
 
     await test.step("the first query asks for ten rows sorted by H4, with no search", async () => {
       const [first] = graphqlMonitor.named(operation);
-      expect(first.variables).toEqual({ credibleSetId, index: 0, size: PAGE_SIZE, sort: [defaultSort] });
+      expect(first.variables).toEqual({
+        credibleSetId,
+        index: 0,
+        size: PAGE_SIZE,
+        sort: [defaultSort],
+      });
       expect(first.errors).toEqual([]);
     });
 
@@ -167,11 +190,20 @@ test.describe("Credible set page: molQTL colocalisation", () => {
     for (let index = 0; index < PAGE_SIZE; index += 1) {
       await test.step(`row ${index + 1}`, async () => {
         await expect(coloc.credibleSetLink(index)).toHaveText("View");
-        await expect(coloc.credibleSetLink(index)).toHaveAttribute("href", /^\/credible-set\/[0-9a-f]{32}$/);
-        await expect(coloc.credibleSetLink(index)).not.toHaveAttribute("href", `/credible-set/${primary}`);
+        await expect(coloc.credibleSetLink(index)).toHaveAttribute(
+          "href",
+          /^\/credible-set\/[0-9a-f]{32}$/
+        );
+        await expect(coloc.credibleSetLink(index)).not.toHaveAttribute(
+          "href",
+          `/credible-set/${primary}`
+        );
         await expect(coloc.studyLink(index)).toHaveAttribute("href", /^\/study\/qts\S+$/);
         await expect(coloc.cell(index, column.type)).toHaveText(STUDY_TYPE);
-        await expect(coloc.link(index, column.gene)).toHaveAttribute("href", /^\/target\/ENSG\d{11}$/);
+        await expect(coloc.link(index, column.gene)).toHaveAttribute(
+          "href",
+          /^\/target\/ENSG\d{11}$/
+        );
         await expect(coloc.link(index, column.gene)).toHaveText(/^[A-Za-z0-9._-]+$/);
         await expect(coloc.link(index, column.tissue)).toHaveAttribute(
           "href",
@@ -229,7 +261,9 @@ test.describe("Credible set page: molQTL colocalisation", () => {
     });
 
     await test.step("Condition shows the API's condition", async () => {
-      expect(await coloc.columnTexts(column.condition)).toEqual(rows.map((row) => row.condition || "N/A"));
+      expect(await coloc.columnTexts(column.condition)).toEqual(
+        rows.map((row) => row.condition || "N/A")
+      );
     });
 
     await test.step("Directionality is the sign of the beta ratio", async () => {
@@ -270,11 +304,17 @@ test.describe("Credible set page: molQTL colocalisation", () => {
   });
 
   test.describe("pagination and page size", () => {
-    test("pages through the server and keeps the sort on every page", async ({ page, testConfig }) => {
+    test("pages through the server and keeps the sort on every page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const total = await coloc.total();
-      expect(total, "more than 100 molQTL colocalisations, so three page sizes differ").toBeGreaterThan(100);
+      expect(
+        total,
+        "more than 100 molQTL colocalisations, so three page sizes differ"
+      ).toBeGreaterThan(100);
       const lastIndex = Math.ceil(total / PAGE_SIZE) - 1;
       const firstPage = await coloc.table.rowTexts();
       const firstPageH4 = (await coloc.columnTexts(column.h4)).map(Number);
@@ -282,14 +322,20 @@ test.describe("Credible set page: molQTL colocalisation", () => {
 
       await test.step("next asks the API for page 2 and shows different, lower-H4 rows", async () => {
         const requested = await coloc.pageTo(coloc.table.nextPageButton, 1);
-        expect(requested).toEqual({ credibleSetId, index: 1, size: PAGE_SIZE, sort: [defaultSort] });
+        expect(requested).toEqual({
+          credibleSetId,
+          index: 1,
+          size: PAGE_SIZE,
+          sort: [defaultSort],
+        });
         await coloc.expectPosition(PAGE_SIZE + 1, PAGE_SIZE * 2, total);
         await coloc.table.expectRowsChangedFrom(firstPage);
         await expect(coloc.rows).toHaveCount(PAGE_SIZE);
         const secondPageH4 = (await coloc.columnTexts(column.h4)).map(Number);
-        expect(secondPageH4[0], "page 2 continues the order where page 1 ended").toBeLessThanOrEqual(
-          firstPageH4[firstPageH4.length - 1]
-        );
+        expect(
+          secondPageH4[0],
+          "page 2 continues the order where page 1 ended"
+        ).toBeLessThanOrEqual(firstPageH4[firstPageH4.length - 1]);
         expect(isOrdered(secondPageH4, "DESCENDING")).toBe(true);
       });
 
@@ -352,10 +398,15 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       const coloc = await open(page, credibleSets(testConfig).primary);
       const variables = await coloc.search("GGCX");
       expect(variables.search).toEqual({ text: "GGCX", fields: searchFields });
-      expect(variables.search?.fields, "the condition column is not searched").not.toContain("CONDITION");
+      expect(variables.search?.fields, "the condition column is not searched").not.toContain(
+        "CONDITION"
+      );
     });
 
-    test("by gene symbol keeps only that gene's colocalisations, over all pages", async ({ page, testConfig }) => {
+    test("by gene symbol keeps only that gene's colocalisations, over all pages", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const all = await coloc.total();
@@ -382,10 +433,14 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       const total = await searchFor(coloc, credibleSetId, "cerebellum");
       expect(total).toBeGreaterThan(1);
       expect(total).toBeLessThan(all);
-      for (const text of await coloc.table.rowTexts()) expect(text.toLowerCase()).toContain("cerebellum");
+      for (const text of await coloc.table.rowTexts())
+        expect(text.toLowerCase()).toContain("cerebellum");
     });
 
-    test("by lead variant id keeps only credible sets led by that variant", async ({ page, testConfig }) => {
+    test("by lead variant id keeps only credible sets led by that variant", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const variantId = (await coloc.leadVariantLink(0).innerText()).trim();
@@ -425,7 +480,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       await coloc.table.expectFirstPage();
     });
 
-    test("searching while on a later page goes back to the first page", async ({ page, testConfig }) => {
+    test("searching while on a later page goes back to the first page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       await coloc.pageTo(coloc.table.nextPageButton, 1);
@@ -439,7 +497,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
 
   test.describe("sorting", () => {
     for (const sortable of MolQTLColocSection.sortable) {
-      test(`${sortable.header} is sorted by the server and the rows follow it`, async ({ page, testConfig }) => {
+      test(`${sortable.header} is sorted by the server and the rows follow it`, async ({
+        page,
+        testConfig,
+      }) => {
         const credibleSetId = credibleSets(testConfig).primary;
         const coloc = await open(page, credibleSetId);
         const total = await coloc.total();
@@ -450,7 +511,8 @@ test.describe("Credible set page: molQTL colocalisation", () => {
         const first = await coloc.clickSort(sortable.header, sortable.key);
         expect(first).toHaveLength(1);
         const direction = first[0].direction;
-        if (isDefault) expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
+        if (isDefault)
+          expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
         await coloc.table.expectRowsChangedFrom(byDefault);
         await coloc.expectPosition(1, PAGE_SIZE, total);
         await coloc.expectColumnOrdered(sortable.column, sortable.kind, direction);
@@ -509,7 +571,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       );
     });
 
-    test("search and sort work together: the matches are sorted, on every page", async ({ page, testConfig }) => {
+    test("search and sort work together: the matches are sorted, on every page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const coloc = await open(page, credibleSetId);
       const total = await searchFor(coloc, credibleSetId, "GGCX");
@@ -540,7 +605,9 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       await list.getByRole("checkbox", { name: "Condition" }).uncheck();
       await expect(coloc.headers).toHaveCount(MolQTLColocSection.headers.length - 1);
       await expect(coloc.headers.filter({ hasText: "Condition" })).toHaveCount(0);
-      await expect(coloc.rows.first().locator("td")).toHaveCount(MolQTLColocSection.headers.length - 1);
+      await expect(coloc.rows.first().locator("td")).toHaveCount(
+        MolQTLColocSection.headers.length - 1
+      );
     });
 
     await test.step("checking it again brings it back in place", async () => {
@@ -564,7 +631,12 @@ test.describe("Credible set page: molQTL colocalisation", () => {
         const rows = JSON.parse(text) as Record<string, unknown>[];
         expect(rows).toHaveLength(total);
         expect(rows.slice(0, PAGE_SIZE).map((row) => row.study)).toEqual(firstPageStudies);
-        expect(isOrdered(rows.map((row) => row.h4 as number), "DESCENDING")).toBe(true);
+        expect(
+          isOrdered(
+            rows.map((row) => row.h4 as number),
+            "DESCENDING"
+          )
+        ).toBe(true);
         expect(Object.keys(rows[0])).toEqual([
           "credibleSet",
           "study",
@@ -599,7 +671,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
       }
     });
 
-    test("the exported gene and tissue are names, not the '?API?' placeholder", async ({ page, testConfig }) => {
+    test("the exported gene and tissue are names, not the '?API?' placeholder", async ({
+      page,
+      testConfig,
+    }) => {
       const coloc = await open(page, credibleSets(testConfig).primary);
       const { text } = await coloc.table.download("Json");
       const rows = JSON.parse(text) as { affectedGene: string; affectedTissueCell: string }[];
@@ -647,7 +722,10 @@ test.describe("Credible set page: molQTL colocalisation", () => {
     await coloc.expectApiQuery(['"key": "P_VALUE"', '"text": "GGCX"', '"TARGET_APPROVED_SYMBOL"']);
   });
 
-  test("the credible set link opens the colocalising credible set", async ({ page, testConfig }) => {
+  test("the credible set link opens the colocalising credible set", async ({
+    page,
+    testConfig,
+  }) => {
     const coloc = await open(page, credibleSets(testConfig).primary);
     const href = await coloc.credibleSetLink(0).getAttribute("href");
     await coloc.credibleSetLink(0).click();

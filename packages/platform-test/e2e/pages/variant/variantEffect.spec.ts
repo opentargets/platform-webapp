@@ -1,6 +1,6 @@
 import { expect, test } from "../../../fixtures";
-import { VariantEffectSection } from "../../../POM/objects/widgets/Variant/variantEffectSection";
 import { waitForOperation } from "../../../POM/objects/widgets/shared/sectionDataControls";
+import { VariantEffectSection } from "../../../POM/objects/widgets/Variant/variantEffectSection";
 import { VariantPage } from "../../../POM/page/variant/variant";
 
 type Effect = {

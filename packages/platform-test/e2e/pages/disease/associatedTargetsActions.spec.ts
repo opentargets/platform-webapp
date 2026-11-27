@@ -115,7 +115,10 @@ test.describe("Disease associations: row menu", () => {
     await aotf.rowMenuItem("Navigate to profile").click();
     await expect(page).toHaveURL(new RegExp(`/target/${gene.id}$`));
     await expect(page.getByTestId("profile-page-header-text")).toHaveText("ADRB1");
-    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
 
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`/disease/${diseaseId}/associations$`));
@@ -140,7 +143,10 @@ test.describe("Disease associations: row menu", () => {
     await aotf.expectLoaded(25);
     await expect(aotf.headerLabel("name")).toHaveText("Disease");
     await expect(aotf.nameFilter).toHaveAttribute("placeholder", "Search disease");
-    await expect(aotf.prioritisationViewButton, "prioritisation is a disease-page view").toHaveCount(0);
+    await expect(
+      aotf.prioritisationViewButton,
+      "prioritisation is a disease-page view"
+    ).toHaveCount(0);
   });
 
   test("Navigate to evidence opens the evidence page of that target and this disease", async ({
@@ -183,7 +189,9 @@ test.describe("Disease associations: pinning", () => {
     await expect(aotf.filterChip("pinned")).toHaveText("Pinned");
 
     await test.step("the pinned row repeats the row of the list, which stays in place", async () => {
-      expect(await aotf.rowNames(), "pinning does not remove the row from the list").toEqual(coreNames);
+      expect(await aotf.rowNames(), "pinning does not remove the row from the list").toEqual(
+        coreNames
+      );
       const pinned = aotf.rowByName(first, "pinning");
       const original = aotf.rowByName(first, "core");
       expect(await aotf.dataColumnIds(pinned)).toEqual(await aotf.dataColumnIds(original));
@@ -206,7 +214,9 @@ test.describe("Disease associations: pinning", () => {
 
     await test.step("a pinned row's menu unpins it", async () => {
       await aotf.openRowMenu(aotf.rowByName(first, "pinning"));
-      await expect(aotf.rowMenu.getByRole("menuitem", { name: "Pin target", exact: true })).toHaveCount(0);
+      await expect(
+        aotf.rowMenu.getByRole("menuitem", { name: "Pin target", exact: true })
+      ).toHaveCount(0);
       await aotf.rowMenuItem("Unpin target").click();
       await expect(aotf.rowByName(first, "pinning")).toHaveCount(0);
       await expect(aotf.rows("pinning")).toHaveCount(1);
@@ -241,7 +251,10 @@ test.describe("Disease associations: pinning", () => {
     // Pinned rows are ordered like the list: by association score.
     await aotf.expectRowNames(["APOE", "IL6"], "pinning");
     await expect(aotf.bodyIndicator("pinning")).toHaveText("Pinned (2 of 2)");
-    await expect(aotf.rowByName("IL6", "core"), "IL6 is not on the first page of the list").toHaveCount(0);
+    await expect(
+      aotf.rowByName("IL6", "core"),
+      "IL6 is not on the first page of the list"
+    ).toHaveCount(0);
     await expect(aotf.rows()).toHaveCount(25);
 
     await page.reload();
@@ -320,9 +333,7 @@ test.describe("Disease associations: uploading a list of targets", () => {
     const dialog = await aotf.openUploadDialog();
 
     await expect(dialog.getByRole("heading", { name: "Upload list of targets" })).toBeVisible();
-    await expect(dialog).toContainText(
-      "allowed file formats - .txt / .csv / .tsv / .xlsx / .json"
-    );
+    await expect(dialog).toContainText("allowed file formats - .txt / .csv / .tsv / .xlsx / .json");
     await expect(dialog).toContainText("The file should contain a single target in every row.");
     await expect(dialog.getByRole("link", { name: "Read more details here." })).toHaveAttribute(
       "href",
@@ -330,16 +341,29 @@ test.describe("Disease associations: uploading a list of targets", () => {
     );
     await expect(dialog.getByText("Add a file", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Entity validation", { exact: true })).toBeVisible();
-    await expect(dialog.getByText("Drag and drop a file here, or click to select file")).toBeVisible();
+    await expect(
+      dialog.getByText("Drag and drop a file here, or click to select file")
+    ).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Upload hits" })).toHaveCount(0);
 
     await test.step("example format", async () => {
-      const examples = ["ENSG00000232810", "interleukin 6", "TP53", "ENSG00000105329", "P15692", "CD4"];
+      const examples = [
+        "ENSG00000232810",
+        "interleukin 6",
+        "TP53",
+        "ENSG00000105329",
+        "P15692",
+        "CD4",
+      ];
       await dialog.getByRole("button", { name: "Example format" }).click();
       const formats = dialog.getByRole("group", { name: "File Example" });
       await expect(formats.getByRole("button")).toHaveText([".txt", ".csv /.tsv /.xlsx", ".json"]);
-      await expect(formats.getByRole("button", { name: ".txt" })).toHaveAttribute("aria-pressed", "true");
-      for (const example of examples) await expect(dialog.getByText(example, { exact: true })).toBeVisible();
+      await expect(formats.getByRole("button", { name: ".txt" })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+      for (const example of examples)
+        await expect(dialog.getByText(example, { exact: true })).toBeVisible();
 
       await formats.getByRole("button", { name: ".csv /.tsv /.xlsx" }).click();
       await expect(dialog.getByRole("columnheader", { name: "id" })).toBeVisible();
@@ -443,7 +467,11 @@ test.describe("Disease associations: uploading a list of targets", () => {
 
       await dialog
         .locator("input[type='file']")
-        .setInputFiles({ name: file.name, mimeType: file.mimeType, buffer: Buffer.from(file.content) });
+        .setInputFiles({
+          name: file.name,
+          mimeType: file.mimeType,
+          buffer: Buffer.from(file.content),
+        });
 
       await expect(dialog.getByText("Validation mappings ( Upload count: 3)")).toBeVisible();
       const il6 = dialog.getByRole("checkbox", { name: "IL6 (1 hits) - IL6" });
@@ -516,7 +544,10 @@ test.describe("Disease associations: uploading a list of targets", () => {
 });
 
 test.describe("Disease associations: export", () => {
-  test("the download dialog names the export and offers its options", async ({ page, testConfig }) => {
+  test("the download dialog names the export and offers its options", async ({
+    page,
+    testConfig,
+  }) => {
     const diseaseId = testConfig.disease.primary;
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(diseaseId);
@@ -539,13 +570,15 @@ test.describe("Disease associations: export", () => {
       await toggle.click();
       await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-      await expect(dialog.getByRole("combobox", { name: "Select associations data type" })).toHaveText(
+      await expect(
+        dialog.getByRole("combobox", { name: "Select associations data type" })
+      ).toHaveText(
         "Clinical, Genetic association, Somatic mutations, Affected pathway, Literature, RNA expression, Animal model"
       );
       await expect(dialog.getByText("Selected 7 of 7")).toBeVisible();
-      await expect(dialog.getByRole("combobox", { name: "Select prioritisation data type" })).toHaveText(
-        "precedence, tractability, doability, safety"
-      );
+      await expect(
+        dialog.getByRole("combobox", { name: "Select prioritisation data type" })
+      ).toHaveText("precedence, tractability, doability, safety");
       await expect(dialog.getByText("Selected 4 of 4")).toBeVisible();
 
       const customControls = dialog.getByRole("checkbox", { name: "Include custom controls" });
@@ -584,7 +617,9 @@ test.describe("Disease associations: export", () => {
       await Promise.all(
         ["ADRB1", "IL6"].map(async (symbol) => [
           symbol,
-          await aotf.dataCell(aotf.rowByName(symbol, "pinning"), "score").getAttribute("data-score"),
+          await aotf
+            .dataCell(aotf.rowByName(symbol, "pinning"), "score")
+            .getAttribute("data-score"),
         ])
       )
     );
@@ -605,7 +640,10 @@ test.describe("Disease associations: export", () => {
     const fileName = new RegExp(`^OT-${diseaseId}-associated-targets-.+-v\\d+_\\d+\\.`);
 
     await test.step("TSV", async () => {
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "TSV", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "TSV", exact: true })
+      );
       expect(download.suggestedFilename()).toMatch(fileName);
       expect(download.suggestedFilename()).toMatch(/\.tsv$/);
       const { header, rows } = parseTsv(await downloadedText(download));
@@ -621,12 +659,17 @@ test.describe("Disease associations: export", () => {
         }
       }
       const exported = rows[0];
-      expect(Number(exported.clinicalPrecedence), "ADRB1 has clinical precedence").toBeGreaterThan(0);
+      expect(Number(exported.clinicalPrecedence), "ADRB1 has clinical precedence").toBeGreaterThan(
+        0
+      );
       expect(exported.gwasCredibleSets, "ADRB1 has no GWAS evidence").toBe("No data");
     });
 
     await test.step("JSON", async () => {
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "JSON", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "JSON", exact: true })
+      );
       expect(download.suggestedFilename()).toMatch(fileName);
       expect(download.suggestedFilename()).toMatch(/\.json$/);
       const records = JSON.parse(await downloadedText(download)) as Record<string, unknown>[];
@@ -660,7 +703,10 @@ test.describe("Disease associations: export", () => {
       await page.keyboard.press("Escape");
       await expect(dialog.getByText("Selected 6 of 7")).toBeVisible();
 
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "TSV", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "TSV", exact: true })
+      );
       const { header, rows } = parseTsv(await downloadedText(download));
       expect(header).toEqual([
         "symbol",
@@ -669,12 +715,18 @@ test.describe("Disease associations: export", () => {
         ...EXPORT_DATA_SOURCE_KEYS.slice(10),
         ...EXPORT_PRIORITISATION_KEYS,
       ]);
-      expect(rows.map((row) => row.symbol), "the export holds the searched rows, in table order").toEqual(names);
+      expect(
+        rows.map((row) => row.symbol),
+        "the export holds the searched rows, in table order"
+      ).toEqual(names);
     });
 
     await test.step("Only prioritisation data drops the scores", async () => {
       await dialog.getByRole("checkbox", { name: "Only prioritisation data" }).check();
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "TSV", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "TSV", exact: true })
+      );
       const { header, rows } = parseTsv(await downloadedText(download));
       expect(header).toEqual(["symbol", "globalScore", ...EXPORT_PRIORITISATION_KEYS]);
       expect(rows.map((row) => row.symbol)).toEqual(names);

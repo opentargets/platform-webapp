@@ -15,7 +15,13 @@ test.describe("/llms.txt", () => {
     expect(lines[0]).toBe("# Open Targets Platform");
     expect(body).toMatch(/^> .{40,}/m);
     const sections = lines.filter((line) => line.startsWith("## ")).map((line) => line.slice(3));
-    expect(sections).toEqual(["Documentation", "API", "Data downloads", "Source & citation", "Community"]);
+    expect(sections).toEqual([
+      "Documentation",
+      "API",
+      "Data downloads",
+      "Source & citation",
+      "Community",
+    ]);
   });
 
   test("every list entry is a markdown link with a URL", async ({ request }) => {

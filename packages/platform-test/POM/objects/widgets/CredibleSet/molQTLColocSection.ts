@@ -37,17 +37,36 @@ export class MolQTLColocSection extends ServerTableSection {
     clpp: 12,
   } as const;
   /** The study types the query asks for: every molecular QTL type, no GWAS. */
-  static readonly studyTypes = ["scsqtl", "sceqtl", "scpqtl", "sctuqtl", "sqtl", "eqtl", "pqtl", "tuqtl"];
+  static readonly studyTypes = [
+    "scsqtl",
+    "sceqtl",
+    "scpqtl",
+    "sctuqtl",
+    "sqtl",
+    "eqtl",
+    "pqtl",
+    "tuqtl",
+  ];
   static readonly searchPlaceholder = "Search all columns...";
   /** What the search box asks the server to look in: the fields of the first column. */
-  static readonly searchFields = ["STUDY_ID", "TARGET_APPROVED_SYMBOL", "BIOSAMPLE_NAME", "LEAD_VARIANT_ID"];
+  static readonly searchFields = [
+    "STUDY_ID",
+    "TARGET_APPROVED_SYMBOL",
+    "BIOSAMPLE_NAME",
+    "LEAD_VARIANT_ID",
+  ];
   /** The sort the table opens with. */
   static readonly defaultSort = { key: "H4", direction: "DESCENDING" } as const;
   /** The columns the server can sort, with the sort key each one sends. */
   static readonly sortable: readonly SortableColumn[] = [
     { header: "Lead Variant", key: "LEAD_VARIANT", column: 6, kind: "text" },
     { header: "P-Value", key: "P_VALUE", column: 7, kind: "pValue" },
-    { header: "Colocalising Variants (n)", key: "NUMBER_COLOCALISING_VARIANTS", column: 8, kind: "number" },
+    {
+      header: "Colocalising Variants (n)",
+      key: "NUMBER_COLOCALISING_VARIANTS",
+      column: 8,
+      kind: "number",
+    },
     { header: "H3", key: "H3", column: 10, kind: "number" },
     { header: "H4", key: "H4", column: 11, kind: "number" },
     { header: "CLPP", key: "CLPP", column: 12, kind: "number" },

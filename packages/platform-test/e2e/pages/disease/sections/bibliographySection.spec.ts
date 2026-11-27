@@ -64,9 +64,10 @@ test.describe("Disease page: Bibliography", () => {
     });
 
     const total = await bibliography.expectResults(DEFAULT_PAGE_SIZE);
-    expect(total, "myocardial infarction is mentioned in thousands of publications").toBeGreaterThan(
-      1000
-    );
+    expect(
+      total,
+      "myocardial infarction is mentioned in thousands of publications"
+    ).toBeGreaterThan(1000);
 
     await test.step("all three tag categories are on", async () => {
       await expect(bibliography.section).toContainText("Tag category:");
@@ -190,7 +191,9 @@ test.describe("Disease page: Bibliography", () => {
         operationName?: string;
         variables?: { ids?: string[] };
       } | null;
-      return body?.operationName === "DiseaseBibliographyQuery" && body.variables?.ids?.[0] === entityId;
+      return (
+        body?.operationName === "DiseaseBibliographyQuery" && body.variables?.ids?.[0] === entityId
+      );
     });
     await chip.click();
     await request;
@@ -242,8 +245,14 @@ test.describe("Disease page: Bibliography", () => {
       return titles.map((title) => title.replace(/^.* ID: /, ""));
     };
     const initial = await idsOffered();
-    expect(initial.some((id) => id.startsWith("CHEMBL")), "a drug is offered").toBe(true);
-    expect(initial.some((id) => /^[A-Za-z]+_\d+$/.test(id)), "diseases are offered").toBe(true);
+    expect(
+      initial.some((id) => id.startsWith("CHEMBL")),
+      "a drug is offered"
+    ).toBe(true);
+    expect(
+      initial.some((id) => /^[A-Za-z]+_\d+$/.test(id)),
+      "diseases are offered"
+    ).toBe(true);
 
     /** The entity names the next bibliography request restricts the entities to. */
     const nextEntityNames = (): Promise<string[]> =>
@@ -253,7 +262,10 @@ test.describe("Disease page: Bibliography", () => {
             operationName?: string;
             variables?: { entityNames?: string[] | null };
           } | null;
-          return body?.operationName === "DiseaseBibliographyQuery" && Array.isArray(body.variables?.entityNames);
+          return (
+            body?.operationName === "DiseaseBibliographyQuery" &&
+            Array.isArray(body.variables?.entityNames)
+          );
         })
         .then(
           (request) =>
@@ -352,7 +364,9 @@ test.describe("Disease page: Bibliography", () => {
       await bibliography.nextPageButton.click();
       const next = await nextResponse;
       expect(next.variables).toMatchObject({ id: primary, index: 1, pageSize: 5 });
-      const nextIds = next.data.disease.literatureOcurrences.rows.map((row) => row.pmid || row.pmcid);
+      const nextIds = next.data.disease.literatureOcurrences.rows.map(
+        (row) => row.pmid || row.pmcid
+      );
       await bibliography.expectResults(DEFAULT_PAGE_SIZE);
       expect(await bibliography.publicationIds()).toEqual(nextIds);
       expect(searches).toEqual([apiIds, nextIds]);
@@ -414,10 +428,9 @@ test.describe("Disease page: Bibliography", () => {
       bibliography.dateRangeStart,
       "the range starts at the earliest publication (year-month)"
     ).toHaveText(new RegExp(`^${earliestYear}-\\d{1,2}$`));
-    await expect(
-      bibliography.dateRangeEnd,
-      "the range ends at the current month"
-    ).toHaveText(new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`));
+    await expect(bibliography.dateRangeEnd, "the range ends at the current month").toHaveText(
+      new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`)
+    );
 
     await test.step("moving the start of the range sends it to the API and narrows the result", async () => {
       const request = page.waitForRequest((candidate) => {
@@ -425,7 +438,10 @@ test.describe("Disease page: Bibliography", () => {
           operationName?: string;
           variables?: { startYear?: number | null };
         } | null;
-        return body?.operationName === "DiseaseBibliographyQuery" && typeof body.variables?.startYear === "number";
+        return (
+          body?.operationName === "DiseaseBibliographyQuery" &&
+          typeof body.variables?.startYear === "number"
+        );
       });
       await bibliography.startThumb.focus();
       // PageUp moves a thumb by ten months; sixty presses move it by fifty years.
@@ -470,14 +486,19 @@ test.describe("Disease page: Bibliography", () => {
     const bibliography = await openBibliography(page, THERAPEUTIC_AREA);
     await bibliography.expectResults(1);
     await expect(bibliography.dateRangeStart).toHaveText(/^2022-\d{1,2}$/);
-    await expect(bibliography.dateRangeEnd).toHaveText(new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`));
+    await expect(bibliography.dateRangeEnd).toHaveText(
+      new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`)
+    );
 
     const request = page.waitForRequest((candidate) => {
       const body = candidate.postDataJSON?.() as {
         operationName?: string;
         variables?: { startYear?: number | null };
       } | null;
-      return body?.operationName === "DiseaseBibliographyQuery" && typeof body.variables?.startYear === "number";
+      return (
+        body?.operationName === "DiseaseBibliographyQuery" &&
+        typeof body.variables?.startYear === "number"
+      );
     });
     await bibliography.startThumb.focus();
     // Pressing PageUp moves the thumb by ten months: past the publication's date.

@@ -52,7 +52,11 @@ export class CredibleSetEnhancerToGenePredictionsSection extends ServerTableSect
   static readonly notSortable = ["Gene", "Affected tissue/cell", "Study", "Interval range"];
 
   constructor(page: Page) {
-    super(page, CredibleSetEnhancerToGenePredictionsSection.id, CredibleSetEnhancerToGenePredictionsSection.operation);
+    super(
+      page,
+      CredibleSetEnhancerToGenePredictionsSection.id,
+      CredibleSetEnhancerToGenePredictionsSection.operation
+    );
   }
 
   geneLink(rowIndex: number): Locator {

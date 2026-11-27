@@ -128,7 +128,10 @@ export class ComparativeGenomicsSection extends ProfileSection {
     await this.chartViewToggle.click();
     await expect(this.chartViewToggle).toHaveAttribute("aria-pressed", "true");
     await expect(this.tableViewToggle).toHaveAttribute("aria-pressed", "false");
-    await expect(this.section.getByTestId("ot-table"), "the table should be replaced by the chart").toHaveCount(0);
+    await expect(
+      this.section.getByTestId("ot-table"),
+      "the table should be replaced by the chart"
+    ).toHaveCount(0);
     await expect(this.dots.first(), "the chart should be drawn").toBeVisible();
   }
 }

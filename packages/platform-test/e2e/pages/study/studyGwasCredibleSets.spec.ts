@@ -1,8 +1,8 @@
 import { expect, test } from "../../../fixtures";
 import {
   GWAS_CS_COLUMNS,
-  GwasCredibleSetsSection,
   type GwasCredibleSetRow,
+  GwasCredibleSetsSection,
 } from "../../../POM/objects/widgets/Study/gwasCredibleSetsSection";
 import { GwasStudyPage } from "../../../POM/page/study/gwasStudy";
 import { GWAS_STUDIES } from "../../../POM/page/study/studyData";
@@ -53,11 +53,16 @@ test.describe("Study page: GWAS credible sets", () => {
     });
 
     await test.step("columns", async () => {
-      await expect(section.table.headers).toHaveText(HEADERS.map((header) => new RegExp(`^${header}\\??$`)));
+      await expect(section.table.headers).toHaveText(
+        HEADERS.map((header) => new RegExp(`^${header}\\??$`))
+      );
     });
 
     await test.step("the table has a search box, a column picker, an export menu and an API query", async () => {
-      await expect(section.table.searchInput).toHaveAttribute("placeholder", "Search all columns...");
+      await expect(section.table.searchInput).toHaveAttribute(
+        "placeholder",
+        "Search all columns..."
+      );
       await expect(section.table.columnsButton).toBeVisible();
       await expect(section.table.exportButton).toBeVisible();
       await expect(section.table.apiQueryButton).toBeVisible();
@@ -111,7 +116,9 @@ test.describe("Study page: GWAS credible sets", () => {
 
     await test.step("every row has a confidence rating", async () => {
       for (let index = 0; index < PAGE_SIZE; index++) {
-        await expect(section.table.cell(index, GWAS_CS_COLUMNS.confidence).locator("svg").first()).toBeVisible();
+        await expect(
+          section.table.cell(index, GWAS_CS_COLUMNS.confidence).locator("svg").first()
+        ).toBeVisible();
       }
     });
   });
@@ -156,7 +163,9 @@ test.describe("Study page: GWAS credible sets", () => {
 
     await section.table.header("Fine-mapping confidence").locator("sup").hover();
     const tooltip = page.getByRole("tooltip");
-    await expect(tooltip).toContainText("Fine-mapping confidence based on the suitability of the linkage-disequilibrium");
+    await expect(tooltip).toContainText(
+      "Fine-mapping confidence based on the suitability of the linkage-disequilibrium"
+    );
     await expect(tooltip.getByRole("link", { name: "here" })).toHaveAttribute(
       "href",
       "https://platform-docs.opentargets.org/credible-set#credible-set-confidence"
@@ -235,17 +244,23 @@ test.describe("Study page: GWAS credible sets", () => {
       await section.table.expectRowsChangedFrom(byDefault);
       await section.table.clickHeader(/^P-value/);
       await expect
-        .poll(async () => {
-          const values = await pValues();
-          return values.every((value, index) => index === 0 || values[index - 1] >= value);
-        }, { message: "p-values should now be descending" })
+        .poll(
+          async () => {
+            const values = await pValues();
+            return values.every((value, index) => index === 0 || values[index - 1] >= value);
+          },
+          { message: "p-values should now be descending" }
+        )
         .toBe(true);
       expect((await pValues())[0], "the weakest signal comes first").toBeGreaterThan(1e-8);
       await section.table.clickHeader(/^P-value/);
       await section.table.expectRowTexts(byDefault);
     });
 
-    const sortedBy = async (pick: (row: GwasCredibleSetRow) => number | string, direction: 1 | -1) =>
+    const sortedBy = async (
+      pick: (row: GwasCredibleSetRow) => number | string,
+      direction: 1 | -1
+    ) =>
       (await section.readRows()).map(pick).every((value, index, values) => {
         if (index === 0) return true;
         return direction === 1 ? values[index - 1] <= value : values[index - 1] >= value;
@@ -263,7 +278,10 @@ test.describe("Study page: GWAS credible sets", () => {
       await expect
         .poll(() => sortedBy((row) => row.beta, 1), { message: "betas should be ascending" })
         .toBe(true);
-      expect((await section.readRows())[0].beta, "the most negative effect comes first").toBeLessThan(0);
+      expect(
+        (await section.readRows())[0].beta,
+        "the most negative effect comes first"
+      ).toBeLessThan(0);
     });
 
     await test.step("credible set size: largest first, then smallest first", async () => {
@@ -351,7 +369,10 @@ test.describe("Study page: GWAS credible sets", () => {
     });
   });
 
-  test("a search from a later page starts again on the first page", async ({ page, testConfig }) => {
+  test("a search from a later page starts again on the first page", async ({
+    page,
+    testConfig,
+  }) => {
     const { section } = await open(page, testConfig.study.gwas.primary);
     const total = await section.table.total();
     await section.table.nextPageButton.click();
@@ -374,7 +395,9 @@ test.describe("Study page: GWAS credible sets", () => {
     const picker = await section.table.openColumnPicker();
 
     await expect(picker.getByRole("checkbox")).toHaveCount(HEADERS.length);
-    await expect(picker.getByRole("checkbox", { name: "Credible set", exact: true })).toBeDisabled();
+    await expect(
+      picker.getByRole("checkbox", { name: "Credible set", exact: true })
+    ).toBeDisabled();
     await expect(picker.getByRole("checkbox", { name: "Lead variant" })).toBeDisabled();
 
     await picker.getByRole("checkbox", { name: "Beta" }).uncheck();

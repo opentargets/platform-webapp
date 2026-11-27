@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { expect, test } from "../../../fixtures";
+import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { GwasStudyHeader } from "../../../POM/objects/components/StudyProfileHeader/gwasStudyHeader";
 import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { GWAS_STUDY_SECTIONS, GwasStudyPage } from "../../../POM/page/study/gwasStudy";
@@ -74,7 +74,9 @@ test.describe("Study page: GWAS study", () => {
     await test.step("type, reported trait and disease", async () => {
       await expect(header.studyType).toHaveText("Study type: GWAS");
       await expect(header.reportedTrait).toHaveText(`Reported trait: ${facts.traitFromSource}`);
-      await expect(header.diseases).toHaveText(`Disease or phenotype: ${MYOCARDIAL_INFARCTION.name}`);
+      await expect(header.diseases).toHaveText(
+        `Disease or phenotype: ${MYOCARDIAL_INFARCTION.name}`
+      );
       await expect(header.diseases.getByRole("link")).toHaveAttribute(
         "href",
         `/disease/${MYOCARDIAL_INFARCTION.id}`
@@ -196,7 +198,9 @@ test.describe("Study page: GWAS study", () => {
         const row = rows.filter({ hasText: label }).filter({ hasNotText: `${label} SE` });
         return parseNumber((await row.first().locator("td:last-child").innerText()).trim());
       };
-      expect(await valueOf("Total variants")).toBeGreaterThan(await valueOf("Significant variants"));
+      expect(await valueOf("Total variants")).toBeGreaterThan(
+        await valueOf("Significant variants")
+      );
     });
 
     await test.step("a row's label has a tooltip that explains it", async () => {
@@ -294,9 +298,10 @@ test.describe("Study page: GWAS study", () => {
     await studyPage.goto(testConfig.study.gwas.primary);
     await expect(header.studyType).toBeVisible();
 
-    await expect(header.root, "the header shows a '?API?' placeholder for fields it cannot fill").not.toContainText(
-      "?API?"
-    );
+    await expect(
+      header.root,
+      "the header shows a '?API?' placeholder for fields it cannot fill"
+    ).not.toContainText("?API?");
     await expect(header.backgroundTrait).toHaveCount(0);
   });
 
@@ -343,7 +348,10 @@ test.describe("Study page: GWAS study", () => {
     await expectSections(page, expectedSectionsFor(facts.id));
 
     await expect(header.reportedTrait).toHaveText(`Reported trait: ${facts.traitFromSource}`);
-    await expect(studyPage.sourceLink(facts.source.label)).toHaveAttribute("href", facts.source.href);
+    await expect(studyPage.sourceLink(facts.source.label)).toHaveAttribute(
+      "href",
+      facts.source.href
+    );
     await expect(studyPage.traitLinks("Trait")).toHaveText([MYOCARDIAL_INFARCTION.name]);
     await expect(header.publication).toHaveCount(0);
     await expect(header.sampleSize).toContainText("(cohorts: FinnGen)");
@@ -479,11 +487,12 @@ test.describe("Study page: GWAS study", () => {
     await page.goto(`/study/${UNKNOWN_STUDY_ID}`);
 
     await expect(studyPage.notFound).toBeVisible();
-    await expect(studyPage.notFound.getByRole("heading", { name: "404: Page not found" })).toBeVisible();
-    await expect(studyPage.notFound.getByRole("link", { name: "Go back to Home Page" })).toHaveAttribute(
-      "href",
-      "/"
-    );
+    await expect(
+      studyPage.notFound.getByRole("heading", { name: "404: Page not found" })
+    ).toBeVisible();
+    await expect(
+      studyPage.notFound.getByRole("link", { name: "Go back to Home Page" })
+    ).toHaveAttribute("href", "/");
     await expect(studyPage.title, "no study header on the 404 page").toHaveCount(0);
     await expect(page.locator("section[data-testid^='section-']")).toHaveCount(0);
   });
@@ -493,7 +502,11 @@ test.describe("Study page: GWAS study", () => {
     pageHealth,
     testConfig,
   }) => {
-    pageHealth.allow(/404 page is displayed/, "opens a study sub-route that does not exist", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "opens a study sub-route that does not exist",
+      "error-ui"
+    );
     const studyPage = new GwasStudyPage(page);
     await page.goto(`/study/${testConfig.study.gwas.primary}/this-tab-does-not-exist`);
 

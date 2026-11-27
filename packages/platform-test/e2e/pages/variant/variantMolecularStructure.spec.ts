@@ -39,9 +39,9 @@ test.describe("Variant page: Molecular Structure", () => {
       const structure = await open(page, variant.id);
 
       await test.step("title and description", async () => {
-        await expect(
-          page.getByTestId("section-molecular-structure-header")
-        ).toHaveText("Molecular Structure");
+        await expect(page.getByTestId("section-molecular-structure-header")).toHaveText(
+          "Molecular Structure"
+        );
         await expect(structure.description).toContainText(
           "reference amino acid highlighted in AlphaFold predicted model of"
         );
@@ -64,10 +64,9 @@ test.describe("Variant page: Molecular Structure", () => {
           "href",
           `https://www.uniprot.org/uniprotkb/${variant.uniprot}/entry#family_and_domains`
         );
-        await expect(structure.description.getByRole("link", { name: "Open Targets" })).toHaveAttribute(
-          "href",
-          "https://platform-docs.opentargets.org/variant"
-        );
+        await expect(
+          structure.description.getByRole("link", { name: "Open Targets" })
+        ).toHaveAttribute("href", "https://platform-docs.opentargets.org/variant");
       });
 
       await test.step("viewer controls and default legend", async () => {
@@ -135,7 +134,9 @@ test.describe("Variant page: Molecular Structure", () => {
       await expect(structure.viewer.getByText("likely benign")).toBeVisible();
       await expect(structure.viewer.getByText("likely pathogenic")).toBeVisible();
       await expect(
-        structure.viewer.getByText("Mean AlphaMissense pathogenicity over possible amino acid substitutions")
+        structure.viewer.getByText(
+          "Mean AlphaMissense pathogenicity over possible amino acid substitutions"
+        )
       ).toBeVisible();
     });
 

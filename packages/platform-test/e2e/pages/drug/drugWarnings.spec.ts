@@ -5,10 +5,10 @@ import {
   DrugWarningsSection,
   WARNING_COLUMN,
 } from "../../../POM/objects/widgets/shared/drugWarningsSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 const WARNING_TYPES = ["Black Box Warning", "Withdrawn"];
 const DISEASE_HREF = /^\/disease\/[A-Za-z]+_\d+$/;
@@ -21,7 +21,10 @@ test.describe("Drug page: Drug Warnings", () => {
     await stubEuropePmc(page);
   });
 
-  test("shows title, description, columns and well-formed warnings", async ({ page, testConfig }) => {
+  test("shows title, description, columns and well-formed warnings", async ({
+    page,
+    testConfig,
+  }) => {
     const { primary } = drugIds(testConfig);
     const drugPage = new DrugPage(page);
     const warnings = new DrugWarningsSection(page);
@@ -74,7 +77,11 @@ test.describe("Drug page: Drug Warnings", () => {
 
     await test.step("page size options", async () => {
       await expect(warnings.table.pageSizeSelect).toHaveValue("10");
-      await expect(warnings.table.pageSizeSelect.getByRole("option")).toHaveText(["10", "25", "100"]);
+      await expect(warnings.table.pageSizeSelect.getByRole("option")).toHaveText([
+        "10",
+        "25",
+        "100",
+      ]);
     });
   });
 
@@ -91,7 +98,9 @@ test.describe("Drug page: Drug Warnings", () => {
     const referenced = warnings.table.rows.filter({ has: page.getByTestId("table-drawer") });
     const unreferenced = warnings.table.rows.filter({ hasNot: page.getByTestId("table-drawer") });
     await expect(referenced.first()).toBeVisible();
-    await expect(unreferenced.first().locator("td").nth(WARNING_COLUMN.references)).toHaveText("N/A");
+    await expect(unreferenced.first().locator("td").nth(WARNING_COLUMN.references)).toHaveText(
+      "N/A"
+    );
 
     const button = referenced.first().getByTestId("table-drawer");
     const sources = (await button.innerText()).trim().split(", ");

@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { PathwaysSection } from "../../../../POM/objects/widgets/shared/pathwaysSection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
 import { EDGE_TARGETS, targetFacts } from "../../../../POM/objects/widgets/Target/targetFacts";
@@ -62,7 +62,10 @@ test.describe("Target profile: Pathways section", () => {
         await expect(
           pathways.browserLink(row),
           "the browser link should open the same pathway with the target flagged"
-        ).toHaveAttribute("href", `https://reactome.org/PathwayBrowser/#/${pathwayId}&FLG=${symbol}`);
+        ).toHaveAttribute(
+          "href",
+          `https://reactome.org/PathwayBrowser/#/${pathwayId}&FLG=${symbol}`
+        );
       });
     }
     expect(seenIds.size, "each row should be a different pathway").toBe(10);
@@ -268,7 +271,9 @@ test.describe("Target profile: Pathways section", () => {
     await pathways.expectLoaded();
     await controls.expectLoaded();
 
-    await expect(pathways.description).toContainText(`Biological pathways where ${symbol} is present`);
+    await expect(pathways.description).toContainText(
+      `Biological pathways where ${symbol} is present`
+    );
     await expect(controls.rows).toHaveCount(1);
     await controls.expectPosition(1, 1, 1);
     await controls.expectFirstPage(true);

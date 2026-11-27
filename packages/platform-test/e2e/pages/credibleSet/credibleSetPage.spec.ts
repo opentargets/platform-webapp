@@ -85,9 +85,7 @@ test.describe("Credible set page", () => {
     await expect(credibleSet.field("P-value")).toHaveText(/^P-value:\s*\d(\.\d+)?\s*×\s*10-17$/);
     await expect(credibleSet.field("Beta")).toHaveText(/0\.0630$/);
     await expect(credibleSet.field("Standard error")).toHaveText(/\d\.\d+(e-\d+)?$/);
-    await expect(credibleSet.field("Posterior probability")).toHaveText(
-      /[01]\.\d+$/
-    );
+    await expect(credibleSet.field("Posterior probability")).toHaveText(/[01]\.\d+$/);
     await expect(credibleSet.profileHeader).toContainText("Fine-mapping");
     await expect(credibleSet.field("Locus")).toHaveText("Locus: chr2:85366766-85770276");
     await expect(credibleSet.field("Method")).toHaveText(`Method: ${GWAS.method}`);
@@ -141,7 +139,9 @@ test.describe("Credible set page", () => {
     await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
 
     await credibleSet.profileHeader.getByText("NFE", { exact: true }).hover();
-    await expect(page.getByRole("tooltip")).toHaveText("LD reference population: non-Finnish Europeans");
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "LD reference population: non-Finnish Europeans"
+    );
     await expect(credibleSet.profileHeader.getByText("100%", { exact: true })).toBeVisible();
 
     await expect(
@@ -151,13 +151,18 @@ test.describe("Credible set page", () => {
     await expect(credibleSet.profileHeader).not.toContainText("?API?");
   });
 
-  test("pQTL study fields have a project, the affected gene and cell or tissue, and no disease", async ({ page, testConfig }) => {
+  test("pQTL study fields have a project, the affected gene and cell or tissue, and no disease", async ({
+    page,
+    testConfig,
+  }) => {
     const credibleSet = new CredibleSetPage(page);
     await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).qtl);
 
     await expect(credibleSet.profileHeader).toContainText(QTL.studyHeading);
     await expect(credibleSet.field("Project")).toHaveText(`Project: ${QTL.project}`);
-    await expect(credibleSet.field("Affected gene")).toHaveText(`Affected gene: ${QTL.gene.symbol}`);
+    await expect(credibleSet.field("Affected gene")).toHaveText(
+      `Affected gene: ${QTL.gene.symbol}`
+    );
     await expect(credibleSet.field("Affected gene").getByRole("link")).toHaveAttribute(
       "href",
       `/target/${QTL.gene.id}`
@@ -204,7 +209,9 @@ test.describe("Credible set page", () => {
       const [mantissa, exponent] = pValue.split("×10");
 
       await expect(credibleSet.field("Beta")).toHaveText(new RegExp(`${beta}$`));
-      await expect(credibleSet.field("Posterior probability")).toHaveText(new RegExp(`${posterior}$`));
+      await expect(credibleSet.field("Posterior probability")).toHaveText(
+        new RegExp(`${posterior}$`)
+      );
       // the header shows more digits of the mantissa than the table does
       await expect(credibleSet.field("P-value")).toHaveText(
         new RegExp(`^P-value:\\s*${mantissa.replace(".", "\\.")}\\d*\\s*×\\s*10${exponent}$`)
@@ -229,7 +236,10 @@ test.describe("Credible set page", () => {
     const credibleSet = new CredibleSetPage(page);
     await credibleSet.goToCredibleSetPage(credibleSetIds(testConfig).primary);
 
-    await expect(credibleSet.leadVariantLink).toHaveAttribute("href", `../variant/${GWAS.variantId}`);
+    await expect(credibleSet.leadVariantLink).toHaveAttribute(
+      "href",
+      `../variant/${GWAS.variantId}`
+    );
     await credibleSet.leadVariantLink.click();
     await expect(page).toHaveURL(new RegExp(`/variant/${GWAS.variantId}$`));
     await expect(page.getByTestId("profile-page-header-text")).toBeVisible();

@@ -3,10 +3,10 @@ import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   CLINICAL_STAGES,
-  DRUGS_PAGE_SIZE,
   type ClinicalRecord,
   type ClinicalRecordsData,
   type ClinicalStageKey,
+  DRUGS_PAGE_SIZE,
   reportsLabel,
   stageIndex,
   stageLabel,
@@ -197,7 +197,8 @@ test.describe("Target drugs and clinical candidates section", () => {
       );
       await expect(drugs.cards).toHaveCount(Math.min(DRUGS_PAGE_SIZE, count - DRUGS_PAGE_SIZE));
       const secondPage = await drugs.cards.getByRole("link").allInnerTexts();
-      for (const name of secondPage) expect(firstPage, `"${name}" is on page 1`).not.toContain(name);
+      for (const name of secondPage)
+        expect(firstPage, `"${name}" is on page 1`).not.toContain(name);
       await expect(drugs.selectedCards).toHaveCount(1);
       await expect(drugs.cards.first()).toHaveAttribute("data-selected", "true");
       await expect(drugs.recordsSummary).toContainText(`for ${secondPage[0]}`);
@@ -232,7 +233,10 @@ test.describe("Target drugs and clinical candidates section", () => {
     await expect(drugs.cards.first()).toHaveAttribute("data-selected", "true");
     const selectedName = await drugs.cardLink(drugs.selectedCards).innerText();
     const selected = rows.find(({ drug }) => drug.name === selectedName);
-    expect(selected, `the selected card "${selectedName}" should be a drug of the API`).toBeDefined();
+    expect(
+      selected,
+      `the selected card "${selectedName}" should be a drug of the API`
+    ).toBeDefined();
     const row = selected as TargetDrugRow;
 
     await test.step("summary line", async () => {
@@ -240,9 +244,10 @@ test.describe("Target drugs and clinical candidates section", () => {
       await expect(drugs.recordsSummary).toHaveText(
         `${reportsLabel(records.length)} for ${row.drug.name}`
       );
-      await expect(
-        drugs.recordsSummary.getByRole("link", { name: row.drug.name })
-      ).toHaveAttribute("href", `/drug/${row.drug.id}`);
+      await expect(drugs.recordsSummary.getByRole("link", { name: row.drug.name })).toHaveAttribute(
+        "href",
+        `/drug/${row.drug.id}`
+      );
     });
 
     const grouped = byStage(records);
@@ -282,9 +287,10 @@ test.describe("Target drugs and clinical candidates section", () => {
       for (const title of await drugs.recordItems
         .getByTestId("clinical-record-drawer-trigger")
         .allInnerTexts()) {
-        expect(titles, `"${title}" should be a ${row.maxClinicalStage} report of the drug`).toContain(
-          title
-        );
+        expect(
+          titles,
+          `"${title}" should be a ${row.maxClinicalStage} report of the drug`
+        ).toContain(title);
       }
     });
   });
@@ -385,7 +391,9 @@ test.describe("Target drugs and clinical candidates section", () => {
       await drugs.selectStage(initial);
       const onFirstPage = Math.min(10, initialRecords.length);
       await expect(drugs.recordItems).toHaveCount(onFirstPage);
-      await expect(recordsTable.position).toHaveText(`1 - ${onFirstPage} of ${initialRecords.length}`);
+      await expect(recordsTable.position).toHaveText(
+        `1 - ${onFirstPage} of ${initialRecords.length}`
+      );
     });
   });
 
@@ -406,9 +414,10 @@ test.describe("Target drugs and clinical candidates section", () => {
     expect(variables.clinicalReportsIds).toEqual(row.clinicalReports.map(({ id }) => id));
     expect(data.clinicalReports).toHaveLength(row.clinicalReports.length);
     await expect(drugs.card(firstName)).toHaveAttribute("data-selected", "false");
-    await expect(
-      drugs.recordsSummary.getByRole("link", { name: row.drug.name })
-    ).toHaveAttribute("href", `/drug/${row.drug.id}`);
+    await expect(drugs.recordsSummary.getByRole("link", { name: row.drug.name })).toHaveAttribute(
+      "href",
+      `/drug/${row.drug.id}`
+    );
 
     const grouped = byStage(data.clinicalReports);
     for (const { key } of CLINICAL_STAGES) {
@@ -459,7 +468,10 @@ test.describe("Target drugs and clinical candidates section", () => {
     expect(detail.title).toBe(title);
     await expect(drawer.getByText(title, { exact: true })).toBeVisible();
     expect(detail.url).toMatch(/^https?:\/\//);
-    await expect(drawer.getByRole("link", { name: detail.url })).toHaveAttribute("href", detail.url);
+    await expect(drawer.getByRole("link", { name: detail.url })).toHaveAttribute(
+      "href",
+      detail.url
+    );
     await expect(drawer).toContainText("Source");
     await expect(drawer).toContainText(`Stage${stageLabel(detail.clinicalStage)}`);
     expect(detail.clinicalStage).toBe(record?.clinicalStage);
@@ -513,7 +525,9 @@ test.describe("Target drugs and clinical candidates section", () => {
     });
 
     await test.step("a term nothing matches leaves no card", async () => {
-      const searched = drugs.waitForPage((variables) => variables.search?.text === "zzzz-no-such-drug");
+      const searched = drugs.waitForPage(
+        (variables) => variables.search?.text === "zzzz-no-such-drug"
+      );
       await drugs.searchInput.fill("zzzz-no-such-drug");
       expect((await searched).data.target.drugAndClinicalCandidates.count).toBe(0);
       await expect(drugs.cards).toHaveCount(0);

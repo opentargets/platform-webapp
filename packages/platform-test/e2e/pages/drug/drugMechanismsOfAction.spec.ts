@@ -5,10 +5,10 @@ import {
   MechanismsOfActionSection,
   MOA_COLUMN,
 } from "../../../POM/objects/widgets/shared/mechanismsOfActionSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 const TARGET_HREF = /^\/target\/ENSG\d{11}$/;
 
@@ -60,14 +60,22 @@ test.describe("Drug page: Mechanisms of Action", () => {
       await expect(moa.table.cell(0, MOA_COLUMN.curation)).toHaveText("Manual");
       await expect(moa.publicationsButton(0), "no PubMed references").toHaveCount(0);
       await expect(moa.referenceLinks(0)).toHaveText(["DailyMed"]);
-      await expectExternalLink(moa.referenceLinks(0), /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/);
+      await expectExternalLink(
+        moa.referenceLinks(0),
+        /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/
+      );
     });
 
     await test.step("one page: every pagination button is disabled", async () => {
       await moa.table.expectPosition(1, 1, 1);
       await moa.table.expectPaginationState("only");
       await expect(moa.table.pageSizeSelect).toHaveValue("10");
-      await expect(moa.table.pageSizeSelect.getByRole("option")).toHaveText(["5", "10", "25", "100"]);
+      await expect(moa.table.pageSizeSelect.getByRole("option")).toHaveText([
+        "5",
+        "10",
+        "25",
+        "100",
+      ]);
     });
   });
 
@@ -189,7 +197,10 @@ test.describe("Drug page: Mechanisms of Action", () => {
       await expect(button).toHaveText(/^\s*\d+\s*$/);
       const pmid = (await button.innerText()).trim();
       await expect(moa.referenceLinks(0)).toHaveText(["DailyMed"]);
-      await expectExternalLink(moa.referenceLinks(0), /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/);
+      await expectExternalLink(
+        moa.referenceLinks(0),
+        /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/
+      );
       await expect(moa.publicationsDrawer).toHaveCount(0);
 
       await button.click();
@@ -285,7 +296,12 @@ test.describe("Drug page: Mechanisms of Action", () => {
     ).toBeDisabled();
 
     await picker.getByRole("checkbox", { name: "Target Name" }).uncheck();
-    await moa.table.expectHeaders(["Mechanism of Action", "Human targets", "Curation", "References"]);
+    await moa.table.expectHeaders([
+      "Mechanism of Action",
+      "Human targets",
+      "Curation",
+      "References",
+    ]);
     await expect(moa.table.row(0).locator("td")).toHaveCount(4);
     await expect(moa.table.row(0)).not.toContainText("Receptor tyrosine-protein kinase erbB-2");
 

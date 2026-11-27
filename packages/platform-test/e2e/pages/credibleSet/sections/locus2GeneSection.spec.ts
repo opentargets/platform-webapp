@@ -1,9 +1,9 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
-import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { Locus2GeneSection } from "../../../../POM/objects/widgets/CredibleSet/locus2GeneSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
+import type { TestConfig } from "../../../../types";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
 const { column, featureGroups } = Locus2GeneSection;
@@ -12,7 +12,8 @@ const THREE_DECIMALS = /^-?\d+\.\d{3}$/;
 /** The two credible sets these tests use; fails loudly if the test config lacks one. */
 function credibleSets(config: TestConfig): { primary: string; qtl: string } {
   const { primary, qtl } = config.credibleSet ?? {};
-  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  if (!primary || !qtl)
+    throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
   return { primary, qtl };
 }
 

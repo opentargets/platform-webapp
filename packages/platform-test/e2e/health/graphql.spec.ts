@@ -1,7 +1,7 @@
-import type { TestConfig } from "../../types";
 import { expect, test } from "../../fixtures";
-import { stubEuropePmc } from "../../POM/objects/widgets/shared/sectionDataControls";
 import { expectedSectionsFor } from "../../fixtures/expectedSections";
+import { stubEuropePmc } from "../../POM/objects/widgets/shared/sectionDataControls";
+import type { TestConfig } from "../../types";
 import type { GraphQLMonitor } from "../../utils/graphqlMonitor";
 import { expectAllSectionsSettled, expectSections } from "../../utils/sections";
 
@@ -80,7 +80,13 @@ const ROUTES: Route[] = [
       { operation: "DiseasePageQuery", field: "disease" },
       { operation: "DiseaseProfileQuery", field: "disease" },
     ],
-    also: ["DataVersion", "OntologyQuery", "drugsQuery", "GWASStudiesQuery", "DiseaseBibliographyQuery"],
+    also: [
+      "DataVersion",
+      "OntologyQuery",
+      "drugsQuery",
+      "GWASStudiesQuery",
+      "DiseaseBibliographyQuery",
+    ],
     sectionsOf: (c) => c.disease.primary,
   },
   {
@@ -100,7 +106,12 @@ const ROUTES: Route[] = [
       { operation: "DrugPageQuery", field: "drug" },
       { operation: "DrugProfileQuery", field: "drug" },
     ],
-    also: ["DataVersion", "MechanismsOfActionSectionQuery", "IndicationsQuery", "DrugBibliographyQuery"],
+    also: [
+      "DataVersion",
+      "MechanismsOfActionSectionQuery",
+      "IndicationsQuery",
+      "DrugBibliographyQuery",
+    ],
     sectionsOf: (c) => c.drug.primary,
   },
   {
@@ -110,7 +121,12 @@ const ROUTES: Route[] = [
       { operation: "VariantPageQuery", field: "variant" },
       { operation: "VariantProfileQuery", field: "variant" },
     ],
-    also: ["DataVersion", "VariantEffectQuery", "GWASCredibleSetsTableQuery", "VariantQTLCredibleSetsQuery"],
+    also: [
+      "DataVersion",
+      "VariantEffectQuery",
+      "GWASCredibleSetsTableQuery",
+      "VariantQTLCredibleSetsQuery",
+    ],
     sectionsOf: (c) => c.variant.primary,
   },
   {
@@ -141,7 +157,8 @@ const ROUTES: Route[] = [
       { operation: "CredibleSetProfileQuery", field: "credibleSet" },
     ],
     also: ["DataVersion", "VariantsQuery", "Locus2GeneQuery", "GWASColocQuery", "MolQTLColocQuery"],
-    sectionsOf: (c) => required(required(c.credibleSet, "credibleSet").primary, "credibleSet.primary"),
+    sectionsOf: (c) =>
+      required(required(c.credibleSet, "credibleSet").primary, "credibleSet.primary"),
   },
 ];
 
@@ -166,7 +183,8 @@ test.describe("GraphQL operations on page load", () => {
           .poll(
             async () => {
               await graphqlMonitor.settle();
-              return graphqlMonitor.named(operation).filter((request) => request.data !== undefined).length;
+              return graphqlMonitor.named(operation).filter((request) => request.data !== undefined)
+                .length;
             },
             { message: `${operation} should be issued and answered` }
           )
@@ -182,12 +200,15 @@ test.describe("GraphQL operations on page load", () => {
       await test.step("every expected operation was issued", () => {
         const issued = graphqlMonitor.operationNames();
         const expected = [...route.root.map((root) => root.operation), ...route.also];
-        for (const operation of expected) expect(issued, `${operation} was not issued`).toContain(operation);
+        for (const operation of expected)
+          expect(issued, `${operation} was not issued`).toContain(operation);
       });
 
       await test.step("the root entity is in every root response", () => {
         for (const { operation, field } of route.root) {
-          for (const request of graphqlMonitor.named(operation).filter((answered) => answered.data !== undefined)) {
+          for (const request of graphqlMonitor
+            .named(operation)
+            .filter((answered) => answered.data !== undefined)) {
             expect(request.errors, `${operation} errors`).toEqual([]);
             expect(request.data, `${operation} returned no data`).toBeTruthy();
             expect(
@@ -207,9 +228,9 @@ test.describe("GraphQL operations on page load", () => {
             .filter((request) => request.data !== undefined);
           expect(answered.length).toBeGreaterThan(0);
           for (const request of answered) {
-            const entity = (request.data as Record<string, Record<string, { count: number; rows: unknown[] }>>)[
-              route.root[1].field
-            ];
+            const entity = (
+              request.data as Record<string, Record<string, { count: number; rows: unknown[] }>>
+            )[route.root[1].field];
             expect(entity[rowsField].count).toBeGreaterThan(0);
             expect(entity[rowsField].rows.length).toBeGreaterThan(0);
           }
@@ -226,7 +247,8 @@ test.describe("GraphQL operations on page load", () => {
     await expect
       .poll(async () => {
         await graphqlMonitor.settle();
-        return graphqlMonitor.named("DataVersion").filter((request) => request.data !== undefined).length;
+        return graphqlMonitor.named("DataVersion").filter((request) => request.data !== undefined)
+          .length;
       })
       .toBeGreaterThan(0);
     await reportRepeatedRequests(graphqlMonitor);

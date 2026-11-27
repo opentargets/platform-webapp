@@ -30,6 +30,8 @@ export class ErrorPages {
 
   /** What a visitor must not see around an error page: a profile header or any section. */
   get profileContent(): Locator {
-    return this.page.locator("section[data-testid^='section-'], [data-testid='profile-page-header-block']");
+    return this.page.locator(
+      "section[data-testid^='section-'], [data-testid='profile-page-header-block']"
+    );
   }
 }

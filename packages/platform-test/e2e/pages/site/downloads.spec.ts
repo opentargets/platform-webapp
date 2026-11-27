@@ -21,7 +21,11 @@ import {
  */
 const TARGET = { id: "target", name: "Target", category: "Target" };
 const DISEASE = { id: "disease", name: "Disease/Phenotype" };
-const CLINICAL_INDICATION = { id: "clinical_indication", name: "Clinical indication", categories: ["Drug", "Disease"] };
+const CLINICAL_INDICATION = {
+  id: "clinical_indication",
+  name: "Clinical indication",
+  categories: ["Drug", "Disease"],
+};
 const COLOCALISATION = { id: "colocalisation", name: "Colocalisation with colocPIP and eCAVIAR" };
 const LONG_DESCRIPTION = { id: "association_by_datasource_direct" };
 const LITERATURE_IDS = ["literature_entity_lut", "literature_vector"];
@@ -30,11 +34,16 @@ test.describe("Downloads page", () => {
   // The first add to the bag opens a one-time coach mark that sits over the toolbar. It has its
   // own tests below; everywhere else it is marked as already seen.
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript((key) => window.localStorage.setItem(key, "1"), COACH_MARK_STORAGE_KEY);
+    await page.addInitScript(
+      (key) => window.localStorage.setItem(key, "1"),
+      COACH_MARK_STORAGE_KEY
+    );
   });
 
   test.describe("page and dataset cards", () => {
-    test("renders the title, description, tags, toolbar and a card per dataset @smoke", async ({ page }) => {
+    test("renders the title, description, tags, toolbar and a card per dataset @smoke", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
@@ -72,19 +81,31 @@ test.describe("Downloads page", () => {
       });
     });
 
-    test("a dataset card shows its name, id, description, category and actions", async ({ page }) => {
+    test("a dataset card shows its name, id, description, category and actions", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
       await expect(downloads.cardName(TARGET.id)).toHaveText(TARGET.name);
       await expect(downloads.cardId(TARGET.id)).toHaveText(TARGET.id);
-      await expect(downloads.cardDescription(TARGET.id)).toContainText("Core annotation for drug targets");
+      await expect(downloads.cardDescription(TARGET.id)).toContainText(
+        "Core annotation for drug targets"
+      );
       await expect(downloads.cardCategories(TARGET.id)).toHaveText([TARGET.category]);
 
-      await expect(downloads.cardSchemaLink(TARGET.id)).toHaveAttribute("href", `/downloads/${TARGET.id}/schema`);
-      await expect(downloads.cardAccessLink(TARGET.id)).toHaveAttribute("href", `/downloads/${TARGET.id}/access`);
+      await expect(downloads.cardSchemaLink(TARGET.id)).toHaveAttribute(
+        "href",
+        `/downloads/${TARGET.id}/schema`
+      );
+      await expect(downloads.cardAccessLink(TARGET.id)).toHaveAttribute(
+        "href",
+        `/downloads/${TARGET.id}/access`
+      );
       // the controls are named for assistive technology
-      await expect(downloads.cardToggle(TARGET.id)).toHaveAccessibleName(`Add ${TARGET.name} to bag`);
+      await expect(downloads.cardToggle(TARGET.id)).toHaveAccessibleName(
+        `Add ${TARGET.name} to bag`
+      );
       await expect(downloads.cardToggle(TARGET.id)).toHaveAttribute("aria-pressed", "false");
       await expect(downloads.card(TARGET.id)).toHaveAccessibleName(TARGET.name);
     });
@@ -92,7 +113,9 @@ test.describe("Downloads page", () => {
     test("a dataset in two categories shows both", async ({ page }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
-      await expect(downloads.cardCategories(CLINICAL_INDICATION.id)).toHaveText(CLINICAL_INDICATION.categories);
+      await expect(downloads.cardCategories(CLINICAL_INDICATION.id)).toHaveText(
+        CLINICAL_INDICATION.categories
+      );
     });
 
     test("every card is well formed and links to its own dialogs", async ({ page }) => {
@@ -107,7 +130,9 @@ test.describe("Downloads page", () => {
       for (const card of cards) {
         expect(card.name, `the name of ${card.id}`).not.toBe("");
         expect(card.id, `the id of "${card.name}"`).toMatch(/^[a-z0-9_]+$/);
-        expect(card.testId, "the card is addressed by its dataset id").toBe(`dataset-card-${card.id}`);
+        expect(card.testId, "the card is addressed by its dataset id").toBe(
+          `dataset-card-${card.id}`
+        );
         expect(card.schemaHref, `schema link of ${card.id}`).toBe(`/downloads/${card.id}/schema`);
         expect(card.accessHref, `access link of ${card.id}`).toBe(`/downloads/${card.id}/access`);
         expect(card.descriptionLength, `${card.id} should show a description`).toBeGreaterThan(15);
@@ -122,7 +147,10 @@ test.describe("Downloads page", () => {
       await downloads.goto();
       const { onCards, onChips } = await downloads.categorySlugs();
       expect(onCards.length).toBeGreaterThan(3);
-      for (const category of onCards) expect(onChips, `no chip for the category "${category}" shown on a card`).toContain(category);
+      for (const category of onCards)
+        expect(onChips, `no chip for the category "${category}" shown on a card`).toContain(
+          category
+        );
       expect(onChips, "every chip has datasets").toEqual(expect.arrayContaining(onCards));
     });
 
@@ -137,14 +165,18 @@ test.describe("Downloads page", () => {
 
       await toggle.click();
       await expect(toggle).toHaveText("hide");
-      await expect.poll(async () => (await downloads.cardDescription(id).boundingBox())?.height ?? 0).toBeGreaterThan(collapsed);
+      await expect
+        .poll(async () => (await downloads.cardDescription(id).boundingBox())?.height ?? 0)
+        .toBeGreaterThan(collapsed);
       await toggle.click();
       await expect(toggle).toHaveText("more");
     });
   });
 
   test.describe("search", () => {
-    test("narrows the cards to the datasets matching the term and updates the counter", async ({ page }) => {
+    test("narrows the cards to the datasets matching the term and updates the counter", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       const total = await downloads.totalDatasets();
@@ -157,7 +189,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.cardName(COLOCALISATION.id)).toHaveText(COLOCALISATION.name);
 
       for (const id of await downloads.cardIds()) {
-        const text = ((await downloads.cardName(id).textContent()) ?? "") + ((await downloads.cardDescription(id).textContent()) ?? "");
+        const text =
+          ((await downloads.cardName(id).textContent()) ?? "") +
+          ((await downloads.cardDescription(id).textContent()) ?? "");
         expect(text.toLowerCase(), `${id} should match the search`).toContain("colocalisation");
       }
       await expect(downloads.clearAllButton).toBeVisible();
@@ -212,7 +246,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.cards).not.toHaveCount(total);
     });
 
-    test("a term that matches nothing shows the empty state, and clearing it brings the cards back", async ({ page }) => {
+    test("a term that matches nothing shows the empty state, and clearing it brings the cards back", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       const total = await downloads.totalDatasets();
@@ -220,7 +256,9 @@ test.describe("Downloads page", () => {
       await downloads.search("zzzqqq");
       await downloads.expectShown(0, total);
       await expect(downloads.emptyStateTitle).toHaveText("No datasets match “zzzqqq”");
-      await expect(downloads.emptyStateBody).toContainText("Search looks at dataset names, ids and descriptions");
+      await expect(downloads.emptyStateBody).toContainText(
+        "Search looks at dataset names, ids and descriptions"
+      );
       await expect(downloads.chips.first()).toBeVisible();
 
       await expect(downloads.emptyStateAction).toHaveText("Clear search");
@@ -255,7 +293,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.clearAllButton).toHaveCount(0);
     });
 
-    test("the chip counts follow the search, and a chip with no match is disabled with a tooltip", async ({ page }) => {
+    test("the chip counts follow the search, and a chip with no match is disabled with a tooltip", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
@@ -287,7 +327,10 @@ test.describe("Downloads page", () => {
       await downloads.expectShown(drugCount, total);
       await expect(downloads.resultsSummary).toHaveText(`${drugCount} Drug datasets`);
       for (const id of await downloads.cardIds()) {
-        expect(await downloads.cardCategories(id).allTextContents(), `${id} is a Drug dataset`).toContain("Drug");
+        expect(
+          await downloads.cardCategories(id).allTextContents(),
+          `${id} is a Drug dataset`
+        ).toContain("Drug");
       }
       await expect(downloads.card(CLINICAL_INDICATION.id)).toBeVisible();
       await expect(downloads.card(DISEASE.id)).toHaveCount(0);
@@ -304,10 +347,15 @@ test.describe("Downloads page", () => {
       const shown = await downloads.shownCount();
       expect(shown).toBeGreaterThan(LITERATURE_IDS.length);
       await downloads.expectShown(shown);
-      await expect(downloads.resultsSummary).toHaveText(`${shown} datasets in Literature, Ontology`);
+      await expect(downloads.resultsSummary).toHaveText(
+        `${shown} datasets in Literature, Ontology`
+      );
       for (const id of await downloads.cardIds()) {
         const categories = await downloads.cardCategories(id).allTextContents();
-        expect(categories.some((c) => c === "Literature" || c === "Ontology"), `${id} is in Literature or Ontology`).toBe(true);
+        expect(
+          categories.some((c) => c === "Literature" || c === "Ontology"),
+          `${id} is in Literature or Ontology`
+        ).toBe(true);
       }
     });
 
@@ -339,7 +387,9 @@ test.describe("Downloads page", () => {
       await downloads.expectShown(total, total);
     });
 
-    test("a search inside a category that has no match explains where the matches are", async ({ page }) => {
+    test("a search inside a category that has no match explains where the matches are", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       const total = await downloads.totalDatasets();
@@ -347,8 +397,12 @@ test.describe("Downloads page", () => {
       await downloads.chip("Literature").click();
       await downloads.search("colocalisation");
       await downloads.expectShown(0, total);
-      await expect(downloads.emptyStateTitle).toHaveText("No Literature datasets match “colocalisation”");
-      await expect(downloads.emptyStateBody).toContainText(/\d+ datasets? in other categories match\. Remove the Literature filter/);
+      await expect(downloads.emptyStateTitle).toHaveText(
+        "No Literature datasets match “colocalisation”"
+      );
+      await expect(downloads.emptyStateBody).toContainText(
+        /\d+ datasets? in other categories match\. Remove the Literature filter/
+      );
       // the selected chip stays selected although nothing matches inside it
       await expect(downloads.chip("Literature")).toHaveAttribute("aria-checked", "true");
 
@@ -360,7 +414,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.searchBox).toHaveValue("colocalisation");
     });
 
-    test("with several categories selected the empty state offers to remove the filters", async ({ page }) => {
+    test("with several categories selected the empty state offers to remove the filters", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
@@ -368,7 +424,9 @@ test.describe("Downloads page", () => {
       await downloads.chip("Ontology").click();
       await downloads.search("colocalisation");
       await downloads.expectShown(0);
-      await expect(downloads.emptyStateTitle).toHaveText("No Literature, Ontology datasets match “colocalisation”");
+      await expect(downloads.emptyStateTitle).toHaveText(
+        "No Literature, Ontology datasets match “colocalisation”"
+      );
       await expect(downloads.emptyStateAction).toHaveText("Remove filters");
       await downloads.emptyStateAction.click();
       await expect(downloads.chip("Literature")).toHaveAttribute("aria-checked", "false");
@@ -388,7 +446,8 @@ test.describe("Downloads page", () => {
       await downloads.expectBagCount(LITERATURE_IDS.length);
       await expect(downloads.addAllButton).toHaveText("All in bag");
       await expect(downloads.addAllButton).toBeDisabled();
-      for (const id of LITERATURE_IDS) await expect(downloads.cardToggle(id)).toHaveAttribute("aria-pressed", "true");
+      for (const id of LITERATURE_IDS)
+        await expect(downloads.cardToggle(id)).toHaveAttribute("aria-pressed", "true");
     });
 
     test("Add all only adds what is not in the bag yet", async ({ page }) => {
@@ -399,14 +458,18 @@ test.describe("Downloads page", () => {
       await downloads.expectShown(LITERATURE_IDS.length);
       await downloads.cardToggle(LITERATURE_IDS[0]).click();
       await downloads.expectBagCount(1);
-      await expect(downloads.addAllButton).toHaveText(`+ Add all ${LITERATURE_IDS.length - 1} to bag`);
+      await expect(downloads.addAllButton).toHaveText(
+        `+ Add all ${LITERATURE_IDS.length - 1} to bag`
+      );
       await downloads.addAllButton.click();
       await downloads.expectBagCount(LITERATURE_IDS.length);
     });
   });
 
   test.describe("the bag", () => {
-    test("adding a dataset marks its card and counts it; adding again takes it out", async ({ page }) => {
+    test("adding a dataset marks its card and counts it; adding again takes it out", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
@@ -426,7 +489,9 @@ test.describe("Downloads page", () => {
       await downloads.expectBagCount(1);
     });
 
-    test("the drawer lists the datasets with a schema link, and Remove takes one out", async ({ page }) => {
+    test("the drawer lists the datasets with a schema link, and Remove takes one out", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.cardToggle(TARGET.id).click();
@@ -438,8 +503,13 @@ test.describe("Downloads page", () => {
       await expect(downloads.drawerRowName(TARGET.id)).toHaveText(TARGET.name);
       await expect(downloads.drawerRowName(DISEASE.id)).toHaveText(DISEASE.name);
       await expect(downloads.drawerRows).toHaveCount(2);
-      await expect(downloads.drawerRowSchemaLink(TARGET.id)).toHaveAttribute("href", `/downloads/${TARGET.id}/schema`);
-      await expect(downloads.drawerRowRemove(DISEASE.id)).toHaveAccessibleName(`Remove ${DISEASE.name} from bag`);
+      await expect(downloads.drawerRowSchemaLink(TARGET.id)).toHaveAttribute(
+        "href",
+        `/downloads/${TARGET.id}/schema`
+      );
+      await expect(downloads.drawerRowRemove(DISEASE.id)).toHaveAccessibleName(
+        `Remove ${DISEASE.name} from bag`
+      );
 
       await downloads.drawerRowRemove(DISEASE.id).click();
       await expect(downloads.drawerRows).toHaveCount(1);
@@ -493,7 +563,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.cardToggle(DISEASE.id)).toHaveAttribute("aria-pressed", "true");
     });
 
-    test("the bag survives a reload and is stored as dataset ids, not in the URL", async ({ page }) => {
+    test("the bag survives a reload and is stored as dataset ids, not in the URL", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.cardToggle(TARGET.id).click();
@@ -527,7 +599,10 @@ test.describe("Downloads page", () => {
     });
 
     test("a bag that is not valid JSON in storage is ignored", async ({ page }) => {
-      await page.addInitScript((key) => window.localStorage.setItem(key, "{not json"), BASKET_STORAGE_KEY);
+      await page.addInitScript(
+        (key) => window.localStorage.setItem(key, "{not json"),
+        BASKET_STORAGE_KEY
+      );
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.expectBagCount(0);
@@ -547,7 +622,9 @@ test.describe("Downloads page", () => {
   });
 
   test.describe("access scripts of the bag", () => {
-    test("one tab per tool, each script listing the bag's datasets and the release locations", async ({ page }) => {
+    test("one tab per tool, each script listing the bag's datasets and the release locations", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.cardToggle(TARGET.id).click();
@@ -563,7 +640,9 @@ test.describe("Downloads page", () => {
 
       await test.step("AWS", async () => {
         await downloads.scriptTab("aws").click();
-        await expect(downloads.scriptText).toContainText(/BASE="s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output"/);
+        await expect(downloads.scriptText).toContainText(
+          /BASE="s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output"/
+        );
         await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
         await expect(downloads.scriptText).toContainText("aws s3 cp");
         await expect(downloads.scriptText).toContainText("--no-sign-request");
@@ -571,7 +650,9 @@ test.describe("Downloads page", () => {
 
       await test.step("Google Cloud with its billing project note", async () => {
         await downloads.scriptTab("gcp").click();
-        await expect(downloads.scriptText).toContainText(/BASE="gs:\/\/open-targets-data-releases\/\d+\.\d+\/output"/);
+        await expect(downloads.scriptText).toContainText(
+          /BASE="gs:\/\/open-targets-data-releases\/\d+\.\d+\/output"/
+        );
         await expect(downloads.scriptText).toContainText("gcloud storage cp");
         await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
         await expect(downloads.drawer).toContainText("You need to specify a billing project");
@@ -579,20 +660,26 @@ test.describe("Downloads page", () => {
 
       await test.step("Rsync", async () => {
         await downloads.scriptTab("rsync").click();
-        await expect(downloads.scriptText).toContainText(/BASE="rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/);
+        await expect(downloads.scriptText).toContainText(
+          /BASE="rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/
+        );
         await expect(downloads.scriptText).toContainText("rsync -rpltvz");
         await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
       });
 
       await test.step("Wget", async () => {
         await downloads.scriptTab("wget").click();
-        await expect(downloads.scriptText).toContainText(/BASE="ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/);
+        await expect(downloads.scriptText).toContainText(
+          /BASE="ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output"/
+        );
         await expect(downloads.scriptText).toContainText("--cut-dirs=6");
         await downloads.expectScriptDatasets([TARGET.id, DISEASE.id]);
       });
     });
 
-    test("the script follows the bag: a removed dataset leaves it and a new one joins it", async ({ page }) => {
+    test("the script follows the bag: a removed dataset leaves it and a new one joins it", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.cardToggle(TARGET.id).click();
@@ -631,10 +718,15 @@ test.describe("Downloads page", () => {
   test.describe("first add coach mark", () => {
     // These tests start from a browser that has never added to the bag.
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript((key) => window.localStorage.removeItem(key), COACH_MARK_STORAGE_KEY);
+      await page.addInitScript(
+        (key) => window.localStorage.removeItem(key),
+        COACH_MARK_STORAGE_KEY
+      );
     });
 
-    test("the first dataset added opens the coach mark; Open bag opens the drawer", async ({ page }) => {
+    test("the first dataset added opens the coach mark; Open bag opens the drawer", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await expect(downloads.coachMark).toHaveCount(0);
@@ -647,7 +739,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.drawer).toBeVisible();
     });
 
-    test("Keep browsing dismisses it and it does not come back for the next dataset", async ({ page }) => {
+    test("Keep browsing dismisses it and it does not come back for the next dataset", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
 
@@ -660,7 +754,9 @@ test.describe("Downloads page", () => {
       await downloads.expectBagCount(2);
       await expect(downloads.coachMark).toHaveCount(0);
       await expect
-        .poll(() => page.evaluate((key) => window.localStorage.getItem(key), COACH_MARK_STORAGE_KEY))
+        .poll(() =>
+          page.evaluate((key) => window.localStorage.getItem(key), COACH_MARK_STORAGE_KEY)
+        )
         .toBe("1");
     });
   });
@@ -682,7 +778,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.dialogSwitchButton).toHaveText("Access Data");
     });
 
-    test("a schema deep link opens the dialog over the page, and Close returns to /downloads", async ({ page }) => {
+    test("a schema deep link opens the dialog over the page, and Close returns to /downloads", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto("/downloads/disease/schema");
       await expect(downloads.datasetDialog).toBeVisible();
@@ -723,10 +821,14 @@ test.describe("Downloads page", () => {
       await downloads.goto(`/downloads/${TARGET.id}/schema`);
       await expect(downloads.schemaRowType("genomicLocation")).toContainText("Struct");
       await expect(downloads.schemaRowName("genomicLocation")).toContainText("│⎯genomicLocation");
-      await expect(downloads.schemaRowName("genomicLocation.chromosome")).toContainText("│⎯│⎯chromosome");
+      await expect(downloads.schemaRowName("genomicLocation.chromosome")).toContainText(
+        "│⎯│⎯chromosome"
+      );
     });
 
-    test("Access data opens the file locations and the scripts of one dataset", async ({ page }) => {
+    test("Access data opens the file locations and the scripts of one dataset", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.cardAccessLink(TARGET.id).click();
@@ -743,27 +845,52 @@ test.describe("Downloads page", () => {
       await expect(downloads.locationTab("ftp-location")).toHaveText("FTP location");
 
       await downloads.locationTab("gcp-location").click();
-      await expect(downloads.locationCode).toContainText(/gs:\/\/open-targets-data-releases\/\d+\.\d+\/output\/target/);
+      await expect(downloads.locationCode).toContainText(
+        /gs:\/\/open-targets-data-releases\/\d+\.\d+\/output\/target/
+      );
       await downloads.locationTab("aws-location").click();
-      await expect(downloads.locationCode).toContainText(/s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target/);
+      await expect(downloads.locationCode).toContainText(
+        /s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target/
+      );
     });
 
     for (const script of [
-      { tool: "rsync" as const, command: /rsync -rpltvz --delete rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./ },
-      { tool: "wget" as const, command: /wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./ },
-      { tool: "gcp" as const, command: /gcloud storage cp -r --billing-project \$\{PROJECT_ID\} gs:\/\/open-targets-data-releases\/\d+\.\d+\/output\/target\/ \./ },
-      { tool: "aws" as const, command: /aws s3 cp --recursive --no-sign-request s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target\/ \./ },
+      {
+        tool: "rsync" as const,
+        command:
+          /rsync -rpltvz --delete rsync\.ebi\.ac\.uk::pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./,
+      },
+      {
+        tool: "wget" as const,
+        command:
+          /wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./,
+      },
+      {
+        tool: "gcp" as const,
+        command:
+          /gcloud storage cp -r --billing-project \$\{PROJECT_ID\} gs:\/\/open-targets-data-releases\/\d+\.\d+\/output\/target\/ \./,
+      },
+      {
+        tool: "aws" as const,
+        command:
+          /aws s3 cp --recursive --no-sign-request s3:\/\/open-targets-public-data-releases\/platform\/\d+\.\d+\/output\/target\/ \./,
+      },
     ]) {
       test(`the access dialog's ${script.tool} command downloads the dataset`, async ({ page }) => {
         const downloads = new DownloadsPage(page);
         await downloads.goto(`/downloads/${TARGET.id}/access`);
         await downloads.accessScriptTab(script.tool).click();
         await expect(downloads.scriptCode).toHaveText(script.command);
-        if (script.tool === "gcp") await expect(downloads.accessScripts).toContainText("You need to specify a billing project");
+        if (script.tool === "gcp")
+          await expect(downloads.accessScripts).toContainText(
+            "You need to specify a billing project"
+          );
       });
     }
 
-    test("the dialog switches between Access and Schema and keeps the dataset", async ({ page }) => {
+    test("the dialog switches between Access and Schema and keeps the dataset", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto("/downloads/disease/access");
       await expect(downloads.accessLocations).toContainText("File Location:");
@@ -819,7 +946,9 @@ test.describe("Downloads page", () => {
   });
 
   test.describe("header tags", () => {
-    test("Croissant explains the format, links to it and downloads the metadata", async ({ page }) => {
+    test("Croissant explains the format, links to it and downloads the metadata", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       await downloads.tag("croissant").click();
@@ -837,7 +966,10 @@ test.describe("Downloads page", () => {
       await downloads.goto();
       await downloads.tag("parquet").click();
       await expect(downloads.tagPopover).toContainText("File Format");
-      await expect(downloads.tagReadMoreLink).toHaveAttribute("href", "https://parquet.apache.org/docs/overview/");
+      await expect(downloads.tagReadMoreLink).toHaveAttribute(
+        "href",
+        "https://parquet.apache.org/docs/overview/"
+      );
     });
 
     test("the version tag names the release and links to the release notes", async ({ page }) => {
@@ -847,7 +979,10 @@ test.describe("Downloads page", () => {
       expect(version).toMatch(/^\d+\.\d+$/);
       await downloads.tag("version").click();
       await expect(downloads.tagPopover).toContainText(`Current version: ${version}`);
-      await expect(downloads.tagReadMoreLink).toHaveAttribute("href", "https://platform-docs.opentargets.org/release-notes");
+      await expect(downloads.tagReadMoreLink).toHaveAttribute(
+        "href",
+        "https://platform-docs.opentargets.org/release-notes"
+      );
     });
 
     test("Cite Us opens the publication of the Platform", async ({ page }) => {
@@ -878,7 +1013,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.graphNodes).toHaveCount(0);
     });
 
-    test("?view=network opens the network, survives a reload, and any other value shows the cards", async ({ page }) => {
+    test("?view=network opens the network, survives a reload, and any other value shows the cards", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await expect(downloads.networkToggle).toHaveAttribute("aria-pressed", "true");
@@ -891,7 +1028,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.cardsToggle).toHaveAttribute("aria-pressed", "true");
     });
 
-    test("draws a node for each connected dataset, with the legend of the categories", async ({ page }) => {
+    test("draws a node for each connected dataset, with the legend of the categories", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.goto();
       const total = await downloads.totalDatasets();
@@ -899,7 +1038,10 @@ test.describe("Downloads page", () => {
       await expect(downloads.graphNodes.first()).toBeVisible();
 
       const nodes = await downloads.graphNodes.count();
-      expect(nodes, "datasets with no reference to another dataset are left off the canvas").toBeGreaterThan(total / 2);
+      expect(
+        nodes,
+        "datasets with no reference to another dataset are left off the canvas"
+      ).toBeGreaterThan(total / 2);
       expect(nodes).toBeLessThanOrEqual(total);
       await expect(downloads.node(TARGET.id)).toBeVisible();
       await expect(downloads.node(DISEASE.id)).toBeVisible();
@@ -912,10 +1054,14 @@ test.describe("Downloads page", () => {
       await expect(downloads.legendItem("In bag")).toHaveCount(0);
       // the only switch above the canvas is the scope: there is one layout
       await expect(downloads.scopeSwitch).toBeVisible();
-      await expect(downloads.hint).toHaveText("Hover a node to preview · click to select · scroll to zoom");
+      await expect(downloads.hint).toHaveText(
+        "Hover a node to preview · click to select · scroll to zoom"
+      );
     });
 
-    test("selecting a node docks its details with the datasets it connects to", async ({ page }) => {
+    test("selecting a node docks its details with the datasets it connects to", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
 
@@ -927,7 +1073,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.node(CLINICAL_INDICATION.id)).toHaveClass(/selected/);
 
       await expect(downloads.connectedTitle).toHaveText(/^Connected datasets · \d+$/);
-      const connected = Number(/(\d+)$/.exec((await downloads.connectedTitle.textContent()) ?? "")?.[1]);
+      const connected = Number(
+        /(\d+)$/.exec((await downloads.connectedTitle.textContent()) ?? "")?.[1]
+      );
       expect(connected).toBeGreaterThan(0);
       await expect(downloads.connectedRows).toHaveCount(connected);
       // a dataset is never listed as its own neighbour, and every neighbour is a node of the graph
@@ -936,8 +1084,14 @@ test.describe("Downloads page", () => {
       expect(new Set(ids).size).toBe(ids.length);
       for (const id of ids) await expect(downloads.node(id)).toBeVisible();
 
-      await expect(downloads.panelSchemaLink).toHaveAttribute("href", `/downloads/${CLINICAL_INDICATION.id}/schema?view=network`);
-      await expect(downloads.panelAccessLink).toHaveAttribute("href", `/downloads/${CLINICAL_INDICATION.id}/access?view=network`);
+      await expect(downloads.panelSchemaLink).toHaveAttribute(
+        "href",
+        `/downloads/${CLINICAL_INDICATION.id}/schema?view=network`
+      );
+      await expect(downloads.panelAccessLink).toHaveAttribute(
+        "href",
+        `/downloads/${CLINICAL_INDICATION.id}/access?view=network`
+      );
     });
 
     test("clicking a connected dataset moves the selection to it", async ({ page }) => {
@@ -947,7 +1101,9 @@ test.describe("Downloads page", () => {
 
       const [neighbourId] = await downloads.connectedIds();
       expect(neighbourId).toMatch(/^[a-z0-9_]+$/);
-      const neighbourName = ((await downloads.connectedRowName(neighbourId).textContent()) ?? "").trim();
+      const neighbourName = (
+        (await downloads.connectedRowName(neighbourId).textContent()) ?? ""
+      ).trim();
       expect(neighbourName).not.toBe("");
       await downloads.connectedRowSelect(neighbourId).click();
 
@@ -961,7 +1117,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.connectedRow(CLINICAL_INDICATION.id)).toHaveCount(1);
     });
 
-    test("the selection clears with Escape, the close button, the chip and a click on the canvas", async ({ page }) => {
+    test("the selection clears with Escape, the close button, the chip and a click on the canvas", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
 
@@ -985,21 +1143,30 @@ test.describe("Downloads page", () => {
       await expect(downloads.panel).toBeHidden();
     });
 
-    test("a hub's details group the connections by category, filter them and collapse", async ({ page }) => {
+    test("a hub's details group the connections by category, filter them and collapse", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await downloads.selectNode(TARGET.id, TARGET.name);
 
-      const connected = Number(/(\d+)$/.exec((await downloads.connectedTitle.textContent()) ?? "")?.[1]);
+      const connected = Number(
+        /(\d+)$/.exec((await downloads.connectedTitle.textContent()) ?? "")?.[1]
+      );
       expect(connected, "the target dataset is referenced by many others").toBeGreaterThan(8);
-      await expect.poll(() => downloads.connectedGroups.count(), "connections are grouped by category").toBeGreaterThan(1);
+      await expect
+        .poll(() => downloads.connectedGroups.count(), "connections are grouped by category")
+        .toBeGreaterThan(1);
 
       await test.step("a group's header collapses and expands its rows", async () => {
         const group = downloads.connectedGroups.first();
         const toggle = downloads.connectedGroupToggle(group);
         const expanded = await toggle.getAttribute("aria-expanded");
         await toggle.click();
-        await expect(toggle).toHaveAttribute("aria-expanded", expanded === "true" ? "false" : "true");
+        await expect(toggle).toHaveAttribute(
+          "aria-expanded",
+          expanded === "true" ? "false" : "true"
+        );
         await toggle.click();
         await expect(toggle).toHaveAttribute("aria-expanded", expanded ?? "");
       });
@@ -1027,7 +1194,9 @@ test.describe("Downloads page", () => {
       });
     });
 
-    test("a node's panel adds the dataset to the bag, and its dialogs keep the network view", async ({ page }) => {
+    test("a node's panel adds the dataset to the bag, and its dialogs keep the network view", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await downloads.selectNode(DISEASE.id, DISEASE.name);
@@ -1053,8 +1222,14 @@ test.describe("Downloads page", () => {
       await downloads.previewNode(DISEASE.id, DISEASE.name);
 
       await expect(downloads.nodePopover).toContainText(DISEASE.id);
-      await expect(downloads.popoverSchemaLink).toHaveAttribute("href", /\/downloads\/disease\/schema/);
-      await expect(downloads.popoverAccessLink).toHaveAttribute("href", /\/downloads\/disease\/access/);
+      await expect(downloads.popoverSchemaLink).toHaveAttribute(
+        "href",
+        /\/downloads\/disease\/schema/
+      );
+      await expect(downloads.popoverAccessLink).toHaveAttribute(
+        "href",
+        /\/downloads\/disease\/access/
+      );
 
       await downloads.popoverToggle.click();
       await downloads.expectBagCount(1);
@@ -1062,7 +1237,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.popoverToggle).toHaveText("In bag");
     });
 
-    test("the bag scope is disabled while the bag is empty, then shows only the bag", async ({ page }) => {
+    test("the bag scope is disabled while the bag is empty, then shows only the bag", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await expect(downloads.scopeAll).toHaveText("All datasets");
@@ -1082,7 +1259,9 @@ test.describe("Downloads page", () => {
       await downloads.scopeBag.click();
       await expect(downloads.scopeBag).toHaveAttribute("aria-checked", "true");
       await expect(downloads.scopeAll).toHaveAttribute("aria-checked", "false");
-      await expect(downloads.hint).toHaveText("1 dataset in your bag · 0 direct connections between them");
+      await expect(downloads.hint).toHaveText(
+        "1 dataset in your bag · 0 direct connections between them"
+      );
       await expect(downloads.legendItem("In bag")).toHaveText("In bag");
       await expect(downloads.node(DISEASE.id)).toHaveClass(/in-basket/);
       await expect(downloads.node(TARGET.id)).not.toHaveClass(/in-basket/);
@@ -1092,7 +1271,9 @@ test.describe("Downloads page", () => {
       await expect(downloads.legendItem("In bag")).toHaveCount(0);
     });
 
-    test("emptying the bag while it is the scope returns the network to all datasets", async ({ page }) => {
+    test("emptying the bag while it is the scope returns the network to all datasets", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await downloads.previewNode(DISEASE.id, DISEASE.name);
@@ -1118,14 +1299,19 @@ test.describe("Downloads page", () => {
 
       const placed = await downloads.nodeLanes();
       expect(placed.length).toBeGreaterThan(20);
-      for (const { id, lane } of placed) expect(lane, `${id} should sit inside a category lane`).not.toBeNull();
+      for (const { id, lane } of placed)
+        expect(lane, `${id} should sit inside a category lane`).not.toBeNull();
       const byId = Object.fromEntries(placed.map((p) => [p.id, p.lane]));
-      expect(byId[`graph-node-${TARGET.id}`], "the target dataset is in the Target lane").toMatch(/^Target/);
+      expect(byId[`graph-node-${TARGET.id}`], "the target dataset is in the Target lane").toMatch(
+        /^Target/
+      );
       expect(byId[`graph-node-${DISEASE.id}`]).toMatch(/Disease/);
       expect(byId[`graph-node-${TARGET.id}`]).not.toBe(byId[`graph-node-${DISEASE.id}`]);
     });
 
-    test("the zoom buttons change the scale of the canvas and Fit restores it", async ({ page }) => {
+    test("the zoom buttons change the scale of the canvas and Fit restores it", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       const fitted = await downloads.zoomLayer.getAttribute("transform");
@@ -1137,13 +1323,19 @@ test.describe("Downloads page", () => {
       expect(zoomedIn).toBeGreaterThan(scaleOf(fitted ?? ""));
 
       await downloads.zoomFit.click();
-      await expect.poll(async () => scaleOf((await downloads.zoomLayer.getAttribute("transform")) ?? "")).toBeCloseTo(scaleOf(fitted ?? ""), 2);
+      await expect
+        .poll(async () => scaleOf((await downloads.zoomLayer.getAttribute("transform")) ?? ""))
+        .toBeCloseTo(scaleOf(fitted ?? ""), 2);
 
       await downloads.zoomOut.click();
-      await expect.poll(async () => scaleOf((await downloads.zoomLayer.getAttribute("transform")) ?? "")).toBeLessThan(scaleOf(fitted ?? ""));
+      await expect
+        .poll(async () => scaleOf((await downloads.zoomLayer.getAttribute("transform")) ?? ""))
+        .toBeLessThan(scaleOf(fitted ?? ""));
     });
 
-    test("the bag drawer works from the network view and in-bag nodes are marked", async ({ page }) => {
+    test("the bag drawer works from the network view and in-bag nodes are marked", async ({
+      page,
+    }) => {
       const downloads = new DownloadsPage(page);
       await downloads.gotoNetwork();
       await downloads.previewNode(DISEASE.id, DISEASE.name);

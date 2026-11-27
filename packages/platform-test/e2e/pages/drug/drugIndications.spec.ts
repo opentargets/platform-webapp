@@ -1,6 +1,7 @@
 import { expect, test } from "../../../fixtures";
 import { closeDrawer, expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
 import { IndicationsSection } from "../../../POM/objects/widgets/shared/indicationsSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import {
   CLINICAL_STAGE_KEYS,
@@ -9,7 +10,6 @@ import {
   drugIds,
 } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 const PAGE_SIZE = 10;
 const stageRank = (label: string): number =>
@@ -74,7 +74,9 @@ test.describe("Drug page: Indications", () => {
       for (const card of cards) {
         expect(card.name).not.toBe("");
         expect(card.diseaseId).toMatch(/^[A-Za-z]+_\d+$/);
-        expect(stageRank(card.stage), `"${card.stage}" is a clinical stage`).toBeGreaterThanOrEqual(0);
+        expect(stageRank(card.stage), `"${card.stage}" is a clinical stage`).toBeGreaterThanOrEqual(
+          0
+        );
         expect(card.reports).toBeGreaterThan(0);
       }
       expect(cards.map((card) => card.name)).toContain("breast cancer");
@@ -154,7 +156,10 @@ test.describe("Drug page: Indications", () => {
     });
   });
 
-  test("the stage filter switches the reports to the stage clicked", async ({ page, testConfig }) => {
+  test("the stage filter switches the reports to the stage clicked", async ({
+    page,
+    testConfig,
+  }) => {
     const { primary } = drugIds(testConfig);
     const indications = new IndicationsSection(page);
     await openIndications(new DrugPage(page), indications, primary);
@@ -243,7 +248,10 @@ test.describe("Drug page: Indications", () => {
     }
 
     await test.step("clicking the selected card again keeps it selected", async () => {
-      await indications.card(PAGE_SIZE - 1).getByText("Max stage:").click();
+      await indications
+        .card(PAGE_SIZE - 1)
+        .getByText("Max stage:")
+        .click();
       await expect(indications.card(PAGE_SIZE - 1)).toHaveAttribute("data-selected", "true");
       await expect(indications.recordRows.first()).toBeVisible();
     });
@@ -312,12 +320,16 @@ test.describe("Drug page: Indications", () => {
         operationName?: string;
         variables?: { search?: { text?: string } };
       } | null;
-      return body?.operationName === "IndicationsQuery" && body.variables?.search?.text === "gastric";
+      return (
+        body?.operationName === "IndicationsQuery" && body.variables?.search?.text === "gastric"
+      );
     });
     await indications.master.search("gastric", total);
-    const variables = ((await searchRequest).postDataJSON() as {
-      variables: { search: { fields: string[] } };
-    }).variables;
+    const variables = (
+      (await searchRequest).postDataJSON() as {
+        variables: { search: { fields: string[] } };
+      }
+    ).variables;
     expect(variables.search.fields).toEqual(["DISEASE_NAME"]);
 
     const matches = await indications.master.total();
@@ -431,7 +443,10 @@ test.describe("Drug page: Indications", () => {
     await test.step("reports are ordered by start year, most recent first", async () => {
       const texts = await indications.recordRows.allInnerTexts();
       const years = texts.map((text) => Number((/Start:\s*(\d{4})/.exec(text) ?? [])[1]));
-      expect(years.every((year) => Number.isInteger(year)), "every trial has a start year").toBe(true);
+      expect(
+        years.every((year) => Number.isInteger(year)),
+        "every trial has a start year"
+      ).toBe(true);
       expect(years).toEqual([...years].sort((a, b) => b - a));
     });
 
@@ -517,7 +532,12 @@ test.describe("Drug page: Indications", () => {
       expect(filename).toBe("clinical-indications.json");
       expect(rows).toHaveLength(total);
       for (const row of rows) {
-        expect(Object.keys(row)).toEqual(["diseaseName", "diseaseId", "maxClinicalStage", "reportCount"]);
+        expect(Object.keys(row)).toEqual([
+          "diseaseName",
+          "diseaseId",
+          "maxClinicalStage",
+          "reportCount",
+        ]);
         expect(String(row.diseaseId)).toMatch(/^[A-Za-z]+_\d+$/);
         expect(Number(row.reportCount)).toBeGreaterThan(0);
       }
@@ -552,7 +572,9 @@ test.describe("Drug page: Indications", () => {
         ]);
         expect(String(row.id), "every report has an id").not.toBe("");
       }
-      expect(new Set(rows.map((row) => row.id)).size, "no report is exported twice").toBe(rows.length);
+      expect(new Set(rows.map((row) => row.id)).size, "no report is exported twice").toBe(
+        rows.length
+      );
       const counts = await indications.stageCounts();
       expect(new Set(rows.map((row) => row.clinicalStage)).size).toBe(Object.keys(counts).length);
     });
@@ -578,7 +600,9 @@ test.describe("Drug page: Indications", () => {
     await indications.expectCards(PAGE_SIZE);
     const total = await indications.master.total();
     await indications.master.search("heart failure", total);
-    const card = indications.cards.filter({ has: page.getByRole("link", { name: "heart failure", exact: true }) });
+    const card = indications.cards.filter({
+      has: page.getByRole("link", { name: "heart failure", exact: true }),
+    });
     await expect(card, "heart failure is one of the indications of the drug").toHaveCount(1);
     await card.click();
     await expect(card).toHaveAttribute("data-selected", "true");
@@ -594,27 +618,41 @@ test.describe("Drug page: Indications", () => {
 
     type Reference = { id: string; type: string };
     await expect
-      .poll(async () => {
-        await graphqlMonitor.settle();
-        return graphqlMonitor.named("RecordDetailQuery").filter((request) => request.data !== undefined).length;
-      }, { message: "the report details should be requested and answered" })
+      .poll(
+        async () => {
+          await graphqlMonitor.settle();
+          return graphqlMonitor
+            .named("RecordDetailQuery")
+            .filter((request) => request.data !== undefined).length;
+        },
+        { message: "the report details should be requested and answered" }
+      )
       .toBeGreaterThan(0);
-    const detail = graphqlMonitor.named("RecordDetailQuery").filter((request) => request.data !== undefined)[0];
-    const references = (detail.data as { clinicalReport: { trialLiterature: Reference[] } }).clinicalReport
-      .trialLiterature;
+    const detail = graphqlMonitor
+      .named("RecordDetailQuery")
+      .filter((request) => request.data !== undefined)[0];
+    const references = (detail.data as { clinicalReport: { trialLiterature: Reference[] } })
+      .clinicalReport.trialLiterature;
 
     await test.step("the API returns references with a type", async () => {
       expect(references.length, "the trial has references").toBeGreaterThan(1);
       for (const reference of references) {
         expect(reference.id, "a reference has a publication id").toMatch(/^\d+$/);
-        expect(["BACKGROUND", "RESULT", "DERIVED"], "a reference has a known type").toContain(reference.type);
+        expect(["BACKGROUND", "RESULT", "DERIVED"], "a reference has a known type").toContain(
+          reference.type
+        );
       }
-      expect(new Set(references.map((reference) => reference.type)).size, "of more than one type").toBeGreaterThan(1);
+      expect(
+        new Set(references.map((reference) => reference.type)).size,
+        "of more than one type"
+      ).toBeGreaterThan(1);
     });
 
     await test.step("the drawer lists one publication per reference, linked to Europe PMC", async () => {
       await expect(drawer.getByText("Literature", { exact: true })).toBeVisible();
-      await expect(drawer.getByTestId(/^literature-entry-/), "one entry per reference").toHaveCount(references.length);
+      await expect(drawer.getByTestId(/^literature-entry-/), "one entry per reference").toHaveCount(
+        references.length
+      );
       for (const { id, type } of references) {
         const entry = drawer.getByTestId(`literature-entry-${id}`);
         await expect(entry, `the ${type} reference ${id}`).toBeVisible();

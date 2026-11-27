@@ -1,6 +1,6 @@
 import { expect, test } from "../../../fixtures";
-import { SearchPage } from "../../../POM/page/search/searchPage";
 import { drugFacts } from "../../../POM/page/drug/drugData";
+import { SearchPage } from "../../../POM/page/search/searchPage";
 
 const APP = "Open Targets Platform";
 
@@ -36,7 +36,11 @@ test.describe("Document title", () => {
   });
 
   test("not found page keeps the application title", async ({ page, pageHealth }) => {
-    pageHealth.allow(/404 page is displayed/, "the test opens a route that does not exist", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "the test opens a route that does not exist",
+      "error-ui"
+    );
     await page.goto("/this-route-does-not-exist");
     await expect(page.getByTestId("not-found-page")).toBeVisible();
     await expect(page).toHaveTitle(APP);
@@ -62,7 +66,9 @@ test.describe("Document title", () => {
 
   test("drug page names the drug", async ({ page, testConfig }) => {
     await page.goto(`/drug/${testConfig.drug.primary}`);
-    await expect(page).toHaveTitle(`${drugFacts(testConfig.drug.primary).name} profile page | ${APP}`);
+    await expect(page).toHaveTitle(
+      `${drugFacts(testConfig.drug.primary).name} profile page | ${APP}`
+    );
   });
 
   test("variant page carries the variant id", async ({ page, testConfig }) => {
@@ -79,7 +85,9 @@ test.describe("Document title", () => {
   test("credible set page names the variant and the study", async ({ page, testConfig }) => {
     await page.goto(`/credible-set/${testConfig.credibleSet?.primary}`);
     await expect(page).toHaveTitle(
-      new RegExp(`^Credible set around \\d+_\\d+_[ACGT]+_[ACGT]+ for ${testConfig.study?.gwas.primary} \\| ${APP}$`)
+      new RegExp(
+        `^Credible set around \\d+_\\d+_[ACGT]+_[ACGT]+ for ${testConfig.study?.gwas.primary} \\| ${APP}$`
+      )
     );
   });
 

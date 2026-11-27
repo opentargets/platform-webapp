@@ -8,7 +8,11 @@ import { ErrorPages } from "../../../POM/page/site/errorPages";
 test.describe("Private routes on the public profile", () => {
   for (const route of ["/projects", "/analysis"]) {
     test(`${route} redirects to the 404 page`, async ({ page, pageHealth }) => {
-      pageHealth.allow(/404 page is displayed/, `opens the partner-only route ${route}`, "error-ui");
+      pageHealth.allow(
+        /404 page is displayed/,
+        `opens the partner-only route ${route}`,
+        "error-ui"
+      );
       const errors = new ErrorPages(page);
       await page.goto(route);
 
@@ -23,7 +27,11 @@ test.describe("Private routes on the public profile", () => {
       page,
       pageHealth,
     }) => {
-      pageHealth.allow(/404 page is displayed/, `opens the partner-only route ${route}`, "error-ui");
+      pageHealth.allow(
+        /404 page is displayed/,
+        `opens the partner-only route ${route}`,
+        "error-ui"
+      );
       const errors = new ErrorPages(page);
       await page.goto("/search?q=braf&page=1");
       await page.goto(route);
@@ -37,7 +45,11 @@ test.describe("Private routes on the public profile", () => {
   }
 
   test("a sub-route of a private route shows the 404 page", async ({ page, pageHealth }) => {
-    pageHealth.allow(/404 page is displayed/, "opens an unknown sub-route of /projects", "error-ui");
+    pageHealth.allow(
+      /404 page is displayed/,
+      "opens an unknown sub-route of /projects",
+      "error-ui"
+    );
     const errors = new ErrorPages(page);
     await page.goto("/projects/some-project");
 

@@ -1,10 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { DiseaseGwasStudiesSection } from "../../../../POM/objects/widgets/Disease/diseaseGwasStudiesSection";
-import {
-  closeDrawer,
-  expectExternalLink,
-} from "../../../../POM/objects/widgets/Drug/sectionTable";
+import { closeDrawer, expectExternalLink } from "../../../../POM/objects/widgets/Drug/sectionTable";
 import {
   stubEuropePmc,
   waitForOperation,
@@ -13,7 +10,14 @@ import { DiseasePage } from "../../../../POM/page/disease/disease";
 import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
 
 const PAGE_SIZE = 10;
-const COL = { study: 0, trait: 1, samples: 2, cohorts: 3, publication: 4, credibleSets: 5 } as const;
+const COL = {
+  study: 0,
+  trait: 1,
+  samples: 2,
+  cohorts: 3,
+  publication: 4,
+  credibleSets: 5,
+} as const;
 /** Marfan syndrome: a single GWAS study, from FinnGen. */
 const SINGLE_STUDY = { disease: "MONDO_0007947", study: "FINNGEN_R12_Q17_MARFAN" };
 /** A leaf of the ontology: no GWAS studies. */
@@ -58,7 +62,9 @@ test.describe("Disease page: GWAS studies", () => {
     const table = gwas.table;
 
     await test.step("title and description", async () => {
-      await expect(new DiseasePage(page).sectionTitle(DiseaseGwasStudiesSection.id)).toHaveText("GWAS");
+      await expect(new DiseasePage(page).sectionTitle(DiseaseGwasStudiesSection.id)).toHaveText(
+        "GWAS"
+      );
       await expect(gwas.description).toHaveText(
         `GWAS associated with ${name}. Source: GWAS Catalog, FinnGen.`
       );
@@ -75,7 +81,9 @@ test.describe("Disease page: GWAS studies", () => {
     await table.expectHeaders([...DiseaseGwasStudiesSection.headers]);
     await table.expectRows(PAGE_SIZE);
     const total = await table.total();
-    expect(total, "myocardial infarction has several pages of studies").toBeGreaterThan(2 * PAGE_SIZE);
+    expect(total, "myocardial infarction has several pages of studies").toBeGreaterThan(
+      2 * PAGE_SIZE
+    );
     await table.expectPosition(1, PAGE_SIZE, total);
     await table.expectPaginationState("first");
     await expect(table.searchInput).toHaveAttribute("placeholder", "Search studies...");
@@ -91,7 +99,9 @@ test.describe("Disease page: GWAS studies", () => {
         await expect(table.cell(row, COL.samples)).toHaveText(/^\d{1,3}(,\d{3})*$/);
         await expect(table.cell(row, COL.credibleSets)).toHaveText(/^(\d+|N\/A)$/);
         await expect(table.cell(row, COL.cohorts)).not.toBeEmpty();
-        await expect(table.cell(row, COL.publication)).toHaveText(/^\s*(N\/A|.+ et al\. \((\d{4}|N\/A)\))\s*$/);
+        await expect(table.cell(row, COL.publication)).toHaveText(
+          /^\s*(N\/A|.+ et al\. \((\d{4}|N\/A)\))\s*$/
+        );
       }
       const ids = await table.columnTexts(COL.study);
       expect(new Set(ids).size, "no study is listed twice").toBe(PAGE_SIZE);
@@ -148,10 +158,15 @@ test.describe("Disease page: GWAS studies", () => {
       const sent = (await request).postDataJSON() as { variables: { sort: { key: string }[] } };
       expect(sent.variables.sort[0].key).toBe("N_SAMPLES");
       await expect
-        .poll(async () => {
-          const samples = numbers(await table.columnTexts(COL.samples));
-          return samples.join() === [...samples].sort((a, b) => a - b).join() && samples[0] < 5000;
-        }, { message: "smallest studies first" })
+        .poll(
+          async () => {
+            const samples = numbers(await table.columnTexts(COL.samples));
+            return (
+              samples.join() === [...samples].sort((a, b) => a - b).join() && samples[0] < 5000
+            );
+          },
+          { message: "smallest studies first" }
+        )
         .toBe(true);
       expect(await table.columnTexts(COL.study)).not.toEqual(descending);
       await table.expectPosition(1, PAGE_SIZE, total);
@@ -179,10 +194,13 @@ test.describe("Disease page: GWAS studies", () => {
         const expected = (values: number[]): number[] =>
           [...values].sort((a, b) => (direction === "DESCENDING" ? b - a : a - b));
         await expect
-          .poll(async () => {
-            const values = await years();
-            return values.every(Number.isInteger) && values.join() === expected(values).join();
-          }, { message: `publications ordered ${direction}` })
+          .poll(
+            async () => {
+              const values = await years();
+              return values.every(Number.isInteger) && values.join() === expected(values).join();
+            },
+            { message: `publications ordered ${direction}` }
+          )
           .toBe(true);
       }
       const oldest = await years();
@@ -197,7 +215,10 @@ test.describe("Disease page: GWAS studies", () => {
     });
   });
 
-  test("the list paginates on the server and the page size widens it", async ({ page, testConfig }) => {
+  test("the list paginates on the server and the page size widens it", async ({
+    page,
+    testConfig,
+  }) => {
     const gwas = await openGwas(page, testConfig.disease.primary);
     const table = gwas.table;
     await table.expectRows(PAGE_SIZE);
@@ -213,8 +234,13 @@ test.describe("Disease page: GWAS studies", () => {
       for (const id of secondPage) expect(firstPage).not.toContain(id);
       await table.expectPaginationState("middle");
       const samples = numbers(await table.columnTexts(COL.samples));
-      expect(samples, "page 2 continues the descending order").toEqual([...samples].sort((a, b) => b - a));
-      expect(samples[0]).toBeLessThanOrEqual(numbers([await table.cell(PAGE_SIZE - 1, COL.samples).innerText()])[0] + Number.MAX_SAFE_INTEGER);
+      expect(samples, "page 2 continues the descending order").toEqual(
+        [...samples].sort((a, b) => b - a)
+      );
+      expect(samples[0]).toBeLessThanOrEqual(
+        numbers([await table.cell(PAGE_SIZE - 1, COL.samples).innerText()])[0] +
+          Number.MAX_SAFE_INTEGER
+      );
     });
 
     await test.step("last page", async () => {
@@ -260,10 +286,15 @@ test.describe("Disease page: GWAS studies", () => {
           operationName?: string;
           variables?: { search?: { text?: string } };
         } | null;
-        return body?.operationName === "GWASStudiesQuery" && body.variables?.search?.text === "GCST011365";
+        return (
+          body?.operationName === "GWASStudiesQuery" &&
+          body.variables?.search?.text === "GCST011365"
+        );
       });
       await table.search("GCST011365", total);
-      const sent = (await request).postDataJSON() as { variables: { search: { fields: string[] } } };
+      const sent = (await request).postDataJSON() as {
+        variables: { search: { fields: string[] } };
+      };
       expect([...sent.variables.search.fields].sort()).toEqual([
         "PUBLICATION_DATE",
         "PUBLICATION_FIRST_AUTHOR",
@@ -284,7 +315,8 @@ test.describe("Disease page: GWAS studies", () => {
       matches = await table.total();
       expect(matches).toBeLessThan(total);
       await table.expectRows(Math.min(matches, PAGE_SIZE));
-      for (const text of await table.columnTexts(COL.publication)) expect(text).toContain("Sakaue S");
+      for (const text of await table.columnTexts(COL.publication))
+        expect(text).toContain("Sakaue S");
     });
 
     await test.step("by trait", async () => {
@@ -309,7 +341,10 @@ test.describe("Disease page: GWAS studies", () => {
     });
   });
 
-  test("FinnGen studies read as FinnGen, with no publication author", async ({ page, testConfig }) => {
+  test("FinnGen studies read as FinnGen, with no publication author", async ({
+    page,
+    testConfig,
+  }) => {
     const gwas = await openGwas(page, testConfig.disease.primary);
     const table = gwas.table;
     await table.expectRows(PAGE_SIZE);
@@ -319,7 +354,9 @@ test.describe("Disease page: GWAS studies", () => {
     for (let row = 0; row < 2; row++) {
       await expect(gwas.studyLink(row)).toHaveText(/^FINNGEN_R\d+_I9_MI_/);
       await expect(table.cell(row, COL.cohorts)).toHaveText(/^FinnGen\??$/);
-      await expect(table.cell(row, COL.publication), "FinnGen has no first author").toHaveText("N/A");
+      await expect(table.cell(row, COL.publication), "FinnGen has no first author").toHaveText(
+        "N/A"
+      );
     }
   });
 
@@ -333,8 +370,13 @@ test.describe("Disease page: GWAS studies", () => {
     const rows = data.studies.studiesView.rows;
     await gwas.table.expectRows(PAGE_SIZE);
 
-    const index = rows.findIndex((row) => row.cohorts.length > 0 && row.ldPopulationStructure?.length);
-    expect(index, "a study with cohorts and LD populations is on the first page").toBeGreaterThanOrEqual(0);
+    const index = rows.findIndex(
+      (row) => row.cohorts.length > 0 && row.ldPopulationStructure?.length
+    );
+    expect(
+      index,
+      "a study with cohorts and LD populations is on the first page"
+    ).toBeGreaterThanOrEqual(0);
     const row = rows[index];
     const cell = gwas.table.cell(index, COL.cohorts);
     await expect(cell).toContainText(row.cohorts.join(", "));
@@ -365,8 +407,12 @@ test.describe("Disease page: GWAS studies", () => {
     expect(index, "a published study is on the first page").toBeGreaterThanOrEqual(0);
     const { pubmedId, publicationFirstAuthor } = rows[index];
 
-    const trigger = gwas.table.cell(index, COL.publication).getByTestId("publications-drawer-trigger");
-    await expect(trigger).toHaveText(new RegExp(`^\\s*${publicationFirstAuthor} et al\\. \\(\\d{4}\\)\\s*$`));
+    const trigger = gwas.table
+      .cell(index, COL.publication)
+      .getByTestId("publications-drawer-trigger");
+    await expect(trigger).toHaveText(
+      new RegExp(`^\\s*${publicationFirstAuthor} et al\\. \\(\\d{4}\\)\\s*$`)
+    );
     await expect(gwas.publicationsDrawer).toHaveCount(0);
     await trigger.click();
 

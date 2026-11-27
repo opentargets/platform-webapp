@@ -3,7 +3,10 @@ import { sectionLocator } from "../../../../utils/sections";
 import { SectionTable } from "../Drug/sectionTable";
 
 /** The first two headers; the third carries the critical value of the drug. */
-export const ADVERSE_EVENTS_COLUMNS = ["Adverse event (MedDRA)", "Number of reported events"] as const;
+export const ADVERSE_EVENTS_COLUMNS = [
+  "Adverse event (MedDRA)",
+  "Number of reported events",
+] as const;
 
 export const LLR_HEADER = /^Log likelihood ratio \(CV = (\d+\.\d{2})\)$/;
 

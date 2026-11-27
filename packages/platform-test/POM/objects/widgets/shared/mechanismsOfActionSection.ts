@@ -11,7 +11,13 @@ export const MECHANISMS_OF_ACTION_COLUMNS = [
 ] as const;
 
 /** Column positions in the mechanisms of action table. */
-export const MOA_COLUMN = { mechanism: 0, targetName: 1, targets: 2, curation: 3, references: 4 } as const;
+export const MOA_COLUMN = {
+  mechanism: 0,
+  targetName: 1,
+  targets: 2,
+  curation: 3,
+  references: 4,
+} as const;
 
 /** Drug page: Mechanisms of Action section (a client-side table). */
 export class MechanismsOfActionSection {
@@ -45,7 +51,9 @@ export class MechanismsOfActionSection {
 
   /** The button that opens the PubMed publications of one row. */
   publicationsButton(rowIndex: number): Locator {
-    return this.table.cell(rowIndex, MOA_COLUMN.references).getByTestId("publications-drawer-trigger");
+    return this.table
+      .cell(rowIndex, MOA_COLUMN.references)
+      .getByTestId("publications-drawer-trigger");
   }
 
   /** The drawer listing the PubMed publications of a row. */

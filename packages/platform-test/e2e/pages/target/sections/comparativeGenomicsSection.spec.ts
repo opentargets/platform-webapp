@@ -8,7 +8,12 @@ import {
   HOMOLOGY_TYPES,
 } from "../../../../POM/objects/widgets/shared/comparativeGenomicsSection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
+import {
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { expectSections } from "../../../../utils/sections";
 
 const ENSEMBL_GENE_URL = /^https:\/\/identifiers\.org\/ensembl:ENS[A-Z]*G\d{11}$/;
@@ -68,9 +73,15 @@ test.describe("Target comparative genomics section", () => {
     await test.step("every dot is placed inside the chart", async () => {
       const width = Number(await genomics.chartSvg.getAttribute("width"));
       const height = Number(await genomics.chartSvg.getAttribute("height"));
-      expect(width, "the chart should have been measured and drawn at a real width").toBeGreaterThan(300);
+      expect(
+        width,
+        "the chart should have been measured and drawn at a real width"
+      ).toBeGreaterThan(300);
       const positions = await genomics.dots.evaluateAll((dots) =>
-        dots.map((dot) => ({ cx: Number(dot.getAttribute("cx")), cy: Number(dot.getAttribute("cy")) }))
+        dots.map((dot) => ({
+          cx: Number(dot.getAttribute("cx")),
+          cy: Number(dot.getAttribute("cy")),
+        }))
       );
       for (const { cx, cy } of positions) {
         expect(cx, "a dot's x should be a position inside the chart").toBeGreaterThan(0);
@@ -108,7 +119,10 @@ test.describe("Target comparative genomics section", () => {
     await expect(genomics.chartTooltip).toHaveCSS("opacity", "0");
   });
 
-  test("the toggle switches between the chart and the table, and back", async ({ page, testConfig }) => {
+  test("the toggle switches between the chart and the table, and back", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const genomics = new ComparativeGenomicsSection(page);
 
@@ -154,7 +168,10 @@ test.describe("Target comparative genomics section", () => {
 
     await genomics.table.expectHeaders(COMPARATIVE_GENOMICS_COLUMNS);
     const total = await genomics.table.total();
-    expect(total, "the primary target should have more than one page of homologues").toBeGreaterThan(10);
+    expect(
+      total,
+      "the primary target should have more than one page of homologues"
+    ).toBeGreaterThan(10);
 
     await genomics.table.setPageSize(100);
     await expect(genomics.table.rows).toHaveCount(total);
@@ -188,9 +205,10 @@ test.describe("Target comparative genomics section", () => {
     }
 
     const species = (await genomics.column("species").allInnerTexts()).map((name) => name.trim());
-    expect(species, "a human gene's closest relatives include the chimpanzee and the mouse").toEqual(
-      expect.arrayContaining(["Chimpanzee", "Mouse"])
-    );
+    expect(
+      species,
+      "a human gene's closest relatives include the chimpanzee and the mouse"
+    ).toEqual(expect.arrayContaining(["Chimpanzee", "Mouse"]));
   });
 
   test("orthologues carry a confidence star with a tooltip", async ({ page, testConfig }) => {
@@ -202,7 +220,9 @@ test.describe("Target comparative genomics section", () => {
     await genomics.showTable();
     await genomics.table.setPageSize(100);
 
-    const orthologues = genomics.table.rows.filter({ hasText: /ortholog (one2one|one2many|many2many)/ });
+    const orthologues = genomics.table.rows.filter({
+      hasText: /ortholog (one2one|one2many|many2many)/,
+    });
     await expect(orthologues.first()).toBeVisible();
     const count = await orthologues.count();
     for (let index = 0; index < count; index++) {
@@ -294,7 +314,8 @@ test.describe("Target comparative genomics section", () => {
     await genomics.table.nextPageButton.click();
     await genomics.table.expectPosition(11, 20, total);
     const secondPage = await genomics.table.rowTexts();
-    for (const row of secondPage) expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
+    for (const row of secondPage)
+      expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
 
     await genomics.table.lastPageButton.click();
     await genomics.table.expectPosition(lastPageStart, total, total);
@@ -305,7 +326,12 @@ test.describe("Target comparative genomics section", () => {
     await genomics.table.expectPosition(1, 10, total);
     expect(await genomics.table.rowTexts()).toEqual(firstPage);
 
-    await expect(genomics.table.pageSizeSelect.locator("option")).toHaveText(["5", "10", "25", "100"]);
+    await expect(genomics.table.pageSizeSelect.locator("option")).toHaveText([
+      "5",
+      "10",
+      "25",
+      "100",
+    ]);
     await genomics.table.setPageSize(5);
     await genomics.table.expectPosition(1, 5, total);
     await expect(genomics.table.rows).toHaveCount(5);
@@ -356,7 +382,9 @@ test.describe("Target comparative genomics section", () => {
     expect(rows).toHaveLength(total);
     for (const row of rows) {
       expect(row).toHaveLength(5);
-      expect(row[1]).toMatch(/^(ortholog_one2one|ortholog_one2many|ortholog_many2many|within_species_paralog|other_paralog)$/);
+      expect(row[1]).toMatch(
+        /^(ortholog_one2one|ortholog_one2many|ortholog_many2many|within_species_paralog|other_paralog)$/
+      );
       expect(Number(row[3])).toBeGreaterThan(0);
       expect(Number(row[4])).toBeGreaterThan(0);
     }
@@ -376,7 +404,13 @@ test.describe("Target comparative genomics section", () => {
       expect(file.filename).toBe("comparative-genomics-plot.json");
       const rows = JSON.parse(file.text) as Record<string, unknown>[];
       expect(rows).toHaveLength(homologues);
-      expect(Object.keys(rows[0])).toEqual(["species", "homologyType", "homologue", "queryId", "targetId"]);
+      expect(Object.keys(rows[0])).toEqual([
+        "species",
+        "homologyType",
+        "homologue",
+        "queryId",
+        "targetId",
+      ]);
     });
 
     await test.step("API query", async () => {
@@ -390,9 +424,10 @@ test.describe("Target comparative genomics section", () => {
     const genomics = new ComparativeGenomicsSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record this target as having no homologues").not.toContain(
-      "compgenomics"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record this target as having no homologues"
+    ).not.toContain("compgenomics");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 

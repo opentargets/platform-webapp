@@ -33,7 +33,8 @@ const EXAMPLES = [
   },
   {
     group: "Target annotation",
-    description: "Explore molQTL credible sets for INSL6, including the ones from OTAR projects studies",
+    description:
+      "Explore molQTL credible sets for INSL6, including the ones from OTAR projects studies",
     operation: "QTLCredibleSetsQuery",
     entity: "ENSG00000120210",
     result: /"count": [1-9]/,
@@ -90,7 +91,8 @@ const EXAMPLES = [
   },
   {
     group: "Search page",
-    description: "Example query to get how many entries there are in each entity category for PCSK9",
+    description:
+      "Example query to get how many entries there are in each entity category for PCSK9",
     operation: "searchTargetAggregations",
     entity: "PCSK9",
     result: /"total": [1-9]/,
@@ -114,16 +116,24 @@ test.describe("API page", () => {
     await expect(api.playground.getByRole("button", { name: /^Execute query/ })).toHaveCount(0);
   });
 
-  test("links to the documentation, community, MCP and the dataset alternatives", async ({ page }) => {
+  test("links to the documentation, community, MCP and the dataset alternatives", async ({
+    page,
+  }) => {
     const api = new ApiPage(page);
     await api.goto();
 
     const links = [
-      ["GraphQL API documentation", "https://platform-docs.opentargets.org/data-access/graphql-api"],
+      [
+        "GraphQL API documentation",
+        "https://platform-docs.opentargets.org/data-access/graphql-api",
+      ],
       ["Open Targets Community", "https://community.opentargets.org"],
       ["MCP", "https://platform-docs.opentargets.org/data-access/model-context-protocol"],
       ["our dataset downloads", "https://platform-docs.opentargets.org/data-access/datasets"],
-      ["Google BigQuery instance", "https://platform-docs.opentargets.org/data-access/google-bigquery"],
+      [
+        "Google BigQuery instance",
+        "https://platform-docs.opentargets.org/data-access/google-bigquery",
+      ],
     ];
     for (const [name, href] of links) {
       const link = api.link(name);
@@ -171,14 +181,21 @@ test.describe("API page", () => {
     for (const group of GROUPS) {
       const expected = EXAMPLES.filter((example) => example.group === group).length;
       await api.openGroup(group);
-      await expect(api.examples.getByText(EXAMPLES.find((e) => e.group === group)?.description ?? "")).toBeVisible();
+      await expect(
+        api.examples.getByText(EXAMPLES.find((e) => e.group === group)?.description ?? "")
+      ).toBeVisible();
       await api.group(group).click();
-      await expect(api.group(group), `${group} (${expected} examples)`).toHaveAttribute("aria-expanded", "false");
+      await expect(api.group(group), `${group} (${expected} examples)`).toHaveAttribute(
+        "aria-expanded",
+        "false"
+      );
     }
   });
 
   for (const example of EXAMPLES) {
-    test(`example "${example.description}" loads its query, and running it returns data`, async ({ page }) => {
+    test(`example "${example.description}" loads its query, and running it returns data`, async ({
+      page,
+    }) => {
       const api = new ApiPage(page);
       await api.goto();
 
@@ -196,7 +213,11 @@ test.describe("API page", () => {
     const api = new ApiPage(page);
     await api.goto();
 
-    await api.loadExample("Target-disease association", "Find targets associated with a specific disease or phenotype", "associatedTargets");
+    await api.loadExample(
+      "Target-disease association",
+      "Find targets associated with a specific disease or phenotype",
+      "associatedTargets"
+    );
     await api.loadExample("Search page", "Example query for KRAS", "searchEntity");
     await expect(api.queryEditor).not.toContainText("query associatedTargets");
     await expect(api.queryEditor).toContainText('queryString: "KRAS"');
@@ -206,7 +227,11 @@ test.describe("API page", () => {
     const api = new ApiPage(page);
     await api.goto();
 
-    await api.loadExample("Drug annotation", "Find approval status and withdrawn and black-box warning for a specific drug", "drugApprovalWithdrawnWarningData");
+    await api.loadExample(
+      "Drug annotation",
+      "Find approval status and withdrawn and black-box warning for a specific drug",
+      "drugApprovalWithdrawnWarningData"
+    );
     await api.run();
     await expect(api.result).toContainText('"id": "CHEMBL118"', { timeout: 30_000 });
     await expect(api.result).toContainText('"drugWarnings"');
@@ -216,20 +241,31 @@ test.describe("API page", () => {
     // run correct whenever it happens; loading another example would not.
     await api.queryEditor.click();
     await page.keyboard.press("ControlOrMeta+a");
-    await page.keyboard.insertText('query drugApprovalWithdrawnWarningData { drug(chemblId: "CHEMBL25") { name id } }');
+    await page.keyboard.insertText(
+      'query drugApprovalWithdrawnWarningData { drug(chemblId: "CHEMBL25") { name id } }'
+    );
     await api.run();
     await expect(api.result).toContainText('"id": "CHEMBL25"', { timeout: 30_000 });
     await expect(api.result).not.toContainText('"id": "CHEMBL118"');
     await expect(api.result).not.toContainText('"drugWarnings"');
   });
 
-  test("a query the API rejects shows its error in the result pane", async ({ page, pageHealth }) => {
-    pageHealth.allow(/Unknown field "thisFieldDoesNotExist"/, "runs a query with a field that does not exist", "graphql-error");
+  test("a query the API rejects shows its error in the result pane", async ({
+    page,
+    pageHealth,
+  }) => {
+    pageHealth.allow(
+      /Unknown field "thisFieldDoesNotExist"/,
+      "runs a query with a field that does not exist",
+      "graphql-error"
+    );
     const api = new ApiPage(page);
     await api.goto();
 
     await api.queryEditor.click();
-    await page.keyboard.insertText("query broken { target(ensemblId: \"ENSG00000169174\") { thisFieldDoesNotExist } }");
+    await page.keyboard.insertText(
+      'query broken { target(ensemblId: "ENSG00000169174") { thisFieldDoesNotExist } }'
+    );
     await page.keyboard.press("Control+Enter");
     await expect(api.result).toContainText("thisFieldDoesNotExist", { timeout: 30_000 });
     await expect(api.result).toContainText('"errors"');

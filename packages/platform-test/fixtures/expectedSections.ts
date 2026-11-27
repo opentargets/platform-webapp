@@ -56,10 +56,22 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   ],
 
   // Drug: imatinib (no warnings)
-  CHEMBL941: ["mechanismsofaction", "indications", "pharmacogenetics", "adverseevents", "bibliography"],
+  CHEMBL941: [
+    "mechanismsofaction",
+    "indications",
+    "pharmacogenetics",
+    "adverseevents",
+    "bibliography",
+  ],
 
   // Drug: amoxicillin (no warnings)
-  CHEMBL1082: ["mechanismsofaction", "indications", "pharmacogenetics", "adverseevents", "bibliography"],
+  CHEMBL1082: [
+    "mechanismsofaction",
+    "indications",
+    "pharmacogenetics",
+    "adverseevents",
+    "bibliography",
+  ],
 
   // Drug: zanzalintinib fumarate (no warnings, pharmacogenetics, adverse events or literature)
   CHEMBL5314605: ["mechanismsofaction", "indications"],

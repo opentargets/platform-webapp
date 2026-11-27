@@ -28,12 +28,19 @@ const STUDY_META = /Study type: \S+ • Credible sets count: [\d,]+ • Sample s
  * Every card on the page is of this entity type, is titled by a link to an entity of
  * that type, and says what in the entity matched the term.
  */
-async function expectCardsOf(results: SearchPage, entity: SearchEntity, count: number): Promise<void> {
-  await expect(results.cardsOf(entity), `every result should be a ${entity} card`).toHaveCount(count);
+async function expectCardsOf(
+  results: SearchPage,
+  entity: SearchEntity,
+  count: number
+): Promise<void> {
+  await expect(results.cardsOf(entity), `every result should be a ${entity} card`).toHaveCount(
+    count
+  );
   await expect(results.cards, `only ${entity} cards should be listed`).toHaveCount(count);
   const hrefs = await results.cardHrefs();
   expect(hrefs).toHaveLength(count);
-  for (const href of hrefs) expect(href, `${entity} card link`).toMatch(ENTITY_ROUTE_PATTERN[entity]);
+  for (const href of hrefs)
+    expect(href, `${entity} card link`).toMatch(ENTITY_ROUTE_PATTERN[entity]);
   expect(new Set(hrefs).size, "each result should be a different entity").toBe(count);
   for (let index = 0; index < count; index++) {
     const card = results.cards.nth(index);
@@ -161,7 +168,11 @@ test.describe("Search results page", () => {
       await expectCardsOf(results, "drug", Math.min(total, RESULTS_PER_PAGE));
 
       const first = results.cardsOf("drug").first();
-      await expectTitleLink(first.locator("> a"), SEARCH.drug.name, entityRoute("drug", SEARCH.drug.id));
+      await expectTitleLink(
+        first.locator("> a"),
+        SEARCH.drug.name,
+        entityRoute("drug", SEARCH.drug.id)
+      );
       await expect(first).toContainText(SEARCH.drug.descriptionStart);
       await expect(results.highlights(first)).toContainText(/aspirin/i);
     });
@@ -184,7 +195,9 @@ test.describe("Search results page", () => {
       await expect(results.highlights(first)).toHaveText(SEARCH.variant.rsId);
     });
 
-    test("study: trait linking to the study page, study facts and the publication", async ({ page }) => {
+    test("study: trait linking to the study page, study facts and the publication", async ({
+      page,
+    }) => {
       const results = new SearchPage(page);
       await results.goto({ q: SEARCH.disease.term, entities: ["study"] });
       await expectCardsOf(results, "study", RESULTS_PER_PAGE);
@@ -234,7 +247,9 @@ test.describe("Search results page", () => {
       await expect(first.getByText("show more", { exact: true })).toBeVisible();
     });
 
-    test("more lists every match of a result and hide returns to the first one", async ({ page }) => {
+    test("more lists every match of a result and hide returns to the first one", async ({
+      page,
+    }) => {
       const results = new SearchPage(page);
       await results.goto({ q: SEARCH.disease.term, entities: ["disease"] });
       const first = results.cardsOf("disease").first();
@@ -273,7 +288,9 @@ test.describe("Search results page", () => {
   });
 
   test.describe("top hit card", () => {
-    test("target: symbol, approved name, description, biotype and UniProt accession", async ({ page }) => {
+    test("target: symbol, approved name, description, biotype and UniProt accession", async ({
+      page,
+    }) => {
       const results = new SearchPage(page);
       await results.goto({ q: SEARCH.target.term });
       const card = results.topHitDetail("target");
@@ -290,7 +307,9 @@ test.describe("Search results page", () => {
       await expect(card).toContainText(`UniProt accession${SEARCH.target.uniprotAccession}`);
     });
 
-    test("disease: name, description and therapeutic areas linking to their pages", async ({ page }) => {
+    test("disease: name, description and therapeutic areas linking to their pages", async ({
+      page,
+    }) => {
       const results = new SearchPage(page);
       await results.goto({ q: SEARCH.disease.term });
       const card = results.topHitDetail("disease");
@@ -303,7 +322,10 @@ test.describe("Search results page", () => {
       await expect(card.getByText("Disease or phenotype", { exact: true })).toBeVisible();
       await expect(card).toContainText(SEARCH.disease.descriptionStart);
       await expect(card).toContainText("Therapeutic areas");
-      const area = card.getByRole("link", { name: SEARCH.disease.therapeuticArea.name, exact: true });
+      const area = card.getByRole("link", {
+        name: SEARCH.disease.therapeuticArea.name,
+        exact: true,
+      });
       await expect(area).toHaveAttribute("href", `/disease/${SEARCH.disease.therapeuticArea.id}`);
       const areaHrefs = await card
         .getByRole("link")
@@ -312,7 +334,9 @@ test.describe("Search results page", () => {
       for (const href of areaHrefs) expect(href).toMatch(/^\/disease\/[A-Za-z]+_\d+$/);
     });
 
-    test("drug: name, description, drug type, maximum clinical stage and indications", async ({ page }) => {
+    test("drug: name, description, drug type, maximum clinical stage and indications", async ({
+      page,
+    }) => {
       const results = new SearchPage(page);
       await results.goto({ q: SEARCH.drug.term });
       const card = results.topHitDetail("drug");
@@ -411,7 +435,9 @@ test.describe("Search results page", () => {
     });
   });
 
-  test("a term that matches nothing shows the no-results guidance and zero counts", async ({ page }) => {
+  test("a term that matches nothing shows the no-results guidance and zero counts", async ({
+    page,
+  }) => {
     const results = new SearchPage(page);
     await results.goto({ q: SEARCH.noMatch });
 

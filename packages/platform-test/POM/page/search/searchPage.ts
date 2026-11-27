@@ -97,10 +97,9 @@ export class SearchPage {
   }
 
   async expectResultsFor(q: string): Promise<void> {
-    await expect(
-      this.heading,
-      `the results page should show the results for "${q}"`
-    ).toHaveText(new RegExp(`^\\d+ results for "${escapeRegExp(q)}"$`));
+    await expect(this.heading, `the results page should show the results for "${q}"`).toHaveText(
+      new RegExp(`^\\d+ results for "${escapeRegExp(q)}"$`)
+    );
   }
 
   /** The total in the heading, once the heading shows results for `q`. */

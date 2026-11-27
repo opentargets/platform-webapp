@@ -1,6 +1,6 @@
-import { type Locator, type Page } from "@playwright/test";
-import { OtTable } from "../../../../utils/table";
+import type { Locator, Page } from "@playwright/test";
 import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 import { SectionDataControls } from "./sectionDataControls";
 
 /** The "Transcript consequences" section (variant_effect_predictor) of the variant page. */

@@ -94,15 +94,18 @@ export async function stubEuropePmc(page: Page): Promise<string[][]> {
   });
   // The Europe PMC evidence section looks its page of publications up with a GET instead
   // (not counted in the returned searches, which are those of the POST).
-  await page.route(/^https:\/\/www\.ebi\.ac\.uk\/europepmc\/webservices\/rest\/search\?/, async (route) => {
-    const query = new URL(route.request().url()).searchParams.get("query") ?? "";
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      headers: { "access-control-allow-origin": "*" },
-      body: answer(idsOf(query)),
-    });
-  });
+  await page.route(
+    /^https:\/\/www\.ebi\.ac\.uk\/europepmc\/webservices\/rest\/search\?/,
+    async (route) => {
+      const query = new URL(route.request().url()).searchParams.get("query") ?? "";
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: answer(idsOf(query)),
+      });
+    }
+  );
   return searches;
 }
 
@@ -186,9 +189,10 @@ export class SectionDataControls {
     const drawer = this.apiQueryDrawer;
     await expect(drawer).toBeVisible();
     await expect(drawer).toContainText("API query");
-    await expect(
-      drawer.getByRole("link", { name: "GraphQL API documentation" })
-    ).toHaveAttribute("href", "https://platform-docs.opentargets.org/data-access/graphql-api");
+    await expect(drawer.getByRole("link", { name: "GraphQL API documentation" })).toHaveAttribute(
+      "href",
+      "https://platform-docs.opentargets.org/data-access/graphql-api"
+    );
     await expect(drawer.getByRole("link", { name: "Community" })).toHaveAttribute(
       "href",
       "https://community.opentargets.org"
@@ -283,7 +287,10 @@ export class SectionTable {
   /** The rows whose cell in `columnIndex` has exactly this text. */
   rowsWith(columnIndex: number, text: string | RegExp): Locator {
     return this.rows.filter({
-      has: this.scope.page().locator(`td:nth-child(${columnIndex + 1})`).filter({ hasText: text }),
+      has: this.scope
+        .page()
+        .locator(`td:nth-child(${columnIndex + 1})`)
+        .filter({ hasText: text }),
     });
   }
 

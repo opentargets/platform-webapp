@@ -106,7 +106,8 @@ export async function resolveTestConfig(): Promise<TestConfig> {
       return mergeWithDefaults(fetched, defaults);
     } catch (error) {
       lastError = error;
-      if (attempt < FETCH_ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+      if (attempt < FETCH_ATTEMPTS)
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
     }
   }
   throw new Error(

@@ -7,7 +7,8 @@ const workers = process.env.PLAYWRIGHT_WORKERS ? Number(process.env.PLAYWRIGHT_W
  * published report small. PLAYWRIGHT_VIDEO=retain-on-failure does the same locally;
  * PLAYWRIGHT_VIDEO=on records every test. */
 type VideoMode = "off" | "on" | "retain-on-failure" | "on-first-retry";
-const video = (process.env.PLAYWRIGHT_VIDEO as VideoMode | undefined) ?? (isCI ? "retain-on-failure" : "off");
+const video =
+  (process.env.PLAYWRIGHT_VIDEO as VideoMode | undefined) ?? (isCI ? "retain-on-failure" : "off");
 
 /**
  * See https://playwright.dev/docs/test-configuration.

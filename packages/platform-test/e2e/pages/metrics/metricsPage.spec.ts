@@ -20,7 +20,9 @@ const ROWS = CSV.trim()
   });
 
 function scalar(dataset: string): number {
-  const row = ROWS.find((r) => r.dataset === dataset && r.kind === "scalar" && r.metric === "count");
+  const row = ROWS.find(
+    (r) => r.dataset === dataset && r.kind === "scalar" && r.metric === "count"
+  );
   if (!row) throw new Error(`metrics.csv has no scalar count for ${dataset}`);
   return row.value;
 }
@@ -40,12 +42,32 @@ function parseCompact(text: string): number {
 const CARDS = [
   { slug: "targets", label: "Targets", expected: () => scalar("target") },
   { slug: "diseases", label: "Diseases", expected: () => scalar("disease") },
-  { slug: "drugs-and-clinical-candidates", label: "Drugs and Clinical Candidates", expected: () => scalar("drug_molecule") },
-  { slug: "clinical-reports", label: "Clinical Reports", expected: () => scalar("clinical_report") },
+  {
+    slug: "drugs-and-clinical-candidates",
+    label: "Drugs and Clinical Candidates",
+    expected: () => scalar("drug_molecule"),
+  },
+  {
+    slug: "clinical-reports",
+    label: "Clinical Reports",
+    expected: () => scalar("clinical_report"),
+  },
   { slug: "gwas-molqtl-studies", label: "GWAS/molQTL Studies", expected: () => scalar("study") },
-  { slug: "target-disease-evidence", label: "Target-Disease Evidence", expected: () => evidenceTotal },
-  { slug: "direct-target-disease-associations", label: "Direct Target-Disease Associations", expected: () => scalar("association_overall_direct") },
-  { slug: "indirect-target-disease-associations", label: "Indirect Target-Disease Associations", expected: () => scalar("association_overall_indirect") },
+  {
+    slug: "target-disease-evidence",
+    label: "Target-Disease Evidence",
+    expected: () => evidenceTotal,
+  },
+  {
+    slug: "direct-target-disease-associations",
+    label: "Direct Target-Disease Associations",
+    expected: () => scalar("association_overall_direct"),
+  },
+  {
+    slug: "indirect-target-disease-associations",
+    label: "Indirect Target-Disease Associations",
+    expected: () => scalar("association_overall_indirect"),
+  },
   { slug: "credible-sets", label: "Credible Sets", expected: () => scalar("credible_set") },
   { slug: "variants", label: "Variants", expected: () => scalar("variant") },
 ];
@@ -64,7 +86,12 @@ const WIDGETS = [
     id: "drugs",
     title: "Drugs and Clinical Candidates",
     description: /Drugs, clinical candidates and clinical reports by stage\./,
-    links: [["Drugs, clinical candidates and clinical reports", "https://platform-docs.opentargets.org/drug"]],
+    links: [
+      [
+        "Drugs, clinical candidates and clinical reports",
+        "https://platform-docs.opentargets.org/drug",
+      ],
+    ],
   },
   {
     id: "studies-and-credible-sets",
@@ -88,8 +115,17 @@ const WIDGETS = [
 ];
 
 const DRUG_STAGES = [
-  "Unknown", "Preclinical", "IND", "Early phase I", "Phase I", "Phase I/II",
-  "Phase II", "Phase II/III", "Phase III", "Preapproval", "Approval",
+  "Unknown",
+  "Preclinical",
+  "IND",
+  "Early phase I",
+  "Phase I",
+  "Phase I/II",
+  "Phase II",
+  "Phase II/III",
+  "Phase III",
+  "Preapproval",
+  "Approval",
 ];
 
 test.describe("Metrics page", () => {
@@ -99,16 +135,21 @@ test.describe("Metrics page", () => {
 
     await expect(page).toHaveTitle("Data Metrics | Open Targets Platform");
     await expect(metrics.title).toHaveText("Open Targets Platform Metrics");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Open Targets Platform Metrics");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Open Targets Platform Metrics"
+    );
     await expect(metrics.cards).toHaveCount(CARDS.length);
-    for (const widget of WIDGETS) await expect(metrics.widgetTitle(widget.id)).toHaveText(widget.title);
+    for (const widget of WIDGETS)
+      await expect(metrics.widgetTitle(widget.id)).toHaveText(widget.title);
   });
 
   test("the cards are in the documented order with their labels", async ({ page }) => {
     const metrics = new MetricsPage(page);
     await metrics.goto();
 
-    await expect(metrics.cards.getByTestId("metrics-card-label")).toHaveText(CARDS.map((c) => c.label));
+    await expect(metrics.cards.getByTestId("metrics-card-label")).toHaveText(
+      CARDS.map((c) => c.label)
+    );
   });
 
   test("each card shows its count from the metrics data, in compact format", async ({ page }) => {
@@ -130,7 +171,9 @@ test.describe("Metrics page", () => {
   });
 
   for (const widget of WIDGETS) {
-    test(`widget "${widget.title}" has its description, documentation links and a chart`, async ({ page }) => {
+    test(`widget "${widget.title}" has its description, documentation links and a chart`, async ({
+      page,
+    }) => {
       const metrics = new MetricsPage(page);
       await metrics.goto();
 
@@ -140,27 +183,59 @@ test.describe("Metrics page", () => {
       await expect(metrics.widgetLinks(widget.id)).toHaveCount(widget.links.length);
       for (const [name, href] of widget.links) {
         const link = metrics.widgetDescription(widget.id).getByRole("link", { name, exact: true });
-        await expect(link, name).toHaveAttribute("href", new RegExp(`^\\s*${href.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}$`));
+        await expect(link, name).toHaveAttribute(
+          "href",
+          new RegExp(`^\\s*${href.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}$`)
+        );
       }
       await expect(metrics.widgetContent(widget.id).getByText(/\d/).first()).toBeAttached();
       await expect(metrics.widgetContent(widget.id)).not.toBeEmpty();
     });
   }
 
-  test("the evidence and associations chart has its three facets and seven data types", async ({ page }) => {
+  test("the evidence and associations chart has its three facets and seven data types", async ({
+    page,
+  }) => {
     const metrics = new MetricsPage(page);
     await metrics.goto();
 
     const content = metrics.widgetContent("disease-target-associations");
     for (const facet of ["Evidence", "Direct associations", "Indirect associations"]) {
-      await expect(metrics.marks("disease-target-associations", "fx-axis tick label").getByText(facet, { exact: true }), facet).toBeAttached();
+      await expect(
+        metrics
+          .marks("disease-target-associations", "fx-axis tick label")
+          .getByText(facet, { exact: true }),
+        facet
+      ).toBeAttached();
     }
-    for (const source of ["Clinical Precedence", "GWAS Associations", "Gene Burden", "ClinVar", "Reactome", "Europe PMC", "IMPC"]) {
+    for (const source of [
+      "Clinical Precedence",
+      "GWAS Associations",
+      "Gene Burden",
+      "ClinVar",
+      "Reactome",
+      "Europe PMC",
+      "IMPC",
+    ]) {
       // Capitalised by CSS, so the raw text may differ in case.
-      await expect(content.getByText(new RegExp(`^${source}$`, "i")).first(), source).toBeAttached();
+      await expect(
+        content.getByText(new RegExp(`^${source}$`, "i")).first(),
+        source
+      ).toBeAttached();
     }
-    for (const dataType of ["Clinical", "Genetic association", "Somatic mutations", "Affected pathway", "Literature", "RNA expression", "Animal model"]) {
-      await expect(content.getByText(new RegExp(`^${dataType}$`, "i")).first(), dataType).toBeAttached();
+    for (const dataType of [
+      "Clinical",
+      "Genetic association",
+      "Somatic mutations",
+      "Affected pathway",
+      "Literature",
+      "RNA expression",
+      "Animal model",
+    ]) {
+      await expect(
+        content.getByText(new RegExp(`^${dataType}$`, "i")).first(),
+        dataType
+      ).toBeAttached();
     }
     await expect(metrics.marks("disease-target-associations", "bar").first()).toBeVisible();
   });
@@ -173,17 +248,28 @@ test.describe("Metrics page", () => {
     await expect(content.getByText("Drugs and candidates by max stage")).toBeVisible();
     await expect(content.getByText("Clinical reports", { exact: true })).toBeVisible();
     for (const stage of DRUG_STAGES) {
-      await expect(content.getByLabel(new RegExp(`^${stage}: [\\d,]+ drugs$`)), stage).toHaveCount(1);
-      await expect(content.getByLabel(new RegExp(`^${stage}: [\\d,]+ clinical reports$`)), stage).toHaveCount(1);
+      await expect(content.getByLabel(new RegExp(`^${stage}: [\\d,]+ drugs$`)), stage).toHaveCount(
+        1
+      );
+      await expect(
+        content.getByLabel(new RegExp(`^${stage}: [\\d,]+ clinical reports$`)),
+        stage
+      ).toHaveCount(1);
     }
     for (const stage of ["Phase IV", "Withdrawal"]) {
-      await expect(content.getByLabel(new RegExp(`^${stage}: [\\d,]+ clinical reports$`)), stage).toHaveCount(1);
+      await expect(
+        content.getByLabel(new RegExp(`^${stage}: [\\d,]+ clinical reports$`)),
+        stage
+      ).toHaveCount(1);
     }
-    const total = ROWS.find((r) => r.dataset === "drug_molecule" && r.kind === "scalar")?.value ?? 0;
+    const total =
+      ROWS.find((r) => r.dataset === "drug_molecule" && r.kind === "scalar")?.value ?? 0;
     expect(total).toBeGreaterThan(0);
   });
 
-  test("the GWAS and molQTL charts show a total that matches the card, and the study types", async ({ page }) => {
+  test("the GWAS and molQTL charts show a total that matches the card, and the study types", async ({
+    page,
+  }) => {
     const metrics = new MetricsPage(page);
     await metrics.goto();
 
@@ -194,18 +280,29 @@ test.describe("Metrics page", () => {
       { title: "Colocalisation by type", dataset: "colocalisation" },
     ];
     for (const chart of charts) {
-      await expect(content.getByText(`${chart.title}(total: ${scalar(chart.dataset).toLocaleString("en-US")})`)).toBeVisible();
+      await expect(
+        content.getByText(`${chart.title}(total: ${scalar(chart.dataset).toLocaleString("en-US")})`)
+      ).toBeVisible();
     }
     for (const type of ["GWAS", "eQTL", "sQTL", "tuQTL", "sceQTL", "pQTL"]) {
       await expect(content.getByText(type, { exact: true }).first(), type).toBeAttached();
     }
-    for (const pair of ["GWAS-GWAS", "GWAS-eQTL", "GWAS-sQTL", "GWAS-tuQTL", "GWAS-sceQTL", "GWAS-pQTL"]) {
+    for (const pair of [
+      "GWAS-GWAS",
+      "GWAS-eQTL",
+      "GWAS-sQTL",
+      "GWAS-tuQTL",
+      "GWAS-sceQTL",
+      "GWAS-pQTL",
+    ]) {
       await expect(content.getByText(pair, { exact: true }), pair).toBeAttached();
     }
     await expect(content.getByText(/^\d+(\.\d+)?%$/).first()).toBeVisible();
   });
 
-  test("the variants chart lists consequences by count, and Show more reveals the rest", async ({ page }) => {
+  test("the variants chart lists consequences by count, and Show more reveals the rest", async ({
+    page,
+  }) => {
     const metrics = new MetricsPage(page);
     await metrics.goto();
 
@@ -221,9 +318,9 @@ test.describe("Metrics page", () => {
     expect(total).toBeGreaterThan(12);
 
     // The counts decrease down the chart.
-    const counts = (await metrics.marks("variants", "text").last().locator("text").allTextContents()).map(
-      (text) => Number(text.replace(/,/g, ""))
-    );
+    const counts = (
+      await metrics.marks("variants", "text").last().locator("text").allTextContents()
+    ).map((text) => Number(text.replace(/,/g, "")));
     expect(counts.length).toBe(total);
     expect(counts).toEqual([...counts].sort((a, b) => b - a));
 
@@ -254,7 +351,10 @@ test.describe("Metrics page", () => {
     await expect(metrics.widget("drugs")).toBeAttached();
   });
 
-  test("a path under /metrics that does not exist shows the 404 page", async ({ page, pageHealth }) => {
+  test("a path under /metrics that does not exist shows the 404 page", async ({
+    page,
+    pageHealth,
+  }) => {
     pageHealth.allow(/404 page is displayed/, "opens a route that does not exist", "error-ui");
     await page.goto("/metrics/does-not-exist");
     await expect(page.getByTestId("not-found-page")).toBeVisible();

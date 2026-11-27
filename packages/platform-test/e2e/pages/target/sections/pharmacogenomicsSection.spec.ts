@@ -1,6 +1,10 @@
 import type { Page, Request } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
+import {
+  stubEuropePmc,
+  waitForOperation,
+} from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
 import {
   PGX_EVIDENCE_LEVELS,
@@ -9,12 +13,13 @@ import {
   TargetPharmacogenomicsSection,
 } from "../../../../POM/objects/widgets/Target/targetPharmacogenomicsSection";
 import {
-  stubEuropePmc,
-  waitForOperation,
-} from "../../../../POM/objects/widgets/shared/sectionDataControls";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
-import { expectSections } from "../../../../utils/sections";
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { VariantPage } from "../../../../POM/page/variant/variant";
+import { expectSections } from "../../../../utils/sections";
 
 type ApiRow = { variantId: string | null; genotypeId: string | null; variantRsId: string | null };
 type PgxData = { target: { pharmacogenomics: { count: number } } };
@@ -40,9 +45,14 @@ const EXPORT_COLUMNS = [
 const LITERATURE_LABEL = /^\s*(\d{5,}|\d+ publications)\s*$/;
 
 /** Rank of a level label ("Level 1A") in the order the table sorts by (strongest first). */
-const levelRank = (text: string): number => PGX_EVIDENCE_LEVELS.indexOf(text.replace("Level ", "") as never);
+const levelRank = (text: string): number =>
+  PGX_EVIDENCE_LEVELS.indexOf(text.replace("Level ", "") as never);
 
-function expectOrdered(values: number[], direction: "ascending" | "descending", what: string): void {
+function expectOrdered(
+  values: number[],
+  direction: "ascending" | "descending",
+  what: string
+): void {
   const sorted = [...values].sort((a, b) => (direction === "ascending" ? a - b : b - a));
   expect(values, `${what} should be in ${direction} order`).toEqual(sorted);
 }
@@ -92,7 +102,9 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(pgx.table.apiQueryButton).toBeVisible();
 
     const total = data.target.pharmacogenomics.count;
-    expect(total, "CYP2C19 is the config's target with many pharmacogenetics rows").toBeGreaterThan(20);
+    expect(total, "CYP2C19 is the config's target with many pharmacogenetics rows").toBeGreaterThan(
+      20
+    );
     await pgx.table.expectPosition(1, 10, total);
     await expect(pgx.table.rows).toHaveCount(10);
   });
@@ -106,7 +118,10 @@ test.describe("Target pharmacogenetics section", () => {
 
     await target.goto(ensgId);
     await expectSections(page, expectedSectionsFor(ensgId));
-    await expect(target.summaryChip(targetWidget("pharmacogenetics"))).toHaveCSS("cursor", "pointer");
+    await expect(target.summaryChip(targetWidget("pharmacogenetics"))).toHaveCSS(
+      "cursor",
+      "pointer"
+    );
   });
 
   test("every row of the first page has well-formed cells in each column", async ({
@@ -147,9 +162,9 @@ test.describe("Target pharmacogenetics section", () => {
         /^https:\/\/www\.pharmgkb\.org\/clinicalAnnotation\/\d+$/
       );
 
-      await expect(pgx.cell(row, "literature").getByTestId("publications-drawer-trigger")).toHaveText(
-        LITERATURE_LABEL
-      );
+      await expect(
+        pgx.cell(row, "literature").getByTestId("publications-drawer-trigger")
+      ).toHaveText(LITERATURE_LABEL);
     }
   });
 
@@ -173,7 +188,10 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(cells.nth(3)).toHaveText(NA);
     const starAllele = cells.nth(1).getByRole("link");
     await expect(starAllele).toHaveText(/^CYP2C19\*\d+$/);
-    await expect(starAllele).toHaveAttribute("href", /^https:\/\/www\.pharmgkb\.org\/haplotype\/PA\d+$/);
+    await expect(starAllele).toHaveAttribute(
+      "href",
+      /^https:\/\/www\.pharmgkb\.org\/haplotype\/PA\d+$/
+    );
     await expect(cells.nth(8).locator("svg[data-icon='circle-xmark']")).toHaveCount(1);
   });
 
@@ -383,10 +401,9 @@ test.describe("Target pharmacogenetics section", () => {
     await pgx.header("confidence").getByText("?", { exact: true }).hover();
     const confidenceHelp = pgx.tooltip.filter({ hasText: "As defined by" });
     await expect(confidenceHelp).toBeVisible();
-    await expect(confidenceHelp.getByRole("link", { name: "PharmGKB ClinAnn Levels" })).toHaveAttribute(
-      "href",
-      "https://www.pharmgkb.org/page/clinAnnLevels"
-    );
+    await expect(
+      confidenceHelp.getByRole("link", { name: "PharmGKB ClinAnn Levels" })
+    ).toHaveAttribute("href", "https://www.pharmgkb.org/page/clinAnnLevels");
   });
 
   test("the directionality drawer lists the annotations of the row that was clicked", async ({
@@ -400,7 +417,9 @@ test.describe("Target pharmacogenetics section", () => {
     await pgx.expectLoaded();
     await pgx.table.expectLoaded();
 
-    const row = pgx.table.rows.filter({ has: page.getByTestId("directionality-drawer-trigger") }).first();
+    const row = pgx.table.rows
+      .filter({ has: page.getByTestId("directionality-drawer-trigger") })
+      .first();
     const trigger = row.getByTestId("directionality-drawer-trigger");
     await expect(trigger).toHaveText(/^\s*\d+ (entry|entries)\s*$/);
     const count = Number((await trigger.innerText()).trim().split(" ")[0]);
@@ -411,7 +430,10 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(pgx.directionalityDrawer).toContainText("Directionality");
     const descriptions = pgx.directionalityDrawer.getByText("Description:");
     await expect(descriptions.first()).toBeVisible();
-    expect(await descriptions.count(), "the drawer lists at most one page of annotations").toBeLessThanOrEqual(count);
+    expect(
+      await descriptions.count(),
+      "the drawer lists at most one page of annotations"
+    ).toBeLessThanOrEqual(count);
     await expect(pgx.directionalityDrawer).toContainText(new RegExp(drug.split(/[\s,]/)[0], "i"));
     const publication = pgx.directionalityDrawer.getByRole("link").first();
     await expect(publication).toHaveAttribute("href", /\d{5,}/);
@@ -515,7 +537,11 @@ test.describe("Target pharmacogenetics section", () => {
       expect(row[header.indexOf("directDrugTarget")]).toMatch(/^(true|false)$/);
       expect(row[header.indexOf("literature")]).toMatch(/^\d+(,\d+)*$/);
     }
-    expectOrdered(rows.map((row) => PGX_EVIDENCE_LEVELS.indexOf(row[level] as never)), "ascending", "exported levels");
+    expectOrdered(
+      rows.map((row) => PGX_EVIDENCE_LEVELS.indexOf(row[level] as never)),
+      "ascending",
+      "exported levels"
+    );
 
     const json = await pgx.table.download("Json");
     expect(json.filename).toBe(`${ensgId}-pharmacogenomics-target.json`);
@@ -573,8 +599,12 @@ test.describe("Target pharmacogenetics section", () => {
     await expect(pgx.table.rows.first()).toBeVisible();
 
     await pgx.table.expectHeaders(TARGET_PGX_COLUMNS);
-    await expect(pgx.column("directTarget").locator("svg[data-icon='circle-check']").first()).toBeVisible();
-    await expect(pgx.column("directTarget").locator("svg[data-icon='circle-xmark']").first()).toBeVisible();
+    await expect(
+      pgx.column("directTarget").locator("svg[data-icon='circle-check']").first()
+    ).toBeVisible();
+    await expect(
+      pgx.column("directTarget").locator("svg[data-icon='circle-xmark']").first()
+    ).toBeVisible();
 
     const rsId = pgx.cell(0, "rsId").getByRole("link");
     const rs = (await rsId.innerText()).trim();
@@ -626,9 +656,10 @@ test.describe("Target pharmacogenetics section", () => {
     const pgx = new TargetPharmacogenomicsSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record the primary target without pharmacogenetics").not.toContain(
-      "pharmacogenetics"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record the primary target without pharmacogenetics"
+    ).not.toContain("pharmacogenetics");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 
@@ -649,7 +680,9 @@ test.describe("Target pharmacogenetics section", () => {
       },
     });
     expect(response.status()).toBe(200);
-    const { data } = (await response.json()) as { data: { target: { pharmacogenomics: { count: number; rows: ApiRow[] } } } };
+    const { data } = (await response.json()) as {
+      data: { target: { pharmacogenomics: { count: number; rows: ApiRow[] } } };
+    };
     expect(data.target.pharmacogenomics.rows, "the API should return every row").toHaveLength(
       data.target.pharmacogenomics.count
     );
@@ -658,7 +691,9 @@ test.describe("Target pharmacogenetics section", () => {
 
   const pgxRequest = (page: Page): Promise<Request> =>
     page.waitForRequest(
-      (request) => request.method() === "POST" && (request.postData() ?? "").includes(`"operationName":"${TARGET_PGX_OPERATION}"`)
+      (request) =>
+        request.method() === "POST" &&
+        (request.postData() ?? "").includes(`"operationName":"${TARGET_PGX_OPERATION}"`)
     );
 
   /**
@@ -683,7 +718,10 @@ test.describe("Target pharmacogenetics section", () => {
       if (row.variantId === null) withoutVariant.add(key);
       else withVariant.set(key, (withVariant.get(key) ?? new Set()).add(row.variantId));
     }
-    expect([...withVariant.keys()].filter((key) => withoutVariant.has(key)), "a row is a variant or it is not").toEqual([]);
+    expect(
+      [...withVariant.keys()].filter((key) => withoutVariant.has(key)),
+      "a row is a variant or it is not"
+    ).toEqual([]);
     expect(withVariant.size, "some rows have a variant").toBeGreaterThan(0);
     expect(withoutVariant.size, "some rows have none").toBeGreaterThan(0);
 
@@ -699,7 +737,10 @@ test.describe("Target pharmacogenetics section", () => {
   // opentargets/issues#4263: the variants of the pharmacogenetics table link to their Platform
   // variant page, using the `variantId` the API returns. EGFR has rows with a variant and rows
   // without one (homozygous reference genotypes, which are not a variant).
-  test("a row with a Platform variant links to /variant/<that variant's id>", async ({ page, testConfig }) => {
+  test("a row with a Platform variant links to /variant/<that variant's id>", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
     const { pgx, api, withVariant, keyOf } = await openWithApiVariants(page, ensgId);
 
@@ -728,12 +769,18 @@ test.describe("Target pharmacogenetics section", () => {
       const key = await keyOf(index);
       if (!withoutVariant.has(key)) continue;
       checked++;
-      await expect(pgx.cell(index, "genotypeId").getByRole("link"), `${key} is not a Platform variant: no link`).toHaveCount(0);
+      await expect(
+        pgx.cell(index, "genotypeId").getByRole("link"),
+        `${key} is not a Platform variant: no link`
+      ).toHaveCount(0);
     }
     expect(checked, "rows without a variant were checked").toBeGreaterThan(0);
   });
 
-  test("following a variant link lands on the healthy page of that variant", async ({ page, testConfig }) => {
+  test("following a variant link lands on the healthy page of that variant", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "withDirectTargetPharmacogenomics");
     const pgx = new TargetPharmacogenomicsSection(page);
 
@@ -747,7 +794,11 @@ test.describe("Target pharmacogenetics section", () => {
 
     // The first row of the table that has a Platform variant.
     const variantByKey = new Map(
-      api.flatMap((row) => (row.variantId ? [[`${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`, row.variantId] as const] : []))
+      api.flatMap((row) =>
+        row.variantId
+          ? [[`${row.variantRsId ?? NA}|${row.genotypeId ?? NA}`, row.variantId] as const]
+          : []
+      )
     );
     let target: { index: number; variantId: string } | undefined;
     for (let index = 0; index < api.length && !target; index++) {
@@ -763,6 +814,9 @@ test.describe("Target pharmacogenetics section", () => {
     const variantPage = new VariantPage(page);
     await variantPage.expectOnVariantPage(variantId);
     await variantPage.waitForVariantPageLoad();
-    await expect(variantPage.title, "the variant header shows the variant that was linked").toHaveText(variantId);
+    await expect(
+      variantPage.title,
+      "the variant header shows the variant that was linked"
+    ).toHaveText(variantId);
   });
 });

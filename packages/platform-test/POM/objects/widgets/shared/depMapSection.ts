@@ -101,7 +101,10 @@ export class DepMapSection extends ProfileSection {
    */
   async isolatedDotIndexes(): Promise<number[]> {
     return this.dots.evaluateAll((circles) => {
-      const points = circles.map((c) => [Number(c.getAttribute("cx")), Number(c.getAttribute("cy"))]);
+      const points = circles.map((c) => [
+        Number(c.getAttribute("cx")),
+        Number(c.getAttribute("cy")),
+      ]);
       const isolated: number[] = [];
       points.forEach(([x, y], i) => {
         const crowded = points.some(
@@ -120,7 +123,10 @@ export class DepMapSection extends ProfileSection {
     const box = await dot.boundingBox();
     if (!box) throw new Error(`dot ${index} has no bounding box`);
     await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await expect(this.tip.locator("tspan[x]").first(), "a tooltip should open on the dot").toBeVisible();
+    await expect(
+      this.tip.locator("tspan[x]").first(),
+      "a tooltip should open on the dot"
+    ).toBeVisible();
     const lines = await this.tip.locator("tspan[x]").allTextContents();
     return lines.map((line) => line.replace(/\u200b/g, "").trim());
   }

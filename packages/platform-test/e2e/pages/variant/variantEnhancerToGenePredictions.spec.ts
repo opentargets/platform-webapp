@@ -227,9 +227,8 @@ test.describe("Variant page: Enhancer-to-gene predictions", () => {
       });
       await table.search("APOC1");
       const request = await searched;
-      const { fields } = (
-        request.postDataJSON() as { variables: { search: { fields: string[] } } }
-      ).variables.search;
+      const { fields } = (request.postDataJSON() as { variables: { search: { fields: string[] } } })
+        .variables.search;
       expect(fields.sort()).toEqual([
         "BIOSAMPLE_ID",
         "BIOSAMPLE_NAME",
@@ -290,9 +289,7 @@ test.describe("Variant page: Enhancer-to-gene predictions", () => {
       })
       .toBe(true);
     const scores = await section.numbers("score");
-    expect(scores[0], "the lowest score of all predictions comes first").toBeLessThan(
-      Number(best)
-    );
+    expect(scores[0], "the lowest score of all predictions comes first").toBeLessThan(Number(best));
     await section.table.expectPosition(`1 - ${E2G_PAGE_SIZE} of ${total}`, {
       canGoBack: false,
       canGoForward: true,

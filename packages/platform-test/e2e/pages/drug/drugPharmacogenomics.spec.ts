@@ -5,10 +5,10 @@ import {
   PHARMACOGENOMICS_COLUMNS,
 } from "../../../POM/objects/widgets/Drug/drugPharmacogenomicsSection";
 import { closeDrawer, expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 /** ClinPGx evidence levels, strongest first: the order an ascending sort must follow. */
 const LEVEL_ORDER = ["1A", "1B", "2A", "2B", "3", "4"];
@@ -129,13 +129,25 @@ test.describe("Drug page: Pharmacogenetics", () => {
     });
 
     await test.step("direct drug target: a tick for the drug's own target, a cross otherwise", async () => {
-      const erbb2 = pgx.table.rows.filter({ has: page.getByRole("link", { name: "ERBB2", exact: true }) });
-      const bard1 = pgx.table.rows.filter({ has: page.getByRole("link", { name: "BARD1", exact: true }) });
+      const erbb2 = pgx.table.rows.filter({
+        has: page.getByRole("link", { name: "ERBB2", exact: true }),
+      });
+      const bard1 = pgx.table.rows.filter({
+        has: page.getByRole("link", { name: "BARD1", exact: true }),
+      });
       await expect(
-        erbb2.first().locator("td").nth(PGX_COLUMN.directTarget).locator("svg[data-icon='circle-check']")
+        erbb2
+          .first()
+          .locator("td")
+          .nth(PGX_COLUMN.directTarget)
+          .locator("svg[data-icon='circle-check']")
       ).toBeVisible();
       await expect(
-        bard1.first().locator("td").nth(PGX_COLUMN.directTarget).locator("svg[data-icon='circle-xmark']")
+        bard1
+          .first()
+          .locator("td")
+          .nth(PGX_COLUMN.directTarget)
+          .locator("svg[data-icon='circle-xmark']")
       ).toBeVisible();
       await expect(pgx.column(PGX_COLUMN.directTarget).locator("svg")).toHaveCount(10);
     });
@@ -321,7 +333,10 @@ test.describe("Drug page: Pharmacogenetics", () => {
     const row = starRows.first();
     const allele = row.locator("td").nth(PGX_COLUMN.starAllele).getByRole("link");
     await expect(allele).toHaveText(/^CYP\w+\*\d+/);
-    await expect(allele).toHaveAttribute("href", /^https:\/\/www\.pharmgkb\.org\/haplotype\/PA\d+$/);
+    await expect(allele).toHaveAttribute(
+      "href",
+      /^https:\/\/www\.pharmgkb\.org\/haplotype\/PA\d+$/
+    );
     await expect(row.locator("td").nth(PGX_COLUMN.rsId)).toHaveText("N/A");
     await expect(row.locator("td").nth(PGX_COLUMN.genotypeId)).toHaveText("N/A");
     await expect(row.locator("td").nth(PGX_COLUMN.consequence)).toHaveText("N/A");
@@ -340,16 +355,23 @@ test.describe("Drug page: Pharmacogenetics", () => {
 
     await test.step("a gene symbol leaves only that gene's rows", async () => {
       const searchRequest = page.waitForRequest((request) => {
-        const body = request.postDataJSON?.() as { operationName?: string; variables?: { search?: { text?: string } } } | null;
+        const body = request.postDataJSON?.() as {
+          operationName?: string;
+          variables?: { search?: { text?: string } };
+        } | null;
         return (
-          body?.operationName === "DrugPharmacogenomicsQuery" && body.variables?.search?.text === "ERBB3"
+          body?.operationName === "DrugPharmacogenomicsQuery" &&
+          body.variables?.search?.text === "ERBB3"
         );
       });
       await pgx.table.search("ERBB3", total);
       const request = await searchRequest;
-      const variables = (request.postDataJSON() as { variables: { search: { fields: string[] } } }).variables;
+      const variables = (request.postDataJSON() as { variables: { search: { fields: string[] } } })
+        .variables;
       expect(variables.search.fields).toContain("TARGET_APPROVED_SYMBOL");
-      expect(variables.search.fields, "the drug itself is not a search field").not.toContain("DRUG_IDS");
+      expect(variables.search.fields, "the drug itself is not a search field").not.toContain(
+        "DRUG_IDS"
+      );
 
       const matches = await pgx.table.total();
       expect(matches).toBeGreaterThan(0);
@@ -450,7 +472,11 @@ test.describe("Drug page: Pharmacogenetics", () => {
     await pgx.directionalityButtons.first().click();
     const drawer = pgx.directionalityDrawer;
     await expect(drawer).toBeVisible();
-    const publication = drawer.getByTestId("ot-table").locator("tbody tr").first().getByRole("link");
+    const publication = drawer
+      .getByTestId("ot-table")
+      .locator("tbody tr")
+      .first()
+      .getByRole("link");
     await expect(publication).toHaveText(/^\s*\d+\s*$/);
     const pmid = (await publication.innerText()).trim();
     // A bare PubMed id as href resolves against the drug page and leads to a 404.
@@ -509,7 +535,9 @@ test.describe("Drug page: Pharmacogenetics", () => {
     await test.step("another row opens its own publication", async () => {
       const texts = (await pgx.literatureButtons.allInnerTexts()).map((text) => text.trim());
       const otherIndex = texts.findIndex((text) => /^\d+$/.test(text) && text !== pmid);
-      expect(otherIndex, "the page has a row with a different single publication").toBeGreaterThan(0);
+      expect(otherIndex, "the page has a row with a different single publication").toBeGreaterThan(
+        0
+      );
       await pgx.literatureButtons.nth(otherIndex).click();
       await expect(drawer.getByTestId(`literature-entry-${texts[otherIndex]}`)).toBeVisible();
       await expect(entries).toHaveCount(1);
@@ -537,7 +565,9 @@ test.describe("Drug page: Pharmacogenetics", () => {
     const drawer = pgx.publicationsDrawer;
     await expect(drawer).toBeVisible();
     const entries = drawer.locator("[data-testid^='literature-entry-']");
-    await expect(entries, "ten publications per page of the drawer").toHaveCount(Math.min(10, count));
+    await expect(entries, "ten publications per page of the drawer").toHaveCount(
+      Math.min(10, count)
+    );
     await expect(drawer.getByText(/^\d+ - \d+ of \d+$/)).toHaveText(
       `1 - ${Math.min(10, count)} of ${count}`
     );
@@ -600,7 +630,10 @@ test.describe("Drug page: Pharmacogenetics", () => {
     await expectSectionLoaded(page, DrugPharmacogenomicsSection.id);
   });
 
-  test("the column picker keeps rsID and hides the rest on demand", async ({ page, testConfig }) => {
+  test("the column picker keeps rsID and hides the rest on demand", async ({
+    page,
+    testConfig,
+  }) => {
     const pgx = new DrugPharmacogenomicsSection(page);
     await new DrugPage(page).goto(drugIds(testConfig).primary);
     await expectSectionLoaded(page, DrugPharmacogenomicsSection.id);
@@ -613,7 +646,9 @@ test.describe("Drug page: Pharmacogenetics", () => {
     await picker.getByRole("checkbox", { name: "Star Allele" }).uncheck();
     await picker.getByRole("checkbox", { name: "Literature" }).uncheck();
     await pgx.table.expectHeaders(
-      HEADER_PATTERNS.filter((_, index) => index !== PGX_COLUMN.starAllele && index !== PGX_COLUMN.literature)
+      HEADER_PATTERNS.filter(
+        (_, index) => index !== PGX_COLUMN.starAllele && index !== PGX_COLUMN.literature
+      )
     );
     await expect(pgx.literatureButtons).toHaveCount(0);
 

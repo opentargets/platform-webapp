@@ -1,13 +1,17 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
-import type { TestConfig } from "../../../../types";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { CredibleSetEnhancerToGenePredictionsSection } from "../../../../POM/objects/widgets/CredibleSet/enhancerToGenePredictionsSection";
-import { isOrdered, opposite } from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
+import {
+  isOrdered,
+  opposite,
+} from "../../../../POM/objects/widgets/CredibleSet/serverTableSection";
 import { CredibleSetPage } from "../../../../POM/page/credibleSet";
+import type { TestConfig } from "../../../../types";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
-const { column, defaultSort, operation, searchFields } = CredibleSetEnhancerToGenePredictionsSection;
+const { column, defaultSort, operation, searchFields } =
+  CredibleSetEnhancerToGenePredictionsSection;
 const PAGE_SIZE = 10;
 const NUMBER = /^\d{1,3}(,\d{3})*$/;
 const RANGE = /^chr(\d+|X|Y|MT)?:?\d*:?[\d,]*-?[\d,]*$/;
@@ -21,11 +25,15 @@ const QTL_LEAD = "6_160329611_C_T";
 /** The credible sets these tests use; fails loudly if the test config lacks one. */
 function credibleSets(config: TestConfig): { primary: string; qtl: string } {
   const { primary, qtl } = config.credibleSet ?? {};
-  if (!primary || !qtl) throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
+  if (!primary || !qtl)
+    throw new Error("the test config needs credibleSet.primary and credibleSet.qtl");
   return { primary, qtl };
 }
 
-async function open(page: Page, credibleSetId: string): Promise<CredibleSetEnhancerToGenePredictionsSection> {
+async function open(
+  page: Page,
+  credibleSetId: string
+): Promise<CredibleSetEnhancerToGenePredictionsSection> {
   await new CredibleSetPage(page).goToCredibleSetPage(credibleSetId);
   await expectSectionLoaded(page, CredibleSetEnhancerToGenePredictionsSection.id);
   const e2g = new CredibleSetEnhancerToGenePredictionsSection(page);
@@ -67,7 +75,9 @@ async function searchFor(
     sort: [defaultSort],
     search: { text: term, fields: searchFields },
   });
-  await expect.poll(() => e2g.total(), { message: "the footer should count the matches" }).not.toBe(before);
+  await expect
+    .poll(() => e2g.total(), { message: "the footer should count the matches" })
+    .not.toBe(before);
   const total = await e2g.total();
   await expect(e2g.rows).toHaveCount(Math.min(total, PAGE_SIZE));
   return total;
@@ -185,13 +195,20 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
 
     await test.step("the first query asks for ten rows sorted by score, with no search", async () => {
       const [first] = graphqlMonitor.named(operation);
-      expect(first.variables).toEqual({ credibleSetId, index: 0, size: PAGE_SIZE, sort: [defaultSort] });
+      expect(first.variables).toEqual({
+        credibleSetId,
+        index: 0,
+        size: PAGE_SIZE,
+        sort: [defaultSort],
+      });
       expect(first.errors).toEqual([]);
     });
 
     await test.step("predictions arrive highest score first, and the Score header says so", async () => {
       await e2g.expectColumnOrdered(column.score, "number", "DESCENDING");
-      await expect(e2g.table.header(/^Score/).locator("svg[data-icon='arrow-down']")).toHaveCount(1);
+      await expect(e2g.table.header(/^Score/).locator("svg[data-icon='arrow-down']")).toHaveCount(
+        1
+      );
     });
 
     await test.step("GGCX is the gene this enhancer most confidently regulates", async () => {
@@ -212,7 +229,12 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
 
       await test.step("next asks for page 2, keeps the sort and shows the remainder", async () => {
         const requested = await e2g.pageTo(e2g.table.nextPageButton, 1);
-        expect(requested).toEqual({ credibleSetId, index: 1, size: PAGE_SIZE, sort: [defaultSort] });
+        expect(requested).toEqual({
+          credibleSetId,
+          index: 1,
+          size: PAGE_SIZE,
+          sort: [defaultSort],
+        });
         await e2g.expectPosition(PAGE_SIZE + 1, total, total);
         await expect(e2g.rows).toHaveCount(total - PAGE_SIZE);
         await e2g.table.expectRowsChangedFrom(firstPage);
@@ -239,7 +261,10 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
       });
     });
 
-    test("a page size of 25 asks for 25 rows and shows everything on one page", async ({ page, testConfig }) => {
+    test("a page size of 25 asks for 25 rows and shows everything on one page", async ({
+      page,
+      testConfig,
+    }) => {
       const e2g = await open(page, credibleSets(testConfig).primary);
       const total = await e2g.total();
       await expect(e2g.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
@@ -317,7 +342,10 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
       await e2g.table.expectFirstPage();
     });
 
-    test("searching while on the second page goes back to the first page", async ({ page, testConfig }) => {
+    test("searching while on the second page goes back to the first page", async ({
+      page,
+      testConfig,
+    }) => {
       const credibleSetId = credibleSets(testConfig).primary;
       const e2g = await open(page, credibleSetId);
       await e2g.pageTo(e2g.table.nextPageButton, 1);
@@ -344,7 +372,8 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
         const first = await e2g.clickSort(sortable.header, sortable.key);
         expect(first).toHaveLength(1);
         const direction = first[0].direction;
-        if (isDefault) expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
+        if (isDefault)
+          expect(direction, "the default order is reversed").toBe(opposite(defaultSort.direction));
         await e2g.expectPosition(1, PAGE_SIZE, total);
         if (readable) {
           await e2g.table.expectRowsChangedFrom(byDefault);
@@ -444,7 +473,10 @@ test.describe("Credible set page: enhancer-to-gene predictions", () => {
     });
   });
 
-  test("Export downloads every prediction as JSON and TSV in the table's order", async ({ page, testConfig }) => {
+  test("Export downloads every prediction as JSON and TSV in the table's order", async ({
+    page,
+    testConfig,
+  }) => {
     const credibleSetId = credibleSets(testConfig).primary;
     const e2g = await open(page, credibleSetId);
     const total = await e2g.total();

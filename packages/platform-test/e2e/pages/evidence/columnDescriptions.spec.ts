@@ -3,8 +3,8 @@ import { expect, test } from "../../../fixtures";
 import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { AssociationsTable } from "../../../POM/objects/widgets/AOTF/associationsTable";
 import { DATA_SOURCE_COLUMNS } from "../../../POM/objects/widgets/AOTF/columns";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { TargetAssociations } from "../../../POM/objects/widgets/AOTFTarget/targetAssociations";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSectionLoaded, sectionLocator, sectionTestId } from "../../../utils/sections";
 
 /**
@@ -46,23 +46,33 @@ const SOURCES: readonly Source[] = [
     template:
       "Clinical candidates and/or approved drugs pharmacologically targeting {s} and indicated for {n}. Source: Open Targets and ChEMBL.",
     links: [
-      { name: "Open Targets", href: "https://platform-docs.opentargets.org/evidence#clinical-precedence" },
+      {
+        name: "Open Targets",
+        href: "https://platform-docs.opentargets.org/evidence#clinical-precedence",
+      },
       { name: "ChEMBL", href: "https://www.ebi.ac.uk/chembl/" },
     ],
   },
   {
     sectionId: "gwas_credible_sets",
     columnId: "gwas_credible_sets",
-    template: "95% GWAS credible sets prioritising {s} as likely causal gene for {n}. Source: Open Targets",
+    template:
+      "95% GWAS credible sets prioritising {s} as likely causal gene for {n}. Source: Open Targets",
     links: [
-      { name: "Open Targets", href: "https://platform-docs.opentargets.org/evidence#gwas-associations" },
+      {
+        name: "Open Targets",
+        href: "https://platform-docs.opentargets.org/evidence#gwas-associations",
+      },
     ],
   },
   {
     sectionId: "gene_burden",
     columnId: "gene_burden",
-    template: "Gene burden analysis prioritising {s} as likely causal gene for {n}. Source: Open Targets",
-    links: [{ name: "Open Targets", href: "https://platform-docs.opentargets.org/evidence#gene-burden" }],
+    template:
+      "Gene burden analysis prioritising {s} as likely causal gene for {n}. Source: Open Targets",
+    links: [
+      { name: "Open Targets", href: "https://platform-docs.opentargets.org/evidence#gene-burden" },
+    ],
   },
   {
     sectionId: "eva",
@@ -100,7 +110,8 @@ const SOURCES: readonly Source[] = [
   {
     sectionId: "orphanet",
     columnId: "orphanet",
-    template: "Expert-reviewed data supporting the relationship between {s} and {n}. Source: Orphanet",
+    template:
+      "Expert-reviewed data supporting the relationship between {s} and {n}. Source: Orphanet",
     links: [{ name: "Orphanet", href: "https://www.orpha.net/consor/cgi-bin/Disease_Genes.php" }],
   },
   {
@@ -184,8 +195,7 @@ const SOURCES: readonly Source[] = [
   {
     sectionId: "impc",
     columnId: "impc",
-    template:
-      "Mapping of phenotypes in {s} animal model mutants similar to {n}. Source: IMPC",
+    template: "Mapping of phenotypes in {s} animal model mutants similar to {n}. Source: IMPC",
     links: [{ name: "IMPC", href: "https://www.mousephenotype.org" }],
   },
 ];
@@ -270,15 +280,19 @@ async function expectDescription(description: Locator, src: Source, symbol: stri
   await expect(description, `description of ${src.sectionId}`).toHaveText(
     fill(src.template, symbol, name)
   );
-  await expect(description.locator("strong"), `${src.sectionId} bolds the target and the disease`).toHaveText(
-    src.template.includes("{n}") ? [symbol, name] : [symbol]
-  );
+  await expect(
+    description.locator("strong"),
+    `${src.sectionId} bolds the target and the disease`
+  ).toHaveText(src.template.includes("{n}") ? [symbol, name] : [symbol]);
   await expect(description.getByRole("link"), `links of ${src.sectionId}`).toHaveCount(
     src.links.length
   );
   for (const link of src.links) {
     const anchor = description.getByRole("link", { name: link.name, exact: true });
-    await expect(anchor, `${src.sectionId} links to ${link.name}`).toHaveAttribute("href", link.href);
+    await expect(anchor, `${src.sectionId} links to ${link.name}`).toHaveAttribute(
+      "href",
+      link.href
+    );
   }
 }
 
@@ -293,7 +307,9 @@ test.describe("Datasource descriptions: definitions", () => {
       DATA_SOURCE_COLUMNS.map((column) => column.id).sort()
     );
     const inPairs = PAIRS.flatMap((pair) => pair.sources);
-    expect(new Set(inPairs).size, "each source is checked on exactly one pair").toBe(inPairs.length);
+    expect(new Set(inPairs).size, "each source is checked on exactly one pair").toBe(
+      inPairs.length
+    );
     expect([...inPairs].sort()).toEqual(SOURCES.map((s) => s.sectionId).sort());
   });
 
@@ -332,7 +348,9 @@ test.describe("Datasource descriptions: evidence page", () => {
       }
     });
 
-    test(`${pair.symbol} in ${pair.name}: no two sections share a description`, async ({ page }) => {
+    test(`${pair.symbol} in ${pair.name}: no two sections share a description`, async ({
+      page,
+    }) => {
       await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
       const seen = new Map<string, string[]>();
       for (const sectionId of pair.sources) {
@@ -353,7 +371,10 @@ test.describe("Datasource descriptions: evidence page", () => {
     await page.goto(`/evidence/${braf.ensgId}/${braf.efoId}`);
     await expectSectionLoaded(page, "eva");
     for (const sectionId of mecp2.sources) {
-      await expect(sectionLocator(page, sectionId), `${sectionId} has no BRAF melanoma evidence`).toHaveCount(0);
+      await expect(
+        sectionLocator(page, sectionId),
+        `${sectionId} has no BRAF melanoma evidence`
+      ).toHaveCount(0);
     }
   });
 });
@@ -385,7 +406,9 @@ test.describe("Datasource descriptions: associations table", () => {
             ).toBeVisible();
             return;
           }
-          expect(withData, `${pair.symbol} should have a value in ${src.columnId}`).toContain(src.columnId);
+          expect(withData, `${pair.symbol} should have a value in ${src.columnId}`).toContain(
+            src.columnId
+          );
           const panel = await aotf.openPanel(row, src.columnId, {
             panelKey: src.columnId,
             sectionId,
@@ -413,7 +436,9 @@ test.describe("Datasource descriptions: associations table", () => {
     }
   });
 
-  test("on a target page the panel of a disease row shows the same descriptions", async ({ page }) => {
+  test("on a target page the panel of a disease row shows the same descriptions", async ({
+    page,
+  }) => {
     const braf = PAIRS[0];
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(braf.ensgId, { q: braf.name });
@@ -424,7 +449,9 @@ test.describe("Datasource descriptions: associations table", () => {
     for (const sectionId of braf.sources) {
       const src = source(sectionId);
       await test.step(src.columnId, async () => {
-        expect(withData, `${braf.name} should have a value in ${src.columnId}`).toContain(src.columnId);
+        expect(withData, `${braf.name} should have a value in ${src.columnId}`).toContain(
+          src.columnId
+        );
         const panel = await aotf.openPanel(row, src.columnId, {
           panelKey: src.columnId,
           sectionId,

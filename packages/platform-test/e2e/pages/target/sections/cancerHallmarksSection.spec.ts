@@ -6,7 +6,12 @@ import {
   CancerHallmarksSection,
 } from "../../../../POM/objects/widgets/shared/cancerHallmarksSection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
+import {
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { expectSections } from "../../../../utils/sections";
 
 const EUROPE_PMC_SEARCH = /^http:\/\/europepmc\.org\/search\?query=EXT_ID:(\d+)$/;
@@ -124,7 +129,9 @@ test.describe("Target cancer hallmarks section", () => {
     await hallmarks.expectLoaded();
     await hallmarks.table.expectLoaded();
     const total = await hallmarks.table.total();
-    expect(total, "the test target should have more than one page of hallmarks").toBeGreaterThan(10);
+    expect(total, "the test target should have more than one page of hallmarks").toBeGreaterThan(
+      10
+    );
 
     await hallmarks.table.setPageSize(100);
     await expect(hallmarks.table.rows).toHaveCount(total);
@@ -132,7 +139,10 @@ test.describe("Target cancer hallmarks section", () => {
     // the hallmark of the last row is beyond the first page of ten
     const term = names[names.length - 1];
     const withTerm = names.filter((name) => name === term).length;
-    expect(new Set(names).size, "the test target should have more than one distinct hallmark").toBeGreaterThan(1);
+    expect(
+      new Set(names).size,
+      "the test target should have more than one distinct hallmark"
+    ).toBeGreaterThan(1);
 
     await hallmarks.table.setPageSize(10);
     await hallmarks.table.search(term);
@@ -140,9 +150,9 @@ test.describe("Target cancer hallmarks section", () => {
       new RegExp(` of ${total}$`)
     );
     // the search is fuzzy, so it may keep a few other rows; it must keep every row of this hallmark
-    await expect(hallmarks.column("hallmark").filter({ hasText: new RegExp(`^${term}$`) })).toHaveCount(
-      withTerm
-    );
+    await expect(
+      hallmarks.column("hallmark").filter({ hasText: new RegExp(`^${term}$`) })
+    ).toHaveCount(withTerm);
     const matching = await hallmarks.table.total();
     expect(matching, "the search should narrow the table").toBeLessThan(total);
     expect(matching).toBeGreaterThanOrEqual(withTerm);
@@ -157,7 +167,9 @@ test.describe("Target cancer hallmarks section", () => {
     await hallmarks.table.expectLoaded();
 
     const total = await hallmarks.table.total();
-    expect(total, "the primary target should fit its hallmarks on one page").toBeLessThanOrEqual(10);
+    expect(total, "the primary target should fit its hallmarks on one page").toBeLessThanOrEqual(
+      10
+    );
     await expect(hallmarks.table.rows).toHaveCount(total);
     await hallmarks.table.expectFirstPage(true);
   });
@@ -174,7 +186,9 @@ test.describe("Target cancer hallmarks section", () => {
     await hallmarks.table.expectLoaded();
 
     const total = await hallmarks.table.total();
-    expect(total, "the test target should have more than one page of hallmarks").toBeGreaterThan(10);
+    expect(total, "the test target should have more than one page of hallmarks").toBeGreaterThan(
+      10
+    );
     expect(total).toBeLessThanOrEqual(20);
 
     await test.step("first page", async () => {
@@ -191,7 +205,8 @@ test.describe("Target cancer hallmarks section", () => {
       await expect(hallmarks.table.rows).toHaveCount(total - 10);
       await hallmarks.table.expectLastPage();
       const lastPage = await hallmarks.table.rowTexts();
-      for (const row of lastPage) expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
+      for (const row of lastPage)
+        expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
     });
 
     await test.step("previous, last and first move between the same two pages", async () => {
@@ -206,7 +221,12 @@ test.describe("Target cancer hallmarks section", () => {
     });
 
     await test.step("page size", async () => {
-      await expect(hallmarks.table.pageSizeSelect.locator("option")).toHaveText(["5", "10", "25", "100"]);
+      await expect(hallmarks.table.pageSizeSelect.locator("option")).toHaveText([
+        "5",
+        "10",
+        "25",
+        "100",
+      ]);
       await hallmarks.table.setPageSize(5);
       await expect(hallmarks.table.rows).toHaveCount(5);
       await hallmarks.table.expectPosition(1, 5, total);
@@ -219,7 +239,10 @@ test.describe("Target cancer hallmarks section", () => {
     });
   });
 
-  test("columns can be hidden and shown, except the hallmark itself", async ({ page, testConfig }) => {
+  test("columns can be hidden and shown, except the hallmark itself", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const hallmarks = new CancerHallmarksSection(page);
 
@@ -271,7 +294,12 @@ test.describe("Target cancer hallmarks section", () => {
       expect(file.filename).toBe(`${symbol}-hallmarks.json`);
       const rows = JSON.parse(file.text) as Record<string, unknown>[];
       expect(rows).toHaveLength(total);
-      expect(Object.keys(rows[0])).toEqual(["hallmark", "effect", "description", "literaturePubMedId"]);
+      expect(Object.keys(rows[0])).toEqual([
+        "hallmark",
+        "effect",
+        "description",
+        "literaturePubMedId",
+      ]);
       expect(typeof rows[0].literaturePubMedId).toBe("number");
     });
   });
@@ -287,7 +315,10 @@ test.describe("Target cancer hallmarks section", () => {
     await hallmarks.table.expectApiQuery(CANCER_HALLMARKS_OPERATION);
   });
 
-  test("a PubMed id opens the publication from Europe PMC in a drawer", async ({ page, testConfig }) => {
+  test("a PubMed id opens the publication from Europe PMC in a drawer", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const hallmarks = new CancerHallmarksSection(page);
     const drawer = hallmarks.publicationsDrawer;
@@ -306,12 +337,18 @@ test.describe("Target cancer hallmarks section", () => {
     ).toHaveCount(0, { timeout: 60_000 });
     await drawer.expectOpen("Publications");
 
-    await expect(drawer.entries, "the drawer should list the one publication of the row").toHaveCount(1);
+    await expect(
+      drawer.entries,
+      "the drawer should list the one publication of the row"
+    ).toHaveCount(1);
     const publication = drawer.entry(pubmedId);
     await expect(publication).toBeVisible();
     const titleLink = publication.getByRole("link").first();
     await expect(titleLink).toHaveText(/\S.{10,}/);
-    await expect(titleLink).toHaveAttribute("href", `https://europepmc.org/abstract/med/${pubmedId}`);
+    await expect(titleLink).toHaveAttribute(
+      "href",
+      `https://europepmc.org/abstract/med/${pubmedId}`
+    );
 
     await test.step("the abstract can be shown and hidden", async () => {
       await publication.getByRole("button", { name: "Show abstract" }).click();
@@ -324,15 +361,19 @@ test.describe("Target cancer hallmarks section", () => {
     await expect(hallmarks.publicationButton(0)).toHaveText(pubmedId);
   });
 
-  test("a target without cancer hallmarks does not render the section", async ({ page, testConfig }) => {
+  test("a target without cancer hallmarks does not render the section", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "withPharmacogenomics");
     const sectionsWithData = expectedSectionsFor(ensgId);
     const hallmarks = new CancerHallmarksSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record this target as having no hallmarks").not.toContain(
-      "cancerhallmarks"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record this target as having no hallmarks"
+    ).not.toContain("cancerhallmarks");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 

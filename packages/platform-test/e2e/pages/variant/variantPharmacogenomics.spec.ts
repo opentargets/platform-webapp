@@ -65,7 +65,9 @@ test.describe("Variant page: Pharmacogenetics", () => {
       await expect(section.title).toHaveText("Pharmacogenetics");
       await expect(section.description).toContainText("Genotypes in");
       await expect(section.description).toContainText(APOE);
-      await expect(section.description).toContainText("known to affect drug response. Source: ClinPGx");
+      await expect(section.description).toContainText(
+        "known to affect drug response. Source: ClinPGx"
+      );
       await expect(section.description.getByRole("link", { name: "ClinPGx" })).toHaveAttribute(
         "href",
         "https://www.pharmgkb.org/"
@@ -103,7 +105,8 @@ test.describe("Variant page: Pharmacogenetics", () => {
   }) => {
     const { section, pgx } = await open(page, PON1);
     for (const [index, expected] of pgx.rows.entries()) {
-      const cell = (column: keyof typeof PGX_COLUMN) => section.table.cell(index, PGX_COLUMN[column]);
+      const cell = (column: keyof typeof PGX_COLUMN) =>
+        section.table.cell(index, PGX_COLUMN[column]);
       await expect(cell("genotype")).toContainText(expected.genotypeId);
       await expect(cell("genotype")).toHaveText(/^\d+_\d+_[ACGT]+_[ACGT]+,[ACGT]+/);
 
@@ -122,7 +125,10 @@ test.describe("Variant page: Pharmacogenetics", () => {
       await expect(cell("phenotype")).toContainText(expected.phenotypeText as string);
       await expect(cell("category")).toHaveText(expected.pgxCategory as string);
       await expect(section.geneLink(index)).toHaveText("PON1");
-      await expect(section.geneLink(index)).toHaveAttribute("href", `/target/${expected.target?.id}`);
+      await expect(section.geneLink(index)).toHaveAttribute(
+        "href",
+        `/target/${expected.target?.id}`
+      );
       await expect(section.level(index)).toHaveText(`Level ${expected.evidenceLevel}`);
       await expect(section.sourceLink(index)).toHaveText("ClinPGx");
       await expect(section.sourceLink(index)).toHaveAttribute(
@@ -179,7 +185,11 @@ test.describe("Variant page: Pharmacogenetics", () => {
   test("the genotype and confidence headers explain themselves", async ({ page }) => {
     const { section } = await open(page, APOE);
 
-    await section.table.headers.filter({ hasText: "Genotype ID" }).locator("sup, svg").first().hover();
+    await section.table.headers
+      .filter({ hasText: "Genotype ID" })
+      .locator("sup, svg")
+      .first()
+      .hover();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toContainText("VCF-style(chr_pos_ref_allele1,allele2)");
     await expect(tooltip.getByRole("link", { name: "here" })).toHaveAttribute(
@@ -189,7 +199,11 @@ test.describe("Variant page: Pharmacogenetics", () => {
     await page.mouse.move(0, 0);
     await expect(tooltip).toBeHidden();
 
-    await section.table.headers.filter({ hasText: "Confidence level" }).locator("sup, svg").first().hover();
+    await section.table.headers
+      .filter({ hasText: "Confidence level" })
+      .locator("sup, svg")
+      .first()
+      .hover();
     await expect(tooltip).toContainText("As defined by");
     await expect(tooltip.getByRole("link", { name: "ClinPGx ClinAnn Levels" })).toHaveAttribute(
       "href",
@@ -230,7 +244,10 @@ test.describe("Variant page: Pharmacogenetics", () => {
 
     await test.step("no other column offers sorting", async () => {
       await expect(section.table.headers.locator("svg[data-icon^='arrow-']")).toHaveCount(1);
-      await expect(section.sortArrows("Confidence level")).toHaveAttribute("data-icon", "arrow-down");
+      await expect(section.sortArrows("Confidence level")).toHaveAttribute(
+        "data-icon",
+        "arrow-down"
+      );
     });
   });
 
@@ -302,13 +319,14 @@ test.describe("Variant page: Pharmacogenetics", () => {
           operationName?: string;
           variables?: { search?: { text?: string } };
         } | null;
-        return body?.operationName === PGX_OPERATION && body.variables?.search?.text === "clopidogrel";
+        return (
+          body?.operationName === PGX_OPERATION && body.variables?.search?.text === "clopidogrel"
+        );
       });
       await table.search("clopidogrel");
       const request = await searched;
-      const { fields } = (
-        request.postDataJSON() as { variables: { search: { fields: string[] } } }
-      ).variables.search;
+      const { fields } = (request.postDataJSON() as { variables: { search: { fields: string[] } } })
+        .variables.search;
       expect([...fields].sort()).toEqual([
         "DRUG_FROM_SOURCES",
         "DRUG_IDS",
@@ -377,10 +395,16 @@ test.describe("Variant page: Pharmacogenetics", () => {
     const entries = (pgx.rows[index].variantAnnotation ?? []).length;
 
     const cell = section.table.cell(index, PGX_COLUMN.directionality);
-    await expect(cell.getByTestId("directionality-drawer-trigger")).toHaveText(`${entries} entries`);
-    const withoutAnnotations = pgx.rows.findIndex((row) => (row.variantAnnotation ?? []).length === 0);
+    await expect(cell.getByTestId("directionality-drawer-trigger")).toHaveText(
+      `${entries} entries`
+    );
+    const withoutAnnotations = pgx.rows.findIndex(
+      (row) => (row.variantAnnotation ?? []).length === 0
+    );
     expect(withoutAnnotations).toBeGreaterThanOrEqual(0);
-    await expect(section.table.cell(withoutAnnotations, PGX_COLUMN.directionality)).toHaveText("N/A");
+    await expect(section.table.cell(withoutAnnotations, PGX_COLUMN.directionality)).toHaveText(
+      "N/A"
+    );
 
     await cell.getByTestId("directionality-drawer-trigger").click();
     const drawer = page.getByTestId("directionality-drawer");
@@ -400,7 +424,9 @@ test.describe("Variant page: Pharmacogenetics", () => {
     expect(index, "the first page holds a row with several publications").toBeGreaterThanOrEqual(0);
     const literature = pgx.rows[index].literature as string[];
 
-    const trigger = section.table.cell(index, PGX_COLUMN.literature).getByTestId("publications-drawer-trigger");
+    const trigger = section.table
+      .cell(index, PGX_COLUMN.literature)
+      .getByTestId("publications-drawer-trigger");
     await expect(trigger).toHaveText(`${literature.length} publications`);
     await trigger.click();
     const drawer = page.getByTestId("publications-drawer");

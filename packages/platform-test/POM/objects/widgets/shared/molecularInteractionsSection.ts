@@ -16,7 +16,12 @@ const INTERACTION_HEADER = /^Interaction\s*Host organism$/;
  * evidence; String shows a heatmap of evidence scores.
  */
 export class MolecularInteractionsSection extends ProfileSection {
-  static readonly SOURCES: readonly InteractionSource[] = ["intact", "signor", "reactome", "string"];
+  static readonly SOURCES: readonly InteractionSource[] = [
+    "intact",
+    "signor",
+    "reactome",
+    "string",
+  ];
 
   static readonly TAB_LABELS: Record<InteractionSource, RegExp> = {
     intact: /^IntAct\s*\d+ molecular interactions$/,
@@ -171,7 +176,9 @@ export class MolecularInteractionsSection extends ProfileSection {
     count: number
   ): Promise<void> {
     await expect(this.evidenceTitle(source)).toHaveText(
-      new RegExp(`^Interaction evidence of\\s*${targetSymbol}\\s*A\\s*\\+ ${escapeRegExp(interactor)}\\s*B$`)
+      new RegExp(
+        `^Interaction evidence of\\s*${targetSymbol}\\s*A\\s*\\+ ${escapeRegExp(interactor)}\\s*B$`
+      )
     );
     const evidence = this.evidence(source);
     if (count > 10) {

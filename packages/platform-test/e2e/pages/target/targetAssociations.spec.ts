@@ -12,8 +12,11 @@ import {
   BRAF_DISEASES,
   TARGET_WITH_FEW_ASSOCIATIONS,
 } from "../../../POM/objects/widgets/AOTFTarget/expectedDiseases";
+import {
+  associationTargets,
+  TargetAssociations,
+} from "../../../POM/objects/widgets/AOTFTarget/targetAssociations";
 import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
-import { associationTargets, TargetAssociations } from "../../../POM/objects/widgets/AOTFTarget/targetAssociations";
 
 const DOCS = "https://platform-docs.opentargets.org/evidence#";
 const DISEASE_ID = /^(MONDO|EFO|OTAR|HP|Orphanet|OBA|GO|NCIT|DOID|MP)_\w+$/;
@@ -40,44 +43,48 @@ function isEvidenceRequestFor(request: Request, ensgId: string, efoId: string): 
  * disease, a column per data source.
  */
 test.describe("Target associations: table", () => {
-  test(
-    "lists the diseases of the target by descending score, with a page header and tabs @smoke",
-    async ({ page, testConfig }) => {
-      const targetId = associationTargets(testConfig).primary;
-      const aotf = new TargetAssociations(page);
-      await aotf.gotoTarget(targetId);
+  test("lists the diseases of the target by descending score, with a page header and tabs @smoke", async ({
+    page,
+    testConfig,
+  }) => {
+    const targetId = associationTargets(testConfig).primary;
+    const aotf = new TargetAssociations(page);
+    await aotf.gotoTarget(targetId);
 
-      await test.step("page header and tabs", async () => {
-        await expect(aotf.pageTitle).toHaveText("BRAF");
-        await expect(page).toHaveTitle("Diseases associated with BRAF | Open Targets Platform");
-        await expect(aotf.associationsTab).toHaveAttribute("aria-selected", "true");
-        await expect(aotf.profileTab).toHaveAttribute("aria-selected", "false");
-        await expect(aotf.associationsTab).toHaveAttribute("href", `/target/${targetId}/associations`);
-        await expect(aotf.profileTab).toHaveAttribute("href", `/target/${targetId}`);
-      });
+    await test.step("page header and tabs", async () => {
+      await expect(aotf.pageTitle).toHaveText("BRAF");
+      await expect(page).toHaveTitle("Diseases associated with BRAF | Open Targets Platform");
+      await expect(aotf.associationsTab).toHaveAttribute("aria-selected", "true");
+      await expect(aotf.profileTab).toHaveAttribute("aria-selected", "false");
+      await expect(aotf.associationsTab).toHaveAttribute(
+        "href",
+        `/target/${targetId}/associations`
+      );
+      await expect(aotf.profileTab).toHaveAttribute("href", `/target/${targetId}`);
+    });
 
-      await test.step("25 distinct diseases, highest score first", async () => {
-        await expect(aotf.rows()).toHaveCount(25);
-        const names = await aotf.rowNames();
-        for (const name of names) expect(name.length, "a row should name its disease").toBeGreaterThan(2);
-        expect(new Set(names).size, "a disease should be listed once").toBe(25);
-        await aotf.expectSortedBy("score");
-        const scores = await aotf.columnScores("score");
-        for (const score of scores) {
-          expect(score).toBeGreaterThan(0);
-          expect(score).toBeLessThanOrEqual(1);
-        }
-        expect(names, "melanoma is one of the strongest BRAF associations").toContain("melanoma");
-      });
+    await test.step("25 distinct diseases, highest score first", async () => {
+      await expect(aotf.rows()).toHaveCount(25);
+      const names = await aotf.rowNames();
+      for (const name of names)
+        expect(name.length, "a row should name its disease").toBeGreaterThan(2);
+      expect(new Set(names).size, "a disease should be listed once").toBe(25);
+      await aotf.expectSortedBy("score");
+      const scores = await aotf.columnScores("score");
+      for (const score of scores) {
+        expect(score).toBeGreaterThan(0);
+        expect(score).toBeLessThanOrEqual(1);
+      }
+      expect(names, "melanoma is one of the strongest BRAF associations").toContain("melanoma");
+    });
 
-      await test.step("the footer counts the associations", async () => {
-        const { from, to, total } = await aotf.displayedRange();
-        expect([from, to]).toEqual([1, 25]);
-        expect(total, "BRAF has more than one page of diseases").toBeGreaterThan(100);
-        await expect(aotf.pageSizeSelect).toHaveText("25");
-      });
-    }
-  );
+    await test.step("the footer counts the associations", async () => {
+      const { from, to, total } = await aotf.displayedRange();
+      expect([from, to]).toEqual([1, 25]);
+      expect(total, "BRAF has more than one page of diseases").toBeGreaterThan(100);
+      await expect(aotf.pageSizeSelect).toHaveText("25");
+    });
+  });
 
   test("shows Disease, Association Score and every data source column, in order", async ({
     page,
@@ -119,7 +126,10 @@ test.describe("Target associations: table", () => {
 
     for (const column of DATA_SOURCE_COLUMNS) {
       const link = aotf.docsLink(column.id);
-      await expect(link, `${column.label} docs link`).toHaveAttribute("href", `${DOCS}${column.docsAnchor}`);
+      await expect(link, `${column.label} docs link`).toHaveAttribute(
+        "href",
+        `${DOCS}${column.docsAnchor}`
+      );
       await expect(link, `${column.label} docs link`).toHaveAttribute("target", "_blank");
       await expect(link, `${column.label} docs link`).toHaveAttribute("rel", /noreferrer/);
     }
@@ -131,7 +141,9 @@ test.describe("Target associations: table", () => {
     );
     expect(testIds).toEqual(DATA_SOURCE_AGGREGATIONS.map(aggregationTestId));
     await aotf.aggregationButton("Somatic mutations").hover();
-    await expect(page.getByRole("tooltip", { name: "Somatic mutations", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("tooltip", { name: "Somatic mutations", exact: true })
+    ).toBeVisible();
   });
 
   test("score cells hold a two decimal score, and the recorded diseases have scores in exactly their recorded data sources", async ({
@@ -147,7 +159,9 @@ test.describe("Target associations: table", () => {
       const perRow = await aotf.rows().evaluateAll((rows) =>
         rows.map((row) => ({
           scored: [
-            ...row.querySelectorAll("[data-testid^='score-cell-']:not([data-testid='score-cell-score'])"),
+            ...row.querySelectorAll(
+              "[data-testid^='score-cell-']:not([data-testid='score-cell-score'])"
+            ),
           ].map((cell) => ({
             column: (cell.getAttribute("data-testid") ?? "").replace("score-cell-", ""),
             score: cell.getAttribute("data-score"),
@@ -159,7 +173,10 @@ test.describe("Target associations: table", () => {
         }))
       );
       for (const [index, row] of perRow.entries()) {
-        expect(row.scored.length, `row ${index} should have a score in some data source`).toBeGreaterThan(0);
+        expect(
+          row.scored.length,
+          `row ${index} should have a score in some data source`
+        ).toBeGreaterThan(0);
         expect(
           [...row.scored.map((cell) => cell.column), ...row.empty].sort(),
           `row ${index} should have exactly one cell per data source`
@@ -275,7 +292,10 @@ test.describe("Target associations: sorting", () => {
 });
 
 test.describe("Target associations: pagination", () => {
-  test("next and previous move through pages of different diseases", async ({ page, testConfig }) => {
+  test("next and previous move through pages of different diseases", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(associationTargets(testConfig).primary);
     const { total } = await aotf.displayedRange();
@@ -301,7 +321,10 @@ test.describe("Target associations: pagination", () => {
     await expect(aotf.previousPageButton).toBeDisabled();
   });
 
-  test("the last page shows the remaining diseases and disables next", async ({ page, testConfig }) => {
+  test("the last page shows the remaining diseases and disables next", async ({
+    page,
+    testConfig,
+  }) => {
     const targetId = associationTargets(testConfig).primary;
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(targetId);
@@ -316,7 +339,10 @@ test.describe("Target associations: pagination", () => {
     await expect(aotf.previousPageButton).toBeEnabled();
   });
 
-  test("a page beyond the last one shows the empty state, not stale rows", async ({ page, testConfig }) => {
+  test("a page beyond the last one shows the empty state, not stale rows", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new TargetAssociations(page);
     const { primary } = associationTargets(testConfig);
     // The target does have associations: only the page asked for is out of range.
@@ -342,7 +368,13 @@ test.describe("Target associations: pagination", () => {
     const twentyFive = await aotf.rowNames();
 
     await aotf.pageSizeSelect.click();
-    await expect(page.getByRole("listbox").getByRole("option")).toHaveText(["10", "25", "50", "200", "500"]);
+    await expect(page.getByRole("listbox").getByRole("option")).toHaveText([
+      "10",
+      "25",
+      "50",
+      "200",
+      "500",
+    ]);
     await page.getByRole("option", { name: "10", exact: true }).click();
     await expect(aotf.rows()).toHaveCount(10);
     await aotf.expectUrlParam("pageSize", "10");
@@ -372,7 +404,9 @@ test.describe("Target associations: pagination", () => {
     await expect(aotf.nextPageButton).toBeEnabled();
   });
 
-  test("a target with few associations has one short page and nothing to page to", async ({ page }) => {
+  test("a target with few associations has one short page and nothing to page to", async ({
+    page,
+  }) => {
     const { id, total } = TARGET_WITH_FEW_ASSOCIATIONS;
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(id);
@@ -400,7 +434,8 @@ test.describe("Target associations: name search", () => {
     const matches = await aotf.expectTotalBelow(total);
     const names = await aotf.rowNames();
     expect(names.length).toBe(Math.min(matches, 25));
-    for (const name of names) expect(name.toLowerCase(), "every row should match the search").toContain("melanoma");
+    for (const name of names)
+      expect(name.toLowerCase(), "every row should match the search").toContain("melanoma");
     expect(names).toContain("melanoma");
     await expect(aotf.displayedRows).toHaveText(new RegExp(`^1–${names.length} of ${matches}$`));
     await aotf.expectSortedBy("score");
@@ -428,7 +463,10 @@ test.describe("Target associations: name search", () => {
     await expect(aotf.displayedRows).toHaveText("0–0 of 0");
     await expect(aotf.nextPageButton).toBeDisabled();
     await expect(aotf.filterChip("entity-search")).toHaveText('"zzzznotadisease"');
-    await expect(aotf.headerLabel("name"), "the search box stays so it can be changed").toBeVisible();
+    await expect(
+      aotf.headerLabel("name"),
+      "the search box stays so it can be changed"
+    ).toBeVisible();
 
     await aotf.nameFilter.fill("");
     await aotf.expectUrlParam("q", "");
@@ -497,7 +535,9 @@ test.describe("Target associations: filters", () => {
     await aotf.excludeMeasurementsChip.locator(".MuiChip-deleteIcon").click();
     await expect(aotf.excludeMeasurementsChip).toHaveCount(0);
     await expect(aotf.rows()).toHaveCount(totalWithMeasurements);
-    await expect(aotf.displayedRows).toHaveText(`1–${totalWithMeasurements} of ${totalWithMeasurements}`);
+    await expect(aotf.displayedRows).toHaveText(
+      `1–${totalWithMeasurements} of ${totalWithMeasurements}`
+    );
   });
 
   test("the filter popover lists the disease facet categories, and picking a facet filters the table", async ({
@@ -522,7 +562,9 @@ test.describe("Target associations: filters", () => {
       await aotf.facetSearchInput.fill("cancer");
       await expect(aotf.facetOptions.first()).toBeVisible();
       for (const suggestion of await aotf.facetOptions.allInnerTexts()) {
-        expect(suggestion.toLowerCase(), "a suggestion should match the search").toContain("cancer");
+        expect(suggestion.toLowerCase(), "a suggestion should match the search").toContain(
+          "cancer"
+        );
         expect(suggestion).toMatch(/\bin (Disease|Therapeutic Area)$/);
       }
       await aotf.facetOptions.filter({ hasText: /^cancer\s*in Disease$/ }).click();
@@ -556,7 +598,10 @@ test.describe("Target associations: filters", () => {
     });
   });
 
-  test("a facet in the URL is applied on load and survives a reload", async ({ page, testConfig }) => {
+  test("a facet in the URL is applied on load and survives a reload", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(associationTargets(testConfig).primary);
     const { total } = await aotf.displayedRange();
@@ -567,7 +612,9 @@ test.describe("Target associations: filters", () => {
     const facets = aotf.urlParam("facets") as string;
     const filtered = await aotf.expectTotalBelow(total);
 
-    await page.goto(TargetAssociations.targetPath(associationTargets(testConfig).primary, { facets }));
+    await page.goto(
+      TargetAssociations.targetPath(associationTargets(testConfig).primary, { facets })
+    );
     await aotf.expectLoaded();
     await aotf.expectTotal(filtered);
     await expect(aotf.filterChips.filter({ hasText: "cancer" })).toBeVisible();
@@ -585,7 +632,9 @@ test.describe("Target associations: filters", () => {
     await expect(aotf.weightSliders).toHaveCount(DATA_SOURCE_COLUMNS.length);
     await expect(aotf.requiredCheckboxes).toHaveCount(DATA_SOURCE_COLUMNS.length);
     for (const column of DATA_SOURCE_COLUMNS) {
-      await expect(aotf.weightSlider(column.id), `${column.label} weight`).toHaveValue(String(column.weight));
+      await expect(aotf.weightSlider(column.id), `${column.label} weight`).toHaveValue(
+        String(column.weight)
+      );
       await expect(aotf.requiredCheckbox(column.id)).not.toBeChecked();
     }
 
@@ -813,11 +862,15 @@ test.describe("Target associations: pinning", () => {
     await expect(aotf.bodyIndicator("pinning")).toHaveText("Pinned (1 of 1)");
     await expect(aotf.bodyIndicator("core")).toHaveText(`All (${total})`);
     await expect(aotf.filterChip("pinned")).toHaveText("Pinned");
-    expect(await aotf.rowNames(), "pinning does not remove the row from the list").toEqual(coreNames);
+    expect(await aotf.rowNames(), "pinning does not remove the row from the list").toEqual(
+      coreNames
+    );
 
     await test.step("a pinned row's menu unpins it", async () => {
       await aotf.openRowMenu(aotf.rowByName(first, "pinning"));
-      await expect(aotf.rowMenu.getByRole("menuitem", { name: "Pin disease", exact: true })).toHaveCount(0);
+      await expect(
+        aotf.rowMenu.getByRole("menuitem", { name: "Pin disease", exact: true })
+      ).toHaveCount(0);
       await aotf.rowMenuItem("Unpin disease").click();
       await expect(aotf.rows("pinning")).toHaveCount(0);
       await expect(aotf.bodyIndicator("pinning")).toHaveCount(0);
@@ -832,7 +885,10 @@ test.describe("Target associations: pinning", () => {
   }) => {
     const disease = BRAF_DISEASES.noonan;
     const aotf = new TargetAssociations(page);
-    await aotf.gotoTarget(associationTargets(testConfig).primary, { pinned: disease.id, page: "3" });
+    await aotf.gotoTarget(associationTargets(testConfig).primary, {
+      pinned: disease.id,
+      page: "3",
+    });
     await aotf.expectLoaded(1, "pinning");
     await expect(aotf.rowByName(disease.name, "pinning")).toHaveCount(1);
     await expect(aotf.bodyIndicator("pinning")).toHaveText("Pinned (1 of 1)");
@@ -850,7 +906,10 @@ test.describe("Target associations: pinning", () => {
 });
 
 test.describe("Target associations: export", () => {
-  test("the download dialog names the export and offers JSON and TSV", async ({ page, testConfig }) => {
+  test("the download dialog names the export and offers JSON and TSV", async ({
+    page,
+    testConfig,
+  }) => {
     const targetId = associationTargets(testConfig).primary;
     const aotf = new TargetAssociations(page);
     await aotf.gotoTarget(targetId);
@@ -865,14 +924,19 @@ test.describe("Target associations: export", () => {
 
     const toggle = dialog.getByRole("button", { name: "Advanced export options:" });
     await toggle.click();
-    await expect(dialog.getByRole("combobox", { name: "Select associations data type" })).toHaveText(
+    await expect(
+      dialog.getByRole("combobox", { name: "Select associations data type" })
+    ).toHaveText(
       "Clinical, Genetic association, Somatic mutations, Affected pathway, Literature, RNA expression, Animal model"
     );
     await expect(
       dialog.getByRole("combobox", { name: "Select prioritisation data type" }),
       "prioritisation data belongs to the disease view"
     ).toHaveCount(0);
-    await expect(dialog.getByRole("checkbox", { name: "Only pinned rows" }), "nothing is pinned").toBeDisabled();
+    await expect(
+      dialog.getByRole("checkbox", { name: "Only pinned rows" }),
+      "nothing is pinned"
+    ).toBeDisabled();
     await aotf.dismissOverlay(dialog);
   });
 
@@ -898,10 +962,15 @@ test.describe("Target associations: export", () => {
     const fileName = new RegExp(`^OT-${targetId}-associated-diseases-.+-v\\d+_\\d+\\.`);
 
     await test.step("TSV", async () => {
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "TSV", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "TSV", exact: true })
+      );
       expect(download.suggestedFilename()).toMatch(fileName);
       expect(download.suggestedFilename()).toMatch(/\.tsv$/);
-      const [headerLine, ...lines] = (await downloadedText(download)).split("\n").filter((line) => line.length > 0);
+      const [headerLine, ...lines] = (await downloadedText(download))
+        .split("\n")
+        .filter((line) => line.length > 0);
       const header = headerLine.split("\t");
       expect(header.slice(0, 3)).toEqual(["disease", "globalScore", "isPinned"]);
       expect(lines).toHaveLength(2);
@@ -913,17 +982,27 @@ test.describe("Target associations: export", () => {
       expect(rows.map((row) => row.disease).sort()).toEqual([melanoma.name, noonan.name].sort());
       const exported = rows.find((row) => row.disease === melanoma.name);
       expect(exported?.isPinned).toBe("true");
-      expect(Number(exported?.globalScore).toFixed(2), "the score matches the table").toBe(melanomaScore);
-      expect(Number(exported?.clinicalPrecedence), "melanoma has clinical precedence").toBeGreaterThan(0);
+      expect(Number(exported?.globalScore).toFixed(2), "the score matches the table").toBe(
+        melanomaScore
+      );
+      expect(
+        Number(exported?.clinicalPrecedence),
+        "melanoma has clinical precedence"
+      ).toBeGreaterThan(0);
       expect(exported?.gwasCredibleSets, "melanoma has no GWAS evidence").toBe("No data");
     });
 
     await test.step("JSON", async () => {
-      const download = await clickAndDownload(aotf, dialog.getByRole("button", { name: "JSON", exact: true }));
+      const download = await clickAndDownload(
+        aotf,
+        dialog.getByRole("button", { name: "JSON", exact: true })
+      );
       expect(download.suggestedFilename()).toMatch(fileName);
       expect(download.suggestedFilename()).toMatch(/\.json$/);
       const records = JSON.parse(await downloadedText(download)) as Record<string, unknown>[];
-      expect(records.map((record) => record.disease).sort()).toEqual([melanoma.name, noonan.name].sort());
+      expect(records.map((record) => record.disease).sort()).toEqual(
+        [melanoma.name, noonan.name].sort()
+      );
       for (const record of records) {
         expect(record.isPinned).toBe(true);
         expect(typeof record.globalScore).toBe("number");
@@ -981,7 +1060,10 @@ test.describe("Target associations: navigation and URL state", () => {
     await aotf.profileTab.click();
     await expect(page).toHaveURL(new RegExp(`/target/${targetId}$`));
     await expect(aotf.profileTab).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByTestId("section-drugs"), "the profile page shows its sections").toBeVisible({
+    await expect(
+      page.getByTestId("section-drugs"),
+      "the profile page shows its sections"
+    ).toBeVisible({
       timeout: 45_000,
     });
     await expect(aotf.root).toHaveCount(0);
@@ -1038,7 +1120,10 @@ test.describe("Target associations: navigation and URL state", () => {
   }) => {
     const { other } = associationTargets(testConfig);
     const aotf = new TargetAssociations(page);
-    await aotf.gotoTarget(associationTargets(testConfig).primary, { sort: "europepmc:desc", q: "cancer" });
+    await aotf.gotoTarget(associationTargets(testConfig).primary, {
+      sort: "europepmc:desc",
+      q: "cancer",
+    });
     await expect(aotf.nameFilter).toHaveValue("cancer");
 
     await aotf.gotoTarget(other);

@@ -285,7 +285,10 @@ export async function stubGtexPortal(page: Page): Promise<string[]> {
         data: STUBBED_GTEX_TISSUES.map((tissueSiteDetailId, index) => ({
           tissueSiteDetailId,
           // nine values around a median of (index + 1) * 10, plus one clear outlier
-          data: [...Array.from({ length: 9 }, (_, i) => (index + 1) * 10 + i - 4), (index + 1) * 40],
+          data: [
+            ...Array.from({ length: 9 }, (_, i) => (index + 1) * 10 + i - 4),
+            (index + 1) * 40,
+          ],
         })),
       }),
     });

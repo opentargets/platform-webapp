@@ -15,7 +15,12 @@ import { expectSections } from "../../../utils/sections";
  */
 const TEP_TARGETS = [
   { ensgId: "ENSG00000196363", symbol: "WDR5", name: "WD repeat domain 5", uniprotId: "P61964" },
-  { ensgId: "ENSG00000156802", symbol: "ATAD2", name: "ATPase family AAA domain containing 2", uniprotId: "Q6PL18" },
+  {
+    ensgId: "ENSG00000156802",
+    symbol: "ATAD2",
+    name: "ATPase family AAA domain containing 2",
+    uniprotId: "Q6PL18",
+  },
 ] as const;
 
 const TEP_TEXT = /Target Enabling Package|\bTEPs?\b/i;
@@ -35,16 +40,25 @@ function recordQueries(page: Page): string[] {
 
 test.describe("Target page: no Target Enabling Package", () => {
   for (const { ensgId, symbol, name, uniprotId } of TEP_TARGETS) {
-    test(`${symbol}: the header and the profile render with no TEP link, chip or text`, async ({ page }) => {
+    test(`${symbol}: the header and the profile render with no TEP link, chip or text`, async ({
+      page,
+    }) => {
       const target = new TargetPage(page);
       await target.goto(ensgId);
 
       await test.step("the header is intact: names, and the four cross-references only", async () => {
         await expect(target.symbol).toHaveText(symbol);
         await expect(target.name).toHaveText(name);
-        await expect(target.externalLinks.getByRole("link")).toHaveText([ensgId, uniprotId, symbol, symbol]);
+        await expect(target.externalLinks.getByRole("link")).toHaveText([
+          ensgId,
+          uniprotId,
+          symbol,
+          symbol,
+        ]);
         await expect(target.externalLinks).toHaveText(
-          new RegExp(`^Ensembl:\\s*${ensgId}\\s*UniProt:\\s*${uniprotId}\\s*GeneCards:\\s*${symbol}\\s*HGNC:\\s*${symbol}$`)
+          new RegExp(
+            `^Ensembl:\\s*${ensgId}\\s*UniProt:\\s*${uniprotId}\\s*GeneCards:\\s*${symbol}\\s*HGNC:\\s*${symbol}$`
+          )
         );
       });
 

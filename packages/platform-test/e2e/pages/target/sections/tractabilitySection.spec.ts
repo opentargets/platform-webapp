@@ -21,10 +21,9 @@ test.describe("Target tractability section", () => {
     await expect(tractability.description).toHaveText(
       "Target tractability assessment for BRAF. Source: Open Targets."
     );
-    await expect(tractability.description.getByRole("link", { name: "Open Targets" })).toHaveAttribute(
-      "href",
-      "https://platform-docs.opentargets.org/target/tractability"
-    );
+    await expect(
+      tractability.description.getByRole("link", { name: "Open Targets" })
+    ).toHaveAttribute("href", "https://platform-docs.opentargets.org/target/tractability");
   });
 
   test("lists the four modalities in order, each with its full set of assessment buckets", async ({
@@ -74,9 +73,13 @@ test.describe("Target tractability section", () => {
 
     for (const modality of TRACTABILITY_MODALITIES) {
       await test.step(modality.title, async () => {
-        const ofModality = assessments.filter((assessment) => assessment.modality === modality.code);
+        const ofModality = assessments.filter(
+          (assessment) => assessment.modality === modality.code
+        );
         const met = ofModality.filter((assessment) => assessment.value).map(({ label }) => label);
-        const notMet = ofModality.filter((assessment) => !assessment.value).map(({ label }) => label);
+        const notMet = ofModality
+          .filter((assessment) => !assessment.value)
+          .map(({ label }) => label);
 
         await expect(tractability.enabledItems(modality.key)).toHaveText(met);
         await expect(tractability.disabledItems(modality.key)).toHaveText(notMet);

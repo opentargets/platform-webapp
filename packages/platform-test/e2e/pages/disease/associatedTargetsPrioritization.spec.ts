@@ -8,7 +8,8 @@ import {
 } from "../../../POM/objects/widgets/AOTF/columns";
 import { expectedAssociationsFor } from "../../../POM/objects/widgets/AOTF/expectedAssociations";
 
-const PRIORITISATION_DOCS = /^https:\/\/platform-docs\.opentargets\.org\/web-interface\/target-prioritisation#[a-z-]+$/;
+const PRIORITISATION_DOCS =
+  /^https:\/\/platform-docs\.opentargets\.org\/web-interface\/target-prioritisation#[a-z-]+$/;
 const PRIORITISATION_IDS = PRIORITISATION_COLUMNS.map((column) => column.id);
 
 /**
@@ -33,9 +34,11 @@ const FACTOR_TOOLTIPS: Record<string, string> = {
   isCancerDriverGene: "Target is classified as an Oncogene and/or Tumor Suppressor Gene",
   paralogMaxIdentityPercentage: "Paralog maximum identity percentage",
   tissueSpecificity: "CELLEX calculation of tissue-specific target expression",
-  tissueDistribution: "Distribution of any detectable baseline expression for the target across tissues",
+  tissueDistribution:
+    "Distribution of any detectable baseline expression for the target across tissues",
   celltypeSpecificity: "CELLEX calculation of cell type-specific target expression",
-  celltypeDistribution: "Distribution of any detectable baseline expression for the target across cell types",
+  celltypeDistribution:
+    "Distribution of any detectable baseline expression for the target across cell types",
 };
 
 /**
@@ -62,9 +65,14 @@ test.describe("Disease associations: target prioritisation view", () => {
         ...PRIORITISATION_COLUMNS.map((column) => column.label),
       ]);
       await expect(aotf.rows()).toHaveCount(25);
-      expect(await aotf.rowNames(), "the same targets are ranked the same way").toEqual(associationsRows);
+      expect(await aotf.rowNames(), "the same targets are ranked the same way").toEqual(
+        associationsRows
+      );
       for (const column of DATA_SOURCE_COLUMNS) {
-        await expect(aotf.headerLabel(column.id), `${column.label} is not a prioritisation factor`).toHaveCount(0);
+        await expect(
+          aotf.headerLabel(column.id),
+          `${column.label} is not a prioritisation factor`
+        ).toHaveCount(0);
       }
     });
 
@@ -91,7 +99,12 @@ test.describe("Disease associations: target prioritisation view", () => {
     await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
     await aotf.expectLoaded(25);
 
-    expect(PRIORITISATION_AGGREGATIONS).toEqual(["precedence", "tractability", "doability", "safety"]);
+    expect(PRIORITISATION_AGGREGATIONS).toEqual([
+      "precedence",
+      "tractability",
+      "doability",
+      "safety",
+    ]);
     const buttonIds = await aotf.aggregationButtons.evaluateAll((buttons) =>
       buttons.map((button) => button.getAttribute("data-testid"))
     );
@@ -108,7 +121,9 @@ test.describe("Disease associations: target prioritisation view", () => {
     // Hovering a header explains the factor.
     await aotf.headerLabel("maxClinicalStage").hover();
     await expect(
-      page.getByRole("tooltip").filter({ hasText: "Target is in clinical trials for any indication" })
+      page
+        .getByRole("tooltip")
+        .filter({ hasText: "Target is in clinical trials for any indication" })
     ).toBeVisible();
   });
 
@@ -125,13 +140,18 @@ test.describe("Disease associations: target prioritisation view", () => {
       const cells = row.locator(
         "[data-testid^='score-cell-']:not([data-testid='score-cell-score']), [data-testid^='empty-cell-']"
       );
-      await expect(cells, `row ${index} should have one cell per factor`).toHaveCount(PRIORITISATION_IDS.length);
+      await expect(cells, `row ${index} should have one cell per factor`).toHaveCount(
+        PRIORITISATION_IDS.length
+      );
       await expect(aotf.dataCell(row, "score")).toHaveAttribute("aria-label", /^Score: \d\.\d{2}$/);
     }
 
-    const scores = await aotf.rows().locator("[data-testid^='score-cell-'][data-score]").evaluateAll((cells) =>
-      cells.map((cell) => Number.parseFloat(cell.getAttribute("data-score") ?? "NaN"))
-    );
+    const scores = await aotf
+      .rows()
+      .locator("[data-testid^='score-cell-'][data-score]")
+      .evaluateAll((cells) =>
+        cells.map((cell) => Number.parseFloat(cell.getAttribute("data-score") ?? "NaN"))
+      );
     expect(scores.length, "the table should have scored cells").toBeGreaterThan(25);
     for (const score of scores) {
       expect(Number.isNaN(score)).toBe(false);
@@ -139,8 +159,14 @@ test.describe("Disease associations: target prioritisation view", () => {
       expect(score).toBeLessThanOrEqual(1);
     }
     // Some factors are favourable (positive) and some unfavourable (negative) for the top targets.
-    expect(scores.some((score) => score > 0), "some factor should be favourable").toBe(true);
-    expect(scores.some((score) => score < 0), "some factor should be unfavourable").toBe(true);
+    expect(
+      scores.some((score) => score > 0),
+      "some factor should be favourable"
+    ).toBe(true);
+    expect(
+      scores.some((score) => score < 0),
+      "some factor should be unfavourable"
+    ).toBe(true);
 
     await expect(aotf.rows().first().getByTestId("name-cell")).not.toBeEmpty();
     const first = aotf.row(0);
@@ -171,7 +197,10 @@ test.describe("Disease associations: target prioritisation view", () => {
     }
   });
 
-  test("a cell tooltip gives the score it shows, and an empty cell says No data", async ({ page, testConfig }) => {
+  test("a cell tooltip gives the score it shows, and an empty cell says No data", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
     await aotf.expectLoaded(25);
@@ -217,26 +246,34 @@ test.describe("Disease associations: target prioritisation view", () => {
     const firstPage = graphqlMonitor
       .named("DiseaseAssociationsQuery")
       .filter((request) => request.variables.index === 0 && request.data !== undefined);
-    expect(firstPage.length, "the first page of associations should have been requested").toBeGreaterThan(0);
+    expect(
+      firstPage.length,
+      "the first page of associations should have been requested"
+    ).toBeGreaterThan(0);
     const query = firstPage[0];
-    expect(query.variables, "the app should leave indirectWeight to the API default").not.toHaveProperty(
-      "indirectWeight"
-    );
+    expect(
+      query.variables,
+      "the app should leave indirectWeight to the API default"
+    ).not.toHaveProperty("indirectWeight");
     type Row = { target: { approvedSymbol: string }; score: number };
-    const rows = (query.data as { disease: { associatedTargets: { rows: Row[] } } }).disease.associatedTargets.rows;
+    const rows = (query.data as { disease: { associatedTargets: { rows: Row[] } } }).disease
+      .associatedTargets.rows;
     expect(rows.length).toBeGreaterThan(0);
 
     const names = await aotf.rowNames();
     for (const [index, { target, score }] of rows.slice(0, 25).entries()) {
       expect(names[index], `row ${index} is the API's row ${index}`).toBe(target.approvedSymbol);
-      await expect(aotf.dataCell(aotf.row(index), "score"), `${target.approvedSymbol} association score`).toHaveAttribute(
-        "data-score",
-        score.toFixed(2)
-      );
+      await expect(
+        aotf.dataCell(aotf.row(index), "score"),
+        `${target.approvedSymbol} association score`
+      ).toHaveAttribute("data-score", score.toFixed(2));
     }
   });
 
-  test("the footer legend switches to the prioritisation indicator scale", async ({ page, testConfig }) => {
+  test("the footer legend switches to the prioritisation indicator scale", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
     await aotf.expectLoaded(25);
@@ -252,7 +289,10 @@ test.describe("Disease associations: target prioritisation view", () => {
     await expect(aotf.legend).not.toContainText("Prioritisation indicator");
   });
 
-  test("the factor columns are not sortable, the association score is", async ({ page, testConfig }) => {
+  test("the factor columns are not sortable, the association score is", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(testConfig.disease.primary, { table: "prioritisations" });
     await aotf.expectLoaded(25);
@@ -319,9 +359,9 @@ test.describe("Disease associations: target prioritisation view", () => {
       expect((await aotf.displayedRange()).from).toBe(26);
       await aotf.expectUrlParam("table", "prioritisations");
       await expect(aotf.headerLabel("hasLigand")).toBeVisible();
-      await expect(aotf.row(0).locator("[data-testid^='score-cell-'], [data-testid^='empty-cell-']")).toHaveCount(
-        PRIORITISATION_IDS.length + 1
-      );
+      await expect(
+        aotf.row(0).locator("[data-testid^='score-cell-'], [data-testid^='empty-cell-']")
+      ).toHaveCount(PRIORITISATION_IDS.length + 1);
     });
 
     await test.step("search narrows the rows to matching targets", async () => {
@@ -357,7 +397,9 @@ test.describe("Disease associations: target prioritisation view", () => {
       const row = aotf.rowByName(symbol, "pinning");
       await expect(row).toHaveCount(1);
       await expect(
-        row.locator("[data-testid^='score-cell-']:not([data-testid='score-cell-score']), [data-testid^='empty-cell-']"),
+        row.locator(
+          "[data-testid^='score-cell-']:not([data-testid='score-cell-score']), [data-testid^='empty-cell-']"
+        ),
         `${symbol} should have a cell per factor`
       ).toHaveCount(PRIORITISATION_IDS.length);
     }

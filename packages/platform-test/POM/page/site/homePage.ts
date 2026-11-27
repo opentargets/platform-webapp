@@ -30,7 +30,9 @@ export class HomePage {
 
   /** The suggestions listed in the search dialog before anything is typed. */
   get dialogSuggestions(): Locator {
-    return this.page.getByTestId("global-search-group-suggestions").getByTestId("global-search-suggestion-item");
+    return this.page
+      .getByTestId("global-search-group-suggestions")
+      .getByTestId("global-search-suggestion-item");
   }
 
   async openSearch(): Promise<void> {
@@ -58,13 +60,26 @@ export class HomePage {
   async chipFacts(): Promise<{ label: string; href: string; entity: SearchEntity; id: string }[]> {
     await expect(this.chips).toHaveCount(CHIP_ENTITIES.length * 2);
     const raw = await this.chips.evaluateAll((links) =>
-      links.map((link) => ({ label: link.textContent ?? "", href: link.getAttribute("href") ?? "" }))
+      links.map((link) => ({
+        label: link.textContent ?? "",
+        href: link.getAttribute("href") ?? "",
+      }))
     );
-    return raw.map(({ label, href }) => ({ label, href, entity: entityOfHref(href), id: idOfHref(href) }));
+    return raw.map(({ label, href }) => ({
+      label,
+      href,
+      entity: entityOfHref(href),
+      id: idOfHref(href),
+    }));
   }
 
   /** Assert a chip link is one of the app's suggestions of its type, with the right route. */
-  expectChipIsSuggestion(chip: { label: string; href: string; entity: SearchEntity; id: string }): void {
+  expectChipIsSuggestion(chip: {
+    label: string;
+    href: string;
+    entity: SearchEntity;
+    id: string;
+  }): void {
     expect(chip.href, `route of chip "${chip.label}"`).toMatch(ENTITY_ROUTE_PATTERN[chip.entity]);
     expect(chip.label, `label of the ${chip.entity} suggestion ${chip.id}`).toBe(
       suggestionFor(chip.entity, chip.id)?.name

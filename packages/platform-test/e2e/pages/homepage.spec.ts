@@ -8,7 +8,7 @@ import {
   type MetaVersions,
   MONTH_NAMES,
 } from "../../POM/page/site/siteData";
-import { SiteShell, failMeta, stubMeta, waitForMeta } from "../../POM/page/site/siteShell";
+import { failMeta, SiteShell, stubMeta, waitForMeta } from "../../POM/page/site/siteShell";
 
 /** The text the home page shows for a data release, as its code builds it. */
 function lastUpdateText({ data }: MetaVersions): string {
@@ -17,7 +17,9 @@ function lastUpdateText({ data }: MetaVersions): string {
 }
 
 test.describe("Home page", () => {
-  test("renders the search box, suggestions, menu, about text and footer @smoke", async ({ page }) => {
+  test("renders the search box, suggestions, menu, about text and footer @smoke", async ({
+    page,
+  }) => {
     const home = new HomePage(page);
     const shell = new SiteShell(page);
     await home.goto();
@@ -44,7 +46,13 @@ test.describe("Home page", () => {
 
     await test.step("the footer closes the page", async () => {
       await expect(shell.footer).toBeVisible();
-      await expect(shell.footerHeadings).toHaveText(["About", "Help", "Follow us", "Partners", "About Open Targets"]);
+      await expect(shell.footerHeadings).toHaveText([
+        "About",
+        "Help",
+        "Follow us",
+        "Partners",
+        "About Open Targets",
+      ]);
     });
   });
 
@@ -68,7 +76,8 @@ test.describe("Home page", () => {
     });
 
     const TITLE: Record<SearchEntity, (label: string) => RegExp> = {
-      target: (label) => new RegExp(`^Diseases associated with ${label} \\| Open Targets Platform$`),
+      target: (label) =>
+        new RegExp(`^Diseases associated with ${label} \\| Open Targets Platform$`),
       disease: () => /^Targets associated with .+ \| Open Targets Platform$/,
       // The chip may show a trade name (VIAGRA) or an rsID for what the page names otherwise.
       drug: () => /^.+ profile page \| Open Targets Platform$/,
@@ -120,7 +129,9 @@ test.describe("Home page", () => {
   });
 
   test.describe("search box", () => {
-    test("opens the search dialog, which offers the same suggestions as the chips", async ({ page }) => {
+    test("opens the search dialog, which offers the same suggestions as the chips", async ({
+      page,
+    }) => {
       const home = new HomePage(page);
       await home.goto();
       const chips = await home.chipFacts();
@@ -142,7 +153,10 @@ test.describe("Home page", () => {
       await expect(page.getByTestId("profile-page-header-text")).toHaveText(first.label);
     });
 
-    test("a typed term lists matches, and the top hit opens its page", async ({ page, testConfig }) => {
+    test("a typed term lists matches, and the top hit opens its page", async ({
+      page,
+      testConfig,
+    }) => {
       const home = new HomePage(page);
       await home.goto();
       await home.openSearch();
@@ -155,7 +169,9 @@ test.describe("Home page", () => {
       }
 
       await topHit.click();
-      await expect(page).toHaveURL(new RegExp(`/disease/${testConfig.disease.primary}/associations$`));
+      await expect(page).toHaveURL(
+        new RegExp(`/disease/${testConfig.disease.primary}/associations$`)
+      );
     });
 
     test("Enter opens the search results page for the typed term", async ({ page }) => {
@@ -176,7 +192,9 @@ test.describe("Home page", () => {
       await home.openSearch();
 
       await home.searchInput.fill("zzqxjvkw");
-      await expect(page.getByTestId("global-search-no-results")).toHaveText("No search result found");
+      await expect(page.getByTestId("global-search-no-results")).toHaveText(
+        "No search result found"
+      );
       await expect(page.getByTestId("global-search-group-suggestions")).toBeVisible();
     });
 
@@ -236,10 +254,10 @@ test.describe("Home page", () => {
       const shell = new SiteShell(page);
       await home.goto();
       for (const item of MAIN_MENU) {
-        await expect(shell.header.getByRole("link", { name: item.name, exact: true }), item.name).toHaveAttribute(
-          "href",
-          item.href
-        );
+        await expect(
+          shell.header.getByRole("link", { name: item.name, exact: true }),
+          item.name
+        ).toHaveAttribute("href", item.href);
       }
 
       await shell.header.getByRole("link", { name: "Metrics", exact: true }).click();
@@ -301,8 +319,16 @@ test.describe("Home page", () => {
       page,
       pageHealth,
     }) => {
-      pageHealth.allow(/DataVersion/, "this test makes the meta query fail on purpose", "graphql-error");
-      pageHealth.allow(/meta is unavailable/, "logged by Apollo for the failing meta query", "console-error");
+      pageHealth.allow(
+        /DataVersion/,
+        "this test makes the meta query fail on purpose",
+        "graphql-error"
+      );
+      pageHealth.allow(
+        /meta is unavailable/,
+        "logged by Apollo for the failing meta query",
+        "console-error"
+      );
       await failMeta(page);
       const home = new HomePage(page);
       await home.goto();

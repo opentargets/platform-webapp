@@ -1,9 +1,6 @@
 import { expect, test } from "../../../../fixtures";
-import {
-  closeDrawer,
-  expectExternalLink,
-} from "../../../../POM/objects/widgets/Drug/sectionTable";
 import { DiseaseDrugsSection } from "../../../../POM/objects/widgets/Disease/diseaseDrugsSection";
+import { closeDrawer, expectExternalLink } from "../../../../POM/objects/widgets/Drug/sectionTable";
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { DiseasePage } from "../../../../POM/page/disease/disease";
 import { CLINICAL_STAGE_KEYS, CLINICAL_STAGE_LABELS } from "../../../../POM/page/drug/drugData";
@@ -64,7 +61,9 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
     });
 
     const total = await drugs.master.total();
-    expect(total, "myocardial infarction has several pages of drugs").toBeGreaterThan(2 * PAGE_SIZE);
+    expect(total, "myocardial infarction has several pages of drugs").toBeGreaterThan(
+      2 * PAGE_SIZE
+    );
     await drugs.master.expectPosition(1, PAGE_SIZE, total);
     await drugs.master.expectPaginationState("first");
 
@@ -76,7 +75,9 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
       );
       for (const card of cards) {
         expect(card.name).not.toBe("");
-        expect(stageRank(card.stage), `"${card.stage}" is a clinical stage`).toBeGreaterThanOrEqual(0);
+        expect(stageRank(card.stage), `"${card.stage}" is a clinical stage`).toBeGreaterThanOrEqual(
+          0
+        );
         expect(card.reports).toBeGreaterThan(0);
       }
     });
@@ -115,7 +116,9 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
       );
       expect(order).toEqual([...CLINICAL_STAGE_KEYS]);
       for (const label of CLINICAL_STAGE_LABELS) {
-        await expect(drugs.recordsPanel.locator("thead").getByText(label, { exact: true })).toBeVisible();
+        await expect(
+          drugs.recordsPanel.locator("thead").getByText(label, { exact: true })
+        ).toBeVisible();
       }
     });
 
@@ -129,7 +132,11 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
       const selectedTestId = (await drugs.selectedStage.getAttribute("data-testid")) ?? "";
       const selected = selectedTestId.replace("stage-filter-", "");
       expect(stageLabel(selected)).toBe(first.stage);
-      await drugs.records.expectPosition(1, Math.min(PAGE_SIZE, counts[selected]), counts[selected]);
+      await drugs.records.expectPosition(
+        1,
+        Math.min(PAGE_SIZE, counts[selected]),
+        counts[selected]
+      );
       await expect(drugs.recordRows).toHaveCount(Math.min(PAGE_SIZE, counts[selected]));
     });
 
@@ -164,13 +171,19 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
     }
 
     await test.step("clicking the selected card again keeps it selected", async () => {
-      await drugs.card(PAGE_SIZE - 1).getByText("Max stage:").click();
+      await drugs
+        .card(PAGE_SIZE - 1)
+        .getByText("Max stage:")
+        .click();
       await expect(drugs.card(PAGE_SIZE - 1)).toHaveAttribute("data-selected", "true");
       await expect(drugs.recordRows.first()).toBeVisible();
     });
   });
 
-  test("the stage filter switches the reports to the stage clicked", async ({ page, testConfig }) => {
+  test("the stage filter switches the reports to the stage clicked", async ({
+    page,
+    testConfig,
+  }) => {
     const drugs = await openDrugs(page, testConfig.disease.primary);
     // Clopidogrel has reports at five stages, two of them spanning several pages.
     await drugs.master.search("clopidogrel", await drugs.master.total());
@@ -335,9 +348,10 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
     const rows = data.disease.drugAndClinicalCandidates.rows;
     expect(rows).toHaveLength(PAGE_SIZE);
     const cards = await drugs.allCards();
-    expect(cards.map((card) => card.drugId), "the cards follow the API's order").toEqual(
-      rows.map((row) => row.drug.id)
-    );
+    expect(
+      cards.map((card) => card.drugId),
+      "the cards follow the API's order"
+    ).toEqual(rows.map((row) => row.drug.id));
     expect(await drugs.master.total()).toBe(data.disease.drugAndClinicalCandidates.count);
   });
 
@@ -368,7 +382,9 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
     await expect(drawer).toContainText(new RegExp(`Stage\\s*${stage.replace("/", "\\/")}`));
     await expect(drawer.getByRole("link").first()).toHaveAttribute("href", /^https?:\/\/\S+$/);
     await expect(drawer).toContainText(/Drugs\s*\S+/);
-    await expect(drawer.getByRole("paragraph").filter({ hasText: new RegExp(`^${first.name}$`, "i") })).toBeVisible();
+    await expect(
+      drawer.getByRole("paragraph").filter({ hasText: new RegExp(`^${first.name}$`, "i") })
+    ).toBeVisible();
     await expect(
       drawer.getByRole("link", { name: testConfig.disease.name, exact: true }),
       "the report lists the disease under test"
@@ -434,10 +450,7 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
     await expect(sectionLocator(page, DiseaseDrugsSection.id)).toHaveCount(0);
   });
 
-  test("exports every drug, and the reports of the selected one", async ({
-    page,
-    testConfig,
-  }) => {
+  test("exports every drug, and the reports of the selected one", async ({ page, testConfig }) => {
     const { primary } = testConfig.disease;
     const drugs = await openDrugs(page, primary);
     const total = await drugs.master.total();
@@ -472,12 +485,16 @@ test.describe("Disease page: Drugs and Clinical Candidates", () => {
       const { filename, rows } = await drugs.records.exportJson();
       expect(filename).toBe("clinical-records.json");
       expect(rows).toHaveLength(cards[0].reports);
-      expect(new Set(rows.map((row) => row.id)).size, "no report is exported twice").toBe(rows.length);
+      expect(new Set(rows.map((row) => row.id)).size, "no report is exported twice").toBe(
+        rows.length
+      );
     });
-
   });
 
-  test("the API query buttons show the queries behind both tables", async ({ page, testConfig }) => {
+  test("the API query buttons show the queries behind both tables", async ({
+    page,
+    testConfig,
+  }) => {
     const { primary } = testConfig.disease;
     const drugs = await openDrugs(page, primary);
     await drugs.expectDetailFor(await drugs.cardInfo(0));

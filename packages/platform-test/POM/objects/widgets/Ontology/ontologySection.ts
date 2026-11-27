@@ -84,8 +84,8 @@ export class OntologySection {
   async expectTooltip(id: string, name: string): Promise<void> {
     await this.nodeLink(id).hover();
     // the tooltip of the previously hovered term may still be fading out
-    await expect(
-      this.page.getByRole("tooltip").filter({ hasText: `ID: ${id}` })
-    ).toHaveText(`${name} | ID: ${id}`);
+    await expect(this.page.getByRole("tooltip").filter({ hasText: `ID: ${id}` })).toHaveText(
+      `${name} | ID: ${id}`
+    );
   }
 }

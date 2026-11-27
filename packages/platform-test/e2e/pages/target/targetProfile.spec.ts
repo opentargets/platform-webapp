@@ -111,8 +111,14 @@ test.describe("Target profile", () => {
       expect(transcript.chromosome).toBe(chromosome);
       expect(transcript.strand).toBe(gene.strand);
       expect(transcript.start).toBeLessThan(transcript.end);
-      expect(transcript.start, "the canonical transcript should lie within the gene body").toBeGreaterThanOrEqual(gene.start);
-      expect(transcript.end, "the canonical transcript should lie within the gene body").toBeLessThanOrEqual(gene.end);
+      expect(
+        transcript.start,
+        "the canonical transcript should lie within the gene body"
+      ).toBeGreaterThanOrEqual(gene.start);
+      expect(
+        transcript.end,
+        "the canonical transcript should lie within the gene body"
+      ).toBeLessThanOrEqual(gene.end);
 
       await test.step("hovering a location explains its format", async () => {
         await profile.genomicLocation("Gene body").hover();
@@ -130,7 +136,9 @@ test.describe("Target profile", () => {
 
       await target.goto(ensgId);
 
-      await expect(profile.synonyms.getByRole("heading", { name: "Synonyms", exact: true })).toBeVisible();
+      await expect(
+        profile.synonyms.getByRole("heading", { name: "Synonyms", exact: true })
+      ).toBeVisible();
       await expect(profile.synonymChips).toHaveCount(10);
       await expect(profile.synonymsToggle).toHaveText(/show more/);
 
@@ -232,7 +240,10 @@ test.describe("Target profile", () => {
         page.getByTestId(`section-${widget.section}-header`),
         "the section named in the URL hash should be in view once the page has loaded"
       ).toBeInViewport();
-      await expect(target.stickyHeader, "the page should have scrolled past the tabs").toBeVisible();
+      await expect(
+        target.stickyHeader,
+        "the page should have scrolled past the tabs"
+      ).toBeVisible();
     });
   });
 
@@ -277,15 +288,15 @@ test.describe("Target profile", () => {
             name: new RegExp(`${widget.name}$`),
           });
           if (sectionsWithData.includes(widget.section)) {
-            await expect(item, `"${widget.name}" has data and should be selectable`).not.toHaveAttribute(
-              "aria-disabled",
-              "true"
-            );
+            await expect(
+              item,
+              `"${widget.name}" has data and should be selectable`
+            ).not.toHaveAttribute("aria-disabled", "true");
           } else {
-            await expect(item, `"${widget.name}" has no data and should be disabled`).toHaveAttribute(
-              "aria-disabled",
-              "true"
-            );
+            await expect(
+              item,
+              `"${widget.name}" has no data and should be disabled`
+            ).toHaveAttribute("aria-disabled", "true");
           }
         }
         await expect(
@@ -303,7 +314,9 @@ test.describe("Target profile", () => {
         await target.stickySectionFilter.fill("no such widget");
         await expect(target.stickySectionMenu.getByRole("menuitem")).toHaveCount(0);
         await target.stickySectionFilter.fill("GENOMICS");
-        await target.stickySectionMenu.getByRole("menuitem", { name: new RegExp(`${widget.name}$`) }).click();
+        await target.stickySectionMenu
+          .getByRole("menuitem", { name: new RegExp(`${widget.name}$`) })
+          .click();
 
         await expect(target.stickySectionMenu).toHaveCount(0);
         await expect(page).toHaveURL(new RegExp(`#${widget.id}$`));
@@ -362,8 +375,16 @@ test.describe("Target profile", () => {
 
       await expectSections(page, sectionsWithData);
       await target.expectActiveSummaryChips(sectionsWithData);
-      for (const absent of ["cancerhallmarks", "mousephenotypes", "compgenomics", "pharmacogenetics"]) {
-        expect(sectionsWithData, `the manifest should not list "${absent}" for ${symbol}`).not.toContain(absent);
+      for (const absent of [
+        "cancerhallmarks",
+        "mousephenotypes",
+        "compgenomics",
+        "pharmacogenetics",
+      ]) {
+        expect(
+          sectionsWithData,
+          `the manifest should not list "${absent}" for ${symbol}`
+        ).not.toContain(absent);
       }
     });
 
@@ -385,7 +406,7 @@ test.describe("Target profile", () => {
       ]);
       await expect(
         target.externalLinks,
-        "a target without a reviewed UniProt entry should not show an empty \"UniProt:\" label"
+        'a target without a reviewed UniProt entry should not show an empty "UniProt:" label'
       ).not.toContainText("UniProt");
       await expect(target.uniprotLinks).toHaveCount(0);
       await expect(target.rnacentralLinks.getByRole("link")).toHaveText(rnacentralIds);
@@ -425,10 +446,16 @@ test.describe("Target profile", () => {
       await expect(profile.genomicLocation("Gene body").getByText(LOCATION_PATTERN)).toBeVisible();
 
       await expectSections(page, sectionsWithData);
-      await expect(profile.synonyms, "a target without synonyms should not show the Synonyms block").toHaveCount(0);
+      await expect(
+        profile.synonyms,
+        "a target without synonyms should not show the Synonyms block"
+      ).toHaveCount(0);
       await target.expectActiveSummaryChips(sectionsWithData);
       for (const absent of ["bibliography", "qtl-credible-sets"]) {
-        expect(sectionsWithData, `the manifest should not list "${absent}" for ${symbol}`).not.toContain(absent);
+        expect(
+          sectionsWithData,
+          `the manifest should not list "${absent}" for ${symbol}`
+        ).not.toContain(absent);
       }
     });
   });

@@ -1,14 +1,14 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expectExternalLink } from "../../../../POM/objects/widgets/Drug/sectionTable";
+import { OTProjectsSection } from "../../../../POM/objects/widgets/OTProjects/otProjectsSection";
 import {
   PHENOTYPE_COLUMNS,
   PhenotypesSection,
 } from "../../../../POM/objects/widgets/Phenotypes/phenotypesSection";
-import { OTProjectsSection } from "../../../../POM/objects/widgets/OTProjects/otProjectsSection";
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { DiseasePage } from "../../../../POM/page/disease/disease";
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
 type Evidence = {
@@ -27,7 +27,9 @@ type PhenotypeRow = {
   phenotypeEFO: { id: string; name: string } | null;
   evidence: Evidence[];
 };
-type PhenotypesData = { disease: { id: string; phenotypes: { count: number; rows: PhenotypeRow[] } } };
+type PhenotypesData = {
+  disease: { id: string; phenotypes: { count: number; rows: PhenotypeRow[] } };
+};
 
 /** Marfan syndrome: 100+ phenotypes (many pages), onset and modifier terms, PubMed references. */
 const MARFAN = { id: "MONDO_0007947", name: "Marfan syndrome" };
@@ -112,7 +114,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await phenotypes.table.expectPosition(1, PAGE_SIZE, api.count);
 
     await test.step("phenotype names, in API order", async () => {
-      const names = (await phenotypes.columnCells("Phenotype").allInnerTexts()).map(withoutHelpIcon);
+      const names = (await phenotypes.columnCells("Phenotype").allInnerTexts()).map(
+        withoutHelpIcon
+      );
       expect(names).toEqual(expected.map(({ phenotype }) => phenotypeName(phenotype)));
     });
 
@@ -185,7 +189,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
 
     await test.step("phenotype description", async () => {
       const described = expected.findIndex(({ phenotype }) => phenotype.phenotypeHPO?.description);
-      expect(described, "a phenotype on the first page has a description").toBeGreaterThanOrEqual(0);
+      expect(described, "a phenotype on the first page has a description").toBeGreaterThanOrEqual(
+        0
+      );
       const description = expected[described].phenotype.phenotypeHPO?.description ?? "";
       await phenotypes.helpIcon(described, "Phenotype").hover();
       await expect(tooltip.filter({ hasText: "Description:" })).toHaveText(
@@ -194,13 +200,16 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     });
   });
 
-  test("references: one reference is a link, several open a drawer listing them", async ({ page }) => {
+  test("references: one reference is a link, several open a drawer listing them", async ({
+    page,
+  }) => {
     const { phenotypes, api } = await openPhenotypes(page, MARFAN.id);
     const expected = flatten(api.rows);
 
     await test.step("a single PubMed reference links to Europe PMC", async () => {
       const single = expected.findIndex(
-        ({ evidence }) => evidence.references.length === 1 && evidence.references[0].startsWith("PMID:")
+        ({ evidence }) =>
+          evidence.references.length === 1 && evidence.references[0].startsWith("PMID:")
       );
       expect(single, "a row with one PMID").toBeGreaterThanOrEqual(0);
       const pmid = expected[single].evidence.references[0];
@@ -212,7 +221,8 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
 
     await test.step("a single OMIM reference links to the HPO disease page", async () => {
       const single = expected.findIndex(
-        ({ evidence }) => evidence.references.length === 1 && evidence.references[0].startsWith("OMIM:")
+        ({ evidence }) =>
+          evidence.references.length === 1 && evidence.references[0].startsWith("OMIM:")
       );
       expect(single, "a row with one OMIM reference").toBeGreaterThanOrEqual(0);
       const omim = expected[single].evidence.references[0];
@@ -318,7 +328,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await expect(table.rows).toHaveCount(flatten(data.disease.phenotypes.rows).length);
   });
 
-  test("search keeps only matching rows and shows an empty table for no match", async ({ page }) => {
+  test("search keeps only matching rows and shows an empty table for no match", async ({
+    page,
+  }) => {
     const { phenotypes } = await openPhenotypes(page, MARFAN.id);
     const table = phenotypes.table;
     const term = "arachnodactyly";
@@ -354,7 +366,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await phenotypes.table.search("Spontaneous cerebrospinal fluid leak");
     await expect(phenotypes.table.rows).toHaveCount(3);
     for (let row = 0; row < 3; row++) {
-      await expect(phenotypes.cell(row, "Phenotype")).toContainText("Spontaneous cerebrospinal fluid leak");
+      await expect(phenotypes.cell(row, "Phenotype")).toContainText(
+        "Spontaneous cerebrospinal fluid leak"
+      );
       await expectExternalLink(
         phenotypes.cell(row, "Onset").getByRole("link", { name: "Young adult onset" }),
         "https://identifiers.org/ols/HP:0011462"
@@ -392,7 +406,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     const json = await table.download("Json");
     expect(json.filename).toBe(`${HUNTINGTON.id}-phenotypes.json`);
     const parsed = JSON.parse(json.text) as Record<string, string>[];
-    expect(parsed.length, "one record per phenotype and evidence").toBeGreaterThanOrEqual(rows.length);
+    expect(parsed.length, "one record per phenotype and evidence").toBeGreaterThanOrEqual(
+      rows.length
+    );
     expect(Object.keys(parsed[0])).toEqual([
       "qualifierNot",
       "phenotype",
@@ -476,7 +492,9 @@ test.describe("Disease page: Clinical signs and symptoms", () => {
     await disease.goto(WITHOUT.id);
     await expectSections(page, expectedSectionsFor(WITHOUT.id));
     await expect(disease.section(PhenotypesSection.id)).toHaveCount(0);
-    await expect(disease.summaryCard(PhenotypesSection.id)).toContainText("Clinical signs and symptoms");
+    await expect(disease.summaryCard(PhenotypesSection.id)).toContainText(
+      "Clinical signs and symptoms"
+    );
   });
 
   test("the summary chip jumps to the section", async ({ page }) => {

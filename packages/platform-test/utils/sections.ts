@@ -66,17 +66,19 @@ export async function expectAllSectionsSettled(page: Page): Promise<void> {
     page.locator("section[data-testid^='section-']").locator(LOADING_INDICATORS),
     "every section should finish loading"
   ).toHaveCount(0, { timeout: SECTION_LOAD_TIMEOUT });
-  await expect(page.getByTestId("section-loader"), "no section should still be mounting").toHaveCount(
-    0,
-    { timeout: SECTION_LOAD_TIMEOUT }
-  );
+  await expect(
+    page.getByTestId("section-loader"),
+    "no section should still be mounting"
+  ).toHaveCount(0, { timeout: SECTION_LOAD_TIMEOUT });
 }
 
 /** The ids (data-testid minus the "section-" prefix) of the sections currently rendered. */
 export async function renderedSectionIds(page: Page): Promise<string[]> {
   const testIds = await page
     .locator("section[data-testid^='section-']")
-    .evaluateAll((sections) => sections.map((section) => section.getAttribute("data-testid") ?? ""));
+    .evaluateAll((sections) =>
+      sections.map((section) => section.getAttribute("data-testid") ?? "")
+    );
   return testIds
     .filter((testId) => testId !== "section-loader")
     .map((testId) => testId.replace(/^section-/, ""))

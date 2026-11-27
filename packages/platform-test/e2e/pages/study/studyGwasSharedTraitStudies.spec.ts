@@ -1,10 +1,10 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../fixtures";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import {
   SHARED_COLUMNS,
   SharedTraitStudiesSection,
 } from "../../../POM/objects/widgets/Study/sharedTraitStudiesSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { GwasStudyPage } from "../../../POM/page/study/gwasStudy";
 import { GWAS_STUDIES, MYOCARDIAL_INFARCTION } from "../../../POM/page/study/studyData";
 import { expectSectionLoaded } from "../../../utils/sections";
@@ -30,7 +30,10 @@ async function open(page: Page, studyId: string) {
 }
 
 const isSorted = (values: number[], direction: 1 | -1) =>
-  values.every((value, index) => index === 0 || (direction === 1 ? values[index - 1] <= value : values[index - 1] >= value));
+  values.every(
+    (value, index) =>
+      index === 0 || (direction === 1 ? values[index - 1] <= value : values[index - 1] >= value)
+  );
 
 test.describe("Study page: shared trait studies", () => {
   // The publication drawer asks Europe PMC for the paper. That third-party service
@@ -58,7 +61,9 @@ test.describe("Study page: shared trait studies", () => {
         "href",
         "https://r12.finngen.fi"
       );
-      await expect(studyPage.summaryCard("shared_trait_studies")).toContainText("Shared Trait Studies");
+      await expect(studyPage.summaryCard("shared_trait_studies")).toContainText(
+        "Shared Trait Studies"
+      );
     });
 
     await test.step("columns and controls", async () => {
@@ -104,7 +109,10 @@ test.describe("Study page: shared trait studies", () => {
       for (let row = 0; row < PAGE_SIZE; row++) {
         await expect(section.studyLink(row)).toHaveAttribute("href", `/study/${ids[row]}`);
         await expect(section.diseaseLinks(row)).toHaveText([MYOCARDIAL_INFARCTION.name]);
-        await expect(section.diseaseLinks(row)).toHaveAttribute("href", `/disease/${MYOCARDIAL_INFARCTION.id}`);
+        await expect(section.diseaseLinks(row)).toHaveAttribute(
+          "href",
+          `/disease/${MYOCARDIAL_INFARCTION.id}`
+        );
         await expect(section.cell(row, "reportedTrait")).not.toBeEmpty();
       }
     });
@@ -180,7 +188,10 @@ test.describe("Study page: shared trait studies", () => {
 
       await section.table.clickHeader("Sample size");
       await expect
-        .poll(async () => isSorted(await section.sampleSizes(), 1) || isSorted(await section.sampleSizes(), -1))
+        .poll(
+          async () =>
+            isSorted(await section.sampleSizes(), 1) || isSorted(await section.sampleSizes(), -1)
+        )
         .toBe(false);
 
       await section.table.clickHeader("Sample size");
@@ -194,19 +205,31 @@ test.describe("Study page: shared trait studies", () => {
         );
       await section.table.clickHeader("Publication");
       await expect
-        .poll(async () => {
-          const years = await year();
-          return years.length > 0 && years.every((value, index) => index === 0 || years[index - 1] >= value);
-        }, { message: "publication years should be descending" })
+        .poll(
+          async () => {
+            const years = await year();
+            return (
+              years.length > 0 &&
+              years.every((value, index) => index === 0 || years[index - 1] >= value)
+            );
+          },
+          { message: "publication years should be descending" }
+        )
         .toBe(true);
       expect((await year())[0], "the newest publication comes first").toBeGreaterThanOrEqual(2024);
 
       await section.table.clickHeader("Publication");
       await expect
-        .poll(async () => {
-          const years = await year();
-          return years.length > 0 && years.every((value, index) => index === 0 || years[index - 1] <= value);
-        }, { message: "publication years should be ascending" })
+        .poll(
+          async () => {
+            const years = await year();
+            return (
+              years.length > 0 &&
+              years.every((value, index) => index === 0 || years[index - 1] <= value)
+            );
+          },
+          { message: "publication years should be ascending" }
+        )
         .toBe(true);
       expect((await year())[0], "the oldest publication comes first").toBeLessThanOrEqual(2012);
     });
@@ -236,7 +259,10 @@ test.describe("Study page: shared trait studies", () => {
         .poll(
           async () => {
             const traits = await section.table.columnTexts(SHARED_COLUMNS.reportedTrait);
-            return traits.length > 0 && traits.every((trait) => trait.toLowerCase().includes("heart attack"));
+            return (
+              traits.length > 0 &&
+              traits.every((trait) => trait.toLowerCase().includes("heart attack"))
+            );
           },
           { message: "every row left should have 'heart attack' in its reported trait" }
         )
@@ -292,7 +318,9 @@ test.describe("Study page: shared trait studies", () => {
 
     await section.diseaseLinks(0).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${MYOCARDIAL_INFARCTION.id}$`));
-    await expect(page.getByTestId("profile-page-header-text")).toHaveText(MYOCARDIAL_INFARCTION.name);
+    await expect(page.getByTestId("profile-page-header-text")).toHaveText(
+      MYOCARDIAL_INFARCTION.name
+    );
   });
 
   test("the cohort tooltip lists the LD populations and their shares", async ({
@@ -336,7 +364,9 @@ test.describe("Study page: shared trait studies", () => {
 
     await picker.getByRole("checkbox", { name: "Cohorts" }).uncheck();
     await picker.getByRole("checkbox", { name: "Publication" }).uncheck();
-    await expect(section.table.headers).toHaveText(HEADERS.filter((h) => h !== "Cohorts" && h !== "Publication"));
+    await expect(section.table.headers).toHaveText(
+      HEADERS.filter((h) => h !== "Cohorts" && h !== "Publication")
+    );
 
     await picker.getByRole("checkbox", { name: "Cohorts" }).check();
     await picker.getByRole("checkbox", { name: "Publication" }).check();
@@ -369,7 +399,10 @@ test.describe("Study page: shared trait studies", () => {
     });
   });
 
-  test("the API query button shows the shared trait studies query", async ({ page, testConfig }) => {
+  test("the API query button shows the shared trait studies query", async ({
+    page,
+    testConfig,
+  }) => {
     const { section } = await open(page, testConfig.study.gwas.primary);
     await section.table.expectApiQuery("SharedTraitStudiesQuery");
   });
@@ -389,7 +422,9 @@ test.describe("Study page: shared trait studies", () => {
     expect(hrefs.length).toBeGreaterThanOrEqual(PAGE_SIZE);
     for (const href of hrefs) {
       expect(href).toMatch(/^\/disease\/[A-Za-z]+_\d+$/);
-      expect(diseaseIds, `${href} is a disease of the study`).toContain(href.replace("/disease/", ""));
+      expect(diseaseIds, `${href} is a disease of the study`).toContain(
+        href.replace("/disease/", "")
+      );
     }
   });
 

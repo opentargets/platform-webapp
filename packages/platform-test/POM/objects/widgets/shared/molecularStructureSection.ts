@@ -59,7 +59,9 @@ export class MolecularStructureSection {
   }
 
   get missingColourWarning(): Locator {
-    return this.viewer.getByText(/Pathogenicity scores not available|Domain information not available/);
+    return this.viewer.getByText(
+      /Pathogenicity scores not available|Domain information not available/
+    );
   }
 
   /** Wait for the structure to be fetched and drawn. */

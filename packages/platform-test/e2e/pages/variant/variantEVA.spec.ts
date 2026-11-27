@@ -64,9 +64,7 @@ test.describe("Variant page: ClinVar (EVA)", () => {
         "Genetic variation from clinical submissions associating"
       );
       await expect(section.description).toContainText(FEW);
-      await expect(section.description).toContainText(
-        "to a disease/phenotype. Source: EVA"
-      );
+      await expect(section.description).toContainText("to a disease/phenotype. Source: EVA");
       const eva = section.description.getByRole("link", { name: "EVA" });
       await expect(eva).toHaveAttribute("href", "https://www.ebi.ac.uk/eva/");
     });
@@ -108,7 +106,9 @@ test.describe("Variant page: ClinVar (EVA)", () => {
   }) => {
     const { section, evidences } = await open(page, FEW);
     const [row] = evidences.rows;
-    expect(row.cohortPhenotypes.length, "the record has several cohort phenotypes").toBeGreaterThan(1);
+    expect(row.cohortPhenotypes.length, "the record has several cohort phenotypes").toBeGreaterThan(
+      1
+    );
 
     await section.helpIcon(0, "disease").hover();
     const tooltip = page.getByRole("tooltip");
@@ -225,7 +225,10 @@ test.describe("Variant page: ClinVar (EVA)", () => {
     const withRequirements = evidences.rows.findIndex(
       (row) => row.allelicRequirements && row.allelicRequirements.length > 0
     );
-    expect(withRequirements, "the first page holds a record with allelic requirements").toBeGreaterThanOrEqual(0);
+    expect(
+      withRequirements,
+      "the first page holds a record with allelic requirements"
+    ).toBeGreaterThanOrEqual(0);
     const record = evidences.rows[withRequirements];
 
     const cell = section.table.cell(withRequirements, EVA_COLUMN.alleleOrigin);
@@ -244,7 +247,9 @@ test.describe("Variant page: ClinVar (EVA)", () => {
   }) => {
     const { section, evidences } = await open(page, MANY);
     const withLiterature = evidences.rows.findIndex((row) => row.literature.length > 1);
-    expect(withLiterature, "the first page holds a record with literature").toBeGreaterThanOrEqual(0);
+    expect(withLiterature, "the first page holds a record with literature").toBeGreaterThanOrEqual(
+      0
+    );
     const { literature } = evidences.rows[withLiterature];
 
     await expect(section.literatureTrigger(withLiterature)).toHaveText(

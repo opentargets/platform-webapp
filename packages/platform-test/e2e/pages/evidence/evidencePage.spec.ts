@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { expect, test } from "../../../fixtures";
+import { expectedSectionsFor } from "../../../fixtures/expectedSections";
 import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { EvidencePage } from "../../../POM/page/evidence/evidence";
 import { expectSectionLoaded, expectSections } from "../../../utils/sections";
@@ -17,7 +17,10 @@ test.describe("Evidence page", () => {
 
   const pairKey = (pair: { ensgId: string; efoId: string }) => `${pair.ensgId}/${pair.efoId}`;
 
-  test("renders the header, links and every expected section @smoke", async ({ page, testConfig }) => {
+  test("renders the header, links and every expected section @smoke", async ({
+    page,
+    testConfig,
+  }) => {
     const pair = testConfig.evidence!.primary;
     const evidence = new EvidencePage(page);
     await evidence.goto(pair.ensgId, pair.efoId);
@@ -58,7 +61,9 @@ test.describe("Evidence page", () => {
     await evidence.goto(pair.ensgId, pair.efoId);
 
     await expect(page.getByTestId("profile-synonyms").first()).toContainText("Synonyms");
-    await expect(page.getByTestId("profile-synonyms").first().getByTestId("chip-BRAF")).toBeVisible();
+    await expect(
+      page.getByTestId("profile-synonyms").first().getByTestId("chip-BRAF")
+    ).toBeVisible();
   });
 
   test("summary cards mark the sections with data and jump to the one clicked", async ({
@@ -71,7 +76,9 @@ test.describe("Evidence page", () => {
     await expectSections(page, expectedSectionsFor(pairKey(pair)));
 
     await evidence.summaryCard("clinical-precedence").click();
-    await expect(page).toHaveURL(/#clinical_precedence$|#clinical-precedence$|#clinicalPrecedence$/i);
+    await expect(page).toHaveURL(
+      /#clinical_precedence$|#clinical-precedence$|#clinicalPrecedence$/i
+    );
     await expect(evidence.section("clinical-precedence")).toBeInViewport();
   });
 
@@ -118,14 +125,22 @@ test.describe("Evidence page", () => {
     await expect(page.locator("section[data-testid^='section-']")).toHaveCount(0);
   });
 
-  test("a target that does not exist shows the 404 page", async ({ page, pageHealth, testConfig }) => {
+  test("a target that does not exist shows the 404 page", async ({
+    page,
+    pageHealth,
+    testConfig,
+  }) => {
     pageHealth.allow(/404 page is displayed/, "opens an unknown target", "error-ui");
     await page.goto(`/evidence/ENSG00000000000/${testConfig.evidence!.primary.efoId}`);
     await expect(new EvidencePage(page).notFound).toBeVisible();
     await expect(page.getByTestId("profile-page-header-text")).toHaveCount(0);
   });
 
-  test("a disease that does not exist shows the 404 page", async ({ page, pageHealth, testConfig }) => {
+  test("a disease that does not exist shows the 404 page", async ({
+    page,
+    pageHealth,
+    testConfig,
+  }) => {
     pageHealth.allow(/404 page is displayed/, "opens an unknown disease", "error-ui");
     await page.goto(`/evidence/${testConfig.evidence!.primary.ensgId}/MONDO_0000000000`);
     await expect(new EvidencePage(page).notFound).toBeVisible();
