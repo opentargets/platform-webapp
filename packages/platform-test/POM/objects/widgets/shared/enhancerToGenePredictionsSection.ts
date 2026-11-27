@@ -1,96 +1,87 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionDataControls, SectionTable } from "./sectionDataControls";
+
+/** Columns of the enhancer-to-gene table, in order. */
+export const E2G_HEADERS = [
+  "Gene",
+  "Affected tissue/cell",
+  "Interval type",
+  "Study",
+  "Distance from start site (bp)",
+  "Interval size (bp)",
+  "Interval range",
+  "Score?",
+] as const;
+
+export const E2G_COLUMN = {
+  gene: 0,
+  biosample: 1,
+  intervalType: 2,
+  study: 3,
+  distance: 4,
+  size: 5,
+  range: 6,
+  score: 7,
+} as const;
+
+/** GraphQL operation behind the section (packages/sections/src/variant/EnhancerToGenePredictions). */
+export const E2G_OPERATION = "VariantEnhancerToGenePredictionsQuery";
+export const E2G_PAGE_SIZE = 10;
 
 /**
- * Interactor for Enhancer-to-Gene Predictions section on Variant page
+ * Variant page > Enhancer-to-gene predictions: a server-side table (pagination, search
+ * across gene, biosample, interval type and study, sort by interval type, distance, size
+ * and score).
  */
 export class EnhancerToGenePredictionsSection {
-  constructor(private page: Page) {}
+  static readonly id = "enhancer-to-gene-predictions";
+  readonly section: Locator;
+  readonly table: SectionTable;
+  readonly controls: SectionDataControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-enhancer-to-gene-predictions']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, EnhancerToGenePredictionsSection.id);
+    this.table = new SectionTable(this.section);
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get title(): Locator {
+    return this.section.getByTestId("section-enhancer-to-gene-predictions-header");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector(
-            "[data-testid='section-enhancer-to-gene-predictions']"
-          );
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  geneLink(row: number): Locator {
+    return this.table.cell(row, E2G_COLUMN.gene).getByRole("link");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The biosample cell's ontology link (absent when the row has no biosample). */
+  biosampleLink(row: number): Locator {
+    return this.table.cell(row, E2G_COLUMN.biosample).getByRole("link");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  studyLink(row: number): Locator {
+    return this.table.cell(row, E2G_COLUMN.study).getByRole("link");
   }
 
-  // Get target gene link
-  async getTargetGeneLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/target/']");
+  /** The title of a column header: clicking it sorts the column. A help icon may follow the text. */
+  sortLabel(header: string): Locator {
+    return this.table.headers
+      .filter({ hasText: header })
+      .getByText(new RegExp(`^${header.replace(/[()]/g, "\\$&")}\\??$`));
   }
 
-  async clickTargetGeneLink(rowIndex: number): Promise<void> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
+  /** The arrow of an unsorted, sortable column (shown on hover) and of the sorted one. */
+  sortArrows(header: string): Locator {
+    return this.table.headers.filter({ hasText: header }).locator("svg[data-icon^='arrow-']");
   }
 
-  async getTargetGeneName(rowIndex: number): Promise<string | null> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    return await link.textContent();
-  }
-
-  // Get E2G score
-  async getE2GScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    // Score is typically in a specific column, adjust index as needed
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** Numbers of one column on the current page, parsed from their formatted text. */
+  async numbers(column: keyof typeof E2G_COLUMN): Promise<number[]> {
+    const texts = await this.table.columnTexts(E2G_COLUMN[column]);
+    return texts.map((text) => Number(text.replace(/,/g, "")));
   }
 }
