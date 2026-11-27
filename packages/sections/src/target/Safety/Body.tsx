@@ -43,7 +43,7 @@ function EffectTooltipContent({ effect }: { effect: SafetyEffect }) {
   );
 }
 
-function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
+function getColumns(theme: Theme): OtTableColumn<SafetyRow>[] {
   return [
     {
       id: "event",
@@ -152,14 +152,19 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "datasource",
       label: "Source",
-      renderCell: ({ datasource, literature }) =>
-        literature ? (
-          <PublicationsDrawer entries={[{ name: literature }]} customLabel={datasource} />
-        ) : (
-          <Link external to={`https://www.clinpgx.org/search?query=${symbol}`}>
-            {datasource}
-          </Link>
-        ),
+      renderCell: ({ datasource, url, literature }) => {
+        if (url) {
+          return (
+            <Link external to={url}>
+              {datasource}
+            </Link>
+          );
+        }
+        if (literature) {
+          return <PublicationsDrawer entries={[{ name: literature }]} customLabel={datasource} />;
+        }
+        return datasource;
+      },
     },
   ];
 }
@@ -181,7 +186,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           showGlobalFilter
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-safety-${entity}`}
-          columns={getColumns(theme, symbol)}
+          columns={getColumns(theme)}
           rows={request.data?.target?.safetyLiabilities ?? []}
           rowsPerPageOptions={defaultRowsPerPageOptions}
           query={SAFETY_QUERY_DOCUMENT.loc?.source.body}
