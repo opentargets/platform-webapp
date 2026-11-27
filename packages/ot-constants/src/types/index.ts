@@ -7588,14 +7588,14 @@ export type ClinicalRecordsQueryVariables = Exact<{
 }>;
 
 
-export type ClinicalRecordsQuery = { __typename?: 'Query', clinicalReports: Array<{ __typename?: 'ClinicalReport', clinicalStage: ClinicalStage, id: string, source: string, title?: string | null, trialOverallStatus?: string | null, trialStartDate?: any | null, year?: number | null, type?: string | null }> };
+export type ClinicalRecordsQuery = { __typename?: 'Query', clinicalReports: Array<{ __typename?: 'ClinicalReport', clinicalStage: ClinicalStage, id: string, origin: Origin, source: string, title?: string | null, trialOverallStatus?: string | null, trialStartDate?: any | null, year?: number | null }> };
 
 export type RecordDetailQueryVariables = Exact<{
   clinicalReportId: Scalars['String']['input'];
 }>;
 
 
-export type RecordDetailQuery = { __typename?: 'Query', clinicalReport?: { __typename?: 'ClinicalReport', clinicalStage: ClinicalStage, countries: Array<string>, id: string, phaseFromSource?: string | null, source: string, trialDescription?: string | null, title?: string | null, trialOverallStatus?: string | null, trialPrimaryPurpose?: string | null, trialStartDate?: any | null, trialWhyStopped?: string | null, trialStopReasonCategories: Array<string>, trialStudyType?: TrialStudyType | null, url?: string | null, year?: number | null, type?: string | null, diseases: Array<{ __typename?: 'ClinicalDiseaseListItem', diseaseFromSource: string, disease: { __typename?: 'Disease', id: string, name: string } }>, drugs: Array<{ __typename?: 'ClinicalReportDrugListItem', drugFromSource: string }>, sideEffects: Array<{ __typename?: 'ClinicalSideEffectListItem', diseaseFromSource?: string | null, disease?: { __typename?: 'Disease', name: string } | null }>, trialLiterature: Array<{ __typename?: 'TrialLiterature', id: string, type: string }>, trialSponsor: { __typename?: 'TrialSponsor', agencyClass?: string | null, name?: string | null } } | null };
+export type RecordDetailQuery = { __typename?: 'Query', clinicalReport?: { __typename?: 'ClinicalReport', clinicalStage: ClinicalStage, countries: Array<string>, id: string, origin: Origin, phaseFromSource?: string | null, provider: Provider, source: string, trialDescription?: string | null, title?: string | null, trialNumberOfArms?: number | null, trialOverallStatus?: string | null, trialPrimaryPurpose?: string | null, trialStartDate?: any | null, trialWhyStopped?: string | null, trialStopReasonCategories: Array<string>, trialStudyType?: TrialStudyType | null, url?: string | null, year?: number | null, diseases: Array<{ __typename?: 'ClinicalDiseaseListItem', diseaseFromSource: string, disease: { __typename?: 'Disease', id: string, name: string } }>, drugs: Array<{ __typename?: 'ClinicalReportDrugListItem', drugFromSource: string }>, sideEffects: Array<{ __typename?: 'ClinicalSideEffectListItem', diseaseFromSource?: string | null, disease?: { __typename?: 'Disease', name: string } | null }>, trialLiterature: Array<{ __typename?: 'TrialLiterature', id: string, referenceType: string }>, trialSponsor: { __typename?: 'TrialSponsor', agencyClass?: string | null, name?: string | null } } | null };
 
 export const CredibleSetProfileHeaderFragment = gql`
     fragment CredibleSetProfileHeaderFragment on CredibleSet {
@@ -10994,11 +10994,11 @@ export const ClinicalRecordsQueryDocument = gql`
   clinicalReports(clinicalReportsIds: $clinicalReportsIds) {
     clinicalStage
     id
+    origin
     source
     title
     trialOverallStatus
     trialStartDate
-    type: evidenceType
     year
   }
 }
@@ -11019,7 +11019,9 @@ export const RecordDetailQueryDocument = gql`
       drugFromSource
     }
     id
+    origin
     phaseFromSource
+    provider
     sideEffects {
       diseaseFromSource
       disease {
@@ -11030,9 +11032,10 @@ export const RecordDetailQueryDocument = gql`
     trialDescription
     trialLiterature {
       id
-      type: referenceType
+      referenceType
     }
     title
+    trialNumberOfArms
     trialOverallStatus
     trialPrimaryPurpose
     trialSponsor {
@@ -11042,7 +11045,6 @@ export const RecordDetailQueryDocument = gql`
     trialStartDate
     trialWhyStopped
     trialStopReasonCategories
-    type: evidenceType
     trialStudyType
     url
     year

@@ -13,7 +13,9 @@ query RecordDetailQuery($clinicalReportId: String!) {
       drugFromSource
     }
     id
+    origin
     phaseFromSource
+    provider
     sideEffects {
       diseaseFromSource
       disease {
@@ -24,9 +26,10 @@ query RecordDetailQuery($clinicalReportId: String!) {
     trialDescription
     trialLiterature {
       id
-      type: referenceType
+      referenceType
     }
     title
+    trialNumberOfArms
     trialOverallStatus
     trialPrimaryPurpose
     trialSponsor {
@@ -36,7 +39,6 @@ query RecordDetailQuery($clinicalReportId: String!) {
     trialStartDate
     trialWhyStopped
     trialStopReasonCategories
-    type: evidenceType
     trialStudyType
     url
     year

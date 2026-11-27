@@ -53,7 +53,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
         />
       ),
       renderCell: (record) => {
-        const { source, trialStartDate, type, trialOverallStatus, title, year } = record;
+        const { source, trialStartDate, origin, trialOverallStatus, title, year } = record;
         const sourceInfo = clinicalReportsSourcesInfo[source];
 
         const displayTitle = (
@@ -68,7 +68,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
                 textOverflow: "ellipsis",
               }}
             >
-              {title || `[${sentenceCase(type)}]`}
+              {title || `[${sentenceCase(origin)}]`}
             </Typography>
           </Link>
         );
