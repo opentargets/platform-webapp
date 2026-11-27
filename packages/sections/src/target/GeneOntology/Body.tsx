@@ -115,8 +115,8 @@ const columns = [
       ) : (
         geneProduct
       ),
-    exportLabel: "GO term",
-    exportValue: ({ term }) => term.label,
+    exportLabel: "Gene product",
+    exportValue: ({ geneProduct }) => geneProduct,
   },
   {
     id: "evidence",
