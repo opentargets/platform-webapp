@@ -1,3 +1,4 @@
+import { Typography } from "@mui/material";
 import { median as d3Median, quantile } from "d3";
 import { useRef } from "react";
 import { DownloadSvgPlot } from "ui";
@@ -44,9 +45,7 @@ export async function getData(symbol) {
     const urlData = `https://gtexportal.org/api/v2/expression/geneExpression?datasetId=gtex_v10&gencodeId=${gencodeId}`;
     const resData = await fetch(urlData);
     const rawData = await resData.json();
-    // TODO:
-    // in order for the SectionItem null check to work, the data needs to match the target object format.
-    // Ideally when switching tabs we don't want to check and hide the widget, so this should be handled differently
+    // SectionItem looks up data[entity], so the data keeps the target object format
     const data = {
       target: {
         expressions: transformData(rawData.data),
@@ -61,10 +60,15 @@ export async function getData(symbol) {
 
 function GtexTab({ symbol, data }) {
   const gtexVariability = useRef();
+  const expressions = data?.target?.expressions;
+
+  if (!expressions?.length) {
+    return <Typography>No GTEx variation data available for {symbol}.</Typography>;
+  }
 
   return (
     <DownloadSvgPlot svgContainer={gtexVariability} filenameStem={`${symbol}-gtex`}>
-      <GtexVariability data={data.target.expressions} ref={gtexVariability} />
+      <GtexVariability data={expressions} ref={gtexVariability} />
     </DownloadSvgPlot>
   );
 }
