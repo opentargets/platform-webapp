@@ -120,7 +120,10 @@ function StickyProfileHeader({
             )}
           </Box>
 
-          <WidgetSelector onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <WidgetSelector
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            data-testid="sticky-section-selector"
+          >
             <Avatar sx={{ width: 24, height: 24, fontSize: "0.7rem", ...avatarSx(activeHasData) }}>
               {createShortName(activeWidget.definition)}
             </Avatar>

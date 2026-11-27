@@ -21,7 +21,7 @@ function CodeBlock({ children, textToCopy }: CodeBlockPropTypes) {
         width: "fit-content",
       }}
     >
-      <Box component="code" sx={{ width: 1 }}>
+      <Box component="code" data-testid="code-block" sx={{ width: 1 }}>
         {textToCopy && (
           <Box
             sx={{

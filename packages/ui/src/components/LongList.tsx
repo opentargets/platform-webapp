@@ -23,7 +23,12 @@ function LongList({ terms, render, maxTerms = 10 }: LongListProps): ReactNode {
       {shownTerms.map(render)}
       {showMore && hiddenTerms.map(render)}
       {hiddenTerms.length > 0 && (
-        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }} onClick={handleClick}>
+        <Typography
+          variant="body2"
+          sx={{ whiteSpace: "nowrap" }}
+          onClick={handleClick}
+          data-testid="long-list-toggle"
+        >
           {showMore ? "" : "... "}[
           <Box component="span" sx={{ color: "primary.main", cursor: "pointer" }}>
             {showMore ? " hide " : " show more "}

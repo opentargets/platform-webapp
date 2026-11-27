@@ -231,6 +231,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
     <>
       <Box
         aria-describedby={id}
+        data-testid="l2g-heat-cell"
         bgcolor={bgrd}
         display="flex"
         justifyContent="center"
@@ -258,6 +259,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
       </Box>
       <Popover
         id={id}
+        data-testid="l2g-plot-popover"
         open={open}
         anchorEl={anchorEl}
         onClose={handleClose}
@@ -337,12 +339,13 @@ function DetailCell({ geneSymbol, score, mouseLeaveRow, waterfallRow, waterfallX
             },
           }}
           onClick={handleClickOpen}
+          data-testid="l2g-details-trigger"
         >
           <Typography variant="caption">Details</Typography>
           <FontAwesomeIcon size="sm" icon={faChevronRight} />
         </Box>
       </Box>
-      <Dialog maxWidth="md" open={open} onClose={handleClose}>
+      <Dialog maxWidth="md" open={open} onClose={handleClose} data-testid="l2g-details-dialog">
         <ClosePlot handleClose={handleClose} />
         <Box p={3}>
           <Typography variant="h6">
@@ -485,6 +488,7 @@ function HeatmapTable({
       <Box display="flex" justifyContent="center">
         <Box
           component="table"
+          data-testid="l2g-heatmap"
           sx={{
             tableLayout: "fixed",
             width: singleRowMode ? "100%" : "90%",

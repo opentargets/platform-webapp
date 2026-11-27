@@ -58,6 +58,7 @@ function GlobalSearchFreeListItem() {
       className="search-list-item search-list-item-active"
       role="menuitem"
       tabIndex="0"
+      data-testid="global-search-free-item"
       data-item-details={JSON.stringify(freeSearchTermObject)}
       onClick={() => handleItemClick(freeSearchTermObject)}
     >

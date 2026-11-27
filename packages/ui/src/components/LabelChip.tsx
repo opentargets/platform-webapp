@@ -3,13 +3,20 @@ import type { ReactElement } from "react";
 import OTTooltip from "./Tooltip";
 
 type LabelChipProps = {
+  "data-testid"?: string;
   label?: string;
   to?: string;
   tooltip?: string | null;
   value?: string;
 };
 
-function LabelChip({ label, value, to, tooltip = null }: LabelChipProps): ReactElement {
+function LabelChip({
+  label,
+  value,
+  to,
+  tooltip = null,
+  "data-testid": dataTestId,
+}: LabelChipProps): ReactElement {
   const containerStyle = {
     display: "flex",
     borderRadius: "5px",
@@ -36,15 +43,19 @@ function LabelChip({ label, value, to, tooltip = null }: LabelChipProps): ReactE
   };
   return (
     <OTTooltip title={tooltip} disableInteractive style={{}}>
-      <a href={to} style={containerStyle}>
+      <a href={to} style={containerStyle} data-testid={dataTestId}>
         {label && (
           <div style={labelStyle}>
-            <Typography variant="caption">{label}</Typography>
+            <Typography variant="caption" data-testid="label-chip-label">
+              {label}
+            </Typography>
           </div>
         )}
         {value && (
           <div style={valueStyle}>
-            <Typography variant="caption">{value}</Typography>
+            <Typography variant="caption" data-testid="label-chip-value">
+              {value}
+            </Typography>
           </div>
         )}
       </a>
