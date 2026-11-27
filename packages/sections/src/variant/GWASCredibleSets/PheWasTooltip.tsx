@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { credsetConfidenceMap, naLabel } from "@ot/constants";
+import { credsetConfidenceLabels, fineMappingMethodLabels, naLabel } from "@ot/constants";
 import { Fragment } from "react";
 import {
   Box,
@@ -17,18 +17,18 @@ import {
 } from "ui";
 import GWAS_CREDIBLE_SETS_TOOLTIP_QUERY from "./GWASCredibleSetsTooltipQuery.gql";
 
-function PheWasTooltip({ studyLocusId, variantId }: { studyLocusId: string; variantId: string }) {
+function PheWasTooltip({ credibleSetId, variantId }: { credibleSetId: string; variantId: string }) {
   const { data, loading, error } = useQuery(GWAS_CREDIBLE_SETS_TOOLTIP_QUERY, {
-    variables: { studyLocusId, variantId },
+    variables: { credibleSetId, variantId },
     fetchPolicy: "cache-first",
   });
   const credibleSet = data?.credibleSet;
   const valueMaxWidth = "200px";
-  const displayId = credibleSet?.variant ? (
+  const displayId = credibleSet?.leadVariant ? (
     <DisplayVariantId
-      variantId={credibleSet.variant.variantId}
-      referenceAllele={credibleSet.variant.referenceAllele}
-      alternateAllele={credibleSet.variant.alternateAllele}
+      variantId={credibleSet.leadVariant.variantId}
+      referenceAllele={credibleSet.leadVariant.referenceAllele}
+      alternateAllele={credibleSet.leadVariant.alternateAllele}
       expand={false}
     />
   ) : (
@@ -64,18 +64,18 @@ function PheWasTooltip({ studyLocusId, variantId }: { studyLocusId: string; vari
         <TooltipTable>
           <TooltipRow label="Credible set">
             <Box display="flex">
-              <Navigate to={`/credible-set/${credibleSet.studyLocusId}`} />
+              <Navigate to={`/credible-set/${credibleSet.credibleSetId}`} />
             </Box>
           </TooltipRow>
           <TooltipRow label="Lead variant">
-            {credibleSet.variant ? (
-              credibleSet.variant.variantId === variantId ? (
+            {credibleSet.leadVariant ? (
+              credibleSet.leadVariant.variantId === variantId ? (
                 <Box display="flex" alignItems="center" gap={0.5}>
                   {displayId}
                   <Chip label="self" variant="outlined" size="small" />
                 </Box>
               ) : (
-                <Link asyncTooltip to={`/variant/${credibleSet.variant.variantId}`}>
+                <Link asyncTooltip to={`/variant/${credibleSet.leadVariant.variantId}`}>
                   {displayId}
                 </Link>
               )
@@ -108,30 +108,32 @@ function PheWasTooltip({ studyLocusId, variantId }: { studyLocusId: string; vari
             )}
           </TooltipRow>
           <TooltipRow label="P-value">
-            {typeof credibleSet.pValueMantissa === "number" &&
-            typeof credibleSet.pValueExponent === "number" ? (
+            {typeof credibleSet.leadPValueMantissa === "number" &&
+            typeof credibleSet.leadPValueExponent === "number" ? (
               <ScientificNotation
-                number={[credibleSet.pValueMantissa, credibleSet.pValueExponent]}
+                number={[credibleSet.leadPValueMantissa, credibleSet.leadPValueExponent]}
                 dp={2}
               />
             ) : (
               naLabel
             )}
           </TooltipRow>
-          <TooltipRow label="Beta">{credibleSet.beta?.toPrecision(3) ?? naLabel}</TooltipRow>
+          <TooltipRow label="Beta">{credibleSet.leadBeta?.toPrecision(3) ?? naLabel}</TooltipRow>
           <TooltipRow label="Posterior probability">
             {credibleSet.locus?.rows?.[0]?.posteriorProbability?.toPrecision(3) ?? naLabel}
           </TooltipRow>
           <TooltipRow label="Fine-mapping">
             <Box display="flex" flexDirection="column" gap={0.25}>
               <Box display="flex" gap={0.5}>
-                Method: {credibleSet.finemappingMethod ?? naLabel}
+                Method:{" "}
+                {fineMappingMethodLabels[credibleSet.fineMappingMethod] ??
+                  credibleSet.fineMappingMethod}
               </Box>
               <Box display="flex" gap={0.5}>
                 Confidence:{" "}
                 {credibleSet.confidence ? (
-                  <Tooltip title={credibleSet.confidence} style="">
-                    <ClinvarStars num={credsetConfidenceMap[credibleSet.confidence]} />
+                  <Tooltip title={credsetConfidenceLabels[credibleSet.confidence]} style="">
+                    <ClinvarStars num={credibleSet.confidence} />
                   </Tooltip>
                 ) : (
                   naLabel
@@ -156,7 +158,7 @@ function PheWasTooltip({ studyLocusId, variantId }: { studyLocusId: string; vari
               </Box>
             </Box>
           </TooltipRow>
-          <TooltipRow label="Credible set size">{credibleSet.locusSize?.count ?? naLabel}</TooltipRow>
+          <TooltipRow label="Credible set size">{credibleSet.locusSize}</TooltipRow>
         </TooltipTable>
       )}
     </Box>
