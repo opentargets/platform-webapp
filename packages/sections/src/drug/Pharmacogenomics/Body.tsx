@@ -154,15 +154,14 @@ function Body({ id: chemblId, label: name, entity }: Props) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }) => {
+      renderCell: ({ genotypeId, variantId }) => {
         if (!genotypeId) return naLabel;
         const [chr, pos, ref, alt] = genotypeId.split(",")[0].split("_");
-        if (!chr || !pos || !ref || !alt) return genotypeId;
-        const variantId = `${chr}_${pos}_${ref}_${alt}`;
+        if (!chr || !pos || !ref || !alt || !variantId) return genotypeId;
         return (
           <Link asyncTooltip to={`/variant/${variantId}`}>
             <DisplayVariantId
-              variantId={variantId}
+              variantId={`${chr}_${pos}_${ref}_${alt}`}
               referenceAllele={ref}
               alternateAllele={alt}
               expand={false}
