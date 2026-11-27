@@ -4,6 +4,7 @@ import {
   type TargetInteractionsStringQuery,
   type TargetInteractionsStringQueryVariables,
 } from "@ot/constants";
+import { getInteractorUrl } from "@ot/utils";
 import { scaleQuantize } from "d3";
 import type { CSSProperties } from "react";
 import { GridLegacy, Legend, Link, type OtTableColumn, OtTableServer } from "ui";
@@ -67,7 +68,7 @@ function getColumns(): OtTableColumn<StringInteractionRow>[] {
               {row.targetB.approvedSymbol}
             </Link>
           ) : (
-            <Link to={`http://uniprot.org/uniprot/${row.intB}`} external>
+            <Link to={getInteractorUrl(row.intB)} external>
               {row.intB}
             </Link>
           )}
