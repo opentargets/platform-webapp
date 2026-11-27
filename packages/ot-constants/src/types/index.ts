@@ -7556,7 +7556,7 @@ export type TargetSafetyQueryVariables = Exact<{
 }>;
 
 
-export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null, eventId?: string | null, datasource: string, literature?: string | null, biosamples: Array<{ __typename?: 'SafetyBiosamples', cellFormat?: string | null, cellLabel?: string | null, tissueLabel?: string | null, tissueId?: string | null }>, effects: Array<{ __typename?: 'SafetyEffects', dosing?: string | null, direction: string }>, studies: Array<{ __typename?: 'SafetyStudies', name?: string | null, type?: string | null, description?: string | null }> }> } | null };
+export type TargetSafetyQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null, eventId?: string | null, datasource: string, url?: string | null, literature?: string | null, biosamples: Array<{ __typename?: 'SafetyBiosamples', cellFormat?: string | null, cellLabel?: string | null, tissueLabel?: string | null, tissueId?: string | null }>, effects: Array<{ __typename?: 'SafetyEffects', dosing?: string | null, direction: string }>, studies: Array<{ __typename?: 'SafetyStudies', name?: string | null, type?: string | null, description?: string | null }> }> } | null };
 
 export type SafetySummaryFragment = { __typename?: 'Target', safetyLiabilities: Array<{ __typename?: 'SafetyLiability', event?: string | null }> };
 
@@ -10567,6 +10567,7 @@ export const TargetSafetyQueryDocument = gql`
         description
       }
       datasource
+      url
       literature
     }
   }

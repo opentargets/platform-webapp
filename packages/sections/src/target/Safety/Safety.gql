@@ -20,6 +20,7 @@ query TargetSafetyQuery($ensemblId: String!) {
         description
       }
       datasource
+      url
       literature
     }
   }
