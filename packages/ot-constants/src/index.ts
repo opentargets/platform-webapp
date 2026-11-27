@@ -583,6 +583,12 @@ export const chromosomeInfo = [
   { chromosome: "Y", length: 57227415 },
 ];
 
+// The API returns Variant.chromosome as a Chromosome enum value ("chr1", "chrx",
+// "chrmt") but target and transcript locations as plain names ("1", "X").
+// Convert either form to the plain name used by chromosomeInfo.
+export const chromosomeName = (chromosome?: string | null): string | undefined =>
+  chromosome ? chromosome.replace(/^chr/i, "").toUpperCase() : undefined;
+
 export * from "./alphaFold";
 export * from "./colorSchemas";
 export * from "./dataTypes";
