@@ -52,6 +52,11 @@ export function getDefaultConfig(): TestConfig {
       alternatives: ["MONDO_0007254"], // breast cancer
       aotfGenes: ["IL6", "ADRB1", "APOE"],
     },
+    evidence: {
+      primary: { ensgId: "ENSG00000157764", efoId: "MONDO_0005105" }, // BRAF, melanoma
+      withGeneticEvidence: { ensgId: "ENSG00000160712", efoId: "MONDO_0005068" }, // IL6R, myocardial infarction
+      withoutEvidence: { ensgId: "ENSG00000243485", efoId: "MONDO_0005105" }, // MIR1302-2HG, melanoma
+    },
     study: {
       gwas: {
         primary: "GCST90475211",
@@ -101,7 +106,8 @@ export async function resolveTestConfig(): Promise<TestConfig> {
       return mergeWithDefaults(fetched, defaults);
     } catch (error) {
       lastError = error;
-      if (attempt < FETCH_ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+      if (attempt < FETCH_ATTEMPTS)
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
     }
   }
   throw new Error(

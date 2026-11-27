@@ -1,13 +1,13 @@
 import { expect, test } from "../../../fixtures";
 import { DrugBibliographySection } from "../../../POM/objects/widgets/Drug/drugBibliographySection";
 import { expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
-import { DrugPage } from "../../../POM/page/drug/drug";
-import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
-import { expectSectionLoaded } from "../../../utils/sections";
 import {
   stubEuropePmc,
   waitForOperation,
 } from "../../../POM/objects/widgets/shared/sectionDataControls";
+import { DrugPage } from "../../../POM/page/drug/drug";
+import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
+import { expectSectionLoaded } from "../../../utils/sections";
 
 const DEFAULT_PAGE_SIZE = 5;
 const MAX_SIMILAR_ENTITIES = 15;
@@ -181,7 +181,9 @@ test.describe("Drug page: Bibliography", () => {
         operationName?: string;
         variables?: { ids?: string[] };
       } | null;
-      return body?.operationName === "DrugBibliographyQuery" && body.variables?.ids?.[0] === entityId;
+      return (
+        body?.operationName === "DrugBibliographyQuery" && body.variables?.ids?.[0] === entityId
+      );
     });
     await chip.click();
     await request;
@@ -208,7 +210,9 @@ test.describe("Drug page: Bibliography", () => {
     await test.step("removing the entity restores the original result", async () => {
       await bibliography.addedEntityChips.first().click();
       await expect(bibliography.addedEntityChips).toHaveCount(0);
-      await expect(bibliography.countInfo).toHaveText(`Showing ${DEFAULT_PAGE_SIZE} of ${total} results`);
+      await expect(bibliography.countInfo).toHaveText(
+        `Showing ${DEFAULT_PAGE_SIZE} of ${total} results`
+      );
       await bibliography.expectResults(DEFAULT_PAGE_SIZE);
       expect(await bibliography.publicationIds()).toEqual(firstPage);
       await expect(
@@ -266,7 +270,9 @@ test.describe("Drug page: Bibliography", () => {
       await expect
         .poll(async () => {
           const ids = await idsOffered();
-          return ids.some((id) => id.startsWith("ENSG")) && ids.some((id) => id.startsWith("CHEMBL"));
+          return (
+            ids.some((id) => id.startsWith("ENSG")) && ids.some((id) => id.startsWith("CHEMBL"))
+          );
         })
         .toBe(true);
     });
@@ -386,10 +392,9 @@ test.describe("Drug page: Bibliography", () => {
       bibliography.dateRangeStart,
       "the range should start at the earliest publication (year-month)"
     ).toHaveText(/^(19|20)\d{2}-\d{1,2}$/);
-    await expect(
-      bibliography.dateRangeEnd,
-      "the range should end at the current month"
-    ).toHaveText(new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`));
+    await expect(bibliography.dateRangeEnd, "the range should end at the current month").toHaveText(
+      new RegExp(`^${new Date().getFullYear()}-\\d{1,2}$`)
+    );
     await expect(bibliography.dateSliderThumbs.last()).not.toHaveAttribute("aria-valuemax", "0");
   });
 

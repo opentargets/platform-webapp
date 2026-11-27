@@ -88,7 +88,9 @@ test.describe("Disease associations: advanced filters (facets)", () => {
     await test.step("category select", async () => {
       await expect(aotf.facetCategorySelect).toHaveText("All Categories");
       await aotf.facetCategorySelect.click();
-      await expect(page.getByRole("listbox").getByRole("option")).toHaveText(TARGET_FACET_CATEGORIES);
+      await expect(page.getByRole("listbox").getByRole("option")).toHaveText(
+        TARGET_FACET_CATEGORIES
+      );
       await page.keyboard.press("Escape");
       await expect(page.getByRole("listbox")).toHaveCount(0);
     });
@@ -169,9 +171,10 @@ test.describe("Disease associations: advanced filters (facets)", () => {
       // The search is fuzzy (it also suggests "Kinesins"), so only the best match is
       // asserted to contain the term.
       await aotf.facetSearchInput.fill("kinase");
-      await expect(aotf.facetOptions.first(), "the best match should lead the new suggestions").toContainText(
-        /kinase/i
-      );
+      await expect(
+        aotf.facetOptions.first(),
+        "the best match should lead the new suggestions"
+      ).toContainText(/kinase/i);
       const suggestions = await aotf.facetOptions.allInnerTexts();
       expect(suggestions.length).toBeGreaterThan(1);
       for (const suggestion of suggestions) expect(suggestion).toMatch(/in Reactome$/);
@@ -227,7 +230,10 @@ test.describe("Disease associations: advanced filters (facets)", () => {
     expect(both).toBeGreaterThan(0);
   });
 
-  test("a facet in the URL is applied on load and survives a reload", async ({ page, testConfig }) => {
+  test("a facet in the URL is applied on load and survives a reload", async ({
+    page,
+    testConfig,
+  }) => {
     const diseaseId = testConfig.disease.primary;
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(diseaseId);
@@ -285,10 +291,16 @@ test.describe("Disease associations: column options (weights and required source
     await expect(aotf.requiredCheckboxes).toHaveCount(DATA_SOURCE_COLUMNS.length);
     for (const column of DATA_SOURCE_COLUMNS) {
       const slider = aotf.weightSlider(column.id);
-      await expect(slider, `${column.label} weight`).toHaveAttribute("aria-valuenow", String(column.weight));
+      await expect(slider, `${column.label} weight`).toHaveAttribute(
+        "aria-valuenow",
+        String(column.weight)
+      );
       await expect(slider).toHaveAttribute("aria-valuemin", "0");
       await expect(slider).toHaveAttribute("aria-valuemax", "1");
-      await expect(aotf.requiredCheckbox(column.id), `${column.label} is not required`).not.toBeChecked();
+      await expect(
+        aotf.requiredCheckbox(column.id),
+        `${column.label} is not required`
+      ).not.toBeChecked();
     }
     await expect(aotf.filterChip("column-options"), "defaults are not a filter").toHaveCount(0);
 
@@ -320,7 +332,10 @@ test.describe("Disease associations: column options (weights and required source
     await expect(aotf.weightsPanel).toBeVisible();
   });
 
-  test("requiring a data source keeps only targets with evidence from it", async ({ page, testConfig }) => {
+  test("requiring a data source keeps only targets with evidence from it", async ({
+    page,
+    testConfig,
+  }) => {
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(testConfig.disease.primary, { weights: "1" });
     const total = (await aotf.displayedRange()).total;
@@ -333,7 +348,8 @@ test.describe("Disease associations: column options (weights and required source
       return !!overrides?.some(({ id, policy }) => id === "clinical_precedence" && policy.required);
     });
     await aotf.requiredCheckbox("clinical_precedence").check();
-    const overrides = associationsVariables(await requested)?.datasourcePolicyOverrides as PolicyOverride[];
+    const overrides = associationsVariables(await requested)
+      ?.datasourcePolicyOverrides as PolicyOverride[];
     expect(
       overrides.filter(({ policy }) => policy.required).map(({ id }) => id),
       "only the ticked source is required"
@@ -376,16 +392,20 @@ test.describe("Disease associations: column options (weights and required source
       .toBeGreaterThan(clinical);
     await aotf.expectLoaded();
     expect((await aotf.displayedRange()).total).toBeLessThan(total);
-    const withEither = await aotf.rows().evaluateAll((rows) =>
-      rows.map(
-        (row) =>
-          !!row.querySelector(
-            "[data-testid='score-cell-clinical_precedence'], [data-testid='score-cell-gene_burden']"
-          )
-      )
-    );
+    const withEither = await aotf
+      .rows()
+      .evaluateAll((rows) =>
+        rows.map(
+          (row) =>
+            !!row.querySelector(
+              "[data-testid='score-cell-clinical_precedence'], [data-testid='score-cell-gene_burden']"
+            )
+        )
+      );
     expect(withEither.length).toBeGreaterThan(0);
-    expect(withEither, "every row should have evidence from a required source").not.toContain(false);
+    expect(withEither, "every row should have evidence from a required source").not.toContain(
+      false
+    );
   });
 
   test("setting a data source's weight to zero re-scores the table, and the chip restores it", async ({
@@ -402,15 +422,22 @@ test.describe("Disease associations: column options (weights and required source
       const overrides = associationsVariables(request)?.datasourcePolicyOverrides as
         | PolicyOverride[]
         | undefined;
-      return !!overrides?.some(({ id, policy }) => id === "clinical_precedence" && policy.weight === 0);
+      return !!overrides?.some(
+        ({ id, policy }) => id === "clinical_precedence" && policy.weight === 0
+      );
     });
     await slider.press("Home");
     await expect(slider).toHaveAttribute("aria-valuenow", "0");
-    const overrides = associationsVariables(await requested)?.datasourcePolicyOverrides as PolicyOverride[];
+    const overrides = associationsVariables(await requested)
+      ?.datasourcePolicyOverrides as PolicyOverride[];
     expect(
       overrides.filter(({ id }) => id !== "clinical_precedence").map(({ policy }) => policy.weight),
       "the other weights keep their defaults"
-    ).toEqual(DATA_SOURCE_COLUMNS.filter(({ id }) => id !== "clinical_precedence").map(({ weight }) => weight));
+    ).toEqual(
+      DATA_SOURCE_COLUMNS.filter(({ id }) => id !== "clinical_precedence").map(
+        ({ weight }) => weight
+      )
+    );
 
     await aotf.expectRowsToDifferFrom(defaultOrder);
     await aotf.expectSortedBy("score");
@@ -429,7 +456,9 @@ test.describe("Disease associations: column options (weights and required source
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(testConfig.disease.primary);
     const total = (await aotf.displayedRange()).total;
-    const somatic = DATA_SOURCE_COLUMNS.filter((column) => column.aggregation === "Somatic mutations");
+    const somatic = DATA_SOURCE_COLUMNS.filter(
+      (column) => column.aggregation === "Somatic mutations"
+    );
 
     await aotf.aggregationButton("Somatic mutations").click();
     await expect(aotf.weightsPanel).toBeVisible();
@@ -442,7 +471,9 @@ test.describe("Disease associations: column options (weights and required source
     const withSomatic = await aotf.expectTotalBelow(total);
     const rowsWithSomatic = await aotf.rows().evaluateAll(
       (rows, ids) =>
-        rows.map((row) => ids.some((id) => !!row.querySelector(`[data-testid='score-cell-${id}']`))),
+        rows.map((row) =>
+          ids.some((id) => !!row.querySelector(`[data-testid='score-cell-${id}']`))
+        ),
       somatic.map((column) => column.id)
     );
     expect(rowsWithSomatic).toHaveLength(Math.min(withSomatic, 25));
@@ -451,7 +482,8 @@ test.describe("Disease associations: column options (weights and required source
 
     await test.step("clicking the bar again releases the group", async () => {
       await aotf.aggregationButton("Somatic mutations").click();
-      for (const column of somatic) await expect(aotf.requiredCheckbox(column.id)).not.toBeChecked();
+      for (const column of somatic)
+        await expect(aotf.requiredCheckbox(column.id)).not.toBeChecked();
       await aotf.expectTotal(total);
       await expect(aotf.filterChip("column-options")).toHaveCount(0);
     });
@@ -478,7 +510,10 @@ test.describe("Disease associations: applied filters", () => {
     await aotf.expectSortedBy("score");
   });
 
-  test("lists every applied filter and the reset button clears them all", async ({ page, testConfig }) => {
+  test("lists every applied filter and the reset button clears them all", async ({
+    page,
+    testConfig,
+  }) => {
     const diseaseId = testConfig.disease.primary;
     const aotf = new AssociationsTable(page);
     await aotf.gotoDisease(diseaseId, { sort: "europepmc:desc", weights: "1" });

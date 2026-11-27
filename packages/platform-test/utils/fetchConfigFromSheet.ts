@@ -23,7 +23,9 @@ export async function fetchConfigFromSheet(url: string, scenarioName: string): P
     transformHeader: (header) => header.trim(),
   });
   if (parseResult.errors.length > 0) {
-    throw new Error(`The sheet is not valid CSV: ${JSON.stringify(parseResult.errors.slice(0, 3))}`);
+    throw new Error(
+      `The sheet is not valid CSV: ${JSON.stringify(parseResult.errors.slice(0, 3))}`
+    );
   }
 
   const rows = parseResult.data;

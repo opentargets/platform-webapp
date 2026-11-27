@@ -87,10 +87,9 @@ test.describe("Target safety section", () => {
 
     const row = safety.rowsForEvent("heart disease");
     await expect(row).toHaveCount(1);
-    await expect(safety.eventCell(row).getByRole("link", { name: "heart disease" })).toHaveAttribute(
-      "href",
-      "/disease/MONDO_0005267"
-    );
+    await expect(
+      safety.eventCell(row).getByRole("link", { name: "heart disease" })
+    ).toHaveAttribute("href", "/disease/MONDO_0005267");
     await expect(
       safety.biosystemsCell(row).getByRole("link", { name: "cardiovascular system" })
     ).toHaveAttribute("href", "https://identifiers.org/UBERON:0004535");
@@ -118,16 +117,19 @@ test.describe("Target safety section", () => {
     await safety.table.expectRowCount(liabilities.length);
 
     await test.step("safety events, linked to the disease page when they have an ontology id", async () => {
-      await expect(safety.table.column(0)).toHaveText(liabilities.map(({ event }) => event ?? "N/A"));
+      await expect(safety.table.column(0)).toHaveText(
+        liabilities.map(({ event }) => event ?? "N/A")
+      );
       for (const [index, { event, eventId }] of liabilities.entries()) {
         const cell = safety.eventCell(safety.table.row(index));
         if (eventId) {
           await expect(cell.getByRole("link")).toHaveAttribute("href", `/disease/${eventId}`);
           await expect(cell.getByRole("link")).toHaveText(event ?? "N/A");
         } else {
-          await expect(cell.getByRole("link"), `"${event}" has no ontology id to link to`).toHaveCount(
-            0
-          );
+          await expect(
+            cell.getByRole("link"),
+            `"${event}" has no ontology id to link to`
+          ).toHaveCount(0);
         }
       }
       expect(liabilities.some(({ eventId }) => eventId)).toBe(true);
@@ -148,19 +150,23 @@ test.describe("Target safety section", () => {
         await expect(safety.effectIcon(row, "down", down ? "active" : "inactive")).toHaveCount(1);
         await expect(safety.effectIcon(row, "down", down ? "inactive" : "active")).toHaveCount(0);
       }
-      expect(liabilities.some(({ effects }) => effects.some((e) => e.direction === ACTIVATION))).toBe(
-        true
-      );
-      expect(liabilities.some(({ effects }) => effects.some((e) => e.direction === INHIBITION))).toBe(
-        true
-      );
+      expect(
+        liabilities.some(({ effects }) => effects.some((e) => e.direction === ACTIVATION))
+      ).toBe(true);
+      expect(
+        liabilities.some(({ effects }) => effects.some((e) => e.direction === INHIBITION))
+      ).toBe(true);
     });
 
     await test.step("experimental studies and sources", async () => {
       await expect(safety.table.column(3)).toHaveText(
-        liabilities.map(({ studies }) => (studies.length === 0 ? "N/A" : `${studies.length} studies`))
+        liabilities.map(({ studies }) =>
+          studies.length === 0 ? "N/A" : `${studies.length} studies`
+        )
       );
-      await expect(safety.table.column(4)).toHaveText(liabilities.map(({ datasource }) => datasource));
+      await expect(safety.table.column(4)).toHaveText(
+        liabilities.map(({ datasource }) => datasource)
+      );
     });
   });
 
@@ -170,7 +176,9 @@ test.describe("Target safety section", () => {
   }) => {
     const response = waitForOperation<SafetyData>(page, SafetySection.operation);
     const safety = await openSafety(page, testConfig.target?.withSafetyLiabilities);
-    const events = (await response).data.target.safetyLiabilities.map(({ event }) => event ?? "N/A");
+    const events = (await response).data.target.safetyLiabilities.map(
+      ({ event }) => event ?? "N/A"
+    );
     const total = events.length;
     expect(total).toBeGreaterThan(20);
     const lastPageStart = Math.floor((total - 1) / 10) * 10;
@@ -278,7 +286,10 @@ test.describe("Target safety section", () => {
     });
   });
 
-  test("search treats regular-expression characters as plain text", async ({ page, testConfig }) => {
+  test("search treats regular-expression characters as plain text", async ({
+    page,
+    testConfig,
+  }) => {
     const safety = await openSafety(page, testConfig.target?.withSafetyLiabilities);
     const { table } = safety;
     await table.expectRowCount(10);
@@ -314,7 +325,11 @@ test.describe("Target safety section", () => {
 
     await picker.getByRole("checkbox", { name: "Biosystems" }).uncheck();
     await picker.getByRole("checkbox", { name: "Source" }).uncheck();
-    await expect(table.headers).toHaveText(["Safety event", "Dosing effects", "Experimental studies"]);
+    await expect(table.headers).toHaveText([
+      "Safety event",
+      "Dosing effects",
+      "Experimental studies",
+    ]);
     await expect(table.row(0).locator("td")).toHaveCount(3);
 
     await picker.getByRole("checkbox", { name: "Biosystems" }).check();
@@ -331,13 +346,19 @@ test.describe("Target safety section", () => {
     await safety.table.expectRowCount(liabilities.length);
 
     const increased = liabilities.findIndex(
-      ({ effects }) => effects.length === 1 && effects[0].direction === ACTIVATION && effects[0].dosing
+      ({ effects }) =>
+        effects.length === 1 && effects[0].direction === ACTIVATION && effects[0].dosing
     );
     const decreased = liabilities.findIndex(
-      ({ effects }) => effects.length === 1 && effects[0].direction === INHIBITION && effects[0].dosing
+      ({ effects }) =>
+        effects.length === 1 && effects[0].direction === INHIBITION && effects[0].dosing
     );
-    expect(increased, "the target should have an activation effect with dosing").toBeGreaterThan(-1);
-    expect(decreased, "the target should have an inhibition effect with dosing").toBeGreaterThan(-1);
+    expect(increased, "the target should have an activation effect with dosing").toBeGreaterThan(
+      -1
+    );
+    expect(decreased, "the target should have an inhibition effect with dosing").toBeGreaterThan(
+      -1
+    );
 
     await test.step("activation", async () => {
       await safety.effectIcon(safety.table.row(increased), "up", "active").hover();
@@ -418,12 +439,15 @@ test.describe("Target safety section", () => {
 
     await test.step("one tissue links to its ontology term", async () => {
       const index = find(
-        ({ biosamples }) => biosamples.length === 1 && !biosamples[0].cellFormat && !!biosamples[0].tissueId,
+        ({ biosamples }) =>
+          biosamples.length === 1 && !biosamples[0].cellFormat && !!biosamples[0].tissueId,
         "one tissue"
       );
       const [{ tissueLabel, tissueId }] = liabilities[index].biosamples;
       await expect(
-        safety.biosystemsCell(safety.table.row(index)).getByRole("link", { name: tissueLabel ?? "" })
+        safety
+          .biosystemsCell(safety.table.row(index))
+          .getByRole("link", { name: tissueLabel ?? "" })
       ).toHaveAttribute("href", `https://identifiers.org/${tissueId?.replace("_", ":")}`);
     });
 
@@ -573,7 +597,10 @@ test.describe("Target safety section", () => {
     );
   });
 
-  test("the export includes the dosing effects shown in the table", async ({ page, testConfig }) => {
+  test("the export includes the dosing effects shown in the table", async ({
+    page,
+    testConfig,
+  }) => {
     const response = waitForOperation<SafetyData>(page, SafetySection.operation);
     const safety = await openSafety(page, testConfig.target?.withSafetyLiabilities);
     const liabilities = (await response).data.target.safetyLiabilities;
@@ -622,7 +649,10 @@ test.describe("Target safety section", () => {
     const drawer = await safety.controls.openApiQuery(SafetySection.operation, targetId);
     await expect(drawer).toContainText("safetyLiabilities");
     await safety.controls.closeApiQuery();
-    await expect(safety.table.table, "the table is still there after the drawer closes").toBeVisible();
+    await expect(
+      safety.table.table,
+      "the table is still there after the drawer closes"
+    ).toBeVisible();
   });
 
   test("is absent for a target with no safety liabilities", async ({ page, testConfig }) => {

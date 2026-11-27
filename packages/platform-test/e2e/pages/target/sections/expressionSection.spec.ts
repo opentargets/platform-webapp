@@ -77,7 +77,10 @@ test.describe("Target baseline expression section", () => {
       ["PRIDE (OTAR3091)", "https://home.opentargets.org/OTAR3091"],
       ["DICE", "https://dice-database.org/"],
     ]) {
-      await expect(expression.description.getByRole("link", { name })).toHaveAttribute("href", href);
+      await expect(expression.description.getByRole("link", { name })).toHaveAttribute(
+        "href",
+        href
+      );
     }
 
     await expect(expression.section.getByRole("tab")).toHaveText(["Summary", "Variation (GTEx)"]);
@@ -92,7 +95,9 @@ test.describe("Target baseline expression section", () => {
     await expect(expression.heatmap.getByRole("heading", { name: "Specificity" })).toBeVisible();
     await expect(expression.heatmap.getByText("high", { exact: true })).toBeVisible();
     await expect(expression.heatmap.getByText("low", { exact: true })).toBeVisible();
-    await expect(expression.heatmap.getByRole("heading", { name: "Median expression" })).toBeVisible();
+    await expect(
+      expression.heatmap.getByRole("heading", { name: "Median expression" })
+    ).toBeVisible();
     await expect(expression.controls.exportButton).toHaveText("Export");
     await expect(expression.controls.apiQueryButton).toBeVisible();
   });
@@ -122,11 +127,15 @@ test.describe("Target baseline expression section", () => {
         // the scale sits above the first row only, from 0 to the column's maximum
         await expect(expression.axis(slug)).toHaveCount(1);
         await expect(expression.axis(slug)).toHaveText(new RegExp(`^0 ${axisUnit}\\d`));
-        await expect(expression.cell(expression.rows(1).first(), slug).getByTestId(
-          `baseline-expression-axis-${slug}`
-        )).toBeVisible();
+        await expect(
+          expression
+            .cell(expression.rows(1).first(), slug)
+            .getByTestId(`baseline-expression-axis-${slug}`)
+        ).toBeVisible();
 
-        const widths = snapshot.map((row) => row[slug]).filter((value) => typeof value === "number");
+        const widths = snapshot
+          .map((row) => row[slug])
+          .filter((value) => typeof value === "number");
         expect(widths.length, `${datatype} should have bars`).toBeGreaterThan(1);
         expect(Math.max(...widths), "bars are normalised: the largest fills its track").toBe(100);
         expect(Math.min(...widths)).toBeGreaterThanOrEqual(0);
@@ -152,7 +161,9 @@ test.describe("Target baseline expression section", () => {
 
     const ranks = (await expression.snapshot()).map((row) => rank(row[sorted]));
     expect(ranks[0], "the first row holds the column's largest median").toBe(100);
-    expect(isNonIncreasing(ranks), `rows should be in descending ${sorted} order: ${ranks}`).toBe(true);
+    expect(isNonIncreasing(ranks), `rows should be in descending ${sorted} order: ${ranks}`).toBe(
+      true
+    );
   });
 
   test("clicking a column header sorts by it, descending then ascending", async ({
@@ -175,11 +186,16 @@ test.describe("Target baseline expression section", () => {
       const snapshot = await expression.snapshot();
       const ranks = snapshot.map((row) => rank(row[other]));
       expect(isNonIncreasing(ranks), `descending ${other}: ${ranks}`).toBe(true);
-      expect(snapshot.map(({ name }) => name), "the row order should change").not.toEqual(before);
+      expect(
+        snapshot.map(({ name }) => name),
+        "the row order should change"
+      ).not.toEqual(before);
       expect(snapshot.map(({ name }) => name).sort()).toEqual([...before].sort());
       // the scale stays above whichever row is now first
       await expect(
-        expression.cell(expression.rows(1).first(), other).getByTestId(`baseline-expression-axis-${other}`)
+        expression
+          .cell(expression.rows(1).first(), other)
+          .getByTestId(`baseline-expression-axis-${other}`)
       ).toBeVisible();
     });
 
@@ -202,7 +218,9 @@ test.describe("Target baseline expression section", () => {
   }) => {
     const { expression } = await openExpression(page, testConfig.target?.primary);
     const names = (await expression.snapshot()).map(({ name }) => name);
-    const alphabetical = [...names].sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
+    const alphabetical = [...names].sort((a, b) =>
+      a.localeCompare(b, "en", { sensitivity: "base" })
+    );
     expect(names, "the default order is by expression, not by name").not.toEqual(alphabetical);
 
     await expression.sortBy("name", "asc");
@@ -225,7 +243,9 @@ test.describe("Target baseline expression section", () => {
     const [[parent, subTissues], [otherParent, otherSubTissues]] = [...children.entries()]
       .filter(([, names]) => names.size > 1)
       .sort((a, b) => b[1].size - a[1].size);
-    expect(subTissues.size, "BRAF should have a tissue with several sub-tissues").toBeGreaterThan(2);
+    expect(subTissues.size, "BRAF should have a tissue with several sub-tissues").toBeGreaterThan(
+      2
+    );
 
     await test.step("expand one tissue", async () => {
       await expression.expand(parent);
@@ -295,7 +315,9 @@ test.describe("Target baseline expression section", () => {
         expression.row(2, withoutDetail[0]).getByTestId("baseline-expression-expand-detail")
       ).toBeHidden();
       await expression.nameCell(expression.row(2, withoutDetail[0])).click();
-      await expect(expression.detailPlots, "a sub-tissue without detail opens nothing").toHaveCount(0);
+      await expect(expression.detailPlots, "a sub-tissue without detail opens nothing").toHaveCount(
+        0
+      );
     });
 
     await test.step("open the cell-type plot", async () => {
@@ -418,7 +440,9 @@ test.describe("Target baseline expression section", () => {
 
     await test.step("specificity legend", async () => {
       await expression.helpIcon("Specificity").hover();
-      await expect(expression.tooltip.filter({ hasText: "Specificity score threshold" })).toHaveText(
+      await expect(
+        expression.tooltip.filter({ hasText: "Specificity score threshold" })
+      ).toHaveText(
         "Specificity score threshold: 75%A high value indicates BRAF is in the top 25% of specifically expressed genes in the tissue."
       );
     });
@@ -444,13 +468,17 @@ test.describe("Target baseline expression section", () => {
       const name = (await expression.snapshot())[0].name;
       // the bar itself ignores the pointer; the hover lands on its tooltip wrapper
       await expression.bar(first, sorted).hover({ force: true });
-      const tooltip = expression.tooltip.filter({ hasText: "Median expression" });
+      const tooltip = expression.tooltip.filter({ hasText: "Median expression:" });
       await expect(tooltip).toContainText(`Tissue:${name}`);
       await expect(tooltip).toHaveText(/Median expression:[\d,.]+ \S+/);
     });
 
     await test.step("a specificity dot shows the score as a percentage", async () => {
-      const dot = expression.rows(1).first().getByTestId("baseline-expression-specificity-low").first();
+      const dot = expression
+        .rows(1)
+        .first()
+        .getByTestId("baseline-expression-specificity-low")
+        .first();
       await dot.hover();
       await expect(expression.tooltip.filter({ hasText: /Specificity score:/ })).toHaveText(
         /Specificity score:(\d+(\.\d)?%|N\/A)$/
@@ -496,9 +524,9 @@ test.describe("Target baseline expression section", () => {
     const naRows = snapshot.filter((row) => row["mass-spectrometry-proteomics"] === "N/A");
     expect(naRows.length).toBeGreaterThan(0);
     // "N/A" only ever stands for "measured, nothing detected", which only proteomics reports
-    expect(snapshot.some((row) => row["scrna-seq"] === "N/A" || row["bulk-rna-seq"] === "N/A")).toBe(
-      false
-    );
+    expect(
+      snapshot.some((row) => row["scrna-seq"] === "N/A" || row["bulk-rna-seq"] === "N/A")
+    ).toBe(false);
 
     await cells.first().hover();
     await expect(expression.tooltip.filter({ hasText: "No protein detected" })).toHaveText(
@@ -518,7 +546,9 @@ test.describe("Target baseline expression section", () => {
 
     await expect(expression.viewSpecificityDot("tissue", "low")).toBeVisible();
     await expect(expression.viewSpecificityDot("celltype", "low")).toBeVisible();
-    await expect(expression.heatmap.getByTestId("baseline-expression-specificity-high")).toHaveCount(0);
+    await expect(
+      expression.heatmap.getByTestId("baseline-expression-specificity-high")
+    ).toHaveCount(0);
 
     await expression.viewButton("tissue").hover();
     await expect(expression.tooltip.filter({ hasText: "tissue" })).toHaveText(
@@ -530,13 +560,18 @@ test.describe("Target baseline expression section", () => {
     page,
     testConfig,
   }) => {
-    const { expression, rows } = await openExpression(page, testConfig.target?.withSpecificExpression);
+    const { expression, rows } = await openExpression(
+      page,
+      testConfig.target?.withSpecificExpression
+    );
     const tissue = groupForView(rows, "tissue");
     const cellType = groupForView(rows, "celltype");
     expect(tissue.mostSpecific?.specificity_score).toBeGreaterThanOrEqual(0.75);
     expect(cellType.mostSpecific?.specificity_score).toBeGreaterThanOrEqual(0.75);
 
-    await expect(expression.description).toContainText("RNA and protein baseline expression for ALB");
+    await expect(expression.description).toContainText(
+      "RNA and protein baseline expression for ALB"
+    );
     await expect(expression.viewSpecificityDot("tissue", "high")).toBeVisible();
     await expect(expression.viewSpecificityDot("celltype", "high")).toBeVisible();
 
@@ -560,7 +595,9 @@ test.describe("Target baseline expression section", () => {
         .cell(expression.row(1, parent), slug)
         .getByTestId("baseline-expression-specificity-high");
       await expect(dot).toHaveCount(1);
-      await expect(expression.heatmap.getByTestId("baseline-expression-specificity-low").first()).toBeVisible();
+      await expect(
+        expression.heatmap.getByTestId("baseline-expression-specificity-low").first()
+      ).toBeVisible();
 
       await dot.hover();
       const tooltip = expression.tooltip.filter({ hasText: /Specificity score:/ });
@@ -626,7 +663,10 @@ test.describe("Target baseline expression section", () => {
     const drawer = await expression.controls.openApiQuery(ExpressionSection.operation, targetId);
     await expect(drawer).toContainText("baselineExpression");
     await expression.controls.closeApiQuery();
-    await expect(expression.heatmap, "the heatmap is still there after the drawer closes").toBeVisible();
+    await expect(
+      expression.heatmap,
+      "the heatmap is still there after the drawer closes"
+    ).toBeVisible();
   });
 
   test("the GTEx tab draws the variation box plot and the Summary tab comes back", async ({
@@ -662,7 +702,9 @@ test.describe("Target baseline expression section", () => {
         STUBBED_GTEX_TISSUES.length
       );
       await expect(expression.heatmap).toHaveCount(0);
-      expect(requested.some((url) => url.includes(`/reference/gene?geneId=${targetId}`))).toBe(true);
+      expect(requested.some((url) => url.includes(`/reference/gene?geneId=${targetId}`))).toBe(
+        true
+      );
       expect(
         requested.some((url) => url.includes("/expression/geneExpression?datasetId=gtex_v10"))
       ).toBe(true);

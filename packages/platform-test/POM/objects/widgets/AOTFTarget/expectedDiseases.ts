@@ -45,7 +45,13 @@ export const BRAF_DISEASES = {
   colorectalCancer: {
     id: "MONDO_0005575",
     name: "colorectal cancer",
-    dataSources: ["clinical_precedence", "eva", "uniprot_variants", "uniprot_literature", "europepmc"],
+    dataSources: [
+      "clinical_precedence",
+      "eva",
+      "uniprot_variants",
+      "uniprot_literature",
+      "europepmc",
+    ],
   },
 } as const satisfies Record<string, ExpectedDisease>;
 

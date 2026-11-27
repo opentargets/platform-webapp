@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { GeneOntologySection } from "../../../../POM/objects/widgets/shared/geneOntologySection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
 import { EDGE_TARGETS, targetFacts } from "../../../../POM/objects/widgets/Target/targetFacts";
@@ -18,7 +18,9 @@ test.describe("Target profile: Gene Ontology section", () => {
     await geneOntology.expectLoaded();
 
     await expect(geneOntology.title).toHaveText("Gene Ontology");
-    await expect(geneOntology.description).toHaveText(`Annotations for ${symbol}. Source: UniProt.`);
+    await expect(geneOntology.description).toHaveText(
+      `Annotations for ${symbol}. Source: UniProt.`
+    );
     await expect(geneOntology.descriptionLink("UniProt")).toHaveAttribute(
       "href",
       "https://www.uniprot.org/"
@@ -81,6 +83,30 @@ test.describe("Target profile: Gene Ontology section", () => {
     const geneOntology = new GeneOntologySection(page);
     const { controls } = geneOntology;
 
+    // The drawer asks Europe PMC, which can take close to a minute. Answer it with the
+    // publication that was asked for, so the test depends only on the app and its API.
+    await page.route("https://www.ebi.ac.uk/europepmc/webservices/rest/searchPOST", (route) => {
+      const ids =
+        decodeURIComponent(route.request().postData() ?? "").match(/ext_id:(\d+)/gi) ?? [];
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          hitCount: ids.length,
+          resultList: {
+            result: ids.map((id) => ({
+              id: id.replace(/ext_id:/i, ""),
+              source: "MED",
+              title: "A stubbed publication",
+              pubYear: "2008",
+              authorList: { author: [{ lastName: "Stub", initials: "A" }] },
+              journalInfo: { journal: { title: "Stub Journal" } },
+            })),
+          },
+        }),
+      });
+    });
+
     await page.goto(`/target/${testConfig.target?.primary}`);
     await geneOntology.expectLoaded();
     await controls.expectLoaded();
@@ -119,6 +145,7 @@ test.describe("Target profile: Gene Ontology section", () => {
       await expect(drawer).toContainText("Publications");
       const entry = drawer.getByTestId(`literature-entry-${pubmedId}`);
       await expect(entry, "the drawer should show the publication that was clicked").toBeVisible();
+      await expect(entry).toContainText("A stubbed publication");
       await expect(entry.getByRole("link").first()).toHaveAttribute(
         "href",
         new RegExp(`europepmc\\.org/.*${pubmedId}$`)
@@ -417,7 +444,9 @@ test.describe("Target profile: Gene Ontology section", () => {
     await geneOntology.expectLoaded();
     await controls.expectLoaded();
 
-    await expect(geneOntology.description).toHaveText(`Annotations for ${symbol}. Source: UniProt.`);
+    await expect(geneOntology.description).toHaveText(
+      `Annotations for ${symbol}. Source: UniProt.`
+    );
     const total = await controls.total();
     expect(total).toBeGreaterThan(0);
     expect(total).toBeLessThanOrEqual(100);

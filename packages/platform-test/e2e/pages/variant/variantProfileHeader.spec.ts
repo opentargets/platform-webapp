@@ -48,7 +48,10 @@ test.describe("Variant profile header", () => {
       await test.step("most severe consequence links to its Sequence Ontology term", async () => {
         const link = header.getMostSevereConsequenceLink();
         await expect(link).toHaveText(facts.consequence);
-        await expect(link).toHaveAttribute("href", `https://identifiers.org/SO:${facts.consequenceId}`);
+        await expect(link).toHaveAttribute(
+          "href",
+          `https://identifiers.org/SO:${facts.consequenceId}`
+        );
       });
     });
   }

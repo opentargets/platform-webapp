@@ -109,6 +109,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "starAllele",
       label: "Star Allele",
+      exportValue: ({ haplotypeId, haplotypeFromSourceId }) =>
+        haplotypeId || haplotypeFromSourceId || "",
       renderCell: ({ haplotypeId, haplotypeFromSourceId }) => {
         const displayId = haplotypeId || haplotypeFromSourceId || naLabel;
         const LinkComponent = haplotypeFromSourceId && (
@@ -135,15 +137,14 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           for more details.
         </>
       ),
-      renderCell: ({ genotypeId }) => {
+      renderCell: ({ genotypeId, variantId }) => {
         if (!genotypeId) return naLabel;
         const [chr, pos, ref, alt] = genotypeId.split(",")[0].split("_");
-        if (!chr || !pos || !ref || !alt) return genotypeId;
-        const variantId = `${chr}_${pos}_${ref}_${alt}`;
+        if (!chr || !pos || !ref || !alt || !variantId) return genotypeId;
         return (
           <Link asyncTooltip to={`/variant/${variantId}`}>
             <DisplayVariantId
-              variantId={variantId}
+              variantId={`${chr}_${pos}_${ref}_${alt}`}
               referenceAllele={ref}
               alternateAllele={alt}
               expand={false}
@@ -156,6 +157,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "variantConsequence",
       label: "Variant Consequence",
+      exportValue: ({ variantFunctionalConsequence }) =>
+        variantFunctionalConsequence ? sentenceCase(variantFunctionalConsequence.label) : "",
       renderCell: ({ variantFunctionalConsequence, genotypeId }) => {
         const pvparams = genotypeId?.split(",")[0].split("_") || [];
         return (
@@ -187,6 +190,13 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "drug",
       label: "Drug(s)",
+      exportValue: ({ drugs }) =>
+        drugs
+          .filter((d) => d.drugId || d.drugFromSource)
+          .map(({ drugFromSource, drugId }) =>
+            drugFromSource && drugId ? `${drugFromSource} (${drugId})` : drugFromSource || drugId
+          )
+          .join("; "),
       renderCell: ({ drugs }) => {
         if (drugs.length === 0) return naLabel;
 
@@ -208,6 +218,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "drugResponse",
       label: "Drug Response Phenotype",
+      exportValue: ({ phenotypeText }) => phenotypeText ?? "",
       renderCell: ({ phenotypeText, phenotypeFromSourceId, genotypeAnnotationText }) => {
         let phenotypeTextElement: ReactNode = phenotypeText || naLabel;
 
@@ -230,12 +241,20 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "drugResponseCategory",
       label: "Drug Response Category",
+      exportValue: ({ pgxCategory }) => pgxCategory ?? "",
       renderCell: ({ pgxCategory }) => pgxCategory || naLabel,
       filterValue: ({ pgxCategory }) => pgxCategory,
     },
     {
       id: "directionality",
       label: "Directionality",
+      exportValue: ({ variantAnnotation }) =>
+        (variantAnnotation ?? [])
+          .map(({ directionality, effectDescription, literature }) =>
+            [directionality, effectDescription, literature].filter(Boolean).join(" | ")
+          )
+          .filter(Boolean)
+          .join("; "),
       renderCell: ({ variantAnnotation }) => (
         <DirectionalityDrawer variantAnnotation={variantAnnotation} caption="Directionality" />
       ),
@@ -284,6 +303,8 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
     {
       id: "source",
       label: "Source",
+      exportValue: ({ studyId }) =>
+        studyId ? `https://www.pharmgkb.org/clinicalAnnotation/${studyId}` : "",
       renderCell: ({ studyId }) =>
         studyId ? (
           <Link external to={`https://www.pharmgkb.org/clinicalAnnotation/${studyId}`}>

@@ -32,14 +32,23 @@ export const HISTORY_STORAGE_KEY = "search-history";
 export const MAX_RECENT_ITEMS = 8;
 
 /** What the app stores about an item, in its `data-item-details` attribute. */
-export type ItemDetails = { entity: string; id?: string; name?: string; symbol?: string; type?: string };
+export type ItemDetails = {
+  entity: string;
+  id?: string;
+  name?: string;
+  symbol?: string;
+  type?: string;
+};
 
 function isSearchQueryFor(response: Response, term: string): boolean {
   const request = response.request();
   if (request.method() !== "POST") return false;
   const body = request.postData();
   if (!body?.includes('"SearchQuery"')) return false;
-  const parsed = JSON.parse(body) as { operationName?: string; variables?: { queryString?: string } };
+  const parsed = JSON.parse(body) as {
+    operationName?: string;
+    variables?: { queryString?: string };
+  };
   return parsed.operationName === "SearchQuery" && parsed.variables?.queryString === term;
 }
 
@@ -219,9 +228,9 @@ export class GlobalSearch {
 
   /** Put recent searches in the browser's storage. Call before opening the dialog. */
   async seedHistory(items: ItemDetails[]): Promise<void> {
-    await this.page.evaluate(
-      ([key, value]) => localStorage.setItem(key, value),
-      [HISTORY_STORAGE_KEY, JSON.stringify(items)] as const
-    );
+    await this.page.evaluate(([key, value]) => localStorage.setItem(key, value), [
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(items),
+    ] as const);
   }
 }

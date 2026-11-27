@@ -242,7 +242,9 @@ export class BibliographySection {
   /** The Europe PMC ids of the publications on the current page, in order. */
   async publicationIds(): Promise<string[]> {
     return this.publications.evaluateAll((entries) =>
-      entries.map((entry) => (entry.getAttribute("data-testid") ?? "").replace("literature-entry-", ""))
+      entries.map((entry) =>
+        (entry.getAttribute("data-testid") ?? "").replace("literature-entry-", "")
+      )
     );
   }
 }

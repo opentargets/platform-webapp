@@ -43,12 +43,12 @@ export class TargetAssociations extends AssociationsTable {
 
   /** The "Exclude measurements" switch in the filter popover. */
   get excludeMeasurementsSwitch(): Locator {
-    return this.facetsPopover.getByRole("checkbox");
+    return this.facetsPopover.getByRole("switch");
   }
 
   /** The chip the table shows while measurements are excluded (the default). */
   get excludeMeasurementsChip(): Locator {
-    return this.activeFilters.getByText("Exclude measurements", { exact: true });
+    return this.activeFilters.locator(".MuiChip-root").filter({ hasText: "Exclude measurements" });
   }
 
   /** Pin a disease row of the core body through its menu. Returns the disease name. */
@@ -66,4 +66,18 @@ export class TargetAssociations extends AssociationsTable {
 
 export function targetAssociations(page: Page): TargetAssociations {
   return new TargetAssociations(page);
+}
+
+/** The primary and an alternative test target from the test config; throws when unset. */
+export function associationTargets(testConfig: {
+  target?: { primary?: string; alternatives?: string[] };
+}): { primary: string; other: string } {
+  const primary = testConfig.target?.primary;
+  const other = testConfig.target?.alternatives?.[0];
+  if (!primary || !other) {
+    throw new Error(
+      "fixtures/testConfig.ts needs target.primary and one target.alternatives entry"
+    );
+  }
+  return { primary, other };
 }

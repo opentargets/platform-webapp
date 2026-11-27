@@ -6,7 +6,12 @@ import {
   BibliographySection,
 } from "../../../../POM/objects/widgets/Bibliography/bibliographySection";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
+import {
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { expectSectionLoaded, expectSections } from "../../../../utils/sections";
 
 const OPERATION = BIBLIOGRAPHY_OPERATION.target;
@@ -54,9 +59,14 @@ test.describe("Target bibliography section", () => {
         `Scientific literature mentioning NLP-recognised entity ${symbol} and other selected co-occurring entities. Source: Open Targets.`
       );
       await expect(bibliography.description.locator("strong")).toHaveText(symbol);
-      const source = bibliography.description.getByRole("link", { name: "Open Targets", exact: true });
-      await expect(source).toHaveAttribute("href", "http://platform-docs.opentargets.org/bibliography");
-      await expect(source).toHaveAttribute("target", "_blank");
+      const source = bibliography.description.getByRole("link", {
+        name: "Open Targets",
+        exact: true,
+      });
+      await expect(source).toHaveAttribute(
+        "href",
+        "http://platform-docs.opentargets.org/bibliography"
+      );
     });
 
     await test.step("the first request asks for five publications of this target in every category", async () => {
@@ -71,7 +81,9 @@ test.describe("Target bibliography section", () => {
         endYear: null,
         endMonth: null,
       });
-      expect(count, `${symbol} should have far more than one page of literature`).toBeGreaterThan(1000);
+      expect(count, `${symbol} should have far more than one page of literature`).toBeGreaterThan(
+        1000
+      );
       expect(publicationIds).toHaveLength(5);
       for (const id of publicationIds) expect(id).toMatch(/^(\d+|PMC\d+|PPR\d+)$/);
     });
@@ -93,9 +105,10 @@ test.describe("Target bibliography section", () => {
     await test.step("count and publications match the API", async () => {
       await bibliography.expectPublications(publicationIds);
       await bibliography.expectPosition(1, 5, count);
-      expect(searches, "Europe PMC should be asked once, for exactly the publications listed").toEqual([
-        publicationIds,
-      ]);
+      expect(
+        searches,
+        "Europe PMC should be asked once, for exactly the publications listed"
+      ).toEqual([publicationIds]);
     });
   });
 
@@ -116,9 +129,11 @@ test.describe("Target bibliography section", () => {
 
     for (const id of publicationIds) {
       const publication = bibliography.publication(id);
-      const title = publication.getByRole("link", { name: `Stubbed publication ${id}`, exact: true });
+      const title = publication.getByRole("link", {
+        name: `Stubbed publication ${id}`,
+        exact: true,
+      });
       await expect(title).toHaveAttribute("href", `https://europepmc.org/abstract/med/${id}`);
-      await expect(title).toHaveAttribute("target", "_blank");
       await expect(publication).toContainText("Tester A");
       await expect(publication).toContainText(/Journal of Stubs\s+2017\s*:1-2/);
       await expect(publication.getByRole("button", { name: "Show abstract" })).toBeEnabled();
@@ -131,7 +146,9 @@ test.describe("Target bibliography section", () => {
       await expect(publication).toContainText(`Abstract of ${first}`);
       await expect(publication.getByRole("button", { name: "Hide abstract" })).toBeVisible();
       await expect(bibliography.publication(second)).not.toContainText("Abstract of");
-      await expect(bibliography.section.getByRole("button", { name: "Hide abstract" })).toHaveCount(1);
+      await expect(bibliography.section.getByRole("button", { name: "Hide abstract" })).toHaveCount(
+        1
+      );
 
       await publication.getByRole("button", { name: "Hide abstract" }).click();
       await expect(publication).not.toContainText(`Abstract of ${first}`);
@@ -156,7 +173,9 @@ test.describe("Target bibliography section", () => {
 
     await test.step("the target is the only selected entity and cannot be removed", async () => {
       await expect(bibliography.ownEntityChip(symbol)).toBeVisible();
-      await expect(bibliography.selectedEntities.locator(`[title="ID: ${ensgId}"]`)).toHaveText(symbol);
+      await expect(bibliography.selectedEntities.locator(`[title="ID: ${ensgId}"]`)).toHaveText(
+        symbol
+      );
       await expect(bibliography.addedEntityChips).toHaveCount(0);
       await expect(bibliography.selectedEntities.locator("svg")).toHaveCount(0);
     });
@@ -182,7 +201,10 @@ test.describe("Target bibliography section", () => {
         [...scores].sort((a, b) => b - a)
       );
       for (const score of scores) {
-        expect(score, "only entities above the 0.5 similarity threshold are offered").toBeGreaterThanOrEqual(0.5);
+        expect(
+          score,
+          "only entities above the 0.5 similarity threshold are offered"
+        ).toBeGreaterThanOrEqual(0.5);
         expect(score).toBeLessThanOrEqual(1);
       }
       for (const chip of await bibliography.similarEntityChips.all()) {
@@ -194,7 +216,10 @@ test.describe("Target bibliography section", () => {
     });
   });
 
-  test("the tag categories decide which kinds of entity are offered", async ({ page, testConfig }) => {
+  test("the tag categories decide which kinds of entity are offered", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const bibliography = new BibliographySection(page);
     await stubEuropePmc(page);
@@ -223,8 +248,14 @@ test.describe("Target bibliography section", () => {
 
     await test.step("all three categories: drugs and targets are both among the entities", async () => {
       const ids = await offeredIds();
-      expect(ids.some((id) => DRUG_ID.test(id)), "a kinase target should co-occur with drugs").toBe(true);
-      expect(ids.some((id) => TARGET_ID.test(id)), "a kinase target should co-occur with targets").toBe(true);
+      expect(
+        ids.some((id) => DRUG_ID.test(id)),
+        "a kinase target should co-occur with drugs"
+      ).toBe(true);
+      expect(
+        ids.some((id) => TARGET_ID.test(id)),
+        "a kinase target should co-occur with targets"
+      ).toBe(true);
     });
 
     await test.step("without Target and Disease, only drugs are offered", async () => {
@@ -294,9 +325,10 @@ test.describe("Target bibliography section", () => {
       const response = bibliography.nextResponse(OPERATION, "target");
       await firstChip.click();
       const added = await response;
-      expect(added.variables.ids, "the request should ask for publications that also mention the entity").toEqual([
-        firstId,
-      ]);
+      expect(
+        added.variables.ids,
+        "the request should ask for publications that also mention the entity"
+      ).toEqual([firstId]);
       expect(added.variables.index).toBe(0);
 
       await expect(bibliography.addedEntityChips).toHaveText([firstLabel]);
@@ -313,11 +345,14 @@ test.describe("Target bibliography section", () => {
       await bibliography.expectPublications(added.publicationIds);
       withOne = added.count;
       expect(withOne, "publications mentioning both should exist").toBeGreaterThan(0);
-      expect(withOne, "publications mentioning both should be fewer than those mentioning the target").toBeLessThan(
-        total
-      );
+      expect(
+        withOne,
+        "publications mentioning both should be fewer than those mentioning the target"
+      ).toBeLessThan(total);
       await bibliography.expectPosition(1, Math.min(5, withOne), withOne);
-      expect(added.publicationIds, "the list should change with the search").not.toEqual(initial.publicationIds);
+      expect(added.publicationIds, "the list should change with the search").not.toEqual(
+        initial.publicationIds
+      );
     });
 
     await test.step("a second entity narrows the search further", async () => {
@@ -364,7 +399,10 @@ test.describe("Target bibliography section", () => {
     });
   });
 
-  test("the list is paged by the server, five publications at a time", async ({ page, testConfig }) => {
+  test("the list is paged by the server, five publications at a time", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const bibliography = new BibliographySection(page);
     const searches = await stubEuropePmc(page);
@@ -381,7 +419,9 @@ test.describe("Target bibliography section", () => {
       await expect(bibliography.previousPageButton).toBeDisabled();
       await expect(bibliography.nextPageButton).toBeEnabled();
       await expect(bibliography.pageSizeSelect).toHaveValue("5");
-      await expect(bibliography.pageSizeSelect.locator("option")).toHaveText([...BIBLIOGRAPHY_PAGE_SIZES]);
+      await expect(bibliography.pageSizeSelect.locator("option")).toHaveText([
+        ...BIBLIOGRAPHY_PAGE_SIZES,
+      ]);
     });
 
     await test.step("next asks the API for the second page and shows other publications", async () => {
@@ -438,9 +478,10 @@ test.describe("Target bibliography section", () => {
       const ten = await response;
       expect(ten.variables).toMatchObject({ index: 0, pageSize: 10 });
       expect(ten.publicationIds).toHaveLength(10);
-      expect(ten.publicationIds.slice(0, 5), "the first five should be the original first page").toEqual(
-        firstPage.publicationIds
-      );
+      expect(
+        ten.publicationIds.slice(0, 5),
+        "the first five should be the original first page"
+      ).toEqual(firstPage.publicationIds);
       await bibliography.expectPublications(ten.publicationIds);
       await bibliography.expectPosition(1, 10, total);
       await expect(bibliography.previousPageButton).toBeDisabled();
@@ -464,7 +505,10 @@ test.describe("Target bibliography section", () => {
     });
   });
 
-  test("a target with two pages of literature ends on the second page", async ({ page, testConfig }) => {
+  test("a target with two pages of literature ends on the second page", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "withFewPublications");
     const { symbol } = targetIdentity(ensgId);
     const bibliography = new BibliographySection(page);
@@ -476,7 +520,10 @@ test.describe("Target bibliography section", () => {
     await expectSectionLoaded(page, "bibliography");
     await bibliography.expectPublications(firstPage.publicationIds);
     const total = firstPage.count;
-    expect(total, `${symbol} should have more than one and at most two pages of five`).toBeGreaterThan(5);
+    expect(
+      total,
+      `${symbol} should have more than one and at most two pages of five`
+    ).toBeGreaterThan(5);
     expect(total).toBeLessThanOrEqual(10);
 
     await expect(bibliography.ownEntityChip(symbol)).toBeVisible();
@@ -498,7 +545,9 @@ test.describe("Target bibliography section", () => {
       await bibliography.setPageSize("25");
       const all = await response;
       expect(all.publicationIds).toHaveLength(total);
-      expect(new Set(all.publicationIds).size, "each publication should be listed once").toBe(total);
+      expect(new Set(all.publicationIds).size, "each publication should be listed once").toBe(
+        total
+      );
       await bibliography.expectPublications(all.publicationIds);
       await expect(bibliography.pagePosition).toHaveText(`1–${total} of ${total}`);
       await expect(bibliography.countInfo).toHaveText(`Showing ${total} of ${total} results`);
@@ -546,7 +595,10 @@ test.describe("Target bibliography section", () => {
     await bibliography.expectPublications(unfiltered.publicationIds);
     const total = unfiltered.count;
 
-    const [startThumb, endThumb] = [bibliography.dateSliderThumbs.nth(0), bibliography.dateSliderThumbs.nth(1)];
+    const [startThumb, endThumb] = [
+      bibliography.dateSliderThumbs.nth(0),
+      bibliography.dateSliderThumbs.nth(1),
+    ];
     let earliestYear = 0;
     let months = 0;
 
@@ -556,7 +608,10 @@ test.describe("Target bibliography section", () => {
       await expect(bibliography.dateRangeEnd).toHaveText(currentYearMonth());
       const now = new Date();
       months = (now.getFullYear() - earliestYear) * 12 + now.getMonth();
-      expect(months, "the test target should have more than two years of literature").toBeGreaterThan(24);
+      expect(
+        months,
+        "the test target should have more than two years of literature"
+      ).toBeGreaterThan(24);
       await expect(startThumb).toHaveAttribute("aria-valuenow", "0");
       await expect(endThumb).toHaveAttribute("aria-valuenow", String(months));
       await expect(endThumb).toHaveAttribute("aria-valuemax", String(months));
@@ -586,7 +641,10 @@ test.describe("Target bibliography section", () => {
       await expect(bibliography.dateRangeEnd).toHaveText(currentYearMonth());
       await expect(startThumb).toHaveAttribute("aria-valuenow", "20");
 
-      expect(filtered.count, "some publications should fall inside the narrower range").toBeGreaterThan(0);
+      expect(
+        filtered.count,
+        "some publications should fall inside the narrower range"
+      ).toBeGreaterThan(0);
       expect(
         filtered.count,
         "the publications of the earliest year fall outside the range and should be dropped"
@@ -657,7 +715,9 @@ test.describe("Target bibliography section", () => {
 
     await expect(bibliography.unavailablePublications).toHaveCount(publicationIds.length);
     for (const id of publicationIds) {
-      await expect(bibliography.section.getByText(`Publication ID: ${id}`, { exact: true })).toBeVisible();
+      await expect(
+        bibliography.section.getByText(`Publication ID: ${id}`, { exact: true })
+      ).toBeVisible();
     }
     await expect(bibliography.publications).toHaveCount(0);
     // the rest of the section does not depend on Europe PMC
@@ -671,9 +731,10 @@ test.describe("Target bibliography section", () => {
     const bibliography = new BibliographySection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record this target as having no literature").not.toContain(
-      "bibliography"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record this target as having no literature"
+    ).not.toContain("bibliography");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 

@@ -112,9 +112,10 @@ export function parseCif(cifString: string) {
       } else {
         // field - split at first space only since field value could be quoted with spaces
         closeLoopIfOpen();
+        // (no space at all means the value is on the following lines)
         const firstSpace = line.search(/\s+/);
-        const fieldName = line.slice(0, firstSpace);
-        let fieldValue = line.slice(firstSpace).trim();
+        const fieldName = firstSpace === -1 ? line : line.slice(0, firstSpace);
+        let fieldValue = firstSpace === -1 ? "" : line.slice(firstSpace).trim();
         if (fieldValue) {
           const [start, end] = [fieldValue[0], fieldValue.at(-1)];
           if ((start === '"' && end === '"') || (start === "'" && end === "'")) {

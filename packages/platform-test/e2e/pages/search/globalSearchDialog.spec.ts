@@ -12,7 +12,12 @@ import {
   SEARCH_ENTITIES,
   type SearchEntity,
 } from "../../../POM/page/search/searchData";
-import { expectEntityPage, expectPath, SearchPage, searchPath } from "../../../POM/page/search/searchPage";
+import {
+  expectEntityPage,
+  expectPath,
+  SearchPage,
+  searchPath,
+} from "../../../POM/page/search/searchPage";
 
 /**
  * The global search dialog before anything is typed: how it opens and closes, the entity
@@ -22,12 +27,23 @@ import { expectEntityPage, expectPath, SearchPage, searchPath } from "../../../P
 
 /** Recent searches as the app stores them, newest first. */
 const HISTORY: ItemDetails[] = [
-  { type: "recent", entity: "target", id: SEARCH.target.id, symbol: SEARCH.target.symbol, name: SEARCH.target.name },
+  {
+    type: "recent",
+    entity: "target",
+    id: SEARCH.target.id,
+    symbol: SEARCH.target.symbol,
+    name: SEARCH.target.name,
+  },
   { type: "recent", entity: "disease", id: SEARCH.disease.id, name: SEARCH.disease.name },
   { type: "recent", entity: "drug", id: SEARCH.drug.id, name: SEARCH.drug.name },
   { type: "recent", entity: "variant", id: SEARCH.variant.id },
   { type: "recent", entity: "study", id: SEARCH.study.id, name: SEARCH.study.trait },
-  { symbol: `Search for: ${SEARCH.disease.term}`, name: SEARCH.disease.term, entity: "search", type: "recent" },
+  {
+    symbol: `Search for: ${SEARCH.disease.term}`,
+    name: SEARCH.disease.term,
+    entity: "search",
+    type: "recent",
+  },
 ];
 const DRUG_INDEX = 2;
 const STUDY_INDEX = 4;
@@ -82,7 +98,10 @@ test.describe("Global search dialog", () => {
       const order = await search.dialog
         .locator("[data-testid^='entity-filter-']")
         .evaluateAll((chips) => chips.map((chip) => chip.getAttribute("data-testid")));
-      expect(order).toEqual(["entity-filter-all", ...SEARCH_ENTITIES.map((e) => `entity-filter-${e}`)]);
+      expect(order).toEqual([
+        "entity-filter-all",
+        ...SEARCH_ENTITIES.map((e) => `entity-filter-${e}`),
+      ]);
     });
 
     await test.step("nothing typed: no results, no free search row, no recent searches", async () => {
@@ -100,7 +119,9 @@ test.describe("Global search dialog", () => {
         const details = await search.details(suggestion);
         expect(details.type, `suggestion ${index + 1}`).toBe("suggestion");
         expect(details.entity, `suggestion ${index + 1}`).toBe(entity);
-        expect(details.id, `suggestion ${index + 1} (${entity})`).toMatch(ENTITY_ID_PATTERN[entity]);
+        expect(details.id, `suggestion ${index + 1} (${entity})`).toMatch(
+          ENTITY_ID_PATTERN[entity]
+        );
         // A variant is suggested by its id, everything else by its name.
         const label = entity === "variant" ? details.id : details.name;
         await expect(suggestion).toHaveText(label as string);
@@ -132,7 +153,9 @@ test.describe("Global search dialog", () => {
     await results.expectResultsFor(SEARCH.study.term);
   });
 
-  test("on a Mac the search box advertises ⌘ K and that shortcut opens the dialog", async ({ page }) => {
+  test("on a Mac the search box advertises ⌘ K and that shortcut opens the dialog", async ({
+    page,
+  }) => {
     await page.addInitScript(() => {
       Object.defineProperty(Navigator.prototype, "platform", { get: () => "MacIntel" });
     });
@@ -314,7 +337,9 @@ test.describe("Global search dialog", () => {
       await expect(search.recentItems).toHaveText(HISTORY_LABELS);
     });
 
-    test(`keep the ${MAX_RECENT_ITEMS} newest: a new search pushes the oldest out`, async ({ page }) => {
+    test(`keep the ${MAX_RECENT_ITEMS} newest: a new search pushes the oldest out`, async ({
+      page,
+    }) => {
       const full: ItemDetails[] = Array.from({ length: MAX_RECENT_ITEMS }, (_, index) => ({
         symbol: `Search for: term ${index + 1}`,
         name: `term ${index + 1}`,

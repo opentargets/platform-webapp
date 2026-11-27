@@ -204,8 +204,8 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
   return (
     <>
       <Box
-        aria-busy={showingPrevious}
         data-testid="clinical-records"
+        aria-busy={showingPrevious}
         sx={{
           position: "relative",
           mr: { md: 0, lg: 4, xl: 6 },

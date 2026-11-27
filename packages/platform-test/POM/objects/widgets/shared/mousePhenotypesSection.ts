@@ -65,3 +65,19 @@ export class MousePhenotypesSection extends ProfileSection {
     await expect(drawer, "the drawer should close").toBeHidden();
   }
 }
+
+/**
+ * The Subcellular Location section of every target page downloads cell diagrams from
+ * SwissBioPics, a third-party service that sometimes answers without CORS headers, which
+ * the browser reports as a console error on an otherwise healthy page. Pass the real
+ * response through with the header always present, so these tests depend on the app only.
+ */
+export async function allowSwissBioPicsCors(page: Page): Promise<void> {
+  await page.route(/^https:\/\/www\.swissbiopics\.org\/+api\//, async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: { ...response.headers(), "access-control-allow-origin": "*" },
+    });
+  });
+}

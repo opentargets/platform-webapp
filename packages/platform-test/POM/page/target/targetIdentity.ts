@@ -11,6 +11,8 @@ export type TargetIdentity = {
   /** Reviewed (Swiss-Prot) accessions: the only ones the header links to. */
   uniprotIds: readonly string[];
   chromosome: string;
+  /** RNAcentral ids of a non-coding target: the header links the first one. */
+  rnacentralIds?: readonly string[];
 };
 
 const TARGET_IDENTITIES: Record<string, TargetIdentity> = {
@@ -54,6 +56,7 @@ const TARGET_IDENTITIES: Record<string, TargetIdentity> = {
     symbol: "MALAT1",
     name: "metastasis associated lung adenocarcinoma transcript 1",
     uniprotIds: [],
+    rnacentralIds: ["URS0002A146E4_9606"],
     chromosome: "11",
   },
   ENSG00000243485: {

@@ -53,10 +53,9 @@ export class EvidencePanel {
    * error, not the "No data available" placeholder, and titled.
    */
   async expectLoaded(sectionId: string): Promise<Locator> {
-    await expect(
-      this.root,
-      `the "${this.panelKey}" panel should open under the row`
-    ).toBeVisible({ timeout: SECTION_LOAD_TIMEOUT });
+    await expect(this.root, `the "${this.panelKey}" panel should open under the row`).toBeVisible({
+      timeout: SECTION_LOAD_TIMEOUT,
+    });
     const section = this.section(sectionId);
     await expect(
       section,
@@ -74,7 +73,10 @@ export class EvidencePanel {
       this.root.getByTestId("section-no-data"),
       `the "${sectionId}" widget should show data, not the empty placeholder`
     ).toHaveCount(0);
-    await expect(this.title(sectionId), `the "${sectionId}" widget should have a title`).not.toBeEmpty();
+    await expect(
+      this.title(sectionId),
+      `the "${sectionId}" widget should have a title`
+    ).not.toBeEmpty();
     return section;
   }
 

@@ -56,10 +56,22 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   ],
 
   // Drug: imatinib (no warnings)
-  CHEMBL941: ["mechanismsofaction", "indications", "pharmacogenetics", "adverseevents", "bibliography"],
+  CHEMBL941: [
+    "mechanismsofaction",
+    "indications",
+    "pharmacogenetics",
+    "adverseevents",
+    "bibliography",
+  ],
 
   // Drug: amoxicillin (no warnings)
-  CHEMBL1082: ["mechanismsofaction", "indications", "pharmacogenetics", "adverseevents", "bibliography"],
+  CHEMBL1082: [
+    "mechanismsofaction",
+    "indications",
+    "pharmacogenetics",
+    "adverseevents",
+    "bibliography",
+  ],
 
   // Drug: zanzalintinib fumarate (no warnings, pharmacogenetics, adverse events or literature)
   CHEMBL5314605: ["mechanismsofaction", "indications"],
@@ -205,6 +217,40 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Target: HOTAIR (lncRNA without any protein annotation, Gene Ontology included)
   ENSG00000228630: ["qtl-credible-sets", "baselineexpression", "mousephenotypes", "bibliography"],
 
+  // Target: WDR5 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
+  ENSG00000196363: [
+    "tractability",
+    "qtl-credible-sets",
+    "chemicalprobes",
+    "baselineexpression",
+    "depmapessentiality",
+    "subcellularlocation",
+    "geneontology",
+    "geneticconstraint",
+    "molecularstructure",
+    "interactions",
+    "pathways",
+    "compgenomics",
+    "bibliography",
+  ],
+
+  // Target: ATAD2 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
+  ENSG00000156802: [
+    "tractability",
+    "qtl-credible-sets",
+    "chemicalprobes",
+    "baselineexpression",
+    "depmapessentiality",
+    "subcellularlocation",
+    "geneontology",
+    "geneticconstraint",
+    "molecularstructure",
+    "interactions",
+    "pathways",
+    "compgenomics",
+    "bibliography",
+  ],
+
   // Target: CYP2C19 (pharmacogenetics; no drugs, no cancer hallmarks)
   ENSG00000165841: [
     "tractability",
@@ -256,6 +302,12 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Disease: Huntington disease (the only one of these with clinical signs and symptoms)
   MONDO_0007739: ["ontology", "drugs", "phenotypes", "gwasstudies", "bibliography"],
 
+  // Disease: Marfan syndrome (many pages of clinical signs and symptoms, onset and modifier terms; no drugs)
+  MONDO_0007947: ["ontology", "phenotypes", "gwasstudies", "bibliography"],
+
+  // Disease: juvenile Huntington disease (a leaf of the ontology: no children, no phenotypes, drugs or GWAS)
+  MONDO_0016621: ["ontology", "bibliography"],
+
   // Disease: genetic, familial or congenital disease (OTAR therapeutic area: no drugs, GWAS,
   // synonyms or cross references)
   OTAR_0000018: ["ontology", "bibliography"],
@@ -298,6 +350,137 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
     "qtl-credible-sets",
     "enhancer-to-gene-predictions",
   ],
+
+  // Evidence: BRAF in melanoma
+  "ENSG00000157764/MONDO_0005105": [
+    "eva",
+    "cancer-gene-census",
+    "intogen",
+    "eva-somatic",
+    "clinical-precedence",
+    "crispr",
+    "cancer-biomarkers",
+    "europe-pmc",
+  ],
+
+  // Evidence: IL6R in myocardial infarction
+  "ENSG00000160712/MONDO_0005068": ["gwas-credible-sets", "clinical-precedence", "europe-pmc"],
+
+  // Evidence: BRAF in myocardial infarction (only five text-mined Europe PMC rows)
+  "ENSG00000157764/MONDO_0005068": ["europe-pmc"],
+
+  // Evidence: BRAF in a disease with a single clinical precedence row and two Europe PMC rows
+  "ENSG00000157764/MONDO_0005147": ["clinical-precedence", "europe-pmc"],
+
+  // Evidence: PCSK9 in LDL cholesterol measurement (gene burden, 130 rows; GWAS credible sets, 600+ rows)
+  "ENSG00000169174/EFO_0004611": ["gene-burden", "gwas-credible-sets"],
+
+  // Evidence: LDLR in familial hypercholesterolemia 1 (ClinVar, thousands of rows)
+  "ENSG00000130164/MONDO_0007750": [
+    "clingen",
+    "europe-pmc",
+    "eva",
+    "eva-somatic",
+    "genomics-england",
+    "impc",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // Evidence: MIR1302-2HG in melanoma (both exist, no evidence between them)
+  // MECP2, neurodevelopmental disorder: every curated genetic source, several rows each
+  "ENSG00000169057/MONDO_0700092": [
+    "clingen",
+    "europe-pmc",
+    "eva",
+    "gene2phenotype",
+    "genomics-england",
+    "impc",
+    "orphanet",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // MECP2, syndromic X-linked intellectual disability Lubs type: only Genomics England, Gene2Phenotype and UniProt literature
+  "ENSG00000169057/MONDO_0010283": [
+    "europe-pmc",
+    "eva",
+    "gene2phenotype",
+    "genomics-england",
+    "uniprot-literature",
+  ],
+
+  // NF1, neurofibromatosis type 1: every curated genetic source, many Genomics England and UniProt variant rows
+  "ENSG00000196712/MONDO_0018975": [
+    "clingen",
+    "europe-pmc",
+    "eva",
+    "eva-somatic",
+    "gene2phenotype",
+    "genomics-england",
+    "orphanet",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // CFTR, cystic fibrosis: curated sources except Gene2Phenotype
+  "ENSG00000001626/MONDO_0009061": [
+    "clingen",
+    "clinical-precedence",
+    "europe-pmc",
+    "eva",
+    "gene-burden",
+    "genomics-england",
+    "gwas-credible-sets",
+    "impc",
+    "orphanet",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  "ENSG00000243485/MONDO_0005105": [],
+
+  // Evidence: KIF1A in neurodegenerative disease (17 CRISPR screens, 4 Expression Atlas experiments)
+  "ENSG00000130294/MONDO_0005559": [
+    "crispr-screen",
+    "europe-pmc",
+    "eva",
+    "expression-atlas",
+    "genomics-england",
+    "orphanet",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // Evidence: CHRM1 in Parkinson disease (one CRISPR screen)
+  "ENSG00000168539/MONDO_0005180": ["clinical-precedence", "crispr-screen", "europe-pmc"],
+
+  // Evidence: FGFR3 in cancer or benign tumor (Reactome 22 rows, Expression Atlas 22, IMPC 134)
+  "ENSG00000068078/MONDO_0045024": [
+    "cancer-biomarkers",
+    "cancer-gene-census",
+    "clinical-precedence",
+    "crispr",
+    "europe-pmc",
+    "eva",
+    "eva-somatic",
+    "expression-atlas",
+    "genomics-england",
+    "gwas-credible-sets",
+    "impc",
+    "intogen",
+    "reactome",
+    "uniprot-literature",
+    "uniprot-variants",
+  ],
+
+  // Evidence: CTNNB1 in cancer or benign tumor (Reactome 5 rows, Expression Atlas 5, IMPC 11)
+  "ENSG00000168036/MONDO_0045024": ["expression-atlas", "impc", "reactome"],
+
+  // Evidence: HRAS in cancer or benign tumor (a single Expression Atlas experiment, 29 Reactome rows)
+  "ENSG00000174775/MONDO_0045024": ["expression-atlas", "reactome"],
 
   // Study: GWAS
   GCST90475211: ["gwas-credible-sets", "shared-trait-studies"],

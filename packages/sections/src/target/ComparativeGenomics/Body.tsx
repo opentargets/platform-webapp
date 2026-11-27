@@ -91,7 +91,7 @@ function getColumns(primaryColor: string): OtTableColumn<HomologueRow>[] {
       renderCell: ({ isHighConfidence, homologyType }) => (
         <>
           <span style={containerStyle}>
-            {isHighConfidence === "NULL" ? null : (
+            {isHighConfidence == null || isHighConfidence === "NULL" ? null : (
               <Tooltip
                 title={
                   isHighConfidence === "1"

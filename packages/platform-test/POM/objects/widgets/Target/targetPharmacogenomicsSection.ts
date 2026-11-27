@@ -72,12 +72,9 @@ export class TargetPharmacogenomicsSection extends ProfileSection {
 
   /** The trimmed text of one column for the rows on the current page. */
   async columnTexts(column: keyof typeof TARGET_PGX_COLUMN): Promise<string[]> {
-    return (await this.column(column).allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim());
-  }
-
-  /** The "N entries" buttons of the Directionality column on the current page. */
-  get directionalityTriggers(): Locator {
-    return this.column("directionality").getByTestId("directionality-drawer-trigger");
+    return (await this.column(column).allInnerTexts()).map((text) =>
+      text.replace(/\s+/g, " ").trim()
+    );
   }
 
   get directionalityDrawer(): Locator {

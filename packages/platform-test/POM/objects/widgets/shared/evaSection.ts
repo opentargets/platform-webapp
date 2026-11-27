@@ -1,102 +1,85 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionDataControls, SectionTable } from "./sectionDataControls";
+
+/** Columns of the ClinVar table, in order. */
+export const EVA_HEADERS = [
+  "Disease/phenotype",
+  "ClinVar ID",
+  "Clinical significance",
+  "Allele origin",
+  "Review status",
+  "Literature",
+] as const;
+
+export const EVA_COLUMN = {
+  disease: 0,
+  clinvarId: 1,
+  significance: 2,
+  alleleOrigin: 3,
+  reviewStatus: 4,
+  literature: 5,
+} as const;
+
+/** GraphQL operation behind the section (packages/sections/src/variant/EVA). */
+export const EVA_OPERATION = "EVAQuery";
+export const EVA_PAGE_SIZE = 10;
 
 /**
- * Interactor for the EVA/ClinVar section on Variant pages.
- *
- * Displays clinical variant annotations from the European Variation Archive (EVA)
- * and NCBI ClinVar database. Information includes:
- * - **Clinical significance**: Pathogenic, benign, uncertain significance, etc.
- * - **Associated diseases**: Conditions linked to the variant
- * - **Review status**: Level of evidence supporting the classification
- * - **Submitter information**: Organizations that submitted the annotation
- *
- * Essential for understanding the clinical relevance of genetic variants.
- *
- * @example
- * ```typescript
- * const eva = new EVASection(page);
- * await eva.waitForLoad();
- *
- * // Get clinical annotations
- * const rowCount = await eva.getTableRows();
- * const significance = await eva.getClinicalSignificance(0);
- *
- * // Navigate to disease
- * await eva.clickDiseaseLink(0);
- * ```
- *
- * @category shared
- * @remarks Section ID: `eva`
+ * Variant page > ClinVar (section id "eva"): a server-paginated table of ClinVar
+ * submissions linking the variant to diseases. No search box.
  */
 export class EVASection {
-  constructor(private page: Page) {}
+  static readonly id = "eva";
+  readonly section: Locator;
+  readonly table: SectionTable;
+  readonly controls: SectionDataControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-eva']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, EVASection.id);
+    this.table = new SectionTable(this.section);
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
-  }
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-eva']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get title(): Locator {
+    return this.section.getByTestId("section-eva-header");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The disease link of a row. */
+  diseaseLink(row: number): Locator {
+    return this.table.cell(row, EVA_COLUMN.disease).getByRole("link");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  /** The ClinVar record link of a row. */
+  clinvarLink(row: number): Locator {
+    return this.table.cell(row, EVA_COLUMN.clinvarId).getByRole("link");
   }
 
-  // Get disease link
-  async getDiseaseLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/disease/']");
+  /** The "?" help icon of a cell, which carries a tooltip. */
+  helpIcon(row: number, column: keyof typeof EVA_COLUMN): Locator {
+    return this.table.cell(row, EVA_COLUMN[column]).locator("sup");
   }
 
-  async clickDiseaseLink(rowIndex: number): Promise<void> {
-    const link = await this.getDiseaseLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
+  /** The star icons of a row's review status: filled ones are solid (fa-solid). */
+  stars(row: number): Locator {
+    return this.table.cell(row, EVA_COLUMN.reviewStatus).locator("svg");
   }
 
-  // Get clinical significance
-  async getClinicalSignificance(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
+  filledStars(row: number): Locator {
+    return this.table.cell(row, EVA_COLUMN.reviewStatus).locator("svg[data-prefix='fas']");
+  }
+
+  literatureTrigger(row: number): Locator {
+    return this.table.cell(row, EVA_COLUMN.literature).getByTestId("publications-drawer-trigger");
+  }
+
+  /** Choose a rows-per-page value and assert the select shows it. */
+  async setPageSize(size: number): Promise<void> {
+    await this.table.pageSizeSelect.selectOption(String(size));
+    await expect(this.table.pageSizeSelect).toHaveValue(String(size));
   }
 }

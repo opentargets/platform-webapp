@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
-import { OtTable } from "../../../../utils/table";
 import { sectionLocator, sectionTestId } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
 /** Column positions of the credible sets table. */
 export const GWAS_CS_COLUMNS = {

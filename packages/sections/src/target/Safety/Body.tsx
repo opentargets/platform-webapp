@@ -43,7 +43,7 @@ function EffectTooltipContent({ effect }: { effect: SafetyEffect }) {
   );
 }
 
-function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
+function getColumns(theme: Theme): OtTableColumn<SafetyRow>[] {
   return [
     {
       id: "event",
@@ -61,6 +61,13 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "biosamples",
       label: "Biosystems",
+      exportValue: ({ biosamples }) =>
+        biosamples
+          .map(({ cellFormat, cellLabel, tissueLabel }) =>
+            cellFormat ? `${cellFormat}${cellLabel ? ` (${cellLabel})` : ""}` : tissueLabel
+          )
+          .filter(Boolean)
+          .join("; "),
       filterValue: ({ biosamples }) => {
         if (biosamples?.length === 1) {
           const sample = biosamples[0];
@@ -93,6 +100,10 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "dosing",
       label: "Dosing effects",
+      exportValue: ({ effects }) =>
+        effects
+          .map(({ direction, dosing }) => [direction, dosing].filter(Boolean).join(": "))
+          .join("; "),
       renderCell: ({ effects }) => {
         const circleUpData = effects.find(
           (effect) => effect.direction === "Activation/Increase/Upregulation"
@@ -146,6 +157,10 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "studies",
       label: "Experimental studies",
+      exportValue: ({ studies }) =>
+        studies
+          .map(({ name, type, description }) => [name, type, description].filter(Boolean).join(" | "))
+          .join("; "),
       renderCell: ({ studies }) => {
         if (studies.length === 0) return "N/A";
         return <SafetyStudiesDrawer studies={studies} />;
@@ -154,14 +169,19 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "datasource",
       label: "Source",
-      renderCell: ({ datasource, literature }) =>
-        literature ? (
-          <PublicationsDrawer entries={[{ name: literature }]} customLabel={datasource} />
-        ) : (
-          <Link external to={`https://www.clinpgx.org/search?query=${symbol}`}>
-            {datasource}
-          </Link>
-        ),
+      renderCell: ({ datasource, url, literature }) => {
+        if (url) {
+          return (
+            <Link external to={url}>
+              {datasource}
+            </Link>
+          );
+        }
+        if (literature) {
+          return <PublicationsDrawer entries={[{ name: literature }]} customLabel={datasource} />;
+        }
+        return datasource;
+      },
     },
   ];
 }
@@ -183,7 +203,7 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
           showGlobalFilter
           dataDownloader
           dataDownloaderFileStem={`${ensemblId}-safety-${entity}`}
-          columns={getColumns(theme, symbol)}
+          columns={getColumns(theme)}
           rows={request.data?.target?.safetyLiabilities ?? []}
           rowsPerPageOptions={defaultRowsPerPageOptions}
           query={SAFETY_QUERY_DOCUMENT.loc?.source.body}

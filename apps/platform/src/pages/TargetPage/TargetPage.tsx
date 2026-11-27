@@ -38,10 +38,15 @@ function TargetPage(): ReactElement {
   const navigation = useNavigation();
   const { ensgId } = useParams<TargetURLParams>();
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
   const nextEnsgId = matchPath(
     "/target/:ensgId/*",
     navigation.location?.pathname ?? ""
   )?.params.ensgId;
+
+  if (!!subRoute && subRoute !== "associations") {
+    return <NotFoundPage />;
+  }
 
   if (data && !data.target) {
     return <NotFoundPage />;

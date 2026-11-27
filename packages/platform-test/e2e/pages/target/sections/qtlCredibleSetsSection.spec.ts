@@ -8,7 +8,12 @@ import {
   TARGET_QTL_OPERATION,
   TargetQtlCredibleSetsSection,
 } from "../../../../POM/objects/widgets/Target/targetQtlCredibleSetsSection";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
+import {
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { expectSections } from "../../../../utils/sections";
 
 const CREDIBLE_SET_HREF = /^\/credible-set\/[0-9a-f]{32}$/;
@@ -67,7 +72,10 @@ test.describe("Target molQTL credible sets section", () => {
 
     await qtl.table.expectHeaders(TARGET_QTL_COLUMNS);
     const total = await qtl.table.total();
-    expect(total, "the primary target should have more than two pages of credible sets").toBeGreaterThan(20);
+    expect(
+      total,
+      "the primary target should have more than two pages of credible sets"
+    ).toBeGreaterThan(20);
     await expect(qtl.table.rows).toHaveCount(10);
     await qtl.table.expectPosition(1, 10, total);
 
@@ -97,9 +105,10 @@ test.describe("Target molQTL credible sets section", () => {
       await expect(qtl.cell(row, "size")).toHaveText(/^[1-9][\d,]*$/);
     }
 
-    const credibleSets = await qtl.column("credibleSet").getByRole("link").evaluateAll((links) =>
-      links.map((link) => link.getAttribute("href"))
-    );
+    const credibleSets = await qtl
+      .column("credibleSet")
+      .getByRole("link")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
     expect(new Set(credibleSets).size, "each credible set should be listed once").toBe(10);
   });
 
@@ -134,7 +143,10 @@ test.describe("Target molQTL credible sets section", () => {
     const firstPage = (await qtl.columnTexts("pValue")).map(log10PValue);
     expect(firstPage).toHaveLength(10);
     expectSorted(firstPage, "ascending", "p-values on the first page");
-    expect(firstPage[0], "the strongest association should be genome-wide significant").toBeLessThan(-7);
+    expect(
+      firstPage[0],
+      "the strongest association should be genome-wide significant"
+    ).toBeLessThan(-7);
 
     await qtl.table.nextPageButton.click();
     await qtl.table.expectPosition(11, 20, total);
@@ -167,7 +179,9 @@ test.describe("Target molQTL credible sets section", () => {
 
     await test.step("credible set size, largest first", async () => {
       await qtl.header("size").getByText("Credible set size", { exact: true }).click();
-      await expect.poll(() => qtl.table.rowTexts(), { message: "the rows should be reordered" }).not.toEqual(byPValue);
+      await expect
+        .poll(() => qtl.table.rowTexts(), { message: "the rows should be reordered" })
+        .not.toEqual(byPValue);
       await qtl.table.expectPosition(1, 10, total);
       const sizes = (await qtl.columnTexts("size")).map(toNumber);
       expectSorted(sizes, "descending", "credible set sizes");
@@ -177,7 +191,10 @@ test.describe("Target molQTL credible sets section", () => {
       await qtl.table.expectLastPage();
       const smallest = (await qtl.columnTexts("size")).map(toNumber);
       expectSorted(smallest, "descending", "credible set sizes on the last page");
-      expect(smallest[smallest.length - 1], "the last page should hold the smallest sets").toBeLessThan(largest);
+      expect(
+        smallest[smallest.length - 1],
+        "the last page should hold the smallest sets"
+      ).toBeLessThan(largest);
     });
 
     await test.step("credible set size, smallest first", async () => {
@@ -188,7 +205,10 @@ test.describe("Target molQTL credible sets section", () => {
         .poll(
           async () => {
             const sizes = (await qtl.columnTexts("size")).map(toNumber);
-            return sizes.length === 10 && sizes.every((size, index) => index === 0 || sizes[index - 1] <= size);
+            return (
+              sizes.length === 10 &&
+              sizes.every((size, index) => index === 0 || sizes[index - 1] <= size)
+            );
           },
           { message: "sizes should now be in ascending order" }
         )
@@ -198,10 +218,16 @@ test.describe("Target molQTL credible sets section", () => {
     await test.step("beta", async () => {
       await qtl.header("beta").getByText(/^Beta/).click();
       await expect
-        .poll(async () => {
-          const betas = (await qtl.columnTexts("beta")).map(Number);
-          return betas.length === 10 && betas.every((beta, index) => index === 0 || betas[index - 1] >= beta);
-        }, { message: "betas should be in descending order" })
+        .poll(
+          async () => {
+            const betas = (await qtl.columnTexts("beta")).map(Number);
+            return (
+              betas.length === 10 &&
+              betas.every((beta, index) => index === 0 || betas[index - 1] >= beta)
+            );
+          },
+          { message: "betas should be in descending order" }
+        )
         .toBe(true);
       const betas = (await qtl.columnTexts("beta")).map(Number);
       expect(betas[0], "the largest beta should be positive").toBeGreaterThan(0);
@@ -233,7 +259,11 @@ test.describe("Target molQTL credible sets section", () => {
     await qtl.table.expectPosition(1, 25, total);
     await expect(qtl.table.rows).toHaveCount(25);
     expect((await qtl.table.rowTexts()).slice(0, 10)).toEqual(firstPage);
-    expectSorted((await qtl.columnTexts("pValue")).map(log10PValue), "ascending", "p-values at 25 rows per page");
+    expectSorted(
+      (await qtl.columnTexts("pValue")).map(log10PValue),
+      "ascending",
+      "p-values at 25 rows per page"
+    );
   });
 
   test("searching looks through every credible set, and a term with no match empties the table", async ({
@@ -261,7 +291,9 @@ test.describe("Target molQTL credible sets section", () => {
     await expect(qtl.cell(0, "study")).toHaveText(studyId);
     const matching = await qtl.table.total();
     expect(matching).toBeGreaterThan(0);
-    expect(matching, "one study should account for only a few of the credible sets").toBeLessThan(total / 2);
+    expect(matching, "one study should account for only a few of the credible sets").toBeLessThan(
+      total / 2
+    );
     await expect(qtl.table.rows).toHaveCount(Math.min(matching, 10));
     await expect(qtl.column("study")).toHaveText(Array(Math.min(matching, 10)).fill(studyId));
 
@@ -332,16 +364,19 @@ test.describe("Target molQTL credible sets section", () => {
     const link = qtl.cell(0, "credibleSet").getByRole("link");
     const href = (await link.getAttribute("href")) ?? "";
     expect(href).toMatch(CREDIBLE_SET_HREF);
-    const variantId = ((await qtl.cell(0, "leadVariant").getByRole("link").getAttribute("href")) ?? "").replace(
-      "/variant/",
-      ""
-    );
+    const variantId = (
+      (await qtl.cell(0, "leadVariant").getByRole("link").getAttribute("href")) ?? ""
+    ).replace("/variant/", "");
 
     await link.click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
     await expect(page.getByTestId("profile-page-header-block")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: variantId.slice(0, variantId.indexOf("_", variantId.indexOf("_") + 1)) }).first(),
+      page
+        .getByRole("link", {
+          name: variantId.slice(0, variantId.indexOf("_", variantId.indexOf("_") + 1)),
+        })
+        .first(),
       "the credible set page should be about the same lead variant"
     ).toBeVisible();
   });
@@ -404,8 +439,12 @@ test.describe("Target molQTL credible sets section", () => {
 
     const picker = await qtl.table.openColumnPicker();
     await expect(picker.getByRole("checkbox")).toHaveCount(TARGET_QTL_COLUMNS.length);
-    await expect(picker.getByRole("checkbox", { name: "Credible set", exact: true })).toBeDisabled();
-    await expect(picker.getByRole("checkbox", { name: "Lead variant", exact: true })).toBeDisabled();
+    await expect(
+      picker.getByRole("checkbox", { name: "Credible set", exact: true })
+    ).toBeDisabled();
+    await expect(
+      picker.getByRole("checkbox", { name: "Lead variant", exact: true })
+    ).toBeDisabled();
 
     await picker.getByRole("checkbox", { name: "Condition", exact: true }).uncheck();
     await picker.getByRole("checkbox", { name: "Fine-mapping method", exact: true }).uncheck();
@@ -419,7 +458,10 @@ test.describe("Target molQTL credible sets section", () => {
     await qtl.table.closeColumnPicker(qtl.title);
   });
 
-  test("the export downloads every credible set, not just the page shown", async ({ page, testConfig }) => {
+  test("the export downloads every credible set, not just the page shown", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const qtl = new TargetQtlCredibleSetsSection(page);
 
@@ -452,7 +494,10 @@ test.describe("Target molQTL credible sets section", () => {
       expect(row[5]).toMatch(/^\d(\.\d+)?x10-?\d+$/);
       expect(Number(row[9])).toBeGreaterThan(0);
     }
-    expect(new Set(rows.map((row) => row[0])).size, "each credible set should be exported once").toBe(total);
+    expect(
+      new Set(rows.map((row) => row[0])).size,
+      "each credible set should be exported once"
+    ).toBe(total);
   });
 
   test("the API query drawer shows the query behind the section", async ({ page, testConfig }) => {
@@ -466,15 +511,19 @@ test.describe("Target molQTL credible sets section", () => {
     await qtl.table.expectApiQuery(TARGET_QTL_OPERATION);
   });
 
-  test("a target without molQTL credible sets does not render the section", async ({ page, testConfig }) => {
+  test("a target without molQTL credible sets does not render the section", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "withoutLiteratureOrQtl");
     const sectionsWithData = expectedSectionsFor(ensgId);
     const qtl = new TargetQtlCredibleSetsSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record this target as having no credible sets").not.toContain(
-      "qtl-credible-sets"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record this target as having no credible sets"
+    ).not.toContain("qtl-credible-sets");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 

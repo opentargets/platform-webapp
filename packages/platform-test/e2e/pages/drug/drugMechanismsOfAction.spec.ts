@@ -5,10 +5,10 @@ import {
   MechanismsOfActionSection,
   MOA_COLUMN,
 } from "../../../POM/objects/widgets/shared/mechanismsOfActionSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 const TARGET_HREF = /^\/target\/ENSG\d{11}$/;
 
@@ -35,7 +35,7 @@ test.describe("Drug page: Mechanisms of Action", () => {
         "Mechanisms of Action"
       );
       await expect(moa.description).toHaveText(
-        `${drugFacts(primary).name} biochemical interactions to produce intended pharmacological effects. Curated from scientific literature and post-marketing package inserts. Source: ChEMBL`
+        `${drugFacts(primary).name} biochemical interactions to produce intended pharmacological effects. Curated from scientific literature and post-marketing package inserts. Source: ChEMBL, Open Targets`
       );
       await expectExternalLink(
         moa.description.getByRole("link", { name: "ChEMBL" }),
@@ -57,15 +57,25 @@ test.describe("Drug page: Mechanisms of Action", () => {
       );
       await expect(moa.targetLinks(0)).toHaveText(["ERBB2"]);
       await expect(moa.targetLinks(0)).toHaveAttribute("href", "/target/ENSG00000141736");
+      await expect(moa.table.cell(0, MOA_COLUMN.curation)).toHaveText("Manual");
+      await expect(moa.publicationsButton(0), "no PubMed references").toHaveCount(0);
       await expect(moa.referenceLinks(0)).toHaveText(["DailyMed"]);
-      await expectExternalLink(moa.referenceLinks(0), /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/);
+      await expectExternalLink(
+        moa.referenceLinks(0),
+        /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/
+      );
     });
 
     await test.step("one page: every pagination button is disabled", async () => {
       await moa.table.expectPosition(1, 1, 1);
       await moa.table.expectPaginationState("only");
       await expect(moa.table.pageSizeSelect).toHaveValue("10");
-      await expect(moa.table.pageSizeSelect.getByRole("option")).toHaveText(["5", "10", "25", "100"]);
+      await expect(moa.table.pageSizeSelect.getByRole("option")).toHaveText([
+        "5",
+        "10",
+        "25",
+        "100",
+      ]);
     });
   });
 
@@ -87,6 +97,7 @@ test.describe("Drug page: Mechanisms of Action", () => {
     for (const targetName of await moa.table.columnTexts(MOA_COLUMN.targetName)) {
       expect(targetName).not.toBe("");
     }
+    expect(await moa.table.columnTexts(MOA_COLUMN.curation)).toEqual(Array(4).fill("Manual"));
 
     await test.step("every target link points at a target page", async () => {
       const links = moa.table.rows
@@ -179,11 +190,52 @@ test.describe("Drug page: Mechanisms of Action", () => {
         `/drug/${child.id}`
       );
     }
-    await expect(moa.referenceLinks(0)).toHaveText(["PubMed", "DailyMed"]);
-    await expectExternalLink(
-      moa.referenceLinks(0).first(),
-      /^https?:\/\/europepmc\.org\/abstract\/MED\/\d+$/
-    );
+
+    await test.step("PubMed references open a publications drawer, other sources stay links", async () => {
+      await expect(moa.table.cell(0, MOA_COLUMN.curation)).toHaveText("Manual");
+      const button = moa.publicationsButton(0);
+      await expect(button).toHaveText(/^\s*\d+\s*$/);
+      const pmid = (await button.innerText()).trim();
+      await expect(moa.referenceLinks(0)).toHaveText(["DailyMed"]);
+      await expectExternalLink(
+        moa.referenceLinks(0),
+        /^https?:\/\/dailymed\.nlm\.nih\.gov\/.+setid=/
+      );
+      await expect(moa.publicationsDrawer).toHaveCount(0);
+
+      await button.click();
+      const drawer = moa.publicationsDrawer;
+      await expect(drawer).toBeVisible();
+      await expect(drawer).toContainText("Publications");
+      await expect(drawer).toContainText(`Stubbed publication ${pmid}`);
+
+      await closeDrawer(drawer);
+      await expect(button).toBeVisible();
+    });
+  });
+
+  test("the curation column shows Electronic for electronically curated mechanisms", async ({
+    page,
+    testConfig,
+  }) => {
+    const { sparse } = drugIds(testConfig);
+    const moa = new MechanismsOfActionSection(page);
+    await new DrugPage(page).goto(sparse);
+    await expectSectionLoaded(page, MechanismsOfActionSection.id);
+    await moa.table.expectRows(5);
+    expect(await moa.table.columnTexts(MOA_COLUMN.curation)).toEqual(Array(5).fill("Electronic"));
+    await expect(moa.table.headers.filter({ hasText: "Curation" })).toHaveCount(1);
+
+    await test.step("PubMed references are a drawer button and export with their ids", async () => {
+      await expect(moa.publicationsButton(0)).toHaveText(/^\s*\d+ publications\s*$/);
+      await expect(moa.referenceLinks(0)).toHaveCount(0);
+      const { rows } = await moa.table.exportJson();
+      expect(rows).toHaveLength(5);
+      for (const row of rows) {
+        expect(row.curation).toBe("Electronic");
+        expect(row.references).toMatch(/^PubMed \(\d+(; \d+)*\)(,PMC)?$/);
+      }
+    });
   });
 
   test("search narrows the rows, a term with no match empties the table, clearing restores it", async ({
@@ -244,8 +296,13 @@ test.describe("Drug page: Mechanisms of Action", () => {
     ).toBeDisabled();
 
     await picker.getByRole("checkbox", { name: "Target Name" }).uncheck();
-    await moa.table.expectHeaders(["Mechanism of Action", "Human targets", "References"]);
-    await expect(moa.table.row(0).locator("td")).toHaveCount(3);
+    await moa.table.expectHeaders([
+      "Mechanism of Action",
+      "Human targets",
+      "Curation",
+      "References",
+    ]);
+    await expect(moa.table.row(0).locator("td")).toHaveCount(4);
     await expect(moa.table.row(0)).not.toContainText("Receptor tyrosine-protein kinase erbB-2");
 
     await picker.getByRole("checkbox", { name: "Target Name" }).check();
@@ -295,8 +352,10 @@ test.describe("Drug page: Mechanisms of Action", () => {
           "mechanismOfAction",
           "targetName",
           "humanTargets",
+          "curation",
           "references",
         ]);
+        expect(row.curation).toBe("Manual");
         expect(row.references).toBe("DailyMed,Wikipedia,FDA");
       }
       expect(rows[3].humanTargets).toBe("ABL1,BCR");
@@ -305,7 +364,13 @@ test.describe("Drug page: Mechanisms of Action", () => {
     await test.step("TSV", async () => {
       const { filename, header, lines } = await moa.table.exportTsv();
       expect(filename).toBe(`${chemblId}-mechanisms-of-action.tsv`);
-      expect(header).toEqual(["mechanismOfAction", "targetName", "humanTargets", "references"]);
+      expect(header).toEqual([
+        "mechanismOfAction",
+        "targetName",
+        "humanTargets",
+        "curation",
+        "references",
+      ]);
       expect(lines).toHaveLength(4);
       expect(lines.map((line) => line.split("\t")[0])).toEqual(shown);
     });
@@ -322,45 +387,5 @@ test.describe("Drug page: Mechanisms of Action", () => {
     await moa.table.expectRows(1);
 
     await moa.table.expectApiQuery("MechanismsOfActionSectionQuery", primary);
-  });
-});
-
-// Pinned: its first mechanism has a curation value and PubMed references on the API
-const DRUG_WITH_PUBMED_MOA = "CHEMBL3353410";
-
-test.describe("Drug Mechanisms of Action Section - Curation and references", () => {
-  let moaSection: MechanismsOfActionSection;
-
-  test.beforeEach(async ({ page }) => {
-    moaSection = new MechanismsOfActionSection(page);
-    await new DrugPage(page).goToDrugPage(DRUG_WITH_PUBMED_MOA);
-    await moaSection.waitForLoad();
-    await expect(moaSection.getTable().locator("tbody tr").first()).toBeVisible();
-  });
-
-  test("Curation column sits between Human targets and References", { tag: "@smoke" }, async () => {
-    const headers = await moaSection.getColumnHeaderTexts();
-    const curationIndex = headers.indexOf("Curation");
-
-    expect(curationIndex, `headers: ${headers.join(", ")}`).toBeGreaterThan(0);
-    expect(headers[curationIndex - 1]).toBe("Human targets");
-    expect(headers[curationIndex + 1]).toBe("References");
-  });
-
-  test("Curation value is capitalised", async () => {
-    const rowCount = await moaSection.getTableRows();
-    expect(rowCount).toBeGreaterThan(0);
-
-    for (let i = 0; i < rowCount; i++) {
-      expect(await moaSection.getCuration(i)).toMatch(/^[A-Z][a-z]+$/);
-    }
-  });
-
-  test("PubMed references open the publications drawer", async () => {
-    const button = await moaSection.getPublicationsButton(0);
-    await expect(button).toBeVisible();
-
-    await button.click();
-    await expect(moaSection.getPublicationsDrawer()).toBeVisible();
   });
 });

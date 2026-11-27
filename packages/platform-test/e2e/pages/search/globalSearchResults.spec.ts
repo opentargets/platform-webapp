@@ -32,7 +32,11 @@ const PER_GROUP = TOTAL_DIALOG_RESULTS / SEARCH_ENTITIES.length;
  * A result group has between one row and `max` rows, and each row shows the id the app
  * would navigate to, in the format of that entity type.
  */
-async function expectGroupRows(search: GlobalSearch, entity: SearchEntity, max: number): Promise<number> {
+async function expectGroupRows(
+  search: GlobalSearch,
+  entity: SearchEntity,
+  max: number
+): Promise<number> {
   const rows = search.items(entity);
   await expect(rows.first(), `the ${entity} group should list results`).toBeVisible();
   const count = await rows.count();
@@ -93,7 +97,9 @@ test.describe("Global search results", () => {
         groups.map((group) => group.getAttribute("data-testid"))
       );
       expect(order.filter((key) => key !== "global-search-group-variants")).toEqual(
-        ["topHit", "targets", "diseases", "studies", "drugs"].map((key) => `global-search-group-${key}`)
+        ["topHit", "targets", "diseases", "studies", "drugs"].map(
+          (key) => `global-search-group-${key}`
+        )
       );
     });
 
@@ -168,7 +174,9 @@ test.describe("Global search results", () => {
 
       await expect(search.topHit).toContainText(SEARCH.disease.id);
       // The description is cut at 180 characters.
-      await expect(search.topHit).toContainText(new RegExp(`${SEARCH.disease.descriptionStart}.*\\.\\.\\.$`));
+      await expect(search.topHit).toContainText(
+        new RegExp(`${SEARCH.disease.descriptionStart}.*\\.\\.\\.$`)
+      );
 
       await search.topHit.click();
       await search.expectClosed();
@@ -332,7 +340,9 @@ test.describe("Global search results", () => {
   });
 
   test.describe("free search", () => {
-    test("Enter opens the results page for the typed term and records the search", async ({ page }) => {
+    test("Enter opens the results page for the typed term and records the search", async ({
+      page,
+    }) => {
       const search = new GlobalSearch(page);
       const results = new SearchPage(page);
       await page.goto("/");
@@ -351,7 +361,9 @@ test.describe("Global search results", () => {
       });
     });
 
-    test("clicking the free search row opens the results page for the typed term", async ({ page }) => {
+    test("clicking the free search row opens the results page for the typed term", async ({
+      page,
+    }) => {
       const search = new GlobalSearch(page);
       const results = new SearchPage(page);
       await page.goto("/");
@@ -440,7 +452,9 @@ test.describe("Global search results", () => {
   });
 
   test.describe("entity filters", () => {
-    test("one filter leaves only that entity's group, with all fifteen results", async ({ page }) => {
+    test("one filter leaves only that entity's group, with all fifteen results", async ({
+      page,
+    }) => {
       const search = new GlobalSearch(page);
       await page.goto("/");
       await search.openAndSearch(SEARCH.disease.term);

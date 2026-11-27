@@ -65,6 +65,7 @@ function DownloadsDialog() {
   return (
     <Dialog
       open={true}
+      data-testid="dataset-dialog"
       onClose={handleClose}
       aria-labelledby="scroll-dialog-title"
       aria-describedby="scroll-dialog-description"
@@ -81,7 +82,12 @@ function DownloadsDialog() {
     >
       <DialogTitle id="scroll-dialog-title">
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
+          <Typography
+            variant="h6"
+            component="div"
+            data-testid="dataset-dialog-title"
+            sx={{ fontWeight: "bold" }}
+          >
             Dataset: {downloadsRow}
           </Typography>
           <CopyUrlButton tooltipTitle={`Copy URL for ${downloadsRow} dataset `} />
@@ -91,8 +97,10 @@ function DownloadsDialog() {
         {VEIW_MAP[downloadsView]}
       </DialogContent>
       <DialogActions sx={{ mb: 2, mx: 2, display: "flex", justifyContent: "space-between" }}>
-        <Button onClick={switchDisplayMode}>{getDisplayText()}</Button>
-        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={switchDisplayMode} data-testid="dataset-dialog-switch">{getDisplayText()}</Button>
+        <Button onClick={handleClose} data-testid="dataset-dialog-close">
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   );

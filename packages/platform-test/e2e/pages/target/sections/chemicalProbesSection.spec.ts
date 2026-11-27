@@ -143,7 +143,9 @@ test.describe("Target chemical probes section", () => {
     await test.step("quality stars", async () => {
       for (const [index, { isHighQuality }] of data.entries()) {
         const cell = probes.qualityCell(table.row(index));
-        await expect(cell.getByTestId(`probe-quality-${isHighQuality ? "high" : "low"}`)).toHaveCount(1);
+        await expect(
+          cell.getByTestId(`probe-quality-${isHighQuality ? "high" : "low"}`)
+        ).toHaveCount(1);
         // a solid star for high quality, an outlined one for low
         await expect(
           cell.locator(`svg[data-icon='star'][data-prefix='${isHighQuality ? "fas" : "far"}']`)
@@ -201,7 +203,9 @@ test.describe("Target chemical probes section", () => {
 
       for (const { id, control } of withControl) {
         await probes.controlHelpIcon(probes.rowForProbe(id)).hover();
-        await expect(probes.tooltip.filter({ hasText: "Control:" })).toHaveText(`Control: ${control}`);
+        await expect(probes.tooltip.filter({ hasText: "Control:" })).toHaveText(
+          `Control: ${control}`
+        );
         // leave the icon so the next probe's tooltip is not confused with this one
         await probes.header.hover();
         await expect(probes.tooltip.filter({ hasText: "Control:" })).toHaveCount(0);
@@ -224,7 +228,10 @@ test.describe("Target chemical probes section", () => {
 
     await table.nextPageButton.click();
     await table.expectRowCount(total - 10);
-    await table.expectPosition(`11 - ${total} of ${total}`, { canGoBack: true, canGoForward: false });
+    await table.expectPosition(`11 - ${total} of ${total}`, {
+      canGoBack: true,
+      canGoForward: false,
+    });
     for (const id of ids.slice(10)) await expect(probes.rowForProbe(id)).toHaveCount(1);
     await expect(probes.rowForProbe(ids[0]), "page 2 must not repeat page 1").toHaveCount(0);
 
@@ -233,14 +240,20 @@ test.describe("Target chemical probes section", () => {
     await expect(probes.rowForProbe(ids[0])).toHaveCount(1);
 
     await table.lastPageButton.click();
-    await table.expectPosition(`11 - ${total} of ${total}`, { canGoBack: true, canGoForward: false });
+    await table.expectPosition(`11 - ${total} of ${total}`, {
+      canGoBack: true,
+      canGoForward: false,
+    });
 
     await table.previousPageButton.click();
     await table.expectPosition(`1 - 10 of ${total}`, { canGoBack: false, canGoForward: true });
 
     await table.pageSizeSelect.selectOption("25");
     await table.expectRowCount(total);
-    await table.expectPosition(`1 - ${total} of ${total}`, { canGoBack: false, canGoForward: false });
+    await table.expectPosition(`1 - ${total} of ${total}`, {
+      canGoBack: false,
+      canGoForward: false,
+    });
 
     await table.pageSizeSelect.selectOption("5");
     await table.expectRowCount(5);
@@ -380,7 +393,10 @@ test.describe("Target chemical probes section", () => {
     const drawer = await probes.controls.openApiQuery(ChemicalProbesSection.operation, targetId);
     await expect(drawer).toContainText("chemicalProbes");
     await probes.controls.closeApiQuery();
-    await expect(probes.table.table, "the table is still there after the drawer closes").toBeVisible();
+    await expect(
+      probes.table.table,
+      "the table is still there after the drawer closes"
+    ).toBeVisible();
   });
 
   test("is absent for a target with no chemical probes", async ({ page, testConfig }) => {

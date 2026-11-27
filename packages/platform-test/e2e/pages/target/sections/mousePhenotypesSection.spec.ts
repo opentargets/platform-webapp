@@ -1,12 +1,18 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
+  allowSwissBioPicsCors,
   MOUSE_PHENOTYPES_COLUMNS,
   MOUSE_PHENOTYPES_OPERATION,
   MousePhenotypesSection,
 } from "../../../../POM/objects/widgets/shared/mousePhenotypesSection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
-import { requireTarget, TargetPage, targetIdentity, targetWidget } from "../../../../POM/page/target";
+import {
+  requireTarget,
+  TargetPage,
+  targetIdentity,
+  targetWidget,
+} from "../../../../POM/page/target";
 import { expectSections } from "../../../../utils/sections";
 
 const MGI_GENE_URL = /^https:\/\/identifiers\.org\/MGI:\d+$/;
@@ -18,6 +24,10 @@ const MP_TERM_URL = /^https:\/\/identifiers\.org\/MP:\d{7}$/;
  * downloads every row and filters them in the browser.
  */
 test.describe("Target mouse phenotypes section", () => {
+  test.beforeEach(async ({ page }) => {
+    await allowSwissBioPicsCors(page);
+  });
+
   test("the section is loaded with its title, description and source link", async ({
     page,
     testConfig,
@@ -53,7 +63,10 @@ test.describe("Target mouse phenotypes section", () => {
 
     await phenotypes.table.expectHeaders(MOUSE_PHENOTYPES_COLUMNS);
     const total = await phenotypes.table.total();
-    expect(total, "the primary target should have more than one page of mouse phenotypes").toBeGreaterThan(10);
+    expect(
+      total,
+      "the primary target should have more than one page of mouse phenotypes"
+    ).toBeGreaterThan(10);
     await expect(phenotypes.table.rows).toHaveCount(10);
     await phenotypes.table.expectPosition(1, 10, total);
 
@@ -67,7 +80,9 @@ test.describe("Target mouse phenotypes section", () => {
       await expect(phenotype).toHaveAttribute("href", MP_TERM_URL);
 
       // one category is a link to the term; several open a drawer
-      await expect(phenotypes.cell(row, "category")).toHaveText(/^\s*(\d+ categories|[a-z][a-z /,-]+)\s*$/);
+      await expect(phenotypes.cell(row, "category")).toHaveText(
+        /^\s*(\d+ categories|[a-z][a-z /,-]+)\s*$/
+      );
       await expect(phenotypes.cell(row, "models")).toHaveText(/^\s*([1-9]\d* models?|N\/A)\s*$/);
     }
 
@@ -103,8 +118,10 @@ test.describe("Target mouse phenotypes section", () => {
       await expect(phenotypes.table.firstPageButton).toBeEnabled();
       await expect(phenotypes.table.previousPageButton).toBeEnabled();
       await expect(phenotypes.table.nextPageButton).toBeEnabled();
+      await phenotypes.table.expectRowsChangedFrom(firstPage);
       const secondPage = await phenotypes.table.rowTexts();
-      for (const row of secondPage) expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
+      for (const row of secondPage)
+        expect(firstPage, "page 2 should not repeat page 1").not.toContain(row);
     });
 
     await test.step("last", async () => {
@@ -112,7 +129,10 @@ test.describe("Target mouse phenotypes section", () => {
       await phenotypes.table.expectPosition(lastPageStart, total, total);
       await expect(phenotypes.table.rows).toHaveCount(total - lastPageStart + 1);
       await phenotypes.table.expectLastPage();
-      await expect(phenotypes.cell(0, "phenotype").getByRole("link")).toHaveAttribute("href", MP_TERM_URL);
+      await expect(phenotypes.cell(0, "phenotype").getByRole("link")).toHaveAttribute(
+        "href",
+        MP_TERM_URL
+      );
     });
 
     await test.step("previous", async () => {
@@ -125,7 +145,7 @@ test.describe("Target mouse phenotypes section", () => {
       await phenotypes.table.firstPageButton.click();
       await phenotypes.table.expectPosition(1, 10, total);
       await phenotypes.table.expectFirstPage();
-      expect(await phenotypes.table.rowTexts()).toEqual(firstPage);
+      await phenotypes.table.expectRowTexts(firstPage);
     });
   });
 
@@ -152,7 +172,9 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.table.setPageSize(25);
     await phenotypes.table.expectPosition(1, 25, total);
     await expect(phenotypes.table.rows).toHaveCount(25);
-    expect((await phenotypes.table.rowTexts()).slice(0, 10)).toEqual(firstPage);
+    await expect
+      .poll(async () => (await phenotypes.table.rowTexts()).slice(0, 10))
+      .toEqual(firstPage);
 
     await phenotypes.table.setPageSize(100);
     await phenotypes.table.expectPosition(1, Math.min(100, total), total);
@@ -170,13 +192,18 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.expectLoaded();
     await phenotypes.table.expectLoaded();
     const total = await phenotypes.table.total();
+    const firstPage = await phenotypes.table.rowTexts();
 
     // take a phenotype that is not on the first page, and search for its MP id
     await phenotypes.table.nextPageButton.click();
     await phenotypes.table.expectPosition(11, 20, total);
+    await phenotypes.table.expectRowsChangedFrom(firstPage);
     const link = phenotypes.cell(0, "phenotype").getByRole("link");
-    const name = (await link.innerText()).trim();
-    const termId = ((await link.getAttribute("href")) ?? "").replace("https://identifiers.org/", "");
+    const { name, href } = await link.evaluate((a: HTMLAnchorElement) => ({
+      name: (a.textContent ?? "").trim(),
+      href: a.href,
+    }));
+    const termId = href.replace("https://identifiers.org/", "");
     expect(termId).toMatch(/^MP:\d{7}$/);
 
     await phenotypes.table.search(termId);
@@ -196,7 +223,10 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.table.search("");
     await phenotypes.table.expectPosition(1, 10, total);
     await expect(phenotypes.table.rows).toHaveCount(10);
-    await expect(phenotypes.cell(0, "phenotype").getByRole("link")).toHaveAttribute("href", MP_TERM_URL);
+    await expect(phenotypes.cell(0, "phenotype").getByRole("link")).toHaveAttribute(
+      "href",
+      MP_TERM_URL
+    );
   });
 
   test("several categories open in a drawer that lists each one with its link", async ({
@@ -256,7 +286,9 @@ test.describe("Target mouse phenotypes section", () => {
     await expect(phenotypes.modelCards).toHaveCount(count);
     for (const card of await phenotypes.modelCards.all()) {
       const model = card.getByRole("link").first();
-      await expect(model, "each model should name its alleles and genetic background").toHaveText(/\S.{3,}/);
+      await expect(model, "each model should name its alleles and genetic background").toHaveText(
+        /\S.{3,}/
+      );
       await expect(model).toHaveAttribute("href", MGI_GENE_URL);
       // the literature behind the model: a count that opens the publications, or N/A
       await expect(card).toContainText(/\d+ publications?|N\/A/);
@@ -280,7 +312,9 @@ test.describe("Target mouse phenotypes section", () => {
     const picker = await phenotypes.table.openColumnPicker();
     await expect(picker.getByRole("checkbox")).toHaveCount(MOUSE_PHENOTYPES_COLUMNS.length);
     await expect(picker.getByRole("checkbox", { name: "Mouse gene", exact: true })).toBeDisabled();
-    await expect(picker.getByRole("checkbox", { name: "Allelic composition", exact: true })).toBeDisabled();
+    await expect(
+      picker.getByRole("checkbox", { name: "Allelic composition", exact: true })
+    ).toBeDisabled();
     await expect(picker.getByRole("checkbox", { name: "Phenotype", exact: true })).toBeEnabled();
 
     await picker.getByRole("checkbox", { name: "Category", exact: true }).uncheck();
@@ -292,7 +326,10 @@ test.describe("Target mouse phenotypes section", () => {
     await phenotypes.table.closeColumnPicker(phenotypes.title);
   });
 
-  test("the export downloads every phenotype, not just the page shown", async ({ page, testConfig }) => {
+  test("the export downloads every phenotype, not just the page shown", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const { symbol } = targetIdentity(ensgId);
     const phenotypes = new MousePhenotypesSection(page);
@@ -347,15 +384,19 @@ test.describe("Target mouse phenotypes section", () => {
     await expect(phenotypes.column("phenotype").getByRole("link")).toHaveCount(total);
   });
 
-  test("a target without mouse phenotypes does not render the section", async ({ page, testConfig }) => {
+  test("a target without mouse phenotypes does not render the section", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "nonCoding");
     const sectionsWithData = expectedSectionsFor(ensgId);
     const phenotypes = new MousePhenotypesSection(page);
     const target = new TargetPage(page);
 
-    expect(sectionsWithData, "the manifest should record this target as having no mouse phenotypes").not.toContain(
-      "mousephenotypes"
-    );
+    expect(
+      sectionsWithData,
+      "the manifest should record this target as having no mouse phenotypes"
+    ).not.toContain("mousephenotypes");
     await target.goto(ensgId);
     await expectSections(page, sectionsWithData);
 

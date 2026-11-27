@@ -57,9 +57,9 @@ function IndicationsTable({
         const isSelected = selectedRow?.id && row.id === selectedRow.id;
         return (
           <Box
-            {...getPrefetchHandlers(row)}
             data-testid="indication-card"
             data-selected={isSelected ? "true" : "false"}
+            {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",
               borderWidth: "0 0 0 4px",

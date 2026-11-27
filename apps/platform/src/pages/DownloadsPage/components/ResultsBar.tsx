@@ -36,7 +36,11 @@ function ResultsBar({ count, categories, query, missingCount, onAddAll }: Result
         mb: 2,
       }}
     >
-      <Typography component="p" sx={{ fontSize: ".875rem", color: "text.primary", m: 0 }}>
+      <Typography
+        component="p"
+        data-testid="results-summary"
+        sx={{ fontSize: ".875rem", color: "text.primary", m: 0 }}
+      >
         {summary}
         {query.trim() ? <> matching &ldquo;{query.trim()}&rdquo;</> : null}
       </Typography>

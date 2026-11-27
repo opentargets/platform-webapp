@@ -1,5 +1,8 @@
 import { expect, test } from "../../../fixtures";
-import { AssociationsTable, SCORE_LABEL } from "../../../POM/objects/widgets/AOTF/associationsTable";
+import {
+  AssociationsTable,
+  SCORE_LABEL,
+} from "../../../POM/objects/widgets/AOTF/associationsTable";
 import {
   aggregationTestId,
   DATA_SOURCE_AGGREGATIONS,
@@ -32,7 +35,9 @@ test.describe("Disease associations: table", () => {
         ...DATA_SOURCE_COLUMNS.map((column) => column.label),
       ]);
       const ids = await aotf.headerLabels.evaluateAll((labels) =>
-        labels.map((label) => (label.getAttribute("data-testid") ?? "").replace("table-header-", ""))
+        labels.map((label) =>
+          (label.getAttribute("data-testid") ?? "").replace("table-header-", "")
+        )
       );
       expect(ids).toEqual(["name", "score", ...DATA_SOURCE_COLUMNS.map((column) => column.id)]);
     });
@@ -46,7 +51,10 @@ test.describe("Disease associations: table", () => {
 
       for (const column of DATA_SOURCE_COLUMNS) {
         const link = aotf.docsLink(column.id);
-        await expect(link, `${column.label} docs link`).toHaveAttribute("href", `${DOCS}${column.docsAnchor}`);
+        await expect(link, `${column.label} docs link`).toHaveAttribute(
+          "href",
+          `${DOCS}${column.docsAnchor}`
+        );
         await expect(link, `${column.label} docs link`).toHaveAttribute("target", "_blank");
         await expect(link, `${column.label} docs link`).toHaveAttribute("rel", /noreferrer/);
       }
@@ -89,7 +97,8 @@ test.describe("Disease associations: table", () => {
       await test.step("names are target symbols and are not repeated", async () => {
         const names = await aotf.rowNames();
         expect(names).toHaveLength(25);
-        for (const name of names) expect(name, "a row name should be a gene symbol").toMatch(SYMBOL);
+        for (const name of names)
+          expect(name, "a row name should be a gene symbol").toMatch(SYMBOL);
         expect(new Set(names).size, "a target should be listed once").toBe(25);
       });
 
@@ -105,7 +114,9 @@ test.describe("Disease associations: table", () => {
           .columnCells("score")
           .evaluateAll((cells) => cells.map((cell) => cell.getAttribute("aria-label") ?? ""));
         for (const label of labels) expect(label).toMatch(SCORE_LABEL);
-        await expect(aotf.sortIndicators, "only the sorted column shows the sort icon").toHaveCount(1);
+        await expect(aotf.sortIndicators, "only the sorted column shows the sort icon").toHaveCount(
+          1
+        );
         await expect(aotf.sortIndicator("score")).toBeVisible();
       });
 
@@ -186,7 +197,10 @@ test.describe("Disease associations: table", () => {
     }) => {
       const diseaseId = testConfig.disease.primary;
       const withoutEvidence = DATA_SOURCES_WITHOUT_EVIDENCE[diseaseId];
-      expect(withoutEvidence, `expectedAssociations.ts should list them for ${diseaseId}`).toBeTruthy();
+      expect(
+        withoutEvidence,
+        `expectedAssociations.ts should list them for ${diseaseId}`
+      ).toBeTruthy();
       const columnId = withoutEvidence[withoutEvidence.length - 1];
 
       const aotf = new AssociationsTable(page);
@@ -215,7 +229,9 @@ test.describe("Disease associations: table", () => {
       const dataLabel = await dataCell.getAttribute("aria-label");
       expect(dataLabel).toMatch(SCORE_LABEL);
       await dataCell.hover();
-      await expect(page.getByRole("tooltip", { name: dataLabel as string, exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("tooltip", { name: dataLabel as string, exact: true })
+      ).toBeVisible();
 
       await row.locator("[data-testid^='empty-cell-']").first().hover();
       await expect(page.getByRole("tooltip", { name: "No data", exact: true })).toBeVisible();
@@ -320,12 +336,17 @@ test.describe("Disease associations: table", () => {
       await expect(aotf.sortIndicators).toHaveCount(1);
       await aotf.expectSortedBy("score");
       expect(await aotf.rowNames()).not.toEqual(sorted);
-      await expect(aotf.filterChip("sort"), "sorting by score is the default: no chip").toHaveCount(0);
+      await expect(aotf.filterChip("sort"), "sorting by score is the default: no chip").toHaveCount(
+        0
+      );
     });
   });
 
   test.describe("pagination", () => {
-    test("next and previous move through pages of different targets", async ({ page, testConfig }) => {
+    test("next and previous move through pages of different targets", async ({
+      page,
+      testConfig,
+    }) => {
       const aotf = new AssociationsTable(page);
       await aotf.gotoDisease(testConfig.disease.primary);
       const total = (await aotf.displayedRange()).total;
@@ -358,7 +379,10 @@ test.describe("Disease associations: table", () => {
       await expect(aotf.previousPageButton).toBeDisabled();
     });
 
-    test("the last page shows the remaining targets and disables next", async ({ page, testConfig }) => {
+    test("the last page shows the remaining targets and disables next", async ({
+      page,
+      testConfig,
+    }) => {
       const diseaseId = testConfig.disease.primary;
       const aotf = new AssociationsTable(page);
       await aotf.gotoDisease(diseaseId);
@@ -379,6 +403,8 @@ test.describe("Disease associations: table", () => {
       testConfig,
     }) => {
       const aotf = new AssociationsTable(page);
+      // The disease has targets, so the empty state below comes from the page, not from the data.
+      await aotf.gotoDisease(testConfig.disease.primary);
       await page.goto(AssociationsTable.diseasePath(testConfig.disease.primary, { page: "99999" }));
 
       await expect(aotf.noResults).toBeVisible({ timeout: 45_000 });
@@ -399,7 +425,13 @@ test.describe("Disease associations: table", () => {
       await expect(aotf.pageSizeSelect).toHaveText("25");
 
       await aotf.pageSizeSelect.click();
-      await expect(page.getByRole("listbox").getByRole("option")).toHaveText(["10", "25", "50", "200", "500"]);
+      await expect(page.getByRole("listbox").getByRole("option")).toHaveText([
+        "10",
+        "25",
+        "50",
+        "200",
+        "500",
+      ]);
       await page.getByRole("option", { name: "10", exact: true }).click();
       await expect(aotf.rows()).toHaveCount(10);
       await aotf.expectUrlParam("pageSize", "10");
@@ -498,7 +530,8 @@ test.describe("Disease associations: table", () => {
       await expect(aotf.filterChip("entity-search")).toHaveText('"adrenoceptor beta"');
       const names = await aotf.rowNames();
       expect(names, "ADRB1 is 'adrenoceptor beta 1'").toContain("ADRB1");
-      for (const name of names) expect(name, "matches are the beta adrenoceptors").toMatch(/^ADRB\d$/);
+      for (const name of names)
+        expect(name, "matches are the beta adrenoceptors").toMatch(/^ADRB\d$/);
       const { from, to, total } = await aotf.displayedRange();
       expect([from, to, total]).toEqual([1, names.length, names.length]);
     });

@@ -1,3 +1,4 @@
+import { escapeRegExp } from "lodash";
 import { faSquareCaretUp } from "@fortawesome/free-regular-svg-icons";
 import { faCaretDown, faCaretUp, faCircle, faSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -100,7 +101,7 @@ function getSortingFn(datatype, allDatatypes) {
 const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value);
   const allRowValuesInString = JSON.stringify(row.original);
-  const containsSubstr = new RegExp(value, "i").test(allRowValuesInString);
+  const containsSubstr = new RegExp(escapeRegExp(value), "i").test(allRowValuesInString);
 
   addMeta({
     itemRank,
@@ -342,7 +343,7 @@ function ViewToggleButton({ value, view, hasSpecific }) {
         <Typography variant="caption">
           {hasSpecific
             ? `At least one ${view} has a high specificity score`
-            : `No ${view}s have a high specificify score`}
+            : `No ${view}s have a high specificity score`}
         </Typography>
       }
       placement="top-start"

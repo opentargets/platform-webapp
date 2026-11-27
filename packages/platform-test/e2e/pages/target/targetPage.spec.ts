@@ -75,7 +75,10 @@ test.describe("Target page", () => {
           `^Ensembl:\\s*${ensgId}\\s*UniProt:\\s*${uniprotIds.join(",\\s*")}\\s*GeneCards:\\s*${symbol}\\s*HGNC:\\s*${symbol}$`
         )
       );
-      await expect(links.nth(0)).toHaveAttribute("href", `https://identifiers.org/ensembl:${ensgId}`);
+      await expect(links.nth(0)).toHaveAttribute(
+        "href",
+        `https://identifiers.org/ensembl:${ensgId}`
+      );
       for (const [index, uniprotId] of uniprotIds.entries()) {
         await expect(target.uniprotLinks.getByRole("link").nth(index)).toHaveAttribute(
           "href",
@@ -108,7 +111,10 @@ test.describe("Target page", () => {
       await expect(target.profileTab).toHaveAttribute("aria-selected", "true");
       await expect(target.associationsTab).toHaveAttribute("aria-selected", "false");
       await expect(target.profileTab).toHaveAttribute("href", `/target/${ensgId}`);
-      await expect(target.associationsTab).toHaveAttribute("href", `/target/${ensgId}/associations`);
+      await expect(target.associationsTab).toHaveAttribute(
+        "href",
+        `/target/${ensgId}/associations`
+      );
       await expect(sectionLocator(page, firstSection)).toBeVisible();
     });
 
@@ -144,7 +150,10 @@ test.describe("Target page", () => {
     });
   });
 
-  test("the associations route opens directly and survives a reload", async ({ page, testConfig }) => {
+  test("the associations route opens directly and survives a reload", async ({
+    page,
+    testConfig,
+  }) => {
     const ensgId = requireTarget(testConfig, "primary");
     const { symbol, name, uniprotIds } = targetIdentity(ensgId);
     const target = new TargetPage(page);
@@ -189,9 +198,7 @@ test.describe("Target page", () => {
     await expect(
       target.notFoundPage.getByRole("heading", { name: "404: Page not found" })
     ).toBeVisible();
-    await expect(target.notFoundPage).toContainText(
-      "We can't find the page you're looking for."
-    );
+    await expect(target.notFoundPage).toContainText("We can't find the page you're looking for.");
     await expect(
       target.notFoundPage.getByRole("link", { name: "Documentation", exact: true })
     ).toHaveAttribute("href", /^https:\/\/platform-docs\.opentargets\.org/);
@@ -228,7 +235,9 @@ test.describe("Target page", () => {
     await target.notFoundPage.getByRole("link", { name: "Go back to Home Page" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(target.notFoundPage).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: /Open Targets Platform/ }).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Open Targets Platform/ }).first()
+    ).toBeVisible();
   });
 
   test("an unknown route under an existing target shows the 404 page", async ({

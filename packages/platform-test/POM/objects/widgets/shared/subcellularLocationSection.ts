@@ -1,7 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { ProfileSection } from "../Target/sectionWidgets";
 
-export type SubcellularSource = "hpa_main" | "hpa_additional" | "hpa_extracellular_location" | "uniprot";
+export type SubcellularSource =
+  | "hpa_main"
+  | "hpa_additional"
+  | "hpa_extracellular_location"
+  | "uniprot";
 
 /** The SwissBioPics endpoint the cell diagram is downloaded from. */
 export const SWISSBIOPICS_API = /^https:\/\/www\.swissbiopics\.org\/+api\/9606\/sl\/[\d,]+$/;

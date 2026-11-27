@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   type EvidenceSource,
   MolecularInteractionsSection,
@@ -53,9 +53,10 @@ test.describe("Target profile: Molecular Interactions section", () => {
     const counts: Record<string, number> = {};
     for (const source of SOURCES) {
       counts[source] = await interactions.tabCount(source);
-      expect(counts[source], `the primary target should have ${source} interactions`).toBeGreaterThan(
-        10
-      );
+      expect(
+        counts[source],
+        `the primary target should have ${source} interactions`
+      ).toBeGreaterThan(10);
       await expect(interactions.tab(source)).toBeEnabled();
     }
     await interactions.expectActive("intact");
@@ -149,9 +150,9 @@ test.describe("Target profile: Molecular Interactions section", () => {
       names[0],
       await interactions.evidenceCount("intact", 0)
     );
-    await interactions.evidence("intact").expectHeaders(
-      MolecularInteractionsSection.EVIDENCE_COLUMNS.intact
-    );
+    await interactions
+      .evidence("intact")
+      .expectHeaders(MolecularInteractionsSection.EVIDENCE_COLUMNS.intact);
 
     // A row with another interactor, so the heading has to change.
     const other = names.findIndex((name) => name !== names[0]);
@@ -431,9 +432,10 @@ test.describe("Target profile: Molecular Interactions section", () => {
     await interactions.tabCount("intact");
     await interactions.expectActive("intact");
     const count = await interactions.evidenceCount("intact", 0);
-    expect(count, "the top IntAct interactor should have more than two pages of evidence").toBeGreaterThan(
-      20
-    );
+    expect(
+      count,
+      "the top IntAct interactor should have more than two pages of evidence"
+    ).toBeGreaterThan(20);
     await expect(evidence.pagePosition).toHaveText(`1–10 of ${count}`);
     await expect(evidence.firstPageButton).toBeDisabled();
     await expect(evidence.previousPageButton).toBeDisabled();
@@ -521,7 +523,10 @@ test.describe("Target profile: Molecular Interactions section", () => {
         );
         previousScore = score;
 
-        await expect(interactions.stringScoreCells(row), "one square per evidence channel").toHaveCount(8);
+        await expect(
+          interactions.stringScoreCells(row),
+          "one square per evidence channel"
+        ).toHaveCount(8);
         const titles = await interactions
           .stringScoreCells(row)
           .evaluateAll((cells) => cells.map((cell) => cell.getAttribute("title") ?? ""));
@@ -717,9 +722,10 @@ test.describe("Target profile: Molecular Interactions section", () => {
   test("is not rendered for a target without interactions", async ({ page }) => {
     const targetId = EDGE_TARGETS.nonCoding;
     const expected = expectedSectionsFor(targetId);
-    expect(expected, "the manifest should record that this target has no interactions").not.toContain(
-      "interactions"
-    );
+    expect(
+      expected,
+      "the manifest should record that this target has no interactions"
+    ).not.toContain("interactions");
     const interactions = new MolecularInteractionsSection(page);
 
     await page.goto(`/target/${targetId}`);

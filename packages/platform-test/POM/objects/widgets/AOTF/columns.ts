@@ -43,8 +43,21 @@ export const DATA_SOURCE_COLUMNS: readonly DataSourceColumn[] = [
   source("gene_burden", "Gene Burden", "Genetic association", 1, "gene-burden"),
   source("eva", "ClinVar", "Genetic association", 1, "clinvar"),
   source("genomics_england", "GEL PanelApp", "Genetic association", 1, "genomics-england-panelapp"),
-  source("gene2phenotype", "Gene2phenotype", "Genetic association", 1, "gene2phenotype", "Gene2Phenotype"),
-  source("uniprot_literature", "UniProt literature", "Genetic association", 1, "uniprot-literature"),
+  source(
+    "gene2phenotype",
+    "Gene2phenotype",
+    "Genetic association",
+    1,
+    "gene2phenotype",
+    "Gene2Phenotype"
+  ),
+  source(
+    "uniprot_literature",
+    "UniProt literature",
+    "Genetic association",
+    1,
+    "uniprot-literature"
+  ),
   source(
     "uniprot_variants",
     "UniProt curated variants",
@@ -57,7 +70,14 @@ export const DATA_SOURCE_COLUMNS: readonly DataSourceColumn[] = [
   source("clingen", "ClinGen", "Genetic association", 1, "clingen"),
   source("cancer_gene_census", "Cancer Gene Census", "Somatic mutations", 1, "cancer-gene-census"),
   source("intogen", "IntOGen", "Somatic mutations", 1, "intogen"),
-  source("eva_somatic", "ClinVar (somatic)", "Somatic mutations", 1, "clinvar-somatic", "EVA somatic"),
+  source(
+    "eva_somatic",
+    "ClinVar (somatic)",
+    "Somatic mutations",
+    1,
+    "clinvar-somatic",
+    "EVA somatic"
+  ),
   source("cancer_biomarkers", "Cancer Biomarkers", "Somatic mutations", 1, "cancer-biomarkers"),
   source("crispr_screen", "CRISPR Screens", "Affected pathway", 1, "crispr-screens"),
   source("crispr", "Project Score", "Affected pathway", 1, "project-score"),
@@ -102,11 +122,35 @@ const factor = (
 ): PrioritisationColumn => ({ id, label, aggregation, panelKey, sectionId, sectionName });
 
 export const PRIORITISATION_COLUMNS: readonly PrioritisationColumn[] = [
-  factor("maxClinicalStage", "Target in clinic", "precedence", "drugs", "Drugs and Clinical Candidates"),
-  factor("isInMembrane", "Membrane protein", "tractability", "subcellularLocation", "Subcellular Location"),
-  factor("isSecreted", "Secreted protein", "tractability", "subcellularLocation", "Subcellular Location"),
+  factor(
+    "maxClinicalStage",
+    "Target in clinic",
+    "precedence",
+    "drugs",
+    "Drugs and Clinical Candidates"
+  ),
+  factor(
+    "isInMembrane",
+    "Membrane protein",
+    "tractability",
+    "subcellularLocation",
+    "Subcellular Location"
+  ),
+  factor(
+    "isSecreted",
+    "Secreted protein",
+    "tractability",
+    "subcellularLocation",
+    "Subcellular Location"
+  ),
   factor("hasLigand", "Ligand binder", "tractability", "tractability", "Tractability"),
-  factor("hasSmallMoleculeBinder", "Small molecule binder", "tractability", "tractability", "Tractability"),
+  factor(
+    "hasSmallMoleculeBinder",
+    "Small molecule binder",
+    "tractability",
+    "tractability",
+    "Tractability"
+  ),
   factor("hasPocket", "Predicted pockets", "tractability", "tractability", "Tractability"),
   factor(
     "mouseOrthologMaxIdentityPercentage",
@@ -115,13 +159,37 @@ export const PRIORITISATION_COLUMNS: readonly PrioritisationColumn[] = [
     "compGenomics",
     "Comparative Genomics"
   ),
-  factor("hasHighQualityChemicalProbes", "Chemical probes", "doability", "chemicalProbes", "Chemical Probes"),
-  factor("geneticConstraint", "Genetic constraint", "safety", "geneticConstraint", "Genetic Constraint"),
+  factor(
+    "hasHighQualityChemicalProbes",
+    "Chemical probes",
+    "doability",
+    "chemicalProbes",
+    "Chemical Probes"
+  ),
+  factor(
+    "geneticConstraint",
+    "Genetic constraint",
+    "safety",
+    "geneticConstraint",
+    "Genetic Constraint"
+  ),
   factor("mouseKOScore", "Mouse models", "safety", "mousePhenotypes", "Mouse Phenotypes"),
   factor("geneEssentiality", "Gene essentiality", "safety", "depMapEssentiality", "Cancer DepMap"),
   factor("hasSafetyEvent", "Known safety events", "safety", "safety", "Safety"),
-  factor("isCancerDriverGene", "Cancer driver gene", "safety", "cancerHallmarks", "Cancer Hallmarks"),
-  factor("paralogMaxIdentityPercentage", "Paralogues", "safety", "compGenomics", "Comparative Genomics"),
+  factor(
+    "isCancerDriverGene",
+    "Cancer driver gene",
+    "safety",
+    "cancerHallmarks",
+    "Cancer Hallmarks"
+  ),
+  factor(
+    "paralogMaxIdentityPercentage",
+    "Paralogues",
+    "safety",
+    "compGenomics",
+    "Comparative Genomics"
+  ),
   factor(
     "tissueSpecificity",
     "Tissue specificity",

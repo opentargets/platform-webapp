@@ -18,6 +18,7 @@ function AddAllButton({ missingCount, onAddAll }: AddAllButtonProps) {
       onClick={onAddAll}
       disabled={allIn}
       aria-disabled={allIn}
+      data-testid="add-all-button"
       sx={theme => ({
         fontSize: ".875rem",
         fontWeight: 500,

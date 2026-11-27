@@ -51,6 +51,9 @@ function Section({ id: ensgId, label: symbol, entity, viewMode, expandSpecificit
       // and switching tabs must not hide the section
       request={{ ...request, data: requestSummary.data }}
       showContentLoading={true}
+      // the GTEx data does not have the shape that definition.hasData checks, so without this
+      // SectionItem would unmount the whole section (tabs included) once the GTEx request ends
+      showEmptySection={tab === "gtex"}
       renderDescription={() => <Description symbol={symbol} />}
       renderBody={() => (
         <Fragment>

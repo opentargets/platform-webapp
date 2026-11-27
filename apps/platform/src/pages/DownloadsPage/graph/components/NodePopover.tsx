@@ -63,6 +63,7 @@ const NodePopover: React.FC<NodePopoverProps> = ({
       ref={ref}
       role="dialog"
       aria-label={`${node.label} preview`}
+      data-testid="node-popover"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       sx={theme => ({
@@ -87,10 +88,10 @@ const NodePopover: React.FC<NodePopoverProps> = ({
           {node.type}
         </Typography>
       </Box>
-      <Typography component="div" sx={theme => ({ fontSize: '1rem', fontWeight: 700, color: theme.palette.grey[800], lineHeight: 1.3, mt: 0.5 })}>
+      <Typography component="div" data-testid="node-popover-name" sx={theme => ({ fontSize: '1rem', fontWeight: 700, color: theme.palette.grey[800], lineHeight: 1.3, mt: 0.5 })}>
         {node.label}
       </Typography>
-      <Typography component="div" sx={theme => ({ fontFamily: MONO_FONT, fontSize: '.75rem', color: theme.palette.grey[500] })}>
+      <Typography component="div" data-testid="node-popover-id" sx={theme => ({ fontFamily: MONO_FONT, fontSize: '.75rem', color: theme.palette.grey[500] })}>
         {node.id}
       </Typography>
       {node.description && (

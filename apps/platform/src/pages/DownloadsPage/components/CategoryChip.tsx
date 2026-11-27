@@ -26,6 +26,7 @@ function CategoryChip({ category, count, active, onToggle }: CategoryChipProps) 
       component="button"
       type="button"
       role="checkbox"
+      data-testid={`category-filter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
       aria-checked={active}
       aria-disabled={disabled || undefined}
       onClick={() => {
@@ -64,6 +65,7 @@ function CategoryChip({ category, count, active, onToggle }: CategoryChipProps) 
       {category}
       <Box
         component="span"
+        data-testid="chip-count"
         sx={theme => ({
           fontFamily: MONO_FONT,
           fontSize: ".6875rem",
@@ -78,7 +80,11 @@ function CategoryChip({ category, count, active, onToggle }: CategoryChipProps) 
 
   if (disabled) {
     return (
-      <Tooltip title="No matches for this search" arrow>
+      <Tooltip
+        title="No matches for this search"
+        arrow
+        slotProps={{ tooltip: { "data-testid": "category-tooltip" } as object }}
+      >
         <span style={{ display: "inline-flex" }}>{chip}</span>
       </Tooltip>
     );

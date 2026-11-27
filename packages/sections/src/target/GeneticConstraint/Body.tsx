@@ -99,6 +99,8 @@ function getColumns(ensemblId: string, symbol: string): OtTableColumn<Constraint
     {
       id: "metrics",
       label: "Constraint metrics",
+      exportValue: ({ score, oe, oeLower, oeUpper, upperBin6 }) =>
+        `${upperBin6 == null ? "Z" : "pLI"} = ${formatSignificantDigits(score)}; o/e = ${formatSignificantDigits(oe)} (${formatSignificantDigits(oeLower)} - ${formatSignificantDigits(oeUpper)})${upperBin6 == null ? "" : `; ${5 - upperBin6}/5 ${upperBin6Map[upperBin6]}`}`,
       renderCell: ({ score, oe, oeLower, oeUpper, upperBin6 }) => (
         <>
           <div>

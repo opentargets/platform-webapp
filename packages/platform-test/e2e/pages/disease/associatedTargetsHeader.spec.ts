@@ -96,7 +96,9 @@ test.describe("Disease associations: header, tabs and toolbar", () => {
     );
     expect(xrefs.length, "the disease should have cross-references").toBeGreaterThan(0);
     for (const { source, links: sourceLinks } of xrefs) {
-      expect(Object.keys(stems), `"${source}" should be a known cross-reference source`).toContain(source);
+      expect(Object.keys(stems), `"${source}" should be a known cross-reference source`).toContain(
+        source
+      );
       expect(sourceLinks.length, `"${source}" should have at least one link`).toBeGreaterThan(0);
       for (const link of sourceLinks) {
         expect(link.text, `a "${source}" link should show its id`).toBeTruthy();
@@ -118,7 +120,10 @@ test.describe("Disease associations: header, tabs and toolbar", () => {
 
     await page.getByRole("tab", { name: "Profile" }).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${diseaseId}$`));
-    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
     await expect(page.getByRole("tab", { name: "Associated targets" })).toHaveAttribute(
       "aria-selected",
       "false"
@@ -147,7 +152,10 @@ test.describe("Disease associations: header, tabs and toolbar", () => {
     const { primary: diseaseId, name } = testConfig.disease;
     await page.goto(`/disease/${diseaseId}`);
     await expect(page.getByTestId("profile-page-header-text")).toHaveText(name as string);
-    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Profile" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
 
     await page.getByRole("tab", { name: "Associated targets" }).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${diseaseId}/associations$`));
@@ -170,7 +178,10 @@ test.describe("Disease associations: header, tabs and toolbar", () => {
     const notFound = page.getByTestId("not-found-page");
     await expect(notFound).toBeVisible();
     await expect(notFound).toContainText("404: Page not found");
-    await expect(notFound.getByRole("link", { name: "Go back to Home Page" })).toHaveAttribute("href", "/");
+    await expect(notFound.getByRole("link", { name: "Go back to Home Page" })).toHaveAttribute(
+      "href",
+      "/"
+    );
     await expect(new AssociationsTable(page).root).toHaveCount(0);
     await expect(page.getByRole("tablist")).toHaveCount(0);
     await expect(page.getByTestId("profile-page-header-text")).toHaveCount(0);

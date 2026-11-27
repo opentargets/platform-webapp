@@ -236,7 +236,10 @@ export class AssociationsTable {
    * that re-queries (page change, filter, sort): it does not pass on the old rows, nor
    * while the new ones are skeletons.
    */
-  async expectRowsToDifferFrom(previous: readonly string[], body: TableBody = "core"): Promise<void> {
+  async expectRowsToDifferFrom(
+    previous: readonly string[],
+    body: TableBody = "core"
+  ): Promise<void> {
     await expect
       .poll(
         async () => {
@@ -278,10 +281,17 @@ export class AssociationsTable {
           if (scores.length !== rowCount)
             return `${rowCount - scores.length} of ${rowCount} rows have no ${columnId} score`;
           if (scores.some((score) => Number.isNaN(score))) return "a score is not a number";
-          const unsorted = scores.findIndex((score, index) => index > 0 && score > scores[index - 1]);
-          return unsorted === -1 ? "sorted" : `row ${unsorted} has a higher score than the row above`;
+          const unsorted = scores.findIndex(
+            (score, index) => index > 0 && score > scores[index - 1]
+          );
+          return unsorted === -1
+            ? "sorted"
+            : `row ${unsorted} has a higher score than the row above`;
         },
-        { message: `the rows should be sorted by ${columnId}, highest first`, timeout: SEARCH_TIMEOUT }
+        {
+          message: `the rows should be sorted by ${columnId}, highest first`,
+          timeout: SEARCH_TIMEOUT,
+        }
       )
       .toBe("sorted");
   }
@@ -463,7 +473,9 @@ export class AssociationsTable {
   async openApiQuery(): Promise<Locator> {
     await this.openExportMenu();
     await this.exportMenu.getByRole("menuitem", { name: "API query" }).click();
-    const drawer = this.page.getByRole("dialog").filter({ has: this.page.getByTestId("drawer-close") });
+    const drawer = this.page
+      .getByRole("dialog")
+      .filter({ has: this.page.getByTestId("drawer-close") });
     await expect(drawer).toBeVisible();
     return drawer;
   }

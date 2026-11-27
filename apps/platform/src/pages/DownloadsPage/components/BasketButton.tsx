@@ -27,6 +27,7 @@ const BasketButton = forwardRef<HTMLButtonElement, BasketButtonProps>(function B
       aria-label={`Your data bundle, ${count} ${count === 1 ? "dataset" : "datasets"}`}
       aria-expanded={open}
       aria-haspopup="dialog"
+      data-testid="basket-button"
       sx={theme => ({
         position: "relative",
         display: "inline-flex",

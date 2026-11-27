@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { GeneticConstraintSection } from "../../../../POM/objects/widgets/shared/geneticConstraintSection";
 import { parseTsv } from "../../../../POM/objects/widgets/Target/sectionWidgets";
 import { EDGE_TARGETS, targetFacts } from "../../../../POM/objects/widgets/Target/targetFacts";
@@ -91,7 +91,9 @@ test.describe("Target profile: Genetic Constraint section", () => {
       await constraint.expectLoaded();
       await constraint.controls.expectLoaded();
 
-      await expect(constraint.assessmentLink).toHaveText(/^[0-5]\/5 (very )?(high|medium|low) constraint$/);
+      await expect(constraint.assessmentLink).toHaveText(
+        /^[0-5]\/5 (very )?(high|medium|low) constraint$/
+      );
       await expect(constraint.assessmentLink).toHaveAttribute(
         "href",
         `https://gnomad.broadinstitute.org/gene/${targetId}`
@@ -143,7 +145,9 @@ test.describe("Target profile: Genetic Constraint section", () => {
     );
 
     await constraint.headerHelp("Observed SNVs").hover();
-    await expect(constraint.tooltip.filter({ hasText: "Includes single nucleotide changes" })).toContainText(
+    await expect(
+      constraint.tooltip.filter({ hasText: "Includes single nucleotide changes" })
+    ).toContainText(
       "The counts represent the number of unique variants and not the allele count of these variants."
     );
   });
@@ -273,7 +277,9 @@ test.describe("Target profile: Genetic Constraint section", () => {
     await constraint.expectLoaded();
     await controls.expectLoaded();
 
-    await expect(constraint.description).toContainText(`Mutational constraint observed in ${symbol}`);
+    await expect(constraint.description).toContainText(
+      `Mutational constraint observed in ${symbol}`
+    );
     await expect(controls.rows).toHaveCount(3);
     expect(await controls.table.columnTexts(0)).toEqual(CATEGORIES);
 

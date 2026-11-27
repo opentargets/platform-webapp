@@ -1,75 +1,86 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
+
+export const STRUCTURE_OPTIONS = ["cartoon", "hybrid", "transparent", "opaque"] as const;
+export const COLOUR_OPTIONS = [
+  "confidence",
+  "pathogenicity",
+  "domain",
+  "hydrophobicity",
+  "secondary structure",
+  "none",
+] as const;
+export type ColourOption = (typeof COLOUR_OPTIONS)[number];
 
 /**
- * Interactor for the Molecular Structure section on Variant pages.
- *
- * Displays 3D protein structure visualization showing the variant's location
- * within the protein. Uses AlphaFold predicted structures when experimental
- * structures are unavailable. Features include:
- * - **3D structure viewer**: Interactive protein structure visualization
- * - **Variant mapping**: Highlights the variant position on the structure
- * - **Confidence scores**: AlphaFold pLDDT scores for structure reliability
- *
- * Helps understand the potential structural impact of amino acid changes.
- *
- * @example
- * ```typescript
- * const structure = new MolecularStructureSection(page);
- * await structure.waitForLoad();
- *
- * // Check if structure is available
- * const hasStructure = await structure.hasStructureViewer();
- * const viewerVisible = await structure.isAlphaFoldViewerVisible();
- * ```
- *
- * @category shared
- * @remarks Section ID: `molecular-structure`
+ * Variant page: Molecular Structure section. An AlphaFold model of the protein the
+ * variant changes, drawn on a 3D canvas, with a representation switch, a colour scheme
+ * dropdown and a legend that follows the colour scheme.
  */
 export class MolecularStructureSection {
-  constructor(private page: Page) {}
+  static readonly id = "molecular-structure";
+  readonly section: Locator;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-molecular-structure']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, MolecularStructureSection.id);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  /**
-   * Wait for the section to finish loading
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-    await this.page.waitForTimeout(500);
+  get viewer(): Locator {
+    return this.section.getByTestId("alphafold-viewer");
   }
 
-  // AlphaFold viewer
-  getAlphaFoldViewer(): Locator {
-    return this.getSection().locator("[data-testid='alphafold-viewer']");
+  /** The WebGL canvas the structure is drawn on. */
+  get canvas(): Locator {
+    return this.viewer.locator("canvas");
   }
 
-  async isAlphaFoldViewerVisible(): Promise<boolean> {
-    return await this.getAlphaFoldViewer()
-      .isVisible()
-      .catch(() => false);
+  get screenshotButton(): Locator {
+    return this.viewer.locator("button:has(svg[data-icon='camera'])");
   }
 
-  // Check if section has structure viewer content
-  async hasStructureViewer(): Promise<boolean> {
-    return await this.getAlphaFoldViewer()
-      .isVisible()
-      .catch(() => false);
+  get usageButton(): Locator {
+    return this.viewer.locator("button:has(svg[data-icon='info'])");
   }
 
-  // Structure information
-  async hasStructureInfo(): Promise<boolean> {
-    const info = this.getSection().locator("text=AlphaFold");
-    return await info.isVisible().catch(() => false);
+  structureRadio(option: (typeof STRUCTURE_OPTIONS)[number]): Locator {
+    return this.viewer.getByRole("radio", { name: option, exact: true });
+  }
+
+  get structureRadios(): Locator {
+    return this.viewer.getByRole("radio");
+  }
+
+  get colourSelect(): Locator {
+    return this.viewer.getByRole("combobox");
+  }
+
+  get missingColourWarning(): Locator {
+    return this.viewer.getByText(
+      /Pathogenicity scores not available|Domain information not available/
+    );
+  }
+
+  /** Wait for the structure to be fetched and drawn. */
+  async expectStructureDrawn(): Promise<void> {
+    await expect(this.canvas, "the AlphaFold structure should be drawn on a canvas").toBeVisible({
+      timeout: 45_000,
+    });
+    await expect(this.viewer.getByText("AlphaFold structure not available")).toHaveCount(0);
+    await expect(this.colourSelect).toBeVisible();
+    await expect
+      .poll(async () => (await this.canvas.boundingBox())?.height ?? 0, {
+        message: "the canvas should have a real size",
+      })
+      .toBeGreaterThan(100);
+  }
+
+  async chooseColour(option: ColourOption): Promise<void> {
+    await this.colourSelect.click();
+    await this.page.getByRole("option", { name: option, exact: true }).click();
+    await expect(this.colourSelect).toHaveText(option);
   }
 }

@@ -368,14 +368,24 @@ request that changes `packages/platform-test` runs the full suite; any other run
 yarn e2e:publish                  # the whole suite
 yarn e2e:publish e2e/pages/drug   # only these specs
 yarn e2e:publish --grep @smoke    # any Playwright argument is passed through
+yarn e2e:publish --pr 1182        # run your checkout's tests against another pull request
 ```
 
-This tests the deploy preview of the branch you have checked out
-(`https://<branch>--ot-platform.netlify.app`) and publishes the report to
-`https://e2e-local-<branch>--ot-platform.netlify.app`. Publishing again replaces that
-branch's report and leaves every other branch alone. The branch needs an open pull
-request, so that its preview exists; use `--base-url http://localhost:3000` to test a
-local server instead, and `--no-publish` to only build the report.
+Nothing is built. The tests run against the deploy preview Netlify already has for the
+pull request of the branch you have checked out
+(`https://deploy-preview-<PR number>--ot-platform.netlify.app`), and the report is
+published to `https://e2e-local-<branch>--ot-platform.netlify.app`. With `--pr <number>`
+they run against that pull request's preview and the report goes to
+`https://e2e-local-pr-<number>--ot-platform.netlify.app`. Publishing again replaces that
+one report and leaves every other branch alone.
 
-It needs the Netlify CLI logged in to an account on the Open Targets team:
-`npm install -g netlify-cli && netlify login`.
+The published page is an overview: one row per part of the app, what that part's tests
+check, how many passed and failed, and links into the Playwright report behind it. The
+areas and their descriptions are in `scripts/reportAreas.mjs`; add an entry there when
+you add a folder of specs.
+
+Use `--base-url http://localhost:3000` to test a local server instead, and
+`--no-publish` to only build the report (into `e2e-published-report/`).
+
+It needs the GitHub CLI, and the Netlify CLI logged in to an account on the Open Targets
+team: `npm install -g netlify-cli && netlify login`.

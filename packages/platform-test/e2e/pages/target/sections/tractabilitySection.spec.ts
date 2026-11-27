@@ -1,9 +1,6 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
-import {
-  stubEuropePmc,
-  waitForOperation,
-} from "../../../../POM/objects/widgets/shared/sectionDataControls";
+import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import {
   TRACTABILITY_MODALITIES,
   TractabilitySection,
@@ -15,12 +12,6 @@ type TractabilityData = {
 
 /** Target profile > Tractability (packages/sections/src/target/Tractability). */
 test.describe("Target tractability section", () => {
-  // Other sections of the page query Europe PMC from the browser; keep that third party
-  // out of these tests (see stubEuropePmc).
-  test.beforeEach(async ({ page }) => {
-    await stubEuropePmc(page);
-  });
-
   test("shows its title, description and documentation link", async ({ page, testConfig }) => {
     const tractability = new TractabilitySection(page);
     await page.goto(`/target/${testConfig.target?.primary}`);
@@ -30,10 +21,9 @@ test.describe("Target tractability section", () => {
     await expect(tractability.description).toHaveText(
       "Target tractability assessment for BRAF. Source: Open Targets."
     );
-    await expect(tractability.description.getByRole("link", { name: "Open Targets" })).toHaveAttribute(
-      "href",
-      "https://platform-docs.opentargets.org/target/tractability"
-    );
+    await expect(
+      tractability.description.getByRole("link", { name: "Open Targets" })
+    ).toHaveAttribute("href", "https://platform-docs.opentargets.org/target/tractability");
   });
 
   test("lists the four modalities in order, each with its full set of assessment buckets", async ({
@@ -83,9 +73,13 @@ test.describe("Target tractability section", () => {
 
     for (const modality of TRACTABILITY_MODALITIES) {
       await test.step(modality.title, async () => {
-        const ofModality = assessments.filter((assessment) => assessment.modality === modality.code);
+        const ofModality = assessments.filter(
+          (assessment) => assessment.modality === modality.code
+        );
         const met = ofModality.filter((assessment) => assessment.value).map(({ label }) => label);
-        const notMet = ofModality.filter((assessment) => !assessment.value).map(({ label }) => label);
+        const notMet = ofModality
+          .filter((assessment) => !assessment.value)
+          .map(({ label }) => label);
 
         await expect(tractability.enabledItems(modality.key)).toHaveText(met);
         await expect(tractability.disabledItems(modality.key)).toHaveText(notMet);

@@ -6,10 +6,10 @@ import {
   AdverseEventsSection,
   LLR_HEADER,
 } from "../../../POM/objects/widgets/shared/adverseEventsSection";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 const toNumbers = (texts: string[]): number[] => texts.map((text) => Number(text));
 
@@ -149,7 +149,10 @@ test.describe("Drug page: Pharmacovigilance (adverse events)", () => {
     });
   });
 
-  test("a drug with hundreds of events pages to the very last one", async ({ page, testConfig }) => {
+  test("a drug with hundreds of events pages to the very last one", async ({
+    page,
+    testConfig,
+  }) => {
     const { withManyWarnings: chemblId } = drugIds(testConfig);
     const adverseEvents = new AdverseEventsSection(page);
     await new DrugPage(page).goto(chemblId);

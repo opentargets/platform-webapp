@@ -5,6 +5,7 @@ import {
   dataSourceColumn,
   prioritisationColumn,
 } from "../../../POM/objects/widgets/AOTF/columns";
+import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
 
 /**
  * Clicking a cell with a value in the associations table opens, under that row, the
@@ -21,6 +22,7 @@ test.describe("Disease associations: evidence widgets", () => {
     "clicking a data cell opens the widget of that data source and closing it removes it",
     { tag: "@smoke" },
     async ({ page, testConfig }) => {
+      await stubEuropePmc(page);
       const aotf = new AssociationsTable(page);
       const gene = "IL6";
       await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
@@ -46,13 +48,16 @@ test.describe("Disease associations: evidence widgets", () => {
       testConfig,
     }) => {
       expect(testConfig.disease.aotfGenes ?? []).toContain(gene);
+      await stubEuropePmc(page);
       const aotf = new AssociationsTable(page);
       await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
       const row = aotf.rowByName(gene);
       await expect(row, `${gene} should be listed for the disease`).toHaveCount(1);
 
       const columnIds = await aotf.dataColumnIds(row);
-      expect(columnIds.length, `${gene} should have evidence in some data source`).toBeGreaterThan(0);
+      expect(columnIds.length, `${gene} should have evidence in some data source`).toBeGreaterThan(
+        0
+      );
       expect(
         columnIds.filter((id) => !DATA_SOURCE_COLUMNS.some((column) => column.id === id)),
         "every column with a value is a known data source"
@@ -100,7 +105,11 @@ test.describe("Disease associations: evidence widgets", () => {
     });
   }
 
-  test("clicking another cell of the row replaces the open widget", async ({ page, testConfig }) => {
+  test("clicking another cell of the row replaces the open widget", async ({
+    page,
+    testConfig,
+  }) => {
+    await stubEuropePmc(page);
     const aotf = new AssociationsTable(page);
     const gene = "ADRB1";
     await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
@@ -135,7 +144,11 @@ test.describe("Disease associations: evidence widgets", () => {
     await expect(aotf.emptyCell(row, empty!.id)).toBeVisible();
   });
 
-  test("the open widget is kept in the URL and restored on reload", async ({ page, testConfig }) => {
+  test("the open widget is kept in the URL and restored on reload", async ({
+    page,
+    testConfig,
+  }) => {
+    await stubEuropePmc(page);
     const aotf = new AssociationsTable(page);
     const gene = "ADRB1";
     await aotf.gotoDisease(testConfig.disease.primary, { q: gene });
@@ -144,7 +157,10 @@ test.describe("Disease associations: evidence widgets", () => {
     const column = dataSourceColumn("clinical_precedence");
 
     await aotf.openPanel(row, column.id, { panelKey: column.id, sectionId: column.sectionId });
-    await aotf.expectUrlParam("focus", new RegExp(`^core\\|ENSG\\d+\\|${column.id}\\+${column.id}$`));
+    await aotf.expectUrlParam(
+      "focus",
+      new RegExp(`^core\\|ENSG\\d+\\|${column.id}\\+${column.id}$`)
+    );
 
     await page.reload();
     await aotf.expectLoaded();

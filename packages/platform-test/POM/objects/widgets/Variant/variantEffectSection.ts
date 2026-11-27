@@ -1,154 +1,76 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
+import { SectionDataControls } from "../shared/sectionDataControls";
 
-/**
- * Interactor for Variant Effect / In-Silico Predictors section.
- *
- * Displays computational predictions of variant effects from various
- * in-silico prediction methods. Supports both table and chart views
- * for visualizing prediction scores.
- *
- * @example
- * ```typescript
- * const variantEffect = new VariantEffectSection(page);
- * await variantEffect.waitForLoad();
- * const methodName = await variantEffect.getMethodName(0);
- * const prediction = await variantEffect.getPrediction(0);
- * await variantEffect.switchToChartView();
- * ```
- *
- * @category Variant
- * @remarks Section ID: `in-silico-predictors`
- */
+/** The "Variant effect" section (in_silico_predictors) of the variant page. */
 export class VariantEffectSection {
-  constructor(private page: Page) {}
+  static readonly id = "in_silico_predictors";
+  static readonly operation = "VariantEffectQuery";
+  static readonly headers = ["Method", "Prediction", "Score", "Normalised score"] as const;
 
-  /**
-   * Get the main section container element.
-   * @returns Locator for the section container
-   */
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-in-silico-predictors']");
+  constructor(readonly page: Page) {}
+
+  get section(): Locator {
+    return sectionLocator(this.page, VariantEffectSection.id);
   }
 
-  /**
-   * Check if the section is currently visible.
-   * @returns Promise resolving to true if visible, false otherwise
-   */
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  /** Wait for the section to be rendered and loaded (chart view is the default). */
+  async expectLoaded(): Promise<void> {
+    await expectSectionLoaded(this.page, VariantEffectSection.id);
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-in-silico-predictors']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get title(): Locator {
+    return this.section.getByTestId("section-in-silico-predictors-header");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  get table(): OtTable {
+    return new OtTable(this.section);
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  get controls(): SectionDataControls {
+    return new SectionDataControls(this.page, this.section);
   }
 
-  // Get method name from row
-  async getMethodName(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const methodCell = row.locator("td").first();
-    return await methodCell.textContent();
+  get chartButton(): Locator {
+    return this.section.getByTestId("view-toggle-chart");
   }
 
-  // Get prediction/assessment from row
-  async getPrediction(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const predictionCell = row.locator("td").nth(1);
-    return await predictionCell.textContent();
+  get tableButton(): Locator {
+    return this.section.getByTestId("view-toggle-table");
   }
 
-  // Get score from row
-  async getScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const scoreCell = row.locator("td").nth(2);
-    return await scoreCell.textContent();
+  get chart(): Locator {
+    return this.section.locator("svg[class^='plot-']");
   }
 
-  // Get normalised score from row
-  async getNormalisedScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const normScoreCell = row.locator("td").nth(3);
-    return await normScoreCell.textContent();
+  /** One circle per method in the plot. */
+  get dots(): Locator {
+    return this.chart.locator("g[aria-label='dot'] circle");
   }
 
-  // View switcher (table/chart)
-  getChartViewButton(): Locator {
-    return this.getSection().locator("[data-testid='view-toggle-chart']");
+  /** The "?" hover targets next to each method name in the plot. */
+  get methodHelpMarks(): Locator {
+    return this.chart.locator(".y-label-tooltips text");
   }
 
-  getTableViewButton(): Locator {
-    return this.getSection().locator("[data-testid='view-toggle-table']");
+  async showTable(): Promise<void> {
+    await this.tableButton.click();
+    await expect(this.tableButton).toHaveAttribute("aria-pressed", "true");
+    await expect(this.chartButton).toHaveAttribute("aria-pressed", "false");
+    await expect(this.chart).toHaveCount(0);
+    await this.table.expectLoaded();
   }
 
-  async switchToChartView(): Promise<void> {
-    await this.getChartViewButton().click();
-    await this.page.waitForTimeout(300); // Brief wait for view transition animation
-  }
-
-  async switchToTableView(): Promise<void> {
-    await this.getTableViewButton().click();
-    await this.page.waitForTimeout(500); // Wait for view transition
-  }
-
-  async isChartViewActive(): Promise<boolean> {
-    // Check the chart button's aria-pressed state
-    const button = this.getChartViewButton();
-    const ariaPressed = await button.getAttribute("aria-pressed");
-    return ariaPressed === "true";
-  }
-
-  async isTableViewActive(): Promise<boolean> {
-    // Check the table button's aria-pressed state
-    const button = this.getTableViewButton();
-    const ariaPressed = await button.getAttribute("aria-pressed");
-    return ariaPressed === "true";
-  }
-
-  // Chart
-  getChart(): Locator {
-    return this.getSection().locator("svg[class^='plot-']");
-  }
-
-  async isChartVisible(): Promise<boolean> {
-    return await this.getChart()
-      .isVisible()
-      .catch(() => false);
+  async showChart(): Promise<void> {
+    await this.chartButton.click();
+    await expect(this.chartButton).toHaveAttribute("aria-pressed", "true");
+    await expect(this.tableButton).toHaveAttribute("aria-pressed", "false");
+    await expect(this.section.getByTestId("ot-table")).toHaveCount(0);
+    await expect(this.chart).toBeVisible();
   }
 }

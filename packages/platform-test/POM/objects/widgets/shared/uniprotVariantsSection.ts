@@ -1,111 +1,51 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionDataControls, SectionTable } from "./sectionDataControls";
+
+/** Columns of the UniProt variants table, in order. */
+export const UNIPROT_HEADERS = ["Disease/phenotype", "Confidence", "Literature"] as const;
+
+export const UNIPROT_COLUMN = { disease: 0, confidence: 1, literature: 2 } as const;
+
+/** GraphQL operation behind the section (packages/sections/src/variant/UniProtVariants). */
+export const UNIPROT_OPERATION = "UniProtVariantsQuery";
 
 /**
- * Interactor for the UniProt Variants section on Variant pages.
- *
- * Displays variant annotations from UniProtKB, including natural variants,
- * disease-associated mutations, and sequence conflicts. Information includes:
- * - **Disease/Phenotype**: Associated conditions from UniProt annotations
- * - **Variant description**: Functional impact and literature evidence
- * - **Cross-references**: Links to disease databases (OMIM, etc.)
- *
- * Complements ClinVar data with protein-focused variant annotations.
- *
- * @example
- * ```typescript
- * const uniprotVariants = new UniProtVariantsSection(page);
- * await uniprotVariants.waitForLoad();
- *
- * // Get variant annotations
- * const rowCount = await uniprotVariants.getTableRows();
- *
- * // Navigate to disease pages
- * const diseaseCount = await uniprotVariants.getDiseaseLinksCount(0);
- * await uniprotVariants.clickDiseaseLink(0, 0);
- * ```
- *
- * @category shared
- * @remarks Section ID: `uniprot-variants`
+ * Variant page > UniProt variants (section id "uniprot_variants", test id
+ * "section-uniprot-variants"): a server-paginated table of literature-curated
+ * variant-disease associations. No search box.
  */
 export class UniProtVariantsSection {
-  constructor(private page: Page) {}
+  static readonly id = "uniprot-variants";
+  readonly section: Locator;
+  readonly table: SectionTable;
+  readonly controls: SectionDataControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-uniprot-variants']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, UniProtVariantsSection.id);
+    this.table = new SectionTable(this.section);
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get title(): Locator {
+    return this.section.getByTestId("section-uniprot-variants-header");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-uniprot-variants']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  diseaseLink(row: number): Locator {
+    return this.table.cell(row, UNIPROT_COLUMN.disease).getByRole("link");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  helpIcon(row: number): Locator {
+    return this.table.cell(row, UNIPROT_COLUMN.disease).locator("sup");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
-  }
-
-  // Get disease/phenotype link
-  async getDiseasePhenotypeLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/disease/']");
-  }
-
-  async clickDiseasePhenotypeLink(rowIndex: number): Promise<void> {
-    const link = await this.getDiseasePhenotypeLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
-  }
-
-  // Get disease links
-  async getDiseaseLinks(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/disease/']");
-  }
-
-  async getDiseaseLinksCount(rowIndex: number): Promise<number> {
-    const links = await this.getDiseaseLinks(rowIndex);
-    return await links.count();
-  }
-
-  async clickDiseaseLink(rowIndex: number, linkIndex: number = 0): Promise<void> {
-    const links = await this.getDiseaseLinks(rowIndex);
-    await links.nth(linkIndex).click();
+  literatureTrigger(row: number): Locator {
+    return this.table
+      .cell(row, UNIPROT_COLUMN.literature)
+      .getByTestId("publications-drawer-trigger");
   }
 }

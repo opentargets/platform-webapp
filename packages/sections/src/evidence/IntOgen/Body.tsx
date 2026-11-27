@@ -148,6 +148,7 @@ const columns: OtTableColumn<IntOgenRow>[] = [
         Combined <i>p</i>-value
       </span>
     ),
+    exportLabel: "Combined p-value",
 
     tooltip: (
       <>
@@ -252,7 +253,10 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
 
         return (
           <>
-            <Box sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}>
+            <Box
+              data-testid="role-in-cancer"
+              sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
+            >
               <Typography sx={{ marginRight: ".5rem !important" }}>
                 <b>{label.symbol}</b> role in cancer:
               </Typography>

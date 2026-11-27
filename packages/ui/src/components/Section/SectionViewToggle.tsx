@@ -27,17 +27,18 @@ function SectionViewToggle({
 }: SectionViewToggleProps): ReactElement {
   const [sectionView, setView] = useState(defaultValue);
 
-  const handleViewChange = (event: MouseEvent) => {
+  const handleViewChange = (event: MouseEvent, newView: string | null) => {
     event.preventDefault();
-    if (event.target.value) {
-      setView(event.target.value);
-      if (viewChange) viewChange(event.target.value);
+    if (newView) {
+      setView(newView);
+      if (viewChange) viewChange(newView);
     }
   };
 
   return (
     <StyledToggleButtonGroup
       sx={{ typography: "body2" }}
+      exclusive
       value={sectionView}
       onChange={handleViewChange}
     >

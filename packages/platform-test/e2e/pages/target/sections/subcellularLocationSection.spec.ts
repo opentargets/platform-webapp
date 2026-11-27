@@ -1,5 +1,5 @@
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   SubcellularLocationSection,
   SWISSBIOPICS_API,
@@ -241,7 +241,9 @@ test.describe("Target profile: Subcellular Location section", () => {
       [...general].sort((a, b) => a.localeCompare(b))
     );
     // The group heading sits between the general locations and the isoform's.
-    await expect(list).toHaveText(new RegExp(`${escapeRegExp(general.at(-1) as string)}\\s*Isoform 2\\s*Secreted$`));
+    await expect(list).toHaveText(
+      new RegExp(`${escapeRegExp(general.at(-1) as string)}\\s*Isoform 2\\s*Secreted$`)
+    );
     await subcellular.expectDiagramDrawn("uniprot");
   });
 

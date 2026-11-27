@@ -64,6 +64,16 @@ const IGNORED_CONSOLE_ERRORS: { pattern: RegExp; reason: string }[] = [
     reason: "The partner-access probe being refused for a visitor outside the partner network",
   },
   {
+    pattern: /^Access to fetch at 'https:\/\/www\.ebi\.ac\.uk\/europepmc\//,
+    reason:
+      "Europe PMC, a third-party service, throttling or refusing a request. The literature sections have their own tests; an outage there must not fail a test of something else on the page",
+  },
+  {
+    pattern: /^Response status \(AlphaFold request\): 5\d\d$/,
+    reason:
+      "AlphaFold, a third-party service, answering a prediction lookup with a server error. The Molecular Structure section has its own tests; an outage there must not fail a test of something else on the page (a 404 is a legitimate 'no model' and is not logged as an error since ot-ui-apps#1199)",
+  },
+  {
     pattern: /^GraphQL Error: /,
     reason: "The app's Apollo error link echo; reported as graphql-error instead",
   },
@@ -83,6 +93,9 @@ function isPartnerAccessProbe(url: string): boolean {
     return false;
   }
 }
+
+/** How long `collect()` waits for GraphQL response bodies still being read. */
+const BODY_READ_GRACE_MS = 5_000;
 
 const ABORTED = /ERR_ABORTED|NS_BINDING_ABORTED|cancelled|Load cannot follow more than/i;
 
@@ -148,7 +161,12 @@ export class PageHealth {
 
   /** Wait for response bodies still being read, then look for error UI on screen. */
   async collect(): Promise<Problem[]> {
-    await Promise.all([...this.pending]);
+    // A response whose body never arrives (the request was still streaming when the test
+    // ended) must not hold the test open: give the bodies in flight a moment, then move on.
+    await Promise.race([
+      Promise.all([...this.pending]),
+      new Promise((resolve) => setTimeout(resolve, BODY_READ_GRACE_MS)),
+    ]);
     if (!this.page.isClosed()) {
       for (const [name, selector] of Object.entries(ERROR_UI_SELECTORS)) {
         const count = await this.page.locator(selector).count();
@@ -269,6 +287,8 @@ export class PageHealth {
 
   private onRequestFailed = (request: Request): void => {
     const failure = request.failure()?.errorText ?? "unknown failure";
+    // Blocked on purpose by the noDeployPreviewToolbar fixture.
+    if (/\/\.netlify\/scripts\/cdp(\?|$)/.test(request.url())) return;
     // Requests cancelled by a navigation or by the test ending are not failures.
     if (ABORTED.test(failure)) return;
     if (isGraphQLRequest(request)) {
