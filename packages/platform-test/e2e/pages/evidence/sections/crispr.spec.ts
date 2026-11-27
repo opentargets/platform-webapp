@@ -4,7 +4,9 @@ import {
   BRAF_MELANOMA_CRISPR,
   CRISPR_COLUMN,
   CRISPR_HEADERS,
+  CRISPR_LIST,
   CRISPR_OPERATION,
+  type CrisprRow,
   openCrispr,
   PIK3CA_CARCINOMA,
 } from "../../../../POM/objects/widgets/Evidence/crispr";
@@ -40,7 +42,7 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     );
     await expect(section.table.headers).toHaveText([...CRISPR_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput, "this table has no search box").toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -56,7 +58,7 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     expect(lines.length, "the row has cell lines").toBeGreaterThan(1);
 
     await expect(section.diseaseLink(0)).toHaveText("melanoma");
-    await expect(section.diseaseLink(0)).toHaveAttribute("href", `/disease/${row.disease.id}`);
+    await expect(section.diseaseLink(0)).toHaveAttribute("href", `/disease/${row.diseaseId}`);
     await expect(section.cellLinesButton(0)).toHaveText(
       `${lines.length} ${row.diseaseFromSource} cell lines`
     );
@@ -91,11 +93,11 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     await expect(section.description).toContainText("a PIK3CA dependency in carcinoma");
 
     for (const [index, row] of list.rows.entries()) {
-      await test.step(`row ${index + 1}: ${row.disease.name}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(row.disease.name);
+      await test.step(`row ${index + 1}: ${row.diseaseName}`, async () => {
+        await expect(section.diseaseLink(index)).toHaveText(row.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${row.disease.id}`
+          `/disease/${row.diseaseId}`
         );
         await expect(section.cellLinesButton(index)).toHaveText(
           `${row.diseaseCellLines?.length} ${row.diseaseFromSource} cell lines`
@@ -105,7 +107,7 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
         );
       });
     }
-    const names = list.rows.map((row) => row.disease.name);
+    const names = list.rows.map((row) => row.diseaseName);
     expect(new Set(names).size, "every row is a different disease").toBe(names.length);
 
     await test.step("the last row opens its own cell lines, not the first row's", async () => {
@@ -117,6 +119,44 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
       );
       await section.closeDrawer();
     });
+  });
+
+  test("the rows arrive sorted by priority score, highest first", async ({ page }) => {
+    const { section, list } = await openCrispr(page, PIK3CA_CARCINOMA);
+    const scores = list.rows.map((row) => row.resourceScore);
+    expect(scores, "the API sorts by score, descending").toEqual([...scores].sort((a, b) => b - a));
+    await expect(section.table.column(CRISPR_COLUMN.score)).toHaveText(
+      scores.map((score) => score.toFixed(3))
+    );
+  });
+
+  test("the search box filters the rows on the server", async ({ page }) => {
+    const { section, list } = await openCrispr(page, PIK3CA_CARCINOMA);
+    const target = list.rows[1];
+    const term = target.diseaseName;
+    const response = page.waitForResponse((candidate) => {
+      const post = candidate.request().postData() ?? "";
+      return post.includes(CRISPR_OPERATION) && post.includes(`"text":"${term}"`);
+    });
+    await section.table.search(term);
+    const found = (await (await response).json()).data.disease.evidenceViews[CRISPR_LIST] as {
+      count: number;
+      rows: CrisprRow[];
+    };
+    expect(found.count, "the search narrows the rows").toBeLessThan(list.count);
+    expect(found.rows.map((row) => row.diseaseName)).toContain(term);
+    await section.table.expectRowCount(found.rows.length);
+    await expect(section.diseaseLink(0)).toHaveText(found.rows[0].diseaseName);
+
+    const none = page.waitForResponse((candidate) =>
+      (candidate.request().postData() ?? "").includes("zzz-no-match")
+    );
+    await section.table.search("zzz-no-match");
+    await none;
+    await section.table.expectRowCount(0);
+
+    await section.table.searchInput.fill("");
+    await section.table.expectRowCount(list.count);
   });
 
   test("the column picker locks the disease columns and hides the score", async ({ page }) => {
@@ -139,7 +179,7 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     expect(header.slice(0, 1)).toEqual(["diseasePhenotype"]);
     expect(header.at(-1)).toBe("priorityScore");
     expect(json.map((row) => row.diseasePhenotype)).toEqual(
-      list.rows.map((row) => row.disease.name)
+      list.rows.map((row) => row.diseaseName)
     );
     expect(json.map((row) => row.priorityScore)).toEqual(list.rows.map((row) => row.resourceScore));
   });
@@ -153,9 +193,9 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
   test("a disease link opens that disease's page", async ({ page }) => {
     const { section, list } = await openCrispr(page, PIK3CA_CARCINOMA);
     await section.diseaseLink(1).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(
-      list.rows[1].disease.name
+      list.rows[1].diseaseName
     );
   });
 

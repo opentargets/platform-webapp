@@ -1,25 +1,30 @@
 import type { Locator, Page } from "@playwright/test";
 import { GeneticEvidenceSection } from "./geneticEvidenceSection";
 
-/** Columns of the UniProt literature table, in order. */
+/** Columns of the UniProt literature table, in order. "Score" carries a help icon, which adds the "?". */
 export const UNIPROT_LITERATURE_HEADERS = [
   "Disease/phenotype",
   "Reported protein",
   "Confidence",
+  "Score?",
   "Literature",
 ] as const;
 export const UNIPROT_LITERATURE_COLUMN = {
   disease: 0,
   protein: 1,
   confidence: 2,
-  literature: 3,
+  score: 3,
+  literature: 4,
 } as const;
 /** GraphQL operation behind the section (packages/sections/src/evidence/UniProtLiterature). */
 export const UNIPROT_LITERATURE_OPERATION = "UniprotLiteratureQuery";
-export const UNIPROT_LITERATURE_LIST = "uniprotLiteratureSummary";
+/** The `disease.evidenceViews` field the section reads. */
+export const UNIPROT_LITERATURE_LIST = "uniprotLiterature";
 
 export type UniprotLiteratureRow = {
-  disease: { id: string; name: string };
+  score: number;
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string | null;
   targetFromSourceId: string | null;
   studyId: string | null;
@@ -50,6 +55,7 @@ export const UNIPROT_VARIANTS_COLUMN = {
 } as const;
 /** GraphQL operation behind the section (packages/sections/src/evidence/UniProtVariants). */
 export const UNIPROT_VARIANTS_OPERATION = "UniprotVariantsQuery";
+/** The `disease` alias the section reads (not on `evidenceViews` yet). */
 export const UNIPROT_VARIANTS_LIST = "uniprotVariantsSummary";
 
 export type UniprotVariantsRow = {

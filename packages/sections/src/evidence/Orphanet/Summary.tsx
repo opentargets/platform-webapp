@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ orphanetSummary }) => {
-        const { count } = orphanetSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.orphanet;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.genetic_association}

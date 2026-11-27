@@ -1,44 +1,39 @@
-query ClinvarQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
-  target(ensemblId: $ensemblId) {
-    approvedSymbol
-  }
+query ClinvarQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceEvaSort!]! = []
+) {
   disease(efoId: $efoId) {
     id
-    name
-    eva: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [eva]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      eva(page: { index: $index, size: $size }, sort: $sort) {
+        count
+        rows {
+          score
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          cohortPhenotypes
+          variantId
+          variantHgvsId
+          variantChromosome
+          variantPosition
+          variantReferenceAllele
+          variantAlternateAllele
+          variantRsId
+          variantFunctionalConsequenceId
+          variantFunctionalConsequenceLabel
+          directionOnTarget
+          directionOnTrait
+          studyId
+          clinicalSignificances
+          allelicRequirements
+          alleleOrigins
+          confidence
+          literature
         }
-        variant {
-          id: variantId
-          hgvsId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        directionOnTarget
-        directionOnTrait
-        diseaseFromSource
-        variantRsId
-        studyId
-        variantFunctionalConsequence {
-          id
-          label
-        }
-        clinicalSignificances
-        allelicRequirements
-        alleleOrigins
-        confidence
-        literature
-        cohortPhenotypes
       }
     }
   }

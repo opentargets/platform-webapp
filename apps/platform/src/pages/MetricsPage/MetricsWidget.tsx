@@ -29,7 +29,10 @@ function MetricsWidget({ icon, title, description, children, id }: MetricsWidget
           <Box sx={{ flex: 1 }}>
             <StyledTitle data-testid={id && `metrics-widget-${id}-title`}>{title}</StyledTitle>
             {description && (
-              <StyledDescription component="div" data-testid={id && `metrics-widget-${id}-description`}>
+              <StyledDescription
+                component="div"
+                {...({ "data-testid": id && `metrics-widget-${id}-description` } as Record<string, string | undefined>)}
+              >
                 {description}
               </StyledDescription>
             )}

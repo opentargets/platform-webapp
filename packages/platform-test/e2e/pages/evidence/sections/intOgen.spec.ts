@@ -1,15 +1,21 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import {
+  type EvidenceViewsData,
+  evidenceList,
+} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
+import {
   INTOGEN_COLUMN,
+  INTOGEN_DEFAULT_SORT,
   INTOGEN_HEADERS,
+  INTOGEN_LIST,
   INTOGEN_OPERATION,
   type IntOgenRow,
   IntOgenSection,
+  waitForIntOgenRequest,
 } from "../../../../POM/objects/widgets/Evidence/intOgen";
 import {
   BRAF,
-  type EvidenceList,
   formatPercent,
   gotoEvidence,
   MELANOMA,
@@ -20,7 +26,7 @@ import {
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSectionLoaded } from "../../../../utils/sections";
 
-type Data = RoleInCancer & { disease: { intOgen: EvidenceList<IntOgenRow> } };
+type Data = RoleInCancer & EvidenceViewsData<IntOgenRow>;
 
 const METHOD_DESCRIPTIONS: Record<string, string> = {
   hotmaps: "Somatic mutations in the gene are significantly clustered according to HotMAPS",
@@ -47,10 +53,20 @@ const sentence = (value: string) =>
 async function open(page: Page) {
   const response = waitForOperation<Data>(page, INTOGEN_OPERATION);
   await gotoEvidence(page);
-  const { data } = await response;
+  const { data, variables } = await response;
+  expect(
+    variables,
+    "the section asks for the first page, sorted by p-value, ascending"
+  ).toMatchObject({
+    ensemblId: BRAF,
+    efoId: MELANOMA,
+    index: 0,
+    size: PAGE_SIZE,
+    sort: [INTOGEN_DEFAULT_SORT],
+  });
   const section = new IntOgenSection(page);
   await section.expectLoaded();
-  return { section, data, list: data.disease.intOgen };
+  return { section, data, list: evidenceList(data, INTOGEN_LIST) };
 }
 
 test.describe("Evidence page: IntOGen", () => {
@@ -85,7 +101,7 @@ test.describe("Evidence page: IntOGen", () => {
       await expect(section.table.rows).toHaveCount(list.count);
       await section.table.expectPosition(1, list.count, list.count);
       await section.table.expectFirstPage(true);
-      await expect(section.table.searchInput).toHaveCount(0);
+      await expect(section.table.searchInput).toBeVisible();
     });
   });
 
@@ -96,10 +112,10 @@ test.describe("Evidence page: IntOGen", () => {
 
     for (const [index, expected] of list.rows.entries()) {
       await test.step(`row ${index + 1}: ${expected.cohortShortName}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
 
         const items = [...expected.mutatedSamples].sort(
@@ -135,17 +151,94 @@ test.describe("Evidence page: IntOGen", () => {
     }
   });
 
-  test("the first cohort is Hartwig cutaneous melanoma: 152 of 152 samples mutated, p-value 7.287×10-52", async ({
+  test("the Hartwig cutaneous melanoma cohort: 152 of 152 samples mutated, p-value 7.287×10-52", async ({
     page,
   }) => {
-    const { section } = await open(page);
-    await expect(section.diseaseLink(0)).toHaveText("cutaneous melanoma");
-    await expect(section.sampleItems(0)).toHaveText(/^100%\s*\(152\/152\)$/);
-    await expect(section.table.cell(0, INTOGEN_COLUMN.pValue)).toHaveText(/^7\.287\s*×10-52$/);
-    await expect(section.cohortLink(0)).toHaveText("HARTWIG_WGS_SKCM_2023");
-    await expect(section.table.cell(0, INTOGEN_COLUMN.cohort)).toContainText(
+    const { section, list } = await open(page);
+    // The table is sorted by p-value and several cohorts tie at the smallest values,
+    // so the Hartwig cohort is not always the first row: find it in the API's page.
+    const index = list.rows.findIndex((row) => row.cohortId === "HARTWIG_WGS_SKCM_2023");
+    expect(
+      index,
+      "the first page holds the Hartwig cutaneous melanoma cohort"
+    ).toBeGreaterThanOrEqual(0);
+    await expect(section.diseaseLink(index)).toHaveText("cutaneous melanoma");
+    await expect(section.sampleItems(index)).toHaveText(/^100%\s*\(152\/152\)$/);
+    await expect(section.table.cell(index, INTOGEN_COLUMN.pValue)).toHaveText(/^7\.287\s*×10-52$/);
+    await expect(section.cohortLink(index)).toHaveText("HARTWIG_WGS_SKCM_2023");
+    await expect(section.table.cell(index, INTOGEN_COLUMN.cohort)).toContainText(
       "Cutaneous Melanoma from Hartwig Medical Foundation"
     );
+  });
+
+  test("the table starts sorted by p-value, ascending, and the p-value header re-sorts it", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    const scores = list.rows.map((row) => row.resourceScore);
+    expect(scores, "the API's page is sorted by p-value, smallest first").toEqual(
+      [...scores].sort((a, b) => a - b)
+    );
+
+    // the first click drops the default sort, the second sorts descending
+    const unsorted = waitForIntOgenRequest(page, (variables) => !variables.sort?.length);
+    await section.table.clickHeader(/^Combined p-value/);
+    await unsorted;
+    const response = waitForIntOgenRequest(
+      page,
+      (variables) => variables.sort?.[0]?.direction === "DESCENDING"
+    );
+    await section.table.clickHeader(/^Combined p-value/);
+    const descending = evidenceList(await response, INTOGEN_LIST);
+    const flipped = descending.rows.map((row) => row.resourceScore);
+    expect(flipped).toEqual([...flipped].sort((a, b) => b - a));
+    await expect
+      .poll(() => section.table.columnTexts(INTOGEN_COLUMN.cohort).then((t) => t.length), {
+        message: "the table shows the descending page",
+      })
+      .toBe(descending.rows.length);
+    for (const [index, row] of descending.rows.entries()) {
+      await expect(section.table.cell(index, INTOGEN_COLUMN.pValue)).toHaveText(
+        formatPValue(row.resourceScore)
+      );
+    }
+  });
+
+  test("the search box filters the cohorts on the server and clearing it brings every row back", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    expect(list.count, "there are several cohorts to narrow down").toBeGreaterThan(1);
+    const term = list.rows[0].cohortShortName as string;
+    expect(term, "the first cohort has a short name").toBeTruthy();
+
+    const searched = waitForIntOgenRequest(page, (variables) => variables.search?.text === term);
+    await section.table.search(term);
+    const result = evidenceList(await searched, INTOGEN_LIST);
+    expect(result.count, "the cohort is found").toBeGreaterThan(0);
+    expect(result.count, "the search narrows the list").toBeLessThan(list.count);
+    await expect(section.table.rows).toHaveCount(result.count);
+    await section.table.expectPosition(1, result.count, result.count);
+    for (const [index, row] of result.rows.entries()) {
+      await expect(section.cohortLink(index)).toHaveText(row.cohortShortName as string);
+      expect((row.cohortShortName as string).toLowerCase()).toContain(term.toLowerCase());
+    }
+
+    await test.step("a term nothing matches leaves an empty table", async () => {
+      const none = waitForIntOgenRequest(
+        page,
+        (variables) => variables.search?.text === "zzzz-no-such-cohort"
+      );
+      await section.table.search("zzzz-no-such-cohort");
+      expect(evidenceList(await none, INTOGEN_LIST).count).toBe(0);
+      await expect(section.table.rows).toHaveCount(0);
+    });
+
+    await test.step("clearing the search restores the list", async () => {
+      await section.table.search("");
+      await expect(section.table.rows).toHaveCount(list.count);
+      await section.table.expectPosition(1, list.count, list.count);
+    });
   });
 
   test("the disease tooltip shows the disease as it was reported by the source", async ({
@@ -236,10 +329,11 @@ test.describe("Evidence page: IntOGen", () => {
   });
 
   test("a disease link opens that disease's page", async ({ page }) => {
-    const { section } = await open(page);
+    const { section, list } = await open(page);
+    const expected = list.rows[0];
     await section.diseaseLink(0).click();
-    await expect(page).toHaveURL(/\/disease\/MONDO_0005012$/);
-    await expect(page.getByTestId("profile-page-header-text")).toContainText("cutaneous melanoma");
+    await expect(page).toHaveURL(new RegExp(`/disease/${expected.diseaseId}$`));
+    await expect(page.getByTestId("profile-page-header-text")).toContainText(expected.diseaseName);
   });
 
   test("the export offers JSON and TSV with a row per cohort", async ({ page }) => {

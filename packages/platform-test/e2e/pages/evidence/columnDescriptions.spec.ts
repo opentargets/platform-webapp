@@ -360,8 +360,17 @@ test.describe("Datasource descriptions: evidence page", () => {
         const text = (await description.innerText()).replace(/\s+/g, " ").trim();
         seen.set(text, [...(seen.get(text) ?? []), sectionId]);
       }
+      // UniProt literature and UniProt variants are two views of one source, so the app
+      // gives them one description on purpose; every other section must have its own.
       const shared = [...seen.values()].filter((ids) => ids.length > 1);
-      expect(shared, "sections that show the very same description").toEqual([]);
+      const declared = new Map<string, string[]>();
+      for (const sectionId of pair.sources) {
+        const template = source(sectionId).template;
+        declared.set(template, [...(declared.get(template) ?? []), sectionId]);
+      }
+      expect(shared, "sections that show the very same description").toEqual(
+        [...declared.values()].filter((ids) => ids.length > 1)
+      );
     });
   }
 

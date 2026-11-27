@@ -216,7 +216,7 @@ export const DATASOURCES: DataSource[] = [
   { datasourceId: "eva_somatic", datasourceNiceName: "ClinVar-somatic" },
   { datasourceId: "gwas_credible_sets", datasourceNiceName: "GWAS credible sets" },
   { datasourceId: "mol_qtl", datasourceNiceName: "molQTL" },
-  { datasourceId: "pharmgkb", datasourceNiceName: "pharmgkb" },
+  { datasourceId: "clinpgx", datasourceNiceName: "ClinPGx" },
   { datasourceId: "uniprot_variants", datasourceNiceName: "UniProt Variants" },
 ];
 

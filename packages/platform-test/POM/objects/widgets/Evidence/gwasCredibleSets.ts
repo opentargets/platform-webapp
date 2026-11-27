@@ -40,39 +40,38 @@ export const EVIDENCE_GWAS_OPERATION = "EvidenceGWASCredibleSetsQuery";
 export const EVIDENCE_GWAS_PAGE_SIZE = 10;
 
 export type EvidenceGwasRow = {
+  diseaseId: string;
+  diseaseName: string;
+  credibleSetId: string;
+  leadVariantId: string | null;
+  leadReferenceAllele: string | null;
+  leadAlternateAllele: string | null;
+  pValueMantissa: number | null;
+  pValueExponent: number | null;
+  beta: number | null;
+  fineMappingMethod: string | null;
+  confidence: number | null;
+  studyId: string;
+  traitFromSource: string | null;
+  publicationFirstAuthor: string | null;
+  publicationDate: string | null;
+  pubmedId: string | null;
+  nSamples: number | null;
   score: number | null;
-  disease: { id: string; name: string };
-  credibleSet: {
-    credibleSetId: string;
-    leadPValueMantissa: number | null;
-    leadPValueExponent: number | null;
-    leadBeta: number | null;
-    fineMappingMethod: string | null;
-    confidence: number | null;
-    leadVariant: { variantId: string } | null;
-    study: {
-      id: string;
-      traitFromSource: string | null;
-      nSamples: number | null;
-      publicationFirstAuthor: string | null;
-      publicationDate: string | null;
-      pubmedId: string | null;
-    };
-  };
 };
+/** The response: the rows sit in `disease.evidenceViews.gwasCredibleSets`. */
 export type EvidenceGwasData = {
   target: { approvedSymbol: string };
   disease: {
     id: string;
-    name: string;
-    gwasCredibleSets: { count: number; rows: EvidenceGwasRow[] };
+    evidenceViews: { gwasCredibleSets: { count: number; rows: EvidenceGwasRow[] } };
   };
 };
 
 /**
  * Evidence page > GWAS credible sets (section id "gwas-credible-sets"): a server-paginated
  * table of the 95% credible sets of GWAS studies that prioritise the target for the
- * disease. No search box, no sorting.
+ * disease. It has a search box, and the L2G score is the default sort (descending).
  */
 export class EvidenceGwasCredibleSetsSection {
   static readonly id = "gwas-credible-sets";

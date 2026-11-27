@@ -1,26 +1,27 @@
-query CancerGeneCensusQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query CancerGeneCensusQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceCancerGeneCensusSort!]! = []
+  $search: EvidenceCancerGeneCensusSearch
+) {
   disease(efoId: $efoId) {
     id
-    cancerGeneCensusSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [cancer_gene_census]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
-        }
-        mutatedSamples {
-          functionalConsequence {
-            id
-            label
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      cancerGeneCensus(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          mutatedSamples {
+            functionalConsequenceId
+            functionalConsequenceLabel
+            numberSamplesWithMutationType
+            numberSamplesTested
           }
-          numberSamplesWithMutationType
-          numberSamplesTested
+          literature
         }
-        literature
       }
     }
   }

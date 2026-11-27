@@ -1,9 +1,7 @@
 fragment reactomeSummary on Disease {
-  reactomeSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [reactome]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    reactome(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

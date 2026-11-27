@@ -1,18 +1,77 @@
 import _ from "lodash";
 import { useQuery } from "@apollo/client";
-import { Tooltip, SectionItem, TooltipStyledLabel, OtTableServer, PublicationsDrawer, Link } from "ui";
+import {
+  Tooltip,
+  SectionItem,
+  TooltipStyledLabel,
+  OtTableServer,
+  type OtTableColumn,
+  PublicationsDrawer,
+  Link,
+} from "ui";
 import Description from "./Description";
 import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
-  EvidenceBodyProps} from "@ot/constants";
+  type EvidenceBodyProps,
+  type EvidenceCrisprScreen,
+  type EvidenceCrisprScreenSort,
+  EvidenceCrisprScreenSortField,
+  type EvidenceCrisprScreenSearch,
+  EvidenceCrisprScreenSearchField,
+  SortDirection,
+} from "@ot/constants";
 import { definition } from ".";
 
-import CRISPR_QUERY from "./CrisprScreenQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import CRISPR_SCREEN_QUERY_DOCUMENT from "./CrisprScreenQuery.gql";
+
+type CrisprScreenRow = Pick<
+  EvidenceCrisprScreen,
+  | "studyId"
+  | "projectId"
+  | "crisprScreenLibrary"
+  | "studyOverview"
+  | "cellType"
+  | "literature"
+  | "diseaseFromSource"
+  | "diseaseFromSourceMappedId"
+  | "contrast"
+  | "resourceScore"
+  | "statisticalTestTail"
+  | "phenotypicConsequenceScore"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { crisprScreen: { count: number; rows: CrisprScreenRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceCrisprScreenSort[];
+  search?: EvidenceCrisprScreenSearch;
+};
+
+const CRISPR_SCREEN_QUERY = typedDocument<QueryData, QueryVariables>(
+  CRISPR_SCREEN_QUERY_DOCUMENT
+);
+const PAGE_SIZE = 10;
+// production sorted this table by significance, ascending
+const DEFAULT_SORT = {
+  id: "resourceScore",
+  field: EvidenceCrisprScreenSortField.Significance,
+  desc: false,
+};
 
 // This will hold more sources in future releases
-const sources = {
+const sources: Record<string, { name: string; url: string } | undefined> = {
   crispr_brain: {
     name: "CRISPRBrain",
     url: "https://crisprbrain.org/",
@@ -21,12 +80,22 @@ const sources = {
 
 // format the diseaseFromSource field: remove the "essential genes" info
 // this might be sorted at data level at some point
-const parseDiseaseName = d => d.toLowerCase().replace("essential genes / ", "");
+const parseDiseaseName = (d?: string | null) =>
+  (d ?? "").toLowerCase().replace("essential genes / ", "");
 
-const getColumns = label => [
+const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<CrisprScreenRow>[] => [
   {
     id: "diseaseFromSourceMappedId",
     label: "Reported disease",
+    // Attach the CRISPR screen search fields to the first column.
+    searchFields: [
+      EvidenceCrisprScreenSearchField.DiseaseFromSource,
+      EvidenceCrisprScreenSearchField.StudyId,
+      EvidenceCrisprScreenSearchField.Contrast,
+      EvidenceCrisprScreenSearchField.StudyOverview,
+      EvidenceCrisprScreenSearchField.CellType,
+      EvidenceCrisprScreenSearchField.Source,
+    ],
     renderCell: row => {
       const disease = parseDiseaseName(row.diseaseFromSource);
       return (
@@ -35,7 +104,6 @@ const getColumns = label => [
         </Link>
       );
     },
-    filterValue: row => row.diseaseFromSource + ", " + row.diseaseFromSourceMappedId,
   },
   {
     id: "studyId",
@@ -60,7 +128,11 @@ const getColumns = label => [
           <Tooltip
             showHelpIcon
             title={
-              <TooltipStyledLabel label={"SCREEN LIBRARY"} description={row.crisprScreenLibrary} />
+              <TooltipStyledLabel
+                label={"SCREEN LIBRARY"}
+                description={row.crisprScreenLibrary ?? ""}
+                newline={false}
+              />
             }
           >
             <span>
@@ -68,19 +140,16 @@ const getColumns = label => [
             </span>
           </Tooltip>
         );
-      } else if (row.contrast) {
-        return <span>{row.contrast}</span>;
-      } else if (overview) {
-        return <span>{overview}</span>;
       }
+      if (row.contrast) return <span>{row.contrast}</span>;
+      if (overview) return <span>{overview}</span>;
+      return naLabel;
     },
-    filterValue: row => row.contrast + "; " + row.studyOverview,
   },
   {
     id: "cellType",
     label: "Cell type",
     renderCell: row => row.cellType,
-    filterValue: row => row.cellType,
     width: "12%",
   },
   {
@@ -95,6 +164,7 @@ const getColumns = label => [
   {
     id: "resourceScore",
     label: "Significance",
+    sortField: DEFAULT_SORT.field,
     renderCell: row => {
       if (row.resourceScore && row.statisticalTestTail) {
         return (
@@ -104,35 +174,37 @@ const getColumns = label => [
               <TooltipStyledLabel
                 label={"STATISTICAL TEST TAIL"}
                 description={row.statisticalTestTail}
+                newline={false}
               />
             }
           >
             <span>{parseFloat(row.resourceScore.toFixed(6))}</span>
           </Tooltip>
         );
-      } else {
-        return row.resourceScore ? parseFloat(row.resourceScore.toFixed(6)) : naLabel;
       }
+      return row.resourceScore ? parseFloat(row.resourceScore.toFixed(6)) : naLabel;
     },
-    filterValue: row => `${parseFloat(row.resourceScore?.toFixed(6))} ${row.statisticalTestTail}`,
     width: "9%",
   },
   {
     id: "projectId",
     label: "Source",
-    renderCell: row => (
-      <Link external to={sources[row.projectId]?.url}>
-        {sources[row.projectId].name}
-      </Link>
-    ),
-    filterValue: row => row.projectId,
+    renderCell: row => {
+      const source = row.projectId ? sources[row.projectId] : undefined;
+      if (!source) return row.projectId ?? naLabel;
+      return (
+        <Link external to={source.url}>
+          {source.name}
+        </Link>
+      );
+    },
     width: "9%",
   },
   {
     id: "literature",
     label: "Publication",
     renderCell: ({ literature }) => {
-      if (!literature) return naLabel;
+      if (literature.length === 0) return naLabel;
       return (
         <PublicationsDrawer
           entries={[{ name: literature[0] }]}
@@ -141,69 +213,85 @@ const getColumns = label => [
         />
       );
     },
-    filterValue: ({ literature }) => literature,
     width: "9%",
   },
 ];
 
-const exportColumns = [
+const exportColumns: OtTableColumn<CrisprScreenRow>[] = [
   {
+    id: "disease",
     label: "disease",
-    exportValue: row => parseDiseaseName(row.diseaseFromSource),
+    exportValue: (row: CrisprScreenRow) => parseDiseaseName(row.diseaseFromSource),
   },
   {
+    id: "diseaseId",
     label: "disease id",
-    exportValue: row => row.diseaseFromSourceMappedId,
+    exportValue: (row: CrisprScreenRow) => row.diseaseFromSourceMappedId,
   },
   {
+    id: "studyId",
     label: "study identifier",
-    exportValue: row => row.studyId,
+    exportValue: (row: CrisprScreenRow) => row.studyId,
   },
   {
+    id: "contrast",
     label: "contrast",
-    exportValue: row => row.contrast,
+    exportValue: (row: CrisprScreenRow) => row.contrast,
   },
   {
+    id: "studyOverview",
     label: "study overview",
-    exportValue: row => row.studyOverview,
+    exportValue: (row: CrisprScreenRow) => row.studyOverview,
   },
   {
+    id: "cellType",
     label: "cell type",
-    exportValue: row => row.cellType,
+    exportValue: (row: CrisprScreenRow) => row.cellType,
   },
   {
+    id: "phenotypicConsequenceScore",
     label: "log2 fold change",
-    exportValue: row => row.phenotypicConsequenceScore,
+    exportValue: (row: CrisprScreenRow) => row.phenotypicConsequenceScore,
   },
   {
+    id: "resourceScore",
     label: "significance",
-    exportValue: row => row.resourceScore,
+    exportValue: (row: CrisprScreenRow) => row.resourceScore,
   },
   {
+    id: "statisticalTestTail",
     label: "statistical test tail",
-    exportValue: row => row.statisticalTestTail,
+    exportValue: (row: CrisprScreenRow) => row.statisticalTestTail,
   },
   {
+    id: "projectId",
     label: "source",
-    exportValue: row => row.projectId,
+    exportValue: (row: CrisprScreenRow) => row.projectId,
   },
   {
+    id: "literature",
     label: "publication",
-    exportValue: row => row.literature.join(", "),
+    exportValue: (row: CrisprScreenRow) => row.literature.join(", "),
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
-  const request = useQuery(CRISPR_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+  const request = useQuery(CRISPR_SCREEN_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns(label);
@@ -217,16 +305,17 @@ function Body({ id, label, entity }: Props) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
         return (
-          <OtTableServer
-            query={CRISPR_QUERY}
+          <OtTableServer<CrisprScreenRow>
+            query={CRISPR_SCREEN_QUERY}
             columns={columns}
             dataDownloader
             dataDownloaderColumns={exportColumns}
             dataDownloaderFileStem={`${ensgId}-${efoId}-crisprscreen`}
-            dataPath="disease.CrisprScreenSummary"
+            dataPath="disease.evidenceViews.crisprScreen"
             pageSize={PAGE_SIZE}
             pageSizeOptions={defaultRowsPerPageOptions}
-            showGlobalFilter={false}
+            sortBy={DEFAULT_SORT.id}
+            order={DEFAULT_SORT.desc ? "desc" : "asc"}
             variables={variables}
           />
         );

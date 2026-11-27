@@ -43,10 +43,11 @@ export const EA_LOCKED = ["Experiment ID"] as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/ExpressionAtlas). */
 export const EA_OPERATION = "ExpressionAtlasQuery";
-export const EA_LIST = "expressionAtlasSummary";
+export const EA_LIST = "expressionAtlas";
 
 export type ExpressionAtlasRow = {
-  disease: { id: string; name: string };
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string | null;
   contrast: string;
   confidence: string;

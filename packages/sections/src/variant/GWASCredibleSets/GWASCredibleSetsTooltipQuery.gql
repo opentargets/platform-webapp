@@ -1,0 +1,38 @@
+query VariantGWASCredibleSetsTooltipQuery($credibleSetId: String!, $variantId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
+      variantId
+      referenceAllele
+      alternateAllele
+    }
+    leadPValueMantissa
+    leadPValueExponent
+    leadBeta
+    study {
+      id
+      traitFromSource
+      diseases {
+        id
+        name
+      }
+    }
+    locus(filter: { variantIds: [$variantId] }, page: { index: 0, size: 1 }) {
+      rows {
+        posteriorProbability
+      }
+    }
+    fineMappingMethod
+    confidence
+    l2GPredictions(page: { index: 0, size: 1 }) {
+      rows {
+        score
+        target {
+          id
+          approvedSymbol
+        }
+      }
+    }
+    locusSize
+  }
+}

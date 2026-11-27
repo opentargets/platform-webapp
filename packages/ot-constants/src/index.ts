@@ -272,6 +272,10 @@ export const clinicalReportsSourcesInfo = {
     name: "Aggregate Content of ClinicalTrials.gov",
     url: "https://aact.ctti-clinicaltrials.org/",
   },
+  "ClinicalTrials.gov": {
+    name: "ClinicalTrials.gov",
+    url: "https://clinicaltrials.gov/",
+  },
   TTD: {
     name: "Therapeutic Target Database",
     url: "https://ttd.idrblab.cn/",
@@ -295,6 +299,10 @@ export const clinicalReportsSourcesInfo = {
   FDA: {
     name: "Food and Drug Administration",
     url: "https://www.fda.gov/",
+  },
+  "Drugs@FDA": {
+    name: "Drugs@FDA",
+    url: "https://www.accessdata.fda.gov/scripts/cder/daf/",
   },
   USAN: {
     name: "United States Adopted Names",
@@ -368,14 +376,6 @@ export const clinvarStarMap: { [key: string]: number } = {
   "no assertion for the individual variant": 0,
   "no assertion criteria provided": 0,
   "no assertion provided": 0,
-};
-
-// Credset Confidence Mapping
-export const credsetConfidenceMap: { [key: string]: number } = {
-  "SuSiE fine-mapped credible set with in-sample LD": 4,
-  "SuSiE fine-mapped credible set with out-of-sample LD": 3,
-  "PICS fine-mapped credible set extracted from summary statistics": 2,
-  "PICS fine-mapped credible set based on reported top hit": 1,
 };
 
 // Credible set confidence: the API returns the level itself (0 to 4), which is

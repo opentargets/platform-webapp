@@ -57,7 +57,7 @@ test.describe("Evidence page: UniProt literature", () => {
     );
     await expect(section.table.headers).toHaveText([...UNIPROT_LITERATURE_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput).toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -68,11 +68,11 @@ test.describe("Evidence page: UniProt literature", () => {
   }) => {
     const { section, list } = await open(page);
     for (const [index, expected] of list.rows.entries()) {
-      await test.step(`row ${index + 1}: ${expected.disease.name}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+      await test.step(`row ${index + 1}: ${expected.diseaseName}`, async () => {
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
         await expect(section.helpIcon(index, UNIPROT_LITERATURE_COLUMN.disease)).toHaveCount(1);
 
@@ -85,6 +85,9 @@ test.describe("Evidence page: UniProt literature", () => {
 
         await expect(section.cell(index, UNIPROT_LITERATURE_COLUMN.confidence)).toHaveText(
           sentence(expected.confidence!)
+        );
+        await expect(section.cell(index, UNIPROT_LITERATURE_COLUMN.score)).toHaveText(
+          expected.score.toFixed(2)
         );
         await expect(section.cell(index, UNIPROT_LITERATURE_COLUMN.literature)).toHaveText(
           GeneticEvidenceSection.literatureLabel(expected.literature)
@@ -110,10 +113,70 @@ test.describe("Evidence page: UniProt literature", () => {
     const { section } = await open(page);
     await expectColumnPicker(
       section,
-      [...UNIPROT_LITERATURE_HEADERS],
+      UNIPROT_LITERATURE_HEADERS.map((header) => header.replace("?", "")),
       ["Disease/phenotype", "Reported protein"],
       "Confidence"
     );
+  });
+
+  test("the Score header explains the score and sorts the rows on the server", async ({ page }) => {
+    const { section, list } = await open(page);
+    const header = section.table.headers.nth(UNIPROT_LITERATURE_COLUMN.score);
+    await header.locator("sup").hover();
+    await expect(section.tooltip).toHaveText("Evidence score, from 0 to 1");
+    await page.mouse.move(0, 0);
+
+    // The table opens sorted by score, highest first; a click on the header reverses it.
+    const scores = list.rows.map((row) => row.score);
+    expect(scores, "the API returns the highest scores first").toEqual(
+      [...scores].sort((a, b) => b - a)
+    );
+    const ascending = page.waitForResponse((response) => {
+      const post = response.request().postData() ?? "";
+      return (
+        post.includes(UNIPROT_LITERATURE_OPERATION) &&
+        (JSON.parse(post).variables?.sort ?? []).some(
+          (sort: { direction: string }) => sort.direction === "ASCENDING"
+        )
+      );
+    });
+    await header.click();
+    const reversed = (await (await ascending).json()).data.disease.evidenceViews[
+      UNIPROT_LITERATURE_LIST
+    ].rows as UniprotLiteratureRow[];
+    expect(reversed.map((row) => row.score)).toEqual([...scores].sort((a, b) => a - b));
+    await expect
+      .poll(() => section.table.columnTexts(UNIPROT_LITERATURE_COLUMN.score))
+      .toEqual(reversed.map((row) => row.score.toFixed(2)));
+    await expect(section.diseaseLink(0)).toHaveText(reversed[0].diseaseName);
+  });
+
+  test("the search box filters the rows on the server", async ({ page }) => {
+    const { section, list } = await open(page);
+    const target = list.rows[1];
+    const term = target.diseaseName;
+    const response = page.waitForResponse((candidate) => {
+      const post = candidate.request().postData() ?? "";
+      return post.includes(UNIPROT_LITERATURE_OPERATION) && post.includes(`"text":"${term}"`);
+    });
+    await section.table.search(term);
+    const found = (await (await response).json()).data.disease.evidenceViews[
+      UNIPROT_LITERATURE_LIST
+    ] as { count: number; rows: UniprotLiteratureRow[] };
+    expect(found.count, "the search narrows the rows").toBeLessThan(list.count);
+    expect(found.rows.map((row) => row.diseaseName)).toContain(term);
+    await section.table.expectRowCount(found.rows.length);
+    await expect(section.diseaseLink(0)).toHaveText(found.rows[0].diseaseName);
+
+    const none = page.waitForResponse((candidate) =>
+      (candidate.request().postData() ?? "").includes("zzz-no-match")
+    );
+    await section.table.search("zzz-no-match");
+    await none;
+    await section.table.expectRowCount(0);
+
+    await section.table.searchInput.fill("");
+    await section.table.expectRowCount(list.count);
   });
 
   test("the literature cell lists the publications of its row, a single one by its id", async ({
@@ -147,7 +210,7 @@ test.describe("Evidence page: UniProt literature", () => {
       `UniProtLiterature-${MECP2_NDD.ensgId}-${MECP2_NDD.efoId}`
     );
     expect(json.map((row) => row.diseasePhenotype)).toEqual(
-      list.rows.map((row) => row.disease.name)
+      list.rows.map((row) => row.diseaseName)
     );
     expect(header).not.toContain("objectObject");
   });
@@ -161,9 +224,9 @@ test.describe("Evidence page: UniProt literature", () => {
   test("a disease link opens that disease's page", async ({ page }) => {
     const { section, list } = await open(page);
     await section.diseaseLink(1).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(
-      list.rows[1].disease.name
+      list.rows[1].diseaseName
     );
   });
 

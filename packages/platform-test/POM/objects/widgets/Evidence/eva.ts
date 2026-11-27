@@ -14,6 +14,7 @@ export const EVIDENCE_EVA_HEADERS = [
   "Clinical significance",
   "Allele origin",
   "Review status",
+  "Score?",
   "Literature",
 ] as const;
 
@@ -28,7 +29,8 @@ export const EVIDENCE_EVA_COLUMN = {
   significance: 7,
   alleleOrigin: 8,
   reviewStatus: 9,
-  literature: 10,
+  score: 10,
+  literature: 11,
 } as const;
 
 export type EvidenceEvaColumn = keyof typeof EVIDENCE_EVA_COLUMN;
@@ -38,36 +40,38 @@ export const EVIDENCE_EVA_OPERATION = "ClinvarQuery";
 export const EVIDENCE_EVA_PAGE_SIZE = 10;
 
 export type EvidenceEvaRow = {
-  disease: { id: string; name: string };
-  variant: {
-    id: string;
-    hgvsId: string | null;
-    chromosome: string;
-    position: number;
-    referenceAllele: string;
-    alternateAllele: string;
-  } | null;
+  score: number;
+  diseaseId: string;
+  diseaseName: string;
+  diseaseFromSource: string | null;
+  cohortPhenotypes: string[] | null;
+  variantId: string | null;
+  variantHgvsId: string | null;
+  variantChromosome: string | null;
+  variantPosition: number | null;
+  variantReferenceAllele: string | null;
+  variantAlternateAllele: string | null;
+  variantRsId: string | null;
+  variantFunctionalConsequenceId: string | null;
+  variantFunctionalConsequenceLabel: string | null;
   directionOnTarget: string | null;
   directionOnTrait: string | null;
-  diseaseFromSource: string | null;
-  variantRsId: string | null;
   studyId: string | null;
-  variantFunctionalConsequence: { id: string; label: string } | null;
   clinicalSignificances: string[] | null;
   allelicRequirements: string[] | null;
   alleleOrigins: string[] | null;
   confidence: string | null;
   literature: string[] | null;
-  cohortPhenotypes: string[] | null;
 };
 export type EvidenceEvaData = {
   target: { approvedSymbol: string };
-  disease: { id: string; name: string; eva: { count: number; rows: EvidenceEvaRow[] } };
+  disease: { id: string; evidenceViews: { eva: { count: number; rows: EvidenceEvaRow[] } } };
 };
 
 /**
  * Evidence page > ClinVar (section id "eva"): a server-paginated table of the ClinVar
- * submissions linking the target's variants to the disease. No search box, no sorting.
+ * submissions linking the target's variants to the disease. No search box; the Score column sorts
+ * server-side (descending by default).
  */
 export class EvidenceEvaSection {
   static readonly id = "eva";
@@ -125,6 +129,16 @@ export class EvidenceEvaSection {
   /** The two icons (variant effect, effect on trait) of a row's direction of effect. */
   directionIcons(row: number): Locator {
     return this.cell(row, "direction").locator("svg");
+  }
+
+  /** The title of the Score header: clicking it sorts the table on the server. */
+  get scoreLabel(): Locator {
+    return this.table.headers.filter({ hasText: "Score" }).getByText(/^Score\??$/);
+  }
+
+  /** Scores of the current page, parsed from their two-decimal text. */
+  async scores(): Promise<number[]> {
+    return (await this.table.columnTexts(EVIDENCE_EVA_COLUMN.score)).map(Number);
   }
 
   literatureTrigger(row: number): Locator {

@@ -47,7 +47,8 @@ export const CS_LOCKED = ["Study Identifier"] as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/CRISPRScreen). */
 export const CS_OPERATION = "CrisprScreenQuery";
-export const CS_LIST = "CrisprScreenSummary";
+/** The `disease.evidenceViews` field the section reads. */
+export const CS_LIST = "crisprScreen";
 
 export type CrisprScreenRow = {
   studyId: string;
@@ -96,7 +97,7 @@ export class CrisprScreenSection extends GeneticEvidenceSection {
   }
 
   override get chip(): Locator {
-    return this.section.getByText("Pathways & systems biology", { exact: true });
+    return this.section.getByText("Affected pathway", { exact: true });
   }
 
   diseaseLink(row: number): Locator {

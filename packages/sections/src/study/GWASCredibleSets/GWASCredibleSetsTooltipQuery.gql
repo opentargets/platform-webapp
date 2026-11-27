@@ -1,0 +1,25 @@
+query StudyGWASCredibleSetsTooltipQuery($credibleSetId: String!) {
+  credibleSet(credibleSetId: $credibleSetId) {
+    credibleSetId
+    leadVariant {
+      variantId
+      referenceAllele
+      alternateAllele
+    }
+    leadPValueMantissa
+    leadPValueExponent
+    leadBeta
+    fineMappingMethod
+    confidence
+    l2GPredictions(page: { index: 0, size: 1 }) {
+      rows {
+        score
+        target {
+          id
+          approvedSymbol
+        }
+      }
+    }
+    locusSize
+  }
+}

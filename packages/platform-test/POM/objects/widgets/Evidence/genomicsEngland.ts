@@ -1,5 +1,29 @@
-import type { Locator, Page } from "@playwright/test";
-import { GeneticEvidenceSection } from "./geneticEvidenceSection";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { stubEuropePmc, waitForOperation } from "../shared/sectionDataControls";
+import {
+  EVIDENCE_PAGE_SIZE,
+  type EvidenceList,
+  type EvidencePair,
+  GeneticEvidenceSection,
+} from "./geneticEvidenceSection";
+import { waitForPageOfOperation } from "./somaticEvidenceSection";
+
+/**
+ * GenomicsEngland, ClinGen and UniProt variants have not moved to `evidenceViews` yet:
+ * their queries still alias `disease.evidences(...)` (e.g. `genomicsEngland`, `clingenSummary`).
+ * The shared `openEvidenceSection` / `expectPaging` only read `disease.evidenceViews`, so these
+ * two helpers do the same for the `disease.<alias>` shape. Drop them when the sections migrate.
+ */
+type AliasData<Row> = { disease: Record<string, EvidenceList<Row> | undefined> };
+
+function aliasList<Row>(data: AliasData<Row>, alias: string): EvidenceList<Row> {
+  const list = data.disease?.[alias];
+  expect(
+    list,
+    `the response holds disease.${alias}; it has: ${Object.keys(data.disease ?? {}).join(", ")}`
+  ).toBeDefined();
+  return list as EvidenceList<Row>;
+}
 
 /** Columns of the Genomics England PanelApp table, in order. The last one has no title. */
 export const GE_HEADERS = [

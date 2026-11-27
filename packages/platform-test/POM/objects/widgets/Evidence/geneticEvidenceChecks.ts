@@ -8,10 +8,46 @@ import {
 } from "./geneticEvidenceSection";
 import { waitForPageOfOperation } from "./somaticEvidenceSection";
 
+/** The shape every evidence section query answers with since the move to `evidenceViews`. */
+export type EvidenceViewsData<Row> = {
+  disease: {
+    evidenceViews?: Record<string, EvidenceList<Row> | undefined>;
+    // sections not yet migrated to evidenceViews (Orphanet, UniProt variants, Genomics England,
+    // ClinGen) still alias `evidences` directly under `disease`
+    [alias: string]:
+      | EvidenceList<Row>
+      | Record<string, EvidenceList<Row> | undefined>
+      | string
+      | undefined;
+  };
+};
+
+/** The `{ count, rows }` of one evidence view, failing clearly when the key is wrong. */
+export function evidenceList<Row>(
+  data: EvidenceViewsData<Row>,
+  listKey: string
+): EvidenceList<Row> {
+  const views = data.disease?.evidenceViews ?? {};
+  const aliased = data.disease?.[listKey];
+  const list =
+    views[listKey] ??
+    (aliased && typeof aliased === "object" && "rows" in aliased
+      ? (aliased as EvidenceList<Row>)
+      : undefined);
+  expect(
+    list,
+    `the response holds disease.evidenceViews.${listKey} or disease.${listKey}; evidenceViews has: ${
+      Object.keys(views).join(", ") || "nothing"
+    }`
+  ).toBeDefined();
+  return list as EvidenceList<Row>;
+}
+
 /**
  * Open an evidence page and wait for one section together with the response of its first
  * page. Europe PMC is stubbed, so the publication drawers depend only on the app.
- * `listKey` is the alias the section's query gives to `disease.<alias>`.
+ * `listKey` is the field of `disease.evidenceViews` the section's query reads (e.g. `eva`), or the
+ * alias under `disease` for a section not yet migrated to evidenceViews.
  */
 export async function openEvidenceSection<Row>(
   page: Page,
@@ -21,10 +57,7 @@ export async function openEvidenceSection<Row>(
   pair: EvidencePair
 ): Promise<EvidenceList<Row>> {
   await stubEuropePmc(page);
-  const response = waitForOperation<{ disease: Record<string, EvidenceList<Row>> }>(
-    page,
-    operation
-  );
+  const response = waitForOperation<EvidenceViewsData<Row>>(page, operation);
   await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
   const { data, variables } = await response;
   expect(variables, "the section asks for the first page of its target and disease").toMatchObject({
@@ -34,7 +67,7 @@ export async function openEvidenceSection<Row>(
     size: EVIDENCE_PAGE_SIZE,
   });
   await section.expectLoaded();
-  const list = data.disease[listKey];
+  const list = evidenceList(data, listKey);
   expect(list.count, "the API has evidence for this pair").toBeGreaterThan(0);
   expect(list.rows.length).toBe(Math.min(list.count, EVIDENCE_PAGE_SIZE));
   return list;
@@ -80,13 +113,9 @@ export async function expectPaging<Row>(
   const firstPageTexts = await table.columnTexts(identifyColumn);
   expect(firstPageTexts).toEqual(list.rows.map(identify));
 
-  const next = waitForPageOfOperation<{ disease: Record<string, EvidenceList<Row>> }>(
-    page,
-    operation,
-    1
-  );
+  const next = waitForPageOfOperation<EvidenceViewsData<Row>>(page, operation, 1);
   await table.nextPageButton.click();
-  const second = (await next).disease[listKey];
+  const second = evidenceList(await next, listKey);
   await expect(table.position).toHaveText(
     `${EVIDENCE_PAGE_SIZE + 1} - ${Math.min(2 * EVIDENCE_PAGE_SIZE, total)} of ${total}`
   );
@@ -98,13 +127,9 @@ export async function expectPaging<Row>(
   await expect(table.firstPageButton).toBeEnabled();
   await expect(table.previousPageButton).toBeEnabled();
 
-  const last = waitForPageOfOperation<{ disease: Record<string, EvidenceList<Row>> }>(
-    page,
-    operation,
-    lastPage
-  );
+  const last = waitForPageOfOperation<EvidenceViewsData<Row>>(page, operation, lastPage);
   await table.lastPageButton.click();
-  const lastRows = (await last).disease[listKey];
+  const lastRows = evidenceList(await last, listKey);
   const remainder = total - lastPage * EVIDENCE_PAGE_SIZE;
   await expect(table.position).toHaveText(
     `${lastPage * EVIDENCE_PAGE_SIZE + 1} - ${total} of ${total}`

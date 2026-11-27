@@ -1,50 +1,45 @@
-query GeneBurdenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query GeneBurdenQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceGeneBurdenSort!]! = []
+  $search: EvidenceGeneBurdenSearch
+) {
   disease(efoId: $efoId) {
     id
-    geneBurdenSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [gene_burden]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      geneBurden(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          targetId
+          targetFromSourceId
+          urls
+          directionOnTarget
+          directionOnTrait
+          allelicRequirements
+          ancestry
+          ancestryId
+          cohortId
+          projectId
+          statisticalMethod
+          statisticalMethodOverview
+          studyCases
+          studyCasesWithQualifyingVariants
+          studySampleSize
+          oddsRatio
+          oddsRatioConfidenceIntervalLower
+          oddsRatioConfidenceIntervalUpper
+          beta
+          betaConfidenceIntervalLower
+          betaConfidenceIntervalUpper
+          pValueMantissa
+          pValueExponent
+          literature
         }
-        diseaseFromSource
-        target {
-          id
-          approvedSymbol
-        }
-        releaseVersion
-        targetFromSourceId
-        urls {
-          url
-        }
-        directionOnTarget
-        directionOnTrait
-        allelicRequirements
-        studyId
-        ancestry
-        ancestryId
-        resourceScore
-        cohortId
-        projectId
-        statisticalMethod
-        statisticalMethodOverview
-        studyCases
-        studyCasesWithQualifyingVariants
-        studySampleSize
-        oddsRatio
-        oddsRatioConfidenceIntervalLower
-        oddsRatioConfidenceIntervalUpper
-        beta
-        betaConfidenceIntervalLower
-        betaConfidenceIntervalUpper
-        pValueMantissa
-        pValueExponent
-        literature
       }
     }
   }

@@ -69,6 +69,11 @@ const IGNORED_CONSOLE_ERRORS: { pattern: RegExp; reason: string }[] = [
       "Europe PMC, a third-party service, throttling or refusing a request. The literature sections have their own tests; an outage there must not fail a test of something else on the page",
   },
   {
+    pattern: /^Response status \(AlphaFold request\): 5\d\d$/,
+    reason:
+      "AlphaFold, a third-party service, answering a prediction lookup with a server error. The Molecular Structure section has its own tests; an outage there must not fail a test of something else on the page (a 404 is a legitimate 'no model' and is not logged as an error since ot-ui-apps#1199)",
+  },
+  {
     pattern: /^GraphQL Error: /,
     reason: "The app's Apollo error link echo; reported as graphql-error instead",
   },

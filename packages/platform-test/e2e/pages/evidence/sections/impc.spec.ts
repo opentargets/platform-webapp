@@ -68,10 +68,10 @@ test.describe("Evidence page: IMPC", () => {
     const { section, list } = await open(page);
     for (const [index, expected] of list.rows.entries()) {
       await test.step(`row ${index + 1}: ${expected.biologicalModelAllelicComposition}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
         await expect(section.helpIcon(index, IMPC_COLUMN.disease)).toHaveCount(1);
 
@@ -94,7 +94,7 @@ test.describe("Evidence page: IMPC", () => {
           `https://identifiers.org/${expected.biologicalModelId}`
         );
         expect(expected.biologicalModelId).toMatch(/^MGI:\d+$/);
-        expect(expected.target.id).toBe(FGFR3_NEOPLASM_IMPC.ensgId);
+        expect(expected.diseaseId).toMatch(/^[A-Za-z]+_\d+$/);
       });
     }
     await expect(section.cell(0, IMPC_COLUMN.model).locator("sup")).toHaveText(["m1J", "m1J"]);
@@ -140,7 +140,7 @@ test.describe("Evidence page: IMPC", () => {
         IMPC_OPERATION,
         IMPC_LIST,
         list,
-        (row: ImpcRow) => `${row.disease.name}?`,
+        (row: ImpcRow) => `${row.diseaseName}?`,
         IMPC_COLUMN.disease
       );
     });
@@ -217,7 +217,7 @@ test.describe("Evidence page: IMPC", () => {
       "literature",
     ]);
     expect(json.slice(0, list.rows.length).map((row) => row.diseaseId)).toEqual(
-      list.rows.map((row) => row.disease.id)
+      list.rows.map((row) => row.diseaseId)
     );
     expect(json.slice(0, list.rows.length).map((row) => row.literature)).toEqual(
       list.rows.map((row) => row.biologicalModelId)
@@ -234,7 +234,7 @@ test.describe("Evidence page: IMPC", () => {
     page,
   }) => {
     const { section, list } = await open(page);
-    const disease = list.rows[0].disease;
+    const disease = { id: list.rows[0].diseaseId, name: list.rows[0].diseaseName };
     await section.diseaseLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${disease.id}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(disease.name, {

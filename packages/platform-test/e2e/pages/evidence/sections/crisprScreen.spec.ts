@@ -17,15 +17,14 @@ import {
   significance,
 } from "../../../../POM/objects/widgets/Evidence/crisprScreen";
 import {
+  type EvidenceViewsData,
+  evidenceList,
   expectColumnPicker,
   expectExports,
   expectFirstPage,
   expectPageSizes,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
-import {
-  EVIDENCE_PAGE_SIZE,
-  type EvidenceList,
-} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
+import { EVIDENCE_PAGE_SIZE } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
 import { waitForPageOfOperation } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
@@ -51,7 +50,7 @@ test.describe("Evidence page: CRISPR Screens", () => {
     );
     await expect(section.table.headers).toHaveText([...CS_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput, "this table has no search box").toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -130,11 +129,13 @@ test.describe("Evidence page: CRISPR Screens", () => {
       const firstPage = await table.columnTexts(CS_COLUMN.study);
       expect(firstPage).toEqual(list.rows.map((row) => row.studyId));
 
-      const next = waitForPageOfOperation<{
-        disease: Record<string, EvidenceList<CrisprScreenRow>>;
-      }>(page, CS_OPERATION, 1);
+      const next = waitForPageOfOperation<EvidenceViewsData<CrisprScreenRow>>(
+        page,
+        CS_OPERATION,
+        1
+      );
       await table.nextPageButton.click();
-      const second = (await next).disease[CS_LIST];
+      const second = evidenceList(await next, CS_LIST);
       await table.expectPosition(`${EVIDENCE_PAGE_SIZE + 1} - ${total} of ${total}`, {
         canGoBack: true,
         canGoForward: false,
@@ -170,6 +171,46 @@ test.describe("Evidence page: CRISPR Screens", () => {
     await test.step("page sizes", async () => {
       await expectPageSizes(section, list);
     });
+  });
+
+  test("the rows arrive sorted by significance, most significant first", async ({ page }) => {
+    const { section, list } = await openCrisprScreen(page);
+    const scores = list.rows.map((row) => row.resourceScore ?? Number.POSITIVE_INFINITY);
+    expect(scores, "the API sorts by significance, ascending").toEqual(
+      [...scores].sort((a, b) => a - b)
+    );
+    await expect(section.table.column(CS_COLUMN.study)).toHaveText(
+      list.rows.map((row) => row.studyId)
+    );
+  });
+
+  test("the search box filters the rows on the server", async ({ page }) => {
+    const { section, list } = await openCrisprScreen(page);
+    const target = list.rows[0];
+    const term = target.studyId;
+    const response = page.waitForResponse((candidate) => {
+      const post = candidate.request().postData() ?? "";
+      return post.includes(CS_OPERATION) && post.includes(`"text":"${term}"`);
+    });
+    await section.table.search(term);
+    const found = (await (await response).json()).data.disease.evidenceViews[CS_LIST] as {
+      count: number;
+      rows: CrisprScreenRow[];
+    };
+    expect(found.count, "the search narrows the rows").toBeLessThan(list.count);
+    expect(found.rows.map((row) => row.studyId)).toContain(term);
+    await section.table.expectRowCount(found.rows.length);
+    await expect(section.studyLink(0)).toHaveText(found.rows[0].studyId);
+
+    const none = page.waitForResponse((candidate) =>
+      (candidate.request().postData() ?? "").includes("zzz-no-match")
+    );
+    await section.table.search("zzz-no-match");
+    await none;
+    await section.table.expectRowCount(0);
+
+    await section.table.searchInput.fill("");
+    await section.table.expectRowCount(EVIDENCE_PAGE_SIZE);
   });
 
   test("the column picker hides and restores the optional columns and locks the study", async ({

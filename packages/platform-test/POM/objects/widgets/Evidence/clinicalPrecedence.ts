@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { CLINICAL_STAGE_KEYS, CLINICAL_STAGE_LABELS } from "../../../page/drug/drugData";
 import { waitForOperation } from "../shared/sectionDataControls";
+import { type EvidenceViewsData, evidenceList } from "./geneticEvidenceChecks";
 import {
   EVIDENCE_PAGE_SIZE,
   type EvidenceList,
@@ -40,16 +41,17 @@ export const CP_LOCKED = ["Report", "Disease/phenotype", "Targets", "Drug"] as c
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/ClinicalPrecedence). */
 export const CP_OPERATION = "ClinicalPrecedence";
-export const CP_LIST = "clinical_precedence";
+/** The field of `disease.evidenceViews` the query reads. */
+export const CP_LIST = "clinicalPrecedence";
 
 export type ClinicalPrecedenceRow = {
-  disease: { id: string; name: string };
-  target: { id: string; approvedSymbol: string };
-  drug: {
-    id: string;
-    name: string;
-    mechanismsOfAction: { rows: { targets: { id: string; approvedSymbol: string }[] }[] } | null;
-  };
+  diseaseId: string;
+  diseaseName: string;
+  targetId: string;
+  targetApprovedSymbol: string;
+  drugId: string;
+  drugName: string;
+  drugTargetIds: string[];
   directionOnTarget: string | null;
   directionOnTrait: string | null;
   clinicalStage: string;
@@ -84,21 +86,14 @@ export function startYear(studyStartDate: string | null): string {
   return studyStartDate ? String(new Date(studyStartDate).getFullYear()) : "N/A";
 }
 
-/** The other targets of a drug's mechanisms of action, as the Targets column counts them. */
+/** The other targets of a drug, as the Targets column counts them. */
 export function otherTargetIds(row: ClinicalPrecedenceRow): string[] {
-  const others = new Set<string>();
-  for (const mechanism of row.drug.mechanismsOfAction?.rows ?? []) {
-    for (const target of mechanism.targets) if (target.id !== row.target.id) others.add(target.id);
-  }
-  return [...others];
+  return [...new Set(row.drugTargetIds.filter((id) => id !== row.targetId))];
 }
 
 /** The text of the Targets cell: the target's symbol, then how many other targets the drug hits. */
 export function targetsText(row: ClinicalPrecedenceRow): string {
-  const symbol =
-    row.drug.mechanismsOfAction?.rows
-      .flatMap((mechanism) => mechanism.targets)
-      .find((target) => target.id === row.target.id)?.approvedSymbol ?? row.target.approvedSymbol;
+  const symbol = row.targetApprovedSymbol;
   const others = otherTargetIds(row).length;
   return others > 0 ? `${symbol} and ${others} other target${others > 1 ? "s" : ""}` : symbol;
 }
@@ -192,9 +187,7 @@ export async function openClinicalPrecedence(
   pair: EvidencePair = BRAF_MELANOMA
 ): Promise<{ section: ClinicalPrecedenceSection; list: EvidenceList<ClinicalPrecedenceRow> }> {
   const section = new ClinicalPrecedenceSection(page);
-  const response = waitForOperation<{
-    disease: Record<string, EvidenceList<ClinicalPrecedenceRow>>;
-  }>(page, CP_OPERATION);
+  const response = waitForOperation<EvidenceViewsData<ClinicalPrecedenceRow>>(page, CP_OPERATION);
   await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
   const { data, variables } = await response;
   expect(variables, "the section asks for the first page of its target and disease").toMatchObject({
@@ -204,7 +197,7 @@ export async function openClinicalPrecedence(
     size: EVIDENCE_PAGE_SIZE,
   });
   await section.expectLoaded();
-  const list = data.disease[CP_LIST];
+  const list = evidenceList(data, CP_LIST);
   expect(list.count, "the API has clinical precedence for this pair").toBeGreaterThan(0);
   expect(list.rows.length).toBe(Math.min(list.count, EVIDENCE_PAGE_SIZE));
   return { section, list };

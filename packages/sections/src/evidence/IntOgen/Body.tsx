@@ -7,6 +7,7 @@ import {
   Tooltip,
   ScientificNotation,
   OtTableServer,
+  type OtTableColumn,
   Box,
   List,
   ListItem,
@@ -17,19 +18,83 @@ import { definition } from ".";
 import methods from "./methods";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
-import INTOGEN_QUERY from "./sectionQuery.gql";
-import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import {
+  dataTypesMap,
+  naLabel,
+  type EvidenceBodyProps,
+  type EvidenceIntogen,
+  type EvidenceIntogenMutatedSamples,
+  type EvidenceIntogenSort,
+  EvidenceIntogenSortField,
+  type EvidenceIntogenSearch,
+  EvidenceIntogenSearchField,
+  SortDirection,
+} from "@ot/constants";
+import { typedDocument } from "../../utils/typedDocument";
+import INTOGEN_QUERY_DOCUMENT from "./sectionQuery.gql";
 
-const intOgenUrl = (id, approvedSymbol) =>
+type IntOgenRow = Pick<
+  EvidenceIntogen,
+  | "diseaseId"
+  | "diseaseName"
+  | "diseaseFromSource"
+  | "targetApprovedSymbol"
+  | "mutatedSamples"
+  | "resourceScore"
+  | "significantDriverMethods"
+  | "cohortId"
+  | "cohortShortName"
+  | "cohortDescription"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { intogen: { count: number; rows: IntOgenRow[] } };
+  } | null;
+  target?: {
+    id: string;
+    hallmarks: { attributes: { description: string; pmid?: number | null; name: string }[] };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceIntogenSort[];
+  search?: EvidenceIntogenSearch;
+};
+
+const INTOGEN_QUERY = typedDocument<QueryData, QueryVariables>(INTOGEN_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+// production sorted this table by the combined p-value, ascending
+const DEFAULT_SORT = {
+  id: "resourceScore",
+  field: EvidenceIntogenSortField.PValue,
+  desc: false,
+};
+
+const driverMethods: Record<string, { description: string } | undefined> = methods;
+
+const intOgenUrl = (id: string, approvedSymbol: string) =>
   `https://www.intogen.org/search?gene=${approvedSymbol}&cohort=${id}`;
 
-const samplePercent = item => (item.numberMutatedSamples / item.numberSamplesTested) * 100;
+const samplePercent = (item: EvidenceIntogenMutatedSamples) =>
+  ((item.numberMutatedSamples ?? 0) / (item.numberSamplesTested ?? 1)) * 100;
 
-const columns = [
+const columns: OtTableColumn<IntOgenRow>[] = [
   {
-    id: "disease",
+    id: "diseaseName",
     label: "Disease/phenotype",
-    renderCell: ({ disease, diseaseFromSource }) => (
+    // Attach the IntOGen search fields to the first column.
+    searchFields: [
+      EvidenceIntogenSearchField.DiseaseName,
+      EvidenceIntogenSearchField.CohortShortName,
+      EvidenceIntogenSearchField.CohortDescription,
+    ],
+    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -37,26 +102,25 @@ const columns = [
               Reported disease or phenotype:
             </Typography>
             <Typography variant="caption" display="block" align="center">
-              {sentenceCase(diseaseFromSource)}
+              {sentenceCase(diseaseFromSource ?? "")}
             </Typography>
           </>
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          {disease.name}
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          {diseaseName}
         </Link>
       </Tooltip>
     ),
-    filterValue: ({ disease, diseaseFromSource }) => [disease.name, diseaseFromSource].join(),
   },
   {
     id: "mutatedSamples",
-    propertyPath: "mutatedSamples.numberMutatedSamples",
     label: "Mutated / Total samples",
     renderCell: ({ mutatedSamples }) => (
       <List style={{ padding: 0 }}>
         {mutatedSamples
+          .slice()
           .sort((a, b) => samplePercent(b) - samplePercent(a))
           .map(item => {
             const percent = samplePercent(item);
@@ -72,6 +136,10 @@ const columns = [
           })}
       </List>
     ),
+    exportValue: ({ mutatedSamples }) =>
+      mutatedSamples
+        .map(item => `${item.numberMutatedSamples}/${item.numberSamplesTested}`)
+        .join(", "),
   },
   {
     id: "resourceScore",
@@ -91,7 +159,9 @@ const columns = [
       </>
     ),
     numeric: true,
-    renderCell: ({ resourceScore }) => <ScientificNotation number={resourceScore} />,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ resourceScore }) =>
+      resourceScore != null ? <ScientificNotation number={resourceScore} /> : naLabel,
   },
   {
     id: "significantDriverMethods",
@@ -109,26 +179,26 @@ const columns = [
       </>
     ),
     renderCell: ({ significantDriverMethods }) =>
-      significantDriverMethods ? (
+      significantDriverMethods.length > 0 ? (
         <ChipList
           items={significantDriverMethods.map(am => ({
             label: am,
-            tooltip: (methods[am] || {}).description,
+            tooltip: driverMethods[am]?.description,
           }))}
         />
       ) : (
         naLabel
       ),
-    filterValue: ({ significantDriverMethods }) => significantDriverMethods.map(am => am).join(),
+    exportValue: ({ significantDriverMethods }) => significantDriverMethods.join(", "),
   },
   {
     id: "cohortShortName",
     label: "Cohort Information",
     enableHiding: false,
-    renderCell: ({ cohortId, cohortShortName, cohortDescription, target: { approvedSymbol } }) =>
+    renderCell: ({ cohortId, cohortShortName, cohortDescription, targetApprovedSymbol }) =>
       cohortShortName && cohortDescription ? (
         <>
-          <Link external to={intOgenUrl(cohortId, approvedSymbol)}>
+          <Link external to={intOgenUrl(cohortId ?? "", targetApprovedSymbol)}>
             {cohortShortName}
           </Link>{" "}
           {cohortDescription}
@@ -136,23 +206,29 @@ const columns = [
       ) : (
         naLabel
       ),
-    filterValue: ({ cohortShortName, cohortDescription }) =>
+    exportValue: ({ cohortShortName, cohortDescription }) =>
       `${cohortShortName} ${cohortDescription}`,
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(INTOGEN_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   return (
@@ -163,13 +239,14 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => {
+        const attributes = request.data?.target?.hallmarks.attributes ?? [];
         const roleInCancerItems =
-          request.data?.target.hallmarks && request.data?.target.hallmarks.attributes.length > 0
-            ? request.data?.target.hallmarks.attributes
+          attributes.length > 0
+            ? attributes
                 .filter(attribute => attribute.name === "role in cancer")
                 .map(attribute => ({
                   label: attribute.description,
-                  url: epmcUrl(attribute.pmid),
+                  url: epmcUrl(String(attribute.pmid)),
                 }))
             : [{ label: "Unknown" }];
 
@@ -184,14 +261,15 @@ function Body({ id, label, entity }: Props) {
               </Typography>
               <ChipList items={roleInCancerItems} />
             </Box>
-            <OtTableServer
+            <OtTableServer<IntOgenRow>
               query={INTOGEN_QUERY}
               columns={columns}
               dataDownloader
               dataDownloaderFileStem={`intOGen-${ensgId}-${efoId}`}
-              dataPath="disease.intOgen"
+              dataPath="disease.evidenceViews.intogen"
               pageSize={PAGE_SIZE}
-              showGlobalFilter={false}
+              sortBy={DEFAULT_SORT.id}
+              order={DEFAULT_SORT.desc ? "desc" : "asc"}
               variables={variables}
             />
           </>

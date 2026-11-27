@@ -29,10 +29,13 @@ type Pair = { ensgId: string; efoId: string };
 async function open(page: Page, pair: Pair) {
   const response = waitForOperation<EvidenceGwasData>(page, EVIDENCE_GWAS_OPERATION);
   await new EvidencePage(page).goto(pair.ensgId, pair.efoId);
-  const { data } = await response;
+  const { data, variables } = await response;
+  expect(variables.sort, "the first page is sorted by L2G score, highest first").toEqual([
+    { key: "SCORE", direction: "DESCENDING" },
+  ]);
   const section = new EvidenceGwasCredibleSetsSection(page);
   await expectSectionLoaded(page, EvidenceGwasCredibleSetsSection.id);
-  return { section, data, evidences: data.disease.gwasCredibleSets };
+  return { section, data, evidences: data.disease.evidenceViews.gwasCredibleSets };
 }
 
 const NA = "N/A";
@@ -59,47 +62,42 @@ async function expectRow(
   index: number,
   row: EvidenceGwasRow
 ) {
-  const { credibleSet, disease } = row;
   await expect(section.credibleSetLink(index)).toHaveText("View");
   await expect(section.credibleSetLink(index)).toHaveAttribute(
     "href",
-    `/credible-set/${credibleSet.credibleSetId}`
+    `/credible-set/${row.credibleSetId}`
   );
-  if (credibleSet.leadVariant) {
+  if (row.leadVariantId) {
     await expect(section.leadVariantLink(index)).toHaveAttribute(
       "href",
-      `/variant/${credibleSet.leadVariant.variantId}`
+      `/variant/${row.leadVariantId}`
     );
   } else {
     await expect(section.cell(index, "leadVariant")).toHaveText(NA);
   }
-  await expect(section.cell(index, "trait")).toHaveText(credibleSet.study.traitFromSource ?? "");
-  await expect(section.diseaseLink(index)).toHaveText(disease.name);
-  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${disease.id}`);
-  await expect(section.studyLink(index)).toHaveText(credibleSet.study.id);
-  await expect(section.studyLink(index)).toHaveAttribute("href", `/study/${credibleSet.study.id}`);
+  await expect(section.cell(index, "trait")).toHaveText(row.traitFromSource ?? "");
+  await expect(section.diseaseLink(index)).toHaveText(row.diseaseName);
+  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.diseaseId}`);
+  await expect(section.studyLink(index)).toHaveText(row.studyId);
+  await expect(section.studyLink(index)).toHaveAttribute("href", `/study/${row.studyId}`);
   await expect(section.cell(index, "sampleSize")).toHaveText(
-    credibleSet.study.nSamples ? credibleSet.study.nSamples.toLocaleString("en-US") : NA
+    row.nSamples ? row.nSamples.toLocaleString("en-US") : NA
   );
   await expect(section.cell(index, "pValue")).toHaveText(
-    scientific(credibleSet.leadPValueMantissa, credibleSet.leadPValueExponent)
+    scientific(row.pValueMantissa, row.pValueExponent)
   );
-  await expect(section.cell(index, "beta")).toHaveText(
-    credibleSet.leadBeta ? credibleSet.leadBeta.toFixed(3) : NA
-  );
-  if (credibleSet.confidence) {
+  await expect(section.cell(index, "beta")).toHaveText(row.beta ? row.beta.toFixed(3) : NA);
+  if (row.confidence) {
     await expect(section.stars(index)).toHaveCount(4);
-    await expect(section.filledStars(index)).toHaveCount(credibleSet.confidence);
+    await expect(section.filledStars(index)).toHaveCount(row.confidence);
   } else {
     await expect(section.cell(index, "confidence")).toHaveText(NA);
   }
   await expect(section.cell(index, "method")).toHaveText(
-    credibleSet.fineMappingMethod
-      ? (METHOD_LABELS[credibleSet.fineMappingMethod] ?? credibleSet.fineMappingMethod)
-      : NA
+    row.fineMappingMethod ? (METHOD_LABELS[row.fineMappingMethod] ?? row.fineMappingMethod) : NA
   );
   await expect(section.cell(index, "l2gScore")).toHaveText(row.score ? row.score.toFixed(3) : NA);
-  const { publicationFirstAuthor, publicationDate } = credibleSet.study;
+  const { publicationFirstAuthor, publicationDate } = row;
   await expect(section.cell(index, "publication")).toHaveText(
     publicationFirstAuthor
       ? `${publicationFirstAuthor} et al. (${new Date(publicationDate as string).getFullYear()})`
@@ -154,10 +152,35 @@ test.describe("Evidence page: GWAS credible sets", () => {
         canGoBack: false,
         canGoForward: false,
       });
-      await expect(section.table.searchInput).toHaveCount(0);
+      await expect(section.table.searchInput).toBeVisible();
       await expect(section.table.pageSizeSelect).toHaveValue("10");
       await expect(section.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
     });
+  });
+
+  test("the search box filters the credible sets on the server and shows the matches", async ({
+    page,
+  }) => {
+    const { section, evidences } = await open(page, MANY);
+    await expect(section.table.searchInput).toBeVisible();
+    const term = evidences.rows[0].studyId;
+
+    const searched = page.waitForResponse((response) => {
+      const body = response.request().postData() ?? "";
+      return body.includes(EVIDENCE_GWAS_OPERATION) && body.includes(`"text":"${term}"`);
+    });
+    await section.table.search(term);
+    const body = (await (await searched).json()) as { data: EvidenceGwasData };
+    const found = body.data.disease.evidenceViews.gwasCredibleSets;
+    expect(found.count, "the search narrows the credible sets").toBeLessThan(evidences.count);
+    expect(found.count).toBeGreaterThan(0);
+    expect(found.rows.every((row) => row.studyId === term)).toBe(true);
+
+    await section.table.expectRowCount(Math.min(found.count, EVIDENCE_GWAS_PAGE_SIZE));
+    await expect(section.table.position).toHaveText(
+      `1 - ${Math.min(found.count, EVIDENCE_GWAS_PAGE_SIZE)} of ${found.count}`
+    );
+    for (const [index, row] of found.rows.entries()) await expectRow(section, index, row);
   });
 
   test("the header tooltips explain the fine-mapping confidence and the L2G score", async ({
@@ -189,7 +212,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
   }) => {
     const { section, evidences } = await open(page, FEW);
     // Rows with different confidences show different numbers of filled stars.
-    const levels = new Set(evidences.rows.map((row) => row.credibleSet.confidence));
+    const levels = new Set(evidences.rows.map((row) => row.confidence));
     expect(
       levels.size,
       "the pair has credible sets of more than one confidence level"
@@ -198,7 +221,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
     for (const [index, row] of evidences.rows.entries()) {
       await section.stars(index).first().hover();
       await expect(page.getByRole("tooltip")).toHaveText(
-        CONFIDENCE_LABELS[row.credibleSet.confidence as number]
+        CONFIDENCE_LABELS[row.confidence as number]
       );
       await page.mouse.move(0, 0);
       await expect(page.getByRole("tooltip")).toBeHidden();
@@ -207,7 +230,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
   test("the View link opens the credible set page of that row", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
-    const { credibleSetId } = evidences.rows[0].credibleSet;
+    const { credibleSetId } = evidences.rows[0];
     await section.credibleSetLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/credible-set/${credibleSetId}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
@@ -215,7 +238,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
   test("the study link opens the study page of that row", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
-    const { id } = evidences.rows[0].credibleSet.study;
+    const { studyId: id } = evidences.rows[0];
     await section.studyLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/study/${id}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
@@ -225,7 +248,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
     page,
   }) => {
     const { section, evidences } = await open(page, FEW);
-    const { id } = evidences.rows[0].disease;
+    const { diseaseId: id } = evidences.rows[0];
     await section.diseaseLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${id}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
@@ -238,7 +261,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
   test("the lead variant link opens the variant page", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
-    const variantId = evidences.rows[0].credibleSet.leadVariant?.variantId;
+    const variantId = evidences.rows[0].leadVariantId;
     expect(variantId, "the first credible set has a lead variant").toBeTruthy();
     await section.leadVariantLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/variant/${variantId}$`));
@@ -269,7 +292,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
   test("the publication cell opens a drawer with the study's publication", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
-    const pubmedId = evidences.rows[0].credibleSet.study.pubmedId as string;
+    const pubmedId = evidences.rows[0].pubmedId as string;
     expect(pubmedId, "the first study has a PubMed id").toBeTruthy();
 
     await section.publicationTrigger(0).click();
@@ -389,15 +412,15 @@ test.describe("Evidence page: GWAS credible sets", () => {
     expect(json.rows).toHaveLength(evidences.count);
     const exported = JSON.stringify(json.rows);
     for (const row of evidences.rows) {
-      expect(exported).toContain(row.credibleSet.credibleSetId);
-      expect(exported).toContain(row.credibleSet.study.id);
+      expect(exported).toContain(row.credibleSetId);
+      expect(exported).toContain(row.studyId);
     }
 
     const tsv = await section.controls.downloadTsv();
     expect(tsv.filename).toBe(`${stem}.tsv`);
     expect(tsv.header).toEqual(expect.arrayContaining(["credibleSet", "study", "pValue"]));
     expect(tsv.lines.filter((line) => line.join("").length > 0)).toHaveLength(evidences.count);
-    expect(tsv.lines.flat()).toContain(evidences.rows[0].credibleSet.credibleSetId);
+    expect(tsv.lines.flat()).toContain(evidences.rows[0].credibleSetId);
   });
 
   test("the API query drawer is loaded with the section's query and target", async ({ page }) => {

@@ -32,7 +32,7 @@ async function open(page: Page, pair: Pair) {
   const { data } = await response;
   const section = new EvidenceEvaSection(page);
   await expectSectionLoaded(page, EvidenceEvaSection.id);
-  return { section, data, evidences: data.disease.eva };
+  return { section, data, evidences: data.disease.evidenceViews.eva };
 }
 
 const NA = "N/A";
@@ -59,12 +59,12 @@ const effectLabel = (value: string | null) =>
 
 /** Assert the cells of one rendered row against the API record it was built from. */
 async function expectRow(section: EvidenceEvaSection, index: number, row: EvidenceEvaRow) {
-  await expect(section.diseaseLink(index)).toHaveText(row.disease.name);
-  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.disease.id}`);
+  await expect(section.diseaseLink(index)).toHaveText(row.diseaseName);
+  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.diseaseId}`);
 
-  if (row.variant) {
-    await expect(section.variantLink(index)).toHaveAttribute("href", `/variant/${row.variant.id}`);
-    await expect(section.variantLink(index)).toContainText(String(row.variant.position));
+  if (row.variantId) {
+    await expect(section.variantLink(index)).toHaveAttribute("href", `/variant/${row.variantId}`);
+    await expect(section.variantLink(index)).toContainText(String(row.variantPosition));
   } else {
     await expect(section.cell(index, "variant")).toHaveText(NA);
   }
@@ -79,7 +79,7 @@ async function expectRow(section: EvidenceEvaSection, index: number, row: Eviden
     await expect(section.cell(index, "rsId")).toHaveText(NA);
   }
 
-  await expect(section.cell(index, "hgvs")).toHaveText(row.variant?.hgvsId ?? NA);
+  await expect(section.cell(index, "hgvs")).toHaveText(row.variantHgvsId ?? NA);
 
   if (row.studyId) {
     await expect(section.clinvarLink(index)).toHaveText(row.studyId);
@@ -91,10 +91,10 @@ async function expectRow(section: EvidenceEvaSection, index: number, row: Eviden
     await expect(section.cell(index, "clinvarId")).toHaveText(NA);
   }
 
-  if (row.variantFunctionalConsequence) {
+  if (row.variantFunctionalConsequenceId) {
     await expect(
       section.cell(index, "consequence").getByTestId("label-chip-value").first()
-    ).toHaveText(sentence(row.variantFunctionalConsequence.label));
+    ).toHaveText(sentence(row.variantFunctionalConsequenceLabel as string));
   } else {
     await expect(section.cell(index, "consequence")).toHaveText(NA);
   }
@@ -113,6 +113,8 @@ async function expectRow(section: EvidenceEvaSection, index: number, row: Eviden
 
   await expect(section.stars(index)).toHaveCount(4);
   await expect(section.filledStars(index)).toHaveCount(STARS[row.confidence ?? ""] ?? 0);
+
+  await expect(section.cell(index, "score")).toHaveText(row.score.toFixed(2));
 
   const literature = (row.literature ?? []).filter((id) => id !== "NA");
   if (literature.length === 0) {
@@ -143,7 +145,7 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
 
     await test.step("title and description name the target and the disease", async () => {
       await expect(section.title).toContainText("ClinVar");
-      await expect(section.title).toContainText("Genetic associations");
+      await expect(section.title).toContainText("Genetic association");
       await expect(section.description).toHaveText(
         "Germline variation associated with BRAF on patients affected by melanoma. Source: EVA"
       );
@@ -224,11 +226,14 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
   }) => {
     const { section, evidences } = await open(page, MANY);
     const missense = evidences.rows.findIndex(
-      (row) => row.variantFunctionalConsequence?.id === "SO:0001583"
+      (row) => row.variantFunctionalConsequenceId === "SO_0001583"
     );
     expect(missense, "the first page holds a missense record").toBeGreaterThanOrEqual(0);
     const row = evidences.rows[missense];
-    const { chromosome, position, referenceAllele, alternateAllele } = row.variant!;
+    const chromosome = row.variantChromosome;
+    const position = row.variantPosition;
+    const referenceAllele = row.variantReferenceAllele;
+    const alternateAllele = row.variantAlternateAllele;
     const cell = section.cell(missense, "consequence");
 
     const vep = cell.locator("a").filter({ hasText: "VEP" });
@@ -299,7 +304,7 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
 
   test("the variant link opens the variant page", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
-    const variantId = evidences.rows[0].variant!.id;
+    const variantId = evidences.rows[0].variantId;
     await section.variantLink(0).click();
     await expect(page).toHaveURL(new RegExp(`/variant/${variantId}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
@@ -308,7 +313,7 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
   test("the disease link opens the disease page", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
     await section.diseaseLink(0).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${evidences.rows[0].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${evidences.rows[0].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
   });
 
@@ -446,13 +451,13 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     expect(json.filename).toBe("eva-evidence.json");
     expect(json.rows).toHaveLength(evidences.count);
     expect(json.rows.map((row) => row.variantId)).toEqual(
-      evidences.rows.map((row) => row.variant!.id)
+      evidences.rows.map((row) => row.variantId)
     );
     expect(json.rows.map((row) => row.variantRsId)).toEqual(
       evidences.rows.map((row) => row.variantRsId)
     );
     expect(json.rows.map((row) => row.diseaseId)).toEqual(
-      evidences.rows.map((row) => row.disease.id)
+      evidences.rows.map((row) => row.diseaseId)
     );
     expect(json.rows.map((row) => row.reviewStatus)).toEqual(
       evidences.rows.map((row) => row.confidence)
@@ -466,14 +471,14 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     expect(tsv.header).toEqual(columns);
     const lines = tsv.lines.filter((line) => line.join("").length > 0);
     expect(lines).toHaveLength(evidences.count);
-    expect(lines.map((line) => line[2])).toEqual(evidences.rows.map((row) => row.variant!.id));
+    expect(lines.map((line) => line[2])).toEqual(evidences.rows.map((row) => row.variantId));
   });
 
   test("the export carries the HGVS id of every variant", async ({ page }) => {
     const { section, evidences } = await open(page, FEW);
     const json = await section.controls.downloadJson();
     expect(json.rows.map((row) => row.variantHgvsId)).toEqual(
-      evidences.rows.map((row) => row.variant!.hgvsId)
+      evidences.rows.map((row) => row.variantHgvsId)
     );
   });
 

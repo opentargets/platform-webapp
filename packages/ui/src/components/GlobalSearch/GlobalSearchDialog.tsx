@@ -43,7 +43,7 @@ function GlobalSearchDialog() {
       // ends up on the Paper slot internally regardless of which path sets
       // it, so overriding it via slotProps.paper reaches the same DOM
       // element without going through Dialog's own restricted prop.
-      slotProps={{ paper: { role: "searchbox", "data-testid": "global-search-dialog" } }}
+      slotProps={{ paper: { role: "searchbox", ...{ "data-testid": "global-search-dialog" } } }}
       sx={{
         "& .MuiDialog-container": {
           alignItems: "start",

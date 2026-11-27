@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { GeneticEvidenceSection } from "./geneticEvidenceSection";
 
-/** Columns of the Gene2Phenotype table, in order. "Direction of Effect" carries a help icon. */
+/** Columns of the Gene2Phenotype table, in order. "Direction of Effect" and "Score" carry a help icon. */
 export const G2P_HEADERS = [
   "Disease/phenotype",
   "Functional consequence",
@@ -9,6 +9,7 @@ export const G2P_HEADERS = [
   "Allelic requirement",
   "Panel",
   "Confidence category",
+  "Score?",
   "Literature",
 ] as const;
 export const G2P_COLUMN = {
@@ -18,22 +19,26 @@ export const G2P_COLUMN = {
   allelic: 3,
   panel: 4,
   confidence: 5,
-  literature: 6,
+  score: 6,
+  literature: 7,
 } as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/Gene2Phenotype). */
 export const G2P_OPERATION = "OpenTargetsGeneticsQuery";
+/** The field of `disease.evidenceViews` that holds the rows. */
 export const G2P_LIST = "gene2Phenotype";
 
 export type G2pRow = {
-  id: string;
-  disease: { id: string; name: string };
+  score: number;
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string | null;
   allelicRequirements: string[] | null;
   confidence: string | null;
   studyId: string | null;
   targetFromSourceId: string | null;
-  variantFunctionalConsequence: { id: string; label: string } | null;
+  variantFunctionalConsequenceId: string | null;
+  variantFunctionalConsequenceLabel: string | null;
   literature: string[] | null;
   directionOnTarget: string | null;
   directionOnTrait: string | null;

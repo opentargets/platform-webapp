@@ -7,9 +7,11 @@ import {
   expectExports,
   expectFirstPage,
   expectPageSizes,
-  openEvidenceSection,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import {
+  EVIDENCE_PAGE_SIZE,
+  type EvidenceList,
+  type EvidencePair,
   GeneticEvidenceSection,
   MECP2_LUBS,
   MECP2_NDD,
@@ -23,19 +25,38 @@ import {
   type OrphanetRow,
   OrphanetSection,
 } from "../../../../POM/objects/widgets/Evidence/orphanet";
-import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
+import {
+  stubEuropePmc,
+  waitForOperation,
+} from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
 
-/** MECP2 in neurodevelopmental disorder: five Orphanet rows, one page. */
-async function open(page: Page, pair = MECP2_NDD) {
+/**
+ * MECP2 in neurodevelopmental disorder: five Orphanet rows, one page.
+ *
+ * The Orphanet section has not moved to `evidenceViews` yet (its query still reads the
+ * `orphanetSummary` alias of `disease.evidences`), so it cannot use the shared
+ * `openEvidenceSection`, which reads `data.disease.evidenceViews`.
+ */
+async function open(page: Page, pair: EvidencePair = MECP2_NDD) {
   const section = new OrphanetSection(page);
-  const list = await openEvidenceSection<OrphanetRow>(
-    page,
-    section,
-    ORPHANET_OPERATION,
-    ORPHANET_LIST,
-    pair
-  );
+  await stubEuropePmc(page);
+  const response = waitForOperation<{
+    disease: Record<string, EvidenceList<OrphanetRow> | undefined>;
+  }>(page, ORPHANET_OPERATION);
+  await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
+  const { data, variables } = await response;
+  expect(variables, "the section asks for the first page of its target and disease").toMatchObject({
+    ensemblId: pair.ensgId,
+    efoId: pair.efoId,
+    index: 0,
+    size: EVIDENCE_PAGE_SIZE,
+  });
+  await section.expectLoaded();
+  const list = data.disease[ORPHANET_LIST] as EvidenceList<OrphanetRow>;
+  expect(list, `the response holds disease.${ORPHANET_LIST}`).toBeDefined();
+  expect(list.count, "the API has evidence for this pair").toBeGreaterThan(0);
+  expect(list.rows.length).toBe(Math.min(list.count, EVIDENCE_PAGE_SIZE));
   return { section, list };
 }
 

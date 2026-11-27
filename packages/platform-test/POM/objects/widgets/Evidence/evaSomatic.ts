@@ -29,13 +29,12 @@ export const EVA_SOMATIC_HEADERS = [
 export const EVA_SOMATIC_OPERATION = "EvaSomaticQuery";
 
 export type EvaSomaticRow = {
-  disease: { id: string; name: string };
-  variant: {
-    id: string;
-    hgvsId: string | null;
-    referenceAllele: string;
-    alternateAllele: string;
-  } | null;
+  diseaseId: string;
+  diseaseName: string;
+  variantId: string | null;
+  variantHgvsId: string | null;
+  variantReferenceAllele: string | null;
+  variantAlternateAllele: string | null;
   directionOnTarget: string | null;
   directionOnTrait: string | null;
   diseaseFromSource: string;

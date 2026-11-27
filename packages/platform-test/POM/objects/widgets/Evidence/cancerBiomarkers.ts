@@ -1,4 +1,5 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import type { EvidenceViewsData } from "./geneticEvidenceChecks";
 import { SomaticEvidenceSection } from "./somaticEvidenceSection";
 
 export const BIOMARKERS_HEADERS = [
@@ -19,26 +20,60 @@ export const BIOMARKERS_COLUMN = {
 } as const;
 /** GraphQL operation behind the section (packages/sections/src/evidence/CancerBiomarkers). */
 export const BIOMARKERS_OPERATION = "CancerBiomarkersQuery";
+/** The field of `disease.evidenceViews` the query reads. */
+export const BIOMARKERS_LIST = "cancerBiomarkers";
 
 export type BiomarkerRow = {
-  disease: { id: string; name: string };
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string;
   biomarkerName: string;
-  biomarkers: {
-    geneticVariation: {
-      geneticVariationId: string | null;
-      name: string;
-      functionalConsequenceId: { id: string; label: string } | null;
-    }[];
-    geneExpression: { name: string; id: { id: string; label: string } }[];
-  };
+  biomarkerGeneticVariations: {
+    id: string | null;
+    name: string;
+    functionalConsequenceId: string | null;
+    functionalConsequenceLabel: string | null;
+  }[];
+  biomarkerGeneExpressions: { id: string | null; name: string; label: string | null }[];
   drugFromSource: string;
-  drug: { id: string; name: string } | null;
-  drugResponse: { id: string; name: string } | null;
+  drugId: string | null;
+  drugName: string | null;
+  drugResponseId: string | null;
+  drugResponseName: string | null;
   confidence: string;
   literature: string[];
   urls: { niceName: string; url: string }[];
 };
+
+type SentVariables = { search?: { text?: string } };
+
+/**
+ * Wait for the Cancer Biomarkers response whose request variables match, and return its
+ * data. Start it before the typing that sends the request.
+ */
+export async function waitForBiomarkersRequest(
+  page: Page,
+  matches: (variables: SentVariables) => boolean
+): Promise<EvidenceViewsData<BiomarkerRow>> {
+  const response = await page.waitForResponse(
+    (candidate) => {
+      const request = candidate.request();
+      if (request.method() !== "POST") return false;
+      const body = request.postDataJSON?.() as {
+        operationName?: string;
+        variables?: SentVariables;
+      } | null;
+      return body?.operationName === BIOMARKERS_OPERATION && matches(body.variables ?? {});
+    },
+    { timeout: 60_000 }
+  );
+  const body = (await response.json()) as {
+    data: EvidenceViewsData<BiomarkerRow>;
+    errors?: unknown[];
+  };
+  expect(body.errors, `${BIOMARKERS_OPERATION} should not return GraphQL errors`).toBeUndefined();
+  return body.data;
+}
 
 /** Evidence page > Cancer Biomarkers (section id "cancer_biomarkers"). */
 export class CancerBiomarkersSection extends SomaticEvidenceSection {

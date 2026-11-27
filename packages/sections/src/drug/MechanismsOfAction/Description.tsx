@@ -34,6 +34,10 @@ function Description({ name, parentMolecule, childMolecules }: Props) {
       <Link to="https://www.ebi.ac.uk/chembl/" external>
         ChEMBL
       </Link>
+      ,{" "}
+      <Link to="https://www.opentargets.org/" external>
+        Open Targets
+      </Link>
     </>
   );
 }

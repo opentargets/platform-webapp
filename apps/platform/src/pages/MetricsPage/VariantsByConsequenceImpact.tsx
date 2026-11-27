@@ -6,7 +6,7 @@ import { DIVERGENT_SCHEME_RED_GREEN, PREDICTED_CONSEQUENCE_LOOKUP } from "@ot/co
 import { ObsPlot } from "ui";
 import type { MetricRow } from "./MetricsPage";
 
-const MIN_COUNT = 10;
+const MIN_COUNT = 1;
 const INITIAL_ROW_COUNT = 12;
 const ROW_HEIGHT = 23;
 const AXIS_HEIGHT = 32;

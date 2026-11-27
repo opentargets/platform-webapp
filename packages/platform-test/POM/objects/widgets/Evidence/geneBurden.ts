@@ -42,10 +42,12 @@ export const EVIDENCE_GENE_BURDEN_OPERATION = "GeneBurdenQuery";
 export const EVIDENCE_GENE_BURDEN_PAGE_SIZE = 10;
 
 export type EvidenceGeneBurdenRow = {
-  disease: { id: string; name: string };
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string | null;
-  target: { id: string; approvedSymbol: string };
-  urls: { url: string }[] | null;
+  targetId: string;
+  targetFromSourceId: string | null;
+  urls: string[] | null;
   directionOnTarget: string | null;
   directionOnTrait: string | null;
   allelicRequirements: string[] | null;
@@ -69,12 +71,15 @@ export type EvidenceGeneBurdenRow = {
   literature: string[] | null;
 };
 export type EvidenceGeneBurdenData = {
-  disease: { id: string; geneBurdenSummary: { count: number; rows: EvidenceGeneBurdenRow[] } };
+  disease: {
+    id: string;
+    evidenceViews: { geneBurden: { count: number; rows: EvidenceGeneBurdenRow[] } };
+  };
 };
 
 /**
  * Evidence page > Gene Burden (section id "gene-burden"): a server-paginated table of gene
- * burden test results for the target and the disease. No search box, no sorting.
+ * burden test results for the target and the disease, with a search box and server-side sorting.
  */
 export class EvidenceGeneBurdenSection {
   static readonly id = "gene-burden";

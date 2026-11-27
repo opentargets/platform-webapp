@@ -1,25 +1,25 @@
 query GWASColocQuery {
-  credibleSet(studyLocusId: "118db6d05cf67fe7668ee7bac1170fd3") {
+  credibleSet(credibleSetId: "062bf4308e4cbbcac87bde4ee0b58df0") {
     colocalisation(filter: { studyTypes: [gwas] }) {
       count
       rows {
-        otherStudyLocus {
-          studyLocusId
+        otherCredibleSet {
+          credibleSetId
           study {
             id
             projectId
             traitFromSource
             publicationFirstAuthor
           }
-          variant {
+          leadVariant {
             variantId
             chromosome
             position
             referenceAllele
             alternateAllele
           }
-          pValueMantissa
-          pValueExponent
+          leadPValueMantissa
+          leadPValueExponent
         }
         numberColocalisingVariants
         colocalisationMethod

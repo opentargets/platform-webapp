@@ -18,7 +18,9 @@ import {
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSectionLoaded } from "../../../../utils/sections";
 
-type Data = RoleInCancer & { disease: { eva_somatic: EvidenceList<EvaSomaticRow> } };
+type Data = RoleInCancer & {
+  disease: { evidenceViews: { evaSomatic: EvidenceList<EvaSomaticRow> } };
+};
 
 const sentence = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ").toLowerCase();
@@ -29,7 +31,7 @@ async function open(page: Page) {
   const { data } = await response;
   const section = new EvaSomaticSection(page);
   await section.expectLoaded();
-  const list = data.disease.eva_somatic;
+  const list = data.disease.evidenceViews.evaSomatic;
   expect(list.count, "BRAF in melanoma has ClinVar somatic records").toBeGreaterThan(0);
   expect(list.rows.length, "the first page holds a record").toBeGreaterThan(0);
   return { section, data, list, row: list.rows[0] };
@@ -75,16 +77,15 @@ test.describe("Evidence page: EVA somatic", () => {
   }) => {
     const { section, list, row } = await open(page);
     await expect(section.table.rows).toHaveCount(list.rows.length);
-    const variant = row.variant;
-    expect(variant, "the record has a variant").not.toBeNull();
+    expect(row.variantId, "the record has a variant").not.toBeNull();
 
     await test.step("disease", async () => {
-      await expect(section.diseaseLink(0)).toHaveText(row.disease.name);
-      await expect(section.diseaseLink(0)).toHaveAttribute("href", `/disease/${row.disease.id}`);
+      await expect(section.diseaseLink(0)).toHaveText(row.diseaseName);
+      await expect(section.diseaseLink(0)).toHaveAttribute("href", `/disease/${row.diseaseId}`);
     });
 
     await test.step("variant links to its page and shows its id", async () => {
-      await expect(section.variantLink(0)).toHaveAttribute("href", `/variant/${variant?.id}`);
+      await expect(section.variantLink(0)).toHaveAttribute("href", `/variant/${row.variantId}`);
       await expect(section.variantLink(0)).toContainText("7_140753335_CA_GT");
     });
 
@@ -98,7 +99,7 @@ test.describe("Evidence page: EVA somatic", () => {
 
     await test.step("HGVS id, ClinVar record and clinical significance", async () => {
       await expect(section.table.cell(0, EVA_SOMATIC_COLUMN.hgvs)).toHaveText(
-        variant?.hgvsId as string
+        row.variantHgvsId as string
       );
       await expect(section.clinvarLink(0)).toHaveText(row.studyId);
       await expect(section.clinvarLink(0)).toHaveAttribute(
@@ -131,10 +132,13 @@ test.describe("Evidence page: EVA somatic", () => {
     await expect(tooltip).toBeHidden();
   });
 
-  test("the allele origin tooltip introduces the allelic requirements", async ({ page }) => {
-    const { section } = await open(page);
-    await section.helpIcon(0, EVA_SOMATIC_COLUMN.alleleOrigin).hover();
-    await expect(page.getByRole("tooltip")).toContainText("Allelic requirements:");
+  test("the allele origin shows a tooltip only for a record that has allelic requirements", async ({
+    page,
+  }) => {
+    const { section, row } = await open(page);
+    expect(row.allelicRequirements, "the record has no allelic requirements").toHaveLength(0);
+    await expect(section.table.cell(0, EVA_SOMATIC_COLUMN.alleleOrigin)).toContainText("Somatic");
+    await expect(section.helpIcon(0, EVA_SOMATIC_COLUMN.alleleOrigin)).toHaveCount(0);
   });
 
   test("the review status shows four stars, none filled for a record without assertion criteria, and names the status", async ({
@@ -202,14 +206,14 @@ test.describe("Evidence page: EVA somatic", () => {
   test("the disease link opens that disease's page", async ({ page }) => {
     const { section, row } = await open(page);
     await section.diseaseLink(0).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${row.disease.id}$`));
-    await expect(page.getByTestId("profile-page-header-text")).toContainText(row.disease.name);
+    await expect(page).toHaveURL(new RegExp(`/disease/${row.diseaseId}$`));
+    await expect(page.getByTestId("profile-page-header-text")).toContainText(row.diseaseName);
   });
 
   test("the variant link opens that variant's page", async ({ page }) => {
     const { section, row } = await open(page);
     await section.variantLink(0).click();
-    await expect(page).toHaveURL(new RegExp(`/variant/${row.variant?.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/variant/${row.variantId}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
   });
 
@@ -221,8 +225,8 @@ test.describe("Evidence page: EVA somatic", () => {
     const rows = JSON.parse(json.text) as Record<string, unknown>[];
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
-      diseaseId: row.disease.id,
-      diseaseName: row.disease.name,
+      diseaseId: row.diseaseId,
+      diseaseName: row.diseaseName,
       variantRsId: row.variantRsId,
       reviewStatus: row.confidence,
     });

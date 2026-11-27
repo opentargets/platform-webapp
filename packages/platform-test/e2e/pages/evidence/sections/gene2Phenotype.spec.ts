@@ -52,7 +52,7 @@ test.describe("Evidence page: Gene2Phenotype", () => {
     );
     await expect(section.table.headers).toHaveText([...G2P_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput).toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -63,19 +63,20 @@ test.describe("Evidence page: Gene2Phenotype", () => {
   }) => {
     const { section, list } = await open(page);
     for (const [index, expected] of list.rows.entries()) {
-      await test.step(`row ${index + 1}: ${expected.disease.name}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+      await test.step(`row ${index + 1}: ${expected.diseaseName}`, async () => {
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
         await expect(section.helpIcon(index, G2P_COLUMN.disease)).toHaveCount(1);
 
-        const consequence = expected.variantFunctionalConsequence!;
-        await expect(section.consequenceLink(index)).toHaveText(sentence(consequence.label));
+        await expect(section.consequenceLink(index)).toHaveText(
+          sentence(expected.variantFunctionalConsequenceLabel!)
+        );
         await expect(section.consequenceLink(index)).toHaveAttribute(
           "href",
-          `http://www.sequenceontology.org/browser/current_svn/term/${consequence.id}`
+          `http://www.sequenceontology.org/browser/current_svn/term/${expected.variantFunctionalConsequenceId!.replace("_", ":")}`
         );
 
         await expect(section.directionIcons(index)).toHaveCount(2);
@@ -93,6 +94,7 @@ test.describe("Evidence page: Gene2Phenotype", () => {
         await expect(section.cell(index, G2P_COLUMN.confidence)).toContainText(
           sentence(expected.confidence!)
         );
+        await expect(section.cell(index, G2P_COLUMN.score)).toHaveText(expected.score.toFixed(2));
         await expect(section.cell(index, G2P_COLUMN.literature)).toHaveText(
           GeneticEvidenceSection.literatureLabel(expected.literature)
         );
@@ -165,11 +167,72 @@ test.describe("Evidence page: Gene2Phenotype", () => {
         "Allelic requirement",
         "Panel",
         "Confidence category",
+        "Score",
         "Literature",
       ],
       ["Disease/phenotype", "Panel"],
       "Allelic requirement"
     );
+  });
+
+  test("the Score header explains the score and sorts the rows on the server", async ({ page }) => {
+    const { section, list } = await open(page);
+    const header = section.table.headers.nth(G2P_COLUMN.score);
+    await header.locator("sup").hover();
+    await expect(section.tooltip).toHaveText("Evidence score, from 0 to 1");
+    await page.mouse.move(0, 0);
+
+    // The table opens sorted by score, highest first; a click on the header reverses it.
+    const scores = list.rows.map((row) => row.score);
+    expect(scores, "the API returns the highest scores first").toEqual(
+      [...scores].sort((a, b) => b - a)
+    );
+    const ascending = page.waitForResponse((response) => {
+      const post = response.request().postData() ?? "";
+      return (
+        post.includes(G2P_OPERATION) &&
+        (JSON.parse(post).variables?.sort ?? []).some(
+          (sort: { direction: string }) => sort.direction === "ASCENDING"
+        )
+      );
+    });
+    await header.click();
+    const reversed = (await (await ascending).json()).data.disease.evidenceViews[G2P_LIST]
+      .rows as G2pRow[];
+    expect(reversed.map((row) => row.score)).toEqual([...scores].sort((a, b) => a - b));
+    await expect
+      .poll(() => section.table.columnTexts(G2P_COLUMN.score))
+      .toEqual(reversed.map((row) => row.score.toFixed(2)));
+    await expect(section.diseaseLink(0)).toHaveText(reversed[0].diseaseName);
+  });
+
+  test("the search box filters the rows on the server", async ({ page }) => {
+    const { section, list } = await open(page);
+    const target = list.rows[2];
+    const term = target.diseaseName.split(" ").at(-2)!; // "Lubs"
+    const response = page.waitForResponse((candidate) => {
+      const post = candidate.request().postData() ?? "";
+      return post.includes(G2P_OPERATION) && post.includes(`"text":"${term}"`);
+    });
+    await section.table.search(term);
+    const found = (await (await response).json()).data.disease.evidenceViews[G2P_LIST] as {
+      count: number;
+      rows: G2pRow[];
+    };
+    expect(found.count, "the search narrows the rows").toBeLessThan(list.count);
+    expect(found.rows.map((row) => row.diseaseName)).toContain(target.diseaseName);
+    await section.table.expectRowCount(found.rows.length);
+    await expect(section.diseaseLink(0)).toHaveText(found.rows[0].diseaseName);
+
+    const none = page.waitForResponse((candidate) =>
+      (candidate.request().postData() ?? "").includes("zzz-no-match")
+    );
+    await section.table.search("zzz-no-match");
+    await none;
+    await section.table.expectRowCount(0);
+
+    await section.table.searchInput.fill("");
+    await section.table.expectRowCount(list.count);
   });
 
   test("the literature cell lists the publications of its row", async ({ page }) => {
@@ -198,7 +261,7 @@ test.describe("Evidence page: Gene2Phenotype", () => {
       `${MECP2_NDD.ensgId}-${MECP2_NDD.efoId}-gene2phenotype`
     );
     expect(json.map((row) => row.diseasePhenotype)).toEqual(
-      list.rows.map((row) => row.disease.name)
+      list.rows.map((row) => row.diseaseName)
     );
     expect(json.map((row) => row.panel)).toEqual(list.rows.map((row) => row.studyId));
     expect(header).toEqual(expect.arrayContaining(["diseasePhenotype", "panel", "literature"]));
@@ -227,9 +290,9 @@ test.describe("Evidence page: Gene2Phenotype", () => {
   test("a disease link opens that disease's page", async ({ page }) => {
     const { section, list } = await open(page);
     await section.diseaseLink(1).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[1].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(
-      list.rows[1].disease.name
+      list.rows[1].diseaseName
     );
   });
 
@@ -242,7 +305,7 @@ test.describe("Evidence page: Gene2Phenotype", () => {
     );
     await expect(section.diseaseLink(0)).toHaveAttribute(
       "href",
-      `/disease/${list.rows[0].disease.id}`
+      `/disease/${list.rows[0].diseaseId}`
     );
   });
 

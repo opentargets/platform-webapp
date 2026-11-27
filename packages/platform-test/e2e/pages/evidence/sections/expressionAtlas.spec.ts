@@ -15,13 +15,18 @@ import {
   scientific,
 } from "../../../../POM/objects/widgets/Evidence/expressionAtlas";
 import {
+  type EvidenceViewsData,
+  evidenceList,
   expectColumnPicker,
   expectExports,
   expectFirstPage,
   expectPageSizes,
   expectPaging,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
-import { sentence } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
+import {
+  EVIDENCE_PAGE_SIZE,
+  sentence,
+} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
 
@@ -32,6 +37,34 @@ const CHRM1_PD = { ensgId: "ENSG00000168539", efoId: "MONDO_0005180" };
 async function open(page: Page, pair = FGFR3_NEOPLASM_EA) {
   await stubEuropePmc(page);
   return openExpressionAtlas(page, pair);
+}
+
+type SectionPage<Row> = { count: number; rows: Row[]; variables: Record<string, any> };
+
+/** Resolve with the next ExpressionAtlasQuery response whose variables satisfy `match`. */
+function waitForQuery(page: Page, match: (variables: Record<string, any>) => boolean) {
+  return page
+    .waitForResponse((response) => {
+      const post = response.request().postData() ?? "";
+      if (!post.includes(EA_OPERATION)) return false;
+      return match(JSON.parse(post).variables ?? {});
+    })
+    .then(async (response): Promise<SectionPage<ExpressionAtlasRow>> => {
+      const body = (await response.json()) as {
+        data: EvidenceViewsData<ExpressionAtlasRow>;
+      };
+      return {
+        ...evidenceList(body.data, EA_LIST),
+        variables: JSON.parse(response.request().postData() ?? "{}").variables,
+      };
+    });
+}
+
+/** Type a term in the search box and wait for the first page of its results. */
+async function searchFor(page: Page, section: ExpressionAtlasSection, term: string) {
+  const response = waitForQuery(page, (variables) => variables.search?.text === term);
+  await section.table.search(term);
+  return response;
 }
 
 test.describe("Evidence page: Expression Atlas", () => {
@@ -51,7 +84,7 @@ test.describe("Evidence page: Expression Atlas", () => {
     ).toHaveAttribute("href", "https://www.ebi.ac.uk/gxa/home");
     await expect(section.table.headers).toHaveText([...EA_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput, "this table has no search box").toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -63,12 +96,12 @@ test.describe("Evidence page: Expression Atlas", () => {
     const { section, list } = await open(page);
     for (const [index, expected] of list.rows.entries()) {
       await test.step(`row ${index + 1}: ${expected.studyId}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
-        expect(expected.disease.id).toMatch(/^(MONDO|EFO|Orphanet|HP)_\d+$/);
+        expect(expected.diseaseId).toMatch(/^(MONDO|EFO|Orphanet|HP)_\d+$/);
 
         await expect(section.experimentLink(index)).toHaveText(expected.studyId);
         await expect(section.experimentLink(index)).toHaveAttribute(
@@ -182,7 +215,7 @@ test.describe("Evidence page: Expression Atlas", () => {
     page,
   }) => {
     const { section, list } = await open(page);
-    const disease = list.rows[2].disease;
+    const disease = { id: list.rows[2].diseaseId, name: list.rows[2].diseaseName };
     await section.diseaseLink(2).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${disease.id}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(disease.name, {
@@ -205,6 +238,57 @@ test.describe("Evidence page: Expression Atlas", () => {
     await expect(section.cell(0, EA_COLUMN.confidence)).toHaveText("Low?");
     await expect(section.table.nextPageButton).toBeDisabled();
     await expect(section.table.lastPageButton).toBeDisabled();
+  });
+
+  test("the search box filters the experiments on the server and shows the matches", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    await expect(section.table.searchInput).toBeVisible();
+    const term = list.rows[0].studyId;
+
+    const { rows, count, variables } = await searchFor(page, section, term);
+    expect(variables.search, "the search is sent to the API").toMatchObject({ text: term });
+    expect(count, "the search narrows the experiments").toBeLessThan(list.count);
+    expect(count).toBeGreaterThan(0);
+    await section.table.expectRowCount(Math.min(count, EVIDENCE_PAGE_SIZE));
+    await expect(section.table.position).toHaveText(
+      `1 - ${Math.min(count, EVIDENCE_PAGE_SIZE)} of ${count}`
+    );
+    await expect
+      .poll(() => section.table.columnTexts(EA_COLUMN.experiment))
+      .toEqual(rows.map((row) => row.studyId));
+    expect(rows.every((row) => row.studyId === term)).toBe(true);
+
+    await test.step("a search without matches shows no rows", async () => {
+      const none = await searchFor(page, section, "no such experiment anywhere");
+      expect(none.count).toBe(0);
+      await expect(section.table.rows).toHaveCount(0);
+    });
+  });
+
+  test("the table is sorted by p-value, smallest first, and the headers sort on the server", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    const pValues = list.rows.map((row) => row.resourceScore as number);
+    expect(pValues, "the API returns the smallest p-values first").toEqual(
+      [...pValues].sort((a, b) => a - b)
+    );
+
+    const percentile = waitForQuery(page, (variables) =>
+      variables.sort?.some((sort: any) => sort.key === "PERCENTILE")
+    );
+    await section.table.headers.filter({ hasText: "Percentile" }).click();
+    const { rows, variables } = await percentile;
+    const ranks = rows.map((row) => row.log2FoldChangePercentileRank as number);
+    const direction = variables.sort[0].direction;
+    expect(ranks, `the API orders by percentile, ${direction}`).toEqual(
+      [...ranks].sort((a, b) => (direction === "ASCENDING" ? a - b : b - a))
+    );
+    await expect
+      .poll(() => section.table.columnTexts(EA_COLUMN.percentile))
+      .toEqual(ranks.map(String));
   });
 
   test("a pair without Expression Atlas data has no such section", async ({ page }) => {

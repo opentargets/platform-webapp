@@ -32,7 +32,50 @@ async function open(page: Page, pair: Pair = MANY) {
   const { data } = await response;
   const section = new EvidenceGeneBurdenSection(page);
   await expectSectionLoaded(page, EvidenceGeneBurdenSection.id);
-  return { section, data, evidences: data.disease.geneBurdenSummary };
+  return { section, data, evidences: data.disease.evidenceViews.geneBurden };
+}
+
+type GeneBurdenPage = {
+  rows: EvidenceGeneBurdenRow[];
+  count: number;
+  variables: Record<string, any>;
+};
+
+/** Resolve with the next GeneBurdenQuery response whose variables satisfy `match`. */
+function waitForQuery(page: Page, match: (variables: Record<string, any>) => boolean) {
+  return page
+    .waitForResponse((response) => {
+      const post = response.request().postData() ?? "";
+      if (!post.includes(EVIDENCE_GENE_BURDEN_OPERATION)) return false;
+      return match(JSON.parse(post).variables ?? {});
+    })
+    .then(async (response): Promise<GeneBurdenPage> => {
+      const body = (await response.json()) as { data: EvidenceGeneBurdenData };
+      const view = body.data.disease.evidenceViews.geneBurden;
+      return {
+        ...view,
+        variables: JSON.parse(response.request().postData() ?? "{}").variables,
+      };
+    });
+}
+
+const waitForSearch = (page: Page, text: string | undefined) =>
+  waitForQuery(page, (variables) =>
+    text === undefined ? !variables.search?.text : variables.search?.text === text
+  );
+
+const waitForSort = (page: Page, key: string, direction: string) =>
+  waitForQuery(page, (variables) =>
+    variables.sort?.some((sort: any) => sort.key === key && sort.direction === direction)
+  );
+
+/** Type a term in the search box and wait for the first page of its results. */
+async function searchFor(page: Page, section: EvidenceGeneBurdenSection, term: string) {
+  const response = waitForSearch(page, term);
+  await section.table.search(term);
+  const result = await response;
+  await section.table.expectRowCount(Math.min(result.count, EVIDENCE_GENE_BURDEN_PAGE_SIZE));
+  return result;
 }
 
 const NA = "N/A";
@@ -52,15 +95,20 @@ const EFFECTS: Record<string, string> = {
 const effectLabel = (value: string | null) =>
   value ? EFFECTS[value.toLowerCase()] : "Inconclusive Assessment";
 
-/** Projects whose cohort is shown as a link to the project's own site. */
-const LINKED_PROJECTS: Record<string, (row: EvidenceGeneBurdenRow) => string | null> = {
-  "Epi25 collaborative": (row) => `https://epi25.broadinstitute.org/gene/${row.target.id}`,
-  "Autism Sequencing Consortiuml": (row) => `https://asc.broadinstitute.org/gene/${row.target.id}`,
-  "SCHEMA consortium": (row) => `https://schema.broadinstitute.org/gene/${row.target.id}`,
-  Genebass: (row) =>
-    `https://app.genebass.org/gene/${row.target.id}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`,
-  "AstraZeneca PheWAS Portal": (row) => row.urls?.[0]?.url ?? null,
+/**
+ * Link-outs the app falls back on when a row carries no `urls`; the cohort links to the first
+ * of the row's `urls` when there is one.
+ */
+const PROJECT_LINKS: Record<string, (targetId: string) => string> = {
+  "Epi25 collaborative": (targetId) => `https://epi25.broadinstitute.org/gene/${targetId}`,
+  "Autism Sequencing Consortium": (targetId) => `https://asc.broadinstitute.org/gene/${targetId}`,
+  Genebass: (targetId) =>
+    `https://app.genebass.org/gene/${targetId}?burdenSet=pLoF&phewasOpts=1&resultLayout=full`,
+  "AMP-PD": () => "https://amp-pd.org/",
+  FinnGen: (targetId) => `https://r12.finngen.fi/gene/${targetId}`,
 };
+const sourceLink = (row: EvidenceGeneBurdenRow): string | null =>
+  row.urls?.[0] ?? (row.projectId ? PROJECT_LINKS[row.projectId]?.(row.targetId) : null) ?? null;
 const sourceLabel = (row: EvidenceGeneBurdenRow) => {
   if (!row.cohortId) return row.projectId;
   if (!row.projectId) return row.cohortId;
@@ -73,15 +121,15 @@ async function expectRow(
   index: number,
   row: EvidenceGeneBurdenRow
 ) {
-  await expect(section.diseaseLink(index)).toHaveText(row.disease.name);
-  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.disease.id}`);
+  await expect(section.diseaseLink(index)).toHaveText(row.diseaseName);
+  await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.diseaseId}`);
 
   const cohort = section.cell(index, "cohort");
   if (!row.cohortId && !row.projectId) {
     await expect(cohort).toHaveText(NA);
   } else {
     await expect(cohort).toHaveText(sourceLabel(row) as string);
-    const href = row.projectId ? LINKED_PROJECTS[row.projectId]?.(row) : null;
+    const href = sourceLink(row);
     if (href) await expect(section.cohortLink(index)).toHaveAttribute("href", href);
     else await expect(section.cohortLink(index)).toHaveCount(0);
   }
@@ -101,9 +149,9 @@ async function expectRow(
   }
 
   await expect(section.cell(index, "model")).toContainText(row.statisticalMethod ?? "");
-  // The app shows N/A for a missing list but an empty cell for an empty one.
+  // The app shows N/A for a missing or an empty list.
   await expect(section.cell(index, "allelicRequirement")).toHaveText(
-    row.allelicRequirements ? (row.allelicRequirements[0] ?? "") : NA
+    row.allelicRequirements?.[0] ?? NA
   );
   await expect(section.cell(index, "casesWithQv")).toHaveText(
     number(row.studyCasesWithQualifyingVariants)
@@ -153,7 +201,7 @@ test.describe("Evidence page: Gene Burden", () => {
 
     await test.step("title and description name the target and the disease", async () => {
       await expect(section.title).toContainText("Gene Burden");
-      await expect(section.title).toContainText("Genetic associations");
+      await expect(section.title).toContainText("Genetic association");
       await expect(section.description).toHaveText(
         "Gene burden analysis prioritising PCSK9 as likely causal gene for low density lipoprotein cholesterol measurement. Source: Open Targets"
       );
@@ -174,12 +222,12 @@ test.describe("Evidence page: Gene Burden", () => {
       }
     });
 
-    await test.step("the footer reports the total, starts on the first page and has no search box", async () => {
+    await test.step("the footer reports the total, starts on the first page and has a search box", async () => {
       await section.table.expectPosition(`1 - ${EVIDENCE_GENE_BURDEN_PAGE_SIZE} of ${total}`, {
         canGoBack: false,
         canGoForward: true,
       });
-      await expect(section.table.searchInput).toHaveCount(0);
+      await expect(section.table.searchInput).toBeVisible();
       await expect(section.table.pageSizeSelect).toHaveValue("10");
       await expect(section.table.pageSizeSelect.locator("option")).toHaveText(["10", "25", "100"]);
     });
@@ -240,23 +288,92 @@ test.describe("Evidence page: Gene Burden", () => {
     await expect(tooltip).toContainText(evidences.rows[index].diseaseFromSource as string);
   });
 
-  test("the cohort of a known project links to that project's own page for the gene", async ({
+  test("the cohort links to the row's own url, or to the project's page for the gene", async ({
+    page,
+  }) => {
+    const { section } = await open(page);
+    // The first page of this pair holds no linked project: search for one with urls and one without.
+    for (const term of ["AstraZeneca", "Genebass"]) {
+      const { rows } = await searchFor(page, section, term);
+      const index = rows.findIndex((row) => row.projectId && sourceLink(row));
+      expect(index, `a ${term} result links its cohort`).toBeGreaterThanOrEqual(0);
+      const row = rows[index];
+      await expect(section.cohortLink(index)).toHaveAttribute("href", sourceLink(row) as string);
+      await expect(section.cohortLink(index)).toHaveText(sourceLabel(row) as string);
+    }
+  });
+
+  test("a project without a link shows its cohort as plain text", async ({ page }) => {
+    const { section, evidences } = await open(page);
+    const index = evidences.rows.findIndex((row) => row.projectId && !sourceLink(row));
+    expect(index, "the first page holds a result whose project has no link").toBeGreaterThanOrEqual(
+      0
+    );
+    await expect(section.cohortLink(index)).toHaveCount(0);
+    await expect(section.cell(index, "cohort")).toHaveText(
+      sourceLabel(evidences.rows[index]) as string
+    );
+  });
+
+  test("the search box filters the results on the server and shows the matches", async ({
     page,
   }) => {
     const { section, evidences } = await open(page);
-    const index = evidences.rows.findIndex(
-      (row) => row.projectId && LINKED_PROJECTS[row.projectId]?.(row)
+    await expect(section.table.searchInput).toBeVisible();
+
+    const { rows, count, variables } = await searchFor(page, section, "AstraZeneca");
+    expect(variables.search, "the search is sent to the API").toMatchObject({
+      text: "AstraZeneca",
+    });
+    expect(count, "the search narrows the results").toBeLessThan(evidences.count);
+    expect(count).toBeGreaterThan(0);
+    await section.table.expectRowCount(Math.min(count, EVIDENCE_GENE_BURDEN_PAGE_SIZE));
+    await section.table.expectPosition(
+      `1 - ${Math.min(count, EVIDENCE_GENE_BURDEN_PAGE_SIZE)} of ${count}`,
+      {
+        canGoBack: false,
+        canGoForward: count > EVIDENCE_GENE_BURDEN_PAGE_SIZE,
+      }
     );
-    expect(
-      index,
-      "the first page holds a result from a project with its own site"
-    ).toBeGreaterThanOrEqual(0);
-    const row = evidences.rows[index];
-    await expect(section.cohortLink(index)).toHaveAttribute(
-      "href",
-      LINKED_PROJECTS[row.projectId as string](row) as string
+    for (const [index, row] of rows.entries()) await expectRow(section, index, row);
+
+    await test.step("a search without matches shows no rows", async () => {
+      const none = await searchFor(page, section, "no such cohort anywhere");
+      expect(none.count).toBe(0);
+      await expect(section.table.rows).toHaveCount(0);
+    });
+
+    await test.step("clearing the search brings every result back", async () => {
+      await section.table.searchInput.fill("");
+      const total = evidences.count;
+      await section.table.expectPosition(`1 - ${EVIDENCE_GENE_BURDEN_PAGE_SIZE} of ${total}`, {
+        canGoBack: false,
+        canGoForward: true,
+      });
+    });
+  });
+
+  test("the numeric headers sort the results on the server, in both directions", async ({
+    page,
+  }) => {
+    const { section } = await open(page);
+    const header = section.table.headers.filter({ hasText: "Cases with QV" });
+
+    const descending = waitForSort(page, "CASES_WITH_QUALIFYING_VARIANTS", "DESCENDING");
+    await header.click();
+    const first = await descending;
+    const values = first.rows.map((row) => row.studyCasesWithQualifyingVariants ?? 0);
+    expect(values, "the API returns the largest counts first").toEqual(
+      [...values].sort((a, b) => b - a)
     );
-    await expect(section.cohortLink(index)).toHaveText(sourceLabel(row) as string);
+    for (const [index, row] of first.rows.entries()) await expectRow(section, index, row);
+
+    const ascending = waitForSort(page, "CASES_WITH_QUALIFYING_VARIANTS", "ASCENDING");
+    await header.click();
+    const second = await ascending;
+    const smallest = second.rows.map((row) => row.studyCasesWithQualifyingVariants ?? 0);
+    expect(smallest).toEqual([...smallest].sort((a, b) => a - b));
+    for (const [index, row] of second.rows.entries()) await expectRow(section, index, row);
   });
 
   test("the ancestry links to its ontology term", async ({ page }) => {
@@ -295,7 +412,7 @@ test.describe("Evidence page: Gene Burden", () => {
   test("the disease link opens the disease page", async ({ page }) => {
     const { section, evidences } = await open(page);
     await section.diseaseLink(0).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${evidences.rows[0].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${evidences.rows[0].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
   });
 
@@ -406,7 +523,7 @@ test.describe("Evidence page: Gene Burden", () => {
     expect(json.filename).toBe(`${stem}.json`);
     expect(json.rows).toHaveLength(evidences.count);
     const exported = JSON.stringify(json.rows);
-    expect(exported).toContain(evidences.rows[0].disease.name);
+    expect(exported).toContain(evidences.rows[0].diseaseName);
 
     const tsv = await section.controls.downloadTsv();
     expect(tsv.filename).toBe(`${stem}.tsv`);

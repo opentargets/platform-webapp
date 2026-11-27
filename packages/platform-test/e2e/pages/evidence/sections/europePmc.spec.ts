@@ -8,12 +8,14 @@ import {
   EP_LIST,
   EP_OPERATION,
   EP_PAGE_SIZE,
+  type EuropePmcData,
   type EuropePmcRow,
   expectedMarks,
   openEuropePmc,
   stubbedAbstract,
   stubbedTitle,
   stubbedYear,
+  yearText,
 } from "../../../../POM/objects/widgets/Evidence/europePmc";
 import { expectExports } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import { waitForPageOfOperation } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
@@ -56,10 +58,10 @@ test.describe("Evidence page: Europe PMC", () => {
       const id = pmid(expected);
       await test.step(`row ${index + 1}: publication ${id}`, async () => {
         expect(id).toMatch(/^\d+$/);
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
 
         await section.expectDetailsLoaded(index);
@@ -72,7 +74,7 @@ test.describe("Evidence page: Europe PMC", () => {
         await expect(section.publication(index)).toContainText(
           `Journal of Stubs ${stubbedYear(id)} 12(3):101-110`
         );
-        await expect(section.cell(index, EP_COLUMN.year)).toHaveText(stubbedYear(id));
+        await expect(section.cell(index, EP_COLUMN.year)).toHaveText(yearText(expected));
         await expect(section.cell(index, EP_COLUMN.score)).toHaveText(
           String(expected.resourceScore)
         );
@@ -97,8 +99,11 @@ test.describe("Evidence page: Europe PMC", () => {
   }) => {
     const { section, list } = await openEuropePmc(page, BRAF_MELANOMA_EP, { omitFirst: true });
     await expect(section.publication(0)).toHaveText("N/A");
-    await expect(section.cell(0, EP_COLUMN.year)).toHaveText("N/A");
-    await expect(section.diseaseLink(0)).toHaveText(list.rows[0].disease.name);
+    await expect(
+      section.cell(0, EP_COLUMN.year),
+      "the year comes from the Open Targets API, not from Europe PMC"
+    ).toHaveText(yearText(list.rows[0]));
+    await expect(section.diseaseLink(0)).toHaveText(list.rows[0].diseaseName);
     await expect(section.cell(0, EP_COLUMN.score)).toHaveText(String(list.rows[0].resourceScore));
     await section.expectDetailsLoaded(1);
     await expect(section.titleLink(1)).toHaveText(stubbedTitle(pmid(list.rows[1])));
@@ -174,7 +179,7 @@ test.describe("Evidence page: Europe PMC", () => {
         .poll(() => table.columnTexts(EP_COLUMN.year), {
           message: "page 2 shows the years of its own publications",
         })
-        .toEqual(second.map((row) => stubbedYear(pmid(row))));
+        .toEqual(second.map(yearText));
       await section.expectDetailsLoaded(0);
       await expect(section.titleLink(0)).toHaveText(stubbedTitle(pmid(second[0])));
       expect(second.map(pmid)).not.toEqual(first);
@@ -186,11 +191,14 @@ test.describe("Evidence page: Europe PMC", () => {
     });
 
     await test.step("the last page shows the remainder and disables forward", async () => {
-      const last = waitForPageOfOperation<{
-        disease: Record<string, { count: number; rows: EuropePmcRow[] }>;
-      }>(page, EP_OPERATION, lastPage, EP_PAGE_SIZE);
+      const last = waitForPageOfOperation<EuropePmcData>(
+        page,
+        EP_OPERATION,
+        lastPage,
+        EP_PAGE_SIZE
+      );
       await table.lastPageButton.click();
-      const lastRows = (await last).disease[EP_LIST].rows;
+      const lastRows = (await last).disease.evidenceViews[EP_LIST].rows;
       const remainder = total - lastPage * EP_PAGE_SIZE;
       expect(lastRows).toHaveLength(remainder);
       await expect(table.position).toHaveText(
@@ -213,7 +221,7 @@ test.describe("Evidence page: Europe PMC", () => {
         .poll(async () =>
           (await section.table.column(EP_COLUMN.year).allInnerTexts()).map((text) => text.trim())
         )
-        .toEqual(first.map(stubbedYear));
+        .toEqual(list.rows.map(yearText));
       await expect(table.firstPageButton).toBeDisabled();
       await expect(table.previousPageButton).toBeDisabled();
     });
@@ -236,7 +244,7 @@ test.describe("Evidence page: Europe PMC", () => {
     await expect(table.position).toHaveText(`1 - ${EP_PAGE_SIZE} of ${list.count}`);
   });
 
-  test("the column picker hides and restores the year and score columns", async ({ page }) => {
+  test("the column picker hides and restores the score column", async ({ page }) => {
     const { section } = await openEuropePmc(page);
     const picker = await section.table.openColumnPicker();
     await expect(picker.getByRole("checkbox")).toHaveCount(4);
@@ -244,7 +252,7 @@ test.describe("Evidence page: Europe PMC", () => {
       await expect(picker.getByRole("checkbox", { name, exact: true })).toBeChecked();
     }
     await picker.getByRole("checkbox", { name: "Score", exact: true }).uncheck();
-    await expect(section.table.headers).toHaveText(["Disease/phenotype", "Publication", ""]);
+    await expect(section.table.headers).toHaveText(["Disease/phenotype", "Publication", "Year"]);
     await expect(section.table.row(0).locator("td")).toHaveCount(3);
     await picker.getByRole("checkbox", { name: "Score", exact: true }).check();
     await expect(section.table.headers).toHaveText([...EP_HEADERS]);
@@ -262,11 +270,13 @@ test.describe("Evidence page: Europe PMC", () => {
       list,
       `europepmc-${BRAF_MI_EP.ensgId}-${BRAF_MI_EP.efoId}`
     );
-    expect(header).toEqual(["diseasePhenotype", "europePmcId", "score"]);
+    expect(header).toEqual(["diseasePhenotype", "europePmcId", "pmcId", "year", "score"]);
     expect(json.map((row) => row.europePmcId)).toEqual(list.rows.map(pmid));
+    expect(json.map((row) => row.pmcId)).toEqual(list.rows.map((row) => row.pmcIds.join(", ")));
+    expect(json.map((row) => row.year)).toEqual(list.rows.map((row) => row.publicationYear));
     expect(json.map((row) => row.score)).toEqual(list.rows.map((row) => row.resourceScore));
     expect(json.map((row) => row.diseasePhenotype)).toEqual(
-      list.rows.map((row) => row.disease.name)
+      list.rows.map((row) => row.diseaseName)
     );
   });
 
@@ -281,9 +291,9 @@ test.describe("Evidence page: Europe PMC", () => {
   }) => {
     const { section, list } = await openEuropePmc(page);
     await section.diseaseLink(0).click();
-    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[0].disease.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/disease/${list.rows[0].diseaseId}$`));
     await expect(page.getByTestId("profile-page-header-text")).toContainText(
-      list.rows[0].disease.name
+      list.rows[0].diseaseName
     );
     await page.goBack();
     await expect(page).toHaveURL(

@@ -1,9 +1,7 @@
 fragment OrphanetSummaryFragment on Disease {
-  orphanetSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [orphanet]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    orphanet(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

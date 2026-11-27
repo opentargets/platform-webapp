@@ -29,6 +29,7 @@ export const REACTOME_HEADERS = [
   "Reported target",
   "Target modulation",
   "Amino acid variation",
+  "Score?",
   "Literature",
 ] as const;
 export const REACTOME_COLUMN = {
@@ -38,17 +39,20 @@ export const REACTOME_COLUMN = {
   target: 3,
   modulation: 4,
   variation: 5,
-  literature: 6,
+  score: 6,
+  literature: 7,
 } as const;
 /** The picker lists every column; only the reaction is locked. */
 export const REACTOME_LOCKED = ["Reaction"] as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/Reactome). */
 export const REACTOME_OPERATION = "reactomeQuery";
-export const REACTOME_LIST = "reactomeSummary";
+export const REACTOME_LIST = "reactome";
 
 export type ReactomeRow = {
-  disease: { id: string; name: string };
+  score: number;
+  diseaseId: string;
+  diseaseName: string;
   diseaseFromSource: string | null;
   reactionName: string;
   reactionId: string;
@@ -100,7 +104,7 @@ export class ReactomeSection extends GeneticEvidenceSection {
   }
 
   override get chip(): Locator {
-    return this.section.getByText("Pathways & systems biology", { exact: true });
+    return this.section.getByText("Affected pathway", { exact: true });
   }
 
   diseaseLink(row: number): Locator {

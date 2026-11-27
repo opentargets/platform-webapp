@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { waitForOperation } from "../shared/sectionDataControls";
+import { openEvidenceSection } from "./geneticEvidenceChecks";
 import {
-  EVIDENCE_PAGE_SIZE,
   type EvidenceList,
   type EvidencePair,
   GeneticEvidenceSection,
@@ -31,10 +30,12 @@ export const CRISPR_COLUMN = { disease: 0, cellLines: 1, score: 2 } as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/CRISPR). */
 export const CRISPR_OPERATION = "CrisprQuery";
-export const CRISPR_LIST = "crisprSummary";
+/** The `disease.evidenceViews` field the section reads. */
+export const CRISPR_LIST = "crispr";
 
 export type CrisprRow = {
-  disease: { id: string; name: string };
+  diseaseId: string;
+  diseaseName: string;
   diseaseCellLines: { id: string; name: string }[] | null;
   diseaseFromSource: string | null;
   resourceScore: number;
@@ -54,7 +55,7 @@ export class CrisprSection extends GeneticEvidenceSection {
   }
 
   override get chip(): Locator {
-    return this.section.getByText("Pathways & systems biology", { exact: true });
+    return this.section.getByText("Affected pathway", { exact: true });
   }
 
   diseaseLink(row: number): Locator {
@@ -98,21 +99,12 @@ export async function openCrispr(
   pair: EvidencePair = BRAF_MELANOMA_CRISPR
 ): Promise<{ section: CrisprSection; list: EvidenceList<CrisprRow> }> {
   const section = new CrisprSection(page);
-  const response = waitForOperation<{ disease: Record<string, EvidenceList<CrisprRow>> }>(
+  const list = await openEvidenceSection<CrisprRow>(
     page,
-    CRISPR_OPERATION
+    section,
+    CRISPR_OPERATION,
+    CRISPR_LIST,
+    pair
   );
-  await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
-  const { data, variables } = await response;
-  expect(variables, "the section asks for the first page of its target and disease").toMatchObject({
-    ensemblId: pair.ensgId,
-    efoId: pair.efoId,
-    index: 0,
-    size: EVIDENCE_PAGE_SIZE,
-  });
-  await section.expectLoaded();
-  const list = data.disease[CRISPR_LIST];
-  expect(list.count, "the API has Project Score evidence for this pair").toBeGreaterThan(0);
-  expect(list.rows.length).toBe(Math.min(list.count, EVIDENCE_PAGE_SIZE));
   return { section, list };
 }

@@ -2,6 +2,8 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
+  type EvidenceViewsData,
+  evidenceList,
   expectColumnPicker,
   expectExports,
   expectFirstPage,
@@ -9,6 +11,7 @@ import {
   expectPaging,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import {
+  EVIDENCE_PAGE_SIZE,
   GeneticEvidenceSection,
   sentence,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
@@ -36,6 +39,34 @@ async function open(page: Page, pair = FGFR3_NEOPLASM) {
   return openReactome(page, pair);
 }
 
+type SectionPage<Row> = { count: number; rows: Row[]; variables: Record<string, any> };
+
+/** Resolve with the next reactomeQuery response whose variables satisfy `match`. */
+function waitForQuery(page: Page, match: (variables: Record<string, any>) => boolean) {
+  return page
+    .waitForResponse((response) => {
+      const post = response.request().postData() ?? "";
+      if (!post.includes(REACTOME_OPERATION)) return false;
+      return match(JSON.parse(post).variables ?? {});
+    })
+    .then(async (response): Promise<SectionPage<ReactomeRow>> => {
+      const body = (await response.json()) as {
+        data: EvidenceViewsData<ReactomeRow>;
+      };
+      return {
+        ...evidenceList(body.data, REACTOME_LIST),
+        variables: JSON.parse(response.request().postData() ?? "{}").variables,
+      };
+    });
+}
+
+/** Type a term in the search box and wait for the first page of its results. */
+async function searchFor(page: Page, section: ReactomeSection, term: string) {
+  const response = waitForQuery(page, (variables) => variables.search?.text === term);
+  await section.table.search(term);
+  return response;
+}
+
 test.describe("Evidence page: Reactome", () => {
   test("shows title, description, chip, controls and the table headers @smoke", async ({
     page,
@@ -54,7 +85,7 @@ test.describe("Evidence page: Reactome", () => {
     );
     await expect(section.table.headers).toHaveText([...REACTOME_HEADERS]);
     await expectFirstPage(section, list);
-    await expect(section.table.searchInput, "this table has no search box").toHaveCount(0);
+    await expect(section.table.searchInput).toBeVisible();
     await expect(section.table.columnsButton).toBeVisible();
     await expect(section.controls.exportButton).toBeVisible();
     await expect(section.controls.apiQueryButton).toBeVisible();
@@ -66,10 +97,10 @@ test.describe("Evidence page: Reactome", () => {
     const { section, list } = await open(page);
     for (const [index, expected] of list.rows.entries()) {
       await test.step(`row ${index + 1}: ${expected.reactionId}`, async () => {
-        await expect(section.diseaseLink(index)).toHaveText(expected.disease.name);
+        await expect(section.diseaseLink(index)).toHaveText(expected.diseaseName);
         await expect(section.diseaseLink(index)).toHaveAttribute(
           "href",
-          `/disease/${expected.disease.id}`
+          `/disease/${expected.diseaseId}`
         );
         await expect(section.helpIcon(index, REACTOME_COLUMN.disease)).toHaveCount(1);
 
@@ -115,6 +146,12 @@ test.describe("Evidence page: Reactome", () => {
               : `${variations.length} entries`
         );
 
+        await expect(section.cell(index, REACTOME_COLUMN.score)).toHaveText(
+          expected.score.toFixed(2)
+        );
+        expect(expected.score).toBeGreaterThan(0);
+        expect(expected.score).toBeLessThanOrEqual(1);
+
         await expect(section.cell(index, REACTOME_COLUMN.literature)).toHaveText(
           GeneticEvidenceSection.literatureLabel(expected.literature)
         );
@@ -155,7 +192,9 @@ test.describe("Evidence page: Reactome", () => {
     page,
   }) => {
     const { section } = await open(page);
-    await expectColumnPicker(section, REACTOME_HEADERS, REACTOME_LOCKED, "Target modulation");
+    // the picker lists the Score column without the "?" of its header tooltip
+    const pickerNames = REACTOME_HEADERS.map((name) => (name === "Score?" ? "Score" : name));
+    await expectColumnPicker(section, pickerNames, REACTOME_LOCKED, "Target modulation");
   });
 
   test("the literature cell lists the publications of its row", async ({ page }) => {
@@ -226,6 +265,7 @@ test.describe("Evidence page: Reactome", () => {
       "reportedTarget",
       "targetModulation",
       "aminoAcidVariation",
+      "score",
       "literature",
     ]);
     expect(json.slice(0, list.rows.length).map((row) => row.reaction)).toEqual(
@@ -246,7 +286,7 @@ test.describe("Evidence page: Reactome", () => {
     page,
   }) => {
     const { section, list } = await open(page);
-    const disease = list.rows[0].disease;
+    const disease = { id: list.rows[0].diseaseId, name: list.rows[0].diseaseName };
     expect(disease.id, "the reaction is mapped to a narrower disease than the page").not.toBe(
       FGFR3_NEOPLASM.efoId
     );
@@ -278,6 +318,56 @@ test.describe("Evidence page: Reactome", () => {
       await expect(section.variationTrigger(index)).toHaveCount(0);
     });
     await expect(section.cell(0, REACTOME_COLUMN.modulation)).toHaveText("Loss of function");
+  });
+
+  test("the search box filters the reactions on the server and shows the matches", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    await expect(section.table.searchInput).toBeVisible();
+    const term = list.rows[0].reactionName;
+
+    const { rows, count, variables } = await searchFor(page, section, term);
+    expect(variables.search, "the search is sent to the API").toMatchObject({ text: term });
+    expect(count, "the search narrows the reactions").toBeLessThan(list.count);
+    expect(count).toBeGreaterThan(0);
+    await section.table.expectRowCount(Math.min(count, EVIDENCE_PAGE_SIZE));
+    await expect(section.table.position).toHaveText(
+      `1 - ${Math.min(count, EVIDENCE_PAGE_SIZE)} of ${count}`
+    );
+    await expect
+      .poll(() => section.table.columnTexts(REACTOME_COLUMN.reaction))
+      .toEqual(rows.map((row) => row.reactionName));
+    expect(rows.map((row) => row.reactionName)).toContain(term);
+
+    await test.step("a search without matches shows no rows", async () => {
+      const none = await searchFor(page, section, "no such reaction anywhere");
+      expect(none.count).toBe(0);
+      await expect(section.table.rows).toHaveCount(0);
+    });
+  });
+
+  test("the table is sorted by score, highest first, and the Score header reverses it", async ({
+    page,
+  }) => {
+    const { section, list } = await open(page);
+    const scores = list.rows.map((row) => row.score);
+    expect(scores, "the API returns the highest scores first").toEqual(
+      [...scores].sort((a, b) => b - a)
+    );
+    await expect
+      .poll(() => section.table.columnTexts(REACTOME_COLUMN.score))
+      .toEqual(scores.map((score) => score.toFixed(2)));
+
+    const ascending = waitForQuery(page, (variables) =>
+      variables.sort?.some((sort: any) => sort.key === "SCORE" && sort.direction === "ASCENDING")
+    );
+    await section.table.headers.filter({ hasText: "Score" }).click();
+    const sorted = (await ascending).rows.map((row) => row.score);
+    expect(sorted).toEqual([...sorted].sort((a, b) => a - b));
+    await expect
+      .poll(() => section.table.columnTexts(REACTOME_COLUMN.score))
+      .toEqual(sorted.map((score) => score.toFixed(2)));
   });
 
   test("a pair without Reactome data has no such section", async ({ page }) => {

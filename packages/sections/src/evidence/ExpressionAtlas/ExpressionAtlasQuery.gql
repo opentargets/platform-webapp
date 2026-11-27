@@ -1,24 +1,27 @@
-query ExpressionAtlasQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query ExpressionAtlasQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceExpressionAtlasSort!]! = []
+  $search: EvidenceExpressionAtlasSearch
+) {
   disease(efoId: $efoId) {
     id
-    expressionAtlasSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [expression_atlas]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      expressionAtlas(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          contrast
+          confidence
+          studyOverview
+          resourceScore
+          log2FoldChangePercentileRank
+          studyId
         }
-        diseaseFromSource
-        contrast
-        confidence
-        studyOverview
-        resourceScore
-        log2FoldChangePercentileRank
-        studyId
       }
     }
   }

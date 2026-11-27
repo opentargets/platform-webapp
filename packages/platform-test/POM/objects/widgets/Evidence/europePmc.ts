@@ -25,13 +25,18 @@ export const BRAF_MI_EP: EvidencePair & { symbol: string; name: string } = {
   name: "myocardial infarction",
 };
 
-/** Columns of the Europe PMC table. The third (the year) has no header text. */
-export const EP_HEADERS = ["Disease/phenotype", "Publication", "", "Score"] as const;
+/** Columns of the Europe PMC table. The year comes from the Open Targets API. */
+export const EP_HEADERS = ["Disease/phenotype", "Publication", "Year", "Score"] as const;
 export const EP_COLUMN = { disease: 0, publication: 1, year: 2, score: 3 } as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/EuropePMC). */
 export const EP_OPERATION = "EuropePMCQuery";
 export const EP_LIST = "europePmc";
+
+/** The rows of a Europe PMC response, which sit under `disease.evidenceViews`. */
+export type EuropePmcData = {
+  disease: { evidenceViews: Record<string, EvidenceList<EuropePmcRow>> };
+};
 
 export type TextMiningSentence = {
   section: string;
@@ -43,12 +48,17 @@ export type TextMiningSentence = {
 };
 
 export type EuropePmcRow = {
-  disease: { id: string; name: string };
-  target: { id: string; approvedSymbol: string };
+  diseaseId: string;
+  diseaseName: string;
   literature: string[];
+  pmcIds: string[];
+  publicationYear: number | null;
   textMiningSentences: TextMiningSentence[] | null;
   resourceScore: number;
 };
+
+/** The text the Year column shows for a row. */
+export const yearText = (row: EuropePmcRow): string => String(row.publicationYear ?? "N/A");
 
 /** What the stub answers for a publication id: the details the section prints. */
 export const stubbedTitle = (id: string): string => `Stubbed publication ${id}`;
@@ -140,7 +150,7 @@ export class EuropePmcSection extends GeneticEvidenceSection {
   }
 
   override get chip(): Locator {
-    return this.section.getByText("Text mining", { exact: true });
+    return this.section.getByText("Literature", { exact: true });
   }
 
   diseaseLink(row: number): Locator {
@@ -183,14 +193,14 @@ export class EuropePmcSection extends GeneticEvidenceSection {
 
   /** Click the next page button and return what the API answered for that page. */
   async goToNextPage(pageIndex: number): Promise<EuropePmcRow[]> {
-    const next = waitForPageOfOperation<{ disease: Record<string, EvidenceList<EuropePmcRow>> }>(
+    const next = waitForPageOfOperation<EuropePmcData>(
       this.page,
       EP_OPERATION,
       pageIndex,
       EP_PAGE_SIZE
     );
     await this.table.nextPageButton.click();
-    return (await next).disease[EP_LIST].rows;
+    return (await next).disease.evidenceViews[EP_LIST].rows;
   }
 }
 
@@ -206,10 +216,7 @@ export async function openEuropePmc(
 }> {
   const stub = await stubEuropePmcSearch(page, stubOptions);
   const section = new EuropePmcSection(page);
-  const response = waitForOperation<{ disease: Record<string, EvidenceList<EuropePmcRow>> }>(
-    page,
-    EP_OPERATION
-  );
+  const response = waitForOperation<EuropePmcData>(page, EP_OPERATION);
   await page.goto(`/evidence/${pair.ensgId}/${pair.efoId}`);
   const { data, variables } = await response;
   expect(variables, "the section asks for the first page of its target and disease").toMatchObject({
@@ -219,7 +226,7 @@ export async function openEuropePmc(
     size: EP_PAGE_SIZE,
   });
   await section.expectLoaded();
-  const list = data.disease[EP_LIST];
+  const list = data.disease.evidenceViews[EP_LIST];
   expect(list.count, "the API has text-mined publications for this pair").toBeGreaterThan(0);
   expect(list.rows.length).toBe(Math.min(list.count, EP_PAGE_SIZE));
   return { section, list, stub };

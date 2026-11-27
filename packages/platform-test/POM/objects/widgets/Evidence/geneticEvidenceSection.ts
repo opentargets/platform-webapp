@@ -87,7 +87,7 @@ export class GeneticEvidenceSection {
 
   /** The data type chip next to the title. */
   get chip(): Locator {
-    return this.section.getByText("Genetic associations", { exact: true });
+    return this.section.getByText("Genetic association", { exact: true });
   }
 
   cell(row: number, column: number): Locator {

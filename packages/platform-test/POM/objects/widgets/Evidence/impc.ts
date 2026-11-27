@@ -45,8 +45,8 @@ export const IMPC_OPERATION = "impcQuery";
 export const IMPC_LIST = "impc";
 
 export type ImpcRow = {
-  disease: { id: string; name: string };
-  target: { id: string; approvedSymbol: string };
+  diseaseId: string;
+  diseaseName: string;
   directionOnTarget: string | null;
   directionOnTrait: string | null;
   diseaseFromSource: string | null;
@@ -80,7 +80,7 @@ export class ImpcSection extends GeneticEvidenceSection {
   }
 
   override get chip(): Locator {
-    return this.section.getByText("Animal models", { exact: true });
+    return this.section.getByText("Animal model", { exact: true });
   }
 
   diseaseLink(row: number): Locator {

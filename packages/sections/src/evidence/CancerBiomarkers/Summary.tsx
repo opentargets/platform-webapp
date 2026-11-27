@@ -9,8 +9,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ cancerBiomarkersSummary }) => {
-        const { count } = cancerBiomarkersSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.cancerBiomarkers;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={definition.dataType}

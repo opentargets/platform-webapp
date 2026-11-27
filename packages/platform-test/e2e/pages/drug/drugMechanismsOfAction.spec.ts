@@ -35,7 +35,7 @@ test.describe("Drug page: Mechanisms of Action", () => {
         "Mechanisms of Action"
       );
       await expect(moa.description).toHaveText(
-        `${drugFacts(primary).name} biochemical interactions to produce intended pharmacological effects. Curated from scientific literature and post-marketing package inserts. Source: ChEMBL`
+        `${drugFacts(primary).name} biochemical interactions to produce intended pharmacological effects. Curated from scientific literature and post-marketing package inserts. Source: ChEMBL, Open Targets`
       );
       await expectExternalLink(
         moa.description.getByRole("link", { name: "ChEMBL" }),
