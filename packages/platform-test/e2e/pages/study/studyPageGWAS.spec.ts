@@ -194,12 +194,12 @@ test.describe("Study page: GWAS study", () => {
     for (const value of values) expect(value.trim()).toMatch(/^-?[\d,.]+(e-?\d+)?$/);
 
     await test.step("significant variants never exceed the total harmonised variants", async () => {
-      const valueOf = async (label: string) => {
+      const qcValue = async (label: string) => {
         const row = rows.filter({ hasText: label }).filter({ hasNotText: `${label} SE` });
         return parseNumber((await row.first().locator("td:last-child").innerText()).trim());
       };
-      expect(await valueOf("Total variants")).toBeGreaterThan(
-        await valueOf("Significant variants")
+      expect(await qcValue("Total variants")).toBeGreaterThan(
+        await qcValue("Significant variants")
       );
     });
 
