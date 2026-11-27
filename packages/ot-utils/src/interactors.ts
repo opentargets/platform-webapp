@@ -21,6 +21,9 @@ const INTERACTOR_LINKS: Array<[RegExp, (id: string, match: RegExpMatchArray) => 
   [/^DB\d{5}$/, (id) => identifiersOrgLink("drugbank", id)],
   // ChEBI, e.g. CHEBI:61151 (IntAct)
   [/^CHEBI:(\d+)$/, (_id, match) => identifiersOrgLink("CHEBI", match[1])],
+  // RefSeq RNA / mRNA, e.g. NR_131157 (IntAct). identifiers.org resolves RefSeq to NCBI Protein,
+  // so link to NCBI Nucleotide directly.
+  [/^[NX][MR]_\d+(\.\d+)?$/, (id) => `https://www.ncbi.nlm.nih.gov/nuccore/${id}`],
 ];
 
 /**
