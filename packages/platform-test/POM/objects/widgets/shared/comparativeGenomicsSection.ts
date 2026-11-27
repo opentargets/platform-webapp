@@ -1,136 +1,137 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection, TableControls } from "../Target/sectionWidgets";
+
+/** Column headers of the homologues table, in order. */
+export const COMPARATIVE_GENOMICS_COLUMNS = [
+  "Species",
+  "Homology type",
+  "Homologue",
+  "Query %id",
+  "Target %id",
+] as const;
+
+export const HOMOLOGUE_COLUMN = {
+  species: 0,
+  homologyType: 1,
+  homologue: 2,
+  queryIdentity: 3,
+  targetIdentity: 4,
+} as const;
+
+/** The species on the chart's axis, bottom to top (ComparativeGenomicsPlot.tsx). */
+export const CHART_SPECIES = [
+  "Caenorhabditis elegans (Nematode, N2)",
+  "Drosophila melanogaster (Fruit fly)",
+  "Zebrafish",
+  "Tropical clawed frog",
+  "Pig",
+  "Dog",
+  "Guinea Pig",
+  "Rabbit",
+  "Rat",
+  "Mouse",
+  "Macaque",
+  "Chimpanzee",
+  "Human",
+] as const;
+
+/** How the table words each homology type the API returns. */
+export const HOMOLOGY_TYPES = [
+  "ortholog one2one",
+  "ortholog one2many",
+  "ortholog many2many",
+  "within species paralog",
+  "other paralog",
+] as const;
+
+/** GraphQL operation behind the section (packages/sections/src/target/ComparativeGenomics). */
+export const COMPARATIVE_GENOMICS_OPERATION = "TargetHomologuesQuery";
 
 /**
- * Interactor for Comparative Genomics section on Target page
- * Displays orthologues and paralogues with a chart and table view
- * Uses only data-testid selectors for reliable, predictable testing
+ * Target profile > Comparative Genomics. Opens on a chart with two dots per homologue
+ * (query and target percentage identity); the toggle switches to a client-side table.
  */
-export class ComparativeGenomicsSection {
-  constructor(private page: Page) {}
+export class ComparativeGenomicsSection extends ProfileSection {
+  readonly table: TableControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-compgenomics']");
+  constructor(page: Page) {
+    super(page, "compGenomics");
+    this.table = new TableControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get tableViewToggle(): Locator {
+    return this.section.getByTestId("view-toggle-table");
   }
 
-  /**
-   * Wait for the section to be visible
-   */
-  async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  get chartViewToggle(): Locator {
+    return this.section.getByTestId("view-toggle-chart");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-compgenomics-header']");
+  get chart(): Locator {
+    return this.section.getByTestId("comparative-genomics-chart");
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  get chartSvg(): Locator {
+    return this.chart.locator("svg").filter({ has: this.page.locator("circle") });
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  /** The dots of the chart: one on the query axis and one on the target axis per homologue. */
+  get dots(): Locator {
+    return this.chartSvg.locator("circle");
   }
 
-  // View toggle buttons
-  getChartViewButton(): Locator {
-    return this.getSection().locator("[data-testid='view-toggle-chart']");
+  /** Query-side dots only (left half of the chart). */
+  get queryDots(): Locator {
+    return this.chartSvg.locator("g.queryContainer circle");
   }
 
-  getTableViewButton(): Locator {
-    return this.getSection().locator("[data-testid='view-toggle-table']");
+  /** The species labels down the middle of the chart. */
+  get speciesLabels(): Locator {
+    return this.chartSvg.locator("g.queryContainer .tick text");
   }
 
-  async switchToChartView(): Promise<void> {
-    await this.getChartViewButton().click();
-    await this.waitForLoad();
+  /** The box that follows the pointer over a dot. */
+  get chartTooltip(): Locator {
+    return this.chart.locator("#tolltip-template-comp-genomic .tooltip");
   }
 
-  async switchToTableView(): Promise<void> {
-    await this.getTableViewButton().click();
-    await this.waitForLoad();
+  /** The Export button above the chart (the table has its own). */
+  get chartExportButton(): Locator {
+    return this.chart.getByTestId("data-downloader").getByRole("button", { name: "Export" });
   }
 
-  // Chart visualization
-  getChart(): Locator {
-    return this.getSection().locator("[data-testid='comparative-genomics-chart']");
+  cell(row: number, column: keyof typeof HOMOLOGUE_COLUMN): Locator {
+    return this.table.rows.nth(row).locator("td").nth(HOMOLOGUE_COLUMN[column]);
   }
 
-  async isChartVisible(): Promise<boolean> {
-    return await this.getChart()
-      .isVisible()
-      .catch(() => false);
+  /** Every cell of one column on the current page. */
+  column(column: keyof typeof HOMOLOGUE_COLUMN): Locator {
+    return this.table.rows.locator(`td:nth-child(${HOMOLOGUE_COLUMN[column] + 1})`);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("[data-testid='ot-table']");
+  /** The orthologue-confidence star inside a "Homology type" cell. */
+  confidenceStar(row: Locator): Locator {
+    return row.locator("td").nth(HOMOLOGUE_COLUMN.homologyType).locator("svg[data-icon='star']");
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  /** Switch to the table and assert the chart is replaced by a loaded table. */
+  async showTable(): Promise<void> {
+    await this.tableViewToggle.click();
+    await expect(this.tableViewToggle).toHaveAttribute("aria-pressed", "true");
+    await expect(this.chartViewToggle).toHaveAttribute("aria-pressed", "false");
+    await expect(this.chart, "the chart should be replaced by the table").toHaveCount(0);
+    await this.table.expectLoaded();
   }
 
-  // Table search
-  getSearchInput(): Locator {
-    return this.getSection().locator("[data-testid='table-search-input']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
-  }
-
-  // Data downloader
-  getDataDownloader(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
-  }
-
-  async clickDataDownloader(): Promise<void> {
-    await this.getDataDownloader().click();
-  }
-
-  // Pagination controls
-  getPaginationFirstButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-first-button']");
-  }
-
-  getPaginationPreviousButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  getPaginationNextButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPaginationLastButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-last-button']");
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.getPaginationFirstButton().click();
-  }
-
-  async goToPreviousPage(): Promise<void> {
-    await this.getPaginationPreviousButton().click();
-  }
-
-  async goToNextPage(): Promise<void> {
-    await this.getPaginationNextButton().click();
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.getPaginationLastButton().click();
+  /** Switch to the chart and assert the table is replaced by a drawn chart. */
+  async showChart(): Promise<void> {
+    await this.chartViewToggle.click();
+    await expect(this.chartViewToggle).toHaveAttribute("aria-pressed", "true");
+    await expect(this.tableViewToggle).toHaveAttribute("aria-pressed", "false");
+    await expect(
+      this.section.getByTestId("ot-table"),
+      "the table should be replaced by the chart"
+    ).toHaveCount(0);
+    await expect(this.dots.first(), "the chart should be drawn").toBeVisible();
   }
 }

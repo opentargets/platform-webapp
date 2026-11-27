@@ -1,134 +1,88 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
 
-/**
- * Interactor for Drug Header component
- */
+/** Header and profile summary of the drug page: name, links, fields, chips, structure. */
 export class DrugHeader {
-  constructor(private page: Page) {}
+  constructor(readonly page: Page) {}
 
-  // Header container
-  getHeader(): Locator {
-    return this.page.locator("[data-testid='profile-page-header-block']");
+  private get headerBlock(): Locator {
+    return this.page.getByTestId("profile-page-header-block");
   }
 
-  async isHeaderVisible(): Promise<boolean> {
-    return await this.getHeader()
-      .isVisible()
-      .catch(() => false);
+  /** The drug name. */
+  get title(): Locator {
+    return this.headerBlock.getByTestId("profile-page-header-text");
   }
 
-  // Drug name/title
-  getDrugTitle(): Locator {
-    return this.getHeader().locator("[data-testid='profile-page-header-text']");
+  /** The "ChEMBL: … | DrugBank: …" line under the name. */
+  get externalLinks(): Locator {
+    return this.headerBlock.getByTestId("external-links");
   }
 
-  async getDrugName(): Promise<string | null> {
-    return await this.getDrugTitle().textContent();
+  externalLink(id: string): Locator {
+    return this.externalLinks.getByRole("link", { name: id, exact: true });
   }
 
-  async isDrugTitleVisible(): Promise<boolean> {
-    return await this.getDrugTitle()
-      .isVisible()
-      .catch(() => false);
+  /** The block with description, fields, chips and structure. */
+  get profile(): Locator {
+    return this.page.getByTestId("profile-header");
   }
 
-  // External links section
-  getExternalLinksSection(): Locator {
-    return this.getHeader().locator("[data-testid='external-links']");
+  get description(): Locator {
+    return this.profile.getByTestId("profile-description");
   }
 
-  async hasExternalLinks(): Promise<boolean> {
-    return await this.getExternalLinksSection()
-      .isVisible()
-      .catch(() => false);
+  get moleculeType(): Locator {
+    return this.profile.getByTestId("drug-molecule-type");
   }
 
-  // ChEMBL link
-  getChemblLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='ebi.ac.uk/chembl']");
+  get maxStage(): Locator {
+    return this.profile.getByTestId("drug-max-stage");
   }
 
-  async hasChemblLink(): Promise<boolean> {
-    return await this.getChemblLink()
-      .isVisible()
-      .catch(() => false);
+  get parentMolecule(): Locator {
+    return this.profile.getByTestId("drug-parent-molecule");
   }
 
-  async clickChemblLink(): Promise<void> {
-    await this.getChemblLink().click();
+  get childMolecules(): Locator {
+    return this.profile.getByTestId("drug-child-molecules");
   }
 
-  // DrugBank link
-  getDrugBankLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='drugbank']");
+  get synonyms(): Locator {
+    return this.profile.getByTestId("profile-synonyms");
   }
 
-  async hasDrugBankLink(): Promise<boolean> {
-    return await this.getDrugBankLink()
-      .isVisible()
-      .catch(() => false);
+  get synonymChips(): Locator {
+    return this.synonyms.locator("[data-testid^='chip-']");
   }
 
-  async clickDrugBankLink(): Promise<void> {
-    await this.getDrugBankLink().click();
+  /** The "[ show more ]" / "[ hide ]" control of the synonyms list. */
+  get synonymsToggle(): Locator {
+    return this.synonyms.getByTestId("long-list-toggle");
   }
 
-  // ChEBI link
-  getChebiLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='CHEBI']");
+  get tradeNames(): Locator {
+    return this.profile.getByTestId("profile-known-trade-names");
   }
 
-  async hasChebiLink(): Promise<boolean> {
-    return await this.getChebiLink()
-      .isVisible()
-      .catch(() => false);
+  get tradeNameChips(): Locator {
+    return this.tradeNames.locator("[data-testid^='chip-']");
   }
 
-  // DailyMed link
-  getDailyMedLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='dailymed']");
+  get tradeNamesToggle(): Locator {
+    return this.tradeNames.getByTestId("long-list-toggle");
   }
 
-  async hasDailyMedLink(): Promise<boolean> {
-    return await this.getDailyMedLink()
-      .isVisible()
-      .catch(() => false);
+  /** The chemical structure thumbnail; a button that opens the enlarged view. */
+  get structureButton(): Locator {
+    return this.profile.getByTestId("drug-structure-button");
   }
 
-  // DrugCentral link
-  getDrugCentralLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='drugcentral']");
+  get structureImage(): Locator {
+    return this.structureButton.getByRole("img");
   }
 
-  async hasDrugCentralLink(): Promise<boolean> {
-    return await this.getDrugCentralLink()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  // Wikipedia link
-  getWikipediaLink(): Locator {
-    return this.getExternalLinksSection().locator("a[href*='wikipedia']");
-  }
-
-  async hasWikipediaLink(): Promise<boolean> {
-    return await this.getWikipediaLink()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  // Get all external links
-  getAllExternalLinks(): Locator {
-    return this.getExternalLinksSection().locator("a");
-  }
-
-  async getExternalLinksCount(): Promise<number> {
-    return await this.getAllExternalLinks().count();
-  }
-
-  // Wait for header to load
-  async waitForHeaderLoad(): Promise<void> {
-    await this.getHeader().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** The enlarged chemical structure. */
+  get structureModal(): Locator {
+    return this.page.getByTestId("drug-structure-modal");
   }
 }
