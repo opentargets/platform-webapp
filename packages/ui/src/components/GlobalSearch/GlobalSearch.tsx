@@ -19,7 +19,8 @@ const SearchButton = styled("button")(({ theme, isHomePage = false }) => ({
 
 function GlobalSearch({ isHomePage }) {
   const { setOpen } = useContext(SearchContext);
-  const shortcutText = navigator?.platform.indexOf("Mac") > -1 ? "⌘ K" : "Ctrl+K";
+  const isMac = navigator?.platform.indexOf("Mac") > -1;
+  const shortcutText = isMac ? "⌘ K" : "Ctrl+K";
   const searchButtonContainer = {
     width: 1,
     display: "flex",
@@ -30,8 +31,9 @@ function GlobalSearch({ isHomePage }) {
   };
 
   function monitorCmdK(event) {
-    // open on cmd + k
-    if (event.metaKey === true && event.code === "KeyK") {
+    // open on cmd + k (Mac) or ctrl + k (elsewhere), matching the label
+    const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
+    if (modifierPressed === true && event.code === "KeyK") {
       event.stopPropagation();
       event.preventDefault();
       setOpen(true);
