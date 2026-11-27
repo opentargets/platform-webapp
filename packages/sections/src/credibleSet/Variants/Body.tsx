@@ -38,6 +38,13 @@ type VariantRow = Pick<
   | "r2Overall"
   | "posteriorProbability"
   | "logBayesFactor"
+  | "sampleSize"
+  | "effectAlleleFrequency"
+  | "conditionalBeta"
+  | "conditionalStandardError"
+  | "rescaledAbsBeta"
+  | "rescaledStandardError"
+  | "rescaledDirection"
 >;
 
 type QueryData = {
@@ -63,12 +70,26 @@ const DEFAULT_SORT = {
   desc: true,
 };
 
+const REPORTED_GROUP = "Reported statistics";
+const FINE_MAPPING_GROUP = "Fine-mapping";
+
 type getColumnsType = {
   leadVariantId: string;
 };
 
 function formatVariantConsequenceLabel(label: string) {
   return label.replace(/_/g, " ");
+}
+
+function formatEffect(beta?: number | null, standardError?: number | null) {
+  if (typeof beta !== "number") return null;
+  if (typeof standardError !== "number") return beta.toPrecision(3);
+  return `${beta.toPrecision(3)} [${standardError.toFixed(3)}]`;
+}
+
+function getRescaledBeta({ rescaledAbsBeta, rescaledDirection }: VariantRow) {
+  if (typeof rescaledAbsBeta !== "number") return null;
+  return rescaledDirection === -1 ? -rescaledAbsBeta : rescaledAbsBeta;
 }
 
 function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow>[] {
@@ -104,8 +125,47 @@ function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow
       exportValue: ({ variantId }) => variantId,
     },
     {
+      id: "sampleSize",
+      label: "Sample size",
+      group: REPORTED_GROUP,
+      numeric: true,
+      sortField: CredibleSetVariantsSortField.SampleSize,
+      tooltip: "Sample size for this variant",
+      renderCell: ({ sampleSize }) => {
+        if (typeof sampleSize !== "number") return naLabel;
+        return sampleSize.toLocaleString();
+      },
+    },
+    {
+      id: "effectAlleleFrequency",
+      label: "EAF",
+      group: REPORTED_GROUP,
+      numeric: true,
+      sortField: CredibleSetVariantsSortField.EffectAlleleFrequency,
+      tooltip: "Effect allele frequency of this variant",
+      renderCell: ({ effectAlleleFrequency }) => {
+        if (typeof effectAlleleFrequency !== "number") return naLabel;
+        return effectAlleleFrequency.toPrecision(3);
+      },
+    },
+    {
+      id: "reportedBeta",
+      label: "Effect",
+      exportLabel: "Univariate effect",
+      group: REPORTED_GROUP,
+      numeric: true,
+      sortField: CredibleSetVariantsSortField.ReportedBeta,
+      tooltip:
+        "Beta with respect to the ALT allele, as reported by the source, followed by its standard error in brackets. Not comparable across studies",
+      renderCell: ({ reportedBeta, reportedStandardError }) =>
+        formatEffect(reportedBeta, reportedStandardError) ?? naLabel,
+      exportValue: ({ reportedBeta, reportedStandardError }) =>
+        formatEffect(reportedBeta, reportedStandardError),
+    },
+    {
       id: "pValue",
       label: "P-value",
+      group: REPORTED_GROUP,
       numeric: true,
       sortField: CredibleSetVariantsSortField.PValue,
       renderCell: ({ pValueMantissa, pValueExponent }) => {
@@ -119,31 +179,34 @@ function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow
       },
     },
     {
-      id: "reportedBeta",
-      label: "Beta",
+      id: "conditionalBeta",
+      label: "Effect",
+      exportLabel: "Conditional effect",
+      group: FINE_MAPPING_GROUP,
       numeric: true,
-      sortField: CredibleSetVariantsSortField.ReportedBeta,
-      tooltip: "Beta with respect to the ALT allele, as reported by the source",
-      renderCell: ({ reportedBeta }) => {
-        if (typeof reportedBeta !== "number") return naLabel;
-        return reportedBeta.toPrecision(3);
-      },
+      sortField: CredibleSetVariantsSortField.ConditionalBeta,
+      tooltip:
+        "Effect of this variant from fine-mapping, conditional on the other signals in the locus, followed by its standard error in brackets",
+      renderCell: ({ conditionalBeta, conditionalStandardError }) =>
+        formatEffect(conditionalBeta, conditionalStandardError) ?? naLabel,
+      exportValue: ({ conditionalBeta, conditionalStandardError }) =>
+        formatEffect(conditionalBeta, conditionalStandardError),
     },
     {
-      id: "reportedStandardError",
-      label: "Standard error",
+      id: "rescaledBeta",
+      label: "Rescaled effect",
+      group: FINE_MAPPING_GROUP,
       numeric: true,
-      sortField: CredibleSetVariantsSortField.ReportedStandardError,
+      sortField: CredibleSetVariantsSortField.RescaledAbsBeta,
       tooltip:
-        "Standard Error: Estimate of the standard deviation of the sampling distribution of the beta",
-      renderCell: ({ reportedStandardError }) => {
-        if (typeof reportedStandardError !== "number") return naLabel;
-        return reportedStandardError.toFixed(3);
-      },
+        "Effect rescaled to be comparable across studies (signed by its direction), followed by its standard error in brackets. Sorted by absolute size",
+      renderCell: row => formatEffect(getRescaledBeta(row), row.rescaledStandardError) ?? naLabel,
+      exportValue: row => formatEffect(getRescaledBeta(row), row.rescaledStandardError),
     },
     {
       id: "r2Overall",
       label: "LD (r²)",
+      group: FINE_MAPPING_GROUP,
       numeric: true,
       sortField: CredibleSetVariantsSortField.R2Overall,
       tooltip: "Linkage disequilibrium with the lead variant",
@@ -153,20 +216,9 @@ function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow
       },
     },
     {
-      id: "posteriorProbability",
-      label: "Posterior Probability",
-      numeric: true,
-      tooltip:
-        "Posterior inclusion probability that this variant is causal within the fine-mapped credible set",
-      sortField: DEFAULT_SORT.field,
-      renderCell: ({ posteriorProbability }) => {
-        if (typeof posteriorProbability !== "number") return naLabel;
-        return posteriorProbability.toPrecision(3);
-      },
-    },
-    {
       id: "logBayesFactor",
       label: "log(BF)",
+      group: FINE_MAPPING_GROUP,
       numeric: true,
       tooltip:
         "Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal",
@@ -174,6 +226,20 @@ function getColumns({ leadVariantId }: getColumnsType): OtTableColumn<VariantRow
       renderCell: ({ logBayesFactor }) => {
         if (typeof logBayesFactor !== "number") return naLabel;
         return logBayesFactor.toPrecision(3);
+      },
+    },
+    {
+      id: "posteriorProbability",
+      label: "PIP",
+      exportLabel: "Posterior inclusion probability",
+      group: FINE_MAPPING_GROUP,
+      numeric: true,
+      tooltip:
+        "Posterior inclusion probability that this variant is causal within the fine-mapped credible set",
+      sortField: DEFAULT_SORT.field,
+      renderCell: ({ posteriorProbability }) => {
+        if (typeof posteriorProbability !== "number") return naLabel;
+        return posteriorProbability.toPrecision(3);
       },
     },
     {
