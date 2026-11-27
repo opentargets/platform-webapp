@@ -957,8 +957,14 @@ export type CredibleSetVariant = {
   alternateAllele: Scalars['String']['output'];
   /** Chromosome of the variant. */
   chromosome: Chromosome;
+  /** Effect of this variant from fine-mapping, conditional on the other signals in the locus. */
+  conditionalBeta?: Maybe<Scalars['Float']['output']>;
+  /** Standard error of the conditional beta. */
+  conditionalStandardError?: Maybe<Scalars['Float']['output']>;
   /** Identifier of the credible set. */
   credibleSetId: Scalars['String']['output'];
+  /** Effect allele frequency of this variant. */
+  effectAlleleFrequency?: Maybe<Scalars['Float']['output']>;
   /** Whether this is the credible set's lead variant. */
   isLead: Scalars['Boolean']['output'];
   /** Natural log Bayes factor for the variant from fine-mapping. */
@@ -983,6 +989,14 @@ export type CredibleSetVariant = {
   reportedBeta?: Maybe<Scalars['Float']['output']>;
   /** Standard error of the reported beta. */
   reportedStandardError?: Maybe<Scalars['Float']['output']>;
+  /** Absolute effect rescaled to be comparable across studies. */
+  rescaledAbsBeta?: Maybe<Scalars['Float']['output']>;
+  /** Direction of the rescaled effect (1 or -1). */
+  rescaledDirection?: Maybe<Scalars['Int']['output']>;
+  /** Standard error of the rescaled effect. */
+  rescaledStandardError?: Maybe<Scalars['Float']['output']>;
+  /** Sample size for this variant. */
+  sampleSize?: Maybe<Scalars['Int']['output']>;
   /** Variant identifier (`chromosome_position_ref_alt`). */
   variantId: Scalars['String']['output'];
 };
@@ -1018,6 +1032,10 @@ export type CredibleSetVariantsSort = {
 
 /** Fields available for sorting. */
 export enum CredibleSetVariantsSortField {
+  /** Effect from fine-mapping, conditional on the other signals in the locus. */
+  ConditionalBeta = 'CONDITIONAL_BETA',
+  ConditionalStandardError = 'CONDITIONAL_STANDARD_ERROR',
+  EffectAlleleFrequency = 'EFFECT_ALLELE_FREQUENCY',
   /** Whether the variant is the credible set's lead variant. Sort descending to put it first. */
   IsLead = 'IS_LEAD',
   LogBayesFactor = 'LOG_BAYES_FACTOR',
@@ -1028,6 +1046,12 @@ export enum CredibleSetVariantsSortField {
   R2Overall = 'R2_OVERALL',
   ReportedBeta = 'REPORTED_BETA',
   ReportedStandardError = 'REPORTED_STANDARD_ERROR',
+  /** Absolute effect rescaled to be comparable across studies. */
+  RescaledAbsBeta = 'RESCALED_ABS_BETA',
+  /** Direction of the rescaled effect (-1 before 1 ascending). */
+  RescaledDirection = 'RESCALED_DIRECTION',
+  RescaledStandardError = 'RESCALED_STANDARD_ERROR',
+  SampleSize = 'SAMPLE_SIZE',
   /** By chromosome, then position, then alleles. */
   Variant = 'VARIANT'
 }
@@ -5614,7 +5638,10 @@ export type StudyStats = {
   hasSumstats: Array<OptBoolBucket>;
   /** The summary statistics of sample sizes. */
   nSamples: Sumstats;
-  /** The samples to cases ratio. */
+  /**
+   * Summary statistics of cases divided by samples, excluding studies with missing counts or
+   * zero samples. The count is the number of valid ratios.
+   */
   samplesByCase: Sumstats;
   /** The distribution of study types. */
   studyType: Array<StudyTypeBucket>;
