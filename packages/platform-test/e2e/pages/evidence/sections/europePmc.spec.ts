@@ -1,6 +1,5 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
-import { expectExports } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import {
   BRAF_MELANOMA_EP,
   BRAF_MI_EP,
@@ -9,13 +8,14 @@ import {
   EP_LIST,
   EP_OPERATION,
   EP_PAGE_SIZE,
+  type EuropePmcRow,
   expectedMarks,
   openEuropePmc,
   stubbedAbstract,
   stubbedTitle,
   stubbedYear,
-  type EuropePmcRow,
 } from "../../../../POM/objects/widgets/Evidence/europePmc";
+import { expectExports } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import { waitForPageOfOperation } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
 import { expectSections } from "../../../../utils/sections";
 
@@ -165,7 +165,9 @@ test.describe("Evidence page: Europe PMC", () => {
 
     await test.step("next page shows other publications and asks for their details", async () => {
       const second = await section.goToNextPage(1);
-      await expect(table.position).toHaveText(`${EP_PAGE_SIZE + 1} - ${2 * EP_PAGE_SIZE} of ${total}`);
+      await expect(table.position).toHaveText(
+        `${EP_PAGE_SIZE + 1} - ${2 * EP_PAGE_SIZE} of ${total}`
+      );
       await expect(table.firstPageButton).toBeEnabled();
       await expect(table.previousPageButton).toBeEnabled();
       await expect
@@ -176,7 +178,9 @@ test.describe("Evidence page: Europe PMC", () => {
       await section.expectDetailsLoaded(0);
       await expect(section.titleLink(0)).toHaveText(stubbedTitle(pmid(second[0])));
       expect(second.map(pmid)).not.toEqual(first);
-      await expect(section.abstractPanel(0), "an opened abstract closes with its page").toHaveCount(0);
+      await expect(section.abstractPanel(0), "an opened abstract closes with its page").toHaveCount(
+        0
+      );
       await expect(section.button(0, "Show abstract")).toBeVisible();
       expect(stub.searches.at(-1)).toEqual(second.map(pmid));
     });
@@ -189,13 +193,17 @@ test.describe("Evidence page: Europe PMC", () => {
       const lastRows = (await last).disease[EP_LIST].rows;
       const remainder = total - lastPage * EP_PAGE_SIZE;
       expect(lastRows).toHaveLength(remainder);
-      await expect(table.position).toHaveText(`${lastPage * EP_PAGE_SIZE + 1} - ${total} of ${total}`);
+      await expect(table.position).toHaveText(
+        `${lastPage * EP_PAGE_SIZE + 1} - ${total} of ${total}`
+      );
       await expect(table.rows).toHaveCount(remainder);
       await expect(table.nextPageButton).toBeDisabled();
       await expect(table.lastPageButton).toBeDisabled();
       await expect(table.previousPageButton).toBeEnabled();
       await section.expectDetailsLoaded(remainder - 1);
-      await expect(section.titleLink(remainder - 1)).toHaveText(stubbedTitle(pmid(lastRows[remainder - 1])));
+      await expect(section.titleLink(remainder - 1)).toHaveText(
+        stubbedTitle(pmid(lastRows[remainder - 1]))
+      );
     });
 
     await test.step("the first page comes back", async () => {
@@ -305,10 +313,7 @@ test.describe("Evidence page: Europe PMC", () => {
 
   test("a pair with only Europe PMC evidence renders just that section", async ({ page }) => {
     await openEuropePmc(page, BRAF_MI_EP);
-    await expectSections(
-      page,
-      expectedSectionsFor(`${BRAF_MI_EP.ensgId}/${BRAF_MI_EP.efoId}`)
-    );
+    await expectSections(page, expectedSectionsFor(`${BRAF_MI_EP.ensgId}/${BRAF_MI_EP.efoId}`));
   });
 
   test("an evidence page of a heavily studied pair loads its publications", async ({ page }) => {

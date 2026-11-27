@@ -4,9 +4,9 @@ import {
   EVIDENCE_EVA_HEADERS,
   EVIDENCE_EVA_OPERATION,
   EVIDENCE_EVA_PAGE_SIZE,
-  EvidenceEvaSection,
   type EvidenceEvaData,
   type EvidenceEvaRow,
+  EvidenceEvaSection,
 } from "../../../../POM/objects/widgets/Evidence/eva";
 import {
   stubEuropePmc,
@@ -92,9 +92,9 @@ async function expectRow(section: EvidenceEvaSection, index: number, row: Eviden
   }
 
   if (row.variantFunctionalConsequence) {
-    await expect(section.cell(index, "consequence").getByTestId("label-chip-value").first()).toHaveText(
-      sentence(row.variantFunctionalConsequence.label)
-    );
+    await expect(
+      section.cell(index, "consequence").getByTestId("label-chip-value").first()
+    ).toHaveText(sentence(row.variantFunctionalConsequence.label));
   } else {
     await expect(section.cell(index, "consequence")).toHaveText(NA);
   }
@@ -203,7 +203,10 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     const lof = evidences.rows.findIndex((row) => row.directionOnTarget === "LoF");
     expect(lof, "the first page of LDLR holds a loss-of-function record").toBeGreaterThanOrEqual(0);
     const plain = evidences.rows.findIndex((row) => !row.directionOnTarget);
-    expect(plain, "the first page of LDLR holds a record without a variant effect").toBeGreaterThanOrEqual(0);
+    expect(
+      plain,
+      "the first page of LDLR holds a record without a variant effect"
+    ).toBeGreaterThanOrEqual(0);
 
     await section.directionIcons(lof).first().hover();
     await expect(page.getByRole("tooltip")).toHaveText("Loss of Function │ Risk");
@@ -247,7 +250,10 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
   }) => {
     const { section, evidences } = await open(page, MANY);
     const [row] = evidences.rows;
-    expect(row.cohortPhenotypes!.length, "the record has several cohort phenotypes").toBeGreaterThan(1);
+    expect(
+      row.cohortPhenotypes!.length,
+      "the record has several cohort phenotypes"
+    ).toBeGreaterThan(1);
 
     await section.helpIcon(0, "disease").hover();
     const tooltip = page.getByRole("tooltip");
@@ -262,7 +268,9 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
   test("the allele origin tooltip lists the allelic requirements", async ({ page }) => {
     const { section, evidences } = await open(page, MANY);
     const index = evidences.rows.findIndex((row) => (row.allelicRequirements ?? []).length > 0);
-    expect(index, "the first page holds a record with allelic requirements").toBeGreaterThanOrEqual(0);
+    expect(index, "the first page holds a record with allelic requirements").toBeGreaterThanOrEqual(
+      0
+    );
 
     await section.helpIcon(index, "alleleOrigin").hover();
     const tooltip = page.getByRole("tooltip");
@@ -309,7 +317,9 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
   }) => {
     const { section, evidences } = await open(page, MANY);
     const index = evidences.rows.findIndex((row) => (row.literature ?? []).length > 1);
-    expect(index, "the first page holds a record with several publications").toBeGreaterThanOrEqual(0);
+    expect(index, "the first page holds a record with several publications").toBeGreaterThanOrEqual(
+      0
+    );
     const literature = evidences.rows[index].literature!;
 
     await section.literatureTrigger(index).click();
@@ -383,7 +393,8 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
 
     await test.step("the last page holds the remainder and cannot go forward", async () => {
       await table.lastPageButton.click();
-      const lastStart = Math.floor((total - 1) / EVIDENCE_EVA_PAGE_SIZE) * EVIDENCE_EVA_PAGE_SIZE + 1;
+      const lastStart =
+        Math.floor((total - 1) / EVIDENCE_EVA_PAGE_SIZE) * EVIDENCE_EVA_PAGE_SIZE + 1;
       await table.expectPosition(`${lastStart} - ${total} of ${total}`, {
         canGoBack: true,
         canGoForward: false,
@@ -434,10 +445,18 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     const json = await section.controls.downloadJson();
     expect(json.filename).toBe("eva-evidence.json");
     expect(json.rows).toHaveLength(evidences.count);
-    expect(json.rows.map((row) => row.variantId)).toEqual(evidences.rows.map((row) => row.variant!.id));
-    expect(json.rows.map((row) => row.variantRsId)).toEqual(evidences.rows.map((row) => row.variantRsId));
-    expect(json.rows.map((row) => row.diseaseId)).toEqual(evidences.rows.map((row) => row.disease.id));
-    expect(json.rows.map((row) => row.reviewStatus)).toEqual(evidences.rows.map((row) => row.confidence));
+    expect(json.rows.map((row) => row.variantId)).toEqual(
+      evidences.rows.map((row) => row.variant!.id)
+    );
+    expect(json.rows.map((row) => row.variantRsId)).toEqual(
+      evidences.rows.map((row) => row.variantRsId)
+    );
+    expect(json.rows.map((row) => row.diseaseId)).toEqual(
+      evidences.rows.map((row) => row.disease.id)
+    );
+    expect(json.rows.map((row) => row.reviewStatus)).toEqual(
+      evidences.rows.map((row) => row.confidence)
+    );
     expect(json.rows.map((row) => row.clinicalSignificances)).toEqual(
       evidences.rows.map((row) => row.clinicalSignificances)
     );

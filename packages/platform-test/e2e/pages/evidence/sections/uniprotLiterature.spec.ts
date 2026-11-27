@@ -20,8 +20,8 @@ import {
   UNIPROT_LITERATURE_HEADERS,
   UNIPROT_LITERATURE_LIST,
   UNIPROT_LITERATURE_OPERATION,
-  UniprotLiteratureSection,
   type UniprotLiteratureRow,
+  UniprotLiteratureSection,
 } from "../../../../POM/objects/widgets/Evidence/uniprot";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
@@ -40,7 +40,9 @@ async function open(page: Page, pair = MECP2_NDD) {
 }
 
 test.describe("Evidence page: UniProt literature", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count).toBe(4);
 

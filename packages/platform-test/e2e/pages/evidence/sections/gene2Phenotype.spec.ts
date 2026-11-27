@@ -1,12 +1,15 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
-  CFTR_CF,
-  GeneticEvidenceSection,
-  MECP2_NDD,
-  NF1_NF1,
-  sentence,
-} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
+  directionText,
+  G2P_COLUMN,
+  G2P_HEADERS,
+  G2P_LIST,
+  G2P_OPERATION,
+  type G2pRow,
+  Gene2PhenotypeSection,
+} from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import {
   expectColumnPicker,
   expectExports,
@@ -15,16 +18,13 @@ import {
   openEvidenceSection,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import {
-  directionText,
-  G2P_COLUMN,
-  G2P_HEADERS,
-  G2P_LIST,
-  G2P_OPERATION,
-  Gene2PhenotypeSection,
-  type G2pRow,
-} from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
+  CFTR_CF,
+  GeneticEvidenceSection,
+  MECP2_NDD,
+  NF1_NF1,
+  sentence,
+} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expectSections } from "../../../../utils/sections";
 
 /** MECP2 in neurodevelopmental disorder: three Gene2Phenotype rows, one page. */
@@ -35,7 +35,9 @@ async function open(page: Page, pair = MECP2_NDD) {
 }
 
 test.describe("Evidence page: Gene2Phenotype", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count).toBe(3);
 
@@ -106,7 +108,9 @@ test.describe("Evidence page: Gene2Phenotype", () => {
     await expect(section.consequenceLink(0)).toHaveText("Absent gene product");
     await expect(section.cell(0, G2P_COLUMN.allelic)).toHaveText("Monoallelic x heterozygous");
     await expect(section.cell(0, G2P_COLUMN.confidence)).toContainText("Definitive");
-    await expect(section.diseaseLink(2)).toHaveText("syndromic X-linked intellectual disability Lubs type");
+    await expect(section.diseaseLink(2)).toHaveText(
+      "syndromic X-linked intellectual disability Lubs type"
+    );
     await expect(section.consequenceLink(2)).toHaveText("Increased gene product level");
     await expect(section.cell(2, G2P_COLUMN.allelic)).toHaveText("Monoallelic x hemizygous");
   });
@@ -170,7 +174,10 @@ test.describe("Evidence page: Gene2Phenotype", () => {
 
   test("the literature cell lists the publications of its row", async ({ page }) => {
     const { section, list } = await open(page);
-    expect(list.rows[0].literature!.length, "the first row cites many publications").toBeGreaterThan(10);
+    expect(
+      list.rows[0].literature!.length,
+      "the first row cites many publications"
+    ).toBeGreaterThan(10);
     await section.expectLiteratureDrawer(0, G2P_COLUMN.literature, list.rows[0].literature!);
     await expect(section.cell(2, G2P_COLUMN.literature)).toHaveText(
       `${list.rows[2].literature!.length} publications`
@@ -230,8 +237,13 @@ test.describe("Evidence page: Gene2Phenotype", () => {
     const { section, list } = await open(page, NF1_NF1);
     expect(list.count).toBe(1);
     await expectFirstPage(section, list);
-    await expect(section.description).toContainText("associating NF1 with neurofibromatosis type 1");
-    await expect(section.diseaseLink(0)).toHaveAttribute("href", `/disease/${list.rows[0].disease.id}`);
+    await expect(section.description).toContainText(
+      "associating NF1 with neurofibromatosis type 1"
+    );
+    await expect(section.diseaseLink(0)).toHaveAttribute(
+      "href",
+      `/disease/${list.rows[0].disease.id}`
+    );
   });
 
   test("an evidence page without Gene2Phenotype data has no such section", async ({ page }) => {

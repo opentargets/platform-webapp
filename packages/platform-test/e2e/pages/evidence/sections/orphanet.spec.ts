@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
+import { directionText } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import {
   expectColumnPicker,
   expectExports,
@@ -14,14 +15,13 @@ import {
   MECP2_NDD,
   NF1_NF1,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
-import { directionText } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import {
   ORPHANET_COLUMN,
   ORPHANET_HEADERS,
   ORPHANET_LIST,
   ORPHANET_OPERATION,
-  OrphanetSection,
   type OrphanetRow,
+  OrphanetSection,
 } from "../../../../POM/objects/widgets/Evidence/orphanet";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
@@ -40,7 +40,9 @@ async function open(page: Page, pair = MECP2_NDD) {
 }
 
 test.describe("Evidence page: Orphanet", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count).toBe(5);
 

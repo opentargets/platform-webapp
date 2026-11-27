@@ -47,7 +47,9 @@ const aminoAcids = (row: UniprotVariantsRow): string =>
     .join(", ") || "N/A";
 
 test.describe("Evidence page: UniProt variants", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count, "MECP2 has several pages of UniProt variants").toBeGreaterThan(20);
 
@@ -128,7 +130,9 @@ test.describe("Evidence page: UniProt variants", () => {
     );
   });
 
-  test("the variant consequence chip explains where the prediction comes from", async ({ page }) => {
+  test("the variant consequence chip explains where the prediction comes from", async ({
+    page,
+  }) => {
     const { section } = await open(page);
     await section.protVarLink(0).hover();
     await expect(section.tooltip).toHaveText("Variant effect on protein function");

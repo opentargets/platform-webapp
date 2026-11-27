@@ -6,8 +6,8 @@ import {
   CLINGEN_HEADERS,
   CLINGEN_LIST,
   CLINGEN_OPERATION,
-  ClinGenSection,
   type ClinGenRow,
+  ClinGenSection,
 } from "../../../../POM/objects/widgets/Evidence/clinGen";
 import {
   expectColumnPicker,
@@ -38,7 +38,9 @@ async function open(page: Page, pair = MECP2_NDD) {
 }
 
 test.describe("Evidence page: ClinGen", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count).toBe(2);
 
@@ -109,7 +111,12 @@ test.describe("Evidence page: ClinGen", () => {
 
   test("the column picker hides and restores columns and locks the disease", async ({ page }) => {
     const { section } = await open(page);
-    await expectColumnPicker(section, [...CLINGEN_HEADERS], ["Disease/phenotype"], "Classification");
+    await expectColumnPicker(
+      section,
+      [...CLINGEN_HEADERS],
+      ["Disease/phenotype"],
+      "Classification"
+    );
   });
 
   test("the page size select offers 10, 25 and 100 rows", async ({ page }) => {
@@ -150,7 +157,9 @@ test.describe("Evidence page: ClinGen", () => {
     const { section, list } = await open(page, NF1_NF1);
     expect(list.count).toBe(1);
     await expectFirstPage(section, list);
-    await expect(section.description).toContainText("variation in NF1 causes neurofibromatosis type 1");
+    await expect(section.description).toContainText(
+      "variation in NF1 causes neurofibromatosis type 1"
+    );
     await expect(section.diseaseLink(0)).toHaveText("neurofibromatosis type 1");
   });
 

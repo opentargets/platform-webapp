@@ -1,15 +1,12 @@
 import { expect, type Page } from "@playwright/test";
-import {
-  stubEuropePmc,
-  waitForOperation,
-} from "../shared/sectionDataControls";
-import { waitForPageOfOperation } from "./somaticEvidenceSection";
+import { stubEuropePmc, waitForOperation } from "../shared/sectionDataControls";
 import {
   EVIDENCE_PAGE_SIZE,
   type EvidenceList,
   type EvidencePair,
   type GeneticEvidenceSection,
 } from "./geneticEvidenceSection";
+import { waitForPageOfOperation } from "./somaticEvidenceSection";
 
 /**
  * Open an evidence page and wait for one section together with the response of its first
@@ -94,7 +91,9 @@ export async function expectPaging<Row>(
     `${EVIDENCE_PAGE_SIZE + 1} - ${Math.min(2 * EVIDENCE_PAGE_SIZE, total)} of ${total}`
   );
   await expect
-    .poll(() => table.columnTexts(identifyColumn), { message: "page 2 shows the API's second page" })
+    .poll(() => table.columnTexts(identifyColumn), {
+      message: "page 2 shows the API's second page",
+    })
     .toEqual(second.rows.map(identify));
   await expect(table.firstPageButton).toBeEnabled();
   await expect(table.previousPageButton).toBeEnabled();
@@ -107,7 +106,9 @@ export async function expectPaging<Row>(
   await table.lastPageButton.click();
   const lastRows = (await last).disease[listKey];
   const remainder = total - lastPage * EVIDENCE_PAGE_SIZE;
-  await expect(table.position).toHaveText(`${lastPage * EVIDENCE_PAGE_SIZE + 1} - ${total} of ${total}`);
+  await expect(table.position).toHaveText(
+    `${lastPage * EVIDENCE_PAGE_SIZE + 1} - ${total} of ${total}`
+  );
   await expect(table.rows).toHaveCount(remainder);
   await expect
     .poll(() => table.columnTexts(identifyColumn), { message: "the last page shows the remainder" })

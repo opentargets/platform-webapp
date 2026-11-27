@@ -1,11 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 import { openEvidenceSection } from "./geneticEvidenceChecks";
-import { TableDrawerPanel } from "./reactome";
 import {
   type EvidenceList,
   type EvidencePair,
   GeneticEvidenceSection,
 } from "./geneticEvidenceSection";
+import { TableDrawerPanel } from "./reactome";
 
 /** FGFR3 in cancer or benign tumor: 134 IMPC mouse models, 14 pages. */
 export const FGFR3_NEOPLASM_IMPC: EvidencePair & { symbol: string; name: string } = {

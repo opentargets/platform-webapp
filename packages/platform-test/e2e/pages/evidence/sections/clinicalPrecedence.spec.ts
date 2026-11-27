@@ -1,20 +1,13 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
-  expectColumnPicker,
-  expectExports,
-  expectFirstPage,
-  expectPageSizes,
-  expectPaging,
-} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
-import {
   BRAF_MELANOMA,
+  type ClinicalPrecedenceRow,
   CP_COLUMN,
   CP_HEADERS,
   CP_LIST,
   CP_LOCKED,
   CP_OPERATION,
-  type ClinicalPrecedenceRow,
   openClinicalPrecedence,
   otherTargetIds,
   stageLabel,
@@ -22,9 +15,16 @@ import {
   targetsText,
 } from "../../../../POM/objects/widgets/Evidence/clinicalPrecedence";
 import { stubEuropePmcSearch } from "../../../../POM/objects/widgets/Evidence/europePmc";
+import { DIRECTION_LABEL } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
+import {
+  expectColumnPicker,
+  expectExports,
+  expectFirstPage,
+  expectPageSizes,
+  expectPaging,
+} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import { EVIDENCE_PAGE_SIZE } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
 import { waitForPageOfOperation } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
-import { DIRECTION_LABEL } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import { expectSections } from "../../../../utils/sections";
 
 /** BRAF in a disease with a single clinical precedence row. */
@@ -40,9 +40,10 @@ test.describe("Evidence page: Clinical precedence", () => {
 
   test("shows title, description, chip, controls and the table headers", async ({ page }) => {
     const { section, list } = await openClinicalPrecedence(page);
-    expect(list.count, "BRAF has more than one page of clinical precedence in melanoma").toBeGreaterThan(
-      EVIDENCE_PAGE_SIZE
-    );
+    expect(
+      list.count,
+      "BRAF has more than one page of clinical precedence in melanoma"
+    ).toBeGreaterThan(EVIDENCE_PAGE_SIZE);
 
     await expect(section.title).toContainText("Clinical Precedence");
     await expect(section.chip).toBeVisible();
@@ -163,7 +164,15 @@ test.describe("Evidence page: Clinical precedence", () => {
     const { section } = await openClinicalPrecedence(page);
     await expectColumnPicker(
       section,
-      ["Report", "Disease/phenotype", "Targets", "Drug", "Direction of Effect?", "Stage", "Start Date"],
+      [
+        "Report",
+        "Disease/phenotype",
+        "Targets",
+        "Drug",
+        "Direction of Effect?",
+        "Stage",
+        "Start Date",
+      ],
       CP_LOCKED,
       "Stage"
     );
@@ -194,7 +203,9 @@ test.describe("Evidence page: Clinical precedence", () => {
     await test.step("another row replaces the content, and Escape closes it", async () => {
       const second = list.rows[3];
       const secondDrawer = await section.openReport(3, second.clinicalReportId as string);
-      await expect(secondDrawer).toContainText(new RegExp(`Stage\\s*${stageLabel(second.clinicalStage)}`));
+      await expect(secondDrawer).toContainText(
+        new RegExp(`Stage\\s*${stageLabel(second.clinicalStage)}`)
+      );
       await page.keyboard.press("Escape");
       await expect(section.recordDrawer).toBeHidden();
     });
@@ -217,7 +228,9 @@ test.describe("Evidence page: Clinical precedence", () => {
 
     const drawer = await section.openReport(index, rows[index].clinicalReportId as string);
     await expect(drawer).toContainText(/Start\s*\d{4}-\d{2}-\d{2}/);
-    await expect(drawer).toContainText(new RegExp(`Stage\\s*${stageLabel(rows[index].clinicalStage)}`));
+    await expect(drawer).toContainText(
+      new RegExp(`Stage\\s*${stageLabel(rows[index].clinicalStage)}`)
+    );
     await section.closeReport();
   });
 
@@ -301,7 +314,9 @@ test.describe("Evidence page: Clinical precedence", () => {
       "href",
       `/disease/${list.rows[0].disease.id}`
     );
-    await expect(section.cell(0, CP_COLUMN.stage)).toHaveText(stageLabel(list.rows[0].clinicalStage));
+    await expect(section.cell(0, CP_COLUMN.stage)).toHaveText(
+      stageLabel(list.rows[0].clinicalStage)
+    );
     await expect(section.table.nextPageButton).toBeDisabled();
   });
 

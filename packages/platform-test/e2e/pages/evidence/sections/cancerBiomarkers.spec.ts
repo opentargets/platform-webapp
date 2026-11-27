@@ -4,23 +4,23 @@ import {
   BIOMARKERS_COLUMN,
   BIOMARKERS_HEADERS,
   BIOMARKERS_OPERATION,
-  CancerBiomarkersSection,
   type BiomarkerRow,
+  CancerBiomarkersSection,
 } from "../../../../POM/objects/widgets/Evidence/cancerBiomarkers";
 import {
   BRAF,
+  type EvidenceList,
   gotoEvidence,
   MELANOMA,
   NO_SOMATIC_EVIDENCE,
   PAGE_SIZE,
-  type EvidenceList,
   waitForPageOfOperation,
 } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
-import { PublicationsDrawer } from "../../../../POM/objects/widgets/Target/publicationsDrawer";
 import {
   stubEuropePmc,
   waitForOperation,
 } from "../../../../POM/objects/widgets/shared/sectionDataControls";
+import { PublicationsDrawer } from "../../../../POM/objects/widgets/Target/publicationsDrawer";
 import { expectSectionLoaded } from "../../../../utils/sections";
 
 type Data = { disease: { cancerBiomarkersSummary: EvidenceList<BiomarkerRow> } };
@@ -102,7 +102,10 @@ test.describe("Evidence page: Cancer Biomarkers", () => {
 
         if (expected.drug) {
           await expect(section.drugLink(index)).toHaveText(expected.drug.name);
-          await expect(section.drugLink(index)).toHaveAttribute("href", `/drug/${expected.drug.id}`);
+          await expect(section.drugLink(index)).toHaveAttribute(
+            "href",
+            `/drug/${expected.drug.id}`
+          );
         } else {
           await expect(section.drugLink(index)).toHaveCount(0);
           await expect(section.table.cell(index, BIOMARKERS_COLUMN.drug)).toHaveText(
@@ -262,7 +265,9 @@ test.describe("Evidence page: Cancer Biomarkers", () => {
   }) => {
     const { section, list } = await open(page, ERBB2, BREAST_ADENOCARCINOMA);
     const index = list.rows.findIndex((row) => row.biomarkers.geneExpression.length > 0);
-    expect(index, "ERBB2 has a gene expression biomarker on the first page").toBeGreaterThanOrEqual(0);
+    expect(index, "ERBB2 has a gene expression biomarker on the first page").toBeGreaterThanOrEqual(
+      0
+    );
     const [expression] = list.rows[index].biomarkers.geneExpression;
 
     await section.biomarkerButton(index).click();
@@ -280,7 +285,9 @@ test.describe("Evidence page: Cancer Biomarkers", () => {
     const index = list.rows.findIndex((row) =>
       row.biomarkers.geneticVariation.some((variant) => variant.geneticVariationId === null)
     );
-    expect(index, "ERBB2 has a copy number biomarker without a variant id").toBeGreaterThanOrEqual(0);
+    expect(index, "ERBB2 has a copy number biomarker without a variant id").toBeGreaterThanOrEqual(
+      0
+    );
     const variant = list.rows[index].biomarkers.geneticVariation.find(
       (candidate) => candidate.geneticVariationId === null
     );
@@ -306,7 +313,10 @@ test.describe("Evidence page: Cancer Biomarkers", () => {
     await expect(drawer).toContainText("Sources");
     await expect(drawer).toContainText(`${record.urls.length} Records`);
     for (const url of record.urls) {
-      await expect(drawer.getByRole("link", { name: url.niceName })).toHaveAttribute("href", url.url);
+      await expect(drawer.getByRole("link", { name: url.niceName })).toHaveAttribute(
+        "href",
+        url.url
+      );
     }
     await drawer.getByTestId("drawer-close").click();
     await expect(drawer).toBeHidden();
@@ -365,10 +375,9 @@ test.describe("Evidence page: Cancer Biomarkers", () => {
     expect(drug, "the first page reports a drug").not.toBeNull();
     await section.drugLink(index).click();
     await expect(page).toHaveURL(new RegExp(`/drug/${drug?.id}$`));
-    await expect(page.getByTestId("profile-page-header-text")).toContainText(
-      drug?.name as string,
-      { ignoreCase: true }
-    );
+    await expect(page.getByTestId("profile-page-header-text")).toContainText(drug?.name as string, {
+      ignoreCase: true,
+    });
   });
 
   test("the export offers JSON and TSV with every biomarker, not just the visible page", async ({

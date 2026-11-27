@@ -51,7 +51,9 @@ export async function waitForPageOfOperation<Data>(
     );
   };
   const response = await page.waitForResponse(isIt, { timeout: 60_000 });
-  expect(response.status(), `${operationName} page ${pageIndex} should answer with HTTP 200`).toBe(200);
+  expect(response.status(), `${operationName} page ${pageIndex} should answer with HTTP 200`).toBe(
+    200
+  );
   const body = (await response.json()) as { data: Data; errors?: unknown[] };
   expect(body.errors, `${operationName} should not return GraphQL errors`).toBeUndefined();
   return body.data;

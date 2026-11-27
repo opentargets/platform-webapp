@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
+import { directionText } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import {
   expectColumnPicker,
   expectExports,
@@ -8,7 +9,6 @@ import {
   expectPageSizes,
   expectPaging,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
-import { directionText } from "../../../../POM/objects/widgets/Evidence/gene2Phenotype";
 import { EVIDENCE_PAGE_SIZE } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
 import {
   allelicText,
@@ -19,8 +19,8 @@ import {
   IMPC_LIST,
   IMPC_LOCKED,
   IMPC_OPERATION,
-  ImpcSection,
   type ImpcRow,
+  ImpcSection,
   openImpc,
   phenotypeCount,
 } from "../../../../POM/objects/widgets/Evidence/impc";
@@ -37,9 +37,13 @@ async function open(page: Page, pair = FGFR3_NEOPLASM_IMPC) {
 }
 
 test.describe("Evidence page: IMPC", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
-    expect(list.count, "FGFR3 has many pages of mouse models").toBeGreaterThan(3 * EVIDENCE_PAGE_SIZE);
+    expect(list.count, "FGFR3 has many pages of mouse models").toBeGreaterThan(
+      3 * EVIDENCE_PAGE_SIZE
+    );
 
     await expect(section.title).toContainText("IMPC");
     await expect(section.chip).toBeVisible();
@@ -93,10 +97,7 @@ test.describe("Evidence page: IMPC", () => {
         expect(expected.target.id).toBe(FGFR3_NEOPLASM_IMPC.ensgId);
       });
     }
-    await expect(section.cell(0, IMPC_COLUMN.model).locator("sup")).toHaveText([
-      "m1J",
-      "m1J",
-    ]);
+    await expect(section.cell(0, IMPC_COLUMN.model).locator("sup")).toHaveText(["m1J", "m1J"]);
   });
 
   test("the direction of effect icons and the header tooltip explain the assessment", async ({
@@ -175,8 +176,7 @@ test.describe("Evidence page: IMPC", () => {
     await test.step("another row shows its own phenotypes", async () => {
       const other = list.rows.findIndex(
         (candidate, at) =>
-          at > 0 &&
-          (candidate.diseaseModelAssociatedHumanPhenotypes ?? []).length !== human.length
+          at > 0 && (candidate.diseaseModelAssociatedHumanPhenotypes ?? []).length !== human.length
       );
       expect(other, "another row has a different number of human phenotypes").toBeGreaterThan(0);
       await section.phenotypesTrigger(other, IMPC_COLUMN.human).click();
@@ -262,7 +262,10 @@ test.describe("Evidence page: IMPC", () => {
     await expect(section.table.nextPageButton).toBeDisabled();
     await expect(section.table.lastPageButton).toBeDisabled();
     await expect(section.table.previousPageButton).toBeEnabled();
-    await expect(section.modelLink(0)).toHaveAttribute("href", /^https:\/\/identifiers\.org\/MGI:\d+$/);
+    await expect(section.modelLink(0)).toHaveAttribute(
+      "href",
+      /^https:\/\/identifiers\.org\/MGI:\d+$/
+    );
   });
 
   test("a pair without IMPC data has no such section", async ({ page }) => {

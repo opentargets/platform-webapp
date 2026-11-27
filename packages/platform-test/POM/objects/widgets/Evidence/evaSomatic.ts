@@ -79,8 +79,6 @@ export class EvaSomaticSection extends SomaticEvidenceSection {
   }
 
   filledStars(row: number): Locator {
-    return this.table
-      .cell(row, EVA_SOMATIC_COLUMN.reviewStatus)
-      .locator("svg[data-prefix='fas']");
+    return this.table.cell(row, EVA_SOMATIC_COLUMN.reviewStatus).locator("svg[data-prefix='fas']");
   }
 }

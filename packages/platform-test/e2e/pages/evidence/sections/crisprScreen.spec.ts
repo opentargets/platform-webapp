@@ -2,13 +2,13 @@ import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   CHRM1_PD,
+  type CrisprScreenRow,
+  CrisprScreenSection,
   CS_COLUMN,
   CS_HEADERS,
   CS_LIST,
   CS_LOCKED,
   CS_OPERATION,
-  type CrisprScreenRow,
-  CrisprScreenSection,
   foldChange,
   KIF1A_NDD,
   openCrisprScreen,
@@ -87,7 +87,10 @@ test.describe("Evidence page: CRISPR Screens", () => {
         await expect(section.cell(index, CS_COLUMN.significance)).toHaveText(
           `${significance(expected)}?`
         );
-        expect(Number(significance(expected)), "the significance is a probability").toBeLessThanOrEqual(1);
+        expect(
+          Number(significance(expected)),
+          "the significance is a probability"
+        ).toBeLessThanOrEqual(1);
 
         await expect(section.sourceLink(index)).toHaveText("CRISPRBrain");
         await expect(section.sourceLink(index)).toHaveAttribute("href", "https://crisprbrain.org/");
@@ -127,11 +130,9 @@ test.describe("Evidence page: CRISPR Screens", () => {
       const firstPage = await table.columnTexts(CS_COLUMN.study);
       expect(firstPage).toEqual(list.rows.map((row) => row.studyId));
 
-      const next = waitForPageOfOperation<{ disease: Record<string, EvidenceList<CrisprScreenRow>> }>(
-        page,
-        CS_OPERATION,
-        1
-      );
+      const next = waitForPageOfOperation<{
+        disease: Record<string, EvidenceList<CrisprScreenRow>>;
+      }>(page, CS_OPERATION, 1);
       await table.nextPageButton.click();
       const second = (await next).disease[CS_LIST];
       await table.expectPosition(`${EVIDENCE_PAGE_SIZE + 1} - ${total} of ${total}`, {
@@ -140,7 +141,9 @@ test.describe("Evidence page: CRISPR Screens", () => {
       });
       await expect(table.rows).toHaveCount(total - EVIDENCE_PAGE_SIZE);
       await expect
-        .poll(() => table.columnTexts(CS_COLUMN.study), { message: "page 2 shows the API's second page" })
+        .poll(() => table.columnTexts(CS_COLUMN.study), {
+          message: "page 2 shows the API's second page",
+        })
         .toEqual(second.rows.map((row) => row.studyId));
       await expect(section.diseaseLink(0)).toHaveAttribute(
         "href",
@@ -181,9 +184,13 @@ test.describe("Evidence page: CRISPR Screens", () => {
   }) => {
     await stubEuropePmc(page);
     const { section, list } = await openCrisprScreen(page);
-    await section.expectLiteratureDrawer(0, CS_COLUMN.publication, [list.rows[0].literature?.[0] ?? ""]);
+    await section.expectLiteratureDrawer(0, CS_COLUMN.publication, [
+      list.rows[0].literature?.[0] ?? "",
+    ]);
     // Another row, so the drawer is not showing a fixed publication.
-    const other = list.rows.findIndex((row) => row.literature?.[0] !== list.rows[0].literature?.[0]);
+    const other = list.rows.findIndex(
+      (row) => row.literature?.[0] !== list.rows[0].literature?.[0]
+    );
     expect(other, "the first page cites two different publications").toBeGreaterThan(0);
     await section.expectLiteratureDrawer(other, CS_COLUMN.publication, [
       list.rows[other].literature?.[0] ?? "",
@@ -226,17 +233,19 @@ test.describe("Evidence page: CRISPR Screens", () => {
     page,
   }) => {
     const { section, list } = await openCrisprScreen(page);
-    const index = list.rows.findIndex(
-      (row) => row.diseaseFromSourceMappedId !== KIF1A_NDD.efoId
+    const index = list.rows.findIndex((row) => row.diseaseFromSourceMappedId !== KIF1A_NDD.efoId);
+    expect(index, "the first page has a screen mapped to another disease").toBeGreaterThanOrEqual(
+      0
     );
-    expect(index, "the first page has a screen mapped to another disease").toBeGreaterThanOrEqual(0);
     const mapped = list.rows[index].diseaseFromSourceMappedId;
     await section.diseaseLink(index).click();
     await expect(page).toHaveURL(new RegExp(`/disease/${mapped}$`));
     await expect(page.getByTestId("profile-page-header-text")).not.toBeEmpty();
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`/evidence/${KIF1A_NDD.ensgId}/${KIF1A_NDD.efoId}(#.*)?$`));
+    await expect(page).toHaveURL(
+      new RegExp(`/evidence/${KIF1A_NDD.ensgId}/${KIF1A_NDD.efoId}(#.*)?$`)
+    );
     await section.expectLoaded();
   });
 

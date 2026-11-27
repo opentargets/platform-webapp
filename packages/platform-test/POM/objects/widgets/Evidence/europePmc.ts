@@ -1,11 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { waitForOperation } from "../shared/sectionDataControls";
-import { waitForPageOfOperation } from "./somaticEvidenceSection";
 import {
   type EvidenceList,
   type EvidencePair,
   GeneticEvidenceSection,
 } from "./geneticEvidenceSection";
+import { waitForPageOfOperation } from "./somaticEvidenceSection";
 
 /** Rows per page of the Europe PMC table (the other evidence tables show ten). */
 export const EP_PAGE_SIZE = 5;
@@ -71,49 +71,54 @@ export async function stubEuropePmcSearch(
   { unknown = [], omitFirst = false }: { unknown?: readonly string[]; omitFirst?: boolean } = {}
 ): Promise<EuropePmcStub> {
   const stub: EuropePmcStub = { searches: [] };
-  await page.route(/^https:\/\/www\.ebi\.ac\.uk\/europepmc\/webservices\/rest\/search\?/, async (route) => {
-    const query = new URL(route.request().url()).searchParams.get("query") ?? "";
-    const ids = query
-      .split(" OR ")
-      .map((part) => part.replace(/^ext_id:/, "").trim())
-      .filter(Boolean);
-    stub.searches.push(ids);
-    const known = ids.filter((id, position) => !unknown.includes(id) && !(omitFirst && position === 0));
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      headers: { "access-control-allow-origin": "*" },
-      body: JSON.stringify({
-        hitCount: known.length,
-        resultList: {
-          result: known.map((id) => ({
-            id,
-            source: "MED",
-            pmid: id,
-            title: stubbedTitle(id),
-            pubYear: stubbedYear(id),
-            authorList: {
-              author: [
-                { fullName: "Tester A", lastName: "Tester", initials: "A" },
-                { fullName: "Checker B", lastName: "Checker", initials: "B" },
-              ],
-            },
-            journalInfo: {
-              yearOfPublication: Number(stubbedYear(id)),
-              volume: "12",
-              issue: "3",
-              journal: { title: "Journal of Stubs" },
-            },
-            pageInfo: "101-110",
-            abstractText: stubbedAbstract(id),
-            inEPMC: "N",
-            inPMC: "N",
-            isOpenAccess: "N",
-          })),
-        },
-      }),
-    });
-  });
+  await page.route(
+    /^https:\/\/www\.ebi\.ac\.uk\/europepmc\/webservices\/rest\/search\?/,
+    async (route) => {
+      const query = new URL(route.request().url()).searchParams.get("query") ?? "";
+      const ids = query
+        .split(" OR ")
+        .map((part) => part.replace(/^ext_id:/, "").trim())
+        .filter(Boolean);
+      stub.searches.push(ids);
+      const known = ids.filter(
+        (id, position) => !unknown.includes(id) && !(omitFirst && position === 0)
+      );
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({
+          hitCount: known.length,
+          resultList: {
+            result: known.map((id) => ({
+              id,
+              source: "MED",
+              pmid: id,
+              title: stubbedTitle(id),
+              pubYear: stubbedYear(id),
+              authorList: {
+                author: [
+                  { fullName: "Tester A", lastName: "Tester", initials: "A" },
+                  { fullName: "Checker B", lastName: "Checker", initials: "B" },
+                ],
+              },
+              journalInfo: {
+                yearOfPublication: Number(stubbedYear(id)),
+                volume: "12",
+                issue: "3",
+                journal: { title: "Journal of Stubs" },
+              },
+              pageInfo: "101-110",
+              abstractText: stubbedAbstract(id),
+              inEPMC: "N",
+              inPMC: "N",
+              isOpenAccess: "N",
+            })),
+          },
+        }),
+      });
+    }
+  );
   return stub;
 }
 

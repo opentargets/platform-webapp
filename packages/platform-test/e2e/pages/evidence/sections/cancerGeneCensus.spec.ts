@@ -8,20 +8,20 @@ import {
 } from "../../../../POM/objects/widgets/Evidence/cancerGeneCensus";
 import {
   BRAF,
+  type EvidenceList,
   formatPercent,
   gotoEvidence,
   MELANOMA,
   NO_SOMATIC_EVIDENCE,
   PAGE_SIZE,
-  type EvidenceList,
   type RoleInCancer,
   waitForPageOfOperation,
 } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
-import { PublicationsDrawer } from "../../../../POM/objects/widgets/Target/publicationsDrawer";
 import {
   stubEuropePmc,
   waitForOperation,
 } from "../../../../POM/objects/widgets/shared/sectionDataControls";
+import { PublicationsDrawer } from "../../../../POM/objects/widgets/Target/publicationsDrawer";
 import { expectSectionLoaded } from "../../../../utils/sections";
 
 type Data = RoleInCancer & { disease: { cancerGeneCensusSummary: EvidenceList<CgcRow> } };
@@ -46,7 +46,9 @@ async function open(page: import("@playwright/test").Page) {
 }
 
 test.describe("Evidence page: Cancer Gene Census", () => {
-  test("shows title, description, role in cancer and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, role in cancer and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, data, list } = await open(page);
     expect(list.count, "BRAF has several pages of Cancer Gene Census diseases").toBeGreaterThan(
       PAGE_SIZE
@@ -308,12 +310,17 @@ test.describe("Evidence page: Cancer Gene Census", () => {
   }) => {
     const { section, list } = await open(page);
     const json = await section.table.download("Json");
-    const [first] = JSON.parse(json.text) as { mutationType: unknown; mutatedTotalSamples: unknown }[];
+    const [first] = JSON.parse(json.text) as {
+      mutationType: unknown;
+      mutatedTotalSamples: unknown;
+    }[];
     expect(
       first.mutationType,
       "cutaneous melanoma is mutated in several ways, so its exported mutation type is not empty"
     ).not.toBe("");
-    expect(first.mutatedTotalSamples, "and so is its export of mutated / total samples").not.toBe("");
+    expect(first.mutatedTotalSamples, "and so is its export of mutated / total samples").not.toBe(
+      ""
+    );
     expect(list.rows[0].mutatedSamples.length).toBeGreaterThan(0);
   });
 

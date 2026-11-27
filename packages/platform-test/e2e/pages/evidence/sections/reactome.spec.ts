@@ -21,8 +21,8 @@ import {
   REACTOME_LIST,
   REACTOME_LOCKED,
   REACTOME_OPERATION,
-  ReactomeSection,
   type ReactomeRow,
+  ReactomeSection,
 } from "../../../../POM/objects/widgets/Evidence/reactome";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
 import { expectSections } from "../../../../utils/sections";
@@ -37,7 +37,9 @@ async function open(page: Page, pair = FGFR3_NEOPLASM) {
 }
 
 test.describe("Evidence page: Reactome", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count, "FGFR3 has more than two pages of reactions").toBeGreaterThan(20);
 
@@ -179,7 +181,9 @@ test.describe("Evidence page: Reactome", () => {
   }) => {
     const { section, list } = await open(page);
     const index = list.rows.findIndex((row) => (row.variantAminoacidDescriptions ?? []).length > 1);
-    expect(index, "the first page has a reaction with several variations").toBeGreaterThanOrEqual(0);
+    expect(index, "the first page has a reaction with several variations").toBeGreaterThanOrEqual(
+      0
+    );
     const variations = list.rows[index].variantAminoacidDescriptions ?? [];
     await expect(section.tableDrawer.root).toHaveCount(0);
 
@@ -194,7 +198,10 @@ test.describe("Evidence page: Reactome", () => {
           (row.variantAminoacidDescriptions ?? []).length > 1 &&
           (row.variantAminoacidDescriptions ?? []).length !== variations.length
       );
-      expect(other, "the first page has another reaction with a different number of variations").toBeGreaterThanOrEqual(0);
+      expect(
+        other,
+        "the first page has another reaction with a different number of variations"
+      ).toBeGreaterThanOrEqual(0);
       await section.variationTrigger(other).click();
       await section.tableDrawer.expectEntries(
         "Amino acid variation",
@@ -235,7 +242,9 @@ test.describe("Evidence page: Reactome", () => {
     await section.controls.closeApiQuery();
   });
 
-  test("a disease link opens the page of the disease the reaction is mapped to", async ({ page }) => {
+  test("a disease link opens the page of the disease the reaction is mapped to", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     const disease = list.rows[0].disease;
     expect(disease.id, "the reaction is mapped to a narrower disease than the page").not.toBe(
@@ -261,7 +270,9 @@ test.describe("Evidence page: Reactome", () => {
     await expect(section.description).toContainText("disregulation of CTNNB1 in the context of");
     await expect(section.table.nextPageButton).toBeDisabled();
     await test.step("a reaction without amino acid variations says N/A", async () => {
-      const index = list.rows.findIndex((row) => (row.variantAminoacidDescriptions ?? []).length === 0);
+      const index = list.rows.findIndex(
+        (row) => (row.variantAminoacidDescriptions ?? []).length === 0
+      );
       expect(index, "one CTNNB1 reaction has no variation").toBeGreaterThanOrEqual(0);
       await expect(section.cell(index, REACTOME_COLUMN.variation)).toHaveText("N/A");
       await expect(section.variationTrigger(index)).toHaveCount(0);

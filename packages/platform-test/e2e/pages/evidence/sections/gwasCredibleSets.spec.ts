@@ -47,10 +47,18 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   1: "PICS fine-mapped credible set based on reported top hit",
   0: "Unknown confidence",
 };
-const METHOD_LABELS: Record<string, string> = { PICS: "PICS", SUSIE: "SuSiE", SUSIE_INF: "SuSiE-inf" };
+const METHOD_LABELS: Record<string, string> = {
+  PICS: "PICS",
+  SUSIE: "SuSiE",
+  SUSIE_INF: "SuSiE-inf",
+};
 
 /** Assert the cells of one rendered row against the API record it was built from. */
-async function expectRow(section: EvidenceGwasCredibleSetsSection, index: number, row: EvidenceGwasRow) {
+async function expectRow(
+  section: EvidenceGwasCredibleSetsSection,
+  index: number,
+  row: EvidenceGwasRow
+) {
   const { credibleSet, disease } = row;
   await expect(section.credibleSetLink(index)).toHaveText("View");
   await expect(section.credibleSetLink(index)).toHaveAttribute(
@@ -110,9 +118,10 @@ test.describe("Evidence page: GWAS credible sets", () => {
     page,
   }) => {
     const { section, evidences } = await open(page, FEW);
-    expect(evidences.count, "IL6R has a handful of GWAS credible sets for myocardial infarction").toBe(
-      evidences.rows.length
-    );
+    expect(
+      evidences.count,
+      "IL6R has a handful of GWAS credible sets for myocardial infarction"
+    ).toBe(evidences.rows.length);
     expect(evidences.count).toBeGreaterThan(1);
     expect(evidences.count).toBeLessThan(EVIDENCE_GWAS_PAGE_SIZE);
 
@@ -165,7 +174,9 @@ test.describe("Evidence page: GWAS credible sets", () => {
     await expect(tooltip).toBeHidden();
 
     await section.headerHelp("L2G score").hover();
-    await expect(tooltip).toContainText("Machine learning prediction linking a gene to a credible set");
+    await expect(tooltip).toContainText(
+      "Machine learning prediction linking a gene to a credible set"
+    );
     await expect(tooltip).toContainText("Score range [0,1]");
     await expect(tooltip.getByRole("link", { name: "our documentation" })).toHaveAttribute(
       "href",
@@ -179,7 +190,10 @@ test.describe("Evidence page: GWAS credible sets", () => {
     const { section, evidences } = await open(page, FEW);
     // Rows with different confidences show different numbers of filled stars.
     const levels = new Set(evidences.rows.map((row) => row.credibleSet.confidence));
-    expect(levels.size, "the pair has credible sets of more than one confidence level").toBeGreaterThan(1);
+    expect(
+      levels.size,
+      "the pair has credible sets of more than one confidence level"
+    ).toBeGreaterThan(1);
 
     for (const [index, row] of evidences.rows.entries()) {
       await section.stars(index).first().hover();
@@ -219,9 +233,7 @@ test.describe("Evidence page: GWAS credible sets", () => {
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`/evidence/${FEW.ensgId}/${FEW.efoId}(#.*)?$`));
     await expectSectionLoaded(page, EvidenceGwasCredibleSetsSection.id);
-    await new EvidenceGwasCredibleSetsSection(page).table.expectRowCount(
-      evidences.rows.length
-    );
+    await new EvidenceGwasCredibleSetsSection(page).table.expectRowCount(evidences.rows.length);
   });
 
   test("the lead variant link opens the variant page", async ({ page }) => {
@@ -300,9 +312,9 @@ test.describe("Evidence page: GWAS credible sets", () => {
       }
     });
 
-    const firstPage = await table.column(0).evaluateAll((cells) =>
-      cells.map((cell) => cell.querySelector("a")?.getAttribute("href"))
-    );
+    const firstPage = await table
+      .column(0)
+      .evaluateAll((cells) => cells.map((cell) => cell.querySelector("a")?.getAttribute("href")));
     await test.step("the next page shows different credible sets", async () => {
       await table.nextPageButton.click();
       await table.expectPosition(
@@ -311,9 +323,11 @@ test.describe("Evidence page: GWAS credible sets", () => {
       );
       await expect
         .poll(async () =>
-          table.column(0).evaluateAll((cells) =>
-            cells.map((cell) => cell.querySelector("a")?.getAttribute("href"))
-          )
+          table
+            .column(0)
+            .evaluateAll((cells) =>
+              cells.map((cell) => cell.querySelector("a")?.getAttribute("href"))
+            )
         )
         .not.toEqual(firstPage);
       await table.expectRowCount(EVIDENCE_GWAS_PAGE_SIZE);
@@ -321,7 +335,8 @@ test.describe("Evidence page: GWAS credible sets", () => {
 
     await test.step("the last page holds the remainder and cannot go forward", async () => {
       await table.lastPageButton.click();
-      const lastStart = Math.floor((total - 1) / EVIDENCE_GWAS_PAGE_SIZE) * EVIDENCE_GWAS_PAGE_SIZE + 1;
+      const lastStart =
+        Math.floor((total - 1) / EVIDENCE_GWAS_PAGE_SIZE) * EVIDENCE_GWAS_PAGE_SIZE + 1;
       await table.expectPosition(`${lastStart} - ${total} of ${total}`, {
         canGoBack: true,
         canGoForward: false,
@@ -337,9 +352,11 @@ test.describe("Evidence page: GWAS credible sets", () => {
       });
       await expect
         .poll(async () =>
-          table.column(0).evaluateAll((cells) =>
-            cells.map((cell) => cell.querySelector("a")?.getAttribute("href"))
-          )
+          table
+            .column(0)
+            .evaluateAll((cells) =>
+              cells.map((cell) => cell.querySelector("a")?.getAttribute("href"))
+            )
         )
         .toEqual(firstPage);
     });

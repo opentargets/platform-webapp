@@ -4,17 +4,17 @@ import {
   INTOGEN_COLUMN,
   INTOGEN_HEADERS,
   INTOGEN_OPERATION,
-  IntOgenSection,
   type IntOgenRow,
+  IntOgenSection,
 } from "../../../../POM/objects/widgets/Evidence/intOgen";
 import {
   BRAF,
+  type EvidenceList,
   formatPercent,
   gotoEvidence,
   MELANOMA,
   NO_SOMATIC_EVIDENCE,
   PAGE_SIZE,
-  type EvidenceList,
   type RoleInCancer,
 } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
@@ -54,7 +54,9 @@ async function open(page: Page) {
 }
 
 test.describe("Evidence page: IntOGen", () => {
-  test("shows title, description, role in cancer and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, role in cancer and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, data, list } = await open(page);
     expect(list.count, "BRAF is a driver gene in several melanoma cohorts").toBeGreaterThan(1);
 
@@ -193,7 +195,9 @@ test.describe("Evidence page: IntOGen", () => {
     await expect(tooltip).toContainText(
       "The current version of the intOGen pipeline uses seven methods to identify cancer driver genes from somatic point mutations"
     );
-    await expect(tooltip).toContainText("HotMAPS, dNDScv, smRegions, CBaSE, FML, MutPanning, and CLUSTL");
+    await expect(tooltip).toContainText(
+      "HotMAPS, dNDScv, smRegions, CBaSE, FML, MutPanning, and CLUSTL"
+    );
     await expect(tooltip.getByRole("link", { name: "click here" })).toHaveAttribute(
       "href",
       "https://www.intogen.org/faq"
@@ -205,7 +209,12 @@ test.describe("Evidence page: IntOGen", () => {
   }) => {
     const { section } = await open(page);
     const { table } = section;
-    const names = ["Disease/phenotype", "Mutated / Total samples", "Cancer driver methods", "Cohort Information"];
+    const names = [
+      "Disease/phenotype",
+      "Mutated / Total samples",
+      "Cancer driver methods",
+      "Cohort Information",
+    ];
     const picker = await table.openColumnPicker();
 
     await expect(picker.getByRole("checkbox")).toHaveCount(INTOGEN_HEADERS.length);

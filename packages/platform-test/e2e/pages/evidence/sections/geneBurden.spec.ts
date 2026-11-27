@@ -4,9 +4,9 @@ import {
   EVIDENCE_GENE_BURDEN_HEADERS,
   EVIDENCE_GENE_BURDEN_OPERATION,
   EVIDENCE_GENE_BURDEN_PAGE_SIZE,
-  EvidenceGeneBurdenSection,
   type EvidenceGeneBurdenData,
   type EvidenceGeneBurdenRow,
+  EvidenceGeneBurdenSection,
 } from "../../../../POM/objects/widgets/Evidence/geneBurden";
 import {
   stubEuropePmc,
@@ -68,7 +68,11 @@ const sourceLabel = (row: EvidenceGeneBurdenRow) => {
 };
 
 /** Assert the cells of one rendered row against the API record it was built from. */
-async function expectRow(section: EvidenceGeneBurdenSection, index: number, row: EvidenceGeneBurdenRow) {
+async function expectRow(
+  section: EvidenceGeneBurdenSection,
+  index: number,
+  row: EvidenceGeneBurdenRow
+) {
   await expect(section.diseaseLink(index)).toHaveText(row.disease.name);
   await expect(section.diseaseLink(index)).toHaveAttribute("href", `/disease/${row.disease.id}`);
 
@@ -101,7 +105,9 @@ async function expectRow(section: EvidenceGeneBurdenSection, index: number, row:
   await expect(section.cell(index, "allelicRequirement")).toHaveText(
     row.allelicRequirements ? (row.allelicRequirements[0] ?? "") : NA
   );
-  await expect(section.cell(index, "casesWithQv")).toHaveText(number(row.studyCasesWithQualifyingVariants));
+  await expect(section.cell(index, "casesWithQv")).toHaveText(
+    number(row.studyCasesWithQualifyingVariants)
+  );
   await expect(section.cell(index, "cases")).toHaveText(number(row.studyCases));
   await expect(section.cell(index, "sampleSize")).toHaveText(number(row.studySampleSize));
   await expect(section.cell(index, "oddsRatio")).toHaveText(
@@ -136,7 +142,9 @@ test.describe("Evidence page: Gene Burden", () => {
     await stubEuropePmc(page);
   });
 
-  test("shows title, description, headers and the first page of results @smoke", async ({ page }) => {
+  test("shows title, description, headers and the first page of results @smoke", async ({
+    page,
+  }) => {
     const { section, evidences } = await open(page);
     const total = evidences.count;
     expect(total, "PCSK9 has many gene burden results for LDL cholesterol").toBeGreaterThan(
@@ -186,7 +194,10 @@ test.describe("Evidence page: Gene Burden", () => {
     const missing = evidences.rows.findIndex(
       (row) => !row.oddsRatio && !row.studyCases && !row.studyCasesWithQualifyingVariants
     );
-    expect(missing, "the first page holds a quantitative-trait result without case counts").toBeGreaterThanOrEqual(0);
+    expect(
+      missing,
+      "the first page holds a quantitative-trait result without case counts"
+    ).toBeGreaterThanOrEqual(0);
     await expect(section.cell(missing, "oddsRatio")).toHaveText(NA);
     await expect(section.cell(missing, "cases")).toHaveText(NA);
     await expect(section.cell(missing, "casesWithQv")).toHaveText(NA);
@@ -219,7 +230,9 @@ test.describe("Evidence page: Gene Burden", () => {
   test("the disease tooltip shows the disease as reported by the source", async ({ page }) => {
     const { section, evidences } = await open(page);
     const index = evidences.rows.findIndex((row) => row.diseaseFromSource);
-    expect(index, "the first page holds a result with a reported disease").toBeGreaterThanOrEqual(0);
+    expect(index, "the first page holds a result with a reported disease").toBeGreaterThanOrEqual(
+      0
+    );
 
     await section.helpIcon(index, "disease").hover();
     const tooltip = page.getByRole("tooltip");
@@ -234,7 +247,10 @@ test.describe("Evidence page: Gene Burden", () => {
     const index = evidences.rows.findIndex(
       (row) => row.projectId && LINKED_PROJECTS[row.projectId]?.(row)
     );
-    expect(index, "the first page holds a result from a project with its own site").toBeGreaterThanOrEqual(0);
+    expect(
+      index,
+      "the first page holds a result from a project with its own site"
+    ).toBeGreaterThanOrEqual(0);
     const row = evidences.rows[index];
     await expect(section.cohortLink(index)).toHaveAttribute(
       "href",
@@ -352,7 +368,10 @@ test.describe("Evidence page: Gene Burden", () => {
 
     await test.step("first page goes back to the first results", async () => {
       await table.firstPageButton.click();
-      await table.expectPosition(`1 - ${size} of ${total}`, { canGoBack: false, canGoForward: true });
+      await table.expectPosition(`1 - ${size} of ${total}`, {
+        canGoBack: false,
+        canGoForward: true,
+      });
       await expect.poll(diseases).toEqual(firstPage);
     });
   });
@@ -377,7 +396,9 @@ test.describe("Evidence page: Gene Burden", () => {
     });
   });
 
-  test("the export offers JSON and TSV with every result, named after the pair", async ({ page }) => {
+  test("the export offers JSON and TSV with every result, named after the pair", async ({
+    page,
+  }) => {
     const { section, evidences } = await open(page);
     const stem = `geneburden-${MANY.ensgId}-${MANY.efoId}`;
 

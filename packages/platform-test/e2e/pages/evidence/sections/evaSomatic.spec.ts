@@ -4,15 +4,15 @@ import {
   EVA_SOMATIC_COLUMN,
   EVA_SOMATIC_HEADERS,
   EVA_SOMATIC_OPERATION,
-  EvaSomaticSection,
   type EvaSomaticRow,
+  EvaSomaticSection,
 } from "../../../../POM/objects/widgets/Evidence/evaSomatic";
 import {
   BRAF,
+  type EvidenceList,
   gotoEvidence,
   MELANOMA,
   NO_SOMATIC_EVIDENCE,
-  type EvidenceList,
   type RoleInCancer,
 } from "../../../../POM/objects/widgets/Evidence/somaticEvidenceSection";
 import { waitForOperation } from "../../../../POM/objects/widgets/shared/sectionDataControls";
@@ -36,7 +36,9 @@ async function open(page: Page) {
 }
 
 test.describe("Evidence page: EVA somatic", () => {
-  test("shows title, description, role in cancer and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, role in cancer and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, data } = await open(page);
 
     await test.step("title, data type and description", async () => {
@@ -162,7 +164,10 @@ test.describe("Evidence page: EVA somatic", () => {
 
   test("the direction of effect header links to the documentation", async ({ page }) => {
     const { section } = await open(page);
-    await section.table.header(/Direction of effect/i).locator("sup").hover();
+    await section.table
+      .header(/Direction of effect/i)
+      .locator("sup")
+      .hover();
     await expect(
       page.getByRole("tooltip").getByRole("link", { name: "More info on our assessment method" })
     ).toHaveAttribute("href", "https://platform-docs.opentargets.org/evidence#clinvar-somatic");

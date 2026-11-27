@@ -1,10 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
+import { openEvidenceSection } from "./geneticEvidenceChecks";
 import {
   type EvidenceList,
   type EvidencePair,
   GeneticEvidenceSection,
 } from "./geneticEvidenceSection";
-import { openEvidenceSection } from "./geneticEvidenceChecks";
 
 /** KIF1A in neurodegenerative disease: 17 CRISPRBrain screens, two pages, rows mapped to three diseases. */
 export const KIF1A_NDD: EvidencePair & { symbol: string; name: string } = {
@@ -123,6 +123,12 @@ export async function openCrisprScreen(
   pair: EvidencePair = KIF1A_NDD
 ): Promise<{ section: CrisprScreenSection; list: EvidenceList<CrisprScreenRow> }> {
   const section = new CrisprScreenSection(page);
-  const list = await openEvidenceSection<CrisprScreenRow>(page, section, CS_OPERATION, CS_LIST, pair);
+  const list = await openEvidenceSection<CrisprScreenRow>(
+    page,
+    section,
+    CS_OPERATION,
+    CS_LIST,
+    pair
+  );
   return { section, list };
 }

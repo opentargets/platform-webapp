@@ -1,19 +1,19 @@
 import { expect, test } from "../../../../fixtures";
 import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
+import {
+  BRAF_MELANOMA_CRISPR,
+  CRISPR_COLUMN,
+  CRISPR_HEADERS,
+  CRISPR_OPERATION,
+  openCrispr,
+  PIK3CA_CARCINOMA,
+} from "../../../../POM/objects/widgets/Evidence/crispr";
 import { stubEuropePmcSearch } from "../../../../POM/objects/widgets/Evidence/europePmc";
 import {
   expectColumnPicker,
   expectExports,
   expectFirstPage,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
-import {
-  BRAF_MELANOMA_CRISPR,
-  CRISPR_COLUMN,
-  CRISPR_HEADERS,
-  CRISPR_OPERATION,
-  PIK3CA_CARCINOMA,
-  openCrispr,
-} from "../../../../POM/objects/widgets/Evidence/crispr";
 import { expectSections } from "../../../../utils/sections";
 
 /** IL6R in myocardial infarction: no Project Score evidence. */
@@ -84,7 +84,9 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     page,
   }) => {
     const { section, list } = await openCrispr(page, PIK3CA_CARCINOMA);
-    expect(list.count, "PIK3CA has Project Score evidence in several carcinomas").toBeGreaterThan(1);
+    expect(list.count, "PIK3CA has Project Score evidence in several carcinomas").toBeGreaterThan(
+      1
+    );
     await expectFirstPage(section, list);
     await expect(section.description).toContainText("a PIK3CA dependency in carcinoma");
 
@@ -136,7 +138,9 @@ test.describe("Evidence page: Project Score (CRISPR)", () => {
     );
     expect(header.slice(0, 1)).toEqual(["diseasePhenotype"]);
     expect(header.at(-1)).toBe("priorityScore");
-    expect(json.map((row) => row.diseasePhenotype)).toEqual(list.rows.map((row) => row.disease.name));
+    expect(json.map((row) => row.diseasePhenotype)).toEqual(
+      list.rows.map((row) => row.disease.name)
+    );
     expect(json.map((row) => row.priorityScore)).toEqual(list.rows.map((row) => row.resourceScore));
   });
 

@@ -1,12 +1,5 @@
 import { expect, test } from "../../../../fixtures";
-import {
-  EVIDENCE_PAGE_SIZE,
-  GeneticEvidenceSection,
-  MECP2_NDD,
-  NF1_NF1,
-  PCSK9_LDL,
-  sentence,
-} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
+import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import {
   expectColumnPicker,
   expectExports,
@@ -16,6 +9,14 @@ import {
   openEvidenceSection,
 } from "../../../../POM/objects/widgets/Evidence/geneticEvidenceChecks";
 import {
+  EVIDENCE_PAGE_SIZE,
+  GeneticEvidenceSection,
+  MECP2_NDD,
+  NF1_NF1,
+  PCSK9_LDL,
+  sentence,
+} from "../../../../POM/objects/widgets/Evidence/geneticEvidenceSection";
+import {
   GE_COLUMN,
   GE_HEADERS,
   GE_LIST,
@@ -24,7 +25,6 @@ import {
   type GeRow,
 } from "../../../../POM/objects/widgets/Evidence/genomicsEngland";
 import { stubEuropePmc } from "../../../../POM/objects/widgets/shared/sectionDataControls";
-import { expectedSectionsFor } from "../../../../fixtures/expectedSections";
 import { expectSections } from "../../../../utils/sections";
 
 async function open(page: import("@playwright/test").Page, pair = NF1_NF1) {
@@ -43,10 +43,9 @@ test.describe("Evidence page: Genomics England PanelApp", () => {
     await expect(section.description).toHaveText(
       "Crowdsourced expert knowledge establishing consensus causation evidence associating NF1 with neurofibromatosis type 1. Source: Genomics England PanelApp"
     );
-    await expect(section.description.getByRole("link", { name: "Genomics England PanelApp" })).toHaveAttribute(
-      "href",
-      "https://panelapp.genomicsengland.co.uk"
-    );
+    await expect(
+      section.description.getByRole("link", { name: "Genomics England PanelApp" })
+    ).toHaveAttribute("href", "https://panelapp.genomicsengland.co.uk");
     await expect(section.table.headers).toHaveText([...GE_HEADERS]);
     await expectFirstPage(section, list);
     await expect(section.table.searchInput, "the table has no search box").toHaveCount(0);
@@ -105,14 +104,17 @@ test.describe("Evidence page: Genomics England PanelApp", () => {
   }) => {
     const { section, list } = await open(page);
     const row = list.rows.findIndex((r) => (r.cohortPhenotypes?.length ?? 0) > 1);
-    expect(row, "the first page has a row reported with several phenotypes").toBeGreaterThanOrEqual(0);
+    expect(row, "the first page has a row reported with several phenotypes").toBeGreaterThanOrEqual(
+      0
+    );
     const expected = list.rows[row];
 
     const tooltip = await section.openHelp(row, GE_COLUMN.disease);
     await expect(tooltip).toContainText("Reported disease or phenotype:");
     await expect(tooltip).toContainText(sentence(expected.diseaseFromSource!));
     await expect(tooltip).toContainText("All reported phenotypes:");
-    for (const phenotype of expected.cohortPhenotypes!) await expect(tooltip).toContainText(phenotype);
+    for (const phenotype of expected.cohortPhenotypes!)
+      await expect(tooltip).toContainText(phenotype);
   });
 
   test("the allelic requirement and rating tooltips explain themselves", async ({ page }) => {
@@ -157,7 +159,13 @@ test.describe("Evidence page: Genomics England PanelApp", () => {
     const { section } = await open(page);
     await expectColumnPicker(
       section,
-      ["Disease/phenotype", "Allelic Requirement", "Genomics England Panel", "Gene rating", "literature"],
+      [
+        "Disease/phenotype",
+        "Allelic Requirement",
+        "Genomics England Panel",
+        "Gene rating",
+        "literature",
+      ],
       ["Disease/phenotype", "Genomics England Panel"],
       "Gene rating"
     );

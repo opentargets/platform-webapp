@@ -2,7 +2,11 @@ import type { Locator, Page } from "@playwright/test";
 import { GeneticEvidenceSection } from "./geneticEvidenceSection";
 
 /** Columns of the ClinGen table, in order. */
-export const CLINGEN_HEADERS = ["Disease/phenotype", "Allelic requirement", "Classification"] as const;
+export const CLINGEN_HEADERS = [
+  "Disease/phenotype",
+  "Allelic requirement",
+  "Classification",
+] as const;
 export const CLINGEN_COLUMN = { disease: 0, allelic: 1, classification: 2 } as const;
 
 /** GraphQL operation behind the section (packages/sections/src/evidence/ClinGen). */

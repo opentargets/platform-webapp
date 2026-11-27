@@ -62,7 +62,11 @@ export type EvidenceGwasRow = {
 };
 export type EvidenceGwasData = {
   target: { approvedSymbol: string };
-  disease: { id: string; name: string; gwasCredibleSets: { count: number; rows: EvidenceGwasRow[] } };
+  disease: {
+    id: string;
+    name: string;
+    gwasCredibleSets: { count: number; rows: EvidenceGwasRow[] };
+  };
 };
 
 /**

@@ -18,7 +18,11 @@ import { expectSections, sectionLocator } from "../../../../utils/sections";
 const PARTNER_SECTIONS = [
   { id: "ot_crispr", name: "Open Targets CRISPR", datasource: "ot_crispr" },
   { id: "encore", name: "Open Targets ENCORE", datasource: "encore" },
-  { id: "ot_crispr_validation", name: "Open Targets Validation CRISPR", datasource: "ot_crispr_validation" },
+  {
+    id: "ot_crispr_validation",
+    name: "Open Targets Validation CRISPR",
+    datasource: "ot_crispr_validation",
+  },
 ] as const;
 
 /** FGFR3 in cancer or benign tumor: a rich evidence page with fifteen public sections. */
@@ -67,7 +71,10 @@ test.describe("Evidence page: partner-only sections", () => {
 
     for (const section of PARTNER_SECTIONS) {
       await test.step(section.name, async () => {
-        await expect(sectionLocator(page, section.id), `${section.name} should not render`).toHaveCount(0);
+        await expect(
+          sectionLocator(page, section.id),
+          `${section.name} should not render`
+        ).toHaveCount(0);
         await expect(
           page.getByText(section.name, { exact: false }),
           `${section.name} should not be named anywhere on the page`
@@ -76,7 +83,10 @@ test.describe("Evidence page: partner-only sections", () => {
     }
 
     // The same page does ask for its public evidence, so an empty list would prove nothing.
-    expect(requests.some((body) => body.includes("reactome")), "the page asked for Reactome").toBe(true);
+    expect(
+      requests.some((body) => body.includes("reactome")),
+      "the page asked for Reactome"
+    ).toBe(true);
     for (const section of PARTNER_SECTIONS) {
       expect(
         requests.filter((body) => body.includes(section.datasource)),
@@ -84,7 +94,9 @@ test.describe("Evidence page: partner-only sections", () => {
       ).toEqual([]);
     }
     expect(
-      requests.filter((body) => /OtCrispr|OTCrispr|OtEncore|OTEncore|OtValidation|OTValidation/.test(body)),
+      requests.filter((body) =>
+        /OtCrispr|OTCrispr|OtEncore|OTEncore|OtValidation|OTValidation/.test(body)
+      ),
       "no request should run a partner section's query"
     ).toEqual([]);
   });

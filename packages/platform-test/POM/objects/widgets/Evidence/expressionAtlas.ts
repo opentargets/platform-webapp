@@ -90,6 +90,12 @@ export async function openExpressionAtlas(
   pair: EvidencePair = FGFR3_NEOPLASM_EA
 ): Promise<{ section: ExpressionAtlasSection; list: EvidenceList<ExpressionAtlasRow> }> {
   const section = new ExpressionAtlasSection(page);
-  const list = await openEvidenceSection<ExpressionAtlasRow>(page, section, EA_OPERATION, EA_LIST, pair);
+  const list = await openEvidenceSection<ExpressionAtlasRow>(
+    page,
+    section,
+    EA_OPERATION,
+    EA_LIST,
+    pair
+  );
   return { section, list };
 }

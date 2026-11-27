@@ -465,13 +465,11 @@ test.describe("Disease associations: uploading a list of targets", () => {
       await aotf.gotoDisease(diseaseId);
       const dialog = await aotf.openUploadDialog();
 
-      await dialog
-        .locator("input[type='file']")
-        .setInputFiles({
-          name: file.name,
-          mimeType: file.mimeType,
-          buffer: Buffer.from(file.content),
-        });
+      await dialog.locator("input[type='file']").setInputFiles({
+        name: file.name,
+        mimeType: file.mimeType,
+        buffer: Buffer.from(file.content),
+      });
 
       await expect(dialog.getByText("Validation mappings ( Upload count: 3)")).toBeVisible();
       const il6 = dialog.getByRole("checkbox", { name: "IL6 (1 hits) - IL6" });

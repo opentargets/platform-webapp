@@ -7,8 +7,8 @@ import {
   EA_LIST,
   EA_LOCKED,
   EA_OPERATION,
-  ExpressionAtlasSection,
   type ExpressionAtlasRow,
+  ExpressionAtlasSection,
   FGFR3_NEOPLASM_EA,
   HRAS_NEOPLASM,
   openExpressionAtlas,
@@ -35,7 +35,9 @@ async function open(page: Page, pair = FGFR3_NEOPLASM_EA) {
 }
 
 test.describe("Evidence page: Expression Atlas", () => {
-  test("shows title, description, chip, controls and the table headers @smoke", async ({ page }) => {
+  test("shows title, description, chip, controls and the table headers @smoke", async ({
+    page,
+  }) => {
     const { section, list } = await open(page);
     expect(list.count, "FGFR3 has more than two pages of experiments").toBeGreaterThan(20);
 
@@ -44,10 +46,9 @@ test.describe("Evidence page: Expression Atlas", () => {
     await expect(section.description).toHaveText(
       "Transcriptomic analysis reporting a significant differential expression of FGFR3 when comparing control samples with cancer or benign tumor samples. Source: Expression Atlas"
     );
-    await expect(section.description.getByRole("link", { name: "Expression Atlas" })).toHaveAttribute(
-      "href",
-      "https://www.ebi.ac.uk/gxa/home"
-    );
+    await expect(
+      section.description.getByRole("link", { name: "Expression Atlas" })
+    ).toHaveAttribute("href", "https://www.ebi.ac.uk/gxa/home");
     await expect(section.table.headers).toHaveText([...EA_HEADERS]);
     await expectFirstPage(section, list);
     await expect(section.table.searchInput, "this table has no search box").toHaveCount(0);
@@ -105,10 +106,9 @@ test.describe("Evidence page: Expression Atlas", () => {
 
     const confidence = await section.openHelp(0, EA_COLUMN.confidence);
     await expect(confidence).toContainText("As defined by the Expression Atlas Guideline");
-    await expect(confidence.getByRole("link", { name: "Expression Atlas Guideline" })).toHaveAttribute(
-      "href",
-      "https://www.ebi.ac.uk/gxa/FAQ.html"
-    );
+    await expect(
+      confidence.getByRole("link", { name: "Expression Atlas Guideline" })
+    ).toHaveAttribute("href", "https://www.ebi.ac.uk/gxa/FAQ.html");
   });
 
   test("pagination walks to the last page and back, and the page size select changes the rows", async ({
