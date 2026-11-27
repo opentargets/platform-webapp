@@ -61,17 +61,28 @@ export function clearDescriptionCodes(
 
 interface GraphQLParams {
   query: string;
+  operationName?: string | null;
   variables?: Record<string, unknown>;
 }
 
+// GraphiQL can send an operationName left over from the previous document when the
+// editor text is swapped and run in quick succession; drop it if the query doesn't define it.
+function hasOperation(query: string, operationName: string): boolean {
+  const escaped = operationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\b(query|mutation|subscription)\\s+${escaped}\\b`).test(query);
+}
+
 export async function fetcher(graphQLParams: GraphQLParams): Promise<unknown> {
+  const { operationName, ...rest } = graphQLParams;
+  const params =
+    operationName && !hasOperation(graphQLParams.query, operationName) ? rest : graphQLParams;
   const data = await fetch(config.urlApi, {
     method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(graphQLParams),
+    body: JSON.stringify(params),
   });
   return data.json();
 }
