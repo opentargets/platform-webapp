@@ -55,7 +55,9 @@ function getColumns({
         VariantCredibleSetsSearchField.LeadVariantId,
         VariantCredibleSetsSearchField.StudyId,
         VariantCredibleSetsSearchField.StudyTargetApprovedSymbol,
+        VariantCredibleSetsSearchField.StudyTargetId,
         VariantCredibleSetsSearchField.BiosampleName,
+        VariantCredibleSetsSearchField.BiosampleId,
         VariantCredibleSetsSearchField.Condition,
         VariantCredibleSetsSearchField.FineMappingMethod,
       ],
@@ -212,7 +214,7 @@ function getColumns({
         </>
       ),
       renderCell: ({ confidence }) => {
-        if (!confidence) return naLabel;
+        if (confidence == null) return naLabel;
         return (
           <Tooltip title={credsetConfidenceLabels[confidence]} style="">
             <ClinvarStars num={confidence} />
