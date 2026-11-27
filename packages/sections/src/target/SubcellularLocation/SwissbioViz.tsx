@@ -24,7 +24,7 @@ function Message({ text }: { text: string }) {
 function SwissBioVis({ locationIds, taxonId, sourceId, hoveredCellPart, setHoveredCellPart}) {
   const [message, setMessage] = useState("Loading cell diagram ...");
   const { config } = useConfigContext();
-  const wrapperRef = useRef();
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const basicHighlightStyles = {
     fill: config.profile.primaryColor,
@@ -44,17 +44,25 @@ function SwissBioVis({ locationIds, taxonId, sourceId, hoveredCellPart, setHover
   useEffect(() => {
     if (!wrapperRef.current) return;
 
+    let cancelled = false;
+
     const fetchSVG = async () => {
       let [svgString, error] = await safeFetch(
-        `https://www.swissbiopics.org//api/${taxonId}/sl/${locationIds}`,
+        `https://www.swissbiopics.org/api/${taxonId}/sl/${locationIds}`,
         "text"
       );
+      // the component may have unmounted while the request was in flight
+      if (cancelled || !wrapperRef.current) return;
       if (error) {
         setMessage("Problem downloading cell diagram");
         return;
       }
       wrapperRef.current.innerHTML = svgString;
       const svg = wrapperRef.current.querySelector("svg");
+      if (!svg) {
+        setMessage("Problem downloading cell diagram");
+        return;
+      }
 
       // all elements inside the SVG for which we have a location
       const subcellularPresentSVGs = svg.querySelectorAll(
@@ -78,7 +86,13 @@ function SwissBioVis({ locationIds, taxonId, sourceId, hoveredCellPart, setHover
       }
       setMessage("");
     }
-    fetchSVG();
+    fetchSVG().catch(() => {
+      if (!cancelled) setMessage("Problem downloading cell diagram");
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [taxonId, sourceId, locationIds]);
   
   // hover updates
