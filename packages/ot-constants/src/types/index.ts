@@ -2821,6 +2821,8 @@ export type EvidenceExpressionAtlas = {
   id: Scalars['String']['output'];
   /** Percentile rank of the fold change among the experiment's genes. */
   log2FoldChangePercentileRank?: Maybe<Scalars['Int']['output']>;
+  /** Log2 fold change of the target's expression between the compared conditions. */
+  log2FoldChangeValue?: Maybe<Scalars['Float']['output']>;
   /** P-value of the differential expression. */
   resourceScore?: Maybe<Scalars['Float']['output']>;
   /** Score of the evidence reflecting the strength of the disease/target relationship. */
@@ -2868,6 +2870,8 @@ export type EvidenceExpressionAtlasSort = {
 
 /** Fields available for sorting. */
 export enum EvidenceExpressionAtlasSortField {
+  /** Log2 fold change. */
+  Log2FoldChange = 'LOG2_FOLD_CHANGE',
   /** Percentile rank of the fold change. */
   Percentile = 'PERCENTILE',
   /** P-value. */

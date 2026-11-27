@@ -34,6 +34,7 @@ type ExpressionAtlasRow = Pick<
   | "contrast"
   | "confidence"
   | "studyOverview"
+  | "log2FoldChangeValue"
   | "resourceScore"
   | "log2FoldChangePercentileRank"
   | "studyId"
@@ -137,6 +138,16 @@ const columns: OtTableColumn<ExpressionAtlasRow>[] = [
         {sentenceCase(confidence ?? "")}
       </Tooltip>
     ),
+  },
+  {
+    id: "log2FoldChangeValue",
+    label: (
+      <>
+        Log<sub>2</sub> fold change
+      </>
+    ),
+    numeric: true,
+    sortField: EvidenceExpressionAtlasSortField.Log2FoldChange,
   },
   {
     id: "log2FoldChangePercentileRank",

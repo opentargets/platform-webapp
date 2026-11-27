@@ -18,6 +18,7 @@ query ExpressionAtlasQuery(
           contrast
           confidence
           studyOverview
+          log2FoldChangeValue
           resourceScore
           log2FoldChangePercentileRank
           studyId
