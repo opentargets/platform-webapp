@@ -29,6 +29,7 @@ function CategoryLegend() {
     <Box
       component="ul"
       aria-label="Legend"
+      data-testid="network-legend"
       sx={theme => ({
         display: "flex",
         alignItems: "center",
@@ -46,7 +47,7 @@ function CategoryLegend() {
         Category
       </Box>
       {categories.map(category => (
-        <Box component="li" key={category} sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+        <Box component="li" key={category} data-testid={`legend-item-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
           <CategoryDot category={category} />
           <Typography component="span" sx={{ fontSize: "inherit", color: "inherit" }}>
             {category}
@@ -56,6 +57,7 @@ function CategoryLegend() {
       {basketMode && (
         <Box
           component="li"
+          data-testid="legend-item-in-bag"
           sx={theme => ({
             display: "inline-flex",
             alignItems: "center",

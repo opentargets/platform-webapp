@@ -71,7 +71,7 @@ function Version({
 
   return (
     <VersionContainer>
-      <Typography variant="body2">
+      <Typography variant="body2" data-testid="home-data-version">
         Last update:{" "}
         <VersionLink link={releaseNotesURL} month={fullMonth} year={year} version={parsedVersion} iteration={version.iteration} />
       </Typography>

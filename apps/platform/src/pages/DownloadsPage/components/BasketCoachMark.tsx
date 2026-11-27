@@ -25,6 +25,7 @@ function BasketCoachMark({ open, anchorRef, onOpenBasket, onDismiss }: BasketCoa
       placement="bottom-end"
       role="dialog"
       aria-labelledby="basket-coach-title"
+      data-testid="basket-coach-mark"
       modifiers={[
         { name: "offset", options: { offset: [0, 12] } },
         { name: "arrow", options: { element: arrowEl, padding: 8 } },
@@ -71,6 +72,7 @@ function BasketCoachMark({ open, anchorRef, onOpenBasket, onDismiss }: BasketCoa
         <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
           <Button
             onClick={onOpenBasket}
+            data-testid="basket-coach-open"
             variant="contained"
             disableElevation
             sx={theme => ({
@@ -89,6 +91,7 @@ function BasketCoachMark({ open, anchorRef, onOpenBasket, onDismiss }: BasketCoa
           </Button>
           <Button
             onClick={onDismiss}
+            data-testid="basket-coach-dismiss"
             variant="outlined"
             sx={{
               borderColor: "rgba(255,255,255,.4)",

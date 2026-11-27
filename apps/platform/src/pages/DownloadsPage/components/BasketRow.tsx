@@ -31,6 +31,7 @@ function BasketRow({ dataset, onRemove }: BasketRowProps) {
   return (
     <Box
       component="li"
+      data-testid={`basket-row-${id}`}
       sx={theme => ({
         display: "flex",
         flexDirection: "column",
@@ -55,16 +56,23 @@ function BasketRow({ dataset, onRemove }: BasketRowProps) {
             whiteSpace: "nowrap",
           })}
           title={dataset.name}
+          data-testid="basket-item-name"
         >
           {dataset.name}
         </Typography>
-        <Box component={Link} to={{ pathname: `/downloads/${id}/schema`, search }} sx={linkSx}>
+        <Box
+          component={Link}
+          to={{ pathname: `/downloads/${id}/schema`, search }}
+          data-testid="basket-item-schema"
+          sx={linkSx}
+        >
           Schema
         </Box>
         <Box
           component="button"
           type="button"
           onClick={() => onRemove(id)}
+          data-testid="basket-item-remove"
           aria-label={`Remove ${dataset.name} from bag`}
           sx={linkSx}
         >

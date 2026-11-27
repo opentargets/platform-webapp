@@ -133,6 +133,7 @@ function NetworkView() {
 
   return (
     <Box
+      data-testid="network-view"
       sx={theme => ({
         display: "flex",
         flexDirection: "column",
@@ -153,7 +154,7 @@ function NetworkView() {
         onClearSelection={clearSelection}
         controller={controller}
       />
-      <Box sx={{ position: "relative", flex: 1, minHeight: 0 }}>
+      <Box data-testid="network-canvas" sx={{ position: "relative", flex: 1, minHeight: 0 }}>
         <GraphVisualization
           nodes={nodes}
           edges={edges}
