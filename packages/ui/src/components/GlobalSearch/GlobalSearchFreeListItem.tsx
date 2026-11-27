@@ -34,8 +34,8 @@ const SearchListItemText = styled("span")({
 function GlobalSearchFreeListItem() {
   const { inputValue } = useContext(SearchInputContext);
 
-  const { setOpen } = useContext(SearchContext);
-  const [openListItem, filterState] = useListOption();
+  const { setOpen, filterState } = useContext(SearchContext);
+  const [openListItem] = useListOption();
 
   const freeSearchTermObject = {
     symbol: `Search for: ${inputValue}`,
