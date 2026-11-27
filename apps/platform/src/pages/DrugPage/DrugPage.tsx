@@ -21,6 +21,11 @@ function DrugPage(): ReactNode {
   const location = useLocation();
   const { chemblId } = useParams();
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
+
+  if (!!subRoute) {
+    return <NotFoundPage />;
+  }
 
   if (data && !data.drug) {
     return <NotFoundPage />;

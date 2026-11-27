@@ -19,6 +19,11 @@ function CredibleSetPage(): ReactElement {
   const location = useLocation();
   const { credibleSetId } = useParams() as { credibleSetId: string };
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
+
+  if (!!subRoute) {
+    return <NotFoundPage />;
+  }
 
   if (data && !data?.credibleSet) {
     return <NotFoundPage />;
