@@ -130,7 +130,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
   // fetch selected structure and show it
   useEffect(() => {
     async function fetchStructure() {
-      if (viewer && selectedRow) {
+      if (viewer && selectedRow?.id) {
         setStructureDetails(null);
         setModelIndex(null);
         setMessageText("Loading structure ...");
