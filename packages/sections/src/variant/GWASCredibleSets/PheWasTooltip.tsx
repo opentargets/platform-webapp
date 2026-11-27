@@ -131,7 +131,7 @@ function PheWasTooltip({ credibleSetId, variantId }: { credibleSetId: string; va
               </Box>
               <Box display="flex" gap={0.5}>
                 Confidence:{" "}
-                {credibleSet.confidence ? (
+                {credibleSet.confidence != null ? (
                   <Tooltip title={credsetConfidenceLabels[credibleSet.confidence]} style="">
                     <ClinvarStars num={credibleSet.confidence} />
                   </Tooltip>

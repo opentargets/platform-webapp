@@ -49,7 +49,15 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       enableHiding: false,
       // For now add all search fields to first column - if move to column-based
       // search, move these fields to their corresponding columns
-      searchFields: Object.values(VariantCredibleSetsSearchField),
+      searchFields: [
+        VariantCredibleSetsSearchField.LeadVariantId,
+        VariantCredibleSetsSearchField.TraitFromSource,
+        VariantCredibleSetsSearchField.DiseaseNames,
+        VariantCredibleSetsSearchField.DiseaseIds,
+        VariantCredibleSetsSearchField.StudyId,
+        VariantCredibleSetsSearchField.FineMappingMethod,
+        VariantCredibleSetsSearchField.TopL2GApprovedSymbol,
+      ],
       renderCell: ({ credibleSetId }) => <Navigate to={`/credible-set/${credibleSetId}`} />,
     },
     {
@@ -148,6 +156,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "beta",
       label: "Beta",
       numeric: true,
+      sortField: VariantCredibleSetsSortField.Beta,
       tooltip: "Beta with respect to the ALT allele",
       renderCell: ({ beta }) => {
         if (typeof beta !== "number") return naLabel;
@@ -158,6 +167,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "posteriorProbability",
       label: "Posterior probability",
       numeric: true,
+      sortField: VariantCredibleSetsSortField.PosteriorProbability,
       tooltip: (
         <>
           Posterior inclusion probability that the fixed page variant (
@@ -199,7 +209,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
         </>
       ),
       renderCell: ({ confidence }) => {
-        if (!confidence) return naLabel;
+        if (confidence == null) return naLabel;
         return (
           <Tooltip title={credsetConfidenceLabels[confidence]} style="">
             <ClinvarStars num={confidence} />
@@ -259,6 +269,7 @@ function getColumns({ id, referenceAllele, alternateAllele }: getColumnsType) {
       id: "credibleSetSize",
       label: "Credible set size",
       numeric: true,
+      sortField: VariantCredibleSetsSortField.CredibleSetSize,
       renderCell: ({ locusSize }) => {
         return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
       },
