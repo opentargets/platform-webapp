@@ -28,6 +28,8 @@ export interface TestConfig {
     primary?: string;
     alternatives?: string[];
     aotfDiseases?: string[];
+    /** Target with pharmacogenetics data */
+    withPharmacogenomics?: string;
   };
   disease: {
     primary: string;

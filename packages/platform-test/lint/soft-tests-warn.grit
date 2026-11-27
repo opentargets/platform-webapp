@@ -1,0 +1,21 @@
+// Soft e2e patterns: reported as warnings across platform-test (legacy specs).
+or {
+  `if ($cond) { $then }` where { $then <: contains `expect($_)` } as $m where {
+    register_diagnostic(span=$m, message="Conditional assertion: when the condition is false nothing is checked and the test passes. Assert the condition instead (await expect(locator).toBeVisible()).", severity="warn")
+  },
+  `$x.toBeGreaterThanOrEqual(0)` as $m where {
+    register_diagnostic(span=$m, message="Always true for a count. Assert a real lower bound (toBeGreaterThan(0)) or an exact count.", severity="warn")
+  },
+  `$p.catch(() => false)` as $m where {
+    register_diagnostic(span=$m, message="Swallowed failure: a timeout becomes false and hides a broken page. Return the Locator and use a web-first assertion.", severity="warn")
+  },
+  `$p.waitForTimeout($t)` as $m where {
+    register_diagnostic(span=$m, message="Fixed sleep: wait for a condition instead (expect(...).toPass, waitForResponse, toBeVisible).", severity="warn")
+  },
+  `$p.waitForLoadState("networkidle")` as $m where {
+    register_diagnostic(span=$m, message="networkidle is discouraged by Playwright and flaky with polling widgets. Wait for the element you need.", severity="warn")
+  },
+  `test.fail($...)` as $m where {
+    register_diagnostic(span=$m, message="test.fail() marks a test as expected to fail; it does not report a failure. Use expect(..., message).", severity="warn")
+  }
+}

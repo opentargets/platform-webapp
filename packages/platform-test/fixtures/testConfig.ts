@@ -3,12 +3,13 @@ import { fetchConfigFromSheet } from "../utils/fetchConfigFromSheet";
 import { mergeWithDefaults } from "../utils/mergeWithDefaults";
 
 /**
- * Default test configuration (fallback)
+ * Default test configuration. Mirrors the `testing_scenario_1` row of the
+ * test config sheet, so a run is reproducible from the code alone.
  */
 function getDefaultConfig(): TestConfig {
   return {
     drug: {
-      primary: "CHEMBL3353410", // TRASTUZUMAB - has comprehensive data
+      primary: "CHEMBL1201585", // TRASTUZUMAB - has comprehensive data
       alternatives: {
         withWarnings: "CHEMBL3353410",
         withAdverseEvents: "CHEMBL3353410",
@@ -24,6 +25,7 @@ function getDefaultConfig(): TestConfig {
     target: {
       primary: "ENSG00000157764", // BRAF
       alternatives: ["ENSG00000139618"], // BRCA2
+      withPharmacogenomics: "ENSG00000100197", // CYP2D6
     },
     disease: {
       primary: "MONDO_0005068", // Myocardial infarction
@@ -44,50 +46,40 @@ function getDefaultConfig(): TestConfig {
     credibleSet: {
       primary: "1aac7a781b1395adad7daa04e5d13970",
       withGWASColoc: "8990f5e6515a5e24a3534da8ab339a92",
-      withQTLColoc: "5f4e2f4f4e2f4e2f4e2f4e2f4e2f4e2f",
+      withQTLColoc: "1aac7a781b1395adad7daa04e5d13970",
     },
   };
 }
 
 /**
- * Cached test configuration
+ * Cached sheet configuration, fetched once per worker
  */
 let cachedConfig: TestConfig | null = null;
 
-/**
- * Default configuration constants
- */
-const DEFAULT_CONFIG_URL =
-  "https://docs.google.com/spreadsheets/d/1oWYlb_o0AZBYOFUCd8k5-whZpKLpicZ-UyyNkLUbUk8/export?format=csv";
 const DEFAULT_SCENARIO = "testing_scenario_1";
 
 /**
- * Get test configuration (always fetches fresh)
- * Reads from environment variables TEST_CONFIG_URL and TEST_SCENARIO if available,
- * otherwise uses hardcoded defaults.
+ * Get test configuration.
+ * Uses the committed defaults unless TEST_CONFIG_URL points to a test config
+ * sheet (CSV export), in which case the TEST_SCENARIO row is merged on top.
  * @returns Test configuration object
  */
 export async function getTestConfig(): Promise<TestConfig> {
-  // Always reset to fetch fresh config for every run
-  cachedConfig = null;
-
-  const configUrl = process.env.TEST_CONFIG_URL || DEFAULT_CONFIG_URL;
-  const scenarioName = process.env.TEST_SCENARIO || DEFAULT_SCENARIO;
+  const configUrl = process.env.TEST_CONFIG_URL;
   const defaults = getDefaultConfig();
 
-  if (configUrl) {
-    console.log(`Fetching test config from: ${configUrl}`);
-    console.log(`Using scenario: ${scenarioName}`);
-    const fetchedConfig = await fetchConfigFromSheet(configUrl, scenarioName);
-    if (fetchedConfig) {
-      // Merge fetched config with defaults to fill any empty cells
-      cachedConfig = mergeWithDefaults(fetchedConfig, defaults);
-      return cachedConfig;
-    }
-    console.log("Falling back to default configuration");
-  }
+  if (!configUrl) return defaults;
+  if (cachedConfig) return cachedConfig;
 
-  cachedConfig = defaults;
+  const scenarioName = process.env.TEST_SCENARIO || DEFAULT_SCENARIO;
+  console.log(`Fetching test config from: ${configUrl}`);
+  console.log(`Using scenario: ${scenarioName}`);
+  const fetchedConfig = await fetchConfigFromSheet(configUrl, scenarioName);
+  if (!fetchedConfig) {
+    throw new Error(`Scenario "${scenarioName}" could not be loaded from ${configUrl}`);
+  }
+  // Merge fetched config with defaults to fill any empty cells
+  cachedConfig = mergeWithDefaults(fetchedConfig, defaults);
   return cachedConfig;
 }
 

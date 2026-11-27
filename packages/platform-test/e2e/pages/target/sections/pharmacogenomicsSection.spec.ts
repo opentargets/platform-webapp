@@ -1,103 +1,28 @@
 import { expect, test } from "../../../../fixtures";
-import { PharmacogenomicsSection } from "../../../../POM/objects/widgets/shared/pharmacogenomicsSection";
+import { ProfileSection } from "../../../../POM/objects/components/ProfileSection/profileSection";
+import { sectionContract } from "../../../../utils/sectionContract";
 
-test.describe("Pharmacogenomics Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
+test.describe("Pharmacogenetics Section", () => {
+  sectionContract({
+    id: "pharmacogenetics",
+    title: "Pharmacogenetics",
+    url: (config) => `/target/${config.target?.withPharmacogenomics}`,
+    table: { searchTerm: "desipramine", exportable: true },
   });
 
-  test("Section is visible when target has pharmacogenomics data", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
+  test("rows show the genotype and link to the drug", async ({ page }) => {
+    const firstRow = new ProfileSection(page, "pharmacogenetics").rows().first();
 
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      expect(isVisible).toBe(true);
-    } else {
-      test.skip();
-    }
+    await expect(firstRow).toContainText("CYP2D6*");
+    await expect(firstRow.locator("a[href*='/drug/']").first()).toBeVisible();
   });
 
-  test("Table is displayed with pharmacogenomics data", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
+  test("next page shows the following rows", async ({ page }) => {
+    const section = new ProfileSection(page, "pharmacogenetics");
+    const firstRow = await section.rows().first().innerText();
 
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      const rowCount = await pharmacogenomicsSection.getTableRows();
-      expect(rowCount).toBeGreaterThanOrEqual(0);
-    }
-  });
+    await section.nextPageButton().click();
 
-  test("Genotype ID is displayed in table rows", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
-
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      const rowCount = await pharmacogenomicsSection.getTableRows();
-
-      if (rowCount > 0) {
-        const genotypeId = await pharmacogenomicsSection.getGenotypeId(0);
-        expect(genotypeId).toBeTruthy();
-      }
-    }
-  });
-
-  test("Drug links are available when present", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
-
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      const rowCount = await pharmacogenomicsSection.getTableRows();
-
-      if (rowCount > 0) {
-        const drugLinksCount = await pharmacogenomicsSection.getDrugLinksCount(0);
-        if (drugLinksCount > 0) {
-          const drugName = await pharmacogenomicsSection.getDrugName(0);
-          expect(drugName).toBeTruthy();
-        }
-      }
-    }
-  });
-
-  test("Pagination controls are functional", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
-
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      const rowCount = await pharmacogenomicsSection.getTableRows();
-
-      if (rowCount >= 10) {
-        const isNextEnabled = await pharmacogenomicsSection.isNextPageEnabled();
-        if (isNextEnabled) {
-          await pharmacogenomicsSection.clickNextPage();
-          const isPrevEnabled = await pharmacogenomicsSection.isPreviousPageEnabled();
-          expect(isPrevEnabled).toBe(true);
-        }
-      }
-    }
-  });
-
-  test("Search functionality filters pharmacogenomics data", async ({ page }) => {
-    const pharmacogenomicsSection = new PharmacogenomicsSection(page);
-    const isVisible = await pharmacogenomicsSection.isSectionVisible();
-
-    if (isVisible) {
-      await pharmacogenomicsSection.waitForLoad();
-      const searchInput = pharmacogenomicsSection.getSearchInput();
-      const searchVisible = await searchInput.isVisible().catch(() => false);
-
-      if (searchVisible) {
-        await pharmacogenomicsSection.search("warfarin");
-        await page.waitForTimeout(500);
-        const inputValue = await searchInput.inputValue();
-        expect(inputValue).toBe("warfarin");
-      }
-    }
+    await expect(section.rows().first()).not.toHaveText(firstRow);
   });
 });

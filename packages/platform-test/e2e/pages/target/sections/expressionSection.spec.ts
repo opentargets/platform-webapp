@@ -1,80 +1,28 @@
 import { expect, test } from "../../../../fixtures";
-import { ExpressionSection } from "../../../../POM/objects/widgets/shared/expressionSection";
+import { BaselineExpressionSection } from "../../../../POM/objects/components/ProfileSection/targetSections";
+import { sectionContract } from "../../../../utils/sectionContract";
 
-test.describe("Expression Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
+test.describe("Baseline Expression Section", () => {
+  sectionContract({
+    id: "baselineexpression",
+    title: "Baseline Expression",
+    url: (config) => `/target/${config.target?.primary}`,
   });
 
-  test("Section is visible when target has expression data", async ({ page }) => {
-    const expressionSection = new ExpressionSection(page);
-    const isVisible = await expressionSection.isSectionVisible();
+  test("summary tab lists tissues", async ({ page }) => {
+    const section = new BaselineExpressionSection(page);
 
-    if (isVisible) {
-      await expressionSection.waitForLoad();
-      expect(isVisible).toBe(true);
-    } else {
-      test.skip();
-    }
+    await expect(section.tab("Summary")).toHaveAttribute("aria-selected", "true");
+    await expect(section.summaryRows().first()).toBeVisible();
+    await expect(section.exportButton()).toBeVisible();
   });
 
-  test("Section header displays correct title", async ({ page }) => {
-    const expressionSection = new ExpressionSection(page);
-    const isVisible = await expressionSection.isSectionVisible();
+  test("GTEx tab can be selected", async ({ page }) => {
+    const section = new BaselineExpressionSection(page);
 
-    if (isVisible) {
-      await expressionSection.waitForLoad();
-      const title = await expressionSection.getSectionTitle();
-      expect(title).toBeTruthy();
-    }
-  });
+    await section.tab("Variation (GTEx)").click();
 
-  test("Summary tab is accessible", async ({ page }) => {
-    const expressionSection = new ExpressionSection(page);
-    const isVisible = await expressionSection.isSectionVisible();
-
-    if (isVisible) {
-      await expressionSection.waitForLoad();
-      const summaryTab = expressionSection.getSummaryTab();
-      const tabVisible = await summaryTab.isVisible().catch(() => false);
-
-      if (tabVisible) {
-        await expressionSection.clickSummaryTab();
-        expect(tabVisible).toBe(true);
-      }
-    }
-  });
-
-  test("GTEx tab is accessible", async ({ page }) => {
-    const expressionSection = new ExpressionSection(page);
-    const isVisible = await expressionSection.isSectionVisible();
-
-    if (isVisible) {
-      await expressionSection.waitForLoad();
-      const gtexTab = expressionSection.getGtexTab();
-      const tabVisible = await gtexTab.isVisible().catch(() => false);
-
-      if (tabVisible) {
-        await expressionSection.clickGtexTab();
-        expect(tabVisible).toBe(true);
-      }
-    }
-  });
-
-  test("Data downloader is available", async ({ page }) => {
-    const expressionSection = new ExpressionSection(page);
-    const isVisible = await expressionSection.isSectionVisible();
-
-    if (isVisible) {
-      await expressionSection.waitForLoad();
-      const downloader = expressionSection.getDataDownloader();
-      const downloaderVisible = await downloader.isVisible().catch(() => false);
-
-      if (downloaderVisible) {
-        expect(downloaderVisible).toBe(true);
-      }
-    }
+    await expect(section.tab("Variation (GTEx)")).toHaveAttribute("aria-selected", "true");
+    await expect(section.root.locator("a[href*='gtexportal.org']").first()).toBeVisible();
   });
 });

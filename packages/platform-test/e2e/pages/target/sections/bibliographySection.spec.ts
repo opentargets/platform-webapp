@@ -1,75 +1,32 @@
 import { expect, test } from "../../../../fixtures";
-import { BibliographySection } from "../../../../POM/objects/widgets/Bibliography/bibliographySection";
+import { BibliographySection } from "../../../../POM/objects/components/ProfileSection/targetSections";
+import { sectionContract } from "../../../../utils/sectionContract";
 
 test.describe("Bibliography Section", () => {
-  test.beforeEach(async ({ page, baseURL, testConfig }) => {
-    const targetId = testConfig.target?.primary || "ENSG00000157764";
-    await page.goto(`${baseURL}/target/${targetId}`);
-    await page.waitForLoadState("networkidle");
+  sectionContract({
+    id: "bibliography",
+    title: "Bibliography",
+    url: (config) => `/target/${config.target?.primary}`,
   });
 
-  test("Section is visible when target has bibliography data", async ({ page }) => {
-    const bibliographySection = new BibliographySection(page);
-    const isVisible = await bibliographySection.isSectionVisible().catch(() => false);
+  test("lists literature entries with a title", async ({ page }) => {
+    const section = new BibliographySection(page);
 
-    if (isVisible) {
-      await bibliographySection.waitForSectionLoad();
-      expect(isVisible).toBe(true);
-    }
+    await expect(section.entries()).toHaveCount(5);
+    await expect(
+      section.entries().first().locator("a[href*='europepmc.org']").first()
+    ).toBeVisible();
   });
 
-  test("Section header displays correct title", async ({ page }) => {
-    const bibliographySection = new BibliographySection(page);
-    const isVisible = await bibliographySection.isSectionVisible().catch(() => false);
+  test("next page shows different entries", async ({ page }) => {
+    const section = new BibliographySection(page);
+    const firstEntry = await section.entries().first().getAttribute("data-testid");
 
-    if (isVisible) {
-      await bibliographySection.waitForSectionLoad();
-      const title = await bibliographySection.getSectionTitle();
-      expect(title).toBeTruthy();
-    }
-  });
+    await expect(section.root.getByText(/^1–5 of/)).toBeVisible();
+    await section.nextPage().click();
 
-  test("Literature entries are displayed", async ({ page }) => {
-    const bibliographySection = new BibliographySection(page);
-    const isVisible = await bibliographySection.isSectionVisible().catch(() => false);
-
-    if (isVisible) {
-      await bibliographySection.waitForSectionLoad();
-      const literatureCount = await bibliographySection.getLiteratureCount();
-      expect(literatureCount).toBeGreaterThanOrEqual(0);
-    }
-  });
-
-  test("Literature entry has title", async ({ page }) => {
-    const bibliographySection = new BibliographySection(page);
-    const isVisible = await bibliographySection.isSectionVisible().catch(() => false);
-
-    if (isVisible) {
-      await bibliographySection.waitForSectionLoad();
-      const literatureCount = await bibliographySection.getLiteratureCount();
-
-      if (literatureCount > 0) {
-        const title = await bibliographySection.getLiteratureTitle(0);
-        expect(title).toBeTruthy();
-      }
-    }
-  });
-
-  test("Search functionality filters literature", async ({ page }) => {
-    const bibliographySection = new BibliographySection(page);
-    const isVisible = await bibliographySection.isSectionVisible().catch(() => false);
-
-    if (isVisible) {
-      await bibliographySection.waitForSectionLoad();
-      const searchInput = bibliographySection.getSearchInput();
-      const searchVisible = await searchInput.isVisible().catch(() => false);
-
-      if (searchVisible) {
-        await bibliographySection.searchLiterature("cancer");
-        await page.waitForTimeout(500);
-        const inputValue = await searchInput.inputValue();
-        expect(inputValue).toBe("cancer");
-      }
-    }
+    await expect(section.root.getByText(/^6–10 of/)).toBeVisible();
+    await expect(section.entries().first()).not.toHaveAttribute("data-testid", firstEntry ?? "");
+    await expect(section.entries()).toHaveCount(5);
   });
 });
