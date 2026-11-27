@@ -2,7 +2,12 @@ import { ApiPlaygroundDrawer } from "ui";
 import { getAssociationsQueryVariables } from "../../associationsUtils";
 import { useAotfQueryState } from "../../context/AssociationsQueryContext";
 
-function AotfApiPlayground() {
+type AotfApiPlaygroundProps = {
+  open: boolean;
+  onClose: () => void;
+};
+
+function AotfApiPlayground({ open, onClose }: AotfApiPlaygroundProps) {
   const {
     id,
     pagination,
@@ -30,7 +35,8 @@ function AotfApiPlayground() {
       fullHeight={true}
       query={query.loc.source.body}
       variables={variables}
-      inMenu
+      open={open}
+      onClose={onClose}
     />
   );
 }

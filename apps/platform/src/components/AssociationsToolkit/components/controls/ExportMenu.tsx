@@ -1,12 +1,22 @@
-import { faFileArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { faFileArrowDown, faPlay } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { PopoverButton, ButtonNoBorder, MenuList, Popover } from "ui";
+import {
+  PopoverButton,
+  ButtonNoBorder,
+  MenuList,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Popover,
+} from "ui";
 import AotfApiPlayground from "./AotfApiPlayground";
 import DataDownloader from "../data/DataDownloader";
 
 function ExportMenu() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [playgroundOpen, setPlaygroundOpen] = useState(false);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -14,6 +24,11 @@ function ExportMenu() {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const openPlayground = () => {
+    handleClose();
+    setPlaygroundOpen(true);
   };
 
   const open = Boolean(anchorEl);
@@ -54,9 +69,21 @@ function ExportMenu() {
       >
         <MenuList dense>
           <DataDownloader />
-          <AotfApiPlayground />
+          <MenuItem
+            onClick={openPlayground}
+            sx={{ "&>.MuiListItemIcon-root>svg": { fontSize: "1rem" } }}
+          >
+            <ListItemIcon>
+              <FontAwesomeIcon icon={faPlay} />
+            </ListItemIcon>
+            <ListItemText>API query</ListItemText>
+          </MenuItem>
         </MenuList>
       </Popover>
+
+      {/* Rendered outside the MenuList so its type-ahead does not take the
+          keystrokes typed in the playground (issues#4309). */}
+      <AotfApiPlayground open={playgroundOpen} onClose={() => setPlaygroundOpen(false)} />
     </>
   );
 }
