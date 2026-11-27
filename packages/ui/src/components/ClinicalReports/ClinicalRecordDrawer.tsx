@@ -387,17 +387,23 @@ function ClinicalRecordDrawer({ recordId, recordDetailQuery, children }: any) {
     <>
       <StyledButtonBase
         disableRipple
+        data-testid="clinical-record-drawer-trigger"
         onClick={toggleDrawer}
         sx={{ maxWidth: "100%", overflow: "hidden", display: "block" }}
       >
         {children}
       </StyledButtonBase>
 
-      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+      <StyledDrawer
+        anchor="right"
+        open={open}
+        onClose={closeDrawer}
+        data-testid="clinical-record-drawer"
+      >
         <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <StyledTitleCaption>Report</StyledTitleCaption>
-            <IconButton onClick={closeDrawer}>
+            <IconButton onClick={closeDrawer} data-testid="drawer-close">
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>

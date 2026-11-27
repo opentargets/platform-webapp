@@ -123,7 +123,7 @@ function OtTableOffsetPagination({
         )}
       </Box>
       <Box sx={{ overflowX: "auto", mt: 3 }}>
-        <OtTableContainer>
+        <OtTableContainer data-testid="ot-table">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>

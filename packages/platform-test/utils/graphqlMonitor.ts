@@ -1,243 +1,165 @@
-import type { APIResponse, Page } from "@playwright/test";
-
-export interface GraphQLQuery {
-  operationName: string;
-  query: string;
-  variables?: Record<string, unknown>;
-  timestamp: number;
-}
-
-export interface GraphQLResponse {
-  status: number;
-  ok: boolean;
-  data?: unknown;
-  errors?: Array<{ message: string; extensions?: Record<string, unknown> }>;
-  timestamp: number;
-}
-
-export interface GraphQLRequest {
-  query: GraphQLQuery;
-  response: GraphQLResponse;
-  duration: number;
-}
-
-export interface GraphQLMonitorStats {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  averageResponseTime: number;
-  requests: GraphQLRequest[];
-  errors: Map<string, string[]>;
-}
+import type { Page, Request, Response } from "@playwright/test";
 
 /**
- * GraphQL Monitor - Monitors all GraphQL responses in tests
+ * Records every GraphQL request a page issues, with its response.
+ *
+ * The page health guard (utils/pageHealth.ts) already fails a test on a GraphQL error or
+ * a non-2xx status, so this monitor does not look for errors. It answers the questions
+ * the guard cannot: which operations did the page issue, how many times, with which
+ * variables, and what data came back.
+ *
+ * It never logs and never measures time: a wall-clock figure taken on a shared CI
+ * runner is noise. Request counts are deterministic.
+ *
+ * Use it through the `graphqlMonitor` fixture, which starts it before the test navigates.
  */
+
+export type RecordedOperation = {
+  /** The GraphQL operation name ("TargetPageQuery"), or "anonymous" when the query has none. */
+  name: string;
+  variables: Record<string, unknown>;
+  /** `name` plus the variables in a stable order: equal for two identical requests. */
+  key: string;
+  /** The page URL when the request was issued. */
+  pageUrl: string;
+  /** HTTP status, or null while in flight, or when the request failed or was cancelled. */
+  status: number | null;
+  /** The `data` member of the response, undefined until read (or when it never arrived). */
+  data: unknown;
+  /** Messages of the `errors` member of the response. */
+  errors: string[];
+};
+
+export type RepeatedRequest = { key: string; name: string; count: number };
+
+/** JSON with object keys sorted, so `{a, b}` and `{b, a}` compare equal. */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, child]) => child !== undefined)
+      .sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([key, child]) => `${JSON.stringify(key)}:${stableStringify(child)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+type GraphQLBody = { operationName?: string | null; variables?: Record<string, unknown> | null };
+
+function parseGraphQLRequest(request: Request): GraphQLBody | null {
+  if (request.method() !== "POST") return null;
+  const body = request.postData();
+  if (!body?.includes('"query"')) return null;
+  const parsed: unknown = JSON.parse(body);
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  return parsed as GraphQLBody;
+}
+
 export class GraphQLMonitor {
-  private requests: GraphQLRequest[] = [];
-  private errors: Map<string, string[]> = new Map();
-  private page: Page;
-  private responseHandler: ((response: APIResponse) => void) | null = null;
+  private recorded: RecordedOperation[] = [];
+  private byRequest = new Map<Request, RecordedOperation>();
+  private pending = new Set<Promise<void>>();
+  private listening = false;
 
-  constructor(page: Page) {
-    this.page = page;
-  }
+  constructor(private readonly page: Page) {}
 
-  /**
-   * Start monitoring GraphQL requests using response listener
-   * This approach is simpler and doesn't block navigation
-   */
+  /** Start recording. Call before the navigation whose requests are of interest. */
   async start(): Promise<void> {
-    console.log("[GraphQLMonitor] Starting response monitoring...");
-
-    // Create handler (non-async to avoid blocking page loads)
-    this.responseHandler = (response: APIResponse): void => {
-      // Only monitor GraphQL endpoints
-      const url = response.url();
-      if (!url.includes("graphql")) {
-        return;
-      }
-
-      // Only monitor POST requests (typical for GraphQL)
-      const request = response.request();
-      if (request.method() !== "POST") {
-        return;
-      }
-
-      const startTime = Date.now();
-
-      // Read response body asynchronously but don't wait in the handler
-      response
-        .text()
-        .then((responseBody: string): void => {
-          const duration = Date.now() - startTime;
-
-          try {
-            const jsonBody = JSON.parse(request.postData() || "{}");
-            const operationName = jsonBody.operationName || "Unknown";
-            const graphqlResponse = JSON.parse(responseBody);
-
-            // Store the request-response pair
-            this.requests.push({
-              query: {
-                operationName,
-                query: jsonBody.query || "",
-                variables: jsonBody.variables,
-                timestamp: startTime,
-              },
-              response: {
-                status: response.status(),
-                ok: response.ok(),
-                data: graphqlResponse.data,
-                errors: graphqlResponse.errors,
-                timestamp: startTime + duration,
-              },
-              duration,
-            });
-
-            console.log(`[GraphQLMonitor] Request logged: ${operationName} (${duration}ms)`);
-
-            // Track errors
-            if (graphqlResponse.errors && graphqlResponse.errors.length > 0) {
-              const errors = graphqlResponse.errors.map((err: { message: string }) => err.message);
-              if (!this.errors.has(operationName)) {
-                this.errors.set(operationName, []);
-              }
-              this.errors.get(operationName)?.push(...errors);
-              console.log(`[GraphQLMonitor] Errors detected for ${operationName}`);
-            }
-
-            // If HTTP error, also track it
-            if (!response.ok()) {
-              if (!this.errors.has(operationName)) {
-                this.errors.set(operationName, []);
-              }
-              const errorList = this.errors.get(operationName);
-              if (errorList) {
-                errorList.push(`HTTP ${response.status()}: ${response.statusText()}`);
-              }
-            }
-          } catch (_e) {
-            console.log(`[GraphQLMonitor] Error processing response: ${_e}`);
-          }
-        })
-        .catch((_error: unknown): void => {
-          console.log(`[GraphQLMonitor] Failed to read response body: ${_error}`);
-        });
-    };
-
-    // Listen for all responses
-    this.page.on("response", this.responseHandler);
+    if (this.listening) return;
+    this.listening = true;
+    this.page.on("request", this.onRequest);
+    this.page.on("response", this.onResponse);
   }
 
-  /**
-   * Stop monitoring and clear data
-   */
   async stop(): Promise<void> {
-    console.log("[GraphQLMonitor] Stopping response monitoring...");
-    // Remove only our specific handler
-    if (this.responseHandler) {
-      this.page.removeListener("response", this.responseHandler);
-      this.responseHandler = null;
-    }
+    if (!this.listening) return;
+    this.listening = false;
+    this.page.off("request", this.onRequest);
+    this.page.off("response", this.onResponse);
   }
 
-  /**
-   * Get all monitored requests
-   */
-  getRequests(): GraphQLRequest[] {
-    return [...this.requests];
-  }
-
-  /**
-   * Get requests by operation name
-   */
-  getRequestsByOperation(operationName: string): GraphQLRequest[] {
-    return this.requests.filter((r) => r.query.operationName === operationName);
-  }
-
-  /**
-   * Get all errors
-   */
-  getErrors(): Map<string, string[]> {
-    return new Map(this.errors);
-  }
-
-  /**
-   * Get errors for a specific operation
-   */
-  getErrorsByOperation(operationName: string): string[] {
-    return this.errors.get(operationName) || [];
-  }
-
-  /**
-   * Get statistics
-   */
-  getStats(): GraphQLMonitorStats {
-    const totalRequests = this.requests.length;
-    const failedRequests = Array.from(this.errors.values()).reduce(
-      (sum, errors) => sum + errors.length,
-      0
-    );
-    const successfulRequests = totalRequests - failedRequests;
-    const averageResponseTime =
-      totalRequests > 0 ? this.requests.reduce((sum, r) => sum + r.duration, 0) / totalRequests : 0;
-
-    return {
-      totalRequests,
-      successfulRequests,
-      failedRequests,
-      averageResponseTime,
-      requests: [...this.requests],
-      errors: new Map(this.errors),
-    };
-  }
-
-  /**
-   * Clear all recorded data
-   */
+  /** Forget what was recorded so far, e.g. after the initial load and before an interaction. */
   clear(): void {
-    this.requests = [];
-    this.errors.clear();
+    this.recorded = [];
+    this.byRequest.clear();
   }
 
   /**
-   * Print a summary report
+   * Wait until the body of every response received so far has been read. Call it after
+   * the page has reached the state under test (a heading, a row count), then assert.
    */
-  printSummary(): void {
-    const stats = this.getStats();
-    console.log(`
-============================================
-    GraphQL Request Summary
-============================================
-Total Requests:      $stats.totalRequests
-Successful:          $stats.successfulRequests
-Failed:              $stats.failedRequests
-Average Response:    $stats.averageResponseTime.toFixed(2)ms
-============================================
-    `);
+  async settle(): Promise<void> {
+    while (this.pending.size > 0) await Promise.all([...this.pending]);
+  }
 
-    if (stats.errors.size > 0) {
-      console.log("ERRORS:");
-      for (const [_operation, errors] of stats.errors.entries()) {
-        console.log(`  ${_operation}:`);
-        for (const error of errors) {
-          console.log(`    - ${error}`);
-        }
-      }
-    }
+  /** Every GraphQL request issued since `start()` or the last `clear()`, in order. */
+  operations(): readonly RecordedOperation[] {
+    return this.recorded;
+  }
+
+  /** The requests of one operation, in the order they were issued. */
+  named(name: string): RecordedOperation[] {
+    return this.recorded.filter((operation) => operation.name === name);
+  }
+
+  /** The distinct operation names issued, sorted. */
+  operationNames(): string[] {
+    return [...new Set(this.recorded.map((operation) => operation.name))].sort();
   }
 
   /**
-   * Assert all requests were successful
+   * Requests issued more than `allowed` times with the same operation and the same
+   * variables. An identical request repeated on load is wasted work at best and a
+   * render loop at worst. The count varies between runs, so tests report it (see
+   * e2e/health/graphql.spec.ts) and do not assert on it.
    */
-  assertNoErrors(): void {
-    if (this.errors.size > 0) {
-      const errorSummary = Array.from(this.errors.entries())
-        .map(([operation, errors]) => `${operation}: ${errors.join(", ")}`)
-        .join("\n");
-
-      throw new Error(`GraphQL requests failed:\n${errorSummary}`);
+  repeatedRequests(allowed = 1): RepeatedRequest[] {
+    const counts = new Map<string, RepeatedRequest>();
+    for (const { key, name } of this.recorded) {
+      const seen = counts.get(key);
+      if (seen) seen.count += 1;
+      else counts.set(key, { key, name, count: 1 });
     }
+    return [...counts.values()].filter((request) => request.count > allowed);
   }
+
+  private onRequest = (request: Request): void => {
+    const body = parseGraphQLRequest(request);
+    if (!body) return;
+    const name = body.operationName || "anonymous";
+    const variables = body.variables ?? {};
+    const operation: RecordedOperation = {
+      name,
+      variables,
+      key: `${name} ${stableStringify(variables)}`,
+      pageUrl: this.page.url(),
+      status: null,
+      data: undefined,
+      errors: [],
+    };
+    this.recorded.push(operation);
+    this.byRequest.set(request, operation);
+  };
+
+  private onResponse = (response: Response): void => {
+    const operation = this.byRequest.get(response.request());
+    if (!operation) return;
+    operation.status = response.status();
+    const reading = response
+      .json()
+      .then((body: { data?: unknown; errors?: { message: string }[] }) => {
+        operation.data = body?.data;
+        operation.errors = (body?.errors ?? []).map((error) => error.message);
+      })
+      .catch((error: Error) => {
+        // A body can only be unreadable because the page navigated away or closed while
+        // it was in flight, or because it is not JSON (an HTTP 500 page). Either way
+        // `data` stays undefined, which is what the caller asserts on.
+        operation.errors = [`response body could not be read: ${error.message}`];
+      })
+      .finally(() => {
+        this.pending.delete(reading);
+      });
+    this.pending.add(reading);
+  };
 }

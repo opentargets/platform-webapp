@@ -74,7 +74,7 @@ function GlobalSearchListHeader({ listHeader, children }) {
         <div>{getIconTag()}</div>
       </Box>
       {listHeader === "recent" && (
-        <ClearAllButton onClick={clearAllRecent}>
+        <ClearAllButton data-testid="global-search-clear-recent" onClick={clearAllRecent}>
           <Typography variant="caption">clear all</Typography>
         </ClearAllButton>
       )}

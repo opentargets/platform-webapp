@@ -1,1 +1,0 @@
-export { TargetPage } from "./target";

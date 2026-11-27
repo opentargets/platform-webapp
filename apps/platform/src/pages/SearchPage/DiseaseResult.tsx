@@ -12,7 +12,7 @@ const StyledLink = styled(Link)({
 function DiseaseResult({ data, highlights }) {
   const theme = useTheme();
   return (
-    <div style={{ marginBottom: "30px" }}>
+    <div data-testid="search-result-disease" style={{ marginBottom: "30px" }}>
       <StyledLink to={`/disease/${data.id}/associations`}>
         <FontAwesomeIcon icon={faStethoscope} color={theme.palette.primary.main} /> {data.name}
       </StyledLink>

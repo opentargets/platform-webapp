@@ -41,7 +41,7 @@ type FooterSectionHeadingProps = {
 };
 const FooterSectionHeading = ({ children }: FooterSectionHeadingProps) => (
   <GridLegacy item xs={12}>
-    <Typography variant="h6" component="div" color="inherit">
+    <Typography variant="h6" component="div" color="inherit" data-testid="footer-heading">
       {children}
     </Typography>
   </GridLegacy>
@@ -170,7 +170,7 @@ const DeployedVersion = () => {
     version: { apiVersion },
   } = useAPIMetadata();
   return (
-    <Typography color="inherit" variant="caption">
+    <Typography color="inherit" variant="caption" data-testid="footer-version">
       <b>UI: </b>
       {config?.gitVersion}
       <br />
@@ -194,6 +194,7 @@ type FooterProps = {
 const Footer = ({ externalLinks }: FooterProps) => {
   return (
     <GridLegacy
+      data-testid="app-footer"
       sx={{
         p: 3,
         backgroundColor: FOOTER_BACKGROUND_COLOR,

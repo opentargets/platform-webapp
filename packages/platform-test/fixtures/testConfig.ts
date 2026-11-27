@@ -3,20 +3,29 @@ import { fetchConfigFromSheet } from "../utils/fetchConfigFromSheet";
 import { mergeWithDefaults } from "../utils/mergeWithDefaults";
 
 /**
- * Default test configuration (fallback)
+ * Test data checked in with the tests.
+ *
+ * These IDs are the default for every run, so a run is reproducible from the commit
+ * alone. `fixtures/expectedSections.ts` records what each of them must render.
  */
-function getDefaultConfig(): TestConfig {
+export function getDefaultConfig(): TestConfig {
   return {
     drug: {
-      primary: "CHEMBL3353410", // TRASTUZUMAB - has comprehensive data
+      primary: "CHEMBL1201585", // TRASTUZUMAB
       alternatives: {
-        withWarnings: "CHEMBL3353410",
-        withAdverseEvents: "CHEMBL3353410",
+        withWarnings: "CHEMBL1201585",
+        withAdverseEvents: "CHEMBL1201585",
+        smallMolecule: "CHEMBL1464", // WARFARIN
+        withParentMolecule: "CHEMBL1200879", // WARFARIN SODIUM
+        withManyWarnings: "CHEMBL122", // ROFECOXIB
+        withMultipleMechanisms: "CHEMBL941", // IMATINIB
+        withNonHumanTarget: "CHEMBL1082", // AMOXICILLIN
+        sparse: "CHEMBL5314605", // ZANZALINTINIB FUMARATE
       },
     },
     variant: {
-      primary: "1_154453788_C_T", // Intron variant overlapping with IL6R.
-      withMolecularStructure: "19_44908822_C_T", // Missense variant overlapping with APOE, causing amino-acid change: R176C with moderate impact.
+      primary: "1_154453788_C_T", // Intron variant overlapping with IL6R
+      withMolecularStructure: "19_44908822_C_T", // APOE missense variant (R176C)
       withPharmacogenomics: "7_95308134_T_C", // PON1 variant
       withQTL: "1_154453788_C_T",
       withEVA: "19_44908822_C_T",
@@ -24,76 +33,95 @@ function getDefaultConfig(): TestConfig {
     target: {
       primary: "ENSG00000157764", // BRAF
       alternatives: ["ENSG00000139618"], // BRCA2
+      withSafetyLiabilities: "ENSG00000169252", // ADRB2: 26 safety liabilities of every kind
+      withChemicalProbes: "ENSG00000141867", // BRD4: 13 chemical probes (controls, low quality)
+      withSpecificExpression: "ENSG00000163631", // ALB: high expression specificity (liver)
+      withoutDrugsSafetyOrProbes: "ENSG00000163631", // ALB: no drugs, safety or chemical probes
+      withPharmacogenomics: "ENSG00000165841", // CYP2C19: 367 pharmacogenetics rows, no cancer hallmarks
+      withManyCancerHallmarks: "ENSG00000146648", // EGFR: more than one page of cancer hallmarks
+      nonCoding: "ENSG00000251562", // MALAT1: lncRNA, no protein, description, hallmarks, mouse phenotypes or homologues
+      withoutLiteratureOrQtl: "ENSG00000243485", // MIR1302-2HG: no bibliography, no credible sets, no synonyms
+      coreEssential: "ENSG00000166851", // PLK1: DepMap core essential gene
+      withFewPublications: "ENSG00000171014", // OR4D5: two pages of literature, earliest publication year known
+      withDirectTargetPharmacogenomics: "ENSG00000146648", // EGFR: pharmacogenetics rows where the gene is the direct drug target
+      aotfDiseases: ["myocardial infarction", "cancer"],
     },
     disease: {
-      primary: "MONDO_0005068", // Myocardial infarction
+      primary: "MONDO_0005068", // myocardial infarction
       name: "myocardial infarction",
-      alternatives: ["EFO_0000305", "MONDO_0007254"], // Breast carcinoma, Alzheimer disease
-      aotfGenes: ["IL6", "ADRB1", "APOE"], // Genes with evidence for testing AOTF table
+      alternatives: ["MONDO_0007254"], // breast cancer
+      aotfGenes: ["IL6", "ADRB1", "APOE"],
+    },
+    evidence: {
+      primary: { ensgId: "ENSG00000157764", efoId: "MONDO_0005105" }, // BRAF, melanoma
+      withGeneticEvidence: { ensgId: "ENSG00000160712", efoId: "MONDO_0005068" }, // IL6R, myocardial infarction
+      withoutEvidence: { ensgId: "ENSG00000243485", efoId: "MONDO_0005105" }, // MIR1302-2HG, melanoma
     },
     study: {
       gwas: {
-        primary: "GCST90475211", // Example credible set study
+        primary: "GCST90475211",
         alternatives: [],
       },
       qtl: {
-        primary: "UKB_PPP_EUR_LPA_P08519_OID30747_v1", // eQTL study
-        alternatives: [],
+        primary: "UKB_PPP_EUR_LPA_P08519_OID30747_v1",
+        // eQTL (GTEx v10, tibial nerve, PCSK9): one credible set, a condition and a PubMed id
+        alternatives: ["qts000015_qtd000286_gtex_v10_ge_nerve_tibial_ensg00000169174"],
       },
     },
     credibleSet: {
-      primary: "1aac7a781b1395adad7daa04e5d13970",
-      withGWASColoc: "8990f5e6515a5e24a3534da8ab339a92",
-      withQTLColoc: "5f4e2f4f4e2f4e2f4e2f4e2f4e2f4e2f",
+      // GWAS credible set of GCST90475211 with L2G, GWAS coloc, molQTL coloc and E2G data
+      primary: "a3ea67115f6db323b2eae6c1bf6cda7e",
+      withGWASColoc: "a3ea67115f6db323b2eae6c1bf6cda7e",
+      withQTLColoc: "a3ea67115f6db323b2eae6c1bf6cda7e",
+      // pQTL credible set of UKB_PPP_EUR_LPA_P08519_OID30747_v1 (no L2G, no molQTL coloc)
+      qtl: "5848564f6c070538c3bfe980357d4785",
     },
   };
 }
 
-/**
- * Cached test configuration
- */
-let cachedConfig: TestConfig | null = null;
-
-/**
- * Default configuration constants
- */
-const DEFAULT_CONFIG_URL =
-  "https://docs.google.com/spreadsheets/d/1oWYlb_o0AZBYOFUCd8k5-whZpKLpicZ-UyyNkLUbUk8/export?format=csv";
 const DEFAULT_SCENARIO = "testing_scenario_1";
+const FETCH_ATTEMPTS = 3;
+
+/** Name of the environment variable global setup uses to hand the config to workers. */
+export const RESOLVED_CONFIG_ENV = "OT_E2E_RESOLVED_TEST_CONFIG";
 
 /**
- * Get test configuration (always fetches fresh)
- * Reads from environment variables TEST_CONFIG_URL and TEST_SCENARIO if available,
- * otherwise uses hardcoded defaults.
- * @returns Test configuration object
+ * Resolve the test data for this run. Called once, from global setup.
+ *
+ * With `TEST_CONFIG_URL` set, the scenario named by `TEST_SCENARIO` is read from that
+ * sheet and empty cells are filled from the defaults. A sheet that was asked for and
+ * cannot be read fails the run: running different data than requested would make the
+ * results meaningless.
  */
-export async function getTestConfig(): Promise<TestConfig> {
-  // Always reset to fetch fresh config for every run
-  cachedConfig = null;
-
-  const configUrl = process.env.TEST_CONFIG_URL || DEFAULT_CONFIG_URL;
-  const scenarioName = process.env.TEST_SCENARIO || DEFAULT_SCENARIO;
+export async function resolveTestConfig(): Promise<TestConfig> {
   const defaults = getDefaultConfig();
+  const configUrl = process.env.TEST_CONFIG_URL;
+  if (!configUrl) return defaults;
 
-  if (configUrl) {
-    console.log(`Fetching test config from: ${configUrl}`);
-    console.log(`Using scenario: ${scenarioName}`);
-    const fetchedConfig = await fetchConfigFromSheet(configUrl, scenarioName);
-    if (fetchedConfig) {
-      // Merge fetched config with defaults to fill any empty cells
-      cachedConfig = mergeWithDefaults(fetchedConfig, defaults);
-      return cachedConfig;
+  const scenarioName = process.env.TEST_SCENARIO || DEFAULT_SCENARIO;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    try {
+      const fetched = await fetchConfigFromSheet(configUrl, scenarioName);
+      return mergeWithDefaults(fetched, defaults);
+    } catch (error) {
+      lastError = error;
+      if (attempt < FETCH_ATTEMPTS)
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
     }
-    console.log("Falling back to default configuration");
   }
-
-  cachedConfig = defaults;
-  return cachedConfig;
+  throw new Error(
+    `Could not read test scenario "${scenarioName}" from TEST_CONFIG_URL after ${FETCH_ATTEMPTS} attempts: ${String(lastError)}`
+  );
 }
 
-/**
- * Reset cached configuration (useful for testing)
- */
-export function resetTestConfig(): void {
-  cachedConfig = null;
+/** The config resolved by global setup, as seen from a worker. */
+export function getTestConfig(): TestConfig {
+  const serialized = process.env[RESOLVED_CONFIG_ENV];
+  if (!serialized) {
+    throw new Error(
+      `${RESOLVED_CONFIG_ENV} is not set: global setup did not run. Run the tests through playwright.config.ts.`
+    );
+  }
+  return JSON.parse(serialized) as TestConfig;
 }

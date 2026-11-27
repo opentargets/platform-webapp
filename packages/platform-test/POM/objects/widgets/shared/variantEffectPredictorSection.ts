@@ -1,100 +1,50 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
+import { SectionDataControls } from "./sectionDataControls";
 
-/**
- * Interactor for Variant Effect Predictor/Transcript Consequences section
- */
+/** The "Transcript consequences" section (variant_effect_predictor) of the variant page. */
 export class VariantEffectPredictorSection {
-  constructor(private page: Page) {}
+  static readonly id = "variant_effect_predictor";
+  static readonly operation = "VariantEffectPredictorQuery";
+  static readonly headers = [
+    "Gene",
+    "Predicted consequence",
+    "Impact",
+    "Distance from footprint (bp)",
+    "Distance from start site (bp)",
+  ] as const;
+  static readonly pageSize = 10;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-variant-effect-predictor']");
+  constructor(readonly page: Page) {}
+
+  get section(): Locator {
+    return sectionLocator(this.page, VariantEffectPredictorSection.id);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  async expectLoaded(): Promise<void> {
+    await expectSectionLoaded(this.page, VariantEffectPredictorSection.id);
+    await this.table.expectLoaded();
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-variant-effect-predictor']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get title(): Locator {
+    return this.section.getByTestId("section-variant-effect-predictor-header");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  get table(): OtTable {
+    return new OtTable(this.section);
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  get controls(): SectionDataControls {
+    return new SectionDataControls(this.page, this.section);
   }
 
-  // Get gene link
-  async getGeneLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/target/']");
-  }
-
-  async clickGeneLink(rowIndex: number): Promise<void> {
-    const link = await this.getGeneLink(rowIndex);
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
-  }
-
-  async getGeneName(rowIndex: number): Promise<string | null> {
-    const link = await this.getGeneLink(rowIndex);
-    return await link.textContent();
-  }
-
-  // Get predicted consequence
-  async getPredictedConsequence(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(1);
-    return await cell.textContent();
-  }
-
-  // Get impact
-  async getImpact(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** The gene link (to /target/:id) of a row. */
+  geneLink(rowIndex: number): Locator {
+    return this.table.cell(rowIndex, 0).locator("a[href*='/target/']");
   }
 }

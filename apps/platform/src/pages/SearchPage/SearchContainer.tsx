@@ -126,8 +126,9 @@ const SearchFilters = ({ entities, entitiesCount, setEntity }) => {
 function SearchResults({ results, page, onPageChange }) {
   const TYPE_NAME = "__typename";
   return (
-    <Box>
+    <Box data-testid="search-results">
       <TablePagination
+        data-testid="search-pagination-top"
         component="div"
         rowsPerPageOptions={[]}
         rowsPerPage={10}
@@ -150,6 +151,7 @@ function SearchResults({ results, page, onPageChange }) {
       })}
 
       <TablePagination
+        data-testid="search-pagination-bottom"
         component="div"
         rowsPerPageOptions={[]}
         rowsPerPage={10}
@@ -169,7 +171,7 @@ function TopHitDetail({ topHit }) {
   else if (topHit[TYPE_NAME] === "Variant") COMPONENT = <VariantDetail data={topHit} />;
   else if (topHit[TYPE_NAME] === "Drug") COMPONENT = <DrugDetail data={topHit} />;
   return (
-    <Card elevation={0}>
+    <Card elevation={0} data-testid="search-top-hit">
       <ErrorBoundary>{COMPONENT}</ErrorBoundary>
     </Card>
   );
@@ -177,6 +179,7 @@ function TopHitDetail({ topHit }) {
 function NoResultsContainer({ q }) {
   return (
     <Box
+      data-testid="search-no-results"
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -226,13 +229,13 @@ function SearchContainer({ q, page, entities, data, onPageChange, onSetEntity })
 
   return (
     <>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom data-testid="search-results-heading">
         {data.search.total} results for &quot;<strong>{q}</strong>&quot;
       </Typography>
       <GridLegacy container spacing={2} sx={{ display: "flex", height: "100%" }}>
         <GridLegacy item md={3}>
           <Typography variant="body2">Refine by:</Typography>
-          <FormGroup>
+          <FormGroup data-testid="search-filters">
             <SearchFilters
               entities={entities}
               entitiesCount={entitiesCount}

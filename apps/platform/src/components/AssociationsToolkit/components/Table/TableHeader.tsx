@@ -75,6 +75,7 @@ interface HeaderCellProps {
 function HeaderCell({ header, onEnter, onLeave }: HeaderCellProps) {
   const inner = header.isPlaceholder ? null : (
     <Box
+      data-testid={`header-cell-${header.id}`}
       sx={header.column.getCanSort() ? { cursor: "pointer", userSelect: "none" } : undefined}
       onMouseEnter={() => onEnter(header)}
       onMouseLeave={onLeave}
@@ -89,13 +90,18 @@ function HeaderCell({ header, onEnter, onLeave }: HeaderCellProps) {
       )}
       {{
         desc: (
-          <Box component="span" sx={{ ml: "5px" }}>
+          <Box component="span" sx={{ ml: "5px" }} data-testid={`sort-indicator-${header.id}`}>
             <FontAwesomeIcon icon={faArrowDownWideShort} />
           </Box>
         ),
       }[header.column.getIsSorted() as string] ?? null}
       {header.column.columnDef.docsLink && (
-        <DocsLink rel="noreferrer" target="_blank" href={header.column.columnDef.docsLink}>
+        <DocsLink
+          data-testid={`docs-link-${header.id}`}
+          rel="noreferrer"
+          target="_blank"
+          href={header.column.columnDef.docsLink}
+        >
           <Box component="span" sx={{ ml: "5px" }}>
             <FontAwesomeIcon icon={faBook} />
           </Box>
