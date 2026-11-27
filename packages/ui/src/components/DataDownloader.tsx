@@ -19,6 +19,15 @@ import { useState } from "react";
 import "graphiql/graphiql.min.css";
 import ApiPlaygroundDrawer from "./ApiPlaygroundDrawer";
 
+// a column without exportValue exports the value at its id; when the id is not a
+// field of the row (a computed column) the filterValue is the closest text the table has
+const getColumnValue = (column, row) => {
+  if (column.exportValue) return column.exportValue(row);
+  const value = _.get(row, column.propertyPath || column.id);
+  if (value === undefined && column.filterValue) return column.filterValue(row);
+  return value ?? "";
+};
+
 const asJSON = (columns, rows) => {
   const rowStrings = rows.map((row) =>
     columns.reduce((accumulator, newKey) => {
@@ -28,9 +37,7 @@ const asJSON = (columns, rows) => {
 
       return {
         ...accumulator,
-        [newLabel]: newKey.exportValue
-          ? newKey.exportValue(row)
-          : _.get(row, newKey.propertyPath || newKey.id, ""),
+        [newLabel]: getColumnValue(newKey, row),
       };
     }, {})
   );
@@ -66,11 +73,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
         .reduce((rowString, column) => {
           if (column.exportValue === false) return rowString;
 
-          const newValue = quoteString(
-            column.exportValue
-              ? column.exportValue(row)
-              : _.get(row, column.propertyPath || column.id, "")
-          );
+          const newValue = quoteString(getColumnValue(column, row));
 
           return [...rowString, newValue];
         }, [])
