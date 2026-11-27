@@ -147,7 +147,19 @@ function App(): ReactElement {
         searchPlaceholder="Search for a target, drug, disease, or phenotype..."
       >
         <GeneEnrichmentProvider>
-          <RouterProvider router={router} />
+          {/*
+            Router updates must not run inside React transitions. Entity pages
+            re-render with a new id in place (drug → drug, variant → variant, …),
+            and Apollo's useQuery changes its variables during render. A
+            transition renders the next page in the background while the
+            current page stays mounted, so both renders keep switching the same
+            queries between the old and the new id, and every switch sends a
+            request: hundreds of requests and seconds of flicker per navigation
+            (opentargets/issues#4753). Without transitions the router behaves
+            as it did with react-router v6: the current page stays on screen
+            while the loader runs, then the next page renders once.
+          */}
+          <RouterProvider router={router} useTransitions={false} />
         </GeneEnrichmentProvider>
       </SearchProvider>
     </OTConfigurationProvider>
