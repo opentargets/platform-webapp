@@ -1,3 +1,6 @@
+# Only what the row interactors table reads: the partner ids (to filter the associations
+# query) and their scores. The new API rejects a 3000-row page that also selects the
+# evidences with "Query is too complex.".
 query InteractionsSectionQuery(
   $ensgId: String!
   $sourceDatabase: InteractionSourceDatabase
@@ -7,8 +10,6 @@ query InteractionsSectionQuery(
 ) {
   target(ensemblId: $ensgId) {
     id
-    approvedName
-    approvedSymbol
     interactions(
       sourceDatabase: $sourceDatabase
       scoreThreshold: $scoreThreshold
@@ -16,46 +17,10 @@ query InteractionsSectionQuery(
     ) {
       count
       rows {
-        intA
-        intABiologicalRole
-        targetA {
-          id
-          approvedSymbol
-        }
-        speciesA {
-          mnemonic
-        }
-        intB
-        intBBiologicalRole
         targetB {
           id
-          approvedSymbol
-        }
-        speciesB {
-          mnemonic
         }
         score
-        count
-        sourceDatabase
-        evidences {
-          evidenceScore
-          hostOrganismScientificName
-          interactionDetectionMethodMiIdentifier
-          interactionDetectionMethodShortName
-          interactionIdentifier
-          interactionTypeShortName
-          participantDetectionMethodA {
-            miIdentifier
-            shortName
-          }
-          participantDetectionMethodB {
-            miIdentifier
-            shortName
-          }
-          interactionDetectionMethodShortName
-          expansionMethodShortName
-          pubmedId
-        }
       }
     }
   }
