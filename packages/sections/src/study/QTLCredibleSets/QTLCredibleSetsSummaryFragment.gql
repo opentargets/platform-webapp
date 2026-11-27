@@ -1,5 +1,5 @@
 fragment StudyQTLCredibleSetsSummaryFragment on Study {
-  qtlCredibleSets: credibleSets(page: { size: 1, index: 0 }) {
+  qtlCredibleSets: credibleSetsView(page: { size: 1, index: 0 }) {
     count
   }
 }
