@@ -342,7 +342,7 @@ function ViewToggleButton({ value, view, hasSpecific }) {
         <Typography variant="caption">
           {hasSpecific
             ? `At least one ${view} has a high specificity score`
-            : `No ${view}s have a high specificify score`}
+            : `No ${view}s have a high specificity score`}
         </Typography>
       }
       placement="top-start"
