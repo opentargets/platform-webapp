@@ -60,6 +60,7 @@ function getColumns(): OtTableColumn<StringInteractionRow>[] {
     {
       id: "partner",
       label: <>Interactor B</>,
+      exportLabel: "Interactor B",
       renderCell: (row) => (
         <span style={nameContainerStyle}>
           {row.targetB ? (
@@ -85,6 +86,7 @@ function getColumns(): OtTableColumn<StringInteractionRow>[] {
           interaction score
         </>
       ),
+      exportLabel: "Overall interaction score",
       renderCell: (row) => row.score?.toFixed(3) ?? "",
       exportValue: (row) => row.score?.toFixed(3) ?? "",
       filterValue: (row) => row.score?.toFixed(3) ?? "",

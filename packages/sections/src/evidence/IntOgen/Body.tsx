@@ -148,6 +148,7 @@ const columns: OtTableColumn<IntOgenRow>[] = [
         Combined <i>p</i>-value
       </span>
     ),
+    exportLabel: "Combined p-value",
 
     tooltip: (
       <>
