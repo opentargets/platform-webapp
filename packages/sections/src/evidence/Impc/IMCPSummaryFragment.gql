@@ -1,9 +1,7 @@
 fragment IMCPSummaryFragment on Disease {
-  impc: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [impc]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    impc(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

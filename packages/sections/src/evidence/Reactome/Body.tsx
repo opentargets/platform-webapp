@@ -6,6 +6,7 @@ import {
   PublicationsDrawer,
   EllsWrapper,
   OtTableServer,
+  type OtTableColumn,
   TableDrawer,
   Typography,
 } from "ui";
@@ -14,19 +15,74 @@ import { definition } from ".";
 import Description from "./Description";
 import { epmcUrl, sentenceCase } from "@ot/utils";
 
-import REACTOME_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import REACTOME_QUERY_DOCUMENT from "./sectionQuery.gql";
 import {
   dataTypesMap,
   defaultRowsPerPageOptions,
   naLabel,
   type EvidenceBodyProps,
+  type EvidenceReactome,
+  type EvidenceReactomeSort,
+  EvidenceReactomeSortField,
+  type EvidenceReactomeSearch,
+  EvidenceReactomeSearchField,
+  SortDirection,
 } from "@ot/constants";
 
-const getColumns = label => [
+type ReactomeRow = Pick<
+  EvidenceReactome,
+  | "score"
+  | "diseaseId"
+  | "diseaseName"
+  | "diseaseFromSource"
+  | "reactionName"
+  | "reactionId"
+  | "targetFromSourceId"
+  | "pathways"
+  | "targetModulation"
+  | "variantAminoacidDescriptions"
+  | "literature"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { reactome: { count: number; rows: ReactomeRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+  sort: EvidenceReactomeSort[];
+  search?: EvidenceReactomeSearch;
+};
+
+const REACTOME_QUERY = typedDocument<QueryData, QueryVariables>(REACTOME_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+// the view's only sort key is the evidence score
+const DEFAULT_SORT = {
+  id: "score",
+  field: EvidenceReactomeSortField.Score,
+  desc: true,
+};
+
+const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<ReactomeRow>[] => [
   {
-    id: "disease",
+    id: "diseaseName",
     label: "Disease / phenotype",
-    renderCell: ({ disease, diseaseFromSource }) => (
+    // Attach the Reactome search fields to the first column.
+    searchFields: [
+      EvidenceReactomeSearchField.DiseaseName,
+      EvidenceReactomeSearchField.PathwayNames,
+      EvidenceReactomeSearchField.ReactionName,
+      EvidenceReactomeSearchField.TargetFromSourceId,
+      EvidenceReactomeSearchField.TargetModulation,
+    ],
+    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -40,8 +96,8 @@ const getColumns = label => [
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          <EllsWrapper>{disease.name}</EllsWrapper>
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          <EllsWrapper>{diseaseName}</EllsWrapper>
         </Link>
       </Tooltip>
     ),
@@ -51,62 +107,69 @@ const getColumns = label => [
     id: "pathways",
     label: "Pathway",
     renderCell: ({ pathways }) => {
-      if (!pathways || pathways.length === 0) {
+      if (pathways.length === 0) {
         return naLabel;
       }
       if (pathways.length === 1) {
         return (
           <Link external to={`http://www.reactome.org/PathwayBrowser/#${pathways[0].id}`}>
-            <EllsWrapper>{pathways[0].name}</EllsWrapper>
+            <EllsWrapper>{pathways[0].name ?? ""}</EllsWrapper>
           </Link>
         );
       }
       const refs = pathways.map(p => ({
         url: `http://www.reactome.org/PathwayBrowser/#${p.id}`,
-        name: p.name,
+        name: p.name ?? "",
         group: "Pathways",
       }));
       return <TableDrawer entries={refs} message={`${refs.length} pathways`} />;
     },
+    exportValue: ({ pathways }) => pathways.map(p => p.name).join(", "),
     width: "17%",
   },
   {
     id: "reactionId",
     label: "Reaction",
     enableHiding: false,
-    renderCell: ({ reactionName, reactionId }) => (
-      <Link external to={`https://identifiers.org/reactome/${reactionId}`}>
-        <EllsWrapper>{reactionName}</EllsWrapper>
-      </Link>
-    ),
+    renderCell: ({ reactionName, reactionId }) =>
+      reactionId ? (
+        <Link external to={`https://identifiers.org/reactome/${reactionId}`}>
+          <EllsWrapper>{reactionName ?? ""}</EllsWrapper>
+        </Link>
+      ) : (
+        naLabel
+      ),
     width: "17%",
   },
   {
     id: "targetFromSourceId",
     label: "Reported target",
-    renderCell: ({ targetFromSourceId }) => (
-      <Link external to={`https://identifiers.org/uniprot/${targetFromSourceId}`}>
-        <EllsWrapper>{targetFromSourceId}</EllsWrapper>
-      </Link>
-    ),
+    renderCell: ({ targetFromSourceId }) =>
+      targetFromSourceId ? (
+        <Link external to={`https://identifiers.org/uniprot/${targetFromSourceId}`}>
+          <EllsWrapper>{targetFromSourceId}</EllsWrapper>
+        </Link>
+      ) : (
+        naLabel
+      ),
     width: "12%",
   },
   {
     id: "targetModulation",
     label: "Target modulation",
     renderCell: ({ targetModulation }) =>
-      targetModulation ? <EllsWrapper>{sentenceCase(targetModulation)}</EllsWrapper> : naLabel,
-    filterValue: ({ targetModulation }) => sentenceCase(targetModulation),
+      targetModulation ? <EllsWrapper>{sentenceCase(targetModulation) ?? ""}</EllsWrapper> : naLabel,
+    exportValue: ({ targetModulation }) => sentenceCase(targetModulation ?? ""),
     width: "12%",
   },
   {
     id: "variantAminoacidDescriptions",
     label: "Amino acid variation",
     renderCell: ({ variantAminoacidDescriptions }) => {
-      if (variantAminoacidDescriptions?.length === 1) {
+      if (variantAminoacidDescriptions.length === 1) {
         return <EllsWrapper>{variantAminoacidDescriptions[0]}</EllsWrapper>;
       }
-      if (variantAminoacidDescriptions?.length > 1) {
+      if (variantAminoacidDescriptions.length > 1) {
         return (
           <TableDrawer
             entries={variantAminoacidDescriptions.map(d => ({
@@ -118,42 +181,55 @@ const getColumns = label => [
       }
       return naLabel;
     },
+    exportValue: ({ variantAminoacidDescriptions }) => variantAminoacidDescriptions.join(", "),
     width: "12%",
+  },
+  {
+    id: "score",
+    label: "Score",
+    tooltip: "Evidence score, from 0 to 1",
+    numeric: true,
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ score }) => score.toFixed(2),
   },
   {
     id: "literature",
     label: "Literature",
-    renderCell: ({ literature = [] }) => {
-      const literatureList = [];
-      literature?.forEach(id => {
-        if (id !== "NA") {
-          literatureList.push({
-            name: id,
-            url: epmcUrl(id),
-            group: "literature",
-          });
-        }
-      });
+    renderCell: ({ literature }) => {
+      const literatureList = literature
+        .filter(id => id !== "NA")
+        .map(id => ({
+          name: id,
+          url: epmcUrl(id),
+          group: "literature",
+        }));
       return (
         <PublicationsDrawer entries={literatureList} symbol={label.symbol} name={label.name} />
       );
     },
+    exportValue: ({ literature }) => literature.join(", "),
     width: "12%",
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId, efoId } = id;
   const variables = { ensemblId: ensgId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
   const request = useQuery(REACTOME_QUERY, {
-    variables: { ...variables, index: 0, size: PAGE_SIZE },
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [
+        {
+          key: DEFAULT_SORT.field,
+          direction: DEFAULT_SORT.desc ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      ],
+    },
   });
 
   const columns = getColumns(label);
@@ -166,15 +242,16 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
+        <OtTableServer<ReactomeRow>
           query={REACTOME_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderFileStem={`reactome-${ensgId}-${efoId}`}
-          dataPath="disease.reactomeSummary"
+          dataPath="disease.evidenceViews.reactome"
           pageSize={PAGE_SIZE}
           pageSizeOptions={defaultRowsPerPageOptions}
-          showGlobalFilter={false}
+          sortBy={DEFAULT_SORT.id}
+          order={DEFAULT_SORT.desc ? "desc" : "asc"}
           variables={variables}
         />
       )}

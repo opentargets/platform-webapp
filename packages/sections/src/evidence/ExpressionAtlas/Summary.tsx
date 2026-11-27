@@ -10,8 +10,8 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={({ expressionAtlasSummary }) => {
-        const { count } = expressionAtlasSummary;
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.expressionAtlas;
         return `${count} ${count === 1 ? "entry" : "entries"}`;
       }}
       subText={dataTypesMap.rna_expression}

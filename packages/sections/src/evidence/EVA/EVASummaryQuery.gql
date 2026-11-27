@@ -1,5 +1,7 @@
 fragment evaSummary on Disease {
-  eva: evidences(ensemblIds: [$ensgId], datasourceIds: [eva], page: { index: 0, size: 1 }) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    eva(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }

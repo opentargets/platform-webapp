@@ -1,8 +1,8 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "ui";
 import { DownloadsContext } from "../../context/DownloadsContext";
-import { selectNode, setNetworkLayout, setNetworkScope } from "../../context/downloadsActions";
-import { NetworkLayout, NetworkScope } from "../../types/downloadTypes";
+import { selectNode, setNetworkScope } from "../../context/downloadsActions";
+import { NetworkScope } from "../../types/downloadTypes";
 import { selectRowsById } from "../../context/downloadsSelectors";
 import { GraphVisualization, useGraphData } from "../../graph";
 import type { GraphController } from "../../graph/types";
@@ -27,8 +27,8 @@ function NetworkView() {
   const { nodes: allNodes, edges: allEdges } = useGraphData();
 
   // Datasets with no schema relationship to anything (degree 0) have no edges
-  // to draw and would only push the radial layout outwards, so they're left
-  // off the canvas - see radialLayout.ts. Nodes are labelled with the
+  // to draw and would only pad the lanes out, so they're left off the
+  // canvas. Nodes are labelled with the
   // dataset's display name (the FileSet name the cards show) rather than the
   // RecordSet name, which in current releases is just the id again.
   const rowsById = useMemo(() => selectRowsById(state.rows), [state.rows]);
@@ -89,11 +89,8 @@ function NetworkView() {
     [dispatch]
   );
 
-  const layout: NetworkLayout = state.networkLayout;
-  const changeLayout = useCallback((next: NetworkLayout) => dispatch(setNetworkLayout(next)), [dispatch]);
-
-  // Re-fit once the canvas has rebuilt for a new layout (the controller is
-  // replaced on rebuild, so this fires after the new one is ready).
+  // Re-fit once the canvas has (re)built (the controller is replaced on
+  // rebuild, so this fires after the new one is ready).
   useEffect(() => {
     if (!controller) return;
     if (basketMode) controller.fitTo(basket);
@@ -151,8 +148,6 @@ function NetworkView() {
         scope={scope}
         basketCount={basket.length}
         onScopeChange={changeScope}
-        layout={layout}
-        onLayoutChange={changeLayout}
         hint={hint}
         selectedLabel={selected?.label ?? null}
         onClearSelection={clearSelection}
@@ -169,7 +164,6 @@ function NetworkView() {
           inBasket={inBasket}
           onToggleBasket={toggle}
           onControllerReady={setController}
-          layout={layout}
         />
         {selected && (
           <NodeDetailsPanel

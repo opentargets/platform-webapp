@@ -80,18 +80,7 @@ function useRowInteractors({
       const rowInteractorsId = id;
       const rowInteractorsSource = source;
 
-      const targetRowInteractorsRequest = await client.query({
-        query,
-        variables: {
-          scoreThreshold,
-          sourceDatabase: rowInteractorsSource,
-          ensgId: rowInteractorsId,
-          index: 0,
-          size: 3000,
-        },
-      });
-
-      if (!targetRowInteractorsRequest?.data?.target?.interactions?.rows) {
+      const setEmpty = (error: boolean) => {
         if (isCurrent) {
           setState({
             interactorsMetadata: { count: 0 },
@@ -99,46 +88,68 @@ function useRowInteractors({
             initialLoading: false,
             count: 0,
             data: [],
+            error,
+          });
+        }
+      };
+
+      try {
+        const targetRowInteractorsRequest = await client.query({
+          query,
+          variables: {
+            scoreThreshold,
+            sourceDatabase: rowInteractorsSource,
+            ensgId: rowInteractorsId,
+            index: 0,
+            size: 3000,
+          },
+        });
+
+        const interactorsIds = getInteractorIds(targetRowInteractorsRequest);
+
+        // No interactors means nothing to look up. The associations query can't be asked for
+        // them anyway: the API rejects a page size of 0, and an empty `Bs` means no filter.
+        if (interactorsIds.length === 0) {
+          setEmpty(false);
+          return;
+        }
+
+        const interactorsAssociationsRequest = await client.query({
+          query: associationsQuery,
+          variables: getAssociationsQueryVariables({
+            id: diseaseId!,
+            index,
+            size: interactorsIds.length,
+            sortBy,
+            rowsFilter: interactorsIds as string[],
+            entitySearch,
+            datasources,
+          }),
+        });
+
+        const interactorsAssociations = getAssociationsData(
+          entity!,
+          interactorsAssociationsRequest.data
+        );
+
+        const interactorsAssociationsWithScore = addInteractorScore(
+          interactorsAssociations,
+          targetRowInteractorsRequest.data.target.interactions.rows
+        );
+
+        if (isCurrent) {
+          setState({
+            interactorsMetadata: targetRowInteractorsRequest.data.target.interactions,
+            loading: false,
+            initialLoading: false,
+            count: interactorsAssociationsWithScore.length,
+            data: interactorsAssociationsWithScore,
             error: false,
           });
         }
-        return;
-      }
-
-      const interactorsIds = getInteractorIds(targetRowInteractorsRequest);
-
-      const interactorsAssociationsRequest = await client.query({
-        query: associationsQuery,
-        variables: getAssociationsQueryVariables({
-          id: diseaseId!,
-          index,
-          size: interactorsIds.length,
-          sortBy,
-          rowsFilter: interactorsIds as string[],
-          entitySearch,
-          datasources,
-        }),
-      });
-
-      const interactorsAssociations = getAssociationsData(
-        entity!,
-        interactorsAssociationsRequest.data
-      );
-
-      const interactorsAssociationsWithScore = addInteractorScore(
-        interactorsAssociations,
-        targetRowInteractorsRequest.data.target.interactions.rows
-      );
-
-      if (isCurrent) {
-        setState({
-          interactorsMetadata: targetRowInteractorsRequest.data.target.interactions,
-          loading: false,
-          initialLoading: false,
-          count: interactorsAssociationsWithScore.length,
-          data: interactorsAssociationsWithScore,
-          error: false,
-        });
+      } catch {
+        // A failed request would otherwise leave the panel loading forever.
+        setEmpty(true);
       }
     }
     if (isCurrent) getInteractors();

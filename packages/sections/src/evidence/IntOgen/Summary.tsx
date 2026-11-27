@@ -11,7 +11,10 @@ function Summary() {
     <SummaryItem
       definition={definition}
       request={request}
-      renderSummary={data => `${data.intOgen.count} entr${data.intOgen.count === 1 ? "y" : "ies"}`}
+      renderSummary={({ evidenceViews }) => {
+        const { count } = evidenceViews.intogen;
+        return `${count} ${count === 1 ? "entry" : "entries"}`;
+      }}
       subText={dataTypesMap.somatic_mutation}
     />
   );

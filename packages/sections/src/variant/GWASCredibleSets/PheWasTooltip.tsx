@@ -39,6 +39,7 @@ function PheWasTooltip({ credibleSetId, variantId }: { credibleSetId: string; va
   return (
     <Box
       sx={{
+        width: 360,
         background: "#fffc",
         borderColor: "#ddd",
         borderWidth: "1px",
@@ -126,8 +127,7 @@ function PheWasTooltip({ credibleSetId, variantId }: { credibleSetId: string; va
               <Box display="flex" gap={0.5}>
                 Method:{" "}
                 {fineMappingMethodLabels[credibleSet.fineMappingMethod] ??
-                  credibleSet.fineMappingMethod ??
-                  naLabel}
+                  credibleSet.fineMappingMethod}
               </Box>
               <Box display="flex" gap={0.5}>
                 Confidence:{" "}
@@ -158,7 +158,7 @@ function PheWasTooltip({ credibleSetId, variantId }: { credibleSetId: string; va
               </Box>
             </Box>
           </TooltipRow>
-          <TooltipRow label="Credible set size">{credibleSet.locusSize ?? naLabel}</TooltipRow>
+          <TooltipRow label="Credible set size">{credibleSet.locusSize}</TooltipRow>
         </TooltipTable>
       )}
     </Box>

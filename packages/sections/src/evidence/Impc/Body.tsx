@@ -8,21 +8,56 @@ import {
   DirectionOfEffectIcon,
   DirectionOfEffectTooltip,
   OtTableServer,
+  type OtTableColumn,
   Typography,
 } from "ui";
 
 import { definition } from ".";
 import Description from "./Description";
-import INTOGEN_QUERY from "./sectionQuery.gql";
+import { typedDocument } from "../../utils/typedDocument";
+import IMPC_QUERY_DOCUMENT from "./sectionQuery.gql";
 
 import { sentenceCase } from "@ot/utils";
-import { dataTypesMap, naLabel, type EvidenceBodyProps} from "@ot/constants";
+import { dataTypesMap, naLabel, type EvidenceBodyProps, type EvidenceImpc } from "@ot/constants";
 
-const columns = [
+type ImpcRow = Pick<
+  EvidenceImpc,
+  | "diseaseId"
+  | "diseaseName"
+  | "directionOnTarget"
+  | "directionOnTrait"
+  | "diseaseFromSource"
+  | "biologicalModelGeneticBackground"
+  | "biologicalModelAllelicComposition"
+  | "biologicalModelId"
+  | "diseaseModelAssociatedModelPhenotypes"
+  | "diseaseModelAssociatedHumanPhenotypes"
+>;
+
+type QueryData = {
+  disease?: {
+    id: string;
+    evidenceViews: { impc: { count: number; rows: ImpcRow[] } };
+  } | null;
+};
+
+type QueryVariables = {
+  ensemblId: string;
+  efoId: string;
+  index: number;
+  size: number;
+};
+
+const IMPC_QUERY = typedDocument<QueryData, QueryVariables>(IMPC_QUERY_DOCUMENT);
+const PAGE_SIZE = 10;
+
+const phenotypesMessage = (count: number) => `${count} phenotype${count !== 1 ? "s" : ""}`;
+
+const columns: OtTableColumn<ImpcRow>[] = [
   {
-    id: "disease",
+    id: "diseaseName",
     label: "Disease/phenotype",
-    renderCell: ({ disease, diseaseFromSource }) => (
+    renderCell: ({ diseaseId, diseaseName, diseaseFromSource }) => (
       <Tooltip
         title={
           <>
@@ -30,46 +65,37 @@ const columns = [
               Reported disease or phenotype:
             </Typography>
             <Typography variant="caption" display="block" align="center">
-              {sentenceCase(diseaseFromSource)}
+              {sentenceCase(diseaseFromSource ?? "")}
             </Typography>
           </>
         }
         showHelpIcon
       >
-        <Link asyncTooltip to={`/disease/${disease.id}`}>
-          {disease.name}
+        <Link asyncTooltip to={`/disease/${diseaseId}`}>
+          {diseaseName}
         </Link>
       </Tooltip>
     ),
-    filterValue: ({ disease, diseaseFromSource }) => [disease.name, diseaseFromSource].join(),
   },
   {
     id: "diseaseModelAssociatedHumanPhenotypes",
     label: "Human phenotypes",
-    renderCell: ({ diseaseModelAssociatedHumanPhenotypes: humanPhenotypes }) => {
-      const entries = humanPhenotypes
-        ? humanPhenotypes.map(entry => ({
-            name: entry.label,
-            group: "Human phenotypes",
-          }))
-        : [];
-      return (
-        <TableDrawer
-          entries={entries}
-          showSingle={false}
-          message={`${humanPhenotypes ? humanPhenotypes.length : 0} phenotype${
-            humanPhenotypes === null || humanPhenotypes.length !== 1 ? "s" : ""
-          }`}
-        />
-      );
-    },
-    filterValue: ({ diseaseModelAssociatedHumanPhenotypes = [] }) =>
-      diseaseModelAssociatedHumanPhenotypes?.map(dmahp => dmahp.label).join(),
+    renderCell: ({ diseaseModelAssociatedHumanPhenotypes: humanPhenotypes }) => (
+      <TableDrawer
+        entries={humanPhenotypes.map(entry => ({
+          name: entry.label,
+          group: "Human phenotypes",
+        }))}
+        showSingle={false}
+        message={phenotypesMessage(humanPhenotypes.length)}
+      />
+    ),
+    exportValue: ({ diseaseModelAssociatedHumanPhenotypes }) =>
+      diseaseModelAssociatedHumanPhenotypes.map(phenotype => phenotype.label).join(", "),
   },
   {
     id: "diseaseModelAssociatedModelPhenotypes",
     label: "Mouse phenotypes",
-
     renderCell: ({ diseaseModelAssociatedModelPhenotypes: mousePhenotypes }) => (
       <TableDrawer
         entries={mousePhenotypes.map(entry => ({
@@ -77,11 +103,11 @@ const columns = [
           group: "Mouse phenotypes",
         }))}
         showSingle={false}
-        message={`${mousePhenotypes.length} phenotype${mousePhenotypes.length !== 1 ? "s" : ""}`}
+        message={phenotypesMessage(mousePhenotypes.length)}
       />
     ),
-    filterValue: ({ diseaseModelAssociatedModelPhenotypes = [] }) =>
-      diseaseModelAssociatedModelPhenotypes.map(dmamp => dmamp.label).join(),
+    exportValue: ({ diseaseModelAssociatedModelPhenotypes }) =>
+      diseaseModelAssociatedModelPhenotypes.map(phenotype => phenotype.label).join(", "),
   },
   {
     id: "directionOfVariantEffect",
@@ -90,7 +116,10 @@ const columns = [
     ),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
-        <DirectionOfEffectIcon variantEffect={directionOnTarget} directionOnTrait={directionOnTrait} />
+        <DirectionOfEffectIcon
+          variantEffect={directionOnTarget ?? ""}
+          directionOnTrait={directionOnTrait ?? ""}
+        />
       );
     },
   },
@@ -131,40 +160,43 @@ const columns = [
   },
 ];
 
-const exportColumns = [
+const exportColumns: OtTableColumn<ImpcRow>[] = [
   {
+    id: "diseaseId",
     label: "diseaseId",
-    exportValue: row => row.disease.id,
+    exportValue: (row: ImpcRow) => row.diseaseId,
   },
   {
+    id: "diseaseName",
     label: "diseaseName",
-    exportValue: row => row.disease.name,
+    exportValue: (row: ImpcRow) => row.diseaseName,
   },
   {
+    id: "diseaseModelAssociatedHumanPhenotypes",
     label: "diseaseModelAssociatedHumanPhenotypes",
-    exportValue: row => row.diseaseModelAssociatedHumanPhenotypes,
+    exportValue: (row: ImpcRow) =>
+      row.diseaseModelAssociatedHumanPhenotypes.map(phenotype => phenotype.label).join(", "),
   },
   {
+    id: "diseaseModelAssociatedModelPhenotypes",
     label: "diseaseModelAssociatedModelPhenotypes",
-    exportValue: row => row.diseaseModelAssociatedModelPhenotypes,
+    exportValue: (row: ImpcRow) =>
+      row.diseaseModelAssociatedModelPhenotypes.map(phenotype => phenotype.label).join(", "),
   },
   {
+    id: "literature",
     label: "literature",
-    exportValue: row => row.biologicalModelId,
+    exportValue: (row: ImpcRow) => row.biologicalModelId,
   },
 ];
 
-type Props = EvidenceBodyProps;
-
-const PAGE_SIZE = 10;
-
-function Body({ id, label, entity }: Props) {
+function Body({ id, label, entity }: EvidenceBodyProps) {
   const { ensgId: ensemblId, efoId } = id;
   const variables = { ensemblId, efoId };
 
   // first page only: drives the section loading/error state, the table fetches
   // the same page from the Apollo cache and then paginates on its own
-  const request = useQuery(INTOGEN_QUERY, {
+  const request = useQuery(IMPC_QUERY, {
     variables: { ...variables, index: 0, size: PAGE_SIZE },
   });
 
@@ -176,14 +208,15 @@ function Body({ id, label, entity }: Props) {
       entity={entity}
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
-        <OtTableServer
-          query={INTOGEN_QUERY}
+        <OtTableServer<ImpcRow>
+          query={IMPC_QUERY}
           columns={columns}
           dataDownloader
           dataDownloaderColumns={exportColumns}
           dataDownloaderFileStem="impc-evidence"
-          dataPath="disease.impc"
+          dataPath="disease.evidenceViews.impc"
           pageSize={PAGE_SIZE}
+          // no search on the IMPC view: a browser search would fetch every row
           showGlobalFilter={false}
           variables={variables}
         />

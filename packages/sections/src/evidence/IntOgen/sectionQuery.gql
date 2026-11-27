@@ -1,34 +1,31 @@
-query IntOgenQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
+query IntOgenQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceIntogenSort!]! = []
+  $search: EvidenceIntogenSearch
+) {
   disease(efoId: $efoId) {
     id
-    intOgen: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [intogen]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
-        }
-        diseaseFromSource
-        target {
-          approvedSymbol
-        }
-        mutatedSamples {
-          functionalConsequence {
-            id
-            label
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      intogen(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          targetApprovedSymbol
+          mutatedSamples {
+            numberSamplesTested
+            numberMutatedSamples
           }
-          numberSamplesTested
-          numberMutatedSamples
+          resourceScore
+          significantDriverMethods
+          cohortId
+          cohortShortName
+          cohortDescription
         }
-        resourceScore
-        significantDriverMethods
-        cohortId
-        cohortShortName
-        cohortDescription
       }
     }
   }

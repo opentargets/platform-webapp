@@ -1,25 +1,25 @@
-query UniprotLiteratureQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
-  target(ensemblId: $ensemblId) {
-    approvedSymbol
-  }
+query UniprotLiteratureQuery(
+  $ensemblId: String!
+  $efoId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [EvidenceUniprotLiteratureSort!]! = []
+  $search: EvidenceUniprotLiteratureSearch
+) {
   disease(efoId: $efoId) {
     id
-    uniprotLiteratureSummary: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [uniprot_literature]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      uniprotLiterature(page: { index: $index, size: $size }, sort: $sort, search: $search) {
+        count
+        rows {
+          score
+          diseaseId
+          diseaseName
+          diseaseFromSource
+          targetFromSourceId
+          literature
+          confidence
         }
-        diseaseFromSource
-        targetFromSourceId
-        studyId
-        literature
-        confidence
       }
     }
   }

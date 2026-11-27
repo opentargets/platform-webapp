@@ -44,7 +44,7 @@ function PheWasPlot({
   );
   if (data.length === 0) {
     return (
-       <Typography  align="center" mt={1}>
+      <Typography align="center" mt={1}>
         No data available for this plot
       </Typography>
     );

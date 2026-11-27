@@ -1,37 +1,27 @@
 query impcQuery($ensemblId: String!, $efoId: String!, $index: Int! = 0, $size: Int! = 10) {
   disease(efoId: $efoId) {
     id
-    impc: evidences(
-      ensemblIds: [$ensemblId]
-      datasourceIds: [impc]
-      page: { index: $index, size: $size }
-    ) {
-      count
-      rows {
-        disease {
-          id
-          name
+    evidenceViews(ensemblIds: [$ensemblId]) {
+      impc(page: { index: $index, size: $size }) {
+        count
+        rows {
+          diseaseId
+          diseaseName
+          directionOnTarget
+          directionOnTrait
+          diseaseFromSource
+          biologicalModelGeneticBackground
+          biologicalModelAllelicComposition
+          biologicalModelId
+          diseaseModelAssociatedModelPhenotypes {
+            id
+            label
+          }
+          diseaseModelAssociatedHumanPhenotypes {
+            id
+            label
+          }
         }
-        target {
-          id
-          approvedSymbol
-        }
-        directionOnTarget
-        directionOnTrait
-        diseaseFromSource
-        biologicalModelGeneticBackground
-        biologicalModelAllelicComposition
-        biologicalModelId
-        diseaseModelAssociatedModelPhenotypes {
-          id
-          label
-        }
-        diseaseModelAssociatedHumanPhenotypes {
-          id
-          label
-        }
-        score
-        targetInModel
       }
     }
   }

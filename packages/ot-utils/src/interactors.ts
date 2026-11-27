@@ -1,3 +1,17 @@
+import { identifiersOrgLink } from "./global";
+
+// RNAcentral URS ids, optionally with a taxon suffix, e.g. URS000075DAEC_9606
+const RNACENTRAL_ID = /^URS[0-9A-F]{10}(_\d+)?$/;
+
+/**
+ * External link for an interactor that is not a Platform target.
+ * Interactors are UniProt accessions, except non-coding RNAs, which are RNAcentral ids.
+ */
+export function getInteractorUrl(id: string): string {
+  if (RNACENTRAL_ID.test(id)) return identifiersOrgLink("rnacentral", id);
+  return `http://uniprot.org/uniprot/${id}`;
+}
+
 export enum InteractorsSource {
   INTACT = "intact",
   REACTOME = "reactome",

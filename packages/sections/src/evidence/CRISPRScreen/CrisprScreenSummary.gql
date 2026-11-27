@@ -1,9 +1,7 @@
 fragment CrisprScreenSummary on Disease {
-  CrisprScreenSummary: evidences(
-    ensemblIds: [$ensgId]
-    datasourceIds: [crispr_screen]
-    page: { index: 0, size: 1 }
-  ) {
-    count
+  evidenceViews(ensemblIds: [$ensgId]) {
+    crisprScreen(page: { index: 0, size: 1 }) {
+      count
+    }
   }
 }
