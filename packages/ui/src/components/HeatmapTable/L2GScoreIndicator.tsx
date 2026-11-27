@@ -38,6 +38,7 @@ function L2GScoreIndicator({ score, targetId, credibleSetId }) {
       <Box
         sx={{ display: "flex", justifyContent: "end", gap: 1, cursor: "pointer" }}
         aria-describedby={id}
+        data-testid="l2g-score-trigger"
         onClick={handleClick}
       >
         <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
@@ -49,6 +50,7 @@ function L2GScoreIndicator({ score, targetId, credibleSetId }) {
       </Box>
       <Popover
         id={id}
+        data-testid="l2g-popover"
         disableScrollLock
         anchorEl={anchorEl}
         onClose={handleClose}

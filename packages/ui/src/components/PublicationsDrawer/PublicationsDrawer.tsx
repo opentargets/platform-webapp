@@ -206,7 +206,11 @@ function PublicationsDrawer({
 
   return (
     <>
-      <StyledButtonBase disableRipple onClick={toggleDrawer}>
+      <StyledButtonBase
+        disableRipple
+        onClick={toggleDrawer}
+        data-testid="publications-drawer-trigger"
+      >
         <Typography variant="body2">
           {" "}
           {customLabel ||
@@ -225,7 +229,7 @@ function PublicationsDrawer({
         <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <StyledTitleCaption>{caption}</StyledTitleCaption>
-            <IconButton onClick={closeDrawer}>
+            <IconButton onClick={closeDrawer} data-testid="drawer-close">
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>

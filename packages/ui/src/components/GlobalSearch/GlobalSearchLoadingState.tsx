@@ -4,7 +4,7 @@ function GlobalSearchLoadingState() {
   const listItemsToShow = new Array<number>(4).fill(0);
   return (
     <Collapse appear in>
-      <div>
+      <div data-testid="global-search-loading">
         <GridLegacy
           container
           justifyContent="flex-start"
