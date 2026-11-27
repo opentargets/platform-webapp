@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { Box, Typography } from "@mui/material";
+import { chromosomeName } from "@ot/constants";
 import { GeneVis, SectionItem, usePlatformApi } from "ui";
 import { definition } from ".";
 import Description from "./Description";
@@ -13,7 +14,13 @@ type BodyProps = {
 
 function Body({ id, entity }: BodyProps) {
   const variantRequest = usePlatformApi();
-  const variant = variantRequest.data?.variant;
+  const apiVariant = variantRequest.data?.variant;
+  // the API returns the chromosome as an enum value ("chr1"); the helpers and
+  // GeneVis work with plain names ("1"), like target locations
+  const variant = apiVariant && {
+    ...apiVariant,
+    chromosome: chromosomeName(apiVariant.chromosome),
+  };
   const region = getVariantGenomicRegion(variant?.chromosome, variant?.position);
   const regionRequest = useQuery(REGION_TARGETS_QUERY, {
     variables: region?.regionVariables,

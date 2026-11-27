@@ -1,21 +1,72 @@
-import { useState } from "react";
+import { useQuery } from "@apollo/client";
 import {
-  Link,
-  SectionItem,
-  ScientificNotation,
-  DisplayVariantId,
-  OtTableOffsetPagination,
-  Navigate,
-  Tooltip,
+  credsetConfidenceLabels,
+  fineMappingMethodLabels,
+  naLabel,
+  SortDirection,
+  type StudyCredibleSet,
+  type StudyCredibleSetsSearch,
+  StudyCredibleSetsSearchField,
+  type StudyCredibleSetsSort,
+  StudyCredibleSetsSortField,
+} from "@ot/constants";
+import type { ReactElement } from "react";
+import {
   ClinvarStars,
+  DisplayVariantId,
+  Link,
+  Navigate,
+  type OtTableColumn,
+  OtTableServer,
+  ScientificNotation,
+  SectionItem,
+  Tooltip,
 } from "ui";
-import { naLabel, credsetConfidenceLabels, fineMappingMethodLabels } from "@ot/constants";
+import { typedDocument } from "../../utils/typedDocument";
 import { definition } from ".";
 import Description from "./Description";
-import QTL_CREDIBLE_SETS_QUERY from "./QTLCredibleSetsQuery.gql";
-import { mantissaExponentComparator, nullishComparator, variantComparator } from "@ot/utils";
+import QTL_CREDIBLE_SETS_QUERY_DOCUMENT from "./QTLCredibleSetsQuery.gql";
 
-const columns = [
+type StudyRow = Pick<
+  StudyCredibleSet,
+  | "credibleSetId"
+  | "leadVariantId"
+  | "leadReferenceAllele"
+  | "leadAlternateAllele"
+  | "pValueMantissa"
+  | "pValueExponent"
+  | "beta"
+  | "locusSize"
+  | "fineMappingMethod"
+  | "confidence"
+>;
+
+type QueryData = {
+  study?: {
+    id: string;
+    credibleSetsView: { count: number; rows: StudyRow[] };
+  } | null;
+};
+
+type QueryVariables = {
+  studyId: string;
+  index: number;
+  size: number;
+  sort: StudyCredibleSetsSort[];
+  search?: StudyCredibleSetsSearch;
+};
+
+const QTL_CREDIBLE_SETS_QUERY = typedDocument<QueryData, QueryVariables>(
+  QTL_CREDIBLE_SETS_QUERY_DOCUMENT
+);
+
+const PAGE_SIZE = 10;
+const DEFAULT_SORT = {
+  id: "pValue",
+  field: StudyCredibleSetsSortField.PValue,
+};
+
+const columns: OtTableColumn<StudyRow>[] = [
   {
     id: "credibleSetId",
     label: "Credible set",
@@ -25,56 +76,44 @@ const columns = [
   {
     id: "leadVariant",
     label: "Lead variant",
-    comparator: variantComparator(d => d?.leadVariant),
-    sortable: true,
-    filterValue: ({ leadVariant: v }) =>
-      `${v?.chromosome}_${v?.position}_${v?.referenceAllele}_${v?.alternateAllele}`,
-    renderCell: ({ leadVariant: variant }) => {
-      if (!variant) return naLabel;
-      const { variantId, referenceAllele, alternateAllele } = variant;
+    sortField: StudyCredibleSetsSortField.LeadVariant,
+    searchFields: [StudyCredibleSetsSearchField.LeadVariantId],
+    renderCell: ({ leadVariantId, leadReferenceAllele, leadAlternateAllele }) => {
+      if (!leadVariantId) return naLabel;
       return (
-        <Link asyncTooltip to={`/variant/${variantId}`}>
+        <Link asyncTooltip to={`/variant/${leadVariantId}`}>
           <DisplayVariantId
-            variantId={variantId}
-            referenceAllele={referenceAllele}
-            alternateAllele={alternateAllele}
+            variantId={leadVariantId}
+            referenceAllele={leadReferenceAllele}
+            alternateAllele={leadAlternateAllele}
             expand={false}
           />
         </Link>
       );
     },
-    exportValue: ({ leadVariant: variant }) => variant?.variantId,
+    exportValue: ({ leadVariantId }) => leadVariantId,
   },
   {
     id: "pValue",
     label: "P-value",
     numeric: true,
-    comparator: (a, b) =>
-      mantissaExponentComparator(
-        a?.leadPValueMantissa,
-        a?.leadPValueExponent,
-        b?.leadPValueMantissa,
-        b?.leadPValueExponent
-      ),
-    sortable: true,
-    filterValue: false,
-    renderCell: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
+    sortField: DEFAULT_SORT.field,
+    renderCell: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return naLabel;
       return <ScientificNotation number={[pValueMantissa, pValueExponent]} dp={2} />;
     },
-    exportValue: ({ leadPValueMantissa: pValueMantissa, leadPValueExponent: pValueExponent }) => {
+    exportValue: ({ pValueMantissa, pValueExponent }) => {
       if (typeof pValueMantissa !== "number" || typeof pValueExponent !== "number") return null;
       return `${pValueMantissa}x10${pValueExponent}`;
     },
   },
   {
-    id: "leadBeta",
+    id: "beta",
     label: "Beta",
     numeric: true,
-    sortable: true,
-    filterValue: false,
+    sortField: StudyCredibleSetsSortField.Beta,
     tooltip: "Beta with respect to the ALT allele",
-    renderCell: ({ leadBeta: beta }) => {
+    renderCell: ({ beta }) => {
       if (typeof beta !== "number") return naLabel;
       return beta.toPrecision(3);
     },
@@ -84,8 +123,6 @@ const columns = [
     label: "Fine-mapping method",
     renderCell: ({ fineMappingMethod }) =>
       fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod ?? naLabel,
-    filterValue: ({ fineMappingMethod }) =>
-      fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
     exportValue: ({ fineMappingMethod }) =>
       fineMappingMethodLabels[fineMappingMethod] ?? fineMappingMethod,
   },
@@ -105,12 +142,7 @@ const columns = [
         for more details.
       </>
     ),
-    sortable: true,
-    comparator: nullishComparator(
-      (a, b) => a - b,
-      row => row.confidence,
-      false
-    ),
+    sortField: StudyCredibleSetsSortField.Confidence,
     renderCell: ({ confidence }) => {
       if (!confidence) return naLabel;
       return (
@@ -119,15 +151,12 @@ const columns = [
         </Tooltip>
       );
     },
-    filterValue: ({ confidence }) => confidence,
   },
   {
     id: "credibleSetSize",
     label: "Credible set size",
-    comparator: (a, b) => a.locusSize - b.locusSize,
-    sortable: true,
+    sortField: StudyCredibleSetsSortField.LocusSize,
     numeric: true,
-    filterValue: false,
     renderCell: ({ locusSize }) => {
       return typeof locusSize === "number" ? locusSize.toLocaleString() : naLabel;
     },
@@ -140,23 +169,32 @@ type BodyProps = {
   entity: string;
 };
 
-function Body({ id, entity }: BodyProps) {
+function Body({ id, entity }: BodyProps): ReactElement {
   const variables = { studyId: id };
-  const [request, setRequest] = useState<any>({ loading: true, data: null, error: null });
+  const request = useQuery(QTL_CREDIBLE_SETS_QUERY, {
+    variables: {
+      ...variables,
+      index: 0,
+      size: PAGE_SIZE,
+      sort: [{ key: DEFAULT_SORT.field, direction: SortDirection.Ascending }],
+    },
+  });
 
   return (
     <SectionItem
       definition={definition}
       entity={entity}
       request={request}
-      renderDescription={() => <Description studyId={request.data?.study.id} />}
+      renderDescription={() => <Description studyId={id} />}
       renderBody={() => (
-        <OtTableOffsetPagination
+        <OtTableServer<StudyRow>
           dataDownloader
           dataDownloaderFileStem={`${id}-qtl-credible-sets-studies`}
-          entity="study"
-          sectionName="credibleSets"
-          setInitialRequestData={setRequest}
+          dataPath="study.credibleSetsView"
+          pageSize={PAGE_SIZE}
+          sortBy={DEFAULT_SORT.id}
+          order="asc"
+          globalFilterPlaceholderText="Search lead variant ID"
           columns={columns}
           query={QTL_CREDIBLE_SETS_QUERY}
           variables={variables}
