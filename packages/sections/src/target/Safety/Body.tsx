@@ -61,6 +61,13 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "biosamples",
       label: "Biosystems",
+      exportValue: ({ biosamples }) =>
+        biosamples
+          .map(({ cellFormat, cellLabel, tissueLabel }) =>
+            cellFormat ? `${cellFormat}${cellLabel ? ` (${cellLabel})` : ""}` : tissueLabel
+          )
+          .filter(Boolean)
+          .join("; "),
       filterValue: ({ biosamples }) => {
         if (biosamples?.length === 1) {
           const sample = biosamples[0];
@@ -93,6 +100,10 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "dosing",
       label: "Dosing effects",
+      exportValue: ({ effects }) =>
+        effects
+          .map(({ direction, dosing }) => [direction, dosing].filter(Boolean).join(": "))
+          .join("; "),
       renderCell: ({ effects }) => {
         const circleUpData = effects.find(
           (effect) => effect.direction === "Activation/Increase/Upregulation"
@@ -144,6 +155,10 @@ function getColumns(theme: Theme, symbol: string): OtTableColumn<SafetyRow>[] {
     {
       id: "studies",
       label: "Experimental studies",
+      exportValue: ({ studies }) =>
+        studies
+          .map(({ name, type, description }) => [name, type, description].filter(Boolean).join(" | "))
+          .join("; "),
       renderCell: ({ studies }) => {
         if (studies.length === 0) return "N/A";
         return <SafetyStudiesDrawer studies={studies} />;
