@@ -83,8 +83,7 @@ export class QTLCredibleSetsSection {
   }
 
   async getVariantId(rowIndex: number): Promise<string | null> {
-    const href = await this.getVariantLink(rowIndex).getAttribute("href");
-    return href ? decodeURIComponent(href.split("/variant/")[1]) : null;
+    return await this.getVariantLink(rowIndex).textContent();
   }
 
   // Search/Filter
