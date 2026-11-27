@@ -55,7 +55,7 @@ function AccessScriptBlock({ rows, locationURLs }: AccessScriptBlockProps) {
 
   return (
     <Box sx={{ padding: "14px 20px 20px", display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography component="h3" sx={theme => ({ ...sectionLabelSx(theme), m: 0 })}>
+      <Typography component="h3" data-testid="access-script-title" sx={theme => ({ ...sectionLabelSx(theme), m: 0 })}>
         Access script · all {rows.length} {rows.length === 1 ? "dataset" : "datasets"}
       </Typography>
       <Box
@@ -94,6 +94,7 @@ function ScriptBody({ type, script, note }: { type: ScriptType; script: string; 
       >
         <Box
           component="pre"
+          data-testid="access-script-text"
           sx={theme => ({
             m: 0,
             fontFamily: MONO_FONT,
@@ -121,7 +122,11 @@ function ScriptBody({ type, script, note }: { type: ScriptType; script: string; 
           })}
         </Box>
         <Box sx={{ position: "absolute", top: 8, right: 8 }}>
-          <CopyIconButton textToCopy={script} label={`Copy ${SCRIPT_LABELS[type]} script`} />
+          <CopyIconButton
+            textToCopy={script}
+            label={`Copy ${SCRIPT_LABELS[type]} script`}
+            testId="access-script-copy"
+          />
         </Box>
       </Box>
     </Box>

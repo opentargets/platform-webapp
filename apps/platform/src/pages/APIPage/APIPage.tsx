@@ -60,7 +60,7 @@ function APIPage() {
   return (
     <>
       <PageMeta title="API" description="API" />
-      <Typography variant="h4" paragraph>
+      <Typography variant="h4" paragraph data-testid="api-page-title">
         API
       </Typography>
       <Typography paragraph>
@@ -92,7 +92,7 @@ function APIPage() {
         .
       </Typography>
       <GridLegacy sx={{ minHeight: "600px !important" }} container spacing={3}>
-        <GridLegacy item md={3} xl={2}>
+        <GridLegacy item md={3} xl={2} data-testid="api-example-queries">
           <Typography variant="h5" paragraph>
             Example queries
           </Typography>
@@ -375,7 +375,7 @@ function APIPage() {
             </AccordionDetails>
           </Accordion>
         </GridLegacy>
-        <GridLegacy item md={9} xl={10}>
+        <GridLegacy item md={9} xl={10} data-testid="api-playground">
           <Suspense fallback={<LoadingBackdrop />}>
             <GraphiQL fetcher={fetcher} query={query} />
           </Suspense>

@@ -11,7 +11,7 @@ const StyledLink = styled(Link)({
 function DiseaseDetail({ data }) {
   const { id, name, description, therapeuticAreas } = data;
   return (
-    <CardContent>
+    <CardContent data-testid="search-top-hit-disease">
       <Typography color="primary" variant="h5">
         <Link to={`/disease/${id}/associations`}>{name}</Link>
       </Typography>

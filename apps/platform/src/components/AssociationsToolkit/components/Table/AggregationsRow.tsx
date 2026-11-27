@@ -70,6 +70,7 @@ function AggregationItem({
   return (
     <AggregationButton
       type="button"
+      data-testid={`aggregation-button-${aggregation.toLowerCase().replace(/\s+/g, "-")}`}
       isActive={isActive}
       style={{ gridColumn: `span ${colSpan}`, gridRow: "row1-start / 2" }}
       onMouseEnter={() => setHovered(true)}

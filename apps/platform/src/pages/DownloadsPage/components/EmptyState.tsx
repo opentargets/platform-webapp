@@ -44,6 +44,7 @@ function EmptyState(props: EmptyStateProps) {
   return (
     <Box
       role="status"
+      data-testid="empty-state"
       sx={theme => ({
         display: "flex",
         flexDirection: "column",
@@ -58,14 +59,18 @@ function EmptyState(props: EmptyStateProps) {
     >
       <Typography
         component="h3"
+        data-testid="empty-state-title"
         sx={theme => ({ fontSize: "1rem", fontWeight: 700, color: theme.palette.grey[800], m: 0 })}
       >
         {title}
       </Typography>
-      <Typography sx={theme => ({ fontSize: ".8125rem", color: theme.palette.grey[600], maxWidth: "52ch" })}>
+      <Typography
+        data-testid="empty-state-body"
+        sx={theme => ({ fontSize: ".8125rem", color: theme.palette.grey[600], maxWidth: "52ch" })}
+      >
         {body}
       </Typography>
-      <Button variant="outlined" onClick={onAction} sx={{ mt: 1, borderRadius: RADIUS, fontSize: ".8125rem" }}>
+      <Button variant="outlined" onClick={onAction} data-testid="empty-state-action" sx={{ mt: 1, borderRadius: RADIUS, fontSize: ".8125rem" }}>
         {action}
       </Button>
     </Box>

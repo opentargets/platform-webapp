@@ -8,6 +8,7 @@ interface CopyIconButtonProps {
   textToCopy: string;
   label?: string;
   size?: number;
+  testId?: string;
 }
 
 /**
@@ -15,7 +16,7 @@ interface CopyIconButtonProps {
  * clipboard call as `ui/CopyToClipboard`, but feedback is an inline "Copied"
  * tooltip instead of a page-level snackbar, which would sit behind the drawer.
  */
-function CopyIconButton({ textToCopy, label = "Copy", size = 24 }: CopyIconButtonProps) {
+function CopyIconButton({ textToCopy, label = "Copy", size = 24, testId }: CopyIconButtonProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -34,12 +35,18 @@ function CopyIconButton({ textToCopy, label = "Copy", size = 24 }: CopyIconButto
   };
 
   return (
-    <Tooltip title={copied ? "Copied" : label} arrow open={copied || undefined}>
+    <Tooltip
+      title={copied ? "Copied" : label}
+      arrow
+      open={copied || undefined}
+      slotProps={{ tooltip: { "data-testid": "copy-tooltip" } as object }}
+    >
       <Box
         component="button"
         type="button"
         onClick={copy}
         aria-label={label}
+        data-testid={testId}
         sx={theme => ({
           display: "inline-flex",
           alignItems: "center",

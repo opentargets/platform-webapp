@@ -58,8 +58,8 @@ function LongText({
   }
 
   return (
-    <Typography variant={variant} gutterBottom={hasGutterBottom}>
-      <StyledTextContainer ref={containerRef}>
+    <Typography variant={variant} gutterBottom={hasGutterBottom} data-testid="target-description">
+      <StyledTextContainer ref={containerRef} data-testid="target-description-text">
         {descriptions.map((desc, i) => (
           <span
             key={`${targetId}-${v1()}`}
@@ -70,7 +70,10 @@ function LongText({
       {numberOfLines >= lineLimit && (
         <span>
           {showMore ? "" : "... "}[{" "}
-          <StyledShowMore onClick={() => setShowMore(!showMore)}>
+          <StyledShowMore
+            onClick={() => setShowMore(!showMore)}
+            data-testid="target-description-toggle"
+          >
             {showMore ? " hide" : " show more"}
           </StyledShowMore>{" "}
           ]
@@ -91,7 +94,7 @@ function TargetDescription({
 
   if (!descriptions || descriptions.length < 1) {
     content = (
-      <Typography variant="body2" gutterBottom>
+      <Typography variant="body2" gutterBottom data-testid="target-description">
         No description available
       </Typography>
     );
