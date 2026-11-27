@@ -388,11 +388,14 @@ export const credsetConfidenceLabels: { [level: number]: string } = {
   0: "Unknown confidence",
 };
 
-// Display names for the API's FineMappingMethod enum
+// Display names for the API's FineMappingMethod enum. The API has spelled the values
+// both as SUSIE / SUSIE_INF and as SuSiE / SuSiE_inf, so both are mapped.
 export const fineMappingMethodLabels: { [method: string]: string } = {
   PICS: "PICS",
   SUSIE: "SuSiE",
   SUSIE_INF: "SuSiE-inf",
+  SuSiE: "SuSiE",
+  SuSiE_inf: "SuSiE-inf",
 };
 
 // Format Mapping
