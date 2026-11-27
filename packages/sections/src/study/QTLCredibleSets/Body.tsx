@@ -144,7 +144,7 @@ const columns: OtTableColumn<StudyRow>[] = [
     ),
     sortField: StudyCredibleSetsSortField.Confidence,
     renderCell: ({ confidence }) => {
-      if (!confidence) return naLabel;
+      if (confidence == null) return naLabel;
       return (
         <Tooltip title={credsetConfidenceLabels[confidence]} style="">
           <ClinvarStars num={confidence} />
