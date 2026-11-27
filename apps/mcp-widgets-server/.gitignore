@@ -1,0 +1,5 @@
+.env
+dist/
+test-results/
+playwright-report/
+tests/render/.host/
