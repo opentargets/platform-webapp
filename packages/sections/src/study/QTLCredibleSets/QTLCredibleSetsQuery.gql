@@ -1,20 +1,22 @@
-query StudyQTLCredibleSetsQuery($studyId: String!, $page: Page) {
+query StudyQTLCredibleSetsQuery(
+  $studyId: String!
+  $index: Int! = 0
+  $size: Int! = 10
+  $sort: [StudyCredibleSetsSort!]! = []
+  $search: StudyCredibleSetsSearch
+) {
   study(studyId: $studyId) {
     id
-    credibleSets(page: $page) {
+    credibleSetsView(page: { index: $index, size: $size }, sort: $sort, search: $search) {
       count
       rows {
         credibleSetId
-        leadVariant {
-          variantId
-          chromosome
-          position
-          referenceAllele
-          alternateAllele
-        }
-        leadPValueMantissa
-        leadPValueExponent
-        leadBeta
+        leadVariantId
+        leadReferenceAllele
+        leadAlternateAllele
+        pValueMantissa
+        pValueExponent
+        beta
         locusSize
         fineMappingMethod
         confidence
