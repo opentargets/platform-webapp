@@ -1,133 +1,54 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { PublicationsDrawer } from "../Target/publicationsDrawer";
+import { ProfileSection, TableControls } from "../Target/sectionWidgets";
+
+/** Column headers of the hallmarks table, in order. */
+export const CANCER_HALLMARKS_COLUMNS = [
+  "Hallmark",
+  "Effect",
+  "Description",
+  "Publications",
+] as const;
+
+export const HALLMARK_COLUMN = { hallmark: 0, effect: 1, description: 2, publications: 3 } as const;
+
+/** GraphQL operation behind the section (packages/sections/src/target/CancerHallmarks). */
+export const CANCER_HALLMARKS_OPERATION = "TargetHallmarksQuery";
 
 /**
- * Interactor for Cancer Hallmarks section on Target page
- * Displays cancer hallmarks with role in cancer chips and a table of hallmark effects
- * Uses only data-testid selectors for reliable, predictable testing
+ * Target profile > Cancer Hallmarks: the "Role in cancer" chips and the client-side
+ * table of hallmarks with one publication per row.
  */
-export class CancerHallmarksSection {
-  constructor(private page: Page) {}
+export class CancerHallmarksSection extends ProfileSection {
+  readonly table: TableControls;
+  readonly publicationsDrawer: PublicationsDrawer;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-cancerhallmarks']");
+  constructor(page: Page) {
+    super(page, "cancerHallmarks");
+    this.table = new TableControls(page, this.section);
+    this.publicationsDrawer = new PublicationsDrawer(page);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get roleInCancer(): Locator {
+    return this.section.getByTestId("role-in-cancer");
   }
 
-  /**
-   * Wait for the section to be visible
-   */
-  async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** One chip per "role in cancer" attribute; each links to its publication. */
+  get roleInCancerChips(): Locator {
+    return this.roleInCancer.locator("[data-testid^='chip-item-']");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-cancerhallmarks-header']");
+  cell(row: number, column: keyof typeof HALLMARK_COLUMN): Locator {
+    return this.table.rows.nth(row).locator("td").nth(HALLMARK_COLUMN[column]);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  /** Every cell of one column on the current page. */
+  column(column: keyof typeof HALLMARK_COLUMN): Locator {
+    return this.table.rows.locator(`td:nth-child(${HALLMARK_COLUMN[column] + 1})`);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
-  }
-
-  // Role in cancer section
-  getRoleInCancerSection(): Locator {
-    return this.getSection().locator("[data-testid='role-in-cancer']");
-  }
-
-  // Role in cancer chips (by index)
-  getRoleInCancerChip(index: number): Locator {
-    return this.getRoleInCancerSection().locator(`[data-testid='chip-item-${index}']`);
-  }
-
-  async getRoleInCancerChipLabel(index: number): Promise<string | null> {
-    return await this.getRoleInCancerChip(index).textContent();
-  }
-
-  async clickRoleInCancerChip(index: number): Promise<void> {
-    await this.getRoleInCancerChip(index).click();
-  }
-
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("[data-testid='ot-table']");
-  }
-
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
-  }
-
-  // Table search
-  getSearchInput(): Locator {
-    return this.getSection().locator("[data-testid='table-search-input']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
-  }
-
-  // Publications drawer
-  getPublicationsDrawer(): Locator {
-    return this.getSection().locator("[data-testid='publications-drawer']");
-  }
-
-  async clickPublicationsDrawer(): Promise<void> {
-    await this.getPublicationsDrawer().first().click();
-  }
-
-  // Data downloader
-  getDataDownloader(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
-  }
-
-  async clickDataDownloader(): Promise<void> {
-    await this.getDataDownloader().click();
-  }
-
-  // Pagination controls
-  getPaginationFirstButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-first-button']");
-  }
-
-  getPaginationPreviousButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  getPaginationNextButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPaginationLastButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-last-button']");
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.getPaginationFirstButton().click();
-  }
-
-  async goToPreviousPage(): Promise<void> {
-    await this.getPaginationPreviousButton().click();
-  }
-
-  async goToNextPage(): Promise<void> {
-    await this.getPaginationNextButton().click();
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.getPaginationLastButton().click();
+  /** The PubMed id button of a row; it opens the publications drawer. */
+  publicationButton(row: number): Locator {
+    return this.cell(row, "publications").getByTestId("publications-drawer-trigger");
   }
 }

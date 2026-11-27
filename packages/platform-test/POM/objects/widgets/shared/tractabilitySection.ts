@@ -1,157 +1,124 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expectSectionLoaded, sectionLocator } from "../../../../utils/sections";
+
+export type TractabilityModalityKey = "sm" | "ab" | "pr" | "oc";
 
 /**
- * Interactor for Tractability section on Target page
- * Displays tractability assessment across different modalities (Small molecule, Antibody, PROTAC, Other)
- * Uses only data-testid selectors for reliable, predictable testing
+ * The four modality columns, in the order the widget renders them, with the assessment
+ * buckets each one always lists. The buckets are fixed by the tractability pipeline: a
+ * target has the same buckets as any other, only their true/false value differs.
  */
+export const TRACTABILITY_MODALITIES: readonly {
+  key: TractabilityModalityKey;
+  /** The `modality` value in the API */
+  code: string;
+  title: string;
+  buckets: readonly string[];
+}[] = [
+  {
+    key: "sm",
+    code: "SM",
+    title: "Small molecule",
+    buckets: [
+      "Advanced Clinical",
+      "Approved Drug",
+      "Druggable Family",
+      "High-Quality Ligand",
+      "High-Quality Pocket",
+      "Med-Quality Pocket",
+      "Phase 1 Clinical",
+      "Structure with Ligand",
+    ],
+  },
+  {
+    key: "ab",
+    code: "AB",
+    title: "Antibody",
+    buckets: [
+      "Advanced Clinical",
+      "Approved Drug",
+      "GO CC high conf",
+      "GO CC med conf",
+      "Human Protein Atlas loc",
+      "Phase 1 Clinical",
+      "UniProt SigP or TMHMM",
+      "UniProt loc high conf",
+      "UniProt loc med conf",
+    ],
+  },
+  {
+    key: "pr",
+    code: "PR",
+    title: "PROTAC",
+    buckets: [
+      "Advanced Clinical",
+      "Approved Drug",
+      "Database Ubiquitination",
+      "Half-life Data",
+      "Literature",
+      "Phase 1 Clinical",
+      "Small Molecule Binder",
+      "UniProt Ubiquitination",
+    ],
+  },
+  {
+    key: "oc",
+    code: "OC",
+    title: "Other modalities",
+    buckets: ["Advanced Clinical", "Approved Drug", "Phase 1 Clinical"],
+  },
+];
+
+/** The Tractability widget of the target profile page. */
 export class TractabilitySection {
-  constructor(private page: Page) {}
+  static readonly id = "tractability";
+  static readonly operation = "TargetTractabilityQuery";
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-tractability']");
+  readonly section: Locator;
+  readonly header: Locator;
+  readonly description: Locator;
+  readonly grid: Locator;
+
+  constructor(private readonly page: Page) {
+    this.section = sectionLocator(page, TractabilitySection.id);
+    this.header = this.section.getByTestId("section-tractability-header");
+    this.description = this.section.getByTestId("section-description");
+    this.grid = this.section.getByTestId("tractability-grid");
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  /** Assert the section is rendered with data and has finished loading. */
+  async expectLoaded(): Promise<void> {
+    await expectSectionLoaded(this.page, TractabilitySection.id);
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-tractability']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  /** The four modality columns, in page order. */
+  get modalityColumns(): Locator {
+    return this.grid.locator("[data-testid^='tractability-modality-title-']");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-tractability-header']");
+  modalityTitle(key: TractabilityModalityKey): Locator {
+    return this.grid.getByTestId(`tractability-modality-title-${key}`);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  modalityList(key: TractabilityModalityKey): Locator {
+    return this.grid.getByTestId(`tractability-modality-list-${key}`);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  /** Every assessment bucket of a modality, enabled or not, in page order. */
+  items(key: TractabilityModalityKey): Locator {
+    return this.modalityList(key).locator("[data-testid^='tractability-item-']");
   }
 
-  // Grid container
-  getGrid(): Locator {
-    return this.getSection().locator("[data-testid='tractability-grid']");
+  enabledItems(key: TractabilityModalityKey): Locator {
+    return this.modalityList(key).getByTestId("tractability-item-enabled");
   }
 
-  // Get modality columns by specific modality code
-  getSmallMoleculeModality(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-sm']");
+  disabledItems(key: TractabilityModalityKey): Locator {
+    return this.modalityList(key).getByTestId("tractability-item-disabled");
   }
 
-  getAntibodyModality(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-ab']");
-  }
-
-  getProtacModality(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-pr']");
-  }
-
-  getOtherModality(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-oc']");
-  }
-
-  // Get modality titles
-  getSmallMoleculeTitle(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-title-sm']");
-  }
-
-  getAntibodyTitle(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-title-ab']");
-  }
-
-  getProtacTitle(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-title-pr']");
-  }
-
-  getOtherTitle(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-title-oc']");
-  }
-
-  // Get modality lists
-  getSmallMoleculeList(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-list-sm']");
-  }
-
-  getAntibodyList(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-list-ab']");
-  }
-
-  getProtacList(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-list-pr']");
-  }
-
-  getOtherList(): Locator {
-    return this.getSection().locator("[data-testid='tractability-modality-list-oc']");
-  }
-
-  // Get enabled/disabled items within a modality list
-  getEnabledItems(modalityList: Locator): Locator {
-    return modalityList.locator("[data-testid='tractability-item-enabled']");
-  }
-
-  getDisabledItems(modalityList: Locator): Locator {
-    return modalityList.locator("[data-testid='tractability-item-disabled']");
-  }
-
-  // Convenience methods for counting enabled/disabled items per modality
-  async getSmallMoleculeEnabledCount(): Promise<number> {
-    return await this.getEnabledItems(this.getSmallMoleculeList()).count();
-  }
-
-  async getSmallMoleculeDisabledCount(): Promise<number> {
-    return await this.getDisabledItems(this.getSmallMoleculeList()).count();
-  }
-
-  async getAntibodyEnabledCount(): Promise<number> {
-    return await this.getEnabledItems(this.getAntibodyList()).count();
-  }
-
-  async getAntibodyDisabledCount(): Promise<number> {
-    return await this.getDisabledItems(this.getAntibodyList()).count();
-  }
-
-  async getProtacEnabledCount(): Promise<number> {
-    return await this.getEnabledItems(this.getProtacList()).count();
-  }
-
-  async getProtacDisabledCount(): Promise<number> {
-    return await this.getDisabledItems(this.getProtacList()).count();
-  }
-
-  async getOtherEnabledCount(): Promise<number> {
-    return await this.getEnabledItems(this.getOtherList()).count();
-  }
-
-  async getOtherDisabledCount(): Promise<number> {
-    return await this.getDisabledItems(this.getOtherList()).count();
+  /** One bucket of a modality by its exact label, whatever its state. */
+  item(key: TractabilityModalityKey, label: string): Locator {
+    return this.items(key).filter({ has: this.page.getByText(label, { exact: true }) });
   }
 }
