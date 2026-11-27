@@ -114,6 +114,9 @@ const columns: OtTableColumn<ImpcRow>[] = [
     label: (
       <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#impc"></DirectionOfEffectTooltip>
     ),
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
         <DirectionOfEffectIcon
