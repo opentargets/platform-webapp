@@ -1,17 +1,6 @@
 import { faPlay, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  Box,
-  Button,
-  Drawer,
-  GridLegacy,
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  Paper,
-  styled,
-} from "@mui/material";
+import { Box, Button, Drawer, GridLegacy, IconButton, Paper } from "@mui/material";
 import { fetcher } from "@ot/utils";
 import { type KeyboardEvent, lazy, type ReactElement, Suspense, useState } from "react";
 
@@ -36,43 +25,37 @@ type ApiPlaygroundDrawerProps = {
   query: string;
   variables: any;
   fullHeight: boolean;
-  inMenu?: boolean;
+  // Controlled mode: the parent renders its own trigger (e.g. a menu item) and owns the
+  // open state. The drawer must then be rendered outside any MenuList, otherwise the
+  // menu's type-ahead takes the keystrokes typed in the playground (issues#4309).
+  open?: boolean;
+  onClose?: () => void;
 };
-
-const StyledMenuItem = styled(MenuItem)({
-  "&>.MuiListItemIcon-root>svg": {
-    fontSize: "1rem",
-  },
-});
 
 function ApiPlaygroundDrawer({
   query,
   variables,
   fullHeight,
-  inMenu = false,
+  open: controlledOpen,
+  onClose,
 }: ApiPlaygroundDrawerProps): ReactElement {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
 
   function close(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") return;
-    setOpen(false);
+    if (isControlled) onClose?.();
+    else setUncontrolledOpen(false);
   }
   function togglePlayground() {
-    setOpen(!open);
+    setUncontrolledOpen(!uncontrolledOpen);
   }
 
   return (
     <>
       {" "}
-      {inMenu && (
-        <StyledMenuItem onClick={() => togglePlayground()}>
-          <ListItemIcon>
-            <FontAwesomeIcon icon={faPlay} />
-          </ListItemIcon>
-          <ListItemText>API query</ListItemText>
-        </StyledMenuItem>
-      )}
-      {query && !inMenu ? (
+      {query && !isControlled ? (
         <GridLegacy item>
           <Button
             sx={{ display: "flex", gap: 1, ...(fullHeight && { height: 1, maxHeight: "45px" }) }}
