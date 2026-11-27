@@ -12,7 +12,8 @@ function getVersion({ month, year }: VersionData): string {
 }
 
 function getFullMonth({ month, year }: VersionData): string {
-  const date = new Date(year + 2000, month - 1);
+  // the API serves month and year as strings; coerce so the year adds instead of concatenating
+  const date = new Date(Number(year) + 2000, Number(month) - 1);
   return date.toLocaleString("default", { month: "long" });
 }
 
