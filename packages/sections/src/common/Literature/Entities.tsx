@@ -149,7 +149,7 @@ export default function Entities({ name, id }: { name: string; id: string }) {
 
   return (
     <div>
-      <StyledChipRow>
+      <StyledChipRow data-testid="literature-selected-entities">
         <Chip label={name} title={`ID: ${id}`} color="primary" variant="filled" size="medium" />
         {selectedChips.map((e, i) => (
           <Grow in key={e.object.id}>
@@ -171,7 +171,7 @@ export default function Entities({ name, id }: { name: string; id: string }) {
           </Grow>
         ))}
       </StyledChipRow>
-      <StyledChipRow>
+      <StyledChipRow data-testid="literature-similar-entities">
         <EntitiesToSelect id={id} />
       </StyledChipRow>
     </div>

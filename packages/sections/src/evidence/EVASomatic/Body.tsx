@@ -352,7 +352,10 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
         <>
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}>
+          <Box
+              data-testid="role-in-cancer"
+              sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
+            >
             {getRoleInCancer()}
           </Box>
 
