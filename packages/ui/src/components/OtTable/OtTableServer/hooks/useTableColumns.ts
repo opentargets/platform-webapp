@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { OtTableColumn } from "../../types/tableTypes";
 import { getLoadingRows, mapTableColumnToTanstackColumns } from "../../utils/tableUtils";
 import { getLoadingCells } from "../utils/loadingCells";
+import { groupColumns } from "../utils/groupColumns";
 import { flattenColumns } from "../utils/localRows";
 
 type UseTableColumnsOptions<Row> = {
@@ -28,7 +29,11 @@ function useTableColumns<Row>({
     [columns, serverSortFields, serverSorting]
   );
   const mappedColumns = useMemo(
-    () => mapTableColumnToTanstackColumns(tableColumnsConfig) as unknown as ColumnDef<Row>[],
+    () =>
+      groupColumns(
+        mapTableColumnToTanstackColumns(tableColumnsConfig) as unknown as ColumnDef<Row>[],
+        tableColumnsConfig.map((column) => column.group)
+      ),
     [tableColumnsConfig]
   );
   const flatColumns = useMemo(() => flattenColumns(mappedColumns), [mappedColumns]);

@@ -25,6 +25,8 @@ export type OtTableColumn<Row> = {
   id: string;
   /** header content; a plain string is also used as the export header unless `exportLabel` is set */
   label: ReactNode;
+  /** adjacent columns with the same group share a second header row with this title (OtTableServer) */
+  group?: string;
   renderCell?: (row: Row) => ReactNode;
   /** value used for searching/sorting; defaults to the value at `id` (dot path) */
   filterValue?: (row: Row) => unknown;
