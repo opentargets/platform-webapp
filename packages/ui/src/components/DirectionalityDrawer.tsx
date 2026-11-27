@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, ButtonBase, Drawer, IconButton, Paper, Typography } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
+import { epmcUrl } from "@ot/utils";
 import { useState } from "react";
 import { v1 } from "uuid";
 import Link from "./Link";
@@ -121,7 +122,7 @@ export function DirectionalityList({ variantAnnotation }) {
               <Box sx={{ typography: "subtitle2", fontWeight: "bold" }} component="span">
                 Publication:{" "}
               </Box>
-              <Link external to={literature}>
+              <Link external to={epmcUrl(literature)}>
                 {literature}{" "}
               </Link>{" "}
             </Box>
