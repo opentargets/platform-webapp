@@ -19,12 +19,27 @@ import { useState } from "react";
 import "graphiql/graphiql.min.css";
 import ApiPlaygroundDrawer from "./ApiPlaygroundDrawer";
 
+// only plain strings make usable headers; React element labels would camelCase to "objectObject"
+const getExportLabel = (column) =>
+  _.camelCase(
+    column.exportLabel ||
+      (typeof column.label === "string" ? column.label : "") ||
+      (typeof column.id === "string" ? column.id : "")
+  );
+
+// objects have no useful default string form ("[object Object]"), so serialise them
+const toCellValue = (d) => {
+  if (Array.isArray(d)) return d.map(toCellValue).join(",");
+  if (d !== null && typeof d === "object") return JSON.stringify(d);
+  return d;
+};
+
 const asJSON = (columns, rows) => {
   const rowStrings = rows.map((row) =>
     columns.reduce((accumulator, newKey) => {
       if (newKey.exportValue === false) return accumulator;
 
-      const newLabel = _.camelCase(newKey.exportLabel || newKey.label || newKey.id);
+      const newLabel = getExportLabel(newKey);
 
       return {
         ...accumulator,
@@ -40,11 +55,8 @@ const asJSON = (columns, rows) => {
 
 const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
   const quoteString = (d) => {
-    let result = d;
-    // converts arrays to strings
-    if (Array.isArray(d)) {
-      result = d.join(",");
-    }
+    // converts arrays and objects to strings
+    const result = toCellValue(d);
     return quoteStrings && typeof result === "string" ? `"${result}"` : result;
   };
 
@@ -54,7 +66,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
     .reduce((accHeaderString, column) => {
       if (column.exportValue === false) return accHeaderString;
 
-      const newLabel = quoteString(_.camelCase(column.exportLabel || column.label || column.id));
+      const newLabel = quoteString(getExportLabel(column));
 
       return [...accHeaderString, newLabel];
     }, [])
