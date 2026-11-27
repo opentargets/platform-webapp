@@ -48,7 +48,7 @@ var configProfile = {
 
   // target page
   hideTargetSectionIds: [""],
-  partnerTargetSectionIds: ["targetGenomicRegion"],
+  partnerTargetSectionIds: [""],
 
   // drug page
   hideDrugSectionIds: [""],
@@ -56,11 +56,11 @@ var configProfile = {
 
   // variant page
   hideVariantSectionIds: [""],
-  partnerVariantSectionIds: ["variantGenomicRegion"],
+  partnerVariantSectionIds: [""],
 
   // credible set page
   hideCredibleSetSectionIds: [""],
-  partnerCredibleSetSectionIds: ["credibleSetGenomicRegion"],
+  partnerCredibleSetSectionIds: [""],
 
   // evidence page
   hideEvidenceSectionIds: [""],
