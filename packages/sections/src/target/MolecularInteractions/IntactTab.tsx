@@ -6,6 +6,7 @@ import {
   type TargetInteractionsQuery,
   type TargetInteractionsQueryVariables,
 } from "@ot/constants";
+import { getInteractorUrl } from "@ot/utils";
 import type { Row as TableRow } from "@tanstack/react-table";
 import type { MouseEvent } from "react";
 import { useState } from "react";
@@ -59,7 +60,7 @@ const interactionColumns: OtTableColumn<InteractionRow>[] = [
               {row.targetB.approvedSymbol}
             </Link>
           ) : (
-            <Link to={`http://uniprot.org/uniprot/${row.intB}`} onClick={onLinkClick} external>
+            <Link to={getInteractorUrl(row.intB)} onClick={onLinkClick} external>
               {row.intB}
             </Link>
           )}
@@ -71,7 +72,7 @@ const interactionColumns: OtTableColumn<InteractionRow>[] = [
         <EllsWrapper title={row.intB}>
           <Typography variant="caption">
             Alt ID:{" "}
-            <Link to={`http://uniprot.org/uniprot/${row.intB}`} onClick={onLinkClick} external>
+            <Link to={getInteractorUrl(row.intB)} onClick={onLinkClick} external>
               {row.intB}
             </Link>
           </Typography>
