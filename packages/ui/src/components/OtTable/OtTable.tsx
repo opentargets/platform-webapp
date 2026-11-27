@@ -1,3 +1,4 @@
+import { escapeRegExp } from "lodash";
 import {
   faAngleLeft,
   faAngleRight,
@@ -62,7 +63,7 @@ export const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value);
   const allRowValuesInString = getFilterValueFromObject(row.original);
-  const containsSubstr = new RegExp(value, "i").test(allRowValuesInString);
+  const containsSubstr = new RegExp(escapeRegExp(value), "i").test(allRowValuesInString);
 
   // Store the itemRank info
   addMeta({
