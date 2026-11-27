@@ -27,6 +27,11 @@ function DiseasePage(): ReactElement {
   const location = useLocation();
   const { efoId } = useParams<DiseaseURLParams>();
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
+
+  if (!!subRoute && subRoute !== "associations") {
+    return <NotFoundPage />;
+  }
 
   if (data && !data.disease) {
     return <NotFoundPage />;
