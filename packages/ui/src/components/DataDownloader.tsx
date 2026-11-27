@@ -110,7 +110,7 @@ const StyledSnackbar = styled(Snackbar)({
   },
 });
 
-function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = "Export" }) {
+function DataDownloader({ columns, rows, fileStem = "data", query, variables, btnLabel = "Export" }) {
   const [downloading, setDownloading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -139,7 +139,7 @@ function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = 
 
     const blob = createBlob(format)(dataColumns, allRows);
 
-    FileSaver.saveAs(blob, `${dataFileStem}.${format}`, { autoBOM: false });
+    FileSaver.saveAs(blob, `${dataFileStem || "data"}.${format}`, { autoBOM: false });
   };
 
   const handleClickDownloadJSON = async () => {

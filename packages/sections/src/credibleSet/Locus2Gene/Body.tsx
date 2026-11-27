@@ -32,6 +32,7 @@ function Body({ id, entity }: BodyProps): ReactNode {
           data={request.data?.credibleSet?.l2GPredictions}
           query={LOCUS2GENE_QUERY.loc.source.body}
           variables={variables}
+          dataDownloaderFileStem={`${id}-locus-to-gene`}
         />
       )}
     />
