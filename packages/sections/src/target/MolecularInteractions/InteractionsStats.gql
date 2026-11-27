@@ -1,4 +1,9 @@
 query TargetInteractionsStatsQuery($ensgId: String!) {
+  interactionResources {
+    sourceDatabase
+    databaseVersion
+  }
+
   target(ensemblId: $ensgId) {
     id
     intact: interactions(sourceDatabase: intact) {

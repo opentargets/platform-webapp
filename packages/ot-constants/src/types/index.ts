@@ -7355,7 +7355,7 @@ export type TargetInteractionsStatsQueryVariables = Exact<{
 }>;
 
 
-export type TargetInteractionsStatsQuery = { __typename?: 'Query', target?: { __typename?: 'Target', id: string, intact: { __typename?: 'InteractionPage', count: number }, signor: { __typename?: 'InteractionPage', count: number }, reactome: { __typename?: 'InteractionPage', count: number }, string: { __typename?: 'InteractionPage', count: number } } | null };
+export type TargetInteractionsStatsQuery = { __typename?: 'Query', interactionResources: Array<{ __typename?: 'InteractionResource', sourceDatabase: string, databaseVersion: string }>, target?: { __typename?: 'Target', id: string, intact: { __typename?: 'InteractionPage', count: number }, signor: { __typename?: 'InteractionPage', count: number }, reactome: { __typename?: 'InteractionPage', count: number }, string: { __typename?: 'InteractionPage', count: number } } | null };
 
 export type TargetInteractionsStringQueryVariables = Exact<{
   ensgId: Scalars['String']['input'];
@@ -10398,6 +10398,10 @@ export const TargetInteractionsQueryDocument = gql`
     `;
 export const TargetInteractionsStatsQueryDocument = gql`
     query TargetInteractionsStatsQuery($ensgId: String!) {
+  interactionResources {
+    sourceDatabase
+    databaseVersion
+  }
   target(ensemblId: $ensgId) {
     id
     intact: interactions(sourceDatabase: intact) {
