@@ -60,6 +60,7 @@ function Body({ label: symbol, id, entity }: Props) {
   const request = usePlatformApi();
   const [source, setSource] = useState<SourceId>(sources[0].id); // must initialize to valid value for tabs to work
   const [counts, setCounts] = useState<Partial<Record<SourceId, number>>>({});
+  const [versions, setVersions] = useState<Partial<Record<SourceId, string>>>({});
   const client = useApolloClient();
 
   const onTabChange = (_event: SyntheticEvent, tabId: SourceId) => {
@@ -74,6 +75,12 @@ function Body({ label: symbol, id, entity }: Props) {
         const nextCounts: Partial<Record<SourceId, number>> = {};
         for (const s of sources) nextCounts[s.id] = target?.[s.id]?.count ?? 0;
         setCounts(nextCounts);
+        // source database versions, shown under each tab label
+        const nextVersions: Partial<Record<SourceId, string>> = {};
+        for (const r of res.data.interactionResources ?? []) {
+          nextVersions[r.sourceDatabase as SourceId] = r.databaseVersion;
+        }
+        setVersions(nextVersions);
         // find first source (tab) with data and set that as the initially selected tab
         const initialTab = sources.find((s) => (nextCounts[s.id] ?? 0) > 0);
         if (initialTab) {
@@ -107,6 +114,11 @@ function Body({ label: symbol, id, entity }: Props) {
                 label={
                   <>
                     <Typography variant="body1">{s.label}</Typography>
+                    {versions[s.id] ? (
+                      <Typography variant="caption" display="block" gutterBottom>
+                        Version: {versions[s.id]}
+                      </Typography>
+                    ) : null}
                     <Typography variant="body2" gutterBottom>
                       {counts[s.id]} {s.countDescription}
                     </Typography>
