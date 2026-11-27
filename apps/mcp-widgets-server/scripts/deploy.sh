@@ -13,9 +13,9 @@ set -euo pipefail
 
 PROJECT="${PROJECT:-open-targets-eu-dev}"
 REGION="${REGION:-europe-west2}"
-SERVICE="${SERVICE:-mcp-widgets-server-dev}"
+SERVICE="${SERVICE:-mcp-widgets-server}"
 REPOSITORY="${REPOSITORY:-platform-widgets-mcp}"
-OT_API_URL="${OT_API_URL:-https://api.platform.opentargets.xyz/api/v4/graphql}"
+OT_API_URL="${OT_API_URL:-https://api.staging.platform.opentargets.xyz/api/v4/graphql}"
 
 SERVER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="$(cd "$SERVER_DIR/../.." && pwd)"
@@ -68,7 +68,8 @@ gcloud run deploy "$SERVICE" \
   --set-env-vars "OT_API_URL=$OT_API_URL,GIT_SHA=$GIT_SHA" \
   --labels "app=mcp-widgets-server,env=dev"
 
-URL="$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format 'value(status.url)')"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format "value(projectNumber)")"
+URL="https://$SERVICE-$PROJECT_NUMBER.$REGION.run.app"
 echo "── Deployed $GIT_SHA"
 echo "   MCP endpoint: $URL/mcp"
 echo "   Health:       $(curl -s "$URL/health")"
