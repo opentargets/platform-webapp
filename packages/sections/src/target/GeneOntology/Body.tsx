@@ -56,6 +56,7 @@ function EvidenceTooltip({ evidence }) {
   const code = filter(GeneOntologyEvidenceCodeMap, {
     evidenceCode: evidence,
   })[0];
+  if (!code) return null;
   return (
     <div>
       <p>
@@ -123,11 +124,14 @@ const columns = [
     label: "Evidence code",
     exportLabel: "Evidence code",
     exportValue: row => row.evidence,
-    renderCell: ({ evidence }) => (
-      <Tooltip title={<EvidenceTooltip evidence={evidence} />} showHelpIcon>
-        {evidence}
-      </Tooltip>
-    ),
+    renderCell: ({ evidence }) =>
+      GeneOntologyEvidenceCodeMap.some(({ evidenceCode }) => evidenceCode === evidence) ? (
+        <Tooltip title={<EvidenceTooltip evidence={evidence} />} showHelpIcon>
+          {evidence}
+        </Tooltip>
+      ) : (
+        evidence
+      ),
   },
   {
     id: "source",
