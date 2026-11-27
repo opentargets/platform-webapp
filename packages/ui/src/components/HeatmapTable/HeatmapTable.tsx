@@ -390,7 +390,7 @@ function ClosePlot({ handleClose }) {
   );
 }
 
-function ChartControls({ rows, query, variables, columns }) {
+function ChartControls({ rows, query, variables, columns, fileStem }) {
   return (
     <Box
       sx={{
@@ -408,6 +408,7 @@ function ChartControls({ rows, query, variables, columns }) {
         query={query}
         variables={variables}
         columns={columns}
+        fileStem={fileStem}
       />
     </Box>
   );
@@ -423,6 +424,7 @@ function HeatmapTable({
   disabledExport = false,
   disabledLegend = false,
   singleRowMode = false,
+  dataDownloaderFileStem = "data",
 }) {
   const disabledGeneColumn = singleRowMode;
   const disabledScoreColumn = singleRowMode;
@@ -483,7 +485,13 @@ function HeatmapTable({
         </Box>
       )}
       {!disabledExport && (
-        <ChartControls query={query} rows={rows} variables={variables} columns={columns} />
+        <ChartControls
+          query={query}
+          rows={rows}
+          variables={variables}
+          columns={columns}
+          fileStem={dataDownloaderFileStem}
+        />
       )}
       <Box display="flex" justifyContent="center">
         <Box
