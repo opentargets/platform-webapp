@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { Box, useDebounce } from "ui";
+import { Box } from "ui";
 import { DownloadsContext } from "../context/DownloadsContext";
 import { textSearch } from "../context/downloadsActions";
 import { CONTROL_BORDER, RADIUS } from "./tokens";
@@ -20,26 +20,37 @@ const DEBOUNCE_MS = 250;
 function SearchField({ width = 260 }: SearchFieldProps) {
   const { state, dispatch } = useContext(DownloadsContext);
   const [value, setValue] = useState(state.freeTextQuery);
-  const debounced = useDebounce(value, DEBOUNCE_MS);
   const lastDispatched = useRef(state.freeTextQuery);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    if (debounced === lastDispatched.current) return;
-    lastDispatched.current = debounced;
-    dispatch(textSearch(debounced));
-  }, [debounced, dispatch]);
+  const cancelPending = () => clearTimeout(timer.current);
+  useEffect(() => cancelPending, []);
 
   // Somebody else changed the query (e.g. "Clear all"): mirror it in the field
   useEffect(() => {
     if (state.freeTextQuery !== lastDispatched.current) {
+      cancelPending();
       lastDispatched.current = state.freeTextQuery;
       setValue(state.freeTextQuery);
     }
   }, [state.freeTextQuery]);
 
+  // Schedule from the keystroke itself (not from a debounced value) so that
+  // clearing and retyping the same text still reaches the reducer
+  const handleChange = (next: string) => {
+    setValue(next);
+    cancelPending();
+    timer.current = setTimeout(() => {
+      if (next === lastDispatched.current) return;
+      lastDispatched.current = next;
+      dispatch(textSearch(next));
+    }, DEBOUNCE_MS);
+  };
+
   const filled = value.length > 0;
 
   const clear = () => {
+    cancelPending();
     setValue("");
     lastDispatched.current = "";
     dispatch(textSearch(""));
@@ -74,7 +85,7 @@ function SearchField({ width = 260 }: SearchFieldProps) {
         component="input"
         type="search"
         value={value}
-        onChange={e => setValue(e.target.value)}
+        onChange={e => handleChange(e.target.value)}
         onKeyDown={e => {
           if (e.key === "Escape" && filled) clear();
         }}
