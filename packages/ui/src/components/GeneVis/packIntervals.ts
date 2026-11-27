@@ -11,7 +11,7 @@ type Target = {
   id: string;
   approvedSymbol: string;
   biotype: string;
-  transcripts: any;
+  canonicalTranscript?: any;
   genomicLocation: GenomicLocation;
 };
 

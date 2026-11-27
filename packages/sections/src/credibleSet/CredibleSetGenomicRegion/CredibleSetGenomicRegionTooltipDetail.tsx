@@ -39,7 +39,7 @@ function CredibleSetGenomicRegionTooltipDetail({ datum, entityType, entity, cont
                 loading={false}
                 data={data.l2GPredictions}
                 query={L2G_QUERY.loc?.source?.body || L2G_QUERY}
-                variables={{ studyLocusId: data.studyLocusId }}
+                variables={{ credibleSetId: data.credibleSetId }}
                 disabledFilter
                 disabledExport
                 disabledLegend
@@ -72,10 +72,10 @@ function CredibleSetGenomicRegionTooltipDetail({ datum, entityType, entity, cont
                 : naLabel}
             </TooltipRow>
             <TooltipRow label="Beta" tooltip="Beta with respect to the ALT allele" {...tooltipPositionProps}>
-              {typeof variantLocus.beta === "number" ? variantLocus.beta.toPrecision(3) : naLabel}
+              {typeof variantLocus.reportedBeta === "number" ? variantLocus.reportedBeta.toPrecision(3) : naLabel}
             </TooltipRow>
             <TooltipRow label="Standard error" tooltip="Standard Error: Estimate of the standard deviation of the sampling distribution of the beta" {...tooltipPositionProps}>
-              {typeof variantLocus.standardError === "number" ? variantLocus.standardError.toFixed(3) : naLabel}
+              {typeof variantLocus.reportedStandardError === "number" ? variantLocus.reportedStandardError.toFixed(3) : naLabel}
             </TooltipRow>
             <TooltipRow label="LD (r²)" tooltip="Linkage disequilibrium with the lead variant" {...tooltipPositionProps}>
               {typeof variantLocus.r2Overall === "number" ? variantLocus.r2Overall.toFixed(3) : naLabel}
@@ -84,7 +84,7 @@ function CredibleSetGenomicRegionTooltipDetail({ datum, entityType, entity, cont
               {typeof variantLocus.posteriorProbability === "number" ? variantLocus.posteriorProbability.toPrecision(3) : naLabel}
             </TooltipRow>
             <TooltipRow label="log(BF)" tooltip="Natural logarithm of the Bayes Factor indicating relative likelihood of the variant being causal" {...tooltipPositionProps}>
-              {typeof variantLocus.logBF === "number" ? variantLocus.logBF.toPrecision(3) : naLabel}
+              {typeof variantLocus.logBayesFactor === "number" ? variantLocus.logBayesFactor.toPrecision(3) : naLabel}
             </TooltipRow>
             <TooltipRow label="Predicted consequence" tooltip="Most severe consequence of the variant. Source: Ensembl VEP" {...tooltipPositionProps}>
               {entity?.mostSevereConsequence ? (

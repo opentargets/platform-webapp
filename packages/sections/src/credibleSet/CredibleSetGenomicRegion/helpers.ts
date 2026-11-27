@@ -11,11 +11,11 @@ export function toGeneVisModel(data: any): GeneVisModel {
 
   return {
     genes: data?.region?.targets?.rows ?? [],
-    referencePosition: data?.variant?.position,
+    referencePosition: data?.leadVariant?.position,
     overviewVariants: (data?.locus?.rows ?? []).map((row: any) => row.variant),
     variantTrack: data?.locus ? {
       rows: data.locus.rows ?? [],
-      emphasis: data.variant ? { variantId: data.variant.id, label: "Lead" } : undefined,
+      emphasis: data.leadVariant ? { variantId: data.leadVariant.id, label: "Lead" } : undefined,
     } : undefined,
     genePresentation: {
       priorityIds: l2gTargetIds,
@@ -92,7 +92,7 @@ export function getCredibleSetGenomicRegion({
   }
 
   const regionVariables = chromosome && start !== undefined && end !== undefined
-    ? { chromosome: `chr${chromosome}`, positionStart: start, positionEnd: end }
+    ? { chromosome: `chr${chromosome.toLowerCase()}`, start, end }
     : undefined;
 
   return { start, end, initialZoom, regionVariables };

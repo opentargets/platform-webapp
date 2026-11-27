@@ -1,13 +1,5 @@
-query CredibleSetGenomicRegionRegionTargetsQuery(
-  $chromosome: ChromosomeEnum!
-  $positionStart: Int!
-  $positionEnd: Int!
-) {
-  region(
-    chromosome: $chromosome
-    positionStart: $positionStart
-    positionEnd: $positionEnd
-  ) {
+query CredibleSetGenomicRegionRegionTargetsQuery($chromosome: Chromosome!, $start: Int!, $end: Int!) {
+  region(chromosome: $chromosome, start: $start, end: $end) {
     targets(page: { index: 0, size: 1000 }) {
       count
       rows {
@@ -20,19 +12,12 @@ query CredibleSetGenomicRegionRegionTargetsQuery(
           end
           strand
         }
-        transcripts(canonical: true) {
-          count
-          rows {
-            chromosome
-            start
-            end
-            isEnsemblCanonical
-            transcriptId
-            exons {
-              start
-              end
-            }
-          }
+        canonicalTranscript {
+          id
+          chromosome
+          start
+          end
+          strand
         }
       }
     }
