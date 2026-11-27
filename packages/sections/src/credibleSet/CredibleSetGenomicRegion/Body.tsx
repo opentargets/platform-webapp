@@ -5,7 +5,7 @@ import { definition } from ".";
 import Description from "./Description";
 import CREDIBLE_SET_GENOMIC_REGION_QUERY from "./CredibleSetGenomicRegionQuery.gql";
 import REGION_TARGETS_QUERY from "./CredibleSetGenomicRegionRegionTargetsQuery.gql";
-import { table5HChunkSize } from "@ot/constants";
+import { chromosomeName, table5HChunkSize } from "@ot/constants";
 import { getCredibleSetGenomicRegion, toGeneVisModel } from "./helpers";
 import CredibleSetGenomicRegionTooltipDetail, {
   getCredibleSetGenomicRegionTooltipWidth,
@@ -33,7 +33,9 @@ function Body({ id, entity }: BodyProps) {
   const data = request.data?.credibleSet;
 
   const locusRows = data?.locus?.rows ?? [];
-  const chromosome = locusRows[0]?.variant?.chromosome;
+  // the API returns the variant chromosome as an enum value ("chr1"); target
+  // locations and the helpers use plain names ("1")
+  const chromosome = chromosomeName(locusRows[0]?.variant?.chromosome);
   const { start, end, initialZoom, regionVariables } = getCredibleSetGenomicRegion({
     chromosome,
     locusRows,

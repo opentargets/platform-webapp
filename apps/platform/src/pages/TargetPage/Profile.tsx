@@ -14,9 +14,10 @@ import {
 
 import ProfileHeader from "./ProfileHeader";
 
-// Genomic region and Overlapping variants are not in this map: the API has no
-// region query and no proteinCodingCoordinates on Target
+// Overlapping variants is not in this map: the API has no proteinCodingCoordinates
+// on Target
 const targetProfileWidgets = new Map<string, Widget>([
+  [Target.TargetGenomicRegion.definition.id, Target.TargetGenomicRegion],
   [Target.Drugs.definition.id, Target.Drugs],
   [Target.Tractability.definition.id, Target.Tractability],
   [Target.Safety.definition.id, Target.Safety],
