@@ -287,6 +287,9 @@ function getColumns(label: EvidenceBodyProps["label"]): OtTableColumn<ClinvarRow
       label: (
         <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#clinvar"></DirectionOfEffectTooltip>
       ),
+      exportLabel: "Direction of effect",
+      exportValue: ({ directionOnTarget, directionOnTrait }) =>
+        [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
       renderCell: ({ directionOnTarget, directionOnTrait }) => {
         return (
           <DirectionOfEffectIcon

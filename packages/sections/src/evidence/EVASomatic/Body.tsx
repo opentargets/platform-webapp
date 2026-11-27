@@ -186,6 +186,9 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
     label: (
       <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#clinvar-somatic"></DirectionOfEffectTooltip>
     ),
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
         <DirectionOfEffectIcon
