@@ -154,7 +154,7 @@ function WgetScript({ link }: { link: string }) {
 }
 
 function RsyncScript({ version, path, link }: { version: string; path: string; link: string }) {
-  const rsyncLink = link.replace("http://ftp.ebi.ac.uk/", "");
+  const rsyncLink = link.replace(/^(?:https?|ftp):\/\/ftp\.ebi\.ac\.uk\//, "");
   const RsyncCmd = `rsync -rpltvz --delete rsync.ebi.ac.uk::${rsyncLink} .`;
   return (
     <Box sx={{ p: 2 }}>
