@@ -195,10 +195,18 @@ test.describe("Drug page header", () => {
   }) => {
     const { smallMolecule } = drugIds(testConfig);
     const header = new DrugHeader(page);
-    await new DrugPage(page).goto(smallMolecule);
     const src = `https://www.ebi.ac.uk/chembl/api/data/image/${smallMolecule}.svg`;
+    // ChEMBL is a third party: serve a small SVG so the test checks the app, not ChEMBL's uptime
+    await page.route(src, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80"><rect width="120" height="80" fill="#ccc"/></svg>',
+      })
+    );
+    await new DrugPage(page).goto(smallMolecule);
 
-    await test.step("the thumbnail loads from ChEMBL", async () => {
+    await test.step("the thumbnail loads from the ChEMBL image URL", async () => {
       await expect(header.structureButton, "enabled once the image has loaded").toBeEnabled();
       await expect(header.structureImage).toHaveAttribute("src", src);
       await expect(header.structureImage).toHaveAttribute(

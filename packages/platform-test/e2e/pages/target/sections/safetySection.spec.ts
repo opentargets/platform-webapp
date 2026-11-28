@@ -300,9 +300,9 @@ test.describe("Target safety section", () => {
       safety.section,
       "typing an unbalanced bracket must not crash the section"
     ).toBeVisible();
-    await expect(table.column(4).first()).toHaveText(/^Lynch et al\. \(\d{4}\)$/);
+    await expect(table.column(4).first()).toHaveText(/^\s*Lynch et al\. \(\d{4}\)\s*$/);
     for (const source of await table.columnTexts(4)) {
-      expect(source).toMatch(/^Lynch et al\. \(\d{4}\)$/);
+      expect(source.trim()).toMatch(/^Lynch et al\. \(\d{4}\)$/);
     }
   });
 
@@ -530,7 +530,11 @@ test.describe("Target safety section", () => {
     expect(index, "the target should have a ClinPGx liability").toBeGreaterThan(-1);
     await expect(
       safety.sourceCell(safety.table.row(index)).getByRole("link", { name: "ClinPGx" })
-    ).toHaveAttribute("href", "https://www.clinpgx.org/search?query=ADRB2");
+    ).toHaveAttribute("href", liabilities[index].url ?? "");
+    expect(
+      liabilities[index].url,
+      "the API row's own url is the ClinPGx search for the target"
+    ).toBe(`https://www.clinpgx.org/search?query=${testConfig.target?.withSafetyLiabilities}`);
   });
 
   test("a source that is not ClinPGx does not link to the ClinPGx search", async ({
@@ -592,8 +596,31 @@ test.describe("Target safety section", () => {
     ]);
     expect(rows.map((row) => row.safetyEvent)).toEqual(liabilities.map(({ event }) => event));
     expect(rows.map((row) => row.source)).toEqual(liabilities.map(({ datasource }) => datasource));
+    expect(rows.map((row) => row.biosystems)).toEqual(
+      liabilities.map(({ biosamples }) =>
+        biosamples
+          .map(({ cellFormat, cellLabel, tissueLabel }) =>
+            cellFormat ? `${cellFormat}${cellLabel ? ` (${cellLabel})` : ""}` : tissueLabel
+          )
+          .filter(Boolean)
+          .join("; ")
+      )
+    );
+    expect(rows.map((row) => row.dosingEffects)).toEqual(
+      liabilities.map(({ effects }) =>
+        effects
+          .map(({ direction, dosing }) => [direction, dosing].filter(Boolean).join(": "))
+          .join("; ")
+      )
+    );
     expect(rows.map((row) => row.experimentalStudies)).toEqual(
-      liabilities.map(({ studies }) => studies)
+      liabilities.map(({ studies }) =>
+        studies
+          .map(({ name, type, description }) =>
+            [name, type, description].filter(Boolean).join(" | ")
+          )
+          .join("; ")
+      )
     );
   });
 

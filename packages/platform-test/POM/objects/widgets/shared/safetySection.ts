@@ -25,6 +25,7 @@ export type SafetyLiability = {
   effects: { dosing: string | null; direction: string }[];
   studies: { name: string | null; type: string | null; description: string | null }[];
   datasource: string;
+  url: string | null;
   literature: string | null;
 };
 

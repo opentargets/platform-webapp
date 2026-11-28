@@ -79,7 +79,7 @@ const EXAMPLES = [
     group: "Credible set Annotation",
     description: "Colocalisation metrics for overlapping GWAS credible sets",
     operation: "GWASColocQuery",
-    entity: "118db6d05cf67fe7668ee7bac1170fd3",
+    entity: "062bf4308e4cbbcac87bde4ee0b58df0",
     result: /"count": [1-9]/,
   },
   {

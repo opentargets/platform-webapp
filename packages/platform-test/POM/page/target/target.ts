@@ -11,6 +11,13 @@ import { expect, type Locator, type Page } from "@playwright/test";
  */
 export const TARGET_WIDGETS = [
   {
+    id: "targetGenomicRegion",
+    section: "targetgenomicregion",
+    summary: "summary-targetgenomicregion",
+    name: "Genomic Region",
+    shortName: "GR",
+  },
+  {
     id: "drugs",
     section: "drugs",
     summary: "summary-drugs",
