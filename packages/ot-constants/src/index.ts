@@ -366,6 +366,31 @@ export const clinicalReportsSourcesInfo = {
   },
 };
 
+// Resources that distribute clinical report data fetched from the primary source,
+// keyed by the ClinicalReport.provider enum.
+export const clinicalReportsProvidersInfo: Record<string, { name: string; url: string }> = {
+  AACT: {
+    name: "AACT",
+    url: "https://aact.ctti-clinicaltrials.org/",
+  },
+  CHEMBL: {
+    name: "ChEMBL",
+    url: "https://www.ebi.ac.uk/chembl/",
+  },
+  EMA: {
+    name: "EMA",
+    url: "https://www.ema.europa.eu/en/medicines",
+  },
+  PMDA: {
+    name: "PMDA",
+    url: "https://www.pmda.go.jp/english/about-pmda/index.html",
+  },
+  TTD: {
+    name: "TTD",
+    url: "https://ttd.idrblab.cn/",
+  },
+};
+
 // ClinVar Star Mapping
 export const clinvarStarMap: { [key: string]: number } = {
   "practice guideline": 4,

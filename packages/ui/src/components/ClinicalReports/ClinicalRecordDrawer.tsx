@@ -13,9 +13,14 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import type { RecordDetailQuery } from "@ot/constants";
-import { clinicalReportsSourcesInfo, clinicalStageCategories, stopReasonMap } from "@ot/constants";
+import {
+  clinicalReportsProvidersInfo,
+  clinicalReportsSourcesInfo,
+  clinicalStageCategories,
+  stopReasonMap,
+} from "@ot/constants";
 import { sentenceCase } from "@ot/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useDelayedFlag from "../../hooks/useDelayedFlag";
 import Link from "../Link";
 import LongText from "../LongText";
@@ -119,6 +124,56 @@ const tooltipSlotProps: any = {
   },
 };
 
+// RESULT and DERIVED references report the trial's outcome; BACKGROUND is literature
+// its authors cited.
+const literatureGroups = [
+  { label: "Trial results", referenceTypes: ["RESULT", "DERIVED"] },
+  { label: "Background", referenceTypes: ["BACKGROUND"] },
+];
+
+function LiteratureSection({ trialLiterature }: any) {
+  const groups = useMemo(() => {
+    const known = literatureGroups.flatMap((g) => g.referenceTypes);
+    return [
+      ...literatureGroups.map((g) => ({
+        label: g.label,
+        ids: trialLiterature
+          .filter((lit: any) => g.referenceTypes.includes(lit.referenceType))
+          .map((lit: any) => lit.id),
+      })),
+      {
+        label: "Other",
+        ids: trialLiterature
+          .filter((lit: any) => !known.includes(lit.referenceType))
+          .map((lit: any) => lit.id),
+      },
+    ].filter((g) => g.ids.length > 0);
+  }, [trialLiterature]);
+
+  return (
+    <Box>
+      <Typography variant="subtitle2">Literature</Typography>
+      {groups.map((group) => (
+        <Box key={group.label} sx={{ mt: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {group.label} ({group.ids.length})
+          </Typography>
+          <Box sx={{ mt: -5 }}>
+            <PublicationsList
+              entriesIds={group.ids}
+              hideSearch
+              name={undefined}
+              symbol={undefined}
+              showRowsPerPageControl={false}
+              showPaginationAlways={false}
+            />
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
 function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
   const client = useApolloClient();
   const [details, setDetails] = useState<any>(null);
@@ -150,7 +205,9 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
 
   const {
     title,
-    type,
+    origin,
+    provider,
+    trialNumberOfArms,
     trialStudyType,
     trialPrimaryPurpose,
     source,
@@ -171,6 +228,10 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
   } = details;
 
   const sourceInfo = clinicalReportsSourcesInfo[source];
+  const providerInfo = clinicalReportsProvidersInfo[provider];
+  // Only mention the provider when it is not already evident from the source name.
+  const showProvider =
+    providerInfo && !source?.toLowerCase().includes(providerInfo.name.toLowerCase());
   const dedupedDiseases: any = dedupOnId(diseases, "disease");
   // the API no longer resolves a drug entity on the report, only its source name
   const dedupedDrugs: ClinicalReportDrug[] = [
@@ -184,7 +245,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
   return (
     <>
       <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 0.75 }}>
-        {title || `[${sentenceCase(type)}]`}
+        {title || `[${sentenceCase(origin)}]`}
       </Typography>
 
       <Link to={url}>
@@ -194,15 +255,21 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       </Link>
 
       <FieldRow label="Source">
-        {sourceInfo ? (
-          <Link to={sourceInfo.url}>
-            <Typography variant="body2">
+        <Typography variant="body2" component="span">
+          {sourceInfo ? (
+            <Link to={sourceInfo.url}>
               {sourceInfo.name} {sourceInfo.name !== source && `(${source})`}
-            </Typography>
-          </Link>
-        ) : (
-          <Typography variant="body2">{source}</Typography>
-        )}
+            </Link>
+          ) : (
+            source
+          )}
+          {showProvider && (
+            <>
+              {" "}
+              via <Link to={providerInfo.url}>{providerInfo.name}</Link>
+            </>
+          )}
+        </Typography>
       </FieldRow>
 
       {trialSponsor?.name && (
@@ -215,16 +282,16 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       )}
 
       {countries?.length > 0 && (
-        <FieldRow label="Status">
+        <FieldRow label="Countries">
           <Typography variant="body2">{countries.join(", ")}</Typography>
         </FieldRow>
       )}
 
-      {(type || trialStudyType) && (
+      {(origin || trialStudyType) && (
         <FieldRow label="Type">
           <Typography variant="body2">
-            {type && formatType(type)}
-            {type && trialStudyType && " - "}
+            {origin && formatType(origin)}
+            {origin && trialStudyType && " - "}
             {trialStudyType && formatType(trialStudyType)}
           </Typography>
         </FieldRow>
@@ -233,6 +300,12 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
       {trialPrimaryPurpose && (
         <FieldRow label="Purpose">
           <Typography variant="body2">{formatType(trialPrimaryPurpose)}</Typography>
+        </FieldRow>
+      )}
+
+      {trialNumberOfArms != null && (
+        <FieldRow label="Arms">
+          <Typography variant="body2">{trialNumberOfArms}</Typography>
         </FieldRow>
       )}
 
@@ -350,21 +423,7 @@ function RecordDetails({ recordId, recordDetailQuery = RECORD_DETAIL_QUERY }) {
         </Typography>
       )}
 
-      {trialLiterature && trialLiterature.length > 0 && (
-        <Box>
-          <Typography variant="subtitle2">Literature</Typography>
-          <Box sx={{ mt: -5 }}>
-            <PublicationsList
-              entriesIds={trialLiterature.map((lit: any) => lit.id)}
-              hideSearch
-              name={undefined}
-              symbol={undefined}
-              showRowsPerPageControl={false}
-              showPaginationAlways={false}
-            />
-          </Box>
-        </Box>
-      )}
+      {trialLiterature?.length > 0 && <LiteratureSection trialLiterature={trialLiterature} />}
     </>
   );
 }
