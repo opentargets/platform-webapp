@@ -25,7 +25,9 @@ const getColumnValue = (column, row) => {
   if (column.exportValue) return column.exportValue(row);
   const value = _.get(row, column.propertyPath || column.id);
   if (value === undefined && column.filterValue) return column.filterValue(row);
-  return value ?? "";
+  // keep null as null (a JSON consumer can tell it from an empty string); only a missing
+  // field exports as ""
+  return value === undefined ? "" : value;
 };
 
 // only plain strings make usable headers; React element labels would camelCase to "objectObject"
