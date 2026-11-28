@@ -388,11 +388,15 @@ export const credsetConfidenceLabels: { [level: number]: string } = {
   0: "Unknown confidence",
 };
 
-// Display names for the API's FineMappingMethod enum
+// Display names for the fine-mapping method. The API's FineMappingMethod enum names are
+// PICS / SUSIE / SUSIE_INF, but the field is serialised as the raw data value (SuSiE_inf),
+// which GraphQL cannot spell with a hyphen, so both spellings are mapped.
 export const fineMappingMethodLabels: { [method: string]: string } = {
   PICS: "PICS",
   SUSIE: "SuSiE",
   SUSIE_INF: "SuSiE-inf",
+  SuSiE: "SuSiE",
+  SuSiE_inf: "SuSiE-inf",
 };
 
 // Format Mapping
