@@ -44,14 +44,14 @@ const NoBorderTable = styled("table")(({ theme }) => ({
 function DownloadsSchemaBuilder({ data }) {
   const schema = buildSchema(data);
   return (
-    <NoBorderTable>
+    <NoBorderTable data-testid="schema-table">
       <thead>
         <tr>
-          <StickyLeftTh>Column</StickyLeftTh>
-          <th>Data Type</th>
+          <StickyLeftTh data-testid="schema-header">Column</StickyLeftTh>
+          <th data-testid="schema-header">Data Type</th>
           {/* <td></td>
           <td></td> */}
-          <th>Description</th>
+          <th data-testid="schema-header">Description</th>
         </tr>
       </thead>
       <tbody>{schema}</tbody>
@@ -59,7 +59,7 @@ function DownloadsSchemaBuilder({ data }) {
   );
 }
 
-function buildSchema(obj, delimiter = "") {
+function buildSchema(obj, delimiter = "", path = "") {
   let schema = <></>;
 
   const DIVIDER = `${delimiter}│⎯`;
@@ -69,26 +69,28 @@ function buildSchema(obj, delimiter = "") {
     const dataType = getDataType(column);
     const isPrimaryKey = isPrimaryColumn(column, obj.key);
     const isForeignKey = isForeignColumn(column);
+    // dotted path of the column, e.g. `genomicLocation.chromosome`
+    const columnPath = path ? `${path}.${column.name}` : column.name;
 
     currentElement = (
-      <tr>
-        <StickyTd>
+      <tr data-testid={`schema-row-${columnPath}`}>
+        <StickyTd data-testid="schema-column-name">
           <Box sx={{ display: "flex", gap: 2 }}>
             {DIVIDER}
             {column.name} <PrimaryKeyIcon isPrimaryKey={isPrimaryKey} />{" "}
             <ForeignKeyIcon isForeignKey={isForeignKey} />
           </Box>
         </StickyTd>
-        <Box component="td" sx={{ whiteSpace: "nowrap" }}>
+        <Box component="td" data-testid="schema-column-type" sx={{ whiteSpace: "nowrap" }}>
           {dataType}
         </Box>
-        <td>
+        <td data-testid="schema-column-description">
           <Box sx={{ whiteSpace: "nowrap" }}>{column.description}</Box>
         </td>
       </tr>
     );
     if (dataType.includes("Struct")) {
-      const nestedSchema = buildSchema(column, `${delimiter}│⎯`);
+      const nestedSchema = buildSchema(column, `${delimiter}│⎯`, columnPath);
       currentElement = (
         <>
           {currentElement}
@@ -109,8 +111,11 @@ function buildSchema(obj, delimiter = "") {
 function PrimaryKeyIcon({ isPrimaryKey }) {
   if (!isPrimaryKey) return;
   return (
-    <Tooltip title="Primary Key">
-      <Box sx={{ color: theme => theme.palette.primary.main }}>
+    <Tooltip
+      title="Primary Key"
+      slotProps={{ tooltip: { "data-testid": "schema-key-tooltip" } as object }}
+    >
+      <Box data-testid="schema-primary-key" sx={{ color: theme => theme.palette.primary.main }}>
         <FontAwesomeIcon icon={faKey} />
       </Box>
     </Tooltip>
@@ -120,8 +125,11 @@ function PrimaryKeyIcon({ isPrimaryKey }) {
 function ForeignKeyIcon({ isForeignKey }) {
   if (!isForeignKey) return;
   return (
-    <Tooltip title={`Foreign Key: ${isForeignKey}`}>
-      <Box sx={{ color: theme => theme.palette.primary.light }}>
+    <Tooltip
+      title={`Foreign Key: ${isForeignKey}`}
+      slotProps={{ tooltip: { "data-testid": "schema-key-tooltip" } as object }}
+    >
+      <Box data-testid="schema-foreign-key" sx={{ color: theme => theme.palette.primary.light }}>
         <FontAwesomeIcon icon={faNetworkWired} />
       </Box>
     </Tooltip>

@@ -42,7 +42,7 @@
     "evidenceSourceUrl": "http://wiki.geneontology.org/index.php/Inferred_from_High_Throughput_Experiment_(HTP)"
   },
   {
-    "evidenceCode": "HAD",
+    "evidenceCode": "HDA",
     "evidenceCategory": "Experimental evidence codes",
     "evidenceLabel": "Inferred from High Throughput Direct Assay (HDA)",
     "evidenceSourceUrl": "http://wiki.geneontology.org/index.php/Inferred_from_High_Throughput_Direct_Assay_(HDA)"

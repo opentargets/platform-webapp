@@ -195,6 +195,7 @@ function GlobalSearchList({ inputValue }) {
 
   const SearchSuggestionEl = (
     <Box
+      data-testid="global-search-group-suggestions"
       sx={{
         pt: 1,
       }}
@@ -261,6 +262,7 @@ function GlobalSearchList({ inputValue }) {
             {shouldShowEntityResult(value) && (
               <Box
                 key={key}
+                data-testid={`global-search-group-${key}`}
                 sx={{
                   pt: 1,
                   borderBottomWidth: "1px",
@@ -287,7 +289,10 @@ function GlobalSearchList({ inputValue }) {
       {/* no search result state  */}
       {inputValue && !loading && isResultEmpty() && (
         <>
-          <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+          <Box
+            data-testid="global-search-no-results"
+            sx={{ display: "flex", justifyContent: "center", my: 2 }}
+          >
             No search result found
           </Box>
           {SearchSuggestionEl}
@@ -297,6 +302,7 @@ function GlobalSearchList({ inputValue }) {
       {/* input value is not present */}
       {!inputValue && recentItems.length > 0 && (
         <Box
+          data-testid="global-search-group-recent"
           sx={{
             pt: 1,
             borderBottomWidth: "1px",

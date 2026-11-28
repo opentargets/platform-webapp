@@ -1,110 +1,120 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { readFile } from "node:fs/promises";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionLocator } from "../../../../utils/sections";
 
-/**
- * Interactor for Locus-to-Gene (L2G) section on Credible Set page
- * Section ID: locus2gene
- */
+/** The "Locus-to-Gene" section of the credible set page: a Shapley heatmap, one row per gene. */
 export class Locus2GeneSection {
-  constructor(private page: Page) {}
+  static readonly id = "locus2gene";
+  /** The score table columns; the last cell of a row holds the "Details" button. */
+  static readonly columnTitles = [
+    "Gene",
+    "Score",
+    "Distance",
+    "VEP",
+    "eQTL",
+    "pQTL",
+    "sQTL",
+    "E2G",
+    "Other",
+    "Base",
+    "",
+  ];
+  static readonly featureGroups = ["Distance", "VEP", "eQTL", "pQTL", "sQTL", "E2G", "Other"];
+  /** Column positions inside a row. */
+  static readonly column = { gene: 0, score: 1, firstGroup: 2, base: 9, details: 10 } as const;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-locus2gene']");
+  readonly section: Locator;
+
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, Locus2GeneSection.id);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-locus2gene']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get heatmap(): Locator {
+    return this.section.getByTestId("l2g-heatmap");
   }
 
-  // L2G uses a HeatmapTable, so we interact with it differently
-  getHeatmapTable(): Locator {
-    return this.getSection().locator("table");
+  /** The header row of column titles (the first header row is the "Colocalisation" banner). */
+  get columnHeaders(): Locator {
+    return this.heatmap.locator("thead tr").nth(1).locator("th");
   }
 
-  async isHeatmapVisible(): Promise<boolean> {
-    return await this.getHeatmapTable()
-      .isVisible()
-      .catch(() => false);
+  get colocalisationBanner(): Locator {
+    return this.heatmap.locator("thead tr").first().locator("th[colspan]");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getHeatmapTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  get rows(): Locator {
+    return this.heatmap.locator("tbody tr");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getHeatmapTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  row(index: number): Locator {
+    return this.rows.nth(index);
   }
 
-  // Target gene link
-  async getTargetGeneLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/target/']");
+  cell(rowIndex: number, columnIndex: number): Locator {
+    return this.row(rowIndex).locator("td").nth(columnIndex);
   }
 
-  async clickTargetGeneLink(rowIndex: number): Promise<void> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    await link.click();
+  /** The gene link of a row. */
+  geneLink(rowIndex: number): Locator {
+    return this.cell(rowIndex, Locus2GeneSection.column.gene).getByRole("link");
   }
 
-  async getTargetGeneName(rowIndex: number): Promise<string | null> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    return await link.textContent();
+  /** A row's feature-group cells, in the order of `featureGroups`. */
+  groupCells(rowIndex: number): Locator {
+    return this.row(rowIndex).getByTestId("l2g-heat-cell");
   }
 
-  async hasTargetGeneLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    return await link.isVisible().catch(() => false);
+  /** The Shapley plot popover a group cell opens. */
+  get plotPopover(): Locator {
+    return this.page.getByTestId("l2g-plot-popover");
   }
 
-  // L2G Score
-  async getL2GScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    // L2G score is typically in the second column
-    const cell = row.locator("td").nth(1);
-    return await cell.textContent();
+  /** The dialog a row's "Details" button opens. */
+  get detailsDialog(): Locator {
+    return this.page.getByTestId("l2g-details-dialog");
   }
 
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
+  detailsTrigger(rowIndex: number): Locator {
+    return this.row(rowIndex).getByTestId("l2g-details-trigger");
   }
 
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  get legend(): Locator {
+    return this.heatmap.locator("caption");
   }
 
-  async clearSearch(): Promise<void> {
-    await this.getSearchInput().clear();
-    await this.waitForLoad();
+  get exportButton(): Locator {
+    return this.section.getByTestId("data-downloader").getByRole("button", { name: "Export" });
+  }
+
+  /** Download through the Export menu and return what was saved. */
+  async export(format: "Json" | "TSV"): Promise<{ filename: string; content: string }> {
+    await this.exportButton.click();
+    const menu = this.page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveText(["Json", "TSV"]);
+    const downloadPromise = this.page.waitForEvent("download");
+    await menu.getByRole("menuitem", { name: format, exact: true }).click();
+    const download = await downloadPromise;
+    const content = await readFile(await download.path(), "utf8");
+    await expect(menu, "the export menu closes after a format is chosen").toBeHidden();
+    return { filename: download.suggestedFilename(), content };
+  }
+
+  /** The score of every row, as numbers, top to bottom. */
+  async scores(): Promise<number[]> {
+    const texts = await this.rows
+      .locator(`td:nth-child(${Locus2GeneSection.column.score + 1})`)
+      .allInnerTexts();
+    return texts.map((text) => Number(text.trim()));
+  }
+
+  async geneSymbols(): Promise<string[]> {
+    const texts = await this.rows
+      .locator(`td:nth-child(${Locus2GeneSection.column.gene + 1})`)
+      .allInnerTexts();
+    return texts.map((text) => text.trim());
   }
 }

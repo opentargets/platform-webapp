@@ -1,20 +1,42 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { sectionTestId } from "../../../utils/sections";
 
-/**
- * Evidence Page Object Model (target-disease evidence, /evidence/:ensgId/:efoId)
- */
+/** The evidence page, /evidence/:ensgId/:efoId. */
 export class EvidencePage {
-  constructor(private page: Page) {}
+  constructor(readonly page: Page) {}
 
-  /**
-   * Navigate to the evidence page of a target-disease pair
-   * @param ensgId - Ensembl gene ID (e.g., "ENSG00000099381")
-   * @param efoId - disease ID (e.g., "MONDO_0005090")
-   */
-  async goToEvidencePage(ensgId: string, efoId: string): Promise<void> {
-    await this.page.goto(`/evidence/${ensgId}/${efoId}`);
-    await this.page.waitForSelector("[data-testid='profile-page-header-text']", {
-      state: "visible",
-    });
+  /** Open the page and wait for its header to show the title. */
+  async goto(ensgId: string, efoId: string, suffix = ""): Promise<void> {
+    await this.page.goto(`/evidence/${ensgId}/${efoId}${suffix}`);
+    await expect(this.title, "the evidence page header should show a title").toContainText(
+      "Evidence for"
+    );
+  }
+
+  get title(): Locator {
+    return this.page.getByTestId("profile-page-header-text");
+  }
+
+  /** Link to the target in the profile header card. */
+  get targetLink(): Locator {
+    return this.page.locator("a[href^='/target/']").first();
+  }
+
+  /** Link to the disease in the profile header card. */
+  get diseaseLink(): Locator {
+    return this.page.locator("a[href^='/disease/']").first();
+  }
+
+  section(sectionId: string): Locator {
+    return this.page.getByTestId(sectionTestId(sectionId));
+  }
+
+  /** The summary card of a section. */
+  summaryCard(sectionId: string): Locator {
+    return this.page.getByTestId(`summary-${sectionId.toLowerCase().replace(/[-_]/g, "")}`);
+  }
+
+  get notFound(): Locator {
+    return this.page.getByTestId("not-found-page");
   }
 }

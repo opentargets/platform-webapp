@@ -25,6 +25,7 @@ function DatasetCard({ dataset, inBasket, onToggleBasket }: DatasetCardProps) {
     <Box
       component="article"
       aria-label={dataset.name}
+      data-testid={`dataset-card-${id}`}
       sx={theme => ({
         display: "flex",
         flexDirection: "column",
@@ -45,6 +46,7 @@ function DatasetCard({ dataset, inBasket, onToggleBasket }: DatasetCardProps) {
       <Box>
         <Typography
           component="h3"
+          data-testid="dataset-name"
           sx={theme => ({
             fontSize: "1rem",
             fontWeight: 700,
@@ -57,6 +59,7 @@ function DatasetCard({ dataset, inBasket, onToggleBasket }: DatasetCardProps) {
         </Typography>
         <Typography
           component="div"
+          data-testid="dataset-id"
           sx={theme => ({
             mt: "2px",
             fontFamily: MONO_FONT,
@@ -69,7 +72,10 @@ function DatasetCard({ dataset, inBasket, onToggleBasket }: DatasetCardProps) {
         </Typography>
       </Box>
 
-      <Box sx={theme => ({ fontSize: ".8125rem", lineHeight: 1.5, color: theme.palette.grey[700] })}>
+      <Box
+        data-testid="dataset-description"
+        sx={theme => ({ fontSize: ".8125rem", lineHeight: 1.5, color: theme.palette.grey[700] })}
+      >
         <LongText lineLimit={2} variant="inherit" displayText="more">
           {dataset.description}
         </LongText>
@@ -78,7 +84,7 @@ function DatasetCard({ dataset, inBasket, onToggleBasket }: DatasetCardProps) {
       {categories.length > 0 && (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
           {categories.map(category => (
-            <Box key={category} sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+            <Box key={category} data-testid="dataset-category" sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
               <CategoryDot category={category} />
               <Typography component="span" sx={{ fontSize: ".8125rem", color: "text.primary" }}>
                 {category}

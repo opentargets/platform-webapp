@@ -16,6 +16,7 @@ function CountBadge({ count }: CountBadgeProps) {
     <Box
       component="span"
       aria-hidden
+      data-testid="basket-count"
       sx={{
         position: "absolute",
         top: -8,

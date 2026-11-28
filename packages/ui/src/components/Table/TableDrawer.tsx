@@ -131,7 +131,7 @@ function TableDrawer({
       <StyledPaperTitle elevation={0}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <StyledTitleCaption>{caption}</StyledTitleCaption>
-          <IconButton onClick={closeDrawer}>
+          <IconButton onClick={closeDrawer} data-testid="drawer-close">
             <FontAwesomeIcon icon={faXmark} />
           </IconButton>
         </Box>
@@ -181,7 +181,12 @@ function TableDrawer({
         <Typography variant="body2"> {message || `${entries.length} entries`}</Typography>
       </StyledButtonBase>
 
-      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+      <StyledDrawer
+        anchor="right"
+        open={open}
+        onClose={closeDrawer}
+        data-testid="table-drawer-panel"
+      >
         {drawerContent}
       </StyledDrawer>
     </>

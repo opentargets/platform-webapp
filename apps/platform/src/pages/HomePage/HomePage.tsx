@@ -168,6 +168,7 @@ function HomePage(): JSX.Element {
               cursor: "pointer",
             }}
             onClick={handleScrollDown}
+            data-testid="home-scroll-down"
           >
             <FontAwesomeIcon icon={faCircle} inverse />
             <FontAwesomeIcon icon={faChevronDown} transform="shrink-4" />

@@ -117,6 +117,7 @@ function SuggestionListItem({ item, onItemClick }) {
         className="search-list-item"
         role="menuitem"
         tabIndex="0"
+        data-testid="global-search-suggestion-item"
         data-item-details={JSON.stringify(item)}
         onClick={() => {
           onItemClick(item);
@@ -148,6 +149,7 @@ function RecentListItem({ item, onItemClick }) {
       className="search-list-item"
       role="menuitem"
       tabIndex="0"
+      data-testid="global-search-recent-item"
       data-item-details={JSON.stringify(item)}
       onClick={() => {
         onItemClick(item);
@@ -160,6 +162,7 @@ function RecentListItem({ item, onItemClick }) {
 
       <FontAwesomeIcon
         icon={faXmark}
+        data-testid="global-search-recent-remove"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -323,6 +326,7 @@ function GlobalSearchListItem({ item, isTopHit = false, onItemClick }) {
       className="search-list-item"
       role="menuitem"
       tabIndex="0"
+      data-testid="global-search-item"
       data-item-details={JSON.stringify(item)}
       onClick={() => {
         onItemClick(item);

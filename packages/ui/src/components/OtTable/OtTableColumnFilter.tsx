@@ -1,3 +1,4 @@
+import { escapeRegExp } from "lodash";
 import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -96,7 +97,7 @@ function OtTableColumnFilter({ column }: { column: Column<any, unknown> }): Reac
                      *  STRING.SEARCH FUNCTION FILTERS THE LIST OF  *
                      * UNIQUE VALUES WITHOUT HAVING TO MODIFY ANY STATE *
                      ****************************************************/
-                    String(keyName).search(new RegExp(columnFilterInputValue, "i")) !== -1 && (
+                    String(keyName).search(new RegExp(escapeRegExp(columnFilterInputValue), "i")) !== -1 && (
                       <ListItemButton
                         disableRipple
                         key={v1()}

@@ -19,18 +19,42 @@ import { useState } from "react";
 import "graphiql/graphiql.min.css";
 import ApiPlaygroundDrawer from "./ApiPlaygroundDrawer";
 
+// a column without exportValue exports the value at its id; when the id is not a
+// field of the row (a computed column) the filterValue is the closest text the table has
+const getColumnValue = (column, row) => {
+  if (column.exportValue) return column.exportValue(row);
+  const value = _.get(row, column.propertyPath || column.id);
+  if (value === undefined && column.filterValue) return column.filterValue(row);
+  // keep null as null (a JSON consumer can tell it from an empty string); only a missing
+  // field exports as ""
+  return value === undefined ? "" : value;
+};
+
+// only plain strings make usable headers; React element labels would camelCase to "objectObject"
+const getExportLabel = (column) =>
+  _.camelCase(
+    column.exportLabel ||
+      (typeof column.label === "string" ? column.label : "") ||
+      (typeof column.id === "string" ? column.id : "")
+  );
+
+// objects have no useful default string form ("[object Object]"), so serialise them
+const toCellValue = (d) => {
+  if (Array.isArray(d)) return d.map(toCellValue).join(",");
+  if (d !== null && typeof d === "object") return JSON.stringify(d);
+  return d;
+};
+
 const asJSON = (columns, rows) => {
   const rowStrings = rows.map((row) =>
     columns.reduce((accumulator, newKey) => {
       if (newKey.exportValue === false) return accumulator;
 
-      const newLabel = _.camelCase(newKey.exportLabel || newKey.label || newKey.id);
+      const newLabel = getExportLabel(newKey);
 
       return {
         ...accumulator,
-        [newLabel]: newKey.exportValue
-          ? newKey.exportValue(row)
-          : _.get(row, newKey.propertyPath || newKey.id, ""),
+        [newLabel]: getColumnValue(newKey, row),
       };
     }, {})
   );
@@ -40,11 +64,8 @@ const asJSON = (columns, rows) => {
 
 const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
   const quoteString = (d) => {
-    let result = d;
-    // converts arrays to strings
-    if (Array.isArray(d)) {
-      result = d.join(",");
-    }
+    // converts arrays and objects to strings
+    const result = toCellValue(d);
     return quoteStrings && typeof result === "string" ? `"${result}"` : result;
   };
 
@@ -54,7 +75,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
     .reduce((accHeaderString, column) => {
       if (column.exportValue === false) return accHeaderString;
 
-      const newLabel = quoteString(_.camelCase(column.exportLabel || column.label || column.id));
+      const newLabel = quoteString(getExportLabel(column));
 
       return [...accHeaderString, newLabel];
     }, [])
@@ -66,11 +87,7 @@ const asDSV = (columns, rows, separator = ",", quoteStrings = true) => {
         .reduce((rowString, column) => {
           if (column.exportValue === false) return rowString;
 
-          const newValue = quoteString(
-            column.exportValue
-              ? column.exportValue(row)
-              : _.get(row, column.propertyPath || column.id, "")
-          );
+          const newValue = quoteString(getColumnValue(column, row));
 
           return [...rowString, newValue];
         }, [])
@@ -110,7 +127,7 @@ const StyledSnackbar = styled(Snackbar)({
   },
 });
 
-function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = "Export" }) {
+function DataDownloader({ columns, rows, fileStem = "data", query, variables, btnLabel = "Export" }) {
   const [downloading, setDownloading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -139,7 +156,7 @@ function DataDownloader({ columns, rows, fileStem, query, variables, btnLabel = 
 
     const blob = createBlob(format)(dataColumns, allRows);
 
-    FileSaver.saveAs(blob, `${dataFileStem}.${format}`, { autoBOM: false });
+    FileSaver.saveAs(blob, `${dataFileStem || "data"}.${format}`, { autoBOM: false });
   };
 
   const handleClickDownloadJSON = async () => {

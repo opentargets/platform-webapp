@@ -186,6 +186,9 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<EvaSomatic
     label: (
       <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#clinvar-somatic"></DirectionOfEffectTooltip>
     ),
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
         <DirectionOfEffectIcon
@@ -352,7 +355,10 @@ function Body({ id, label, entity }: EvidenceBodyProps) {
       renderDescription={() => <Description symbol={label.symbol} name={label.name} />}
       renderBody={() => (
         <>
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}>
+          <Box
+              data-testid="role-in-cancer"
+              sx={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
+            >
             {getRoleInCancer()}
           </Box>
 

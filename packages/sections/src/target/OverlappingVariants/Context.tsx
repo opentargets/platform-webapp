@@ -1,6 +1,7 @@
 // !! IMPORT SEARCH LIBRARTY HERE UNTIL DECIDE IF USING IT !!
 // import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.mjs";
 
+import { escapeRegExp } from "lodash";
 import { useMemo } from "react";
 import { createContext, useContext, useReducer, ReactNode } from "react";
 import { reducer, getInitialState, actions } from "./Reducer";
@@ -27,7 +28,7 @@ const DispatchContext = createContext<DispatchContextType | undefined>(undefined
 function getFilteredRows(data, state) {
   const rows = [];
   const { startPosition, variant: variantText, consequence, evidence } = state.filters;
-  const variantTextRegexp = new RegExp(variantText, "i");
+  const variantTextRegexp = new RegExp(escapeRegExp(variantText), "i");
   const consequenceIds = new Set(consequence.map(c => c.id));
   const evidenceIds = new Set(evidence.map(e => e.datasourceId));
   for (const row of data.proteinCodingCoordinates.rows) {

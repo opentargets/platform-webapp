@@ -151,6 +151,7 @@ const columns: OtTableColumn<ExpressionAtlasRow>[] = [
         <i>p</i>-value
       </>
     ),
+    exportLabel: "p-value",
     sortField: DEFAULT_SORT.field,
     renderCell: ({ resourceScore }) =>
       resourceScore != null ? <ScientificNotation number={resourceScore} /> : naLabel,

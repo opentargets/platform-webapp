@@ -22,6 +22,11 @@ function EvidencePage() {
   const location = useLocation();
   const { ensgId, efoId } = useParams<{ ensgId: string; efoId: string }>();
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
+
+  if (!!subRoute) {
+    return <NotFoundPage />;
+  }
 
   if (data && !(data.target && data.disease)) {
     return <NotFoundPage />;

@@ -46,10 +46,12 @@ function useListOption() {
 
 function navigateToSearchResultsPage({ navigate, newOption, activeSearchEntities = [] }) {
   // Use requestAnimationFrame same as navigatetoBuiltPath to prevent freeze
-  const path =
-    activeSearchEntities.length === TOTAL_ENTITIES || activeSearchEntities.length === 0
-      ? `/search?q=${newOption.name}&page=1`
-      : `/search?q=${newOption.name}&page=1&entities=${activeSearchEntities.join()}`;
+  const params = new URLSearchParams({ q: newOption.name, page: "1" });
+  let path = `/search?${params.toString()}`;
+  if (activeSearchEntities.length > 0 && activeSearchEntities.length < TOTAL_ENTITIES) {
+    // the results page reads entities as a comma separated list, so keep the commas unescaped
+    path += `&entities=${activeSearchEntities.join()}`;
+  }
 
   requestAnimationFrame(() => {
     navigate(path);

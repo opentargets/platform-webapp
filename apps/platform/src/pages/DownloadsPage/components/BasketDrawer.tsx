@@ -44,6 +44,7 @@ function BasketDrawer({ open, onClose, rows, locationURLs, onRemove, onEmpty }: 
       open={open}
       onClose={onClose}
       aria-labelledby="basket-drawer-title"
+      data-testid="basket-drawer"
       slotProps={{ backdrop: { sx: { backgroundColor: "rgba(33,33,33,.38)" } } }}
       PaperProps={{
         sx: theme => ({
@@ -71,15 +72,19 @@ function BasketDrawer({ open, onClose, rows, locationURLs, onRemove, onEmpty }: 
           <Typography
             id="basket-drawer-title"
             component="h2"
+            data-testid="basket-drawer-title"
             sx={theme => ({ fontSize: "1.2rem", fontWeight: 700, color: theme.palette.grey[800], m: 0 })}
           >
             Your data bundle
           </Typography>
-          <Typography sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}>
+          <Typography
+            data-testid="basket-drawer-count"
+            sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}
+          >
             {n} {noun}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label="Close bag" size="small" sx={{ mt: -0.5, mr: -1 }}>
+        <IconButton onClick={onClose} aria-label="Close bag" data-testid="basket-drawer-close" size="small" sx={{ mt: -0.5, mr: -1 }}>
           <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />
         </IconButton>
       </Box>
@@ -133,6 +138,7 @@ function DrawerBody({ rows, locationURLs, onRemove, onEmpty }: DrawerBodyProps) 
           <Box ref={contentRef}>
             <Typography
               component="h3"
+              data-testid="basket-list-title"
               sx={theme => ({
                 ...sectionLabelSx(theme),
                 position: "sticky",
@@ -146,7 +152,7 @@ function DrawerBody({ rows, locationURLs, onRemove, onEmpty }: DrawerBodyProps) 
             >
               Datasets · file location
             </Typography>
-            <Box component="ul" sx={{ m: 0, p: 0 }}>
+            <Box component="ul" data-testid="basket-rows" sx={{ m: 0, p: 0 }}>
               {rows.map(row => (
                 <BasketRow key={row["@id"]} dataset={row} onRemove={onRemove} />
               ))}
@@ -195,12 +201,12 @@ function DrawerBody({ rows, locationURLs, onRemove, onEmpty }: DrawerBodyProps) 
             <Typography component="span" sx={theme => ({ color: theme.palette.grey[500] })}>
               ·
             </Typography>
-            <Box component="button" type="button" onClick={onEmpty} sx={footerLinkSx}>
+            <Box component="button" type="button" onClick={onEmpty} data-testid="basket-empty-button" sx={footerLinkSx}>
               Empty bag
             </Box>
           </>
         ) : (
-          <Box component="button" type="button" onClick={onEmpty} sx={footerLinkSx}>
+          <Box component="button" type="button" onClick={onEmpty} data-testid="basket-empty-button" sx={footerLinkSx}>
             Empty bag
           </Box>
         )}

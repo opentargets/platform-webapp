@@ -46,8 +46,10 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
       if (uniprotId) {
         try {
           const response = await fetch(`${alphaFoldResultsStem}${uniprotId}`);
-          if (!response.ok) {
-            console.error(`Response status (AlphaFold request): ${response.status}`);
+          if (response.status === 404) {
+            // no AlphaFold prediction for this accession: expected, not an error
+          } else if (!response.ok) {
+            console.warn(`Response status (AlphaFold request): ${response.status}`);
           } else {
             const json = await response.json();
             if (json.length > 0) {
@@ -149,7 +151,12 @@ function Body({ id: ensemblId, label: symbol, entity }: Props) {
 
 function NoRows({ children }) {
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", fontStyle: "italic" }}>{children}</Box>
+    <Box
+      data-testid="structure-status"
+      sx={{ display: "flex", justifyContent: "center", fontStyle: "italic" }}
+    >
+      {children}
+    </Box>
   );
 }
 

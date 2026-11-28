@@ -91,6 +91,7 @@ function DatasetsToolbar({
                 whiteSpace: "nowrap",
               })}
               aria-live="polite"
+              data-testid="dataset-counter"
             >
               {resultCount} of {totalCount}
             </Typography>
@@ -98,6 +99,7 @@ function DatasetsToolbar({
               <Box
                 component="button"
                 type="button"
+                data-testid="clear-all-button"
                 onClick={() => dispatch(clearFilterData())}
                 sx={theme => ({
                   border: 0,
@@ -130,7 +132,7 @@ function DatasetsToolbar({
       </Box>
 
       {isCards && state.allUniqueCategories.length > 0 && (
-        <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.75 }} role="group" aria-label="Filter by category">
+        <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.75 }} role="group" aria-label="Filter by category" data-testid="category-filters">
           <Typography
             component="span"
             sx={theme => ({ fontSize: ".8125rem", color: theme.palette.grey[600], mr: 0.5 })}

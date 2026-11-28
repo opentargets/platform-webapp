@@ -58,6 +58,8 @@ function DrugsTable({
 
         return (
           <Box
+            data-testid="drug-card"
+            data-selected={isSelected ? "true" : "false"}
             {...getPrefetchHandlers(row)}
             sx={{
               p: "0.5rem 0.5rem 0.5rem 1rem",

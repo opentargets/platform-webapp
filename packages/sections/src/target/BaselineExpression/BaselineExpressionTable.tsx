@@ -1,3 +1,4 @@
+import { escapeRegExp } from "lodash";
 import { faSquareCaretUp } from "@fortawesome/free-regular-svg-icons";
 import { faCaretDown, faCaretUp, faCircle, faSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -72,6 +73,9 @@ declare module "@tanstack/table-core" {
   }
 }
 
+// column ids contain spaces ("bulk rna-seq"); test ids are kebab-case
+const testIdSlug = (id: string) => id.replace(/\s+/g, "-");
+
 function getSortingFn(datatype, allDatatypes) {
   return (rowA, rowB) => {
     const a = rowA.original;
@@ -97,7 +101,7 @@ function getSortingFn(datatype, allDatatypes) {
 const searchFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value);
   const allRowValuesInString = JSON.stringify(row.original);
-  const containsSubstr = new RegExp(value, "i").test(allRowValuesInString);
+  const containsSubstr = new RegExp(escapeRegExp(value), "i").test(allRowValuesInString);
 
   addMeta({
     itemRank,
@@ -261,6 +265,7 @@ function XAxis({ datatype, maxMedian }) {
   return (
     <Box 
       className="xaxis-component"
+      data-testid={`baseline-expression-axis-${testIdSlug(datatype)}`}
       sx={{
         position: "absolute",
         top: 0,
@@ -338,7 +343,7 @@ function ViewToggleButton({ value, view, hasSpecific }) {
         <Typography variant="caption">
           {hasSpecific
             ? `At least one ${view} has a high specificity score`
-            : `No ${view}s have a high specificify score`}
+            : `No ${view}s have a high specificity score`}
         </Typography>
       }
       placement="top-start"
@@ -357,6 +362,7 @@ function ViewToggleButton({ value, view, hasSpecific }) {
         >
           <Box sx={{ fontSize: "13px" }}>{sentenceCase(view)}</Box>
           <Box
+            data-testid={`baseline-expression-view-specificity-${hasSpecific ? "high" : "low"}`}
             sx={{
               width: specificityCircleWidth,
               height: specificityCircleWidth,
@@ -504,6 +510,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
             {isFirstLevel && (
               <IconButton
                 disableRipple
+                data-testid="baseline-expression-expand"
                 sx={{
                   ...expandButtonSx,
                   visibility: cellContext.row.getCanExpand() ? "visible" : "hidden", // keeps all rows same height
@@ -617,7 +624,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       }
                     >
                       <Box sx={medianCellSx}>
-                        <Box sx={{ ...barContainerSx, ...failedSx }}>{naLabel}</Box>
+                        <Box data-testid="baseline-expression-na" sx={{ ...barContainerSx, ...failedSx }}>{naLabel}</Box>
                       </Box>
                     </Tooltip>
                   </>
@@ -654,6 +661,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       }
                     >
                       <Box
+                        data-testid="baseline-expression-bar"
                         sx={{
                           ...(isFirstLevel ? barSx : childBarSx),
                           width: `${percent}%`,
@@ -688,6 +696,9 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                           >
                             <FontAwesomeIcon
                               icon={faCircle}
+                              data-testid={`baseline-expression-specificity-${
+                                specificityScore >= specificityThreshold ? "high" : "low"
+                              }`}
                               fontSize={specificityCircleWidth}
                               color={
                                 specificityColors[
@@ -710,6 +721,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                           <IconButton
                             size="small"
                             disableRipple
+                            data-testid="baseline-expression-expand-detail"
                             sx={{
                               ...expandColumnSx,
                               visibility: cellContext.row.getCanExpand() ? "visible" : "hidden",
@@ -797,7 +809,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
   }, []); // only auto expand when first loads
 
   return (
-    <Box sx={tableContainerSx}>
+    <Box sx={tableContainerSx} data-testid="baseline-expression-table">
       <Box
         sx={{
           display: "flex",
@@ -863,6 +875,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       return (
                         <TableCell
                           key={header.id}
+                          data-testid={`baseline-expression-header-${testIdSlug(header.column.id)}`}
+                          data-sort={header.column.getIsSorted() || "none"}
                           sx={{
                             ...headerCellSx,
                             width: getColumnWidth(index),
@@ -941,6 +955,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                                       : "visible",
                                   cursor: "pointer",
                                 }}
+                                data-testid="baseline-expression-collapse-all"
                                 onClick={handleCollapseAll}
                               >
                                 <FontAwesomeIcon icon={faSquareCaretUp} color="grey.400" />
@@ -978,6 +993,8 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                     <Fragment key={row.id}>
                       {/* 1st and 2nd level rows */}
                       <TableRow
+                        data-testid={`baseline-expression-row-level-${isFirstLevel ? 1 : 2}`}
+                        data-expanded={isExpanded ? "true" : "false"}
                         onClick={() => {
                           if (row.getCanExpand()) row.toggleExpanded();
                         }}
@@ -1048,6 +1065,7 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                                   : undefined,
                               }}
                               className={isSingleCellColumn ? "single-cell-column" : undefined}
+                              data-testid={`baseline-expression-cell-${testIdSlug(cell.column.id)}`}
                               key={cell.id}
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -1057,7 +1075,10 @@ const BaselineExpressionTable: React.FC<BaselineExpressionTableProps> = ({
                       </TableRow>
                       {/* 3rd level rows */}
                       {row.getIsExpanded() && row.original._secondLevelId && (
-                        <TableRow sx={{ "& > *": { marginBottom: 5 } }}>
+                        <TableRow
+                          data-testid="baseline-expression-detail-row"
+                          sx={{ "& > *": { marginBottom: 5 } }}
+                        >
                           <TableCell
                             colSpan={table.getVisibleLeafColumns().length}
                             sx={{

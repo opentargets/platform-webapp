@@ -66,6 +66,8 @@ type LinkProptypes = {
   children: ReactNode;
   ariaLabel?: string;
   asyncTooltip?: boolean;
+  /** Test id put on the anchor itself, for the e2e tests. */
+  "data-testid"?: string;
 };
 
 const defaultProps = {
@@ -88,6 +90,7 @@ function Link({
   className,
   ariaLabel,
   asyncTooltip,
+  "data-testid": testId,
 }: LinkProptypes = defaultProps): ReactElement {
   const ariaLabelProp = ariaLabel ? { "aria-label": ariaLabel } : {};
   const newTabProps = newTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
@@ -100,6 +103,7 @@ function Link({
         className={className}
         href={to}
         onClick={onClick}
+        data-testid={testId}
         {...newTabProps}
         {...ariaLabelProp}
       >
@@ -116,6 +120,7 @@ function Link({
         className={className}
         to={to}
         onClick={onClick}
+        data-testid={testId}
       >
         <OtAsyncTooltip entity={args[1]} id={args[2]}>
           <span>{children}</span>
@@ -131,6 +136,7 @@ function Link({
       className={className}
       to={to}
       onClick={onClick}
+      data-testid={testId}
     >
       <Tooltip title={tooltip}>{children}</Tooltip>
     </StyledRouterLink>

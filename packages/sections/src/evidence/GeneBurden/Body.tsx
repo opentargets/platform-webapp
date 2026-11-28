@@ -245,6 +245,9 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<GeneBurden
         <DirectionOfEffectIcon variantEffect={directionOnTarget ?? ""} directionOnTrait={directionOnTrait ?? ""} />
       );
     },
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
   },
   {
     id: "pValue",
@@ -253,6 +256,7 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<GeneBurden
         <i>p</i>-value
       </>
     ),
+    exportLabel: "p-value",
     numeric: true,
     sortField: DEFAULT_SORT.field,
     renderCell: ({ pValueMantissa, pValueExponent }) => {

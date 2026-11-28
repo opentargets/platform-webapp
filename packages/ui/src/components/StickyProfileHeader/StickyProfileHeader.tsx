@@ -56,7 +56,9 @@ function StickyProfileHeader({
   const activeId = useActiveSection(ids);
   const activeWidget = widgets.find((widget) => widget.definition.id === activeId) ?? widgets[0];
 
-  const entityData = data?.[entity];
+  // Some sections report their summary data from root-level query fields
+  // (e.g. disease `studies`), so expose those next to the entity fields.
+  const entityData = data?.[entity] ? { ...data, ...data[entity] } : undefined;
 
   useScrollToHashOnMount(ids);
 
@@ -120,7 +122,10 @@ function StickyProfileHeader({
             )}
           </Box>
 
-          <WidgetSelector onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <WidgetSelector
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            data-testid="sticky-section-selector"
+          >
             <Avatar sx={{ width: 24, height: 24, fontSize: "0.7rem", ...avatarSx(activeHasData) }}>
               {createShortName(activeWidget.definition)}
             </Avatar>

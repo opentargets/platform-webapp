@@ -8,6 +8,8 @@ function RouteErrorBoundary() {
 
   return (
     <Box
+      data-testid="route-error"
+      role="alert"
       sx={{
         minHeight: "500px",
         height: "80vh",

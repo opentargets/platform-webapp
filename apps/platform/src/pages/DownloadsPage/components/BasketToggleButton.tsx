@@ -46,6 +46,7 @@ function BasketToggleButton({
         onClick={handleClick}
         aria-pressed={inBasket}
         aria-label={ariaLabel}
+        data-testid="basket-toggle"
         sx={{
           background: "none",
           border: 0,
@@ -73,6 +74,7 @@ function BasketToggleButton({
       onClick={handleClick}
       aria-pressed={inBasket}
       aria-label={ariaLabel}
+      data-testid="basket-toggle"
       variant={inBasket ? "contained" : "outlined"}
       disableElevation
       sx={theme => ({

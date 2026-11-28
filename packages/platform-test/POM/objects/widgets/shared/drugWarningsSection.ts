@@ -1,92 +1,62 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionTable } from "../Drug/sectionTable";
 
-/**
- * Interactor for Drug Warnings section
- */
+export const DRUG_WARNINGS_COLUMNS = [
+  "Warning type",
+  "Adverse event",
+  "ChEMBL warning class",
+  "Country / region",
+  "Year",
+  "References",
+] as const;
+
+/** Column positions in the drug warnings table. */
+export const WARNING_COLUMN = {
+  type: 0,
+  adverseEvent: 1,
+  warningClass: 2,
+  country: 3,
+  year: 4,
+  references: 5,
+} as const;
+
+/** Drug page: Drug Warnings section (a server-paginated table). */
 export class DrugWarningsSection {
-  constructor(private page: Page) {}
+  static readonly id = "drugwarnings";
+  readonly section: Locator;
+  readonly table: SectionTable;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-drugwarnings']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, DrugWarningsSection.id);
+    this.table = new SectionTable(this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-drugwarnings']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  /** Links in the "ChEMBL warning class" column, one per row that has a class. */
+  get warningClassLinks(): Locator {
+    return this.table.rows
+      .locator(`td:nth-child(${WARNING_COLUMN.warningClass + 1})`)
+      .getByRole("link");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  /** Links in the "Adverse event" column, one per row that names an event. */
+  get adverseEventLinks(): Locator {
+    return this.table.rows
+      .locator(`td:nth-child(${WARNING_COLUMN.adverseEvent + 1})`)
+      .getByRole("link");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The buttons that open the references of a row ("DailyMed, FDA"). */
+  get referenceButtons(): Locator {
+    return this.table.rows.getByTestId("table-drawer");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
-  }
-
-  // Get warning type
-  async getWarningType(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(0);
-    return await cell.textContent();
-  }
-
-  // Get adverse event link
-  async getAdverseEventLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/disease/']").first();
-  }
-
-  async hasAdverseEventLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getAdverseEventLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  async clickAdverseEventLink(rowIndex: number): Promise<void> {
-    const link = await this.getAdverseEventLink(rowIndex);
-    await link.click();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** The drawer listing the references of a row, grouped by source. */
+  get referencesDrawer(): Locator {
+    return this.page.getByTestId("table-drawer-panel");
   }
 }

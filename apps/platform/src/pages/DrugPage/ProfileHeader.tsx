@@ -54,6 +54,7 @@ function DrugStructure({ chemblId }: { chemblId: string }) {
         elevation={0}
         disabled={!loaded}
         aria-label="Enlarge chemical structure"
+        data-testid="drug-structure-button"
         sx={{
           position: "relative",
           width: STRUCTURE_SIZE,
@@ -124,6 +125,7 @@ function DrugStructure({ chemblId }: { chemblId: string }) {
           <Paper
             variant="outlined"
             elevation={0}
+            data-testid="drug-structure-modal"
             sx={{
               position: "relative",
               width: STRUCTURE_ZOOM_SIZE,
@@ -187,18 +189,18 @@ function ProfileHeader({ chemblId }: { chemblId: string }) {
     <BaseProfileHeader>
       <>
         <ProfileDescription loading={loading}>{description}</ProfileDescription>
-        <Field loading={loading} title="Molecule type">
+        <Field loading={loading} title="Molecule type" testId="drug-molecule-type">
           {drugType}
         </Field>
-        <Field loading={loading} title="Max stage">
+        <Field loading={loading} title="Max stage" testId="drug-max-stage">
           {maxStage}
         </Field>
-        <Field loading={loading} title="Parent molecule">
+        <Field loading={loading} title="Parent molecule" testId="drug-parent-molecule">
           {parentMolecule ? (
             <Link to={`/drug/${parentMolecule.id}`}>{parentMolecule.name}</Link>
           ) : null}
         </Field>
-        <Field loading={loading} title="Child molecules">
+        <Field loading={loading} title="Child molecules" testId="drug-child-molecules">
           {childMolecules.map(({ id, name }, i) => (
             <Fragment key={id}>
               <Link to={`/drug/${id}`}>{name}</Link>

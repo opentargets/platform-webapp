@@ -140,6 +140,9 @@ const getColumns = (label: EvidenceBodyProps["label"]): OtTableColumn<Gene2Pheno
         <DirectionOfEffectIcon variantEffect={directionOnTarget ?? ""} directionOnTrait={directionOnTrait ?? ""} />
       );
     },
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
   },
   {
     id: "allelicRequirements",

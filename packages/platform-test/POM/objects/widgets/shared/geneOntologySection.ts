@@ -1,115 +1,63 @@
-import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { ProfileSection, TableControls } from "../Target/sectionWidgets";
 
-/**
- * Interactor for Gene Ontology section on Target page
- * Displays GO annotations organized by aspect (Molecular Function, Biological Process, Cellular Component)
- * Uses only data-testid selectors for reliable, predictable testing
- */
-export class GeneOntologySection {
-  constructor(private page: Page) {}
+/** Gene Ontology section of the target profile: GO annotations with evidence and source. */
+export class GeneOntologySection extends ProfileSection {
+  static readonly COLUMNS = ["Category", "GO term", "Gene product", "Evidence code", "Source"];
+  /** The three GO aspects, in the order the table sorts them. */
+  static readonly CATEGORIES = ["Biological Process", "Cellular Component", "Molecular Function"];
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-geneontology']");
+  readonly controls: TableControls;
+
+  constructor(page: Page) {
+    super(page, "geneontology");
+    this.controls = new TableControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  category(rowIndex: number): Locator {
+    return this.controls.table.cell(rowIndex, 0);
   }
 
-  /**
-   * Wait for the section to be visible
-   */
-  async waitForLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  /** The GO term label, linking to the term on identifiers.org. */
+  termLink(rowIndex: number): Locator {
+    return this.controls.table.cell(rowIndex, 1).getByRole("link");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-geneontology-header']");
+  /** The annotated gene product, linking to its annotations for this term in QuickGO. */
+  geneProductLink(rowIndex: number): Locator {
+    return this.controls.table.cell(rowIndex, 2).getByRole("link");
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  evidenceCell(rowIndex: number): Locator {
+    return this.controls.table.cell(rowIndex, 3);
   }
 
-  // Section description
-  getSectionDescription(): Locator {
-    return this.getSection().locator("[data-testid='section-description']");
+  /** The "?" next to an evidence code; hovering it explains the code. */
+  evidenceHelp(rowIndex: number): Locator {
+    return this.evidenceCell(rowIndex).locator("sup");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("[data-testid='ot-table']");
+  sourceCell(rowIndex: number): Locator {
+    return this.controls.table.cell(rowIndex, 4);
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  /** Rows whose source is a publication: the cell is a button that opens the publications drawer. */
+  get rowsWithPublication(): Locator {
+    return this.controls.rows.filter({ has: this.page.locator("td:nth-child(5) button") });
   }
 
-  // Table search
-  getSearchInput(): Locator {
-    return this.getSection().locator("[data-testid='table-search-input']");
+  get publicationsDrawer(): Locator {
+    return this.page.getByTestId("publications-drawer");
   }
 
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
+  /** The evidence code of a row, without the help marker. */
+  async evidenceCode(rowIndex: number): Promise<string> {
+    await expect(this.evidenceCell(rowIndex)).toHaveText(/^[A-Z]{2,3}\?$/);
+    return (await this.evidenceCell(rowIndex).innerText()).replace("?", "").trim();
   }
 
-  // Publications drawer
-  getPublicationsDrawer(): Locator {
-    return this.getSection().locator("[data-testid='publications-drawer']");
-  }
-
-  async clickPublicationsDrawer(): Promise<void> {
-    await this.getPublicationsDrawer().first().click();
-  }
-
-  // Data downloader
-  getDataDownloader(): Locator {
-    return this.getSection().locator("[data-testid='data-downloader']");
-  }
-
-  async clickDataDownloader(): Promise<void> {
-    await this.getDataDownloader().click();
-  }
-
-  // Pagination controls
-  getPaginationFirstButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-first-button']");
-  }
-
-  getPaginationPreviousButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  getPaginationNextButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPaginationLastButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-last-button']");
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.getPaginationFirstButton().click();
-  }
-
-  async goToPreviousPage(): Promise<void> {
-    await this.getPaginationPreviousButton().click();
-  }
-
-  async goToNextPage(): Promise<void> {
-    await this.getPaginationNextButton().click();
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.getPaginationLastButton().click();
+  /** The Category value of every row on the current page. */
+  async categories(): Promise<string[]> {
+    return this.controls.table.columnTexts(0);
   }
 }

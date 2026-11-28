@@ -74,7 +74,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
         );
 
         return (
-          <Box sx={{ mb: 0.5, overflow: "hidden" }}>
+          <Box data-testid="clinical-record" sx={{ mb: 0.5, overflow: "hidden" }}>
             <Box
               sx={{
                 display: "inline-block",
@@ -204,6 +204,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
   return (
     <>
       <Box
+        data-testid="clinical-records"
         aria-busy={showingPrevious}
         sx={{
           position: "relative",
@@ -229,6 +230,7 @@ function RecordsCards({ records: recordsProp, loading, maxClinicalStage, selecte
       >
         <Typography
           variant="subtitle2"
+          data-testid="clinical-records-summary"
           sx={{
             position: "absolute",
             top: 5,

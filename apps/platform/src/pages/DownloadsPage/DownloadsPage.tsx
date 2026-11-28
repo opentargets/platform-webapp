@@ -117,10 +117,12 @@ function DatasetsPage() {
 
   return (
     <>
-      <Typography variant="h4" component="h1" paragraph>
+      <Typography variant="h4" component="h1" paragraph data-testid="downloads-title">
         {state.downloadsData?.name as string}
       </Typography>
-      <Typography paragraph>{state.downloadsData?.description as string}</Typography>
+      <Typography paragraph data-testid="downloads-description">
+        {state.downloadsData?.description as string}
+      </Typography>
 
       {config.profile.isPartnerPreview ? (
         <Alert severity="info" sx={{ marginBottom: 2 }}>
@@ -185,8 +187,9 @@ function DatasetsPage() {
           if (reason !== "clickaway") setUndoIds(null);
         }}
         message="Bag emptied"
+        ContentProps={{ "data-testid": "undo-snackbar" } as object}
         action={
-          <Button size="small" onClick={handleUndoEmpty} sx={{ color: "#fff", border: 0 }}>
+          <Button size="small" onClick={handleUndoEmpty} sx={{ color: "#fff", border: 0 }} data-testid="undo-button">
             Undo
           </Button>
         }
@@ -243,6 +246,7 @@ function CardsView() {
         />
       )}
       <Box
+        data-testid="dataset-grid"
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",

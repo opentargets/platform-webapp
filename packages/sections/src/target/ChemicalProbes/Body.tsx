@@ -71,7 +71,7 @@ const columns: OtTableColumn<ChemicalProbeRow>[] = [
     label: "Quality",
     renderCell: (row) => (
       <Tooltip title={row.isHighQuality ? "High quality" : "Low quality"}>
-        <span>
+        <span data-testid={`probe-quality-${row.isHighQuality ? "high" : "low"}`}>
           <ClinvarStars num={row.isHighQuality ? 1 : 0} length={1} />
         </span>
       </Tooltip>

@@ -251,9 +251,9 @@ function IntactTab({ ensgId, symbol }: { ensgId: string; symbol: string }) {
 
   return (
     <GridLegacy container spacing={10}>
-      <GridLegacy item xs={12} md={5}>
+      <GridLegacy item xs={12} md={5} data-testid="interactions-interactors">
         {/* table 1: interactions */}
-        <Typography variant="body1" gutterBottom>
+        <Typography variant="body1" gutterBottom data-testid="interactions-interactors-title">
           Interactors of
           <br />
           {symbol}{" "}
@@ -277,8 +277,8 @@ function IntactTab({ ensgId, symbol }: { ensgId: string; symbol: string }) {
       </GridLegacy>
 
       {/* table 2: evidence */}
-      <GridLegacy item xs={12} md={7}>
-        <Typography variant="body1" gutterBottom>
+      <GridLegacy item xs={12} md={7} data-testid="interactions-evidence">
+        <Typography variant="body1" gutterBottom data-testid="interactions-evidence-title">
           Interaction evidence of
           <br />
           {symbol}{" "}
