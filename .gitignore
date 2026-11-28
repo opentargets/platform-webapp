@@ -58,6 +58,9 @@ yarn-error.log*
 ./packages/platform-test/.env
 playwright-report/
 test-results/
+# local Playwright runs with --output test-results-<name>
+test-results-*/
+playwright-report-*/
 ./packages/platform-test/playwright-report/index.html
 packages/platform-test/playwright-report/**/index.html
 packages/platform-test/playwright-report/index.html

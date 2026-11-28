@@ -78,6 +78,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: BRAF
   ENSG00000157764: [
+    "targetgenomicregion",
     "drugs",
     "tractability",
     "safety",
@@ -99,6 +100,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: BRCA2
   ENSG00000139618: [
+    "targetgenomicregion",
     "tractability",
     "qtl-credible-sets",
     "baselineexpression",
@@ -117,6 +119,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: ADRB2 (safety liabilities)
   ENSG00000169252: [
+    "targetgenomicregion",
     "drugs",
     "tractability",
     "safety",
@@ -138,6 +141,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: BRD4 (chemical probes)
   ENSG00000141867: [
+    "targetgenomicregion",
     "drugs",
     "tractability",
     "safety",
@@ -159,6 +163,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: ALB (tissue-specific baseline expression; no drugs, safety or probes)
   ENSG00000163631: [
+    "targetgenomicregion",
     "tractability",
     "qtl-credible-sets",
     "baselineexpression",
@@ -176,6 +181,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: EGFR (membrane protein; isoform-specific subcellular location; large tables)
   ENSG00000146648: [
+    "targetgenomicregion",
     "drugs",
     "tractability",
     "safety",
@@ -198,6 +204,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: OR4D5 (sparse data: one pathway, String interactions only, AlphaFold structure only)
   ENSG00000171014: [
+    "targetgenomicregion",
     "tractability",
     "baselineexpression",
     "depmapessentiality",
@@ -212,13 +219,26 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   ],
 
   // Target: MALAT1 (lncRNA: Gene Ontology terms but no protein, so no location, constraint, structure, interactions or pathways)
-  ENSG00000251562: ["qtl-credible-sets", "baselineexpression", "geneontology", "bibliography"],
+  ENSG00000251562: [
+    "targetgenomicregion",
+    "qtl-credible-sets",
+    "baselineexpression",
+    "geneontology",
+    "bibliography",
+  ],
 
   // Target: HOTAIR (lncRNA without any protein annotation, Gene Ontology included)
-  ENSG00000228630: ["qtl-credible-sets", "baselineexpression", "mousephenotypes", "bibliography"],
+  ENSG00000228630: [
+    "targetgenomicregion",
+    "qtl-credible-sets",
+    "baselineexpression",
+    "mousephenotypes",
+    "bibliography",
+  ],
 
   // Target: WDR5 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
   ENSG00000196363: [
+    "targetgenomicregion",
     "tractability",
     "qtl-credible-sets",
     "chemicalprobes",
@@ -236,6 +256,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: ATAD2 (had a Target Enabling Package until 26.09; see e2e/pages/target/targetTep.spec.ts)
   ENSG00000156802: [
+    "targetgenomicregion",
     "tractability",
     "qtl-credible-sets",
     "chemicalprobes",
@@ -253,6 +274,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Target: CYP2C19 (pharmacogenetics; no drugs, no cancer hallmarks)
   ENSG00000165841: [
+    "targetgenomicregion",
     "tractability",
     "safety",
     "pharmacogenetics",
@@ -272,10 +294,11 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   ],
 
   // Target: MIR1302-2HG (lncRNA with no literature, credible sets, mouse phenotypes or homologues)
-  ENSG00000243485: ["baselineexpression", "geneontology"],
+  ENSG00000243485: ["targetgenomicregion", "baselineexpression", "geneontology"],
 
   // Target: PLK1 (core essential gene; no pharmacogenetics, cancer hallmarks or mouse phenotypes)
   ENSG00000166851: [
+    "targetgenomicregion",
     "drugs",
     "tractability",
     "safety",
@@ -315,6 +338,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Variant: intron variant overlapping IL6R
   "1_154453788_C_T": [
     "in-silico-predictors",
+    "variantgenomicregion",
     "variant-effect-predictor",
     "gwas-credible-sets",
     "qtl-credible-sets",
@@ -324,6 +348,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   "19_44908822_C_T": [
     "in-silico-predictors",
     "molecular-structure",
+    "variantgenomicregion",
     "variant-effect-predictor",
     "eva",
     "uniprot-variants",
@@ -337,6 +362,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   "7_95308134_T_C": [
     "in-silico-predictors",
     "molecular-structure",
+    "variantgenomicregion",
     "variant-effect-predictor",
     "gwas-credible-sets",
     "qtl-credible-sets",
@@ -346,6 +372,7 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
   // Variant: 12 base deletion in an intron of a lncRNA gene
   "1_916631_AGAGCCGGCCCT_A": [
     "in-silico-predictors",
+    "variantgenomicregion",
     "variant-effect-predictor",
     "qtl-credible-sets",
     "enhancer-to-gene-predictions",
@@ -511,15 +538,21 @@ export const EXPECTED_SECTIONS: Record<string, readonly string[]> = {
 
   // Credible set: GWAS, from GCST90475211
   a3ea67115f6db323b2eae6c1bf6cda7e: [
+    "crediblesetgenomicregion",
     "variants",
-    "locus2gene",
     "enhancer-to-gene-predictions",
     "gwas-coloc",
+    "locus2gene",
     "molqtl-coloc",
   ],
 
   // Credible set: pQTL, from UKB_PPP_EUR_LPA_P08519_OID30747_v1
-  "5848564f6c070538c3bfe980357d4785": ["variants", "enhancer-to-gene-predictions", "gwas-coloc"],
+  "5848564f6c070538c3bfe980357d4785": [
+    "crediblesetgenomicregion",
+    "variants",
+    "enhancer-to-gene-predictions",
+    "gwas-coloc",
+  ],
 };
 
 /** The sections an entity must render. Throws for an entity the manifest does not know. */

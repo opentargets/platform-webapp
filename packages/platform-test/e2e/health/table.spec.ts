@@ -573,9 +573,9 @@ test.describe("Table component: server-side (OtTableServer)", () => {
     await test.step("the last page of the descending order holds the strongest level", async () => {
       await table.lastPageButton.click();
       await table.expectPosition(lastPageStart(total, PAGE_SIZE), total, total);
-      const lastLevels = await levels(table);
-      expectMonotonic(lastLevels, "desc");
-      expect(lastLevels.at(-1)).toBe(strongest);
+      // the position label moves before the new page's rows arrive, so wait for the rows
+      await expect.poll(async () => (await levels(table)).at(-1)).toBe(strongest);
+      expectMonotonic(await levels(table), "desc");
     });
 
     await test.step("a third click clears the sort and goes back to the first page", async () => {

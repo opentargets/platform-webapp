@@ -5,7 +5,10 @@ import {
   PHARMACOGENOMICS_COLUMNS,
 } from "../../../POM/objects/widgets/Drug/drugPharmacogenomicsSection";
 import { closeDrawer, expectExternalLink } from "../../../POM/objects/widgets/Drug/sectionTable";
-import { stubEuropePmc } from "../../../POM/objects/widgets/shared/sectionDataControls";
+import {
+  stubEuropePmc,
+  waitForOperation,
+} from "../../../POM/objects/widgets/shared/sectionDataControls";
 import { DrugPage } from "../../../POM/page/drug/drug";
 import { drugFacts, drugIds } from "../../../POM/page/drug/drugData";
 import { expectSectionLoaded } from "../../../utils/sections";
@@ -32,8 +35,12 @@ test.describe("Drug page: Pharmacogenetics", () => {
     const { primary } = drugIds(testConfig);
     const drugPage = new DrugPage(page);
     const pgx = new DrugPharmacogenomicsSection(page);
+    const response = waitForOperation<{
+      drug: { pharmacogenomics: { rows: { variantId: string | null }[] } };
+    }>(page, "DrugPharmacogenomicsQuery");
     await drugPage.goto(primary);
     await expectSectionLoaded(page, DrugPharmacogenomicsSection.id);
+    const apiRows = (await response).data.drug.pharmacogenomics.rows;
 
     await test.step("title and description", async () => {
       await expect(drugPage.sectionTitle(DrugPharmacogenomicsSection.id)).toHaveText(
@@ -82,14 +89,23 @@ test.describe("Drug page: Pharmacogenetics", () => {
       }
     });
 
-    await test.step("genotype ID: links to the variant page of its first allele", async () => {
-      const links = pgx.column(PGX_COLUMN.genotypeId).getByRole("link");
-      await expect(links.first()).toBeVisible();
-      for (const link of await links.all()) {
-        const genotype = (await link.innerText()).replace(/\s+/g, "");
-        expect(genotype).toMatch(/^(\d{1,2}|X|Y|MT)_\d+_[ACGT]+_[ACGT]+(,[ACGT]+)?$/);
-        await expect(link).toHaveAttribute("href", `/variant/${genotype.split(",")[0]}`);
+    await test.step("genotype ID: links to the variant page of the row's variantId, or is plain text", async () => {
+      expect(apiRows.length, "the API rows of the first page are the table rows").toBe(10);
+      let linked = 0;
+      for (const [index, apiRow] of apiRows.entries()) {
+        const cell = pgx.table.cell(index, PGX_COLUMN.genotypeId);
+        const genotype = (await cell.innerText()).replace(/\s+/g, "");
+        expect(genotype).toMatch(/^(\d{1,2}|X|Y|MT)_\d+_[ACGT]+_[ACGT]+(,[ACGT]+)?$|^N\/A$/);
+        const links = cell.getByRole("link");
+        if (apiRow.variantId === null) {
+          await expect(links, `${genotype} has no Platform variant: no link`).toHaveCount(0);
+        } else {
+          linked++;
+          await expect(links, `${genotype} has one link`).toHaveCount(1);
+          await expect(links).toHaveAttribute("href", `/variant/${apiRow.variantId}`);
+        }
       }
+      expect(linked, "some rows link to a variant").toBeGreaterThan(0);
     });
 
     await test.step("variant consequence: a VEP chip linking to the sequence ontology", async () => {

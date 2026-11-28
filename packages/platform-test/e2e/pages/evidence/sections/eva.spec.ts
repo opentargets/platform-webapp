@@ -441,10 +441,15 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
       "variantId",
       "variantRsId",
       "variantHgvsId",
+      "clinvarId",
       "variantConsequence",
+      "directionOnTarget",
+      "directionOnTrait",
       "clinicalSignificances",
       "allelicRequirements",
       "reviewStatus",
+      "score",
+      "literature",
     ];
 
     const json = await section.controls.downloadJson();
@@ -465,6 +470,15 @@ test.describe("Evidence page: ClinVar (EVA)", () => {
     expect(json.rows.map((row) => row.clinicalSignificances)).toEqual(
       evidences.rows.map((row) => row.clinicalSignificances)
     );
+
+    expect(json.rows.map((row) => row.clinvarId)).toEqual(evidences.rows.map((row) => row.studyId));
+    expect(json.rows.map((row) => row.directionOnTarget)).toEqual(
+      evidences.rows.map((row) => row.directionOnTarget)
+    );
+    expect(json.rows.map((row) => row.directionOnTrait)).toEqual(
+      evidences.rows.map((row) => row.directionOnTrait)
+    );
+    expect(json.rows.map((row) => row.score)).toEqual(evidences.rows.map((row) => row.score));
 
     const tsv = await section.controls.downloadTsv();
     expect(tsv.filename).toBe("eva-evidence.tsv");
