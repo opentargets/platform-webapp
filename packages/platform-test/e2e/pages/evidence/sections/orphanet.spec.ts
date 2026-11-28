@@ -192,19 +192,20 @@ test.describe("Evidence page: Orphanet", () => {
       list,
       `orphanet-${MECP2_NDD.ensgId}-${MECP2_NDD.efoId}`
     );
+    // export column names are the camelCased labels of the section's exportColumns
     expect(header).toEqual([
-      "Disease",
-      "Disease ID",
-      "Disease from source",
-      "Target from source",
-      "Target from source ID",
-      "Allele origins",
-      "Functional consequence",
-      "Functional consequence ID",
-      "Confidence",
-      "Publication IDs",
+      "disease",
+      "diseaseId",
+      "diseaseFromSource",
+      "targetFromSource",
+      "targetFromSourceId",
+      "alleleOrigins",
+      "functionalConsequence",
+      "functionalConsequenceId",
+      "confidence",
+      "publicationIDs",
     ]);
-    expect(json.map((row) => row["Disease ID"])).toEqual(list.rows.map((row) => row.disease.id));
+    expect(json.map((row) => row.diseaseId)).toEqual(list.rows.map((row) => row.disease.id));
   });
 
   test("the API query drawer is loaded with the section's query", async ({ page }) => {
