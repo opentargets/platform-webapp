@@ -438,9 +438,12 @@ test.describe("Disease page: Bibliography", () => {
           operationName?: string;
           variables?: { startYear?: number | null };
         } | null;
+        // the slider sends a request on every move; wait for the one that has left the
+        // earliest year, not the first intermediate one
         return (
           body?.operationName === "DiseaseBibliographyQuery" &&
-          typeof body.variables?.startYear === "number"
+          typeof body.variables?.startYear === "number" &&
+          body.variables.startYear > earliestYear
         );
       });
       await bibliography.startThumb.focus();
