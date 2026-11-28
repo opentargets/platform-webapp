@@ -54,6 +54,9 @@ const METHOD_LABELS: Record<string, string> = {
   PICS: "PICS",
   SUSIE: "SuSiE",
   SUSIE_INF: "SuSiE-inf",
+  // the API serialises the raw data value, not the enum name (ot-ui-apps#1252)
+  SuSiE: "SuSiE",
+  SuSiE_inf: "SuSiE-inf",
 };
 
 /** Assert the cells of one rendered row against the API record it was built from. */
