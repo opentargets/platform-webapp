@@ -50,7 +50,7 @@ function FilterChip({ onDelete, label, tootltipContent, maxWidth = 150, testId }
 
 function ActiveFiltersPanel() {
   const { facetFilters, includeMeasurements, entitySearch, modifiedSourcesDataControls, sorting, entityToGet } = useAotfQueryState();
-  const { facetFilterSelect, dispatch, resetDatasourceControls, resetSorting, handleEntitySearch } = useAotfQueryDispatch();
+  const { facetFilterSelect, dispatch, resetDatasourceControls, resetSorting, handleEntitySearch, resetAllFilters } = useAotfQueryDispatch();
   const { pinnedEntries, uploadedEntries, setPinnedEntries, setUploadedEntries } = useAotfURLState();
 
   const somePinned = pinnedEntries.length > 0;
@@ -79,13 +79,7 @@ function ActiveFiltersPanel() {
   };
 
   const setAllFilters = () => {
-    if (somePinned) setPinnedEntries([]);
-    if (someUploaded) setUploadedEntries([]);
-    if (entitySearch) handleEntitySearch("");
-    if (modifiedSourcesDataControls) resetDatasourceControls();
-    if (facetFilters.length > 0) facetFilterSelect([]);
-    if (tableSorted) resetSorting();
-    if (showExcludeMeasurements) dispatch(setIncludeMeasurements(true));
+    resetAllFilters();
   };
 
   return (
