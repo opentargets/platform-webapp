@@ -25,6 +25,7 @@ function DetailPlot({
 
   return (
     <Box
+      data-testid="baseline-expression-detail-plot"
       sx={{
         backgroundColor: "#fff",
         borderStyle: "solid",

@@ -1,5 +1,23 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
+/**
+ * Interactor for the Association On-The-Fly (AOTF) Table component.
+ *
+ * The AOTF table displays target-disease associations with scores across
+ * different data types. It supports multiple sections (Pinned, Uploaded, Core)
+ * and provides functionality for sorting, filtering, and pagination.
+ *
+ * @example
+ * ```typescript
+ * const table = new AotfTable(page);
+ * await table.waitForTableLoad();
+ * const rowCount = await table.getRowCount();
+ * const entityName = await table.getEntityName(0);
+ * ```
+ *
+ * @category AOTF
+ * @remarks Section ID: `associations-table`
+ */
 export class AotfTable {
   page: Page;
 
@@ -150,30 +168,12 @@ export class AotfTable {
 
     for (let i = 0; i < rowCount; i++) {
       const nameCell = this.getNameCell(i, prefix);
-      const text = await nameCell.textContent();
+      // Bounded timeout: a row that disappears fails here, with the locator in the message.
+      const text = await nameCell.textContent({ timeout: 5000 });
 
       if (text?.includes(geneSymbol)) {
         return i;
       }
-    }
-
-    return null;
-  }
-
-  // Wait for specific gene to appear in table
-  async waitForGeneInTable(
-    geneSymbol: string,
-    prefix: string = "core",
-    timeout: number = 10000
-  ): Promise<number | null> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeout) {
-      const rowIndex = await this.findRowIndexByGeneSymbol(geneSymbol, prefix);
-      if (rowIndex !== null) {
-        return rowIndex;
-      }
-      await this.page.waitForTimeout(500);
     }
 
     return null;
@@ -221,29 +221,21 @@ export class AotfTable {
     return text?.trim() || null;
   }
 
-  // Check if table is loading
-  getLoadingIndicator(): Locator {
-    return this.page.locator("[data-testid='table-loading']");
-  }
-
+  // Row cells (name-cell, score-cell-*) render as MUI Skeletons while their
+  // data is (re)loading - there is no dedicated loading-indicator element,
+  // so the skeleton count is the only reliable "table is loading" signal.
   async isLoading(): Promise<boolean> {
-    return await this.getLoadingIndicator().isVisible();
+    return (await this.getTable().locator(".MuiSkeleton-root").count()) > 0;
   }
 
-  // Wait for table to load
+  // Wait for the table to load, or to finish re-fetching after a filter, sort or facet
+  // change. Row cells render as skeletons while their data loads, so the wait is for the
+  // first row to be present and every skeleton to be gone.
   async waitForTableLoad(): Promise<void> {
-    await this.page.waitForSelector(".TAssociations", { state: "visible" });
-    // Wait for loading to finish if present
-    const loadingVisible = await this.getLoadingIndicator()
-      .isVisible()
-      .catch(() => false);
-    if (loadingVisible) {
-      await this.getLoadingIndicator().waitFor({ state: "hidden" });
-    }
-    // Wait for at least one row to be present with actual content
-    await this.page.waitForSelector("[data-testid^='table-row-core']", { state: "visible" });
-    // Give a moment for content to populate
-    await this.page.waitForTimeout(500);
+    const timeout = 45_000;
+    await expect(this.getTable()).toBeVisible({ timeout });
+    await expect(this.getTableRows().first()).toBeVisible({ timeout });
+    await expect(this.getTable().locator(".MuiSkeleton-root")).toHaveCount(0, { timeout });
   }
 
   // Get all data cells with scores in a specific row

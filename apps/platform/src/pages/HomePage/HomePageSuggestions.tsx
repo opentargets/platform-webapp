@@ -31,7 +31,13 @@ interface SearchSuggestion {
 function HomePageSuggestions() {
   const { searchSuggestions } = useSearchState() as { searchSuggestions: SearchSuggestion[] };
   return (
-    <GridLegacy container justifyContent="center" gap={1.5} sx={{ mt: 4 }}>
+    <GridLegacy
+      container
+      justifyContent="center"
+      gap={1.5}
+      sx={{ mt: 4 }}
+      data-testid="home-suggestions"
+    >
       <Link asyncTooltip to={`/target/${searchSuggestions[0].id}/associations`}>
         <StyledChip
           variant="filled"

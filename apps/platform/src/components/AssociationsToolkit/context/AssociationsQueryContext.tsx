@@ -25,6 +25,7 @@ import {
   resetToInitialState,
   setDataSourceControl,
   setEnableIndirect,
+  setIncludeMeasurements,
 } from "./aotfActions";
 import type { Action, QueryState, Pagination, Sorting } from "../types";
 import { ENTITY } from "../types";
@@ -86,6 +87,7 @@ export interface QueryContextDispatch {
   facetFilterSelect: (facets: Facet[]) => void;
   setEnableIndirect: (value: boolean) => void;
   handleEntitySearch: (value: string) => void;
+  resetAllFilters: () => void;
 }
 
 const AssociationsQueryStateContext = createContext<QueryContextState | null>(null);
@@ -273,6 +275,22 @@ export function AssociationsQueryProvider({
     [updateUrlParams]
   );
 
+  // Clears every filter with a single navigate. Separate navigate calls in one
+  // handler each start from the same stale location, so the last one would win
+  // and restore the params the others removed.
+  const resetAllFilters = useCallback(() => {
+    dispatch(resetDataSourceControl());
+    dispatch(setIncludeMeasurements(true));
+    updateUrlParams({
+      facets: null,
+      sort: null,
+      q: null,
+      pinned: null,
+      uploaded: null,
+      page: null,
+    });
+  }, [updateUrlParams]);
+
   // --- Context values ---
 
   const queryState = useMemo<QueryContextState>(
@@ -304,6 +322,7 @@ export function AssociationsQueryProvider({
       facetFilterSelect,
       setEnableIndirect: handleSetEnableIndirect,
       handleEntitySearch,
+      resetAllFilters,
     }),
     [
       handlePaginationChange,
@@ -316,6 +335,7 @@ export function AssociationsQueryProvider({
       facetFilterSelect,
       handleSetEnableIndirect,
       handleEntitySearch,
+      resetAllFilters,
     ]
   );
 

@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, ButtonBase, Drawer, IconButton, Paper, Typography } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import { naLabel } from "@ot/constants";
+import { epmcUrl } from "@ot/utils";
 import { useState } from "react";
 import { v1 } from "uuid";
 import Link from "./Link";
@@ -121,7 +122,7 @@ export function DirectionalityList({ variantAnnotation }) {
               <Box sx={{ typography: "subtitle2", fontWeight: "bold" }} component="span">
                 Publication:{" "}
               </Box>
-              <Link external to={literature}>
+              <Link external to={epmcUrl(literature)}>
                 {literature}{" "}
               </Link>{" "}
             </Box>
@@ -166,7 +167,11 @@ function DirectionalityDrawer({
 
   return (
     <>
-      <StyledButtonBase disableRipple onClick={toggleDrawer}>
+      <StyledButtonBase
+        disableRipple
+        onClick={toggleDrawer}
+        data-testid="directionality-drawer-trigger"
+      >
         <Typography variant="body2">
           {" "}
           {customLabel ||
@@ -176,11 +181,16 @@ function DirectionalityDrawer({
         </Typography>
       </StyledButtonBase>
 
-      <StyledDrawer anchor="right" open={open} onClose={closeDrawer}>
+      <StyledDrawer
+        anchor="right"
+        open={open}
+        onClose={closeDrawer}
+        data-testid="directionality-drawer"
+      >
         <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <StyledTitleCaption>{caption}</StyledTitleCaption>
-            <IconButton onClick={closeDrawer}>
+            <IconButton onClick={closeDrawer} data-testid="drawer-close">
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>

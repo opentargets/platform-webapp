@@ -4,7 +4,7 @@ import { Link, DisplayVariantId, LongText, CardContent, Typography } from "ui";
 
 function VariantDetail({ data }) {
   return (
-    <CardContent>
+    <CardContent data-testid="search-top-hit-variant">
       <Typography
         color="primary"
         variant="h5"

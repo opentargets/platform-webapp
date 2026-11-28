@@ -1,124 +1,62 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { sectionLocator, sectionTestId } from "../../../../utils/sections";
+import { OtTable } from "../../../../utils/table";
 
+/** Column positions of the shared trait studies table. */
+export const SHARED_COLUMNS = {
+  study: 0,
+  sharedDisease: 1,
+  reportedTrait: 2,
+  sampleSize: 3,
+  cohorts: 4,
+  publication: 5,
+} as const;
+
+/** The "Shared Trait Studies" section of a GWAS study page (server-side table). */
 export class SharedTraitStudiesSection {
-  page: Page;
+  static readonly id = "shared-trait-studies";
+  readonly section: Locator;
+  readonly table: OtTable;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, SharedTraitStudiesSection.id);
+    this.table = new OtTable(this.section);
   }
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-shared-trait-studies']");
+  get title(): Locator {
+    return this.page.getByTestId(`${sectionTestId(SharedTraitStudiesSection.id)}-header`);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  // Section header
-  getSectionHeader(): Locator {
-    return this.page.locator("[data-testid='section-shared-trait-studies-header']");
+  /** The cell of one column in one row. */
+  cell(row: number, column: keyof typeof SHARED_COLUMNS): Locator {
+    return this.table.cell(row, SHARED_COLUMNS[column]);
   }
 
-  async getSectionTitle(): Promise<string | null> {
-    return await this.getSectionHeader().textContent();
+  studyLink(row: number): Locator {
+    return this.cell(row, "study").getByRole("link");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  diseaseLinks(row: number): Locator {
+    return this.cell(row, "sharedDisease").getByRole("link");
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  publicationTrigger(row: number): Locator {
+    return this.cell(row, "publication").getByTestId("publications-drawer-trigger");
   }
 
-  getTableRows(): Locator {
-    return this.getTable().locator("tbody tr");
+  /** The study ids on the current page, in order. */
+  async studyIds(): Promise<string[]> {
+    return this.table.columnTexts(SHARED_COLUMNS.study);
   }
 
-  async getRowCount(): Promise<number> {
-    return await this.getTableRows().count();
-  }
-
-  // Get cell data
-  getCell(rowIndex: number, columnIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("td").nth(columnIndex);
-  }
-
-  async getCellText(rowIndex: number, columnIndex: number): Promise<string | null> {
-    return await this.getCell(rowIndex, columnIndex).textContent();
-  }
-
-  // Get study link
-  getStudyLink(rowIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("a[href*='/study/']");
-  }
-
-  async clickStudyLink(rowIndex: number): Promise<void> {
-    await this.getStudyLink(rowIndex).click();
-  }
-
-  async getStudyId(rowIndex: number): Promise<string | null> {
-    return await this.getStudyLink(rowIndex).textContent();
-  }
-
-  // Get disease link
-  getDiseaseLink(rowIndex: number): Locator {
-    return this.getTableRows().nth(rowIndex).locator("a[href*='/disease/']");
-  }
-
-  async clickDiseaseLink(rowIndex: number): Promise<void> {
-    await this.getDiseaseLink(rowIndex).click();
-  }
-
-  async getDiseaseName(rowIndex: number): Promise<string | null> {
-    return await this.getDiseaseLink(rowIndex).textContent();
-  }
-
-  // Search/Filter
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[type='text']");
-  }
-
-  async searchStudy(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-  }
-
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-  }
-
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
-  }
-
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
-  }
-
-  // Wait for section to load
-  async waitForSectionLoad(): Promise<void> {
-    await this.getSection().waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-    await this.page.waitForTimeout(500);
+  /** The sample sizes on the current page, in order, as numbers. */
+  async sampleSizes(): Promise<number[]> {
+    return (await this.table.columnTexts(SHARED_COLUMNS.sampleSize)).map((text) =>
+      Number(text.replace(/,/g, ""))
+    );
   }
 }

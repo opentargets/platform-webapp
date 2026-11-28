@@ -111,9 +111,24 @@ const exportColumns: OtTableColumn<ClinvarRow>[] = [
     exportValue: (row: ClinvarRow) => row.variantHgvsId,
   },
   {
+    id: "studyId",
+    label: "clinvarId",
+    exportValue: (row: ClinvarRow) => row.studyId,
+  },
+  {
     id: "variantConsequence",
     label: "variantConsequence",
     exportValue: (row: ClinvarRow) => row.variantFunctionalConsequenceLabel,
+  },
+  {
+    id: "directionOnTarget",
+    label: "directionOnTarget",
+    exportValue: (row: ClinvarRow) => row.directionOnTarget,
+  },
+  {
+    id: "directionOnTrait",
+    label: "directionOnTrait",
+    exportValue: (row: ClinvarRow) => row.directionOnTrait,
   },
   {
     id: "clinicalSignificances",
@@ -129,6 +144,16 @@ const exportColumns: OtTableColumn<ClinvarRow>[] = [
     id: "reviewStatus",
     label: "reviewStatus",
     exportValue: (row: ClinvarRow) => row.confidence,
+  },
+  {
+    id: "score",
+    label: "score",
+    exportValue: (row: ClinvarRow) => row.score,
+  },
+  {
+    id: "literature",
+    label: "literature",
+    exportValue: (row: ClinvarRow) => row.literature?.filter(id => id !== "NA"),
   },
 ];
 
@@ -262,6 +287,9 @@ function getColumns(label: EvidenceBodyProps["label"]): OtTableColumn<ClinvarRow
       label: (
         <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#clinvar"></DirectionOfEffectTooltip>
       ),
+      exportLabel: "Direction of effect",
+      exportValue: ({ directionOnTarget, directionOnTrait }) =>
+        [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
       renderCell: ({ directionOnTarget, directionOnTrait }) => {
         return (
           <DirectionOfEffectIcon

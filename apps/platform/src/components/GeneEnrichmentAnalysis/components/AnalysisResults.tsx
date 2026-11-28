@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Alert, Box, ToggleButton, ToggleButtonGroup, Typography } from "ui";
 import { useState } from "react";
 import type { GseaResult, InputOverlap } from "../api/gseaApi";
+import type { Gene } from "../types";
 import ResultsCustomSunburst from "./ResultsCustomSunburst";
 import { ResultsEnrichmentMap } from "./ResultsEnrichmentMap/";
 import { EnrichmentMapControlsProvider } from "./ResultsEnrichmentMap/utils/EnrichmentMapControlsContext";
@@ -17,9 +18,11 @@ interface AnalysisResultsProps {
   onReset: () => void;
   activeRunId?: string | null;
   diseaseId?: string;
+  /** Input genes of the run; carries Ensembl IDs for target links */
+  genes?: Gene[];
 }
 const MIN_OVERLAP_COUNT = 25; // Minimum number of genes required for analysis
-function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseId }: AnalysisResultsProps) {
+function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseId, genes }: AnalysisResultsProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const handleViewChange = (_: React.MouseEvent<HTMLElement>, newMode: ViewMode | null) => {
@@ -94,7 +97,7 @@ function AnalysisResults({ results, inputOverlap, onReset, activeRunId, diseaseI
             library={inputOverlap?.library}
           />
         )}
-         {viewMode === "network" && <ResultsEnrichmentMap results={results} diseaseId={diseaseId} />}
+         {viewMode === "network" && <ResultsEnrichmentMap results={results} genes={genes} diseaseId={diseaseId} />}
       </Box>
     </Box>
     </EnrichmentMapControlsProvider>

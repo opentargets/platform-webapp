@@ -46,6 +46,7 @@ function BtnGroup({ btnGroup, defaultActiveId }: BtnGroupPropType) {
               }),
             }}
             onClick={() => setActiveTab(e)}
+            data-testid={`btn-group-tab-${e}`}
             key={v1()}
           >
             {btnGroup[e].title}
@@ -53,7 +54,7 @@ function BtnGroup({ btnGroup, defaultActiveId }: BtnGroupPropType) {
         ))}
       </Box>
       <Divider />
-      <Box>{btnGroup[activeId].component}</Box>
+      <Box data-testid="btn-group-panel">{btnGroup[activeId].component}</Box>
     </Box>
   );
 }

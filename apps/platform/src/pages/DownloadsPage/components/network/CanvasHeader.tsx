@@ -38,7 +38,11 @@ function CanvasHeader({
       })}
     >
       <BasketScopeSwitch scope={scope} basketCount={basketCount} onChange={onScopeChange} />
-      <Typography component="span" sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}>
+      <Typography
+        component="span"
+        data-testid="network-hint"
+        sx={theme => ({ fontSize: ".75rem", color: theme.palette.grey[600] })}
+      >
         {hint}
       </Typography>
       {selectedLabel && <SelectedChip label={selectedLabel} onClear={onClearSelection} />}
@@ -86,6 +90,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
     <Box
       role="radiogroup"
       aria-label="Datasets shown"
+      data-testid="network-scope"
       sx={segmentGroupSx}
     >
       <Box
@@ -93,6 +98,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
         type="button"
         role="radio"
         aria-checked={scope === "all"}
+        data-testid="network-scope-all"
         onClick={() => onChange("all")}
         sx={segmentSx(scope === "all")}
       >
@@ -103,6 +109,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
         type="button"
         role="radio"
         aria-checked={scope === "basket"}
+        data-testid="network-scope-basket"
         aria-disabled={basketDisabled || undefined}
         onClick={() => {
           if (!basketDisabled) onChange("basket");
@@ -120,6 +127,7 @@ export function BasketScopeSwitch({ scope, basketCount, onChange }: BasketScopeS
 export function SelectedChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <Box
+      data-testid="network-selected-chip"
       sx={theme => ({
         display: "inline-flex",
         alignItems: "center",
@@ -143,6 +151,7 @@ export function SelectedChip({ label, onClear }: { label: string; onClear: () =>
         type="button"
         onClick={onClear}
         aria-label="Clear selection"
+        data-testid="network-selected-clear"
         sx={{
           display: "inline-flex",
           alignItems: "center",
@@ -187,13 +196,13 @@ export function CanvasControls({ controller }: { controller: GraphController | n
   const disabled = !controller;
   return (
     <Box role="group" aria-label="Canvas controls" sx={{ display: "inline-flex" }}>
-      <Box component="button" type="button" aria-label="Zoom out" disabled={disabled} onClick={() => controller?.zoomOut()} sx={buttonSx}>
+      <Box component="button" type="button" aria-label="Zoom out" data-testid="network-zoom-out" disabled={disabled} onClick={() => controller?.zoomOut()} sx={buttonSx}>
         −
       </Box>
-      <Box component="button" type="button" aria-label="Zoom in" disabled={disabled} onClick={() => controller?.zoomIn()} sx={buttonSx}>
+      <Box component="button" type="button" aria-label="Zoom in" data-testid="network-zoom-in" disabled={disabled} onClick={() => controller?.zoomIn()} sx={buttonSx}>
         +
       </Box>
-      <Box component="button" type="button" disabled={disabled} onClick={() => controller?.fit()} sx={buttonSx}>
+      <Box component="button" type="button" data-testid="network-zoom-fit" disabled={disabled} onClick={() => controller?.fit()} sx={buttonSx}>
         Fit
       </Box>
     </Box>

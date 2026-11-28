@@ -1,147 +1,75 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { ServerTableSection, type SortableColumn } from "./serverTableSection";
 
-/**
- * Interactor for Enhancer-to-Gene Predictions section on Credible Set page
- * Section ID: Enhancer_to_gene_predictions
- * data-testid: section-enhancer-to-gene-predictions (lowercase with hyphens)
- */
-export class CredibleSetEnhancerToGenePredictionsSection {
-  constructor(private page: Page) {}
-
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-enhancer-to-gene-predictions']");
-  }
-
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
-  }
-
+/** The "Enhancer-to-gene predictions" section of the credible set page (ENCODE rE2G). */
+export class CredibleSetEnhancerToGenePredictionsSection extends ServerTableSection {
+  static readonly id = "enhancer-to-gene-predictions";
+  static readonly operation = "CredibleSetEnhancerToGenePredictionsQuery";
+  /** The header cells as rendered: the "?" is the help icon of a column with a tooltip. */
+  static readonly headers = [
+    "Gene",
+    "Affected tissue/cell",
+    "Interval type",
+    "Study",
+    "Distance from start site (bp)",
+    "Interval size (bp)",
+    "Interval range",
+    "Score?",
+  ];
+  static readonly column = {
+    gene: 0,
+    tissue: 1,
+    intervalType: 2,
+    study: 3,
+    distance: 4,
+    size: 5,
+    range: 6,
+    score: 7,
+  } as const;
+  static readonly searchPlaceholder = "Search all columns...";
+  /** What the search box asks the server to look in: the fields of the first column. */
+  static readonly searchFields = [
+    "BIOSAMPLE_ID",
+    "BIOSAMPLE_NAME",
+    "INTERVAL_TYPE",
+    "STUDY_ID",
+    "TARGET_APPROVED_SYMBOL",
+  ];
+  /** The sort the table opens with. */
+  static readonly defaultSort = { key: "SCORE", direction: "DESCENDING" } as const;
   /**
-   * Wait for the section to finish loading (no skeleton loaders)
+   * The columns the server can sort, with the sort key each one sends. Every prediction of the
+   * test credible sets has the same interval type (all genic or all intergenic), so that
+   * column cannot show its order: its kind is "unreadable".
    */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  static readonly sortable: readonly SortableColumn[] = [
+    { header: "Interval type", key: "INTERVAL_TYPE", column: 2, kind: "unreadable" },
+    { header: "Distance from start site (bp)", key: "DISTANCE_TO_TSS", column: 4, kind: "number" },
+    { header: "Interval size (bp)", key: "INTERVAL_SIZE", column: 5, kind: "number" },
+    { header: "Score", key: "SCORE", column: 7, kind: "number" },
+  ];
+  /** The columns with no sort field: their titles are not controls. */
+  static readonly notSortable = ["Gene", "Affected tissue/cell", "Study", "Interval range"];
 
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector(
-            "[data-testid='section-enhancer-to-gene-predictions']"
-          );
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  constructor(page: Page) {
+    super(
+      page,
+      CredibleSetEnhancerToGenePredictionsSection.id,
+      CredibleSetEnhancerToGenePredictionsSection.operation
+    );
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  geneLink(rowIndex: number): Locator {
+    return this.link(rowIndex, CredibleSetEnhancerToGenePredictionsSection.column.gene);
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  /** The external link to the biosample ontology term. */
+  tissueLink(rowIndex: number): Locator {
+    return this.link(rowIndex, CredibleSetEnhancerToGenePredictionsSection.column.tissue);
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
-  }
-
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
-  }
-
-  // Target gene link
-  async getTargetGeneLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/target/']");
-  }
-
-  async clickTargetGeneLink(rowIndex: number): Promise<void> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    await link.click();
-  }
-
-  async getTargetGeneName(rowIndex: number): Promise<string | null> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    return await link.textContent();
-  }
-
-  async hasTargetGeneLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getTargetGeneLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  // E2G Score
-  async getE2GScore(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    // Score is typically in a specific column
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
-  }
-
-  // Cell text by column index
-  async getCellText(rowIndex: number, columnIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(columnIndex);
-    return await cell.textContent();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
-  }
-
-  async clearSearch(): Promise<void> {
-    await this.getSearchInput().clear();
-    await this.waitForLoad();
-  }
-
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Next Page']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Previous Page']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
-  }
-
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
+  /** The external link to the ENCODE experiment. */
+  studyLink(rowIndex: number): Locator {
+    return this.link(rowIndex, CredibleSetEnhancerToGenePredictionsSection.column.study);
   }
 }

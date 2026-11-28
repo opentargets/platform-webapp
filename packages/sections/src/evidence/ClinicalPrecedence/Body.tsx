@@ -202,6 +202,9 @@ const columns: OtTableColumn<ClinicalPrecedenceRow>[] = [
     label: (
       <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#clinical-precedence"></DirectionOfEffectTooltip>
     ),
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
         <Box sx={{ maxWidth: "140px" }}>

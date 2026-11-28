@@ -10,7 +10,7 @@ function CountInfo() {
 
   return (
     <Box sx={{ mt: 4, mr: 3 }}>
-      <InputLabel>{getLabelText()}</InputLabel>
+      <InputLabel data-testid="literature-count-info">{getLabelText()}</InputLabel>
     </Box>
   );
 }

@@ -55,8 +55,12 @@ export function PublicationsList({
 }) {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
+    setLoading(true);
+    setError(false);
     // filter out empty ids - these will fetch irrelevant publications
     const { baseUrl, formBody } = europePmcSearchPOSTQuery(entriesIds.filter((id) => id?.trim()));
     const requestOptions = {
@@ -67,12 +71,33 @@ export function PublicationsList({
       body: formBody,
     };
     fetch(baseUrl, requestOptions)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error(`Europe PMC request failed: ${response.status}`);
+        return response.json();
+      })
       .then((data) => {
-        setLoading(false);
+        if (!isActive) return;
         setPublications(data.resultList.result);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setError(true);
+        setLoading(false);
       });
+    return () => {
+      isActive = false;
+    };
   }, [entriesIds]);
+
+  if (error)
+    return (
+      <Box my={20} display="flex" justifyContent="center" alignItems="center">
+        <Typography color="error">
+          Could not fetch publications from Europe PMC. Please try again later.
+        </Typography>
+      </Box>
+    );
 
   if (loading)
     return (
@@ -206,7 +231,11 @@ function PublicationsDrawer({
 
   return (
     <>
-      <StyledButtonBase disableRipple onClick={toggleDrawer}>
+      <StyledButtonBase
+        disableRipple
+        onClick={toggleDrawer}
+        data-testid="publications-drawer-trigger"
+      >
         <Typography variant="body2">
           {" "}
           {customLabel ||
@@ -225,7 +254,7 @@ function PublicationsDrawer({
         <StyledPaperTitle elevation={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <StyledTitleCaption>{caption}</StyledTitleCaption>
-            <IconButton onClick={closeDrawer}>
+            <IconButton onClick={closeDrawer} data-testid="drawer-close">
               <FontAwesomeIcon icon={faXmark} />
             </IconButton>
           </Box>

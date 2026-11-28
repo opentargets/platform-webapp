@@ -76,6 +76,9 @@ const getColumns = label => [
     label: (
       <DirectionOfEffectTooltip docsUrl="https://platform-docs.opentargets.org/evidence#orphanet"></DirectionOfEffectTooltip>
     ),
+    exportLabel: "Direction of effect",
+    exportValue: ({ directionOnTarget, directionOnTrait }) =>
+      [directionOnTarget, directionOnTrait].filter(Boolean).join(", "),
     renderCell: ({ directionOnTarget, directionOnTrait }) => {
       return (
         <DirectionOfEffectIcon variantEffect={directionOnTarget} directionOnTrait={directionOnTrait} />
@@ -143,11 +146,11 @@ const exportColumns = [
   },
   {
     label: "Functional consequence",
-    exportValue: row => sentenceCase(row.variantFunctionalConsequence.label),
+    exportValue: row => sentenceCase(row.variantFunctionalConsequence?.label),
   },
   {
     label: "Functional consequence ID",
-    exportValue: row => row.variantFunctionalConsequence.id,
+    exportValue: row => row.variantFunctionalConsequence?.id,
   },
   {
     label: "Confidence",

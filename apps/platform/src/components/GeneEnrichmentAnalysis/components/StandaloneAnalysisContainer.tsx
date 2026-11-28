@@ -27,7 +27,7 @@ export function StandaloneAnalysisContainer() {
   } = state;
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { step, results, inputOverlap, error, isLoading, runAnalysis, reset } = useGseaAnalysis({
+  const { step, results, inputOverlap, error, isLoading, runAnalysis, reset, activeRun } = useGseaAnalysis({
     client,
     state,
     dispatch,
@@ -131,6 +131,8 @@ export function StandaloneAnalysisContainer() {
           inputOverlap={inputOverlap}
           onReset={reset}
           activeRunId={activeRunId}
+          diseaseId={activeRun?.efoId}
+          genes={activeRun?.genes}
         />
       );
     }

@@ -19,6 +19,11 @@ function VariantPage(): ReactElement {
   const location = useLocation();
   const { varId } = useParams() as { varId: string };
   const data = useLoaderData<typeof loader>();
+  const subRoute = (useParams()["*"] ?? "").replace(/\/+$/, "");
+
+  if (!!subRoute) {
+    return <NotFoundPage />;
+  }
 
   if (data && !data.variant) {
     return <NotFoundPage />;

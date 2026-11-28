@@ -231,6 +231,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
     <>
       <Box
         aria-describedby={id}
+        data-testid="l2g-heat-cell"
         bgcolor={bgrd}
         display="flex"
         justifyContent="center"
@@ -258,6 +259,7 @@ function HeatCell({ value, bgrd, groupName, mouseLeaveRow, waterfallRow, waterfa
       </Box>
       <Popover
         id={id}
+        data-testid="l2g-plot-popover"
         open={open}
         anchorEl={anchorEl}
         onClose={handleClose}
@@ -337,12 +339,13 @@ function DetailCell({ geneSymbol, score, mouseLeaveRow, waterfallRow, waterfallX
             },
           }}
           onClick={handleClickOpen}
+          data-testid="l2g-details-trigger"
         >
           <Typography variant="caption">Details</Typography>
           <FontAwesomeIcon size="sm" icon={faChevronRight} />
         </Box>
       </Box>
-      <Dialog maxWidth="md" open={open} onClose={handleClose}>
+      <Dialog maxWidth="md" open={open} onClose={handleClose} data-testid="l2g-details-dialog">
         <ClosePlot handleClose={handleClose} />
         <Box p={3}>
           <Typography variant="h6">
@@ -387,7 +390,7 @@ function ClosePlot({ handleClose }) {
   );
 }
 
-function ChartControls({ rows, query, variables, columns }) {
+function ChartControls({ rows, query, variables, columns, fileStem }) {
   return (
     <Box
       sx={{
@@ -405,6 +408,7 @@ function ChartControls({ rows, query, variables, columns }) {
         query={query}
         variables={variables}
         columns={columns}
+        fileStem={fileStem}
       />
     </Box>
   );
@@ -420,6 +424,7 @@ function HeatmapTable({
   disabledExport = false,
   disabledLegend = false,
   singleRowMode = false,
+  dataDownloaderFileStem = "data",
 }) {
   const disabledGeneColumn = singleRowMode;
   const disabledScoreColumn = singleRowMode;
@@ -480,11 +485,18 @@ function HeatmapTable({
         </Box>
       )}
       {!disabledExport && (
-        <ChartControls query={query} rows={rows} variables={variables} columns={columns} />
+        <ChartControls
+          query={query}
+          rows={rows}
+          variables={variables}
+          columns={columns}
+          fileStem={dataDownloaderFileStem}
+        />
       )}
       <Box display="flex" justifyContent="center">
         <Box
           component="table"
+          data-testid="l2g-heatmap"
           sx={{
             tableLayout: "fixed",
             width: singleRowMode ? "100%" : "90%",

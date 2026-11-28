@@ -1,217 +1,77 @@
 import type { Locator, Page } from "@playwright/test";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { ServerTableSection, type SortableColumn } from "./serverTableSection";
 
-/**
- * Interactor for Credible Set Variants section on Credible Set page
- * Section ID: variants
- * data-testid: section-variants
- */
-export class CredibleSetVariantsSection {
-  constructor(private page: Page) {}
-
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-variants']");
-  }
-
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
-  }
-
+/** The "Variants" section of the credible set page: the fine-mapped locus table. */
+export class CredibleSetVariantsSection extends ServerTableSection {
+  static readonly id = "variants";
+  static readonly operation = "VariantsQuery";
+  /** The header cells as rendered: the "?" is the help icon of a column with a tooltip. */
+  static readonly headers = [
+    "Variant",
+    "P-value",
+    "Beta?",
+    "Standard error?",
+    "LD (r²)?",
+    "Posterior Probability?",
+    "log(BF)?",
+    "Predicted consequence?",
+  ];
+  /** Column positions in the table. */
+  static readonly column = {
+    variant: 0,
+    pValue: 1,
+    beta: 2,
+    standardError: 3,
+    ld: 4,
+    posterior: 5,
+    logBf: 6,
+    consequence: 7,
+  } as const;
+  static readonly searchPlaceholder = "Search variant ID or consequence…";
+  /** What the search box asks the server to look in. */
+  static readonly searchFields = ["MOST_SEVERE_CONSEQUENCE_LABEL", "VARIANT_ID"];
+  /** The sort the table opens with. */
+  static readonly defaultSort = { key: "POSTERIOR_PROBABILITY", direction: "DESCENDING" } as const;
   /**
-   * Wait for the section to finish loading (no skeleton loaders)
+   * The columns the server can sort, with the sort key each one sends. Standard error is shown
+   * to three decimals, where every variant of the test credible sets reads the same, and LD is
+   * not available for them: neither can show its order, so their kind is "unreadable".
    */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
+  static readonly sortable: readonly SortableColumn[] = [
+    { header: "Variant", key: "VARIANT", column: 0, kind: "text" },
+    { header: "P-value", key: "P_VALUE", column: 1, kind: "pValue" },
+    { header: "Beta", key: "REPORTED_BETA", column: 2, kind: "number" },
+    { header: "Standard error", key: "REPORTED_STANDARD_ERROR", column: 3, kind: "unreadable" },
+    { header: "LD (r²)", key: "R2_OVERALL", column: 4, kind: "unreadable" },
+    { header: "Posterior Probability", key: "POSTERIOR_PROBABILITY", column: 5, kind: "number" },
+    { header: "log(BF)", key: "LOG_BAYES_FACTOR", column: 6, kind: "number" },
+  ];
+  /** The columns with no sort field: their titles are not controls. */
+  static readonly notSortable = ["Predicted consequence"];
 
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-variants']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  constructor(page: Page) {
+    super(page, CredibleSetVariantsSection.id, CredibleSetVariantsSection.operation);
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  /** The variant link of a row. */
+  variantLink(rowIndex: number): Locator {
+    return this.link(rowIndex, CredibleSetVariantsSection.column.variant);
   }
 
-  async isTableVisible(): Promise<boolean> {
-    return await this.getTable()
-      .isVisible()
-      .catch(() => false);
+  /** The "lead" chip, which only the lead variant's row carries. */
+  get leadChips(): Locator {
+    return this.rows.getByText("lead", { exact: true });
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  /** The ontology link of a row's predicted consequence. */
+  consequenceLink(rowIndex: number): Locator {
+    return this.link(rowIndex, CredibleSetVariantsSection.column.consequence);
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
-  }
-
-  // Variant link
-  async getVariantLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/variant/']");
-  }
-
-  async clickVariantLink(rowIndex: number): Promise<void> {
-    const link = await this.getVariantLink(rowIndex);
-    await link.click();
-  }
-
-  async getVariantId(rowIndex: number): Promise<string | null> {
-    const link = await this.getVariantLink(rowIndex);
-    return await link.textContent();
-  }
-
-  async hasVariantLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getVariantLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  // Lead variant badge
-  async isLeadVariant(rowIndex: number): Promise<boolean> {
-    const row = await this.getTableRow(rowIndex);
-    const leadBadge = row.locator("text=lead");
-    return await leadBadge.isVisible().catch(() => false);
-  }
-
-  // P-value
-  async getPValue(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(1);
-    return await cell.textContent();
-  }
-
-  // Beta
-  async getBeta(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(2);
-    return await cell.textContent();
-  }
-
-  // Standard error
-  async getStandardError(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(3);
-    return await cell.textContent();
-  }
-
-  // LD (r²)
-  async getLDR2(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(4);
-    return await cell.textContent();
-  }
-
-  // Posterior Probability
-  async getPosteriorProbability(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(5);
-    return await cell.textContent();
-  }
-
-  // log(BF)
-  async getLogBF(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(6);
-    return await cell.textContent();
-  }
-
-  // Predicted consequence link
-  async getPredictedConsequenceLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='identifiers.org/SO']");
-  }
-
-  async getPredictedConsequence(rowIndex: number): Promise<string | null> {
-    const link = await this.getPredictedConsequenceLink(rowIndex);
-    return await link.textContent();
-  }
-
-  async hasPredictedConsequenceLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getPredictedConsequenceLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  // Cell text by column index
-  async getCellText(rowIndex: number, columnIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const cell = row.locator("td").nth(columnIndex);
-    return await cell.textContent();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await this.getSearchInput().fill(searchTerm);
-    await this.waitForLoad();
-  }
-
-  async clearSearch(): Promise<void> {
-    await this.getSearchInput().clear();
-    await this.waitForLoad();
-  }
-
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Next Page']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("button[aria-label='Previous Page']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
-  }
-
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
-  }
-
-  // Column visibility button
-  getColumnsButton(): Locator {
-    return this.getSection().locator("button:has-text('Columns')");
-  }
-
-  // Export button
-  getExportButton(): Locator {
-    return this.getSection().locator("button:has-text('Export')");
-  }
-
-  // API query button
-  getAPIQueryButton(): Locator {
-    return this.getSection().locator("button:has-text('API query')");
+  /** The variant ids on this page, without the "lead" chip. */
+  async variantIds(): Promise<string[]> {
+    return (await this.columnTexts(CredibleSetVariantsSection.column.variant)).map((text) =>
+      text.replace(/\s*lead$/, "")
+    );
   }
 }

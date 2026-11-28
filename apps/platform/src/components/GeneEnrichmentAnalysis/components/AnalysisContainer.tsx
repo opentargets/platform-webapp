@@ -20,7 +20,7 @@ function AnalysisContainer() {
     state;
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { step, results, inputOverlap, error, isLoading, runAnalysis, reset } = useGseaAnalysis({
+  const { step, results, inputOverlap, error, isLoading, runAnalysis, reset, activeRun } = useGseaAnalysis({
     client,
     state,
     dispatch,
@@ -125,7 +125,17 @@ function AnalysisContainer() {
 
     // Analysis complete
     if (step === "complete") {
-      return <AnalysisResults results={results} inputOverlap={inputOverlap} onReset={reset} activeRunId={activeRunId} diseaseId={state.associationsState.efoId} />;
+      // Link back to the disease the run was made for, not whichever AOTF state is current
+      return (
+        <AnalysisResults
+          results={results}
+          inputOverlap={inputOverlap}
+          onReset={reset}
+          activeRunId={activeRunId}
+          diseaseId={activeRun?.efoId}
+          genes={activeRun?.genes}
+        />
+      );
     }
 
     // Default: input form

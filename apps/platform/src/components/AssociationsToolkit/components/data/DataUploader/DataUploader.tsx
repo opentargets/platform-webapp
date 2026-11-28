@@ -204,12 +204,12 @@ const FileExample = ({ entity = "target", runAction }: FileExampleProps) => {
               <SuggestionContainer>
                 <Box sx={{ position: "absolute", right: 10, display: "flex", gap: 1 }}>
                   <Tooltip placement="bottom" title="Run this sample">
-                    <Button onClick={() => handleClickRun()}>
+                    <Button onClick={() => handleClickRun()} data-testid="upload-run-sample-button">
                       <FontAwesomeIcon icon={faPlay} />
                     </Button>
                   </Tooltip>
                   <Tooltip placement="bottom" title="Copy to clipboard">
-                    <Button onClick={() => copyToClipboard()}>
+                    <Button onClick={() => copyToClipboard()} data-testid="upload-copy-sample-button">
                       <FontAwesomeIcon icon={faClipboard} />
                     </Button>
                   </Tooltip>

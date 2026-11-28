@@ -16,7 +16,7 @@ function TargetDetail({ data }) {
   const targetDescription = clearDescriptionCodes(functionDescriptions, theme.palette.primary.main);
 
   return (
-    <CardContent>
+    <CardContent data-testid="search-top-hit-target">
       <Typography color="primary" variant="h5">
         <Link to={`/target/${id}/associations`}>{approvedSymbol}</Link>
       </Typography>

@@ -130,7 +130,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
   // fetch selected structure and show it
   useEffect(() => {
     async function fetchStructure() {
-      if (viewer && selectedRow) {
+      if (viewer && selectedRow?.id) {
         setStructureDetails(null);
         setModelIndex(null);
         setMessageText("Loading structure ...");
@@ -332,7 +332,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
     <>
       <StructureTitle selectedRow={selectedRow} structureDetails={structureDetails} />
       <Box position="relative" display="flex" justifyContent="center" pb={1}>
-        <Box ref={viewerRef} position="relative" width="100%">
+        <Box ref={viewerRef} data-testid="structure-viewer" position="relative" width="100%">
           <Box className="viewerContainer" position="relative" width="100%" height="380px">
             {/* info and screenshot buttons */}
             {!messageText && (
@@ -352,6 +352,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
                 <InfoPopper />
                 <Tooltip title="Screenshot" placement="top-start">
                   <Button
+                    data-testid="structure-screenshot-button"
                     sx={{
                       display: "flex",
                       gap: 1,
@@ -371,6 +372,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
             {/* atom info */}
             {hoverInfo && (
               <Box
+                data-testid="structure-hover-info"
                 position="absolute"
                 bottom={0}
                 right={0}
@@ -406,6 +408,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
             {/* model picker */}
             {structureDetails?.modelNumbers?.length > 1 && (
               <Box
+                data-testid="structure-model-picker"
                 position="absolute"
                 top={0}
                 left={0}
@@ -417,12 +420,14 @@ function Viewer({ ensemblId, selectedRow, segments }) {
                 p="0.6rem 0.6rem"
               >
                 <Button
+                  data-testid="structure-model-previous"
                   onClick={handleDecrementModel}
                   sx={{ bgcolor: "white", pointerEvents: "auto" }}
                 >
                   <FontAwesomeIcon icon={faChevronLeft} size="xs" />
                 </Button>
                 <Button
+                  data-testid="structure-model-next"
                   onClick={handleIncrementModel}
                   sx={{ bgcolor: "white", pointerEvents: "auto" }}
                 >
@@ -439,6 +444,7 @@ function Viewer({ ensemblId, selectedRow, segments }) {
           {/* message */}
           {messageText && (
             <Typography
+              data-testid="structure-viewer-message"
               variant="body2"
               component="div"
               sx={{
@@ -468,7 +474,16 @@ function StructureTitle({ selectedRow, structureDetails }) {
   const title = isAlphaFold(selectedRow) ? "AlphaFold prediction" : structureDetails?.title ?? "";
 
   return (
-    <Box display="flex" alignItems="baseline" minHeight={22} gap={0.5} ml={2} mt={0.75} mb={1}>
+    <Box
+      data-testid="structure-title"
+      display="flex"
+      alignItems="baseline"
+      minHeight={22}
+      gap={0.5}
+      ml={2}
+      mt={0.75}
+      mb={1}
+    >
       {selectedRow && (isAlphaFold(selectedRow) || structureDetails) && (
         <>
           <Typography variant="subtitle2" component="span">

@@ -40,6 +40,7 @@ function DatasetActionLinks({ datasetId, stopPropagation = false }: DatasetActio
         to={{ pathname: `/downloads/${datasetId}/schema`, search }}
         onClick={onClick}
         variant="outlined"
+        data-testid="dataset-schema-link"
         sx={smallOutlinedButtonSx}
       >
         <FontAwesomeIcon icon={faCode} style={{ fontSize: 12 }} />
@@ -50,6 +51,7 @@ function DatasetActionLinks({ datasetId, stopPropagation = false }: DatasetActio
         to={{ pathname: `/downloads/${datasetId}/access`, search }}
         onClick={onClick}
         variant="outlined"
+        data-testid="dataset-access-link"
         sx={smallOutlinedButtonSx}
       >
         Access data

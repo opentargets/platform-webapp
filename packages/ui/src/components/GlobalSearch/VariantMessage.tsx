@@ -8,6 +8,7 @@ const docsLink = "https://platform-docs.opentargets.org/variant";
 function VariantMessage({ inputValue }: { inputValue: string }) {
   return (
     <Box
+      data-testid="global-search-variant-message"
       sx={{
         display: "flex",
         alignItems: "center",
