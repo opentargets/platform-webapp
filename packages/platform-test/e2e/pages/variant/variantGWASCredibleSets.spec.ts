@@ -23,6 +23,7 @@ const FEW = "6_160716958_G_A";
 const FEW_SECTIONS = [
   "gwas-credible-sets",
   "in-silico-predictors",
+  "variantgenomicregion",
   "qtl-credible-sets",
   "variant-effect-predictor",
 ];
