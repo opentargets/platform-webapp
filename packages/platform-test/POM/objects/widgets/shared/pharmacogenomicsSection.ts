@@ -1,176 +1,88 @@
 import type { Locator, Page } from "@playwright/test";
-import { fillPolling } from "../../../../utils/fillPolling";
-import { WIDGET_LOAD_TIMEOUT } from "../../../../utils/timeouts";
+import { sectionLocator } from "../../../../utils/sections";
+import { SectionDataControls, SectionTable } from "./sectionDataControls";
+
+/** Columns of the pharmacogenetics table, in order. */
+export const PGX_HEADERS = [
+  "Genotype ID?",
+  "Drug(s)",
+  "Drug response phenotype",
+  "Drug response category",
+  "Gene",
+  "Directionality",
+  "Direct drug target",
+  "Confidence level?",
+  "Source",
+  "Literature",
+] as const;
+
+export const PGX_COLUMN = {
+  genotype: 0,
+  drugs: 1,
+  phenotype: 2,
+  category: 3,
+  gene: 4,
+  directionality: 5,
+  directTarget: 6,
+  level: 7,
+  source: 8,
+  literature: 9,
+} as const;
+
+/** GraphQL operation behind the section (packages/sections/src/variant/Pharmacogenomics). */
+export const PGX_OPERATION = "PharmacogenomicsQuery";
+export const PGX_PAGE_SIZE = 10;
 
 /**
- * Interactor for Pharmacogenomics section
+ * Variant page > Pharmacogenetics (section id "pharmacogenetics"): a server-side table
+ * (pagination, search, sort by confidence level).
  */
 export class PharmacogenomicsSection {
-  constructor(private page: Page) {}
+  static readonly id = "pharmacogenetics";
+  readonly section: Locator;
+  readonly table: SectionTable;
+  readonly controls: SectionDataControls;
 
-  // Section container
-  getSection(): Locator {
-    return this.page.locator("[data-testid='section-pharmacogenetics']");
+  constructor(readonly page: Page) {
+    this.section = sectionLocator(page, PharmacogenomicsSection.id);
+    this.table = new SectionTable(this.section);
+    this.controls = new SectionDataControls(page, this.section);
   }
 
-  async isSectionVisible(): Promise<boolean> {
-    return await this.getSection()
-      .isVisible()
-      .catch(() => false);
+  get title(): Locator {
+    return this.section.getByTestId("section-pharmacogenetics-header");
   }
 
-  /**
-   * Wait for the section to finish loading (no skeleton loaders)
-   */
-  async waitForLoad(): Promise<void> {
-    const section = this.getSection();
-    await section.waitFor({ state: "visible", timeout: WIDGET_LOAD_TIMEOUT });
-
-    // Wait for skeleton loaders to disappear
-    await this.page
-      .waitForFunction(
-        () => {
-          const sect = document.querySelector("[data-testid='section-pharmacogenetics']");
-          if (!sect) return false;
-          const skeletons = sect.querySelectorAll(".MuiSkeleton-root");
-          return skeletons.length === 0;
-        },
-        { timeout: 15000 }
-      )
-      .catch(() => {
-        // If no skeletons found, section already loaded
-      });
+  get description(): Locator {
+    return this.section.getByTestId("section-description");
   }
 
-  // Table
-  getTable(): Locator {
-    return this.getSection().locator("table");
+  drugLinks(row: number): Locator {
+    return this.table.cell(row, PGX_COLUMN.drugs).getByRole("link");
   }
 
-  async getTableRows(): Promise<number> {
-    const tbody = this.getTable().locator("tbody");
-    const rows = tbody.locator("tr");
-    return await rows.count();
+  geneLink(row: number): Locator {
+    return this.table.cell(row, PGX_COLUMN.gene).getByRole("link");
   }
 
-  async getTableRow(index: number): Promise<Locator> {
-    const tbody = this.getTable().locator("tbody");
-    return tbody.locator("tr").nth(index);
+  sourceLink(row: number): Locator {
+    return this.table.cell(row, PGX_COLUMN.source).getByRole("link");
   }
 
-  // Get genotype ID from row
-  async getGenotypeId(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    const genotypeCell = row.locator("td").first();
-    return await genotypeCell.textContent();
+  /** The "Level 2B" badge of a row. */
+  level(row: number): Locator {
+    return this.table.cell(row, PGX_COLUMN.level);
   }
 
-  // Drug links - Not applicable for Drug page, only for Variant page
-  async getDrugLinks(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("a[href*='/drug/']");
+  /** The title of a column header: clicking it sorts the column. A help icon may follow the text. */
+  sortLabel(header: string): Locator {
+    return this.table.headers
+      .filter({ hasText: header })
+      .getByText(new RegExp(`^${header.replace(/[()]/g, "\\$&")}\\??$`));
   }
 
-  async getDrugLinksCount(rowIndex: number): Promise<number> {
-    const links = await this.getDrugLinks(rowIndex);
-    return await links.count();
-  }
-
-  async clickDrugLink(rowIndex: number, linkIndex: number = 0): Promise<void> {
-    const links = await this.getDrugLinks(rowIndex);
-    await links.nth(linkIndex).click();
-  }
-
-  async getDrugName(rowIndex: number, linkIndex: number = 0): Promise<string | null> {
-    const links = await this.getDrugLinks(rowIndex);
-    return await links.nth(linkIndex).textContent();
-  }
-
-  // Gene/Target link
-  async getGeneLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("td").first().locator("a[href*='/target/']");
-  }
-
-  async hasGeneLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getGeneLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  async clickGeneLink(rowIndex: number): Promise<void> {
-    const link = await this.getGeneLink(rowIndex);
-    await link.click();
-  }
-
-  async getGeneName(rowIndex: number): Promise<string | null> {
-    const link = await this.getGeneLink(rowIndex);
-    return await link.textContent();
-  }
-
-  // Phenotype link (disease)
-  async getPhenotypeLink(rowIndex: number): Promise<Locator> {
-    const row = await this.getTableRow(rowIndex);
-    return row.locator("td").nth(2).locator("a[href*='/disease/']");
-  }
-
-  async hasPhenotypeLink(rowIndex: number): Promise<boolean> {
-    const link = await this.getPhenotypeLink(rowIndex);
-    return await link.isVisible().catch(() => false);
-  }
-
-  async clickPhenotypeLink(rowIndex: number): Promise<void> {
-    const link = await this.getPhenotypeLink(rowIndex);
-    await link.click();
-  }
-
-  // Get confidence level from row
-  async getConfidenceLevel(rowIndex: number): Promise<string | null> {
-    const row = await this.getTableRow(rowIndex);
-    // Confidence level column has a colored badge
-    const confidenceCell = row.locator("td").nth(7);
-    return await confidenceCell.textContent();
-  }
-
-  // Pagination
-  getNextPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-next-button']");
-  }
-
-  getPreviousPageButton(): Locator {
-    return this.getSection().locator("[data-testid='pagination-previous-button']");
-  }
-
-  async clickNextPage(): Promise<void> {
-    await this.getNextPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async clickPreviousPage(): Promise<void> {
-    await this.getPreviousPageButton().click();
-    await this.waitForLoad();
-  }
-
-  async isNextPageEnabled(): Promise<boolean> {
-    return await this.getNextPageButton().isEnabled();
-  }
-
-  async isPreviousPageEnabled(): Promise<boolean> {
-    return await this.getPreviousPageButton().isEnabled();
-  }
-
-  // Global filter/search
-  getSearchInput(): Locator {
-    return this.getSection().locator("input[placeholder*='Search']");
-  }
-
-  async search(searchTerm: string): Promise<void> {
-    await fillPolling(this.getSearchInput(), searchTerm);
-    await this.getSearchInput().press("Enter");
-    await this.waitForLoad();
-  }
-
-  async clearSearch(): Promise<void> {
-    await this.getSearchInput().clear();
-    await this.waitForLoad();
+  /** The arrow of an unsorted, sortable column (shown on hover) and of the sorted one. */
+  sortArrows(header: string): Locator {
+    return this.table.headers.filter({ hasText: header }).locator("svg[data-icon^='arrow-']");
   }
 }
