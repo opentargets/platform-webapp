@@ -30,6 +30,11 @@ on:
         required: false
         type: string
 
+# A newer push to the same pull request replaces the run in progress.
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   get_branch_name:
     name: Extract branch name
@@ -152,7 +157,10 @@ jobs:
     needs: [tests_e2e_netlify_prepare, get_branch_name]
     name: Run end-to-end tests on Netlify PR preview
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -194,7 +202,7 @@ jobs:
       - name: Install Playwright browsers
         run: |
           cd packages/platform-test
-          yarn playwright install --with-deps chromium webkit
+          yarn playwright install --with-deps chromium
 
       - name: Run E2E tests
         # Fix: move expressions into env vars to avoid script injection
@@ -203,19 +211,142 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           TEST_SCOPE: ${{ github.event.inputs.test_scope }}
           PLAYWRIGHT_TEST_BASE_URL: ${{ github.event.inputs.base_url || format('https://{0}--ot-platform.netlify.app', needs.get_branch_name.outputs.deploy_alias) }}
-          DEBUG: pw:api
           TEST_CONFIG_URL: ${{ github.event.inputs.test_config_url }}
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
+          # The full suite runs when asked for, and on a pull request that changes the
+          # tests themselves. Every other pull request runs the smoke subset.
+          SCOPE="smoke"
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$TEST_SCOPE" == "all" ]]; then
+            SCOPE="all"
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            if gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/files" --paginate --jq '.[].filename' \
+              | grep -q '^packages/platform-test/'; then
+              SCOPE="all"
+            fi
+          fi
+          echo "E2E_SCOPE=$SCOPE" >> "$GITHUB_ENV"
+          if [[ "$SCOPE" == "all" ]]; then
             yarn dev:test:platform:e2e
           else
             yarn dev:test:platform:e2e:smoke
           fi
+
+      # The HTML report (steps, screenshots, traces, and a video of each failed test),
+      # published next to the app preview so anyone on the team can open it.
+      - name: Publish the test report to Netlify
+        id: report
+        if: ${{ !cancelled() }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+          DEPLOY_ALIAS: ${{ needs.get_branch_name.outputs.deploy_alias }}
+          REPORT_DIR: ${{ github.workspace }}/packages/platform-test/playwright-report
+        run: |
+          set -euo pipefail
+          if [[ -z "${NETLIFY_AUTH_TOKEN:-}" ]]; then
+            echo "No Netlify token (a pull request from a fork): the report is only in the artifact."
+            exit 0
+          fi
+          if [[ ! -f "$REPORT_DIR/index.html" ]]; then
+            echo "No report was produced." >&2
+            exit 1
+          fi
+          # Netlify aliases are limited to 37 characters.
+          REPORT_ALIAS="$(echo "e2e-report-${DEPLOY_ALIAS}" | cut -c1-37 | sed 's/-\+$//')"
+          npm install -g netlify-cli
+          netlify deploy \
+            --dir="$REPORT_DIR" \
+            --alias="$REPORT_ALIAS" \
+            --filter platform \
+            --no-build \
+            --site "$NETLIFY_SITE_ID"
+          echo "url=https://${REPORT_ALIAS}--ot-platform.netlify.app" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise the run
+        id: summary
+        if: ${{ !cancelled() }}
+        env:
+          RESULTS: ${{ github.workspace }}/packages/platform-test/e2e-results.json
+          REPORT_URL: ${{ steps.report.outputs.url }}
+          APP_URL: ${{ github.event.inputs.base_url || format('https://{0}--ot-platform.netlify.app', needs.get_branch_name.outputs.deploy_alias) }}
+          HEAD_SHA: ${{ needs.get_branch_name.outputs.head_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          TEST_SCOPE: ${{ github.event.inputs.test_scope }}
+        run: |
+          set -euo pipefail
+          SCOPE="smoke"
+          if [[ "${E2E_SCOPE:-smoke}" == "all" ]]; then SCOPE="full suite"; fi
+          {
+            echo "<!-- e2e-report -->"
+            echo "### End-to-end tests ($SCOPE)"
+            echo
+            if [[ -f "$RESULTS" ]]; then
+              PASSED="$(jq '.stats.expected' "$RESULTS")"
+              FAILED="$(jq '.stats.unexpected' "$RESULTS")"
+              FLAKY="$(jq '.stats.flaky' "$RESULTS")"
+              SKIPPED="$(jq '.stats.skipped' "$RESULTS")"
+              echo "| Passed | Failed | Flaky (passed on retry) | Skipped |"
+              echo "|---|---|---|---|"
+              echo "| $PASSED | $FAILED | $FLAKY | $SKIPPED |"
+              if [[ "$FAILED" != "0" ]]; then
+                echo
+                echo "**Failed tests**"
+                echo
+                jq -r '[.. | objects | select(has("specs")) | .specs[] | select(.ok == false) | "- `\(.file)`: \(.title)"] | unique | .[:40][]' "$RESULTS"
+              fi
+            else
+              echo "The run produced no results file: it stopped before any test ran."
+            fi
+            echo
+            if [[ -n "${REPORT_URL:-}" ]]; then
+              echo "**Report:** $REPORT_URL (steps, screenshots and traces for every test; a video for each failed test)"
+            else
+              echo "**Report:** in the \`playwright-report\` artifact of this run"
+            fi
+            echo
+            echo "App under test: $APP_URL at \`${HEAD_SHA:0:8}\`"
+          } > e2e-summary.md
+          cat e2e-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      # One comment per pull request, replaced on every run.
+      - name: Comment on the pull request
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          COMMENT_ID="$(gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq '[.[] | select(.body | startswith("<!-- e2e-report -->"))][0].id // empty')"
+          if [[ -n "$COMMENT_ID" ]]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$COMMENT_ID" -F body=@e2e-summary.md > /dev/null
+          else
+            gh api --method POST "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -F body=@e2e-summary.md > /dev/null
+          fi
+
+      - name: Type check the tests
+        if: ${{ !cancelled() }}
+        run: |
+          cd packages/platform-test
+          yarn typecheck
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: ${{ github.workspace }}/packages/platform-test/playwright-report
+          retention-days: 7
+
+      # Traces and screenshots of failed tests
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: playwright-test-results
+          path: ${{ github.workspace }}/packages/platform-test/test-results
           retention-days: 7
