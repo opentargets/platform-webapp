@@ -272,6 +272,14 @@ const PAIRS: readonly Pair[] = [
  */
 const NEVER_SCORED: ReadonlySet<string> = new Set(["expression_atlas"]);
 
+/**
+ * Sources whose BRAF evidence is annotated to descendants of melanoma (cutaneous melanoma,
+ * MONDO_0005012) rather than to melanoma itself. The disease page counts indirect evidence
+ * (`indirectWeight: 1`), the target page only direct evidence (`indirectWeight: 0`), so on the
+ * target page these columns are empty for the pair. See opentargets/issues#4754.
+ */
+const INDIRECT_ONLY_ON_TARGET_PAGE: ReadonlySet<string> = new Set(["cancer_biomarkers"]);
+
 const fill = (template: string, symbol: string, name: string): string =>
   template.replace("{s}", symbol).replace("{n}", name);
 
@@ -458,6 +466,13 @@ test.describe("Datasource descriptions: associations table", () => {
     for (const sectionId of braf.sources) {
       const src = source(sectionId);
       await test.step(src.columnId, async () => {
+        if (INDIRECT_ONLY_ON_TARGET_PAGE.has(sectionId)) {
+          await expect(
+            aotf.emptyCell(row, src.columnId),
+            `${src.columnId} only reaches ${braf.name} through its descendants, which the target page does not count`
+          ).toBeVisible();
+          return;
+        }
         expect(withData, `${braf.name} should have a value in ${src.columnId}`).toContain(
           src.columnId
         );
