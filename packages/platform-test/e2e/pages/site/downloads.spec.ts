@@ -863,7 +863,7 @@ test.describe("Downloads page", () => {
       {
         tool: "wget" as const,
         command:
-          /wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftp:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./,
+          /wget --recursive --no-parent --no-host-directories --cut-dirs 6 ftps:\/\/ftp\.ebi\.ac\.uk\/pub\/databases\/opentargets\/platform\/\d+\.\d+\/output\/target \./,
       },
       {
         tool: "gcp" as const,
