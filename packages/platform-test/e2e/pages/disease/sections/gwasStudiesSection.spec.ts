@@ -470,11 +470,12 @@ test.describe("Disease page: GWAS studies", () => {
       const { filename, rows } = await table.exportJson();
       expect(filename).toBe(`${primary}-gwas-studies.json`);
       expect(rows).toHaveLength(total);
-      expect(rows.slice(0, PAGE_SIZE).map((row) => row.id)).toEqual(ids);
+      expect(rows.slice(0, PAGE_SIZE).map((row) => row.study)).toEqual(ids);
       expect(Object.keys(rows[0])).toEqual([
-        "id",
-        "traitFromSource",
-        "nSamples",
+        // export columns are named after the camelCased column labels
+        "study",
+        "reportedTrait",
+        "sampleSize",
         "cohorts",
         "publication",
         "credibleSetsCount",
@@ -485,9 +486,10 @@ test.describe("Disease page: GWAS studies", () => {
       const { filename, header, lines } = await table.exportTsv();
       expect(filename).toBe(`${primary}-gwas-studies.tsv`);
       expect(header).toEqual([
-        "id",
-        "traitFromSource",
-        "nSamples",
+        // export columns are named after the camelCased column labels
+        "study",
+        "reportedTrait",
+        "sampleSize",
         "cohorts",
         "publication",
         "credibleSetsCount",
