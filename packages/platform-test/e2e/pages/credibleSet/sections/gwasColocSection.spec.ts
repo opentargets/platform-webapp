@@ -731,8 +731,8 @@ test.describe("Credible set page: GWAS colocalisation", () => {
     await expectSections(page, expectedSectionsFor(primary));
     await expect(
       sectionLocator(page, "credibleSetGenomicRegion"),
-      "the genomic region section is switched off in the credible set profile"
-    ).toHaveCount(0);
+      "the genomic region section is shown on the public credible set profile (ot-ui-apps#1191)"
+    ).toBeVisible();
 
     await new CredibleSetPage(page).goToCredibleSetPage(qtl);
     await expectSections(page, expectedSectionsFor(qtl));

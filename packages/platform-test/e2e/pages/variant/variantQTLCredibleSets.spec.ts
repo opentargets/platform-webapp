@@ -26,6 +26,7 @@ const NO_QTL_SECTIONS = [
   "gwas-credible-sets",
   "in-silico-predictors",
   "molecular-structure",
+  "variantgenomicregion",
   "uniprot-variants",
   "variant-effect-predictor",
 ];
